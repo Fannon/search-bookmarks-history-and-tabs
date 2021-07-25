@@ -1,7 +1,3 @@
-// Idea: Dark Theme
-// Idea: Make extension configurable via UI
-// Idea: Allow to quick edit bookmark?
-
 performance.mark('init-start')
 const ext = window.ext = {}
 
@@ -23,7 +19,7 @@ ext.options = {
 
   // Search options
   search: {
-    maxResults: 8,
+    maxResults: 64,
     minMatchCharLength: 2,
     threshold: 0.4,
     distance: 120,
@@ -214,7 +210,12 @@ function search(event) {
     ext.data.result = []
   } else {
 
-    const searchResult = ext.fuse.search(searchTerm)
+    let searchResult = ext.fuse.search(searchTerm)
+
+    if (ext.options.search.maxResults && searchResult.length > ext.options.search.maxResults) {
+      searchResult = searchResult.slice(0, ext.options.search.maxResults)
+    }
+
     const highlighted = highlightSearchResult(searchResult)
 
     // TODO: This second mapping could be avoided by merging it with highlightSearchResult()

@@ -1,19 +1,29 @@
 # search-bookmarks-and-history
 Chrome Extension to fuzzy search bookmarks and history.
 
-The extension can only be installed locally right now:
+## Installation
 
+The extension can only be installed locally right now, as it has not been published to the store.
+
+* Check out this extension via git or .zip download
 * Go to chrome://extensions/ 
-  * Load unpacked
+  * Load unpacked and open the root folder of this repository
 
 > This extension is WIP and only for private use first.
 > It is rather configurable, but you need to change the options in `popup/popup.js`
 
-## Screenshots and Demonstrations
+## Screenshots and Demo
 
 ![Screenshot](/images/screenshot.png "Screenshot")
 
+## Tipps & Tricks
+
+* You can tag your bookmarks by just adding `#one tag` or `#first #second` tags to it after the title.
+* If you want to search for tags, start your query with `#`
+* If you want to search for a folder, start with `>`
+
 ## Ideas and To Dos
+* Add a proper icon :)
 * Make extension configurable via UI
-* Dark Theme
-* Allow to quick edit bookmark?
+* Add a Dark Theme
+* Allow to quick edit bookmark title (e.g. to add tags)?
