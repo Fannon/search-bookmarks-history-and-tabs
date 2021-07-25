@@ -11,7 +11,7 @@ ext.options = {
   general: {
     tags: true,
     highlight: true, // TODO: Skip highlight processing if false
-    score: false,
+    score: true,
     lastVisit: true,
     removeDuplicateUrls: true, // TODO: This does not find all duplicates yet
     removeNonHttpLinks: true,
@@ -27,6 +27,7 @@ ext.options = {
     tagWeight: 7,
     urlWeight: 5,
     folderWeight: 2,
+    lowPrioHistory: true
   },
 
   // Bookmark options
@@ -38,7 +39,7 @@ ext.options = {
   history: {
     enabled: true,
     daysAgo: 5,
-    maxItems: 128,
+    maxItems: 8,
   }
 }
 
@@ -134,6 +135,8 @@ function initializeFuseJsSearch(searchData) {
 
 /**
  * Gets the actual data to search within
+ * 
+ * Also removes some items (e.g. duplicates) before they are indexed
  */
 async function getSearchData() {
   let result = []
@@ -220,8 +223,17 @@ function searchWithFuseJs(event) {
 
     let searchResult = ext.fuse.search(searchTerm)
 
+    // Only render maxResults if given (to improve render performance)
     if (ext.options.search.maxResults && searchResult.length > ext.options.search.maxResults) {
       searchResult = searchResult.slice(0, ext.options.search.maxResults)
+    }
+
+    // Move all history results to the bottom
+    if (ext.options.search.lowPrioHistory) {
+      searchResult = [
+        ...searchResult.filter(el => el.item.type === 'bookmark'),
+        ...searchResult.filter(el => el.item.type === 'history'),
+      ]
     }
 
     const highlighted = highlightSearchMatches(searchResult)
