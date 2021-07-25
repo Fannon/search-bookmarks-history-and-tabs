@@ -9,6 +9,10 @@ The extension can only be installed locally right now:
 > This extension is WIP and only for private use first.
 > It is rather configurable, but you need to change the options in `popup/popup.js`
 
+## Screenshots and Demonstrations
+
+![Screenshot](/images/screenshot.png "Screenshot")
+
 ## Ideas and To Dos
 * Make extension configurable via UI
 * Dark Theme
