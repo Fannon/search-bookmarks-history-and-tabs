@@ -1,0 +1,134 @@
+@charset "utf-8";
+@import "../node_modules/bulma/sass/base/_all.sass";
+
+// @import "node_modules/bulma/sass/utilities/_all.sass"
+
+body {
+  width: 500px;
+  height: 600px;
+  background: #EEE;
+  padding: 0;
+}
+
+#popup {
+  width: 100%;
+}
+
+#search-input,
+#search-input:focus {
+  width: 500px;
+  height: 55px;
+  padding: 4px 8px;
+  font-size: 24px;
+  border-radius: 0;
+  border: none;
+  outline: none;
+  background: #FFF;
+  border-bottom: 1px solid #CCC;
+}
+
+#result-list {
+  margin: 4px 4px 4px 4px;
+  padding: 0 4px 0 0;
+  height: 540px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+#result-list li {
+  background-color: #FFF;
+  margin: 0 0 4px 0;
+  padding: 4px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+#result-list .title {
+  font-size: 18px;
+  margin: 0;
+  font-weight: 500;
+}
+#result-list .title a {
+  color: #333;
+  margin-right: 4px;
+}
+#result-list .tags {
+  background: #557292;
+  color: #FFF;
+  border-radius: 3px;
+  padding: 2px 3px 3px 3px;
+  margin-right: 4px;
+  font-size: 10px;
+  white-space:nowrap;
+  display: inline;
+}
+#result-list .tags .divider:before {
+  content: " ";
+}
+
+#result-list .folder {
+  background: #559292;
+  color: #FFF;
+  border-radius: 3px;
+  padding: 2px 3px 3px 3px;
+  margin-right: 4px;
+  font-size: 10px;
+  white-space:nowrap;
+}
+#result-list .folder .divider:before {
+  content: " \276F \0020";
+}
+#result-list .last-visited {
+  background: rgb(158, 206, 47);
+  color: #FFF;
+  border-radius: 3px;
+  padding: 2px 3px 3px 3px;
+  margin-right: 4px;
+  font-size: 10px;
+  white-space:nowrap;
+}
+#result-list .score {
+  background: #AFAFAF;
+  color: #FFF;
+  border-radius: 3px;
+  padding: 2px 3px 3px 3px;
+  margin-right: 4px;
+  font-size: 10px;
+  white-space:nowrap;
+  // float: right;
+}
+#result-list .url {
+  font-size: 12px;
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+#result-list .highlight {
+  background-color: rgba(243, 251, 114, 0.5);
+}
+
+#result-list li#selected,
+#result-list li:hover {
+  background-color: #DADADA;
+}
+#result-list li.bookmark {
+  border-left: 4px solid #559292;
+}
+#result-list li.history {
+  border-left: 4px solid rgb(158, 206, 47);
+}
+
+/** SCROLLBAR */
+#result-list::-webkit-scrollbar {
+  width: 6px;
+  margin-left: 4px;
+  padding-left: 4px;
+}
+#result-list::-webkit-scrollbar-track {
+  background: #DDD;
+  padding-left: 2px;
+}
+#result-list::-webkit-scrollbar-thumb {
+  background-color: #999;
+}
