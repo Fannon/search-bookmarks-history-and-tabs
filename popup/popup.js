@@ -15,7 +15,7 @@ ext.options = {
     lastVisit: true,
     removeDuplicateUrls: true, // TODO: This does not find all duplicates yet
     removeNonHttpLinks: true,
-    extendedSearch: false,
+    extendedSearch: true,
   },
 
   // Search options
@@ -208,9 +208,9 @@ async function getSearchData() {
  */
 function searchWithFuseJs(event) {
 
-  const searchTerm = ext.searchInput.value ? ext.searchInput.value.trim() : ''
+  let searchTerm = ext.searchInput.value ? ext.searchInput.value.trim() : ''
 
-  performance.mark('search-start: ' + searchTerm)
+  performance.mark('search-start')
 
   if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter') {
     // Dont execute search on navigation keys
@@ -221,6 +221,18 @@ function searchWithFuseJs(event) {
     ext.data.result = []
   } else {
 
+    // Support for history and bookmark only mode
+    // This is detected by looking at the first char of the search
+    let historyOnly = false
+    let bookmarksOnly = false
+    if (searchTerm.startsWith('+')) {
+      historyOnly = true
+      searchTerm = searchTerm.substring(1)
+    } else if (searchTerm.startsWith('-')) {
+      bookmarksOnly = true
+      searchTerm = searchTerm.substring(1)
+    }
+
     let searchResult = ext.fuse.search(searchTerm)
 
     // Only render maxResults if given (to improve render performance)
@@ -228,24 +240,30 @@ function searchWithFuseJs(event) {
       searchResult = searchResult.slice(0, ext.options.search.maxResults)
     }
 
+    if (historyOnly) {
+      searchResult = searchResult.filter(el => el.item.type === 'history')
+    }
+    if (bookmarksOnly) {
+      searchResult = searchResult.filter(el => el.item.type === 'bookmark')
+    }
+
     // Move all history results to the bottom
-    if (ext.options.search.lowPrioHistory) {
+    if (!historyOnly && !bookmarksOnly && ext.options.search.lowPrioHistory) {
       searchResult = [
         ...searchResult.filter(el => el.item.type === 'bookmark'),
         ...searchResult.filter(el => el.item.type === 'history'),
       ]
     }
 
-    const highlighted = highlightSearchMatches(searchResult)
-
     // TODO: This second mapping could be avoided by merging it with highlightSearchResult()
-    ext.data.result = searchResult.map((el, index) => {
+    ext.data.result = searchResult.map((el) => {
+      const highlighted = highlightResultItem(el)
       return {
         ...el.item,
-        titleHighlighted: highlighted[index].title,
-        tagsHighlighted: highlighted[index].tags,
-        urlHighlighted: highlighted[index].url,
-        folderHighlighted: highlighted[index].folder,
+        titleHighlighted: highlighted.title || el.item.title,
+        tagsHighlighted: highlighted.tags || el.item.tags,
+        urlHighlighted: highlighted.url || el.item.url,
+        folderHighlighted: highlighted.folder || el.item.folder,
         score: 100 - Math.round(el.score || 0 * 100),
       }
     })
@@ -253,8 +271,8 @@ function searchWithFuseJs(event) {
   }
   renderResult(ext.data.result)
 
-  performance.mark('search-end: ' + searchTerm)
-  performance.measure('search: ' + searchTerm, 'search-start: ' + searchTerm, 'search-end: ' + searchTerm);
+  performance.mark('search-end')
+  performance.measure('search: ' + searchTerm, 'search-start', 'search-end');
   console.debug('Search Performance', performance.getEntriesByType("measure"));
   performance.clearMeasures()
 }
@@ -267,6 +285,8 @@ function searchWithFuseJs(event) {
  * Render the search result in UI as result items
  */
 function renderResult(result) {
+
+  performance.mark('render-start')
 
   // Clean current result set
   ext.resultList.innerHTML = '';
@@ -334,6 +354,11 @@ function renderResult(result) {
     resultListItem.appendChild(urlDiv)
     ext.resultList.appendChild(resultListItem)
   }
+
+  performance.mark('render-end')
+  performance.measure('Render DOM', 'render-start', 'render-end');
+  console.debug('Render Performance', performance.getEntriesByType("measure"));
+  performance.clearMeasures()
 }
 
 /**
@@ -385,56 +410,39 @@ function openListItemLink(event) {
 }
 
 /**
- * Apply the fuse.js search indexes to highlight found instances of text
- * 
- * TODO: Optimize this?
- * TODO: Try out simpler approach (no fuzzy):
- *       https://bitsofco.de/a-one-line-solution-to-highlighting-search-matches/
- * @see https://gist.github.com/evenfrost/1ba123656ded32fb7a0cd4651efd4db0
+ * Inspired from https://github.com/brunocechet/Fuse.js-with-highlight/blob/master/index.js 
  */
-function highlightSearchMatches(fuseSearchResult) {
-  const set = (obj, path, value) => {
-    const pathValue = path.split('.');
-    let i;
-    for (i = 0; i < pathValue.length - 1; i++) {
-      obj = obj[pathValue[i]];
+function highlightResultItem(resultItem) {
+  const highlightedResultItem = {}
+  for (const matchItem of resultItem.matches) {
+    
+    const text = resultItem.item[matchItem.key]
+    const result = []
+    const matches = [].concat(matchItem.indices);
+    let pair = matches.shift()
+    
+    for (let i = 0; i < text.length; i++) {
+      const char = text.charAt(i)
+      if (pair && i == pair[0]) {
+        result.push('<mark>')
+      }
+      result.push(char)
+      if (pair && i == pair[1]) {
+        result.push('</mark>')
+        pair = matches.shift()
+      }
     }
-    obj[pathValue[i]] = value;
-  };
+    highlightedResultItem[matchItem.key] = result.join('')
 
-  const generateHighlightedText = (inputText, regions = []) => {
-    let content = '';
-    let nextUnhighlightedRegionStartingIndex = 0;
-
-    regions.forEach(region => {
-      const lastRegionNextIndex = region[1] + 1;
-
-      content += [
-        inputText.substring(nextUnhighlightedRegionStartingIndex, region[0]),
-        `<mark>`,
-        inputText.substring(region[0], lastRegionNextIndex),
-        '</mark>',
-      ].join('');
-
-      nextUnhighlightedRegionStartingIndex = lastRegionNextIndex;
-    });
-
-    content += inputText.substring(nextUnhighlightedRegionStartingIndex);
-
-    return content;
-  };
-
-  return fuseSearchResult
-    .filter(({ matches }) => matches && matches.length)
-    .map(({ item, matches }) => {
-      const highlightedItem = { ...item };
-
-      matches.forEach((match) => {
-        set(highlightedItem, match.key, generateHighlightedText(match.value, match.indices));
+    // TODO: Didn't try recursion if it works
+    if (resultItem.children && resultItem.children.length > 0){
+      resultItem.children.forEach((child) => {
+        highlightedResultItem[matchItem.key] = highlightResultItem(child);
       });
+    }
+  }
 
-      return highlightedItem;
-    });
+  return highlightedResultItem
 };
 
 //////////////////////////////////////////
@@ -535,9 +543,9 @@ function convertChromeHistory(history) {
  */
  function timeSince(date) {
 
-  var seconds = Math.floor((new Date() - date) / 1000);
+  const seconds = Math.floor((new Date() - date) / 1000);
 
-  var interval = seconds / 31536000;
+  let interval = seconds / 31536000;
 
   if (interval > 1) {
     return Math.floor(interval) + " years";

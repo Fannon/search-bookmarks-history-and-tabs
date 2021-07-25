@@ -19,9 +19,17 @@ The extension can only be installed locally right now, as it has not been publis
 ## Tipps & Tricks
 * This extension can (and should!) be triggered via keyboard shortcut.
   * The default is `CTRL` + `.`
+* If you start your query with `+`: only history will be searched
+* If you start your query with `-`: only bookmarks will be searched
+* Fuse.js Extended Search operators can be used:
+  * https://fusejs.io/examples.html#extended-search
 * You can tag your bookmarks by just adding `#one tag` or `#first #second` tags to it after the title.
-* If you want to search for bookmark tags, start your query with `#`
-* If you want to search for bookmark folders, start with `>`
+* If you want to search for bookmark tags:
+  * Start your query with `#` for fuzzy search
+  * Start your query with `'#` for more precise search
+* If you want to search for bookmark folders:
+  * Start your query with `>` for fuzzy search
+  * Start your query with `'>` for more precise search
 
 ## Credits
 
