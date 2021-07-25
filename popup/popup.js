@@ -20,6 +20,7 @@ ext.options = {
 
   // Search options
   search: {
+    library: 'elasticlunr',
     maxResults: 128,
     minMatchCharLength: 2,
     threshold: 0.4,
@@ -39,7 +40,7 @@ ext.options = {
   history: {
     enabled: true,
     daysAgo: 5,
-    maxItems: 8,
+    maxItems: 128,
   }
 }
 
@@ -79,13 +80,17 @@ async function initExtension() {
   performance.mark('initialized-data')
 
   // Use flexsearch
-  ext.data.index = initializeFlexSearch(searchData)
+  if (ext.options.search.library === 'elasticlunr') {
+    ext.data.index = inizializeElasticLunrSearch(searchData)
+  } else if (ext.options.search.library === 'fusejs') {
+
+  }
 
   performance.mark('initialized-search')
 
   // Register Events
   // ext.searchInput.addEventListener("keyup", searchWithFuseJs);
-  ext.searchInput.addEventListener("keyup", searchWithFlexSearch);
+  ext.searchInput.addEventListener("keyup", searchWithElasticLunr);
   document.addEventListener("keydown", navigationKeyListener);
 
   // Do some performance measurements and log it to debug
@@ -97,34 +102,19 @@ async function initExtension() {
   performance.clearMeasures()
 }
 
-function initializeFlexSearch(searchData) {
-  const index = new FlexSearch.Document({
-    tokenize: "strict",
-    optimize: true,
-    minlength: 2,
-    document: {
-      id: "id",
-      index: [{
-        field: "title",
-        resolution: 10
-      }, {
-        field: "tags",
-        resolution: 7,
-      },
-      {
-        field: "url",
-        resolution: 5,
-      }, {
-        field: "folder",
-        resolution: 2,
-      }]
-    }
-  });
+function inizializeElasticLunrSearch(searchData) {
+  ext.data.index = elasticlunr();
+  ext.data.index.addField('title');
+  ext.data.index.addField('tags');
+  ext.data.index.addField('url');
+  ext.data.index.addField('folder');
+  ext.data.index.setRef('id');
 
   for (const entry of searchData) {
-    index.add(entry)
+    ext.data.index.addDoc(entry)
   }
-  return index
+
+  return ext.data.index
 }
 
 /**
@@ -236,7 +226,7 @@ async function getSearchData() {
 // SEARCH                               //
 //////////////////////////////////////////
 
-function searchWithFlexSearch(event) {
+function searchWithElasticLunr(event) {
   const searchTerm = ext.searchInput.value ? ext.searchInput.value.trim() : ''
 
   performance.mark('search-start: ' + searchTerm)
@@ -251,40 +241,39 @@ function searchWithFlexSearch(event) {
   } else {
 
     let searchResult = ext.data.index.search(searchTerm, {
-      limit: ext.options.search.maxResults,
-      suggest: true,
-      enrich: true,
-      // bool: 'and'
-    })
+      fields: {
+        title: { boost: 10, bool: "AND" },
+        tags: { boost: 7 },
+        url: { boost: 5 },
+        folder: { boost: 2 },
+      },
+      expand: true,
+    });
 
     // Move all history results to the bottom
-    // if (ext.options.search.lowPrioHistory) {
-    //   searchResult = [
-    //     ...searchResult.filter(el => el.item.type === 'bookmark'),
-    //     ...searchResult.filter(el => el.item.type === 'history'),
-    //   ]
-    // }
+    if (ext.options.search.lowPrioHistory) {
+      searchResult = [
+        ...searchResult.filter(el => el.doc.type === 'bookmark'),
+        ...searchResult.filter(el => el.doc.type === 'history'),
+      ]
+    }
 
+    // TODO: no highlighting with elasticlunr yet
     // const highlighted = highlightSearchMatches(searchResult)
 
     ext.data.result = []
 
     for (const entry of searchResult) {
-
+      ext.data.result.push({
+        ...entry.doc,
+        titleHighlighted: entry.doc.title,
+        tagsHighlighted: entry.doc.tags,
+        urlHighlighted: entry.doc.url,
+        folderHighlighted: entry.doc.folder,
+        score: Math.round(entry.score),
+      })
     }
-    
-    console.log(searchResult)
 
-    // ext.data.result = searchResult.map((el, index) => {
-    //   return {
-    //     ...el.item,
-    //     titleHighlighted: highlighted[index].title,
-    //     tagsHighlighted: highlighted[index].tags,
-    //     urlHighlighted: highlighted[index].url,
-    //     folderHighlighted: highlighted[index].folder,
-    //     score: 100 - Math.round(el.score || 0 * 100),
-    //   }
-    // })
     ext.data.currentItem = 0
   }
   renderResult(ext.data.result)
