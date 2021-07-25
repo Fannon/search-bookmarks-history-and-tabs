@@ -9,6 +9,8 @@
     "node-sass": "^6.0.1"
   },
   "scripts": {
+    "build": "npm run css-build && npm run create-dist",
+    "create-dist": "sh bin/createDist.sh",
     "css-build": "node-sass sass/popup.scss popup/popup.css --omit-source-map-url --output-style compressed",
     "css-watch": "npm run css-build -- --watch"
   },

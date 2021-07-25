@@ -15,6 +15,7 @@ ext.options = {
     lastVisit: true,
     removeDuplicateUrls: true, // TODO: This does not find all duplicates yet
     removeNonHttpLinks: true,
+    extendedSearch: false,
   },
 
   // Search options
@@ -22,7 +23,6 @@ ext.options = {
     maxResults: 128,
     minMatchCharLength: 2,
     threshold: 0.4,
-    distance: 120,
     titleWeight: 10,
     tagWeight: 7,
     urlWeight: 5,
@@ -79,13 +79,13 @@ async function initExtension() {
 
   // Inut fuse.js for fuzzy search
   ext.Fuse = Fuse;
-  ext.fuse = initializeSearch(searchData)
+  ext.fuse = initializeFuseJsSearch(searchData)
 
   performance.mark('initialized-search')
 
   // Register Events
-  ext.searchInput.addEventListener("keyup", search);
-  document.addEventListener("keyup", keyUpListener);
+  ext.searchInput.addEventListener("keyup", searchWithFuseJs);
+  document.addEventListener("keydown", navigationKeyListener);
 
   // Do some performance measurements and log it to debug
   performance.mark('init-complete')
@@ -96,17 +96,20 @@ async function initExtension() {
   performance.clearMeasures()
 }
 
-
-function initializeSearch(searchData) {
+/**
+ * Initialize search with Fuse.js
+ */
+function initializeFuseJsSearch(searchData) {
   const options = {
     isCaseSensitive: false,
+    useExtendedSearch: ext.options.general.extendedSearch,
     includeScore: ext.options.general.score,
     includeMatches: true,
     maxPatternLength: 32,
     shouldSort: true,
     minMatchCharLength: ext.options.search.minMatchCharLength,
     threshold: ext.options.search.threshold,
-    distance: ext.options.search.distance,
+    ignoreLocation: true,
     keys: [{
       name: 'title',
       weight: ext.options.search.titleWeight,
@@ -195,7 +198,12 @@ async function getSearchData() {
 // SEARCH                               //
 //////////////////////////////////////////
 
-function search(event) {
+/**
+ * Uses Fuse.js to do a fuzzy search
+ * 
+ * @see https://fusejs.io/
+ */
+function searchWithFuseJs(event) {
 
   const searchTerm = ext.searchInput.value ? ext.searchInput.value.trim() : ''
 
@@ -216,7 +224,7 @@ function search(event) {
       searchResult = searchResult.slice(0, ext.options.search.maxResults)
     }
 
-    const highlighted = highlightSearchResult(searchResult)
+    const highlighted = highlightSearchMatches(searchResult)
 
     // TODO: This second mapping could be avoided by merging it with highlightSearchResult()
     ext.data.result = searchResult.map((el, index) => {
@@ -277,25 +285,25 @@ function renderResult(result) {
     titleDiv.appendChild(titleLink)
     if (ext.options.general.tags && resultEntry.tags) {
       const tags = document.createElement('span')
-      tags.classList.add('tags')
+      tags.classList.add('badge', 'tags')
       tags.innerHTML = resultEntry.tagsHighlighted
       titleDiv.appendChild(tags)
     }
     if (resultEntry.folder) {
       const folder = document.createElement('span')
-      folder.classList.add('folder')
+      folder.classList.add('badge', 'folder')
       folder.innerHTML = resultEntry.folderHighlighted
       titleDiv.appendChild(folder)
     }
     if (ext.options.general.lastVisit && resultEntry.lastVisit) {
       const lastVisited = document.createElement('span')
-      lastVisited.classList.add('last-visited')
-      lastVisited.innerText = resultEntry.lastVisit + ' ago'
+      lastVisited.classList.add('badge', 'last-visited')
+      lastVisited.innerText = '-' + resultEntry.lastVisit
       titleDiv.appendChild(lastVisited)
     }
     if (ext.options.general.score && resultEntry.score) {
       const score = document.createElement('span')
-      score.classList.add('score')
+      score.classList.add('badge', 'score')
       score.innerText = resultEntry.score
       titleDiv.appendChild(score)
     }
@@ -317,10 +325,10 @@ function renderResult(result) {
 }
 
 /**
- * General key up listender that detects keyboard navigation
+ * General key listener that detects keyboard navigation
  * -> Arrow up, Arrow Down, Enter
  */
-function keyUpListener(event) {
+function navigationKeyListener(event) {
   if (event.key === 'ArrowUp' && ext.data.currentItem > 0) {
     ext.data.currentItem--
     selectListItem(ext.data.currentItem)
@@ -368,18 +376,17 @@ function openListItemLink(event) {
  * Apply the fuse.js search indexes to highlight found instances of text
  * 
  * TODO: Optimize this?
+ * TODO: Try out simpler approach (no fuzzy):
+ *       https://bitsofco.de/a-one-line-solution-to-highlighting-search-matches/
  * @see https://gist.github.com/evenfrost/1ba123656ded32fb7a0cd4651efd4db0
  */
-function highlightSearchResult(fuseSearchResult) {
-  const highlightClassName = 'highlight'
+function highlightSearchMatches(fuseSearchResult) {
   const set = (obj, path, value) => {
     const pathValue = path.split('.');
     let i;
-
     for (i = 0; i < pathValue.length - 1; i++) {
       obj = obj[pathValue[i]];
     }
-
     obj[pathValue[i]] = value;
   };
 
@@ -392,9 +399,9 @@ function highlightSearchResult(fuseSearchResult) {
 
       content += [
         inputText.substring(nextUnhighlightedRegionStartingIndex, region[0]),
-        `<span class="${highlightClassName}">`,
+        `<mark>`,
         inputText.substring(region[0], lastRegionNextIndex),
-        '</span>',
+        '</mark>',
       ].join('');
 
       nextUnhighlightedRegionStartingIndex = lastRegionNextIndex;

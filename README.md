@@ -17,7 +17,8 @@ The extension can only be installed locally right now, as it has not been publis
 ![Screenshot](/images/screenshot.png "Screenshot")
 
 ## Tipps & Tricks
-
+* This extension can (and should!) be triggered via keyboard shortcut.
+  * The default is `CTRL` + `.`
 * You can tag your bookmarks by just adding `#one tag` or `#first #second` tags to it after the title.
 * If you want to search for bookmark tags, start your query with `#`
 * If you want to search for bookmark folders, start with `>`
@@ -26,3 +27,5 @@ The extension can only be installed locally right now, as it has not been publis
 * Make extension configurable via UI
 * Add a Dark Theme
 * Allow to quick edit bookmark title (e.g. to add tags)?
+* Try other search approaches / libraries
+  * https://github.com/nextapps-de/flexsearch 

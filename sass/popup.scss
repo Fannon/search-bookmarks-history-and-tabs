@@ -6,8 +6,12 @@
 body {
   width: 500px;
   height: 600px;
-  background: #EEE;
+  background: #eee;
   padding: 0;
+}
+
+mark {
+  background-color: rgba(243, 251, 114, 0.7);
 }
 
 #popup {
@@ -23,8 +27,8 @@ body {
   border-radius: 0;
   border: none;
   outline: none;
-  background: #FFF;
-  border-bottom: 1px solid #CCC;
+  background: #fff;
+  border-bottom: 1px solid #ccc;
 }
 
 #result-list {
@@ -36,7 +40,7 @@ body {
 }
 
 #result-list li {
-  background-color: #FFF;
+  background-color: #fff;
   margin: 0 0 4px 0;
   padding: 4px;
   border-radius: 3px;
@@ -52,65 +56,47 @@ body {
   color: #333;
   margin-right: 4px;
 }
+#result-list .badge {
+  color: #fff;
+  font-size: 11px;
+  border-radius: 3px;
+  padding: 1px 3px 2px 3px;
+  margin-right: 4px;
+  white-space: nowrap;
+  display: inline;
+  position: relative;
+  top: -3px;
+}
+
 #result-list .tags {
   background: #557292;
-  color: #FFF;
-  border-radius: 3px;
-  padding: 2px 3px 3px 3px;
-  margin-right: 4px;
-  font-size: 10px;
-  white-space:nowrap;
-  display: inline;
 }
 #result-list .tags .divider:before {
   content: " ";
 }
-
 #result-list .folder {
   background: #559292;
-  color: #FFF;
-  border-radius: 3px;
-  padding: 2px 3px 3px 3px;
-  margin-right: 4px;
-  font-size: 10px;
-  white-space:nowrap;
 }
 #result-list .folder .divider:before {
   content: " \276F \0020";
 }
 #result-list .last-visited {
   background: rgb(158, 206, 47);
-  color: #FFF;
-  border-radius: 3px;
-  padding: 2px 3px 3px 3px;
-  margin-right: 4px;
-  font-size: 10px;
-  white-space:nowrap;
 }
 #result-list .score {
-  background: #AFAFAF;
-  color: #FFF;
-  border-radius: 3px;
-  padding: 2px 3px 3px 3px;
-  margin-right: 4px;
-  font-size: 10px;
-  white-space:nowrap;
+  background: #afafaf;
   // float: right;
 }
 #result-list .url {
-  font-size: 12px;
+  font-size: 13px;
   margin: 0;
   overflow: hidden;
   white-space: nowrap;
 }
 
-#result-list .highlight {
-  background-color: rgba(243, 251, 114, 0.5);
-}
-
 #result-list li#selected,
 #result-list li:hover {
-  background-color: #DADADA;
+  background-color: #dadada;
 }
 #result-list li.bookmark {
   border-left: 4px solid #559292;
@@ -126,7 +112,7 @@ body {
   padding-left: 4px;
 }
 #result-list::-webkit-scrollbar-track {
-  background: #DDD;
+  background: #ddd;
   padding-left: 2px;
 }
 #result-list::-webkit-scrollbar-thumb {
