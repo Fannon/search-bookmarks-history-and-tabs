@@ -12,9 +12,9 @@ The extension can only be installed locally right now, as it has not been publis
 > This extension is WIP and only for private use first.
 > It is rather configurable, but you need to change the options in `popup/popup.js`
 
-## Screenshots and Demo
+## Demo
 
-![Screenshot](/images/screenshot.png "Screenshot")
+![Demo GIF](/images/bookmark-and-history-search.gif "Demo GIF")
 
 ## Tipps & Tricks
 * This extension can (and should!) be triggered via keyboard shortcut.
