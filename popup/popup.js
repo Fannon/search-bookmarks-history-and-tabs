@@ -78,14 +78,14 @@ async function initExtension() {
 
   performance.mark('initialized-data')
 
-  // Inut fuse.js for fuzzy search
-  ext.Fuse = Fuse;
-  ext.fuse = initializeFuseJsSearch(searchData)
+  // Use flexsearch
+  ext.data.index = initializeFlexSearch(searchData)
 
   performance.mark('initialized-search')
 
   // Register Events
-  ext.searchInput.addEventListener("keyup", searchWithFuseJs);
+  // ext.searchInput.addEventListener("keyup", searchWithFuseJs);
+  ext.searchInput.addEventListener("keyup", searchWithFlexSearch);
   document.addEventListener("keydown", navigationKeyListener);
 
   // Do some performance measurements and log it to debug
@@ -95,6 +95,36 @@ async function initExtension() {
   performance.measure('initializeSearch', 'initialized-data', 'initialized-search');
   console.debug('Init Performance', performance.getEntriesByType("measure"));
   performance.clearMeasures()
+}
+
+function initializeFlexSearch(searchData) {
+  const index = new FlexSearch.Document({
+    tokenize: "strict",
+    optimize: true,
+    minlength: 2,
+    document: {
+      id: "id",
+      index: [{
+        field: "title",
+        resolution: 10
+      }, {
+        field: "tags",
+        resolution: 7,
+      },
+      {
+        field: "url",
+        resolution: 5,
+      }, {
+        field: "folder",
+        resolution: 2,
+      }]
+    }
+  });
+
+  for (const entry of searchData) {
+    index.add(entry)
+  }
+  return index
 }
 
 /**
@@ -194,12 +224,76 @@ async function getSearchData() {
     }
   }
 
+  // Add index to each result item
+  for (let i = 0; i < result.length; i++) {
+    result[i].id = i
+  }
+
   return result
 }
 
 //////////////////////////////////////////
 // SEARCH                               //
 //////////////////////////////////////////
+
+function searchWithFlexSearch(event) {
+  const searchTerm = ext.searchInput.value ? ext.searchInput.value.trim() : ''
+
+  performance.mark('search-start: ' + searchTerm)
+
+  if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter') {
+    // Dont execute search on navigation keys
+    return
+  }
+
+  if (searchTerm === '') {
+    ext.data.result = []
+  } else {
+
+    let searchResult = ext.data.index.search(searchTerm, {
+      limit: ext.options.search.maxResults,
+      suggest: true,
+      enrich: true,
+      // bool: 'and'
+    })
+
+    // Move all history results to the bottom
+    // if (ext.options.search.lowPrioHistory) {
+    //   searchResult = [
+    //     ...searchResult.filter(el => el.item.type === 'bookmark'),
+    //     ...searchResult.filter(el => el.item.type === 'history'),
+    //   ]
+    // }
+
+    // const highlighted = highlightSearchMatches(searchResult)
+
+    ext.data.result = []
+
+    for (const entry of searchResult) {
+
+    }
+    
+    console.log(searchResult)
+
+    // ext.data.result = searchResult.map((el, index) => {
+    //   return {
+    //     ...el.item,
+    //     titleHighlighted: highlighted[index].title,
+    //     tagsHighlighted: highlighted[index].tags,
+    //     urlHighlighted: highlighted[index].url,
+    //     folderHighlighted: highlighted[index].folder,
+    //     score: 100 - Math.round(el.score || 0 * 100),
+    //   }
+    // })
+    ext.data.currentItem = 0
+  }
+  renderResult(ext.data.result)
+
+  performance.mark('search-end: ' + searchTerm)
+  performance.measure('search: ' + searchTerm, 'search-start: ' + searchTerm, 'search-end: ' + searchTerm);
+  console.debug('Search Performance', performance.getEntriesByType("measure"));
+  performance.clearMeasures()
+}
 
 /**
  * Uses Fuse.js to do a fuzzy search
@@ -460,7 +554,7 @@ async function getChromeHistory(daysBack, maxResults) {
 /**
  * Recursive function to return bookmarks in our internal, flat array format
  */
- function convertChromeBookmarks(bookmarks, folderTrail) {
+function convertChromeBookmarks(bookmarks, folderTrail) {
   let result = []
   folderTrail = folderTrail || []
 
@@ -502,7 +596,7 @@ async function getChromeHistory(daysBack, maxResults) {
       result = result.concat(convertChromeBookmarks(entry.children, newFolderTrail))
     }
   }
-  
+
   return result
 }
 
@@ -533,7 +627,7 @@ function convertChromeHistory(history) {
  * 
  * @see https://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
  */
- function timeSince(date) {
+function timeSince(date) {
 
   var seconds = Math.floor((new Date() - date) / 1000);
 
