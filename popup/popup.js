@@ -13,13 +13,13 @@ ext.options = {
     highlight: true, // TODO: Skip highlight processing if false
     score: false,
     lastVisit: true,
-    removeDuplicateUrls: true,
+    removeDuplicateUrls: true, // TODO: This does not find all duplicates yet
     removeNonHttpLinks: true,
   },
 
   // Search options
   search: {
-    maxResults: 64,
+    maxResults: 128,
     minMatchCharLength: 2,
     threshold: 0.4,
     distance: 120,

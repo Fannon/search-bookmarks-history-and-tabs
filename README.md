@@ -19,11 +19,10 @@ The extension can only be installed locally right now, as it has not been publis
 ## Tipps & Tricks
 
 * You can tag your bookmarks by just adding `#one tag` or `#first #second` tags to it after the title.
-* If you want to search for tags, start your query with `#`
-* If you want to search for a folder, start with `>`
+* If you want to search for bookmark tags, start your query with `#`
+* If you want to search for bookmark folders, start with `>`
 
 ## Ideas and To Dos
-* Add a proper icon :)
 * Make extension configurable via UI
 * Add a Dark Theme
 * Allow to quick edit bookmark title (e.g. to add tags)?
