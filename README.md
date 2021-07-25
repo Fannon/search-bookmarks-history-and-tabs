@@ -23,6 +23,12 @@ The extension can only be installed locally right now, as it has not been publis
 * If you want to search for bookmark tags, start your query with `#`
 * If you want to search for bookmark folders, start with `>`
 
+## Credits
+
+This extension makes use of the following helpful open-source projects (thanks!):
+* https://bulma.io/
+* https://fusejs.io/
+
 ## Ideas and To Dos
 * Make extension configurable via UI
 * Add a Dark Theme
