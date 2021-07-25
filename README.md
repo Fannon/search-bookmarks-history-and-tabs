@@ -1,12 +1,18 @@
 # search-bookmarks-and-history
-Chrome Extension to fuzzy search bookmarks and history.
+
+Chrome extension to search bookmarks and history.
+
+It also supports searching for bookmark folder names and tags.
 
 ## Installation
+
+### Developer Installation
 
 The extension can only be installed locally right now, as it has not been published to the store.
 
 * Check out this extension via git or .zip download
 * Go to chrome://extensions/ 
+  * Enable "Developer mode"
   * Load unpacked and open the root folder of this repository
 
 > This extension is WIP and only for private use first.

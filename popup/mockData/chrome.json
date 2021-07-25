@@ -1,0 +1,434 @@
+{
+  "bookmarks": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "dateAdded": 1627220684098,
+                  "id": "6",
+                  "index": 0,
+                  "parentId": "5",
+                  "title": "quicktype generator #json #json-schema",
+                  "url": "https://app.quicktype.io/"
+                },
+                {
+                  "dateAdded": 1627220684100,
+                  "id": "7",
+                  "index": 1,
+                  "parentId": "5",
+                  "title": "JSON Editor #json",
+                  "url": "https://www.jsoneditoronline.org/"
+                },
+                {
+                  "dateAdded": 1627220684100,
+                  "id": "8",
+                  "index": 2,
+                  "parentId": "5",
+                  "title": "JSON Generator – tool for generating random JSON data",
+                  "url": "https://next.json-generator.com/"
+                },
+                {
+                  "dateAdded": 1627220684100,
+                  "id": "9",
+                  "index": 3,
+                  "parentId": "5",
+                  "title": "JSON Parser",
+                  "url": "http://json.parser.online.fr/beta/"
+                },
+                {
+                  "dateAdded": 1627220684100,
+                  "id": "10",
+                  "index": 4,
+                  "parentId": "5",
+                  "title": "CodePen",
+                  "url": "http://codepen.io/pen/"
+                },
+                {
+                  "dateAdded": 1627220684100,
+                  "id": "11",
+                  "index": 5,
+                  "parentId": "5",
+                  "title": "JSFiddle",
+                  "url": "https://jsfiddle.net/"
+                },
+                {
+                  "dateAdded": 1627220684100,
+                  "id": "12",
+                  "index": 6,
+                  "parentId": "5",
+                  "title": "DevDocs",
+                  "url": "http://devdocs.io/"
+                },
+                {
+                  "dateAdded": 1627220684100,
+                  "id": "13",
+                  "index": 7,
+                  "parentId": "5",
+                  "title": "file.io - Ephemeral file sharing",
+                  "url": "https://www.file.io/"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "14",
+                  "index": 8,
+                  "parentId": "5",
+                  "title": "ASCIIFlow Infinity",
+                  "url": "http://asciiflow.com/"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "15",
+                  "index": 9,
+                  "parentId": "5",
+                  "title": "HTTP-Bin",
+                  "url": "https://httpbin.org/"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "16",
+                  "index": 10,
+                  "parentId": "5",
+                  "title": "Neutrino General Purpose API",
+                  "url": "https://www.neutrinoapi.com/"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "17",
+                  "index": 11,
+                  "parentId": "5",
+                  "title": "Convert JSON to YAML",
+                  "url": "http://www.json2yaml.com/"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "18",
+                  "index": 12,
+                  "parentId": "5",
+                  "title": "Mergely - Diff online, merge documents",
+                  "url": "http://www.mergely.com/editor"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "19",
+                  "index": 13,
+                  "parentId": "5",
+                  "title": "regex101",
+                  "url": "https://regex101.com/"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "20",
+                  "index": 14,
+                  "parentId": "5",
+                  "title": "JavaScript Visualizer",
+                  "url": "https://javascriptvisualizer.com/"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "21",
+                  "index": 15,
+                  "parentId": "5",
+                  "title": "Scratchpad | Guesstimate",
+                  "url": "https://www.getguesstimate.com/scratchpad"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "22",
+                  "index": 16,
+                  "parentId": "5",
+                  "title": "markdownTables",
+                  "url": "https://jmalarcon.github.io/markdowntables/"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "23",
+                  "index": 17,
+                  "parentId": "5",
+                  "title": "Try pandoc!",
+                  "url": "https://pandoc.org/try/"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "24",
+                  "index": 18,
+                  "parentId": "5",
+                  "title": "Excalidraw | Hand-drawn look & feel • Collaborative • Secure",
+                  "url": "https://excalidraw.com/"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "25",
+                  "index": 19,
+                  "parentId": "5",
+                  "title": "OBS.Ninja",
+                  "url": "https://obs.ninja/"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "26",
+                  "index": 20,
+                  "parentId": "5",
+                  "title": "vdo.ninja invite link generator",
+                  "url": "https://invite.vdo.ninja/"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "27",
+                  "index": 21,
+                  "parentId": "5",
+                  "title": "ACRN",
+                  "url": "https://generalfuzz.net/acrn/"
+                },
+                {
+                  "dateAdded": 1627220684101,
+                  "id": "28",
+                  "index": 22,
+                  "parentId": "5",
+                  "title": "Chrome Web Store - Developer Dashboard",
+                  "url": "https://chrome.google.com/webstore/devconsole/1a52e4dd-3773-4dfb-94b4-89e431a09fed"
+                }
+              ],
+              "dateAdded": 1627220684098,
+              "dateGroupModified": 1627220684101,
+              "id": "5",
+              "index": 0,
+              "parentId": "1",
+              "title": "Tools"
+            },
+            {
+              "children": [
+                {
+                  "dateAdded": 1627220693130,
+                  "id": "30",
+                  "index": 0,
+                  "parentId": "29",
+                  "title": "Fefes Blog",
+                  "url": "https://blog.fefe.de/"
+                },
+                {
+                  "dateAdded": 1627220693130,
+                  "id": "31",
+                  "index": 1,
+                  "parentId": "29",
+                  "title": "martinfowler.com",
+                  "url": "https://martinfowler.com/"
+                },
+                {
+                  "dateAdded": 1627220693130,
+                  "id": "32",
+                  "index": 2,
+                  "parentId": "29",
+                  "title": "Ben Morris. Software architecture.",
+                  "url": "https://www.ben-morris.com/"
+                },
+                {
+                  "dateAdded": 1627220693130,
+                  "id": "33",
+                  "index": 3,
+                  "parentId": "29",
+                  "title": "apenwarr.ca",
+                  "url": "https://apenwarr.ca/log/"
+                },
+                {
+                  "dateAdded": 1627220693130,
+                  "id": "34",
+                  "index": 4,
+                  "parentId": "29",
+                  "title": "berthub.eu",
+                  "url": "https://berthub.eu/articles/"
+                },
+                {
+                  "dateAdded": 1627220693130,
+                  "id": "35",
+                  "index": 5,
+                  "parentId": "29",
+                  "title": "deal architect ",
+                  "url": "https://dealarchitect.typepad.com/deal_architect/"
+                },
+                {
+                  "dateAdded": 1627220693130,
+                  "id": "36",
+                  "index": 6,
+                  "parentId": "29",
+                  "title": "Slate Star Codex",
+                  "url": "https://slatestarcodex.com/"
+                },
+                {
+                  "dateAdded": 1627220693130,
+                  "id": "37",
+                  "index": 7,
+                  "parentId": "29",
+                  "title": "Astral Codex Ten",
+                  "url": "https://astralcodexten.substack.com/"
+                },
+                {
+                  "dateAdded": 1627220693130,
+                  "id": "38",
+                  "index": 8,
+                  "parentId": "29",
+                  "title": "Martin Rue – Articles",
+                  "url": "https://martinrue.com/articles/"
+                },
+                {
+                  "dateAdded": 1627220693130,
+                  "id": "39",
+                  "index": 9,
+                  "parentId": "29",
+                  "title": "Overreacted — A blog by Dan Abramov",
+                  "url": "https://overreacted.io/"
+                },
+                {
+                  "dateAdded": 1627220693130,
+                  "id": "40",
+                  "index": 10,
+                  "parentId": "29",
+                  "title": "Who is Scott Alexander and what is he about?",
+                  "url": "https://jasoncrawford.org/guide-to-scott-alexander-and-slate-star-codex"
+                },
+                {
+                  "dateAdded": 1627220693130,
+                  "id": "41",
+                  "index": 11,
+                  "parentId": "29",
+                  "title": "Articles | Mathias Lafeldt",
+                  "url": "https://sharpend.io/"
+                },
+                {
+                  "dateAdded": 1627220693130,
+                  "id": "42",
+                  "index": 12,
+                  "parentId": "29",
+                  "title": "Homepage | Dilbert by Scott Adams",
+                  "url": "https://dilbert.com/"
+                }
+              ],
+              "dateAdded": 1627220693129,
+              "dateGroupModified": 1627220693130,
+              "id": "29",
+              "index": 1,
+              "parentId": "1",
+              "title": "Blogs"
+            }
+          ],
+          "dateAdded": 1627219418121,
+          "id": "1",
+          "index": 0,
+          "parentId": "0",
+          "title": "Lesezeichenleiste"
+        },
+        {
+          "children": [],
+          "dateAdded": 1627219418121,
+          "id": "2",
+          "index": 1,
+          "parentId": "0",
+          "title": "Weitere Lesezeichen"
+        }
+      ],
+      "dateAdded": 1627243998992,
+      "id": "0",
+      "title": ""
+    }
+  ],
+  "history": [
+    {
+      "id": "13",
+      "lastVisitTime": 1627244145754.936,
+      "title": "Chrome Web Store - Erweiterungen",
+      "typedCount": 0,
+      "url": "https://chrome.google.com/webstore/category/extensions?hl=de",
+      "visitCount": 1
+    },
+    {
+      "id": "12",
+      "lastVisitTime": 1627244145486.889,
+      "title": "Chrome Web Store - Erweiterungen",
+      "typedCount": 0,
+      "url": "https://chrome.google.com/webstore?hl=de",
+      "visitCount": 1
+    },
+    {
+      "id": "11",
+      "lastVisitTime": 1627244144357.927,
+      "title": "chrome web store - Google Suche",
+      "typedCount": 0,
+      "url": "https://www.google.com/search?q=chrome+web+store&oq=chrome+web+store&aqs=chrome.0.69i59j0l6j69i65.2604j0j7&sourceid=chrome&ie=UTF-8",
+      "visitCount": 2
+    },
+    {
+      "id": "10",
+      "lastVisitTime": 1627244127470.8818,
+      "title": "Portfolio: Simon Heimler",
+      "typedCount": 1,
+      "url": "https://simon-heimler.de/",
+      "visitCount": 1
+    },
+    {
+      "id": "9",
+      "lastVisitTime": 1627244050377.419,
+      "title": "JSON Schema | The home of JSON Schema",
+      "typedCount": 0,
+      "url": "https://json-schema.org/",
+      "visitCount": 1
+    },
+    {
+      "id": "8",
+      "lastVisitTime": 1627244048444.0862,
+      "title": "JSON Schema - Google Suche",
+      "typedCount": 0,
+      "url": "https://www.google.com/search?q=JSON+Schema&oq=JSON+Schema&aqs=chrome..69i57j0l9.1625j0j15&sourceid=chrome&ie=UTF-8",
+      "visitCount": 2
+    },
+    {
+      "id": "7",
+      "lastVisitTime": 1627242087546.5159,
+      "title": "JSON Generator",
+      "typedCount": 0,
+      "url": "https://next.json-generator.com/",
+      "visitCount": 1
+    },
+    {
+      "id": "6",
+      "lastVisitTime": 1627242080761.473,
+      "title": "hckr news - Hacker News sorted by time",
+      "typedCount": 1,
+      "url": "https://hckrnews.com/",
+      "visitCount": 3
+    },
+    {
+      "id": "3",
+      "lastVisitTime": 1627242076809.577,
+      "title": "Json Parser Online",
+      "typedCount": 0,
+      "url": "http://json.parser.online.fr/beta/",
+      "visitCount": 3
+    },
+    {
+      "id": "5",
+      "lastVisitTime": 1627242015027.691,
+      "title": "JSON Editor Online - view, edit and format JSON online",
+      "typedCount": 0,
+      "url": "https://jsoneditoronline.org/",
+      "visitCount": 2
+    },
+    {
+      "id": "2",
+      "lastVisitTime": 1627221134898.613,
+      "title": "chrome web store - Google Suche",
+      "typedCount": 0,
+      "url": "https://www.google.com/search?q=chrome+web+store&oq=chrome+web+store&aqs=chrome..69i57j0l6j69i65.1715j0j7&sourceid=chrome&ie=UTF-8",
+      "visitCount": 4
+    },
+    {
+      "id": "1",
+      "lastVisitTime": 1627220707158.5432,
+      "title": "Google",
+      "typedCount": 1,
+      "url": "https://www.google.de/",
+      "visitCount": 1
+    }
+  ]
+}

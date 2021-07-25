@@ -150,12 +150,17 @@ async function getSearchData() {
       result = result.concat(convertChromeHistory(chromeHistory))
     }
   } else {
+    console.warn(`No Chrome API found. Switching to local dev mode with mock data only`)
     // Use mock data (for localhost preview / development)
+    // To do this, create a http server (e.g. live-server) in popup/
+    const requestChromeMockData = await fetch('./mockData/chrome.json')
+    const chromeMockData = await requestChromeMockData.json()
+
     if (ext.options.bookmarks.enabled) {
-      result = result.concat(convertChromeBookmarks(window.exampleData.bookmarks))
+      result = result.concat(convertChromeBookmarks(chromeMockData.bookmarks))
     }
     if (ext.options.history.enabled) {
-      result = result.concat(convertChromeHistory(window.exampleData.history))
+      result = result.concat(convertChromeHistory(chromeMockData.history))
     }
   }
 
@@ -223,6 +228,7 @@ function searchWithFuseJs(event) {
 
     // Support for history and bookmark only mode
     // This is detected by looking at the first char of the search
+    // TODO: This could be optimized by having two separate search indexes?
     let historyOnly = false
     let bookmarksOnly = false
     if (searchTerm.startsWith('+')) {
@@ -415,12 +421,12 @@ function openListItemLink(event) {
 function highlightResultItem(resultItem) {
   const highlightedResultItem = {}
   for (const matchItem of resultItem.matches) {
-    
+
     const text = resultItem.item[matchItem.key]
     const result = []
     const matches = [].concat(matchItem.indices);
     let pair = matches.shift()
-    
+
     for (let i = 0; i < text.length; i++) {
       const char = text.charAt(i)
       if (pair && i == pair[0]) {
@@ -435,7 +441,7 @@ function highlightResultItem(resultItem) {
     highlightedResultItem[matchItem.key] = result.join('')
 
     // TODO: Didn't try recursion if it works
-    if (resultItem.children && resultItem.children.length > 0){
+    if (resultItem.children && resultItem.children.length > 0) {
       resultItem.children.forEach((child) => {
         highlightedResultItem[matchItem.key] = highlightResultItem(child);
       });
@@ -468,14 +474,17 @@ async function getChromeHistory(daysBack, maxResults) {
 /**
  * Recursive function to return bookmarks in our internal, flat array format
  */
- function convertChromeBookmarks(bookmarks, folderTrail) {
+function convertChromeBookmarks(bookmarks, folderTrail, depth) {
+  depth = depth || 1
   let result = []
   folderTrail = folderTrail || []
 
   for (const entry of bookmarks) {
 
     let newFolderTrail = folderTrail.slice(); // clone
-    if (entry.title && entry.title !== 'Bookmarks bar') {
+    // Only consider bookmark folders that have a title and have
+    // at least a depth of 2, so we skip the default chrome "system" folders
+    if (entry.title && depth > 2) {
       newFolderTrail = folderTrail.concat(entry.title)
     }
 
@@ -507,10 +516,10 @@ async function getChromeHistory(daysBack, maxResults) {
       })
     }
     if (entry.children) {
-      result = result.concat(convertChromeBookmarks(entry.children, newFolderTrail))
+      result = result.concat(convertChromeBookmarks(entry.children, newFolderTrail, depth + 1))
     }
   }
-  
+
   return result
 }
 
@@ -541,7 +550,7 @@ function convertChromeHistory(history) {
  * 
  * @see https://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
  */
- function timeSince(date) {
+function timeSince(date) {
 
   const seconds = Math.floor((new Date() - date) / 1000);
 

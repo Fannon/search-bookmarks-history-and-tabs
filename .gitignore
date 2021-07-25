@@ -36,5 +36,3 @@ jspm_packages/
 .env
 .env.test
 
-# Local mock data
-popup/data/mockData.js

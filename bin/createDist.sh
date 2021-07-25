@@ -7,11 +7,14 @@ mkdir dist/
 cp manifest.json dist/manifest.json
 cp background.js dist/background.js
 
-cp -r popup/ dist/popup/
-cp -r options/ dist/options/
-
 mkdir dist/images/
 cp images/logo-16.png dist/images/logo-16.png
 cp images/logo-32.png dist/images/logo-32.png
 cp images/logo-48.png dist/images/logo-48.png
 cp images/logo-128.png dist/images/logo-128.png
+
+cp -r popup/ dist/popup/
+cp -r options/ dist/options/
+
+# Remove mock data
+rm -rf dist/popup/mockData
