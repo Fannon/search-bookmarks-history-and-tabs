@@ -27,6 +27,8 @@ The extension can only be installed locally right now, as it has not been publis
 > This extension is WIP and only for private use first.
 > It is rather configurable, but you need to change the options in `popup/popup.js`
 
+To customize the extension options, adjust the `ext.opts` in `popup/popup.js` 
+
 ## How To
 
 * This extension can (and should!) be triggered via keyboard shortcut.
@@ -50,6 +52,7 @@ This extension makes use of the following helpful open-source projects (thanks!)
 * https://fusejs.io/
 
 ## Ideas and To Dos
+
 * Make extension configurable via UI (requires new `storage` permission)
 * Allow to search and navigate open tabs (requires new `tab` permission)
 * Allow to quick add & edit bookmarks (title + tags)
@@ -62,3 +65,4 @@ This extension makes use of the following helpful open-source projects (thanks!)
 * Improve scoring calculation
   * Merge bookmarks with history, so we know when a bookmark has been opened recently / frequently -> higher score
 * Introduce dedicates search mode for tags and folders
+* Index bookmarks and history continually in background, to have faster startup performance

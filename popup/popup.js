@@ -83,7 +83,7 @@ async function initExtension() {
 
   performance.mark('initialized-data')
 
-  // Inut fuse.js for fuzzy search
+  // Initialize fuse.js for fuzzy search
   ext.Fuse = Fuse;
   ext.fuse = initializeFuseJsSearch(searchData)
 
@@ -176,7 +176,7 @@ async function getSearchData() {
   if (ext.opts.general.removeNonHttpLinks) {
     const ignoredLinks = []
     result = result.filter((el) => {
-      if (el.url && el.url.startsWith('http://') || el.url && el.url.startsWith('https://')) {
+      if (el.originalUrl && el.originalUrl.startsWith('http://') || el.originalUrl && el.originalUrl.startsWith('https://')) {
         return el;
       } else {
         ignoredLinks.push(el)
@@ -193,8 +193,8 @@ async function getSearchData() {
     const duplicatedUrls = []
 
     result = result.filter((el) => {
-      if (!knownUrls[el.url]) {
-        knownUrls[el.url] = true
+      if (!knownUrls[el.originalUrl]) {
+        knownUrls[el.originalUrl] = true
         return el
       } else {
         duplicatedUrls.push(el)
@@ -321,7 +321,7 @@ function renderResult(result) {
     // Create result list item (li)
     const resultListItem = document.createElement("li");
     resultListItem.classList.add(resultEntry.type)
-    resultListItem.setAttribute('x-open-url', resultEntry.url)
+    resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
     resultListItem.setAttribute('x-index', i)
     // Register events for mouse navigation
     resultListItem.addEventListener('mouseup', openListItemLink, { passive: true, })
@@ -331,7 +331,7 @@ function renderResult(result) {
     titleDiv = document.createElement('div')
     titleDiv.classList.add('title')
     const titleLink = document.createElement('a');
-    titleLink.setAttribute('href', resultEntry.url);
+    titleLink.setAttribute('href', resultEntry.originalUrl);
     titleLink.setAttribute('target', '_newtab');
     if (ext.opts.general.highlight) {
       titleLink.innerHTML = resultEntry.titleHighlighted;
@@ -362,7 +362,7 @@ function renderResult(result) {
     urlDiv = document.createElement('div')
     urlDiv.classList.add('url')
     const a = document.createElement('a');
-    a.setAttribute('href', resultEntry.url);
+    a.setAttribute('href', resultEntry.originalUrl);
     a.setAttribute('target', '_newtab');
     a.innerHTML = resultEntry.urlHighlighted;
     urlDiv.appendChild(a)
@@ -528,7 +528,8 @@ function convertChromeBookmarks(bookmarks, folderTrail, depth) {
         type: 'bookmark',
         title: title,
         tags: tags,
-        url: entry.url,
+        originalUrl: entry.url,
+        url: cleanUpUrl(entry.url),
         folder: folderText
       })
     }
@@ -550,7 +551,8 @@ function convertChromeHistory(history) {
     result.push({
       type: 'history',
       title: entry.title,
-      url: entry.url,
+      originalUrl: entry.url,
+      url: cleanUpUrl(entry.url),
       visitCount: entry.visitCount,
       lastVisit: timeSince(new Date(entry.lastVisitTime))
     })
@@ -608,3 +610,11 @@ function isInViewport(elem) {
       bounding.right <= (window.innerWidth || document.documentElement.clientWidth)
   );
 };
+
+/**
+ * Remove http:// or http:// and www from URLs
+ * @see https://stackoverflow.com/a/57698415
+ */
+function cleanUpUrl(url) {
+  return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").split('/')[0]
+}
