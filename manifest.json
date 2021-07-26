@@ -3,7 +3,7 @@
   "description": "Search your bookmarks and history",
   "homepage_url": "https://github.com/Fannon/search-bookmarks-and-history",
   "author": "Simon Heimler",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "manifest_version": 3,
   "permissions": [
     "commands",
@@ -22,8 +22,8 @@
   "commands": {
     "_execute_action": {
       "suggested_key": {
-        "default": "Ctrl+Period",
-        "mac": "Command+Period"
+        "default": "Ctrl+Shift+Period",
+        "mac": "Command+Shift+Period"
       }
     }
   },
