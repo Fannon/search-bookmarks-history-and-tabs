@@ -11,7 +11,15 @@ body {
 }
 
 mark {
-  background-color: rgba(243, 251, 114, 0.7);
+  font-weight: bold;
+  color: #356ba9;
+  background: none;
+}
+.tags mark {
+  color: #a8c9ed;
+}
+.folder mark {
+  color: #95e3e3;
 }
 
 #popup {
@@ -83,17 +91,12 @@ mark {
 #result-list .last-visited {
   background: rgb(158, 206, 47);
 }
-#result-list .score {
-  background: #afafaf;
-  // float: right;
-}
 #result-list .url {
   font-size: 13px;
   margin: 0;
   overflow: hidden;
   white-space: nowrap;
 }
-
 #result-list li#selected,
 #result-list li:hover {
   background-color: #dadada;

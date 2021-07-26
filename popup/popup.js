@@ -1,46 +1,51 @@
 performance.mark('init-start')
-const ext = window.ext = {}
+
+const ext = window.ext = {
+  /** Extension functions */
+  fn: {},
+  /** Extension options */
+  options: {},
+  /** Extension data / model */
+  data: {},
+}
 
 //////////////////////////////////////////
 // OPTIONS                              //
 //////////////////////////////////////////
 
-ext.options = {
-
-  // General options
-  general: {
-    tags: true,
-    highlight: true, // TODO: Skip highlight processing if false
-    score: true,
-    lastVisit: true,
-    removeDuplicateUrls: true, // TODO: This does not find all duplicates yet
-    removeNonHttpLinks: true,
-    extendedSearch: true,
-  },
-
-  // Search options
-  search: {
-    maxResults: 128,
-    minMatchCharLength: 2,
-    threshold: 0.4,
-    titleWeight: 10,
-    tagWeight: 7,
-    urlWeight: 5,
-    folderWeight: 2,
-    lowPrioHistory: true
-  },
-
-  // Bookmark options
-  bookmarks: {
-    enabled: true,
-  },
-
-  // History options
-  history: {
-    enabled: true,
-    daysAgo: 5,
-    maxItems: 8,
-  }
+ext.options.general = {
+  /** Extract tags from title and display it as a badge with different search prio */
+  tags: true,
+  /** Highlight search matches in result */
+  highlight: true,
+  /** Display  last visit */
+  lastVisit: true,
+  removeDuplicateUrls: true, // TODO: This does not find all duplicates yet
+  removeNonHttpLinks: true,
+  /**
+   * Enables fuse.js extended search, which additional operators to fine-tune results.
+   * @see https://fusejs.io/examples.html#weighted-search
+   */
+  extendedSearch: true,
+}
+ext.options.search = {
+  maxResults: 128,
+  minMatchCharLength: 2,
+  /** Fuzzy search threshold (increase to increase fuzzyness) */
+  threshold: 0.4,
+  titleWeight: 10,
+  tagWeight: 7,
+  urlWeight: 5,
+  folderWeight: 2,
+  lowPrioHistory: true
+}
+ext.options.bookmarks = {
+  enabled: true,
+}
+ext.options.history = {
+  enabled: true,
+  daysAgo: 5,
+  maxItems: 128,
 }
 
 //////////////////////////////////////////
@@ -104,7 +109,7 @@ function initializeFuseJsSearch(searchData) {
   const options = {
     isCaseSensitive: false,
     useExtendedSearch: ext.options.general.extendedSearch,
-    includeScore: ext.options.general.score,
+    includeScore: true,
     includeMatches: true,
     maxPatternLength: 32,
     shouldSort: true,
@@ -261,16 +266,17 @@ function searchWithFuseJs(event) {
       ]
     }
 
+    ext.data.fuseSearchResult = searchResult
+
     // TODO: This second mapping could be avoided by merging it with highlightSearchResult()
     ext.data.result = searchResult.map((el) => {
-      const highlighted = highlightResultItem(el)
+      const highlighted = ext.options.general.highlight ? highlightResultItem(el) : {}
       return {
         ...el.item,
         titleHighlighted: highlighted.title || el.item.title,
         tagsHighlighted: highlighted.tags || el.item.tags,
         urlHighlighted: highlighted.url || el.item.url,
         folderHighlighted: highlighted.folder || el.item.folder,
-        score: 100 - Math.round(el.score || 0 * 100),
       }
     })
     ext.data.currentItem = 0
@@ -306,8 +312,8 @@ function renderResult(result) {
     if (i === 0) {
       resultListItem.id = 'selected'
     }
-    resultListItem.setAttribute('x-url', resultEntry.url)
-    resultListItem.addEventListener('click', openListItemLink)
+    resultListItem.setAttribute('x-open-url', resultEntry.url)
+    resultListItem.addEventListener('mouseup', openListItemLink, { passive: true, })
 
     // Create title div
     titleDiv = document.createElement('div')
@@ -338,12 +344,6 @@ function renderResult(result) {
       lastVisited.classList.add('badge', 'last-visited')
       lastVisited.innerText = '-' + resultEntry.lastVisit
       titleDiv.appendChild(lastVisited)
-    }
-    if (ext.options.general.score && resultEntry.score) {
-      const score = document.createElement('span')
-      score.classList.add('badge', 'score')
-      score.innerText = resultEntry.score
-      titleDiv.appendChild(score)
     }
 
     // Create URL div
@@ -399,18 +399,16 @@ function selectListItem(index) {
 
 /**
  * Support a click on the whole result list item to be a link
- * TODO:  This is a hacky solution. 
- *        It would be better to change the selection on mouse hover
- *        and on click just execute the selected item
+ * 
+ * TODO: mouse click is not bubbling through to resultItem LI. Hacky fix around that.
  */
 function openListItemLink(event) {
-  let url = event.target.getAttribute('x-url')
-  // Hack, if we accidentally clicked the child div
-  // TODO: This could be solved better :)
+  let url = event.target.getAttribute('x-open-url')
   if (!url) {
-    url = event.target.parentElement.getAttribute('x-url')
+    url = event.target.parentElement.getAttribute('x-open-url')
   }
   if (url) {
+    event.stopPropagation()
     window.open(url, '_newtab')
   }
 }
