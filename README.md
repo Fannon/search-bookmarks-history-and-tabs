@@ -1,7 +1,7 @@
 # search-bookmarks-and-history
 
 Browser extension to search local bookmarks and history.
-Supported Browsers are Google Chrome and Microsoft Edge (based on Chromium)
+Supported Browsers are Google Chrome and Microsoft Edge (based on Chromium).
 
 ## Features
 
@@ -60,7 +60,6 @@ This extension makes use of the following helpful open-source projects (thanks!)
   * quick add current open site via + button
 * Try other search algorithms / libraries that are less fuzzy
   * https://github.com/nextapps-de/flexsearch 
-* Create one index per type (bookmarks, history) to improve performance
 * Add a dark theme
 * Improve scoring calculation
   * Merge bookmarks with history, so we know when a bookmark has been opened recently / frequently -> higher score
