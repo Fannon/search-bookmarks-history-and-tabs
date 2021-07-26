@@ -1,8 +1,16 @@
 # search-bookmarks-and-history
 
-Chrome extension to search bookmarks and history.
+Chrome extension to search local bookmarks and history.
 
-It also supports searching for bookmark folder names and tags.
+## Features
+
+* Local / offline only (no external communication / requests).
+* Searching for bookmark folder names and tags.
+* Lightweight: Vanilla JS, with only a small search library ([Fuse.js](https://fuse.io/)) and a small subset of [BULMA](https://bulma.io/) CSS styles.
+
+## Demo
+
+![Demo GIF](/images/bookmark-and-history-search.gif "Demo GIF")
 
 ## Installation
 
@@ -18,24 +26,21 @@ The extension can only be installed locally right now, as it has not been publis
 > This extension is WIP and only for private use first.
 > It is rather configurable, but you need to change the options in `popup/popup.js`
 
-## Demo
+## How To
 
-![Demo GIF](/images/bookmark-and-history-search.gif "Demo GIF")
-
-## Tipps & Tricks
 * This extension can (and should!) be triggered via keyboard shortcut.
   * The default is `CTRL` + `.`
-* If you start your query with `+`: only history will be searched
-* If you start your query with `-`: only bookmarks will be searched
-* Fuse.js Extended Search operators can be used:
-  * https://fusejs.io/examples.html#extended-search
+* Different search modes are supported
+  * If you start your query with `+ `: only history will be searched
+  * If you start your query with `- `: only bookmarks will be searched
+* [Fuse.js Extended Search](https://fusejs.io/examples.html#extended-search) operators can be used.
 * You can tag your bookmarks by just adding `#one tag` or `#first #second` tags to it after the title.
 * If you want to search for bookmark tags:
   * Start your query with `#` for fuzzy search
-  * Start your query with `'#` for more precise search
+  * Start your query with `^#` or `'#` for more precise search
 * If you want to search for bookmark folders:
   * Start your query with `>` for fuzzy search
-  * Start your query with `'>` for more precise search
+  * Start your query with `^>` or `'>` for more precise search
 
 ## Credits
 
@@ -55,3 +60,4 @@ This extension makes use of the following helpful open-source projects (thanks!)
 * Create one index per type (bookmarks, history) to improve performance
 * Improve scoring calculation
   * Merge bookmarks with history, so we know when a bookmark has been opened recently / frequently -> higher score
+* Introduce dedicates search mode for tags and folders

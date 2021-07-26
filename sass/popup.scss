@@ -1,13 +1,15 @@
 @charset "utf-8";
-@import "../node_modules/bulma/sass/base/_all.sass";
-
-// @import "node_modules/bulma/sass/utilities/_all.sass"
+@import "../node_modules/bulma/sass/base/minireset.sass";
+@import "../node_modules/bulma/sass/base/generic.sass";
 
 body {
   width: 500px;
   height: 600px;
   background: #eee;
   padding: 0;
+}
+a {
+  color: #888;
 }
 
 mark {
@@ -42,7 +44,7 @@ mark {
 #result-list {
   margin: 4px 4px 4px 4px;
   padding: 0 4px 0 0;
-  height: 540px;
+  height: 538px;
   overflow-x: hidden;
   overflow-y: scroll;
 }
@@ -58,7 +60,7 @@ mark {
 #result-list .title {
   font-size: 18px;
   margin: 0;
-  font-weight: 500;
+  font-weight: 400;
 }
 #result-list .title a {
   color: #333;
@@ -71,7 +73,7 @@ mark {
   padding: 1px 3px 2px 3px;
   margin-right: 4px;
   white-space: nowrap;
-  display: inline;
+  display: inline-block;
   position: relative;
   top: -3px;
 }
@@ -97,7 +99,7 @@ mark {
   overflow: hidden;
   white-space: nowrap;
 }
-#result-list li#selected {
+#result-list li#selected-result {
   background-color: #dadada;
 }
 #result-list li.bookmark {

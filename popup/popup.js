@@ -4,7 +4,7 @@ const ext = window.ext = {
   /** Extension functions */
   fn: {},
   /** Extension options */
-  options: {},
+  opts: {},
   /** Extension data / model */
   data: {},
 }
@@ -13,7 +13,7 @@ const ext = window.ext = {
 // OPTIONS                              //
 //////////////////////////////////////////
 
-ext.options.general = {
+ext.opts.general = {
   /** Extract tags from title and display it as a badge with different search prio */
   tags: true,
   /** Highlight search matches in result */
@@ -28,10 +28,10 @@ ext.options.general = {
    */
   extendedSearch: true,
 }
-ext.options.search = {
+ext.opts.search = {
   maxResults: 128,
   minMatchCharLength: 2,
-  /** Fuzzy search threshold (increase to increase fuzzyness) */
+  /** Fuzzy search threshold (increase to increase fuzziness) */
   threshold: 0.4,
   titleWeight: 10,
   tagWeight: 7,
@@ -39,10 +39,10 @@ ext.options.search = {
   folderWeight: 2,
   lowPrioHistory: true
 }
-ext.options.bookmarks = {
+ext.opts.bookmarks = {
   enabled: true,
 }
-ext.options.history = {
+ext.opts.history = {
   enabled: true,
   daysAgo: 5,
   maxItems: 128,
@@ -63,7 +63,7 @@ initExtension().catch((err) => {
  */
 async function initExtension() {
 
-  console.debug('Initialized with options', ext.options)
+  console.debug('Initialized with options', ext.opts)
 
   // HTML Element selectors
   ext.popup = document.getElementById('popup');
@@ -98,7 +98,9 @@ async function initExtension() {
   performance.measure('startToEnd', 'init-start', 'init-complete');
   performance.measure('initializeData', 'initialized-dom', 'initialized-data');
   performance.measure('initializeSearch', 'initialized-data', 'initialized-search');
-  console.debug('Init Performance', performance.getEntriesByType("measure"));
+  const initPerformance = performance.getEntriesByType("measure")
+  const totalInitPerformance = performance.getEntriesByName("startToEnd")
+  console.debug('Init Performance: ' + totalInitPerformance[0].duration, initPerformance);
   performance.clearMeasures()
 }
 
@@ -108,26 +110,26 @@ async function initExtension() {
 function initializeFuseJsSearch(searchData) {
   const options = {
     isCaseSensitive: false,
-    useExtendedSearch: ext.options.general.extendedSearch,
+    useExtendedSearch: ext.opts.general.extendedSearch,
     includeScore: true,
     includeMatches: true,
     maxPatternLength: 32,
     shouldSort: true,
-    minMatchCharLength: ext.options.search.minMatchCharLength,
-    threshold: ext.options.search.threshold,
+    minMatchCharLength: ext.opts.search.minMatchCharLength,
+    threshold: ext.opts.search.threshold,
     ignoreLocation: true,
     keys: [{
       name: 'title',
-      weight: ext.options.search.titleWeight,
+      weight: ext.opts.search.titleWeight,
     }, {
       name: 'tags',
-      weight: ext.options.search.tagWeight,
+      weight: ext.opts.search.tagWeight,
     }, {
       name: 'url',
-      weight: ext.options.search.urlWeight,
+      weight: ext.opts.search.urlWeight,
     }, {
       name: 'folder',
-      weight: ext.options.search.folderWeight,
+      weight: ext.opts.search.folderWeight,
     }]
   };
 
@@ -146,12 +148,12 @@ function initializeFuseJsSearch(searchData) {
 async function getSearchData() {
   let result = []
   if (chrome.bookmarks) {
-    if (ext.options.bookmarks.enabled) {
+    if (ext.opts.bookmarks.enabled) {
       const chromeBookmarks = await getChromeBookmarks()
       result = result.concat(convertChromeBookmarks(chromeBookmarks))
     }
-    if (ext.options.history.enabled) {
-      const chromeHistory = await getChromeHistory(ext.options.history.daysAgo, ext.options.history.maxItems)
+    if (ext.opts.history.enabled) {
+      const chromeHistory = await getChromeHistory(ext.opts.history.daysAgo, ext.opts.history.maxItems)
       result = result.concat(convertChromeHistory(chromeHistory))
     }
   } else {
@@ -161,17 +163,17 @@ async function getSearchData() {
     const requestChromeMockData = await fetch('./mockData/chrome.json')
     const chromeMockData = await requestChromeMockData.json()
 
-    if (ext.options.bookmarks.enabled) {
+    if (ext.opts.bookmarks.enabled) {
       result = result.concat(convertChromeBookmarks(chromeMockData.bookmarks))
     }
-    if (ext.options.history.enabled) {
+    if (ext.opts.history.enabled) {
       result = result.concat(convertChromeHistory(chromeMockData.history))
     }
   }
 
   // Remove local links
   // Only URLs that begin with http:// or https:// are taken
-  if (ext.options.general.removeNonHttpLinks) {
+  if (ext.opts.general.removeNonHttpLinks) {
     const ignoredLinks = []
     result = result.filter((el) => {
       if (el.url && el.url.startsWith('http://') || el.url && el.url.startsWith('https://')) {
@@ -186,7 +188,7 @@ async function getSearchData() {
   }
 
   // Remove duplicate URLs
-  if (ext.options.general.removeDuplicateUrls) {
+  if (ext.opts.general.removeDuplicateUrls) {
     const knownUrls = {}
     const duplicatedUrls = []
 
@@ -200,9 +202,11 @@ async function getSearchData() {
     })
 
     if (duplicatedUrls.length) {
-      console.log(`Ignoring ${duplicatedUrls.length} duplicated URLs`, duplicatedUrls)
+      console.debug(`Ignoring ${duplicatedUrls.length} duplicated URLs`, duplicatedUrls)
     }
   }
+
+  console.debug(`Found ${result.length} items to index`)
 
   return result
 }
@@ -218,48 +222,54 @@ async function getSearchData() {
  */
 function searchWithFuseJs(event) {
 
-  let searchTerm = ext.searchInput.value ? ext.searchInput.value.trim() : ''
-
-  performance.mark('search-start')
-
   if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter') {
     // Don't execute search on navigation keys
     return
   }
+  
+  performance.mark('search-start')
+  
+  let searchTerm = ext.searchInput.value ? ext.searchInput.value.trim() : ''
+  ext.data.result = []
+  let searchMode = 'all' // OR 'bookmarks' OR 'history'
 
-  if (searchTerm === '') {
-    ext.data.result = []
-  } else {
+  // Support for history and bookmark only mode
+  // This is detected by looking at the first char of the search
+  // TODO: This could be optimized by having two separate search indexes?
+  if (searchTerm.startsWith('+ ')) {
+    searchMode = 'history'
+    searchTerm = searchTerm.substring(2)
+  } else if (searchTerm.startsWith('- ')) {
+    searchMode = 'bookmarks'
+    searchTerm = searchTerm.substring(2)
+  }
 
-    // Support for history and bookmark only mode
-    // This is detected by looking at the first char of the search
-    // TODO: This could be optimized by having two separate search indexes?
-    let historyOnly = false
-    let bookmarksOnly = false
-    if (searchTerm.startsWith('+')) {
-      historyOnly = true
-      searchTerm = searchTerm.substring(1)
-    } else if (searchTerm.startsWith('-')) {
-      bookmarksOnly = true
-      searchTerm = searchTerm.substring(1)
-    }
+  // If the search term is below minMatchCharLength, no point in starting search
+  if (searchTerm.length < ext.opts.search.minMatchCharLength) {
+    searchTerm = ''
+  }
+  
+  // If we have a search term after 
+  if (searchTerm) {
+
+    console.debug(`Searching with mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
     let searchResult = ext.fuse.search(searchTerm)
 
     // Only render maxResults if given (to improve render performance)
-    if (ext.options.search.maxResults && searchResult.length > ext.options.search.maxResults) {
-      searchResult = searchResult.slice(0, ext.options.search.maxResults)
+    if (ext.opts.search.maxResults && searchResult.length > ext.opts.search.maxResults) {
+      searchResult = searchResult.slice(0, ext.opts.search.maxResults)
     }
 
-    if (historyOnly) {
+    if (searchMode === 'history') {
       searchResult = searchResult.filter(el => el.item.type === 'history')
     }
-    if (bookmarksOnly) {
+    if (searchMode === 'bookmarks') {
       searchResult = searchResult.filter(el => el.item.type === 'bookmark')
     }
 
     // Move all history results to the bottom
-    if (!historyOnly && !bookmarksOnly && ext.options.search.lowPrioHistory) {
+    if (searchMode === 'all' && ext.opts.search.lowPrioHistory) {
       searchResult = [
         ...searchResult.filter(el => el.item.type === 'bookmark'),
         ...searchResult.filter(el => el.item.type === 'history'),
@@ -270,7 +280,7 @@ function searchWithFuseJs(event) {
 
     // TODO: This second mapping could be avoided by merging it with highlightSearchResult()
     ext.data.result = searchResult.map((el) => {
-      const highlighted = ext.options.general.highlight ? highlightResultItem(el) : {}
+      const highlighted = ext.opts.general.highlight ? highlightResultItem(el) : {}
       return {
         ...el.item,
         titleHighlighted: highlighted.title || el.item.title,
@@ -279,13 +289,14 @@ function searchWithFuseJs(event) {
         folderHighlighted: highlighted.folder || el.item.folder,
       }
     })
-    ext.data.currentItem = 0
   }
+
   renderResult(ext.data.result)
 
   performance.mark('search-end')
   performance.measure('search: ' + searchTerm, 'search-start', 'search-end');
-  console.debug('Search Performance', performance.getEntriesByType("measure"));
+  const searchPerformance = performance.getEntriesByType("measure")
+  console.debug('Search Performance: ' + searchPerformance[0].duration, searchPerformance);
   performance.clearMeasures()
 }
 
@@ -302,6 +313,7 @@ function renderResult(result) {
 
   // Clean current result set
   ext.resultList.innerHTML = '';
+  ext.data.currentItem = 0
 
   for (let i = 0; i < result.length; i++) {
     const resultEntry = result[i]
@@ -309,9 +321,6 @@ function renderResult(result) {
     // Create result list item (li)
     const resultListItem = document.createElement("li");
     resultListItem.classList.add(resultEntry.type)
-    if (i === 0) {
-      resultListItem.id = 'selected'
-    }
     resultListItem.setAttribute('x-open-url', resultEntry.url)
     resultListItem.setAttribute('x-index', i)
     // Register events for mouse navigation
@@ -324,13 +333,13 @@ function renderResult(result) {
     const titleLink = document.createElement('a');
     titleLink.setAttribute('href', resultEntry.url);
     titleLink.setAttribute('target', '_newtab');
-    if (ext.options.general.highlight) {
+    if (ext.opts.general.highlight) {
       titleLink.innerHTML = resultEntry.titleHighlighted;
     } else {
       titleLink.innerText = resultEntry.title;
     }
     titleDiv.appendChild(titleLink)
-    if (ext.options.general.tags && resultEntry.tags) {
+    if (ext.opts.general.tags && resultEntry.tags) {
       const tags = document.createElement('span')
       tags.classList.add('badge', 'tags')
       tags.innerHTML = resultEntry.tagsHighlighted
@@ -342,7 +351,7 @@ function renderResult(result) {
       folder.innerHTML = resultEntry.folderHighlighted
       titleDiv.appendChild(folder)
     }
-    if (ext.options.general.lastVisit && resultEntry.lastVisit) {
+    if (ext.opts.general.lastVisit && resultEntry.lastVisit) {
       const lastVisited = document.createElement('span')
       lastVisited.classList.add('badge', 'last-visited')
       lastVisited.innerText = '-' + resultEntry.lastVisit
@@ -364,9 +373,13 @@ function renderResult(result) {
     ext.resultList.appendChild(resultListItem)
   }
 
+  // mark first result item as selected
+  selectListItem(0)
+
   performance.mark('render-end')
   performance.measure('Render DOM', 'render-start', 'render-end');
-  console.debug('Render Performance', performance.getEntriesByType("measure"));
+  const renderPerformance = performance.getEntriesByType("measure")
+  console.debug('Render Performance: ' + renderPerformance[0].duration, renderPerformance);
   performance.clearMeasures()
 }
 
@@ -382,9 +395,8 @@ function navigationKeyListener(event) {
     ext.data.currentItem++
     selectListItem(ext.data.currentItem)
   } else if (event.key === 'Enter' && ext.data.result.length > 0) {
-    const selection = ext.data.result[ext.data.currentItem]
-    console.info('Open Link', selection)
-    document.querySelector("#selected a").click();
+    let url = document.getElementById('selected-result').getAttribute('x-open-url')
+    window.open(url, '_newtab')
   }
 }
 
@@ -392,26 +404,30 @@ function navigationKeyListener(event) {
  * Marks the list item with a specific index as selected
  */
 function selectListItem(index) {
-  document.getElementById('selected').id = ''
-  ext.resultList.children[index].id = 'selected'
-  ext.resultList.children[index].scrollIntoViewIfNeeded(false)
+  const currentSelection = document.getElementById('selected-result')
+  if (currentSelection) {
+    currentSelection.id = ''
+  }
+  if (ext.resultList.children[index]) {
+    ext.resultList.children[index].id = 'selected-result'
+    ext.resultList.children[index].scrollIntoViewIfNeeded(false)
+  }
 }
 
 /**
  * When clicked on a list-item, we want to navigate like pressing "Enter"
  */
 function openListItemLink(event) {
-  let url = document.getElementById('selected').getAttribute('x-open-url')
+  let url = document.getElementById('selected-result').getAttribute('x-open-url')
   event.stopPropagation()
   window.open(url, '_newtab')
 }
 
 function hoverListItem(event) {
   const index = event.target.getAttribute('x-index')
-  console.log(event)
   if (index) {
-    document.getElementById('selected').id = ''
-    event.target.id = 'selected'
+    document.getElementById('selected-result').id = ''
+    event.target.id = 'selected-result'
     ext.data.currentItem = index
   }
 }
@@ -492,7 +508,7 @@ function convertChromeBookmarks(bookmarks, folderTrail, depth) {
     // Parse out tags from bookmark title (starting with #) 
     let title = entry.title
     let tags = ''
-    if (ext.options.general.tags && title) {
+    if (ext.opts.general.tags && title) {
       const tagSplit = title.split('#')
       title = tagSplit.shift().trim()
       for (const tag of tagSplit) {
