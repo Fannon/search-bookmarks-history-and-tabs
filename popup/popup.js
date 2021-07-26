@@ -223,7 +223,7 @@ function searchWithFuseJs(event) {
   performance.mark('search-start')
 
   if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter') {
-    // Dont execute search on navigation keys
+    // Don't execute search on navigation keys
     return
   }
 
@@ -306,14 +306,17 @@ function renderResult(result) {
   for (let i = 0; i < result.length; i++) {
     const resultEntry = result[i]
 
-    // Create LI for result list item
+    // Create result list item (li)
     const resultListItem = document.createElement("li");
     resultListItem.classList.add(resultEntry.type)
     if (i === 0) {
       resultListItem.id = 'selected'
     }
     resultListItem.setAttribute('x-open-url', resultEntry.url)
+    resultListItem.setAttribute('x-index', i)
+    // Register events for mouse navigation
     resultListItem.addEventListener('mouseup', openListItemLink, { passive: true, })
+    resultListItem.addEventListener('mouseenter', hoverListItem, { passive: true, })
 
     // Create title div
     titleDiv = document.createElement('div')
@@ -389,27 +392,27 @@ function navigationKeyListener(event) {
  * Marks the list item with a specific index as selected
  */
 function selectListItem(index) {
-  if (ext.resultList.children && ext.resultList.children.length > 0) {
-    for (const child of ext.resultList.children) {
-      child.id = undefined
-    }
-    ext.resultList.children[index].id = 'selected'
-  }
+  document.getElementById('selected').id = ''
+  ext.resultList.children[index].id = 'selected'
+  ext.resultList.children[index].scrollIntoViewIfNeeded(false)
 }
 
 /**
- * Support a click on the whole result list item to be a link
- * 
- * TODO: mouse click is not bubbling through to resultItem LI. Hacky fix around that.
+ * When clicked on a list-item, we want to navigate like pressing "Enter"
  */
 function openListItemLink(event) {
-  let url = event.target.getAttribute('x-open-url')
-  if (!url) {
-    url = event.target.parentElement.getAttribute('x-open-url')
-  }
-  if (url) {
-    event.stopPropagation()
-    window.open(url, '_newtab')
+  let url = document.getElementById('selected').getAttribute('x-open-url')
+  event.stopPropagation()
+  window.open(url, '_newtab')
+}
+
+function hoverListItem(event) {
+  const index = event.target.getAttribute('x-index')
+  console.log(event)
+  if (index) {
+    document.getElementById('selected').id = ''
+    event.target.id = 'selected'
+    ext.data.currentItem = index
   }
 }
 
@@ -575,3 +578,17 @@ function timeSince(date) {
   }
   return Math.floor(seconds) + " seconds";
 }
+
+/**
+ * Checks whether DOM element in viewport
+ * @see https://gomakethings.com/how-to-test-if-an-element-is-in-the-viewport-with-vanilla-javascript/
+ */
+function isInViewport(elem) {
+  var bounding = elem.getBoundingClientRect();
+  return (
+      bounding.top >= 0 &&
+      bounding.left >= 0 &&
+      bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      bounding.right <= (window.innerWidth || document.documentElement.clientWidth)
+  );
+};

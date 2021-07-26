@@ -97,8 +97,7 @@ mark {
   overflow: hidden;
   white-space: nowrap;
 }
-#result-list li#selected,
-#result-list li:hover {
+#result-list li#selected {
   background-color: #dadada;
 }
 #result-list li.bookmark {
