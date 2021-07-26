@@ -22,8 +22,8 @@
   "commands": {
     "_execute_action": {
       "suggested_key": {
-        "default": "Ctrl+Period",
-        "mac": "Command+Period"
+        "default": "Ctrl+Shift+Period",
+        "mac": "Command+Shift+Period"
       }
     }
   },
