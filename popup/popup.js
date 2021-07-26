@@ -1,8 +1,6 @@
 performance.mark('init-start')
 
 const ext = window.ext = {
-  /** Extension functions */
-  fn: {},
   /** Extension options */
   opts: {},
   /** Extension data / model */
@@ -21,7 +19,6 @@ ext.opts.general = {
   /** Display  last visit */
   lastVisit: true,
   removeDuplicateUrls: true, // TODO: This does not find all duplicates yet
-  removeNonHttpLinks: true,
   /**
    * Enables fuse.js extended search, which additional operators to fine-tune results.
    * @see https://fusejs.io/examples.html#weighted-search
@@ -44,7 +41,7 @@ ext.opts.bookmarks = {
 }
 ext.opts.history = {
   enabled: true,
-  daysAgo: 5,
+  daysAgo: 3,
   maxItems: 128,
 }
 
@@ -62,7 +59,7 @@ initExtension().catch((err) => {
  * This includes indexing the current bookmarks and history
  */
 async function initExtension() {
-
+  
   console.debug('Initialized with options', ext.opts)
 
   // HTML Element selectors
@@ -71,7 +68,7 @@ async function initExtension() {
   ext.resultList = document.getElementById('result-list')
   ext.searchInput.value = ''
 
-  performance.mark('initialized-dom')
+  performance.mark('init-dom')
 
   // Model / Data
   ext.data = {
@@ -81,25 +78,31 @@ async function initExtension() {
 
   const searchData = await getSearchData()
 
-  performance.mark('initialized-data')
+  performance.mark('init-data-load')
 
   // Initialize fuse.js for fuzzy search
   ext.Fuse = Fuse;
-  ext.fuse = initializeFuseJsSearch(searchData)
+  if (ext.opts.bookmarks.enabled) {
+    ext.data.bookmarkIndex = createFuseJsIndex('bookmarks', searchData.bookmarks)
+  }
+  if (ext.opts.history.enabled) {
+    ext.data.historyIndex = createFuseJsIndex('history', searchData.history)
+  }
 
-  performance.mark('initialized-search')
+  performance.mark('init-search-index')
 
   // Register Events
   ext.searchInput.addEventListener("keyup", searchWithFuseJs);
   document.addEventListener("keydown", navigationKeyListener);
 
   // Do some performance measurements and log it to debug
-  performance.mark('init-complete')
-  performance.measure('startToEnd', 'init-start', 'init-complete');
-  performance.measure('initializeData', 'initialized-dom', 'initialized-data');
-  performance.measure('initializeSearch', 'initialized-data', 'initialized-search');
+  performance.mark('init-end')
+  performance.measure('init-end-to-end', 'init-start', 'init-end');
+  performance.measure('init-dom', 'init-start', 'init-dom');
+  performance.measure('init-data-load', 'init-dom', 'init-data-load');
+  performance.measure('init-search-index', 'init-data-load', 'init-search-index');
   const initPerformance = performance.getEntriesByType("measure")
-  const totalInitPerformance = performance.getEntriesByName("startToEnd")
+  const totalInitPerformance = performance.getEntriesByName("init-end-to-end")
   console.debug('Init Performance: ' + totalInitPerformance[0].duration, initPerformance);
   performance.clearMeasures()
 }
@@ -107,21 +110,27 @@ async function initExtension() {
 /**
  * Initialize search with Fuse.js
  */
-function initializeFuseJsSearch(searchData) {
+function createFuseJsIndex(type, searchData) {
+  performance.mark('index-start')
   const options = {
-    isCaseSensitive: false,
-    useExtendedSearch: ext.opts.general.extendedSearch,
     includeScore: true,
     includeMatches: true,
-    maxPatternLength: 32,
-    shouldSort: true,
+    tokenize: true,
+    matchAllTokens: true,
+    ignoreLocation: true,
+    findAllMatches: true,
+    distance: 1000,
+    useExtendedSearch: ext.opts.general.extendedSearch,
     minMatchCharLength: ext.opts.search.minMatchCharLength,
     threshold: ext.opts.search.threshold,
-    ignoreLocation: true,
     keys: [{
       name: 'title',
       weight: ext.opts.search.titleWeight,
-    }, {
+    }]
+  }
+
+  if (type === 'bookmarks') {
+    options.keys.push({
       name: 'tags',
       weight: ext.opts.search.tagWeight,
     }, {
@@ -130,10 +139,21 @@ function initializeFuseJsSearch(searchData) {
     }, {
       name: 'folder',
       weight: ext.opts.search.folderWeight,
-    }]
-  };
+    })
+  } else if (type === 'history') {
+    options.keys.push({
+      name: 'url',
+      weight: ext.opts.search.urlWeight,
+    })
+  } else {
+    throw new Error(`Unsupported index type: ${type}`)
+  }
 
-  return new window.Fuse(searchData, options);
+  const index = new window.Fuse(searchData, options);
+  
+  performance.mark('index-end')
+  performance.measure('index-' + type, 'index-start', 'index-end');
+  return index
 }
 
 //////////////////////////////////////////
@@ -146,53 +166,73 @@ function initializeFuseJsSearch(searchData) {
  * Also removes some items (e.g. duplicates) before they are indexed
  */
 async function getSearchData() {
-  let result = []
+  const result = {
+    bookmarks: [],
+    history: [],
+  }
+
+  // FIRST: Get data
+
   if (chrome.bookmarks) {
     if (ext.opts.bookmarks.enabled) {
+      performance.mark('load-data-bookmarks-start')
       const chromeBookmarks = await getChromeBookmarks()
-      result = result.concat(convertChromeBookmarks(chromeBookmarks))
+      performance.mark('load-data-bookmarks-end')
+      result.bookmarks = convertChromeBookmarks(chromeBookmarks)
+      performance.mark('convert-data-bookmarks-end')
+      performance.measure('load-data-bookmarks', 'load-data-bookmarks-start', 'load-data-bookmarks-end');
+      performance.measure('convert-data-bookmarks', 'load-data-bookmarks-end', 'convert-data-bookmarks-end');
     }
+  }
+  if (chrome.history) {
     if (ext.opts.history.enabled) {
+      performance.mark('load-data-history-start')
       const chromeHistory = await getChromeHistory(ext.opts.history.daysAgo, ext.opts.history.maxItems)
-      result = result.concat(convertChromeHistory(chromeHistory))
+      performance.mark('load-data-history-end')
+      result.history = convertChromeHistory(chromeHistory)
+      performance.mark('convert-data-history-end')
+      performance.measure('load-data-history', 'load-data-history-start', 'load-data-history-end');
+      performance.measure('convert-data-history', 'load-data-history-end', 'convert-data-history-end');
     }
-  } else {
+  } 
+
+  // Use mock data (for localhost preview / development)
+  // To do this, create a http server (e.g. live-server) in popup/
+  if (!chrome.bookmarks || !chrome.history) {
     console.warn(`No Chrome API found. Switching to local dev mode with mock data only`)
-    // Use mock data (for localhost preview / development)
-    // To do this, create a http server (e.g. live-server) in popup/
     const requestChromeMockData = await fetch('./mockData/chrome.json')
     const chromeMockData = await requestChromeMockData.json()
 
     if (ext.opts.bookmarks.enabled) {
-      result = result.concat(convertChromeBookmarks(chromeMockData.bookmarks))
+      result.bookmarks = convertChromeBookmarks(chromeMockData.bookmarks)
     }
     if (ext.opts.history.enabled) {
-      result = result.concat(convertChromeHistory(chromeMockData.history))
+      result.history = convertChromeHistory(chromeMockData.history)
     }
   }
 
+  // SECOND: Clean up data
+
   // Remove local links
-  // Only URLs that begin with http:// or https:// are taken
-  if (ext.opts.general.removeNonHttpLinks) {
-    const ignoredLinks = []
-    result = result.filter((el) => {
-      if (el.originalUrl && el.originalUrl.startsWith('http://') || el.originalUrl && el.originalUrl.startsWith('https://')) {
-        return el;
-      } else {
-        ignoredLinks.push(el)
-      }
-    })
-    if (ignoredLinks.length) {
-      console.log(`Ignoring ${ignoredLinks.length} non HTTP URLs`, ignoredLinks)
-    }
-  }
+  // Only URLs that use HTTP(s) protocol are allowed
+  result.bookmarks = result.bookmarks.filter(el => el.originalUrl && el.originalUrl.startsWith('http'))
+  result.history = result.history.filter(el => el.originalUrl && el.originalUrl.startsWith('http'))
 
   // Remove duplicate URLs
   if (ext.opts.general.removeDuplicateUrls) {
     const knownUrls = {}
     const duplicatedUrls = []
 
-    result = result.filter((el) => {
+    // start with bookmarks, as they are higher prio
+    result.bookmarks = result.bookmarks.filter((el) => {
+      if (!knownUrls[el.originalUrl]) {
+        knownUrls[el.originalUrl] = true
+        return el
+      } else {
+        duplicatedUrls.push(el)
+      }
+    })
+    result.history = result.history.filter((el) => {
       if (!knownUrls[el.originalUrl]) {
         knownUrls[el.originalUrl] = true
         return el
@@ -206,7 +246,7 @@ async function getSearchData() {
     }
   }
 
-  console.debug(`Found ${result.length} items to index`)
+  console.debug(`Indexed ${result.bookmarks.length} bookmarks and ${result.history.length} history items`)
 
   return result
 }
@@ -254,32 +294,24 @@ function searchWithFuseJs(event) {
 
     console.debug(`Searching with mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
-    let searchResult = ext.fuse.search(searchTerm)
-
-    // Only render maxResults if given (to improve render performance)
-    if (ext.opts.search.maxResults && searchResult.length > ext.opts.search.maxResults) {
-      searchResult = searchResult.slice(0, ext.opts.search.maxResults)
-    }
-
-    if (searchMode === 'history') {
-      searchResult = searchResult.filter(el => el.item.type === 'history')
-    }
-    if (searchMode === 'bookmarks') {
-      searchResult = searchResult.filter(el => el.item.type === 'bookmark')
-    }
-
-    // Move all history results to the bottom
-    if (searchMode === 'all' && ext.opts.search.lowPrioHistory) {
-      searchResult = [
-        ...searchResult.filter(el => el.item.type === 'bookmark'),
-        ...searchResult.filter(el => el.item.type === 'history'),
+    if (searchMode === 'history' && ext.data.historyIndex) {
+      ext.data.searchResult = ext.data.historyIndex.search(searchTerm)
+    } else if (searchMode === 'bookmarks' && ext.data.bookmarkIndex) {
+      ext.data.searchResult = ext.data.bookmarkIndex.search(searchTerm)
+    } else {
+      ext.data.searchResult = [
+        ...ext.data.bookmarkIndex.search(searchTerm),
+        ...ext.data.historyIndex.search(searchTerm),
       ]
     }
 
-    ext.data.fuseSearchResult = searchResult
+    // Only render maxResults if given (to improve render performance)
+    if (ext.opts.search.maxResults && ext.data.searchResult.length > ext.opts.search.maxResults) {
+      ext.data.searchResult = ext.data.searchResult.slice(0, ext.opts.search.maxResults)
+    }
 
-    // TODO: This second mapping could be avoided by merging it with highlightSearchResult()
-    ext.data.result = searchResult.map((el) => {
+    // Convert search results into result format view model
+    ext.data.result = ext.data.searchResult.map((el) => {
       const highlighted = ext.opts.general.highlight ? highlightResultItem(el) : {}
       return {
         ...el.item,
@@ -530,7 +562,8 @@ function convertChromeBookmarks(bookmarks, folderTrail, depth) {
         tags: tags,
         originalUrl: entry.url,
         url: cleanUpUrl(entry.url),
-        folder: folderText
+        folder: folderText,
+        originalId: entry.id,
       })
     }
     if (entry.children) {
@@ -553,8 +586,9 @@ function convertChromeHistory(history) {
       title: entry.title,
       originalUrl: entry.url,
       url: cleanUpUrl(entry.url),
-      visitCount: entry.visitCount,
-      lastVisit: timeSince(new Date(entry.lastVisitTime))
+      // visitCount: entry.visitCount,
+      lastVisit: timeSince(new Date(entry.lastVisitTime)),
+      originalId: entry.id,
     })
   }
   return result

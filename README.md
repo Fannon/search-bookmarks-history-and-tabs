@@ -66,5 +66,4 @@ This extension makes use of the following helpful open-source projects (thanks!)
   * Merge bookmarks with history, so we know when a bookmark has been opened recently / frequently -> higher score
   * Remember which result items have been executed via extension recently -> higher score
 * Introduce dedicates search mode for tags and folders
-* Index bookmarks and history continually in background, to have faster startup performance
 * Remember which items have been opened recently and show last (n) items immediately.
