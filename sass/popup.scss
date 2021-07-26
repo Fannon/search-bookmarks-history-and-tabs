@@ -83,17 +83,12 @@ mark {
 #result-list .last-visited {
   background: rgb(158, 206, 47);
 }
-#result-list .score {
-  background: #afafaf;
-  // float: right;
-}
 #result-list .url {
   font-size: 13px;
   margin: 0;
   overflow: hidden;
   white-space: nowrap;
 }
-
 #result-list li#selected,
 #result-list li:hover {
   background-color: #dadada;
