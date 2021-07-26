@@ -1,6 +1,7 @@
 # search-bookmarks-and-history
 
-Chrome extension to search local bookmarks and history.
+Browser extension to search local bookmarks and history.
+Supported Browsers are Google Chrome and Microsoft Edge (based on Chromium)
 
 ## Features
 
@@ -50,14 +51,14 @@ This extension makes use of the following helpful open-source projects (thanks!)
 
 ## Ideas and To Dos
 * Make extension configurable via UI (requires new `storage` permission)
-* Allow to search and navigate open Tabs (requires new `tab` permission)
-* Add a Dark Theme
+* Allow to search and navigate open tabs (requires new `tab` permission)
 * Allow to quick add & edit bookmarks (title + tags)
   * tags would ideally have autocomplete, based on existing tags (something like select2)
   * quick add current open site via + button
 * Try other search algorithms / libraries that are less fuzzy
   * https://github.com/nextapps-de/flexsearch 
 * Create one index per type (bookmarks, history) to improve performance
+* Add a dark theme
 * Improve scoring calculation
   * Merge bookmarks with history, so we know when a bookmark has been opened recently / frequently -> higher score
 * Introduce dedicates search mode for tags and folders
