@@ -34,7 +34,6 @@ ext.opts.search = {
   tagWeight: 7,
   urlWeight: 5,
   folderWeight: 2,
-  lowPrioHistory: true
 }
 ext.opts.tabs = {
   enabled: true,

@@ -35,6 +35,7 @@ To customize the extension options, adjust the `ext.opts` in `popup/popup.js`
 * This extension can (and should!) be triggered via keyboard shortcut.
   * The default is `CTRL` + `Shift` + `.`
 * Different search modes are supported
+  * If you start your query with `. `: only tabs will be searched
   * If you start your query with `+ `: only history will be searched
   * If you start your query with `- `: only bookmarks will be searched
 * [Fuse.js Extended Search](https://fusejs.io/examples.html#extended-search) operators can be used.
@@ -55,15 +56,17 @@ This extension makes use of the following helpful open-source projects (thanks!)
 ## Ideas and To Dos
 
 * Make extension configurable via UI (requires new `storage` permission)
-* Allow to search and navigate open tabs (requires new `tab` permission)
 * Allow to quick add & edit bookmarks (title + tags)
   * tags would ideally have autocomplete, based on existing tags (something like select2)
   * quick add current open site via + button
+* Start with some initial results 
+  * Remember which items have been opened recently and show last (n) items immediately?
+  * Display currently open tabs?
 * Try other search algorithms / libraries that are less fuzzy
   * https://github.com/nextapps-de/flexsearch 
 * Add a dark theme
-* Improve scoring calculation
+* Create own scoring calculation
+  * Different weight between index types (tabs, bookmarks, history)
   * Merge bookmarks with history, so we know when a bookmark has been opened recently / frequently -> higher score
   * Remember which result items have been executed via extension recently -> higher score
-* Introduce dedicates search mode for tags and folders
-* Remember which items have been opened recently and show last (n) items immediately.
+* Introduce dedicates search mode for tags and folders, that is more precise
