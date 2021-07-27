@@ -102,6 +102,9 @@ mark {
 #result-list li#selected-result {
   background-color: #dadada;
 }
+#result-list li.tab {
+  border-left: 4px solid #865592;
+}
 #result-list li.bookmark {
   border-left: 4px solid #559292;
 }

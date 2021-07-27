@@ -1,4 +1,52 @@
 {
+  "tabs": [
+    {
+      "active": false,
+      "audible": false,
+      "autoDiscardable": true,
+      "discarded": false,
+      "favIconUrl": "https://ssl.gstatic.com/chrome/webstore/images/icon_192px.png",
+      "groupId": -1,
+      "height": 1172,
+      "highlighted": false,
+      "id": 179,
+      "incognito": false,
+      "index": 0,
+      "mutedInfo": {
+        "muted": false
+      },
+      "pinned": false,
+      "selected": false,
+      "status": "complete",
+      "title": "Developer Dashboard",
+      "url": "https://chrome.google.com/webstore/devconsole/1a52e4dd-3773-4dfb-94b4-89e431a09fed",
+      "width": 1334,
+      "windowId": 1
+    },
+    {
+      "active": false,
+      "audible": false,
+      "autoDiscardable": true,
+      "discarded": false,
+      "favIconUrl": "https://partner.microsoft.com/favicon.ico",
+      "groupId": -1,
+      "height": 1172,
+      "highlighted": false,
+      "id": 182,
+      "incognito": false,
+      "index": 1,
+      "mutedInfo": {
+        "muted": false
+      },
+      "pinned": false,
+      "selected": false,
+      "status": "complete",
+      "title": "Partner Center",
+      "url": "https://partner.microsoft.com/de-de/dashboard/microsoftedge/overview",
+      "width": 1334,
+      "windowId": 1
+    }
+  ],
   "bookmarks": [
     {
       "children": [

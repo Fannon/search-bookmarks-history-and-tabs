@@ -1,7 +1,7 @@
 {
-  "name": "search-bookmarks-and-history",
-  "version": "0.2.2",
-  "description": "A chrome extension to fuzzy search bookmarks and history",
+  "name": "search-tabs-bookmarks-and-history",
+  "version": "0.3.0",
+  "description": "Browser extension to search and navigate browser tabs, local bookmarks and history.",
   "main": "index.js",
   "dependencies": {},
   "devDependencies": {

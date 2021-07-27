@@ -1,12 +1,13 @@
-# search-bookmarks-and-history
+# Browser Extension: Search Tabs, Bookmarks and History
 
-Browser extension to search local bookmarks and history.
-Supported Browsers are Google Chrome and Microsoft Edge (based on Chromium).
+Browser extension to search and navigate browser tabs, local bookmarks and history.
+It works fully offline, so there is no external communication.
+For bookmarks, it supports extraction and search of tags and folder names. 
 
 ## Features
 
 * Local / offline only (no external communication / requests).
-* Searching for bookmark folder names and tags.
+* Searching for open browser tabs, bookmark folder names and tags.
 * Lightweight: Vanilla JS, with only a small search library ([Fuse.js](https://fuse.io/)) and a small subset of [BULMA](https://bulma.io/) CSS styles.
 
 ## Demo

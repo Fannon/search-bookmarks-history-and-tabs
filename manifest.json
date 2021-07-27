@@ -1,14 +1,15 @@
 {
   "name": "Bookmark and History Search",
-  "description": "Search your bookmarks and history",
+  "description": "Browser extension to search and navigate browser tabs, local bookmarks and history.",
   "homepage_url": "https://github.com/Fannon/search-bookmarks-and-history",
   "author": "Simon Heimler",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "manifest_version": 3,
   "permissions": [
     "commands",
     "bookmarks",
-    "history"
+    "history",
+    "tabs"
   ],
   "action": {
     "default_popup": "/popup/index.html",

@@ -36,6 +36,9 @@ ext.opts.search = {
   folderWeight: 2,
   lowPrioHistory: true
 }
+ext.opts.tabs = {
+  enabled: true,
+}
 ext.opts.bookmarks = {
   enabled: true,
 }
@@ -59,7 +62,7 @@ initExtension().catch((err) => {
  * This includes indexing the current bookmarks and history
  */
 async function initExtension() {
-  
+
   console.debug('Initialized with options', ext.opts)
 
   // HTML Element selectors
@@ -76,17 +79,19 @@ async function initExtension() {
     result: [],
   }
 
-  const searchData = await getSearchData()
+  ext.data.searchData = await getSearchData()
 
   performance.mark('init-data-load')
 
   // Initialize fuse.js for fuzzy search
-  ext.Fuse = Fuse;
+  if (ext.opts.tabs.enabled) {
+    ext.data.tabIndex = createFuseJsIndex('tabs', ext.data.searchData.tabs)
+  }
   if (ext.opts.bookmarks.enabled) {
-    ext.data.bookmarkIndex = createFuseJsIndex('bookmarks', searchData.bookmarks)
+    ext.data.bookmarkIndex = createFuseJsIndex('bookmarks', ext.data.searchData.bookmarks)
   }
   if (ext.opts.history.enabled) {
-    ext.data.historyIndex = createFuseJsIndex('history', searchData.history)
+    ext.data.historyIndex = createFuseJsIndex('history', ext.data.searchData.history)
   }
 
   performance.mark('init-search-index')
@@ -145,12 +150,17 @@ function createFuseJsIndex(type, searchData) {
       name: 'url',
       weight: ext.opts.search.urlWeight,
     })
+  } else if (type === 'tabs') {
+    options.keys.push({
+      name: 'url',
+      weight: ext.opts.search.urlWeight,
+    })
   } else {
     throw new Error(`Unsupported index type: ${type}`)
   }
 
   const index = new window.Fuse(searchData, options);
-  
+
   performance.mark('index-end')
   performance.measure('index-' + type, 'index-start', 'index-end');
   return index
@@ -167,34 +177,35 @@ function createFuseJsIndex(type, searchData) {
  */
 async function getSearchData() {
   const result = {
+    tabs: [],
     bookmarks: [],
     history: [],
   }
 
   // FIRST: Get data
 
-  if (chrome.bookmarks) {
-    if (ext.opts.bookmarks.enabled) {
-      performance.mark('load-data-bookmarks-start')
-      const chromeBookmarks = await getChromeBookmarks()
-      performance.mark('load-data-bookmarks-end')
-      result.bookmarks = convertChromeBookmarks(chromeBookmarks)
-      performance.mark('convert-data-bookmarks-end')
-      performance.measure('load-data-bookmarks', 'load-data-bookmarks-start', 'load-data-bookmarks-end');
-      performance.measure('convert-data-bookmarks', 'load-data-bookmarks-end', 'convert-data-bookmarks-end');
-    }
+  if (chrome.tabs) {
+    performance.mark('get-data-tabs-start')
+    const chromeTabs = await getChromeTabs()
+    result.tabs = convertChromeTabs(chromeTabs)
+    performance.mark('get-data-tabs-end')
+    performance.measure('get-data-tabs', 'get-data-tabs-start', 'get-data-tabs-end');
   }
-  if (chrome.history) {
-    if (ext.opts.history.enabled) {
-      performance.mark('load-data-history-start')
-      const chromeHistory = await getChromeHistory(ext.opts.history.daysAgo, ext.opts.history.maxItems)
-      performance.mark('load-data-history-end')
-      result.history = convertChromeHistory(chromeHistory)
-      performance.mark('convert-data-history-end')
-      performance.measure('load-data-history', 'load-data-history-start', 'load-data-history-end');
-      performance.measure('convert-data-history', 'load-data-history-end', 'convert-data-history-end');
-    }
-  } 
+  if (chrome.bookmarks && ext.opts.bookmarks.enabled) {
+    performance.mark('get-data-bookmarks-start')
+    const chromeBookmarks = await getChromeBookmarks()
+    result.bookmarks = convertChromeBookmarks(chromeBookmarks)
+    performance.mark('get-data-bookmarks-end')
+    performance.measure('get-data-bookmarks', 'get-data-bookmarks-start', 'get-data-bookmarks-end');
+  }
+  if (chrome.history && ext.opts.history.enabled) {
+    performance.mark('get-data-history-start')
+    const chromeHistory = await getChromeHistory(ext.opts.history.daysAgo, ext.opts.history.maxItems)
+    result.history = convertChromeHistory(chromeHistory)
+    performance.mark('get-data-history-end')
+    performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end');
+  }
+
 
   // Use mock data (for localhost preview / development)
   // To do this, create a http server (e.g. live-server) in popup/
@@ -203,6 +214,7 @@ async function getSearchData() {
     const requestChromeMockData = await fetch('./mockData/chrome.json')
     const chromeMockData = await requestChromeMockData.json()
 
+    result.tabs = convertChromeTabs(chromeMockData.tabs)
     if (ext.opts.bookmarks.enabled) {
       result.bookmarks = convertChromeBookmarks(chromeMockData.bookmarks)
     }
@@ -213,12 +225,7 @@ async function getSearchData() {
 
   // SECOND: Clean up data
 
-  // Remove local links
-  // Only URLs that use HTTP(s) protocol are allowed
-  result.bookmarks = result.bookmarks.filter(el => el.originalUrl && el.originalUrl.startsWith('http'))
-  result.history = result.history.filter(el => el.originalUrl && el.originalUrl.startsWith('http'))
-
-  // Remove duplicate URLs
+  // Remove duplicate URLs from bookmarks and history
   if (ext.opts.general.removeDuplicateUrls) {
     const knownUrls = {}
     const duplicatedUrls = []
@@ -246,7 +253,7 @@ async function getSearchData() {
     }
   }
 
-  console.debug(`Indexed ${result.bookmarks.length} bookmarks and ${result.history.length} history items`)
+  console.debug(`Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items`)
 
   return result
 }
@@ -266,9 +273,9 @@ function searchWithFuseJs(event) {
     // Don't execute search on navigation keys
     return
   }
-  
+
   performance.mark('search-start')
-  
+
   let searchTerm = ext.searchInput.value ? ext.searchInput.value.trim() : ''
   ext.data.result = []
   let searchMode = 'all' // OR 'bookmarks' OR 'history'
@@ -282,13 +289,16 @@ function searchWithFuseJs(event) {
   } else if (searchTerm.startsWith('- ')) {
     searchMode = 'bookmarks'
     searchTerm = searchTerm.substring(2)
+  } else if (searchTerm.startsWith(' .')) {
+    searchMode = 'tabs'
+    searchTerm = searchTerm.substring(2)
   }
 
   // If the search term is below minMatchCharLength, no point in starting search
   if (searchTerm.length < ext.opts.search.minMatchCharLength) {
     searchTerm = ''
   }
-  
+
   // If we have a search term after 
   if (searchTerm) {
 
@@ -298,8 +308,11 @@ function searchWithFuseJs(event) {
       ext.data.searchResult = ext.data.historyIndex.search(searchTerm)
     } else if (searchMode === 'bookmarks' && ext.data.bookmarkIndex) {
       ext.data.searchResult = ext.data.bookmarkIndex.search(searchTerm)
+    } else if (searchMode === 'tabs' && ext.data.tabIndex) {
+      ext.data.searchResult = ext.data.tabIndex.search(searchTerm)
     } else {
       ext.data.searchResult = [
+        ...ext.data.tabIndex.search(searchTerm),
         ...ext.data.bookmarkIndex.search(searchTerm),
         ...ext.data.historyIndex.search(searchTerm),
       ]
@@ -356,7 +369,7 @@ function renderResult(result) {
     resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
     resultListItem.setAttribute('x-index', i)
     // Register events for mouse navigation
-    resultListItem.addEventListener('mouseup', openListItemLink, { passive: true, })
+    resultListItem.addEventListener('mouseup', openResultItem, { passive: true, })
     resultListItem.addEventListener('mouseenter', hoverListItem, { passive: true, })
 
     // Create title div
@@ -427,8 +440,7 @@ function navigationKeyListener(event) {
     ext.data.currentItem++
     selectListItem(ext.data.currentItem)
   } else if (event.key === 'Enter' && ext.data.result.length > 0) {
-    let url = document.getElementById('selected-result').getAttribute('x-open-url')
-    window.open(url, '_newtab')
+    openResultItem()
   }
 }
 
@@ -449,10 +461,22 @@ function selectListItem(index) {
 /**
  * When clicked on a list-item, we want to navigate like pressing "Enter"
  */
-function openListItemLink(event) {
+function openResultItem(event) {
   let url = document.getElementById('selected-result').getAttribute('x-open-url')
-  event.stopPropagation()
-  window.open(url, '_newtab')
+  if (event) {
+    event.stopPropagation()
+  }
+  const foundTab = ext.data.searchData.tabs.find((el) => {
+    return el.originalUrl === url
+  })
+  if (foundTab && chrome.tabs.highlight) {
+    console.debug('Found tab, setting it active', foundTab)
+    chrome.tabs.update(foundTab.originalId, {
+      active: true
+    })
+  } else {
+    return window.open(url, '_newtab')
+  }
 }
 
 function hoverListItem(event) {
@@ -504,10 +528,20 @@ function highlightResultItem(resultItem) {
 // CHROME SPECIFIC                      //
 //////////////////////////////////////////
 
+async function getChromeTabs() {
+  return (await chrome.tabs.query({})).filter((el) => {
+    return (!el.incognito && el.url && el.url.startsWith('http'))
+  })
+}
+
 async function getChromeBookmarks() {
   return await chrome.bookmarks.getTree()
 }
 
+/**
+ * Gets chrome browsing history.
+ * Warning: This chrome API call tends to be rather slow
+ */
 async function getChromeHistory(daysBack, maxResults) {
   return new Promise((resolve, reject) => {
     const startTime = new Date() - 1000 * 60 * 60 * 24 * daysBack;
@@ -515,8 +549,24 @@ async function getChromeHistory(daysBack, maxResults) {
       if (err) {
         return reject(err)
       }
+      history = history.filter((el) => {
+        return (el.url && el.url.startsWith('http'))
+      })
       return resolve(history)
     })
+  })
+}
+
+function convertChromeTabs(chromeTabs) {
+  return chromeTabs.map((entry) => {
+    return {
+      type: 'tab',
+      title: entry.title,
+      url: cleanUpUrl(entry.url),
+      originalUrl: entry.url,
+      originalId: entry.id,
+      favIconUrl: entry.favIconUrl,
+    }
   })
 }
 
@@ -555,7 +605,7 @@ function convertChromeBookmarks(bookmarks, folderTrail, depth) {
     }
     folderText = folderText.slice(0, -1)
 
-    if (entry.url) {
+    if (entry.url && entry.url.startsWith('http')) {
       result.push({
         type: 'bookmark',
         title: title,
@@ -638,10 +688,10 @@ function timeSince(date) {
 function isInViewport(elem) {
   var bounding = elem.getBoundingClientRect();
   return (
-      bounding.top >= 0 &&
-      bounding.left >= 0 &&
-      bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-      bounding.right <= (window.innerWidth || document.documentElement.clientWidth)
+    bounding.top >= 0 &&
+    bounding.left >= 0 &&
+    bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+    bounding.right <= (window.innerWidth || document.documentElement.clientWidth)
   );
 };
 
