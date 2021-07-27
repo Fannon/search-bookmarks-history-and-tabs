@@ -6,10 +6,11 @@
   "version": "0.3.0",
   "manifest_version": 3,
   "permissions": [
-    "commands",
+    "tabs",
     "bookmarks",
     "history",
-    "tabs"
+    "storage",
+    "commands"
   ],
   "action": {
     "default_popup": "/popup/index.html",
