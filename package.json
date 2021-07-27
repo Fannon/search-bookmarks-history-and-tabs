@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Fannon/search-bookmarks-and-history.git"
+    "url": "git+https://github.com/Fannon/search-tabs-bookmarks-and-history.git"
   },
   "keywords": [
     "chrome",
@@ -30,7 +30,7 @@
   "author": "Simon Heimler",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Fannon/search-bookmarks-and-history/issues"
+    "url": "https://github.com/Fannon/search-tabs-bookmarks-and-history/issues"
   },
-  "homepage": "https://github.com/Fannon/search-bookmarks-and-history#readme"
+  "homepage": "https://github.com/Fannon/search-tabs-bookmarks-and-history#readme"
 }
