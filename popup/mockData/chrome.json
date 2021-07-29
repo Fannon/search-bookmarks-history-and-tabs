@@ -383,6 +383,14 @@
   ],
   "history": [
     {
+      "id": "14",
+      "lastVisitTime": 1627244145754.936,
+      "title": "Localhost Popup",
+      "typedCount": 0,
+      "url": "http://localhost:8080/popup/",
+      "visitCount": 1
+    },
+    {
       "id": "13",
       "lastVisitTime": 1627244145754.936,
       "title": "Chrome Web Store - Erweiterungen",

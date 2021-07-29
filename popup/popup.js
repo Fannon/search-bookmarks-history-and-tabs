@@ -98,6 +98,9 @@ async function initExtension() {
   ext.searchInput.addEventListener("keyup", searchWithFuseJs);
   document.addEventListener("keydown", navigationKeyListener);
 
+  // Start with empty search to display default results
+  await searchWithFuseJs()
+
   // Do some performance measurements and log it to debug
   performance.mark('init-end')
   performance.measure('init-end-to-end', 'init-start', 'init-end');
@@ -268,11 +271,13 @@ async function getSearchData() {
  * 
  * @see https://fusejs.io/
  */
-function searchWithFuseJs(event) {
+async function searchWithFuseJs(event) {
 
-  if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter') {
-    // Don't execute search on navigation keys
-    return
+  if (event) {
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter') {
+      // Don't execute search on navigation keys
+      return
+    }
   }
 
   performance.mark('search-start')
@@ -334,13 +339,32 @@ function searchWithFuseJs(event) {
       const highlighted = ext.opts.general.highlight ? highlightResultItem(el) : {}
       return {
         ...el.item,
-        titleHighlighted: highlighted.title || el.item.title,
-        tagsHighlighted: highlighted.tags || el.item.tags,
-        urlHighlighted: highlighted.url || el.item.url,
-        folderHighlighted: highlighted.folder || el.item.folder,
+        titleHighlighted: highlighted.title,
+        tagsHighlighted: highlighted.tags,
+        urlHighlighted: highlighted.url,
+        folderHighlighted: highlighted.folder,
       }
     })
+  } else {
+    // If we don't have a sufficiently long search term, display current tab related entries
+    // Find out if there are any bookmarks or history that match our current open URL
+
+    let currentUrl = window.location.href
+    if (chrome && chrome.tabs) {
+      const queryOptions = { active: true, currentWindow: true };
+      const [tab] = await chrome.tabs.query(queryOptions);
+      currentUrl = tab.url
+    }
+    // Remove trailing slash from URL, so the startsWith search works better
+    currentUrl = currentUrl.replace(/\/$/, "")
+
+    const foundBookmarks = ext.data.searchData.bookmarks.filter((el) => el.originalUrl.startsWith(currentUrl))
+    ext.data.result = ext.data.result.concat(foundBookmarks)
+    const foundHistory = ext.data.searchData.history.filter((el) => el.originalUrl.startsWith(currentUrl))
+    ext.data.result = ext.data.result.concat(foundHistory)
+    console.log(ext.data.result)
   }
+
 
   renderResult(ext.data.result)
 
@@ -385,7 +409,7 @@ function renderResult(result) {
     titleLink.setAttribute('href', resultEntry.originalUrl);
     titleLink.setAttribute('target', '_newtab');
     if (ext.opts.general.highlight) {
-      titleLink.innerHTML = resultEntry.titleHighlighted;
+      titleLink.innerHTML = resultEntry.titleHighlighted || resultEntry.title;
     } else {
       titleLink.innerText = resultEntry.title;
     }
@@ -393,13 +417,13 @@ function renderResult(result) {
     if (ext.opts.general.tags && resultEntry.tags) {
       const tags = document.createElement('span')
       tags.classList.add('badge', 'tags')
-      tags.innerHTML = resultEntry.tagsHighlighted
+      tags.innerHTML = resultEntry.tagsHighlighted || resultEntry.tags
       titleDiv.appendChild(tags)
     }
     if (resultEntry.folder) {
       const folder = document.createElement('span')
       folder.classList.add('badge', 'folder')
-      folder.innerHTML = resultEntry.folderHighlighted
+      folder.innerHTML = resultEntry.folderHighlighted || resultEntry.folder
       titleDiv.appendChild(folder)
     }
     if (resultEntry.lastVisit) {
@@ -415,7 +439,7 @@ function renderResult(result) {
     const a = document.createElement('a');
     a.setAttribute('href', resultEntry.originalUrl);
     a.setAttribute('target', '_newtab');
-    a.innerHTML = resultEntry.urlHighlighted;
+    a.innerHTML = resultEntry.urlHighlighted || resultEntry.url
     urlDiv.appendChild(a)
 
     // Append everything together :)
@@ -550,8 +574,12 @@ async function getChromeBookmarks() {
  */
 async function getChromeHistory(daysBack, maxResults) {
   return new Promise((resolve, reject) => {
-    const startTime = new Date() - 1000 * 60 * 60 * 24 * daysBack;
-    chrome.history.search({ text: '', maxResults, startTime }, (history, err) => {
+    chrome.history.search({ 
+      text: '', 
+      maxResults: maxResults, 
+      startTime: Date.now() - (1000 * 60 * 60 * 24 * daysBack), 
+      endTime: Date.now(),
+    }, (history, err) => {
       if (err) {
         return reject(err)
       }
