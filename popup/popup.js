@@ -255,8 +255,6 @@ async function getSearchData() {
     }
   })
 
-  result.history = result.history.filter(el => el != null)
-
   console.debug(`Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items`)
 
   return result
@@ -360,7 +358,9 @@ async function searchWithFuseJs(event) {
 
     const foundBookmarks = ext.data.searchData.bookmarks.filter((el) => el.originalUrl.startsWith(currentUrl))
     ext.data.result = ext.data.result.concat(foundBookmarks)
-    const foundHistory = ext.data.searchData.history.filter((el) => el.originalUrl.startsWith(currentUrl))
+    const foundHistory = ext.data.searchData.history.filter((el) => {
+      return (currentUrl === el.originalUrl || currentUrl === el.originalUrl + '/')
+    })
     ext.data.result = ext.data.result.concat(foundHistory)
     console.log(ext.data.result)
   }
@@ -392,6 +392,10 @@ function renderResult(result) {
 
   for (let i = 0; i < result.length; i++) {
     const resultEntry = result[i]
+
+    if (!resultEntry) {
+      continue
+    }
 
     // Create result list item (li)
     const resultListItem = document.createElement("li");
@@ -734,5 +738,5 @@ function isInViewport(elem) {
  * @see https://stackoverflow.com/a/57698415
  */
 function cleanUpUrl(url) {
-  return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").split('/')[0]
+  return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "")
 }
