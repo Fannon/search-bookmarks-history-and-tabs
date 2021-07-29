@@ -277,6 +277,11 @@ function searchWithFuseJs(event) {
 
   performance.mark('search-start')
 
+  if (!ext.data.tabIndex || !ext.data.bookmarkIndex || !ext.data.historyIndex) {
+    console.warn('No search index found (yet). Skipping search')
+    return
+  }
+
   let searchTerm = ext.searchInput.value ? ext.searchInput.value.trim() : ''
   ext.data.result = []
   let searchMode = 'all' // OR 'bookmarks' OR 'history'
