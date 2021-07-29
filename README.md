@@ -9,6 +9,7 @@ For bookmarks, it supports extraction and search of tags and folder names.
 * Local / offline only (no external communication / requests).
 * Searching for open browser tabs, bookmark folder names and tags.
 * Lightweight: Vanilla JS, with only a small search library ([Fuse.js](https://fuse.io/)) and a small subset of [BULMA](https://bulma.io/) CSS styles.
+* Dark mode / light mode (via system settings / [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
 
 ## Demo
 
@@ -64,7 +65,6 @@ This extension makes use of the following helpful open-source projects (thanks!)
   * Display currently open tabs?
 * Try other search algorithms / libraries that are less fuzzy
   * https://github.com/nextapps-de/flexsearch 
-* Add a dark theme
 * Create own scoring calculation
   * Different weight between index types (tabs, bookmarks, history)
   * Merge bookmarks with history, so we know when a bookmark has been opened recently / frequently -> higher score
