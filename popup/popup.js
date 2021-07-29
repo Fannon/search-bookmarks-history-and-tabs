@@ -18,7 +18,6 @@ ext.opts.general = {
   highlight: true,
   /** Display  last visit */
   lastVisit: true,
-  removeDuplicateUrls: true, // TODO: This does not find all duplicates yet
   /**
    * Enables fuse.js extended search, which additional operators to fine-tune results.
    * @see https://fusejs.io/examples.html#weighted-search
@@ -222,35 +221,36 @@ async function getSearchData() {
     }
   }
 
-  // SECOND: Clean up data
+  // SECOND: Merge history with bookmarks and tabs and clean up data
 
-  // Remove duplicate URLs from bookmarks and history
-  if (ext.opts.general.removeDuplicateUrls) {
-    const knownUrls = {}
-    const duplicatedUrls = []
-
-    // start with bookmarks, as they are higher prio
-    result.bookmarks = result.bookmarks.filter((el) => {
-      if (!knownUrls[el.originalUrl]) {
-        knownUrls[el.originalUrl] = true
-        return el
-      } else {
-        duplicatedUrls.push(el)
+  // Build maps with URL as key, so we have fast hashmap access
+  const historyMap = result.history.reduce((obj, item, index) => (obj[item.originalUrl] = { ...item, index }, obj) ,{});
+  
+  // merge history with bookmarks
+  result.bookmarks = result.bookmarks.map((el) => {
+    if (historyMap[el.originalUrl]) {
+      delete result.history[historyMap[el.originalUrl].index]
+      return {
+        ...historyMap[el.originalUrl],
+        ...el,
       }
-    })
-    result.history = result.history.filter((el) => {
-      if (!knownUrls[el.originalUrl]) {
-        knownUrls[el.originalUrl] = true
-        return el
-      } else {
-        duplicatedUrls.push(el)
-      }
-    })
-
-    if (duplicatedUrls.length) {
-      console.debug(`Ignoring ${duplicatedUrls.length} duplicated URLs`, duplicatedUrls)
+    } else {
+      return el
     }
-  }
+  })
+
+  // merge history with open tabs
+  result.tabs = result.tabs.map((el) => {
+    if (historyMap[el.originalUrl]) {
+      delete result.history[historyMap[el.originalUrl].index]
+      return {
+        ...historyMap[el.originalUrl],
+        ...el,
+      }
+    } else {
+      return el
+    }
+  })
 
   console.debug(`Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items`)
 
@@ -395,7 +395,7 @@ function renderResult(result) {
       folder.innerHTML = resultEntry.folderHighlighted
       titleDiv.appendChild(folder)
     }
-    if (ext.opts.general.lastVisit && resultEntry.lastVisit) {
+    if (resultEntry.lastVisit) {
       const lastVisited = document.createElement('span')
       lastVisited.classList.add('badge', 'last-visited')
       lastVisited.innerText = '-' + resultEntry.lastVisit
@@ -635,8 +635,8 @@ function convertChromeHistory(history) {
       title: entry.title,
       originalUrl: entry.url,
       url: cleanUpUrl(entry.url),
-      // visitCount: entry.visitCount,
-      lastVisit: timeSince(new Date(entry.lastVisitTime)),
+      visitCount: entry.visitCount,
+      lastVisit: ext.opts.general.lastVisit ? timeSince(new Date(entry.lastVisitTime)) : undefined,
       originalId: entry.id,
     })
   }

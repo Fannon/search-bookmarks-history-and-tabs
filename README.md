@@ -70,3 +70,4 @@ This extension makes use of the following helpful open-source projects (thanks!)
   * Merge bookmarks with history, so we know when a bookmark has been opened recently / frequently -> higher score
   * Remember which result items have been executed via extension recently -> higher score
 * Introduce dedicates search mode for tags and folders, that is more precise
+* Convert project to TypeScript once it is published in store(s)
