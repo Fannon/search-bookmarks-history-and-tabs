@@ -252,6 +252,8 @@ async function getSearchData() {
     }
   })
 
+  result.history = result.history.filter(el => el != null)
+
   console.debug(`Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items`)
 
   return result
@@ -288,7 +290,7 @@ function searchWithFuseJs(event) {
   } else if (searchTerm.startsWith('- ')) {
     searchMode = 'bookmarks'
     searchTerm = searchTerm.substring(2)
-  } else if (searchTerm.startsWith(' .')) {
+  } else if (searchTerm.startsWith('. ')) {
     searchMode = 'tabs'
     searchTerm = searchTerm.substring(2)
   }
