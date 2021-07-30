@@ -80,8 +80,7 @@ async function initExtension() {
   ext.searchInput = document.getElementById('search-input')
   ext.resultList = document.getElementById('result-list')
   ext.searchInput.value = ''
-  window.location.hash = ''
-
+  
   performance.mark('init-dom')
 
   // Model / Data
@@ -104,6 +103,8 @@ async function initExtension() {
   if (ext.opts.history.enabled) {
     ext.data.historyIndex = createFuseJsIndex('history', ext.data.searchData.history)
   }
+
+  hashRouter()
 
   performance.mark('init-search-index')
 
@@ -413,6 +414,8 @@ async function searchWithFuseJs(event) {
  */
 function renderResult(result) {
 
+  result = result || ext.data.result
+
   performance.mark('render-start')
 
   // Clean current result set
@@ -436,13 +439,15 @@ function renderResult(result) {
     resultListItem.addEventListener('mouseenter', hoverListItem, { passive: true, })
 
     // Create edit button
-    const editButton = document.createElement('a')
-    editButton.href = "#edit-bookmark/" + resultEntry.originalId
-    editButton.classList.add('edit-button')
-    const editImg = document.createElement('img')
-    editImg.src = "../images/edit.svg"
-    editButton.appendChild(editImg)
-    resultListItem.appendChild(editButton)
+    if (resultEntry.type === 'bookmark') {
+      const editButton = document.createElement('a')
+      editButton.href = "#edit-bookmark/" + resultEntry.originalId
+      editButton.classList.add('edit-button')
+      const editImg = document.createElement('img')
+      editImg.src = "../images/edit.svg"
+      editButton.appendChild(editImg)
+      resultListItem.appendChild(editButton)
+    }
 
     // Create title div
     const titleDiv = document.createElement('div')
@@ -587,7 +592,11 @@ function navigationKeyListener(event) {
     ext.data.currentItem++
     selectListItem(ext.data.currentItem)
   } else if (event.key === 'Enter' && ext.data.result.length > 0) {
-    openResultItem()
+    if (window.location.hash === '' || window.location.hash === '#') {
+      openResultItem()
+    } else if (window.location.hash.startsWith('#edit-bookmark/')) {
+      window.location.hash = window.location.hash.replace('#edit-bookmark/', '#update-bookmark/')
+    }
   }
 }
 
@@ -680,29 +689,70 @@ function hashRouter() {
   console.debug('Changing Route: ' + hash)
   if (!hash || hash === '#') {
     closeModals()
+    ext.searchInput.focus()
   } else if (hash.startsWith('#edit-bookmark/')) {
     const bookmarkId = hash.replace('#edit-bookmark/', '')
     editBookmark(bookmarkId)
-  }
-}
-
-function editBookmark(bookmarkId) {
-  const bookmark = ext.data.bookmarkIndex._docs.find(el => el.originalId === bookmarkId)
-  console.debug('Editing bookmark ' + bookmarkId, bookmark)
-  if (bookmark) {
-    const editDiv = document.getElementById('edit-bookmark')
-    editDiv.style = ""
-    const titleInput = document.getElementById('bookmark-title')
-    const tagsInput = document.getElementById('bookmark-tags')
-
-    titleInput.value = bookmark.title
-    tagsInput.value = bookmark.tags
+  } else if (hash.startsWith('#update-bookmark/')) {
+    const bookmarkId = hash.replace('#update-bookmark/', '')
+    updateBookmark(bookmarkId)
   }
 }
 
 function closeModals() {
   const editDiv = document.getElementById('edit-bookmark')
   editDiv.style = "display: none;"
+}
+
+function editBookmark(bookmarkId) {
+  const bookmark = ext.data.searchData.bookmarks.find(el => el.originalId === bookmarkId)
+  console.debug('Editing bookmark ' + bookmarkId, bookmark)
+  if (bookmark) {
+    document.getElementById('edit-bookmark').style = ""
+    document.getElementById('tags-overview').innerHTML = ext.data.tags.map((el) => {
+      return `<span class="badge tags">#${el}</span>`
+    }).join('')
+
+    const titleInput = document.getElementById('bookmark-title')
+    const tagsInput = document.getElementById('bookmark-tags')
+
+    titleInput.value = bookmark.title
+    tagsInput.value = bookmark.tags
+
+    document.getElementById('edit-bookmark-save').href = "#update-bookmark/" + bookmarkId
+  }
+}
+
+function updateBookmark(bookmarkId) {
+  const bookmark = ext.data.searchData.bookmarks.find(el => el.originalId === bookmarkId)
+  const titleInput = document.getElementById('bookmark-title').value.trim()
+  const tagsInput = document.getElementById('bookmark-tags').value.trim()
+
+  // Update search data model of bookmark
+  bookmark.title = titleInput
+  bookmark.tags = tagsInput
+
+  // Add new tag(s) to tags model
+  const individualTags = tagsInput.split('#')
+  for (const tag of individualTags) {
+    if (ext.data.tags.find((el) => el === tag)) {
+      ext.data.tags.push(tag)
+    }
+  }
+
+  console.debug(`Update bookmark with ID ${bookmarkId}: "${titleInput} ${tagsInput}"`)
+  
+  if (chrome.bookmarks) {
+    chrome.bookmarks.update(bookmarkId, {
+      title: `${titleInput} ${tagsInput}`,
+    })
+  } else {
+    console.warn(`No chrome.bookmarks API found. Bookmark update will not persist.`)
+  }
+
+  // Start search again to update the search index and the UI with new bookmark model
+  searchWithFuseJs()
+  window.location.href = '#'
 }
 
 //////////////////////////////////////////
