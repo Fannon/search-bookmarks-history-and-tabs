@@ -58,18 +58,12 @@ This extension makes use of the following helpful open-source projects (thanks!)
 
 ## Ideas and To Dos
 
-* Make extension configurable via UI (requires new `storage` permission)
 * Allow to quick add & edit bookmarks (title + tags)
   * tags would ideally have autocomplete, based on existing tags (something like select2)
   * quick add current open site via + button
-* Start with some initial results 
-  * Remember which items have been opened recently and show last (n) items immediately?
-  * Display currently open tabs?
+* Make extension configurable via UI (requires new `storage` permission)
+* Improve scoring algorithm?
+* Introduce dedicates search mode for tags and folders, that is more precise
 * Try other search algorithms / libraries that are less fuzzy
   * https://github.com/nextapps-de/flexsearch 
-* Create own scoring calculation
-  * Different weight between index types (tabs, bookmarks, history)
-  * Merge bookmarks with history, so we know when a bookmark has been opened recently / frequently -> higher score
-  * Remember which result items have been executed via extension recently -> higher score
-* Introduce dedicates search mode for tags and folders, that is more precise
 * Convert project to TypeScript once it is published in store(s)

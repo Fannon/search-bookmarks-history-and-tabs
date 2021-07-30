@@ -36,6 +36,8 @@ ext.opts.search = {
   bookmarksWeight: 1,
   tabsWeight: 0.9,
   historyWeight: 0.4,
+  /** Additional score per visit within history hoursAgo timeframe  */
+  visitedBonusScore: 0.1,
 }
 ext.opts.tabs = {
   enabled: true,
@@ -473,6 +475,9 @@ function renderResult(result) {
  * Sorts the result by that score
  */
 function sortResult(result, searchTerm) {  
+
+  console.dir(result)
+
   // calculate score
   for (let i = 0; i < result.length; i++) {
     const el = result[i]
@@ -496,7 +501,6 @@ function sortResult(result, searchTerm) {
     if (el.url.startsWith(searchTerm)) {
       score += 0.5 * ext.opts.search.urlWeight
     }
-
     if (searchTerm.includes('#')) {
       let searchTermTags = searchTerm.split('#')
       searchTermTags.shift()
@@ -509,6 +513,11 @@ function sortResult(result, searchTerm) {
       })
     }
 
+    // Increase score if result has been open frequently or recently
+    if (el.visitCount) {
+      score += (el.visitCount * ext.opts.search.visitedBonusScore)
+    }
+
     el.score = score
   }
 
@@ -516,15 +525,15 @@ function sortResult(result, searchTerm) {
     return b.score - a.score
   });
 
-  // console.table(result.map((el) => {
-  //   return {
-  //     score: el.score,
-  //     fuseScore: el.fuseScore,
-  //     type: el.type,
-  //     title: el.title,
-  //     url: el.originalUrl
-  //   }
-  // }))
+  console.table(result.map((el) => {
+    return {
+      score: el.score,
+      fuseScore: el.fuseScore,
+      type: el.type,
+      title: el.title,
+      url: el.originalUrl
+    }
+  }))
 
   return result
 }

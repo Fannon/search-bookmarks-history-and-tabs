@@ -321,22 +321,6 @@
                 },
                 {
                   "dateAdded": 1627220693130,
-                  "id": "36",
-                  "index": 6,
-                  "parentId": "29",
-                  "title": "Slate Star Codex",
-                  "url": "https://slatestarcodex.com/"
-                },
-                {
-                  "dateAdded": 1627220693130,
-                  "id": "37",
-                  "index": 7,
-                  "parentId": "29",
-                  "title": "Astral Codex Ten",
-                  "url": "https://astralcodexten.substack.com/"
-                },
-                {
-                  "dateAdded": 1627220693130,
                   "id": "38",
                   "index": 8,
                   "parentId": "29",
@@ -350,14 +334,6 @@
                   "parentId": "29",
                   "title": "Overreacted — A blog by Dan Abramov",
                   "url": "https://overreacted.io/"
-                },
-                {
-                  "dateAdded": 1627220693130,
-                  "id": "40",
-                  "index": 10,
-                  "parentId": "29",
-                  "title": "Who is Scott Alexander and what is he about?",
-                  "url": "https://jasoncrawford.org/guide-to-scott-alexander-and-slate-star-codex"
                 },
                 {
                   "dateAdded": 1627220693130,
