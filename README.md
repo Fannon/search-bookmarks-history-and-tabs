@@ -53,8 +53,9 @@ To customize the extension options, adjust the `ext.opts` in `popup/popup.js`
 ## Credits
 
 This extension makes use of the following helpful open-source projects (thanks!):
-* https://bulma.io/
-* https://fusejs.io/
+* https://fusejs.io/ for the fuzzy search algorithm
+* https://bulma.io/ for some minimal CSS base styling
+* https://github.com/tabler/tabler-icons for the edit icon
 
 ## Ideas and To Dos
 

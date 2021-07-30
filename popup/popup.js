@@ -80,6 +80,7 @@ async function initExtension() {
   ext.searchInput = document.getElementById('search-input')
   ext.resultList = document.getElementById('result-list')
   ext.searchInput.value = ''
+  window.location.hash = ''
 
   performance.mark('init-dom')
 
@@ -109,6 +110,7 @@ async function initExtension() {
   // Register Events
   ext.searchInput.addEventListener("keyup", searchWithFuseJs);
   document.addEventListener("keydown", navigationKeyListener);
+  window.addEventListener("hashchange", hashRouter, false);
 
   // Start with empty search to display default results
   await searchWithFuseJs()
@@ -431,8 +433,16 @@ function renderResult(result) {
     resultListItem.setAttribute('x-id', resultEntry.originalId)
     resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
     // Register events for mouse navigation
-    resultListItem.addEventListener('mouseup', openResultItem, { passive: true, })
     resultListItem.addEventListener('mouseenter', hoverListItem, { passive: true, })
+
+    // Create edit button
+    const editButton = document.createElement('a')
+    editButton.href = "#edit-bookmark/" + resultEntry.originalId
+    editButton.classList.add('edit-button')
+    const editImg = document.createElement('img')
+    editImg.src = "../images/edit.svg"
+    editButton.appendChild(editImg)
+    resultListItem.appendChild(editButton)
 
     // Create title div
     const titleDiv = document.createElement('div')
@@ -531,10 +541,8 @@ function sortResult(result, searchTerm) {
       let searchTermTags = searchTerm.split('#')
       searchTermTags.shift()
       searchTermTags.forEach((tagName) => {
-        console.log(tagName)
         if (el.tags && el.tags.includes('#' + tagName)) {
           score += ext.opts.search.startsWithBonusScore * ext.opts.search.tagWeight
-          console.log('increased tag score', el)
         }
       })
     }
@@ -619,7 +627,6 @@ function openResultItem(event) {
 }
 
 function hoverListItem(event) {
-  console.log(event)
   const index = event.target.getAttribute('x-index')
   if (index) {
     document.getElementById('selected-result').id = ''
@@ -668,8 +675,34 @@ function highlightResultItem(resultItem) {
 // EDIT BOOKMARK FEATURE                //
 //////////////////////////////////////////
 
-function editBookmark() {
+function hashRouter() {
+  const hash = window.location.hash.trim()
+  console.debug('Changing Route: ' + hash)
+  if (!hash || hash === '#') {
+    closeModals()
+  } else if (hash.startsWith('#edit-bookmark/')) {
+    const bookmarkId = hash.replace('#edit-bookmark/', '')
+    editBookmark(bookmarkId)
+  }
+}
 
+function editBookmark(bookmarkId) {
+  const bookmark = ext.data.bookmarkIndex._docs.find(el => el.originalId === bookmarkId)
+  console.debug('Editing bookmark ' + bookmarkId, bookmark)
+  if (bookmark) {
+    const editDiv = document.getElementById('edit-bookmark')
+    editDiv.style = ""
+    const titleInput = document.getElementById('bookmark-title')
+    const tagsInput = document.getElementById('bookmark-tags')
+
+    titleInput.value = bookmark.title
+    tagsInput.value = bookmark.tags
+  }
+}
+
+function closeModals() {
+  const editDiv = document.getElementById('edit-bookmark')
+  editDiv.style = "display: none;"
 }
 
 //////////////////////////////////////////

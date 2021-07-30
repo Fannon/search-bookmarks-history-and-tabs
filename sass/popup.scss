@@ -6,33 +6,29 @@ body {
   width: 500px;
   height: 600px;
   background: #eee;
+  color: #555;
   padding: 0;
   overflow: hidden;
-}
-a {
-  color: #888;
-}
-
-mark {
-  font-weight: bold;
-  color: #356ba9;
-  background: none;
-}
-.tags mark {
-  color: #7cb3f6;
-}
-.folder mark {
-  color: #85dbdb;
+  a {
+    color: #888;
+  }
+  mark {
+    font-weight: bold;
+    color: #356ba9;
+    background: none;
+  }
 }
 
 #popup {
   width: 100%;
   overflow: hidden;
 }
-
-#search-input,
-#search-input:focus {
-  width: 500px;
+.input,
+.input:active,
+.input:focus {
+  width: 100%;
+  max-width: 500px;
+  min-width: 500px;
   height: 55px;
   padding: 4px 8px;
   font-size: 24px;
@@ -49,73 +45,102 @@ mark {
   height: 540px;
   overflow-x: hidden;
   overflow-y: scroll;
+
+  li {
+    background-color: #fff;
+    margin: 0 0 4px 0;
+    padding: 4px;
+    border-radius: 3px;
+    overflow: hidden;
+
+    #selected-result {
+      background-color: #dadada;
+    }
+  }
+  li.tab {
+    border-left: 6px solid #b89aff;
+  }
+  li.bookmark {
+    border-left: 6px solid #559292;
+  }
+  li.history {
+    border-left: 6px solid rgb(158, 206, 47);
+  }
+  .edit-button {
+    float: right;
+  }
+  .title {
+    font-size: 18px;
+    margin: 0;
+    font-weight: 400;
+
+    a {
+      color: #333;
+      margin-right: 4px;
+    }
+  }
+  .badge {
+    color: #fff;
+    font-size: 11px;
+    border-radius: 3px;
+    padding: 1px 3px 2px 3px;
+    margin-right: 4px;
+    white-space: nowrap;
+    display: inline-block;
+    position: relative;
+    top: -3px;
+  }
+  .tags {
+    background: #557292;
+    .divider:before {
+      content: " ";
+    }
+    mark {
+      color: #7cb3f6;
+    }
+  }
+  .folder {
+    background: #559292;
+    .divider:before {
+      content: " \276F \0020";
+    }
+    mark {
+      color: #85dbdb;
+    }
+  }
+  .score {
+    background: rgb(116, 116, 116);
+    color: #DDD;
+  }
+  .url {
+    font-size: 13px;
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
 }
 
-#result-list li {
-  background-color: #fff;
-  margin: 0 0 4px 0;
-  padding: 4px;
-  border-radius: 3px;
-  overflow: hidden;
-}
 
-#result-list .title {
-  font-size: 18px;
-  margin: 0;
-  font-weight: 400;
-}
-#result-list .title a {
-  color: #333;
-  margin-right: 4px;
-}
-#result-list .badge {
-  color: #fff;
-  font-size: 11px;
-  border-radius: 3px;
-  padding: 1px 3px 2px 3px;
-  margin-right: 4px;
-  white-space: nowrap;
-  display: inline-block;
-  position: relative;
-  top: -3px;
-}
+/** EDIT BOOKMARK */
 
-#result-list .tags {
-  background: #557292;
-}
-#result-list .tags .divider:before {
-  content: " ";
-}
-#result-list .folder {
-  background: #559292;
-}
-#result-list .folder .divider:before {
-  content: " \276F \0020";
-}
-#result-list .last-visited {
-  background: rgb(158, 206, 47);
-}
-#result-list .score {
-  background: rgb(116, 116, 116);
-  color: #DDD;
-}
-#result-list .url {
-  font-size: 13px;
-  margin: 0;
-  overflow: hidden;
-  white-space: nowrap;
-}
-#result-list li#selected-result {
-  background-color: #dadada;
-}
-#result-list li.tab {
-  border-left: 6px solid #b89aff;
-}
-#result-list li.bookmark {
-  border-left: 6px solid #559292;
-}
-#result-list li.history {
-  border-left: 6px solid rgb(158, 206, 47);
+#edit-bookmark {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 500px;
+  height: 600px;
+  background: #EEE;
+
+  #bookmark-title {
+    height: 140px;
+  }
+  #bookmark-tags {
+    height: 120px;
+  }
+  .input-description {
+    margin: 4px 0 2px 8px;
+    font-size: 12px;
+  }
 }
 
 /** SCROLLBAR */
@@ -136,40 +161,48 @@ mark {
 /** DARK MODE **/
 @media screen and (prefers-color-scheme: dark) {
   html,
-  body {
+  body,
+  #edit-bookmark {
     background: #222;
+    a,
+    a:visited {
+      color: #999;
+    }  
+    a:hover {
+      color: #BBB;
+    }
+    mark {
+      color: #6b92c0;
+    }
   }
-  a,
-  a:visited {
-    color: #999;
-  }  
-  a:hover {
-    color: #BBB;
-  }
-  #search-input,
-  #search-input:active,
-  #search-input:focus {
+ 
+  .input,
+  .input:active,
+  .input:focus {
     background-color: #000;
     border-bottom: 1px solid #444;
     color: #DDD;
   }
-
-  #result-list li {
-    background: #111;
-  }
-  #result-list li#selected-result {
-    background-color: #333;
-  }
-  #result-list .title a {
-    color: #d4d4d4;
-  }
-  mark {
-    color: #6b92c0;
+  #result-list {
+    li {
+      background: #111;
+      #selected-result {
+        background-color: #333;
+      }
+    }
+    .title {
+      a {
+        color: #d4d4d4;
+      }
+    }
   }
   #result-list::-webkit-scrollbar-track {
     background: rgb(65, 65, 65);
   }
   #result-list::-webkit-scrollbar-thumb {
     background-color: rgb(95, 95, 95);
+  }
+  .input-description {
+    color: #777;
   }
 }

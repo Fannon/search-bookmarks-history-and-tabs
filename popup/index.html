@@ -8,12 +8,16 @@
 
 <body>
   <div id="popup">
-    <input id="search-input" type="text" placeholder="Search bookmarks and history" autofocus>
+    <input id="search-input" class="input" type="text" placeholder="Search bookmarks and history" autofocus>
     <ul id="result-list"></ul>
   </div>
   <div id="edit-bookmark" style="display: none;">
-    <input id="bookmark-title" type="text">
-    <input id="bookmark-tags" type="text">
+    <div class="input-description">EDIT TITLE:</div>
+    <textarea id="bookmark-title" class="input" type="text"></textarea>
+    <div class="input-description">EDIT TAGS:</div>
+    <textarea id="bookmark-tags" class="input" type="text"></textarea>
+    <button id="edit-bookmark-cancel">CANCEL</button>
+    <button id="edit-bookmark-save">SAVE</button>
   </div>
   <script src="./lib/fuse.min.js"></script>
   <script src="./popup.js"></script>
