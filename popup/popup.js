@@ -80,7 +80,7 @@ async function initExtension() {
   ext.searchInput = document.getElementById('search-input')
   ext.resultList = document.getElementById('result-list')
   ext.searchInput.value = ''
-  
+
   performance.mark('init-dom')
 
   // Model / Data
@@ -241,8 +241,8 @@ async function getSearchData() {
   // SECOND: Merge history with bookmarks and tabs and clean up data
 
   // Build maps with URL as key, so we have fast hashmap access
-  const historyMap = result.history.reduce((obj, item, index) => (obj[item.originalUrl] = { ...item, index }, obj) ,{});
-  
+  const historyMap = result.history.reduce((obj, item, index) => (obj[item.originalUrl] = { ...item, index }, obj), {});
+
   // merge history with bookmarks
   result.bookmarks = result.bookmarks.map((el) => {
     if (historyMap[el.originalUrl]) {
@@ -269,9 +269,16 @@ async function getSearchData() {
     }
   })
 
+
+  console.debug(`Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items.`)
+
+  return result
+}
+
+function getUniqueTags() {
   // Extract tags from bookmark titles
   const tagsDictionary = {}
-  for (const el of result.bookmarks) {
+  for (const el of ext.data.searchData.bookmarks) {
     if (el.tags) {
       for (const tag of el.tags.split('#')) {
         if (tag.trim()) {
@@ -280,11 +287,8 @@ async function getSearchData() {
       }
     }
   }
-  ext.data.tags = Object.keys(tagsDictionary)
-  
-  console.debug(`Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items with ${ext.data.tags.length} unique tags`)
-
-  return result
+  ext.data.tags = Object.keys(tagsDictionary).sort()
+  return ext.data.tags
 }
 
 //////////////////////////////////////////
@@ -300,9 +304,9 @@ async function search(event) {
 
   if (event) {
     if (
-      event.key === 'ArrowUp' || 
-      event.key === 'ArrowDown' || 
-      event.key === 'Enter' || 
+      event.key === 'ArrowUp' ||
+      event.key === 'ArrowDown' ||
+      event.key === 'Enter' ||
       event.key === 'Escape'
     ) {
       // Don't execute search on navigation keys
@@ -535,7 +539,7 @@ function renderResult(result) {
  * Calculates score on basis of the fuse score and some own rules
  * Sorts the result by that score
  */
-function sortResult(result, searchTerm) {  
+function sortResult(result, searchTerm) {
 
   // calculate score
   for (let i = 0; i < result.length; i++) {
@@ -574,8 +578,8 @@ function sortResult(result, searchTerm) {
 
     // Increase score if result has been open frequently or recently
     if (el.visitCount) {
-      score += Math.min(ext.opts.search.maxVisitedBonusScore, 
-      el.visitCount * ext.opts.search.visitedBonusScore
+      score += Math.min(ext.opts.search.maxVisitedBonusScore,
+        el.visitCount * ext.opts.search.visitedBonusScore
       )
     }
 
@@ -744,9 +748,9 @@ function closeModals() {
 //////////////////////////////////////////
 
 function getTagsOverview() {
-  ext.data.tags.sort()
+  const tags = getUniqueTags()
   document.getElementById('tags-overview').style = ""
-  document.getElementById('tags-list').innerHTML = ext.data.tags.map((el) => {
+  document.getElementById('tags-list').innerHTML = tags.map((el) => {
     return `<a class="badge tags" href="#search/'#${el}">#${el}</a>`
   }).join('')
 }
@@ -760,17 +764,11 @@ function editBookmark(bookmarkId) {
   console.debug('Editing bookmark ' + bookmarkId, bookmark)
   if (bookmark) {
     document.getElementById('edit-bookmark').style = ""
-    document.getElementById('tags-overview').innerHTML = ext.data.tags.map((el) => {
-      return `<a class="badge tags" href="#search/'#${el}">#${el}</a>`
-    }).join('')
-
-    const titleInput = document.getElementById('bookmark-title')
-    const tagsInput = document.getElementById('bookmark-tags')
-
-    titleInput.value = bookmark.title
-    tagsInput.value = bookmark.tags
-
+    document.getElementById('bookmark-title').value = bookmark.title
+    document.getElementById('bookmark-tags').value = bookmark.tags
     document.getElementById('edit-bookmark-save').href = "#update-bookmark/" + bookmarkId
+  } else {
+    console.warn(`Tried to edit bookmark id="${bookmarkId}", but coult not find it in searchData.`)
   }
 }
 
@@ -783,16 +781,8 @@ function updateBookmark(bookmarkId) {
   bookmark.title = titleInput
   bookmark.tags = tagsInput
 
-  // Add new tag(s) to tags model
-  const individualTags = tagsInput.split('#')
-  for (const tag of individualTags) {
-    if (ext.data.tags.find((el) => el === tag)) {
-      ext.data.tags.push(tag)
-    }
-  }
-
   console.debug(`Update bookmark with ID ${bookmarkId}: "${titleInput} ${tagsInput}"`)
-  
+
   if (chrome.bookmarks) {
     chrome.bookmarks.update(bookmarkId, {
       title: `${titleInput} ${tagsInput}`,
@@ -825,10 +815,10 @@ async function getChromeBookmarks() {
  */
 async function getChromeHistory(hoursAgo, maxResults) {
   return new Promise((resolve, reject) => {
-    chrome.history.search({ 
-      text: '', 
-      maxResults: maxResults, 
-      startTime: Date.now() - (1000 * 60 * 60 * hoursAgo), 
+    chrome.history.search({
+      text: '',
+      maxResults: maxResults,
+      startTime: Date.now() - (1000 * 60 * 60 * hoursAgo),
       endTime: Date.now(),
     }, (history, err) => {
       if (err) {

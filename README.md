@@ -63,7 +63,7 @@ This extension makes use of the following helpful open-source projects (thanks!)
 * Quick add current open site via + button
 * Make extension configurable via UI (requires new `storage` permission)
 * Improve scoring algorithm?
-* Introduce dedicates search mode for tags and folders, that is more precise
+* Introduce dedicates and precise search mode for tags and folders
 * Try other search algorithms / libraries that are less fuzzy
   * https://github.com/nextapps-de/flexsearch 
-* Convert project to TypeScript once it is published in store(s)
+* Convert project to TypeScript and make it more modular
