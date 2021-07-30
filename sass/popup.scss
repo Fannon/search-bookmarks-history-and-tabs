@@ -7,6 +7,7 @@ body {
   height: 600px;
   background: #eee;
   padding: 0;
+  overflow: hidden;
 }
 a {
   color: #888;
@@ -18,14 +19,15 @@ mark {
   background: none;
 }
 .tags mark {
-  color: #a8c9ed;
+  color: #7cb3f6;
 }
 .folder mark {
-  color: #95e3e3;
+  color: #85dbdb;
 }
 
 #popup {
   width: 100%;
+  overflow: hidden;
 }
 
 #search-input,
@@ -42,9 +44,9 @@ mark {
 }
 
 #result-list {
-  margin: 4px 4px 4px 4px;
+  margin: 4px 0 4px 4px;
   padding: 0 4px 0 0;
-  height: 538px;
+  height: 540px;
   overflow-x: hidden;
   overflow-y: scroll;
 }
@@ -114,9 +116,9 @@ mark {
 
 /** SCROLLBAR */
 #result-list::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
   margin-left: 4px;
-  padding-left: 4px;
+  padding-left: 0px;
 }
 #result-list::-webkit-scrollbar-track {
   background: #ddd;
@@ -124,4 +126,46 @@ mark {
 }
 #result-list::-webkit-scrollbar-thumb {
   background-color: #999;
+}
+
+
+/** DARK MODE **/
+@media screen and (prefers-color-scheme: dark) {
+  html,
+  body {
+    background: #222;
+  }
+  a,
+  a:visited {
+    color: #999;
+  }  
+  a:hover {
+    color: #BBB;
+  }
+  #search-input,
+  #search-input:active,
+  #search-input:focus {
+    background-color: #000;
+    border-bottom: 1px solid #444;
+    color: #DDD;
+  }
+
+  #result-list li {
+    background: #111;
+  }
+  #result-list li#selected-result {
+    background-color: #333;
+  }
+  #result-list .title a {
+    color: #d4d4d4;
+  }
+  mark {
+    color: #6b92c0;
+  }
+  #result-list::-webkit-scrollbar-track {
+    background: rgb(65, 65, 65);
+  }
+  #result-list::-webkit-scrollbar-thumb {
+    background-color: rgb(95, 95, 95);
+  }
 }

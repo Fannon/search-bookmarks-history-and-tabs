@@ -26,13 +26,16 @@ ext.opts.general = {
 }
 ext.opts.search = {
   maxResults: 128,
-  minMatchCharLength: 2,
+  minMatchCharLength: 1,
   /** Fuzzy search threshold (increase to increase fuzziness) */
   threshold: 0.4,
-  titleWeight: 10,
-  tagWeight: 7,
-  urlWeight: 5,
-  folderWeight: 2,
+  titleWeight: 1,
+  tagWeight: 0.7,
+  urlWeight: 0.55,
+  folderWeight: 0.2,
+  bookmarksWeight: 1,
+  tabsWeight: 0.9,
+  historyWeight: 0.4,
 }
 ext.opts.tabs = {
   enabled: true,
@@ -42,8 +45,8 @@ ext.opts.bookmarks = {
 }
 ext.opts.history = {
   enabled: true,
-  daysAgo: 3,
-  maxItems: 128,
+  hoursAgo: 24,
+  maxItems: 1024,
 }
 
 //////////////////////////////////////////
@@ -201,7 +204,7 @@ async function getSearchData() {
   }
   if (chrome.history && ext.opts.history.enabled) {
     performance.mark('get-data-history-start')
-    const chromeHistory = await getChromeHistory(ext.opts.history.daysAgo, ext.opts.history.maxItems)
+    const chromeHistory = await getChromeHistory(ext.opts.history.hoursAgo, ext.opts.history.maxItems)
     result.history = convertChromeHistory(chromeHistory)
     performance.mark('get-data-history-end')
     performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end');
@@ -254,8 +257,6 @@ async function getSearchData() {
       return el
     }
   })
-
-  result.history = result.history.filter(el => el != null)
 
   console.debug(`Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items`)
 
@@ -310,6 +311,8 @@ async function searchWithFuseJs(event) {
     searchTerm = ''
   }
 
+  ext.data.searchTerm = searchTerm
+
   // If we have a search term after 
   if (searchTerm) {
 
@@ -323,8 +326,8 @@ async function searchWithFuseJs(event) {
       ext.data.searchResult = ext.data.tabIndex.search(searchTerm)
     } else {
       ext.data.searchResult = [
-        ...ext.data.tabIndex.search(searchTerm),
         ...ext.data.bookmarkIndex.search(searchTerm),
+        ...ext.data.tabIndex.search(searchTerm),
         ...ext.data.historyIndex.search(searchTerm),
       ]
     }
@@ -339,6 +342,7 @@ async function searchWithFuseJs(event) {
       const highlighted = ext.opts.general.highlight ? highlightResultItem(el) : {}
       return {
         ...el.item,
+        fuseScore: el.score,
         titleHighlighted: highlighted.title,
         tagsHighlighted: highlighted.tags,
         urlHighlighted: highlighted.url,
@@ -360,11 +364,13 @@ async function searchWithFuseJs(event) {
 
     const foundBookmarks = ext.data.searchData.bookmarks.filter((el) => el.originalUrl.startsWith(currentUrl))
     ext.data.result = ext.data.result.concat(foundBookmarks)
-    const foundHistory = ext.data.searchData.history.filter((el) => el.originalUrl.startsWith(currentUrl))
+    const foundHistory = ext.data.searchData.history.filter((el) => {
+      return (currentUrl === el.originalUrl || currentUrl === el.originalUrl + '/')
+    })
     ext.data.result = ext.data.result.concat(foundHistory)
-    console.log(ext.data.result)
   }
 
+  sortResult(ext.data.result, searchTerm)
 
   renderResult(ext.data.result)
 
@@ -392,6 +398,10 @@ function renderResult(result) {
 
   for (let i = 0; i < result.length; i++) {
     const resultEntry = result[i]
+
+    if (!resultEntry) {
+      continue
+    }
 
     // Create result list item (li)
     const resultListItem = document.createElement("li");
@@ -456,6 +466,67 @@ function renderResult(result) {
   const renderPerformance = performance.getEntriesByType("measure")
   console.debug('Render Performance: ' + renderPerformance[0].duration, renderPerformance);
   performance.clearMeasures()
+}
+
+/**
+ * Calculates score on basis of the fuse score and some own rules
+ * Sorts the result by that score
+ */
+function sortResult(result, searchTerm) {  
+  // calculate score
+  for (let i = 0; i < result.length; i++) {
+    const el = result[i]
+    let score = 1
+
+    // Apply result.type weight
+    if (el.type === 'bookmark') {
+      score = score * ext.opts.search.bookmarksWeight
+    } else if (el.type === 'tab') {
+      score = score * ext.opts.search.tabsWeight
+    } else if (el.type === 'history') {
+      score = score * ext.opts.search.historyWeight
+    }
+
+    score = score * (1 - el.fuseScore)
+
+    // Increase score if we have excact "startsWith" matches
+    if (el.title.startsWith(searchTerm)) {
+      score += 0.5 * ext.opts.search.titleWeight
+    }
+    if (el.url.startsWith(searchTerm)) {
+      score += 0.5 * ext.opts.search.urlWeight
+    }
+
+    if (searchTerm.includes('#')) {
+      let searchTermTags = searchTerm.split('#')
+      searchTermTags.shift()
+      searchTermTags.forEach((tagName) => {
+        console.log(tagName)
+        if (el.tags && el.tags.includes('#' + tagName)) {
+          score += 0.5 * ext.opts.search.tagWeight
+          console.log('increased tag score', el)
+        }
+      })
+    }
+
+    el.score = score
+  }
+
+  result = result.sort((a, b) => {
+    return b.score - a.score
+  });
+
+  // console.table(result.map((el) => {
+  //   return {
+  //     score: el.score,
+  //     fuseScore: el.fuseScore,
+  //     type: el.type,
+  //     title: el.title,
+  //     url: el.originalUrl
+  //   }
+  // }))
+
+  return result
 }
 
 /**
@@ -572,12 +643,12 @@ async function getChromeBookmarks() {
  * Gets chrome browsing history.
  * Warning: This chrome API call tends to be rather slow
  */
-async function getChromeHistory(daysBack, maxResults) {
+async function getChromeHistory(hoursAgo, maxResults) {
   return new Promise((resolve, reject) => {
     chrome.history.search({ 
       text: '', 
       maxResults: maxResults, 
-      startTime: Date.now() - (1000 * 60 * 60 * 24 * daysBack), 
+      startTime: Date.now() - (1000 * 60 * 60 * hoursAgo), 
       endTime: Date.now(),
     }, (history, err) => {
       if (err) {
@@ -734,5 +805,5 @@ function isInViewport(elem) {
  * @see https://stackoverflow.com/a/57698415
  */
 function cleanUpUrl(url) {
-  return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").split('/')[0]
+  return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "")
 }

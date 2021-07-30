@@ -45,6 +45,29 @@
       "url": "https://partner.microsoft.com/de-de/dashboard/microsoftedge/overview",
       "width": 1334,
       "windowId": 1
+    },
+    {
+      "active": false,
+      "audible": false,
+      "autoDiscardable": true,
+      "discarded": false,
+      "favIconUrl": "https://partner.microsoft.com/favicon.ico",
+      "groupId": -1,
+      "height": 1172,
+      "highlighted": false,
+      "id": 185,
+      "incognito": false,
+      "index": 1,
+      "mutedInfo": {
+        "muted": false
+      },
+      "pinned": false,
+      "selected": false,
+      "status": "complete",
+      "title": "Getting Started Step-By-Step | JSON Schema",
+      "url": "https://json-schema.org/learn/getting-started-step-by-step.html",
+      "width": 1334,
+      "windowId": 1
     }
   ],
   "bookmarks": [
