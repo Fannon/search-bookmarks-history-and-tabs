@@ -34,11 +34,16 @@ ext.opts.search = {
   tagWeight: 0.7,
   urlWeight: 0.55,
   folderWeight: 0.2,
-  bookmarksWeight: 1,
-  tabsWeight: 0.9,
-  historyWeight: 0.4,
+  bookmarkDefaultScore: 100,
+  tabDefaultScore: 90,
+  historyDefaultScore: 40,
   /** Additional score points per visit within history hoursAgo */
-  visitedBonusScore: 10,
+  visitedBonusScore: 3,
+  maxVisitedBonusScore: 40,
+  /** 
+   * Additional score points if title, url and tag starts exactly with search text.
+   * The points can be added multiple times, if more than one has a "starts with" match.
+   */
   startsWithBonusScore: 30,
 }
 ext.opts.tabs = {
@@ -411,7 +416,7 @@ function renderResult(result) {
     const resultListItem = document.createElement("li");
     resultListItem.classList.add(resultEntry.type)
     resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
-    resultListItem.setAttribute('x-score', Math.round(resultEntry.score))
+    resultListItem.setAttribute('x-score', Math.round(resultEntry.score || 0))
     // Register events for mouse navigation
     resultListItem.addEventListener('mouseup', openResultItem, { passive: true, })
     resultListItem.addEventListener('mouseenter', hoverListItem, { passive: true, })
@@ -446,7 +451,7 @@ function renderResult(result) {
       lastVisited.innerText = '-' + resultEntry.lastVisit
       titleDiv.appendChild(lastVisited)
     }
-    if (ext.opts.general.displayScore) {
+    if (ext.opts.general.displayScore && resultEntry.score) {
       const score = document.createElement('span')
       score.classList.add('badge', 'score')
       score.innerText = Math.round(resultEntry.score)
@@ -491,21 +496,23 @@ function sortResult(result, searchTerm) {
 
     // Apply result.type weight
     if (el.type === 'bookmark') {
-      score = score * ext.opts.search.bookmarksWeight
+      score = ext.opts.search.bookmarkDefaultScore
     } else if (el.type === 'tab') {
-      score = score * ext.opts.search.tabsWeight
+      score = ext.opts.search.tabDefaultScore
     } else if (el.type === 'history') {
-      score = score * ext.opts.search.historyWeight
+      score = ext.opts.search.historyDefaultScore
     }
 
+    // Multiply by fuse.js score. 
+    // This will reduce the score if the search is not a good match
     score = score * (1 - el.fuseScore)
 
     // Increase score if we have exact "startsWith" matches
     if (el.title.startsWith(searchTerm)) {
-      score += ext.opts.search.startsWithBonusScore * ext.opts.search.titleWeight
+      score += (ext.opts.search.startsWithBonusScore * ext.opts.search.titleWeight)
     }
     if (el.url.startsWith(searchTerm)) {
-      score += ext.opts.search.startsWithBonusScore * ext.opts.search.urlWeight
+      score += (ext.opts.search.startsWithBonusScore * ext.opts.search.urlWeight)
     }
     if (searchTerm.includes('#')) {
       let searchTermTags = searchTerm.split('#')
@@ -521,7 +528,9 @@ function sortResult(result, searchTerm) {
 
     // Increase score if result has been open frequently or recently
     if (el.visitCount) {
-      score += (el.visitCount * ext.opts.search.visitedBonusScore)
+      score += Math.min(ext.opts.search.maxVisitedBonusScore, 
+      el.visitCount * ext.opts.search.visitedBonusScore
+      )
     }
 
     el.score = score
@@ -531,6 +540,7 @@ function sortResult(result, searchTerm) {
     return b.score - a.score
   });
 
+  // Helpful for debugging score algorithm
   // console.table(result.map((el) => {
   //   return {
   //     score: el.score,
