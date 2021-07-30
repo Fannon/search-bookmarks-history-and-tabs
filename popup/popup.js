@@ -419,7 +419,7 @@ function renderResult(result) {
     titleLink.setAttribute('href', resultEntry.originalUrl);
     titleLink.setAttribute('target', '_newtab');
     if (ext.opts.general.highlight) {
-      titleLink.innerHTML = resultEntry.titleHighlighted || resultEntry.title;
+      titleLink.innerHTML = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url;
     } else {
       titleLink.innerText = resultEntry.title;
     }
@@ -668,7 +668,7 @@ function convertChromeTabs(chromeTabs) {
       type: 'tab',
       title: entry.title,
       url: cleanUpUrl(entry.url),
-      originalUrl: entry.url,
+      originalUrl: entry.url.replace(/\/$/, ''),
       originalId: entry.id,
       favIconUrl: entry.favIconUrl,
     }
@@ -715,7 +715,7 @@ function convertChromeBookmarks(bookmarks, folderTrail, depth) {
         type: 'bookmark',
         title: title,
         tags: tags,
-        originalUrl: entry.url,
+        originalUrl: entry.url.replace(/\/$/, ''),
         url: cleanUpUrl(entry.url),
         folder: folderText,
         originalId: entry.id,
@@ -739,7 +739,7 @@ function convertChromeHistory(history) {
     result.push({
       type: 'history',
       title: entry.title,
-      originalUrl: entry.url,
+      originalUrl: entry.url.replace(/\/$/, ''),
       url: cleanUpUrl(entry.url),
       visitCount: entry.visitCount,
       lastVisit: ext.opts.general.lastVisit ? timeSince(new Date(entry.lastVisitTime)) : undefined,
@@ -802,8 +802,9 @@ function isInViewport(elem) {
 
 /**
  * Remove http:// or http:// and www from URLs
+ * Remove trailing slashes
  * @see https://stackoverflow.com/a/57698415
  */
 function cleanUpUrl(url) {
-  return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "")
+  return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '').replace(/\/$/, '')
 }

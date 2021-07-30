@@ -13,6 +13,8 @@ For bookmarks, it supports extraction and search of tags and folder names.
 
 ## Demo
 
+![light and dark theme](/images/bookmark-and-history-search.png "light and dark theme")
+
 ![Demo GIF](/images/bookmark-and-history-search.gif "Demo GIF")
 
 ## Installation
