@@ -80,7 +80,7 @@ body {
 #result-list {
   margin: 4px 0 4px 4px;
   padding: 0 4px 0 0;
-  height: 540px;
+  height: 512px;
   overflow-x: hidden;
   overflow-y: scroll;
 
@@ -89,11 +89,10 @@ body {
     margin: 0 0 4px 0;
     padding: 4px;
     border-radius: 3px;
-    overflow: hidden;
-
-    #selected-result {
-      background-color: #dadada;
-    }
+    overflow: hidden;    
+  }
+  #selected-result {
+    background-color: #dadada;
   }
   li.tab {
     border-left: 6px solid #b89aff;
@@ -119,7 +118,31 @@ body {
   }
   
 }
+#links {
+  height: 25px;
+  background: #FFF;
+  padding: 0 8px;
+}
 
+#tags-overview {
+  position: fixed;
+  top: 59px;
+  left: 0;
+  width: 500px;
+  height: 512px;
+  background: #EEE;
+  padding: 4px 8px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+
+  #tags-list {
+    width: 100%;
+    a,
+    a:hover {
+      color: #FFF;
+    }
+  }
+}
 
 /** EDIT BOOKMARK */
 
@@ -137,11 +160,7 @@ body {
   #bookmark-tags {
     height: 120px;
   }
-  #tags-overview {
-    padding: 4px 8px;
-    width: 100%;
-    max-height: 220px;
-  }
+
   .input-description {
     margin: 4px 0 2px 8px;
     font-size: 12px;
@@ -160,24 +179,29 @@ body {
     }
     #edit-bookmark-cancel {
       background: rgb(201, 68, 68);
+      color: #FFF;
     }
     #edit-bookmark-save {
       background: rgb(95, 201, 68);
+      color: #FFF;
     }
   }
 }
 
 /** SCROLLBAR */
-#result-list::-webkit-scrollbar {
+#result-list::-webkit-scrollbar,
+#tags-overview::-webkit-scrollbar {
   width: 8px;
   margin-left: 4px;
   padding-left: 0px;
 }
-#result-list::-webkit-scrollbar-track {
+#result-list::-webkit-scrollbar-track,
+#tags-overviewt::-webkit-scrollbar-track {
   background: #ddd;
   padding-left: 2px;
 }
-#result-list::-webkit-scrollbar-thumb {
+#result-list::-webkit-scrollbar-thumb,
+#tags-overview::-webkit-scrollbar-thumb {
   background-color: #999;
 }
 
@@ -186,7 +210,8 @@ body {
 @media screen and (prefers-color-scheme: dark) {
   html,
   body,
-  #edit-bookmark {
+  #edit-bookmark,
+  #tags-overview {
     background: #222;
     a,
     a:visited {
@@ -210,9 +235,9 @@ body {
   #result-list {
     li {
       background: #111;
-      #selected-result {
-        background-color: #333;
-      }
+    }
+    #selected-result {
+      background-color: #333;
     }
     .title {
       a {
@@ -220,10 +245,15 @@ body {
       }
     }
   }
-  #result-list::-webkit-scrollbar-track {
+  #links {
+    background: #000;
+  }
+  #result-list::-webkit-scrollbar-track,
+  #tags-overview::-webkit-scrollbar-track {
     background: rgb(65, 65, 65);
   }
-  #result-list::-webkit-scrollbar-thumb {
+  #result-list::-webkit-scrollbar-thumb,
+  #tags-overview::-webkit-scrollbar-thumb {
     background-color: rgb(95, 95, 95);
   }
   .input-description {

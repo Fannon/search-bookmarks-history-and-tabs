@@ -109,12 +109,12 @@ async function initExtension() {
   performance.mark('init-search-index')
 
   // Register Events
-  ext.searchInput.addEventListener("keyup", searchWithFuseJs);
+  ext.searchInput.addEventListener("keyup", updateSearchUrl);
   document.addEventListener("keydown", navigationKeyListener);
   window.addEventListener("hashchange", hashRouter, false);
 
   // Start with empty search to display default results
-  await searchWithFuseJs()
+  await search()
 
   // Do some performance measurements and log it to debug
   performance.mark('init-end')
@@ -275,7 +275,7 @@ async function getSearchData() {
     if (el.tags) {
       for (const tag of el.tags.split('#')) {
         if (tag.trim()) {
-          tagsDictionary[tag] = true
+          tagsDictionary[tag.trim()] = true
         }
       }
     }
@@ -291,15 +291,20 @@ async function getSearchData() {
 // SEARCH                               //
 //////////////////////////////////////////
 
-/**
- * Uses Fuse.js to do a fuzzy search
- * 
- * @see https://fusejs.io/
- */
-async function searchWithFuseJs(event) {
+function updateSearchUrl() {
+  const searchTerm = ext.searchInput.value ? ext.searchInput.value.trim() : ''
+  window.location.hash = '#search/' + searchTerm
+}
+
+async function search(event) {
 
   if (event) {
-    if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter') {
+    if (
+      event.key === 'ArrowUp' || 
+      event.key === 'ArrowDown' || 
+      event.key === 'Enter' || 
+      event.key === 'Escape'
+    ) {
       // Don't execute search on navigation keys
       return
     }
@@ -336,6 +341,21 @@ async function searchWithFuseJs(event) {
   }
 
   ext.data.searchTerm = searchTerm
+  ext.data.searchMode = searchMode
+
+  await searchWithFuseJs(searchTerm, searchMode)
+}
+
+/**
+ * Uses Fuse.js to do a fuzzy search
+ * 
+ * @see https://fusejs.io/
+ */
+async function searchWithFuseJs(searchTerm, searchMode) {
+
+  searchMode = searchMode || 'all'
+
+  performance.mark('search-start')
 
   // If we have a search term after 
   if (searchTerm) {
@@ -592,11 +612,15 @@ function navigationKeyListener(event) {
     ext.data.currentItem++
     selectListItem(ext.data.currentItem)
   } else if (event.key === 'Enter' && ext.data.result.length > 0) {
-    if (window.location.hash === '' || window.location.hash === '#') {
+    // Depending on which overlay we are, ENTER results in a different action
+    if (window.location.hash.startsWith('#search/')) {
       openResultItem()
     } else if (window.location.hash.startsWith('#edit-bookmark/')) {
       window.location.hash = window.location.hash.replace('#edit-bookmark/', '#update-bookmark/')
     }
+  } else if (event.key === 'Escape') {
+    window.location.hash = '#search/'
+    ext.searchInput.focus()
   }
 }
 
@@ -681,28 +705,55 @@ function highlightResultItem(resultItem) {
 };
 
 //////////////////////////////////////////
-// EDIT BOOKMARK FEATURE                //
+// NAVIGATION                           //
 //////////////////////////////////////////
 
 function hashRouter() {
   const hash = window.location.hash.trim()
   console.debug('Changing Route: ' + hash)
   if (!hash || hash === '#') {
-    closeModals()
+    // Index route -> redirect to last known search or empty search
+    window.location.hash = '#search/' + (ext.data.searchTerm || '')
+  } else if (hash.startsWith('#search/')) {
+    // Search specific term
+    const searchTerm = hash.replace('#search/', '')
+    ext.searchInput.value = searchTerm
     ext.searchInput.focus()
+    search()
+    closeModals()
+  } else if (hash.startsWith('#tags/')) {
+    getTagsOverview()
   } else if (hash.startsWith('#edit-bookmark/')) {
+    // Edit bookmark route
     const bookmarkId = hash.replace('#edit-bookmark/', '')
     editBookmark(bookmarkId)
   } else if (hash.startsWith('#update-bookmark/')) {
+    // Update bookmark route
     const bookmarkId = hash.replace('#update-bookmark/', '')
     updateBookmark(bookmarkId)
   }
 }
 
 function closeModals() {
-  const editDiv = document.getElementById('edit-bookmark')
-  editDiv.style = "display: none;"
+  document.getElementById('edit-bookmark').style = "display: none;"
+  document.getElementById('tags-overview').style = "display: none;"
 }
+
+//////////////////////////////////////////
+// TAGS OVERVIEW                        //
+//////////////////////////////////////////
+
+function getTagsOverview() {
+  ext.data.tags.sort()
+  document.getElementById('tags-overview').style = ""
+  document.getElementById('tags-list').innerHTML = ext.data.tags.map((el) => {
+    return `<a class="badge tags" href="#search/'#${el}">#${el}</a>`
+  }).join('')
+}
+
+//////////////////////////////////////////
+// BOOKMARK EDITING                     //
+//////////////////////////////////////////
 
 function editBookmark(bookmarkId) {
   const bookmark = ext.data.searchData.bookmarks.find(el => el.originalId === bookmarkId)
@@ -710,7 +761,7 @@ function editBookmark(bookmarkId) {
   if (bookmark) {
     document.getElementById('edit-bookmark').style = ""
     document.getElementById('tags-overview').innerHTML = ext.data.tags.map((el) => {
-      return `<span class="badge tags">#${el}</span>`
+      return `<a class="badge tags" href="#search/'#${el}">#${el}</a>`
     }).join('')
 
     const titleInput = document.getElementById('bookmark-title')
@@ -751,7 +802,6 @@ function updateBookmark(bookmarkId) {
   }
 
   // Start search again to update the search index and the UI with new bookmark model
-  searchWithFuseJs()
   window.location.href = '#'
 }
 

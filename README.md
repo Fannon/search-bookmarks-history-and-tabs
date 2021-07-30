@@ -59,9 +59,8 @@ This extension makes use of the following helpful open-source projects (thanks!)
 
 ## Ideas and To Dos
 
-* Allow to quick add & edit bookmarks (title + tags)
-  * tags would ideally have autocomplete, based on existing tags (something like select2)
-  * quick add current open site via + button
+* Add autocomplete for tags, based on existing tags (something like select2)
+* Quick add current open site via + button
 * Make extension configurable via UI (requires new `storage` permission)
 * Improve scoring algorithm?
 * Introduce dedicates search mode for tags and folders, that is more precise
