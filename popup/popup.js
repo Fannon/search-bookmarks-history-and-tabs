@@ -427,14 +427,15 @@ function renderResult(result) {
     // Create result list item (li)
     const resultListItem = document.createElement("li");
     resultListItem.classList.add(resultEntry.type)
+    resultListItem.setAttribute('x-index', i)
+    resultListItem.setAttribute('x-id', resultEntry.originalId)
     resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
-    resultListItem.setAttribute('x-score', Math.round(resultEntry.score || 0))
     // Register events for mouse navigation
     resultListItem.addEventListener('mouseup', openResultItem, { passive: true, })
     resultListItem.addEventListener('mouseenter', hoverListItem, { passive: true, })
 
     // Create title div
-    titleDiv = document.createElement('div')
+    const titleDiv = document.createElement('div')
     titleDiv.classList.add('title')
     const titleLink = document.createElement('a');
     titleLink.setAttribute('href', resultEntry.originalUrl);
@@ -471,7 +472,7 @@ function renderResult(result) {
     }
 
     // Create URL div
-    urlDiv = document.createElement('div')
+    const urlDiv = document.createElement('div')
     urlDiv.classList.add('url')
     const a = document.createElement('a');
     a.setAttribute('href', resultEntry.originalUrl);
@@ -618,6 +619,7 @@ function openResultItem(event) {
 }
 
 function hoverListItem(event) {
+  console.log(event)
   const index = event.target.getAttribute('x-index')
   if (index) {
     document.getElementById('selected-result').id = ''
@@ -661,6 +663,14 @@ function highlightResultItem(resultItem) {
 
   return highlightedResultItem
 };
+
+//////////////////////////////////////////
+// EDIT BOOKMARK FEATURE                //
+//////////////////////////////////////////
+
+function editBookmark() {
+
+}
 
 //////////////////////////////////////////
 // CHROME SPECIFIC                      //
