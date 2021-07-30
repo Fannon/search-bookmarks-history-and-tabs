@@ -219,7 +219,6 @@ async function getSearchData() {
     performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end');
   }
 
-
   // Use mock data (for localhost preview / development)
   // To do this, create a http server (e.g. live-server) in popup/
   if (!chrome.bookmarks || !chrome.history) {
@@ -267,7 +266,20 @@ async function getSearchData() {
     }
   })
 
-  console.debug(`Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items`)
+  // Extract tags from bookmark titles
+  const tagsDictionary = {}
+  for (const el of result.bookmarks) {
+    if (el.tags) {
+      for (const tag of el.tags.split('#')) {
+        if (tag.trim()) {
+          tagsDictionary[tag] = true
+        }
+      }
+    }
+  }
+  ext.data.tags = Object.keys(tagsDictionary)
+  
+  console.debug(`Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items with ${ext.data.tags.length} unique tags`)
 
   return result
 }
