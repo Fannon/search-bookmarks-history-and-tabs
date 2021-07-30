@@ -18,6 +18,7 @@ ext.opts.general = {
   highlight: true,
   /** Display  last visit */
   lastVisit: true,
+  displayScore: true,
   /**
    * Enables fuse.js extended search, which additional operators to fine-tune results.
    * @see https://fusejs.io/examples.html#weighted-search
@@ -36,8 +37,9 @@ ext.opts.search = {
   bookmarksWeight: 1,
   tabsWeight: 0.9,
   historyWeight: 0.4,
-  /** Additional score per visit within history hoursAgo timeframe  */
-  visitedBonusScore: 0.1,
+  /** Additional score points per visit within history hoursAgo */
+  visitedBonusScore: 10,
+  startsWithBonusScore: 30,
 }
 ext.opts.tabs = {
   enabled: true,
@@ -409,7 +411,7 @@ function renderResult(result) {
     const resultListItem = document.createElement("li");
     resultListItem.classList.add(resultEntry.type)
     resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
-    resultListItem.setAttribute('x-index', i)
+    resultListItem.setAttribute('x-score', Math.round(resultEntry.score))
     // Register events for mouse navigation
     resultListItem.addEventListener('mouseup', openResultItem, { passive: true, })
     resultListItem.addEventListener('mouseenter', hoverListItem, { passive: true, })
@@ -444,6 +446,12 @@ function renderResult(result) {
       lastVisited.innerText = '-' + resultEntry.lastVisit
       titleDiv.appendChild(lastVisited)
     }
+    if (ext.opts.general.displayScore) {
+      const score = document.createElement('span')
+      score.classList.add('badge', 'score')
+      score.innerText = Math.round(resultEntry.score)
+      titleDiv.appendChild(score)
+    }
 
     // Create URL div
     urlDiv = document.createElement('div')
@@ -476,12 +484,10 @@ function renderResult(result) {
  */
 function sortResult(result, searchTerm) {  
 
-  console.dir(result)
-
   // calculate score
   for (let i = 0; i < result.length; i++) {
     const el = result[i]
-    let score = 1
+    let score = 100
 
     // Apply result.type weight
     if (el.type === 'bookmark') {
@@ -494,12 +500,12 @@ function sortResult(result, searchTerm) {
 
     score = score * (1 - el.fuseScore)
 
-    // Increase score if we have excact "startsWith" matches
+    // Increase score if we have exact "startsWith" matches
     if (el.title.startsWith(searchTerm)) {
-      score += 0.5 * ext.opts.search.titleWeight
+      score += ext.opts.search.startsWithBonusScore * ext.opts.search.titleWeight
     }
     if (el.url.startsWith(searchTerm)) {
-      score += 0.5 * ext.opts.search.urlWeight
+      score += ext.opts.search.startsWithBonusScore * ext.opts.search.urlWeight
     }
     if (searchTerm.includes('#')) {
       let searchTermTags = searchTerm.split('#')
@@ -507,7 +513,7 @@ function sortResult(result, searchTerm) {
       searchTermTags.forEach((tagName) => {
         console.log(tagName)
         if (el.tags && el.tags.includes('#' + tagName)) {
-          score += 0.5 * ext.opts.search.tagWeight
+          score += ext.opts.search.startsWithBonusScore * ext.opts.search.tagWeight
           console.log('increased tag score', el)
         }
       })
@@ -525,15 +531,15 @@ function sortResult(result, searchTerm) {
     return b.score - a.score
   });
 
-  console.table(result.map((el) => {
-    return {
-      score: el.score,
-      fuseScore: el.fuseScore,
-      type: el.type,
-      title: el.title,
-      url: el.originalUrl
-    }
-  }))
+  // console.table(result.map((el) => {
+  //   return {
+  //     score: el.score,
+  //     fuseScore: el.fuseScore,
+  //     type: el.type,
+  //     title: el.title,
+  //     url: el.originalUrl
+  //   }
+  // }))
 
   return result
 }
