@@ -53,17 +53,17 @@ To customize the extension options, adjust the `ext.opts` in `popup/popup.js`
 ## Credits
 
 This extension makes use of the following helpful open-source projects (thanks!):
-* https://bulma.io/
-* https://fusejs.io/
+* https://fusejs.io/ for the fuzzy search algorithm
+* https://bulma.io/ for some minimal CSS base styling
+* https://github.com/tabler/tabler-icons for the edit icon
 
 ## Ideas and To Dos
 
-* Allow to quick add & edit bookmarks (title + tags)
-  * tags would ideally have autocomplete, based on existing tags (something like select2)
-  * quick add current open site via + button
+* Add autocomplete for tags, based on existing tags (something like select2)
+* Quick add current open site via + button
 * Make extension configurable via UI (requires new `storage` permission)
 * Improve scoring algorithm?
-* Introduce dedicates search mode for tags and folders, that is more precise
+* Introduce dedicates and precise search mode for tags and folders
 * Try other search algorithms / libraries that are less fuzzy
   * https://github.com/nextapps-de/flexsearch 
-* Convert project to TypeScript once it is published in store(s)
+* Convert project to TypeScript and make it more modular

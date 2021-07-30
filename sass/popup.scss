@@ -6,33 +6,29 @@ body {
   width: 500px;
   height: 600px;
   background: #eee;
+  color: #555;
   padding: 0;
   overflow: hidden;
-}
-a {
-  color: #888;
-}
-
-mark {
-  font-weight: bold;
-  color: #356ba9;
-  background: none;
-}
-.tags mark {
-  color: #7cb3f6;
-}
-.folder mark {
-  color: #85dbdb;
+  a {
+    color: #888;
+  }
+  mark {
+    font-weight: bold;
+    color: #356ba9;
+    background: none;
+  }
 }
 
 #popup {
   width: 100%;
   overflow: hidden;
 }
-
-#search-input,
-#search-input:focus {
-  width: 500px;
+.input,
+.input:active,
+.input:focus {
+  width: 100%;
+  max-width: 500px;
+  min-width: 500px;
   height: 55px;
   padding: 4px 8px;
   font-size: 24px;
@@ -42,33 +38,7 @@ mark {
   background: #fff;
   border-bottom: 1px solid #ccc;
 }
-
-#result-list {
-  margin: 4px 0 4px 4px;
-  padding: 0 4px 0 0;
-  height: 540px;
-  overflow-x: hidden;
-  overflow-y: scroll;
-}
-
-#result-list li {
-  background-color: #fff;
-  margin: 0 0 4px 0;
-  padding: 4px;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-#result-list .title {
-  font-size: 18px;
-  margin: 0;
-  font-weight: 400;
-}
-#result-list .title a {
-  color: #333;
-  margin-right: 4px;
-}
-#result-list .badge {
+.badge {
   color: #fff;
   font-size: 11px;
   border-radius: 3px;
@@ -79,56 +49,159 @@ mark {
   position: relative;
   top: -3px;
 }
-
-#result-list .tags {
+.tags {
   background: #557292;
+  .divider:before {
+    content: " ";
+  }
+  mark {
+    color: #7cb3f6;
+  }
 }
-#result-list .tags .divider:before {
-  content: " ";
-}
-#result-list .folder {
+.folder {
   background: #559292;
+  .divider:before {
+    content: " \276F \0020";
+  }
+  mark {
+    color: #85dbdb;
+  }
 }
-#result-list .folder .divider:before {
-  content: " \276F \0020";
-}
-#result-list .last-visited {
-  background: rgb(158, 206, 47);
-}
-#result-list .score {
+.score {
   background: rgb(116, 116, 116);
   color: #DDD;
 }
-#result-list .url {
+.url {
   font-size: 13px;
   margin: 0;
   overflow: hidden;
   white-space: nowrap;
 }
-#result-list li#selected-result {
-  background-color: #dadada;
+#result-list {
+  margin: 4px 0 4px 4px;
+  padding: 0 4px 0 0;
+  height: 512px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+
+  li {
+    background-color: #fff;
+    margin: 0 0 4px 0;
+    padding: 4px;
+    border-radius: 3px;
+    overflow: hidden;    
+  }
+  #selected-result {
+    background-color: #dadada;
+  }
+  li.tab {
+    border-left: 6px solid #b89aff;
+  }
+  li.bookmark {
+    border-left: 6px solid #559292;
+  }
+  li.history {
+    border-left: 6px solid rgb(158, 206, 47);
+  }
+  .edit-button {
+    float: right;
+  }
+  .title {
+    font-size: 18px;
+    margin: 0;
+    font-weight: 400;
+
+    a {
+      color: #333;
+      margin-right: 4px;
+    }
+  }
+  
 }
-#result-list li.tab {
-  border-left: 6px solid #b89aff;
+#links {
+  height: 25px;
+  background: #FFF;
+  padding: 0 8px;
 }
-#result-list li.bookmark {
-  border-left: 6px solid #559292;
+
+#tags-overview {
+  position: fixed;
+  top: 59px;
+  left: 0;
+  width: 500px;
+  height: 512px;
+  background: #EEE;
+  padding: 4px 8px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+
+  #tags-list {
+    width: 100%;
+    a,
+    a:hover {
+      color: #FFF;
+    }
+  }
 }
-#result-list li.history {
-  border-left: 6px solid rgb(158, 206, 47);
+
+/** EDIT BOOKMARK */
+
+#edit-bookmark {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 500px;
+  height: 600px;
+  background: #EEE;
+
+  #bookmark-title {
+    height: 140px;
+  }
+  #bookmark-tags {
+    height: 120px;
+  }
+
+  .input-description {
+    margin: 4px 0 2px 8px;
+    font-size: 12px;
+  }
+  .controls {
+    text-align: right;
+    margin: 4px 8px;
+    a,
+    a:hover {
+      background: #777;
+      color: #FFF;
+      margin: 0 0 0 8px;
+      padding: 2px 12px 4px 12px;
+      border: none;
+      font-size: 16px;
+    }
+    #edit-bookmark-cancel {
+      background: rgb(201, 68, 68);
+      color: #FFF;
+    }
+    #edit-bookmark-save {
+      background: rgb(95, 201, 68);
+      color: #FFF;
+    }
+  }
 }
 
 /** SCROLLBAR */
-#result-list::-webkit-scrollbar {
+#result-list::-webkit-scrollbar,
+#tags-overview::-webkit-scrollbar {
   width: 8px;
   margin-left: 4px;
   padding-left: 0px;
 }
-#result-list::-webkit-scrollbar-track {
+#result-list::-webkit-scrollbar-track,
+#tags-overviewt::-webkit-scrollbar-track {
   background: #ddd;
   padding-left: 2px;
 }
-#result-list::-webkit-scrollbar-thumb {
+#result-list::-webkit-scrollbar-thumb,
+#tags-overview::-webkit-scrollbar-thumb {
   background-color: #999;
 }
 
@@ -136,40 +209,54 @@ mark {
 /** DARK MODE **/
 @media screen and (prefers-color-scheme: dark) {
   html,
-  body {
+  body,
+  #edit-bookmark,
+  #tags-overview {
     background: #222;
+    a,
+    a:visited {
+      color: #999;
+    }  
+    a:hover {
+      color: #BBB;
+    }
+    mark {
+      color: #6b92c0;
+    }
   }
-  a,
-  a:visited {
-    color: #999;
-  }  
-  a:hover {
-    color: #BBB;
-  }
-  #search-input,
-  #search-input:active,
-  #search-input:focus {
+ 
+  .input,
+  .input:active,
+  .input:focus {
     background-color: #000;
     border-bottom: 1px solid #444;
     color: #DDD;
   }
-
-  #result-list li {
-    background: #111;
+  #result-list {
+    li {
+      background: #111;
+    }
+    #selected-result {
+      background-color: #333;
+    }
+    .title {
+      a {
+        color: #d4d4d4;
+      }
+    }
   }
-  #result-list li#selected-result {
-    background-color: #333;
+  #links {
+    background: #000;
   }
-  #result-list .title a {
-    color: #d4d4d4;
-  }
-  mark {
-    color: #6b92c0;
-  }
-  #result-list::-webkit-scrollbar-track {
+  #result-list::-webkit-scrollbar-track,
+  #tags-overview::-webkit-scrollbar-track {
     background: rgb(65, 65, 65);
   }
-  #result-list::-webkit-scrollbar-thumb {
+  #result-list::-webkit-scrollbar-thumb,
+  #tags-overview::-webkit-scrollbar-thumb {
     background-color: rgb(95, 95, 95);
+  }
+  .input-description {
+    color: #777;
   }
 }

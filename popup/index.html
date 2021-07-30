@@ -2,19 +2,32 @@
 <html>
 
 <head>
-  <meta charset="utf-8"/>
+  <meta charset="utf-8" />
   <link rel="stylesheet" href="./popup.css">
 </head>
 
 <body>
   <div id="popup">
-    <input id="search-input" type="text" placeholder="Search bookmarks and history" autofocus>
+    <input id="search-input" class="input" type="text" placeholder="Search bookmarks and history" autofocus>
     <ul id="result-list"></ul>
   </div>
   <div id="edit-bookmark" style="display: none;">
-    <input id="bookmark-title" type="text">
-    <input id="bookmark-tags" type="text">
+    <div class="inputs">
+      <div class="input-description">EDIT TITLE:</div>
+      <textarea id="bookmark-title" class="input" type="text"></textarea>
+      <div class="input-description">EDIT TAGS:</div>
+      <textarea id="bookmark-tags" class="input" type="text"></textarea>
+    </div>
+    <div class="controls">
+      <a id="edit-bookmark-cancel" class="button" href="#">CANCEL</a>
+      <a id="edit-bookmark-save" class="button" href="#">SAVE</a>
+    </div>
+    
   </div>
+  <div id="tags-overview" style="display: none;">
+    <div id="tags-list"></div>
+  </div>
+  <div id="links"><a href="#search/">NEW SEARCH</a> | <a href="#tags/">TAGS</a></div>
   <script src="./lib/fuse.min.js"></script>
   <script src="./popup.js"></script>
 </body>

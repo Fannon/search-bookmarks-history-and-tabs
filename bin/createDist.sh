@@ -8,6 +8,7 @@ cp manifest.json dist/manifest.json
 cp background.js dist/background.js
 
 mkdir dist/images/
+cp images/edit.svg dist/images/edit.svg
 cp images/logo-16.png dist/images/logo-16.png
 cp images/logo-32.png dist/images/logo-32.png
 cp images/logo-48.png dist/images/logo-48.png

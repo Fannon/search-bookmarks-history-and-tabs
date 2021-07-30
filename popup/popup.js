@@ -104,14 +104,17 @@ async function initExtension() {
     ext.data.historyIndex = createFuseJsIndex('history', ext.data.searchData.history)
   }
 
+  hashRouter()
+
   performance.mark('init-search-index')
 
   // Register Events
-  ext.searchInput.addEventListener("keyup", searchWithFuseJs);
+  ext.searchInput.addEventListener("keyup", updateSearchUrl);
   document.addEventListener("keydown", navigationKeyListener);
+  window.addEventListener("hashchange", hashRouter, false);
 
   // Start with empty search to display default results
-  await searchWithFuseJs()
+  await search()
 
   // Do some performance measurements and log it to debug
   performance.mark('init-end')
@@ -238,8 +241,8 @@ async function getSearchData() {
   // SECOND: Merge history with bookmarks and tabs and clean up data
 
   // Build maps with URL as key, so we have fast hashmap access
-  const historyMap = result.history.reduce((obj, item, index) => (obj[item.originalUrl] = { ...item, index }, obj) ,{});
-  
+  const historyMap = result.history.reduce((obj, item, index) => (obj[item.originalUrl] = { ...item, index }, obj), {});
+
   // merge history with bookmarks
   result.bookmarks = result.bookmarks.map((el) => {
     if (historyMap[el.originalUrl]) {
@@ -266,37 +269,46 @@ async function getSearchData() {
     }
   })
 
+
+  console.debug(`Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items.`)
+
+  return result
+}
+
+function getUniqueTags() {
   // Extract tags from bookmark titles
   const tagsDictionary = {}
-  for (const el of result.bookmarks) {
+  for (const el of ext.data.searchData.bookmarks) {
     if (el.tags) {
       for (const tag of el.tags.split('#')) {
         if (tag.trim()) {
-          tagsDictionary[tag] = true
+          tagsDictionary[tag.trim()] = true
         }
       }
     }
   }
-  ext.data.tags = Object.keys(tagsDictionary)
-  
-  console.debug(`Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items with ${ext.data.tags.length} unique tags`)
-
-  return result
+  ext.data.tags = Object.keys(tagsDictionary).sort()
+  return ext.data.tags
 }
 
 //////////////////////////////////////////
 // SEARCH                               //
 //////////////////////////////////////////
 
-/**
- * Uses Fuse.js to do a fuzzy search
- * 
- * @see https://fusejs.io/
- */
-async function searchWithFuseJs(event) {
+function updateSearchUrl() {
+  const searchTerm = ext.searchInput.value ? ext.searchInput.value.trim() : ''
+  window.location.hash = '#search/' + searchTerm
+}
+
+async function search(event) {
 
   if (event) {
-    if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter') {
+    if (
+      event.key === 'ArrowUp' ||
+      event.key === 'ArrowDown' ||
+      event.key === 'Enter' ||
+      event.key === 'Escape'
+    ) {
       // Don't execute search on navigation keys
       return
     }
@@ -333,6 +345,21 @@ async function searchWithFuseJs(event) {
   }
 
   ext.data.searchTerm = searchTerm
+  ext.data.searchMode = searchMode
+
+  await searchWithFuseJs(searchTerm, searchMode)
+}
+
+/**
+ * Uses Fuse.js to do a fuzzy search
+ * 
+ * @see https://fusejs.io/
+ */
+async function searchWithFuseJs(searchTerm, searchMode) {
+
+  searchMode = searchMode || 'all'
+
+  performance.mark('search-start')
 
   // If we have a search term after 
   if (searchTerm) {
@@ -411,6 +438,8 @@ async function searchWithFuseJs(event) {
  */
 function renderResult(result) {
 
+  result = result || ext.data.result
+
   performance.mark('render-start')
 
   // Clean current result set
@@ -431,8 +460,18 @@ function renderResult(result) {
     resultListItem.setAttribute('x-id', resultEntry.originalId)
     resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
     // Register events for mouse navigation
-    resultListItem.addEventListener('mouseup', openResultItem, { passive: true, })
     resultListItem.addEventListener('mouseenter', hoverListItem, { passive: true, })
+
+    // Create edit button
+    if (resultEntry.type === 'bookmark') {
+      const editButton = document.createElement('a')
+      editButton.href = "#edit-bookmark/" + resultEntry.originalId
+      editButton.classList.add('edit-button')
+      const editImg = document.createElement('img')
+      editImg.src = "../images/edit.svg"
+      editButton.appendChild(editImg)
+      resultListItem.appendChild(editButton)
+    }
 
     // Create title div
     const titleDiv = document.createElement('div')
@@ -500,7 +539,7 @@ function renderResult(result) {
  * Calculates score on basis of the fuse score and some own rules
  * Sorts the result by that score
  */
-function sortResult(result, searchTerm) {  
+function sortResult(result, searchTerm) {
 
   // calculate score
   for (let i = 0; i < result.length; i++) {
@@ -531,18 +570,16 @@ function sortResult(result, searchTerm) {
       let searchTermTags = searchTerm.split('#')
       searchTermTags.shift()
       searchTermTags.forEach((tagName) => {
-        console.log(tagName)
         if (el.tags && el.tags.includes('#' + tagName)) {
           score += ext.opts.search.startsWithBonusScore * ext.opts.search.tagWeight
-          console.log('increased tag score', el)
         }
       })
     }
 
     // Increase score if result has been open frequently or recently
     if (el.visitCount) {
-      score += Math.min(ext.opts.search.maxVisitedBonusScore, 
-      el.visitCount * ext.opts.search.visitedBonusScore
+      score += Math.min(ext.opts.search.maxVisitedBonusScore,
+        el.visitCount * ext.opts.search.visitedBonusScore
       )
     }
 
@@ -579,7 +616,15 @@ function navigationKeyListener(event) {
     ext.data.currentItem++
     selectListItem(ext.data.currentItem)
   } else if (event.key === 'Enter' && ext.data.result.length > 0) {
-    openResultItem()
+    // Depending on which overlay we are, ENTER results in a different action
+    if (window.location.hash.startsWith('#search/')) {
+      openResultItem()
+    } else if (window.location.hash.startsWith('#edit-bookmark/')) {
+      window.location.hash = window.location.hash.replace('#edit-bookmark/', '#update-bookmark/')
+    }
+  } else if (event.key === 'Escape') {
+    window.location.hash = '#search/'
+    ext.searchInput.focus()
   }
 }
 
@@ -619,7 +664,6 @@ function openResultItem(event) {
 }
 
 function hoverListItem(event) {
-  console.log(event)
   const index = event.target.getAttribute('x-index')
   if (index) {
     document.getElementById('selected-result').id = ''
@@ -665,11 +709,90 @@ function highlightResultItem(resultItem) {
 };
 
 //////////////////////////////////////////
-// EDIT BOOKMARK FEATURE                //
+// NAVIGATION                           //
 //////////////////////////////////////////
 
-function editBookmark() {
+function hashRouter() {
+  const hash = window.location.hash.trim()
+  console.debug('Changing Route: ' + hash)
+  if (!hash || hash === '#') {
+    // Index route -> redirect to last known search or empty search
+    window.location.hash = '#search/' + (ext.data.searchTerm || '')
+  } else if (hash.startsWith('#search/')) {
+    // Search specific term
+    const searchTerm = hash.replace('#search/', '')
+    ext.searchInput.value = searchTerm
+    ext.searchInput.focus()
+    search()
+    closeModals()
+  } else if (hash.startsWith('#tags/')) {
+    getTagsOverview()
+  } else if (hash.startsWith('#edit-bookmark/')) {
+    // Edit bookmark route
+    const bookmarkId = hash.replace('#edit-bookmark/', '')
+    editBookmark(bookmarkId)
+  } else if (hash.startsWith('#update-bookmark/')) {
+    // Update bookmark route
+    const bookmarkId = hash.replace('#update-bookmark/', '')
+    updateBookmark(bookmarkId)
+  }
+}
 
+function closeModals() {
+  document.getElementById('edit-bookmark').style = "display: none;"
+  document.getElementById('tags-overview').style = "display: none;"
+}
+
+//////////////////////////////////////////
+// TAGS OVERVIEW                        //
+//////////////////////////////////////////
+
+function getTagsOverview() {
+  const tags = getUniqueTags()
+  document.getElementById('tags-overview').style = ""
+  document.getElementById('tags-list').innerHTML = tags.map((el) => {
+    return `<a class="badge tags" href="#search/'#${el}">#${el}</a>`
+  }).join('')
+}
+
+//////////////////////////////////////////
+// BOOKMARK EDITING                     //
+//////////////////////////////////////////
+
+function editBookmark(bookmarkId) {
+  const bookmark = ext.data.searchData.bookmarks.find(el => el.originalId === bookmarkId)
+  console.debug('Editing bookmark ' + bookmarkId, bookmark)
+  if (bookmark) {
+    document.getElementById('edit-bookmark').style = ""
+    document.getElementById('bookmark-title').value = bookmark.title
+    document.getElementById('bookmark-tags').value = bookmark.tags
+    document.getElementById('edit-bookmark-save').href = "#update-bookmark/" + bookmarkId
+  } else {
+    console.warn(`Tried to edit bookmark id="${bookmarkId}", but coult not find it in searchData.`)
+  }
+}
+
+function updateBookmark(bookmarkId) {
+  const bookmark = ext.data.searchData.bookmarks.find(el => el.originalId === bookmarkId)
+  const titleInput = document.getElementById('bookmark-title').value.trim()
+  const tagsInput = document.getElementById('bookmark-tags').value.trim()
+
+  // Update search data model of bookmark
+  bookmark.title = titleInput
+  bookmark.tags = tagsInput
+
+  console.debug(`Update bookmark with ID ${bookmarkId}: "${titleInput} ${tagsInput}"`)
+
+  if (chrome.bookmarks) {
+    chrome.bookmarks.update(bookmarkId, {
+      title: `${titleInput} ${tagsInput}`,
+    })
+  } else {
+    console.warn(`No chrome.bookmarks API found. Bookmark update will not persist.`)
+  }
+
+  // Start search again to update the search index and the UI with new bookmark model
+  window.location.href = '#'
 }
 
 //////////////////////////////////////////
@@ -692,10 +815,10 @@ async function getChromeBookmarks() {
  */
 async function getChromeHistory(hoursAgo, maxResults) {
   return new Promise((resolve, reject) => {
-    chrome.history.search({ 
-      text: '', 
-      maxResults: maxResults, 
-      startTime: Date.now() - (1000 * 60 * 60 * hoursAgo), 
+    chrome.history.search({
+      text: '',
+      maxResults: maxResults,
+      startTime: Date.now() - (1000 * 60 * 60 * hoursAgo),
       endTime: Date.now(),
     }, (history, err) => {
       if (err) {
