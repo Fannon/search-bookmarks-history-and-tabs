@@ -61,8 +61,8 @@ This extension makes use of the following helpful open-source projects (thanks!)
 
 ## Ideas and To Dos
 
-* Quick add current open site via + button
 * Make extension configurable via UI (requires new `storage` permission)
+* Quick add current open site via + button
 * Improve scoring algorithm?
 * Introduce dedicates and precise search mode for tags and folders
 * Try other search algorithms / libraries that are less fuzzy

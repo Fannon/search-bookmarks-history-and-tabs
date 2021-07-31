@@ -721,7 +721,7 @@ function hashRouter() {
   } else if (hash.startsWith('#search/')) {
     // Search specific term
     const searchTerm = hash.replace('#search/', '')
-    ext.searchInput.value = searchTerm.split('%20').join(' ')
+    ext.searchInput.value = decodeURIComponent(searchTerm)
     ext.searchInput.focus()
     search()
     closeModals()
