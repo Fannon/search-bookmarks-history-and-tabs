@@ -13,7 +13,7 @@ It works fully offline, so there is no external communication.
 * Dark mode / light mode (via system settings / [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
 * Lightweight: Written in vanilla JS with the goal to only include the minimun necessary libraries (see [credits](#credits)).
 
-## Demo
+## Screenshots & Demo
 
 ![light and dark theme](/images/bookmark-and-history-search.png "light and dark theme")
 
