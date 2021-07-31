@@ -160,11 +160,12 @@ body {
   background: #EEE;
 
   #bookmark-title {
-    height: 140px;
+    height: 136px;
+    resize: none;
   }
   #bookmark-tags,
   .tagify  {
-    height: 90px;
+    height: 85px;
     font-size: 18px;
     border: none;
     padding: 4px 2px;
@@ -207,6 +208,7 @@ body {
 
   --tag-bg                  : #557292;
   --tag-hover               : #5c84af;
+  --tagify-dd-color-primary : #557292;
   --tag-text-color          : #FFF;
   --tag-text-color--edit    : #111;
   --tag-remove-bg           : var(--tag-hover);
@@ -221,12 +223,23 @@ body {
   font-size: 15px;
 }
 .tagify__dropdown {
-  max-height: 240px;
+  max-height: 255px;
+  border: none;
 }
+.tagify__dropdown__wrapper {
+  border: none;
+}
+.tagify__dropdown__item {
+  padding: 3px 8px 3px 8px;
+}
+.tagify__dropdown__item--active {
+  background: #557292;
+}
+
 
 /** SCROLLBAR */
 #result-list::-webkit-scrollbar,
-#tags-overview::-webkit-scrollbar {
+#tags-overview::-webkit-scrollbar{
   width: 8px;
   margin-left: 4px;
   padding-left: 0px;
@@ -294,5 +307,11 @@ body {
   }
   .input-description {
     color: #777;
+  }
+  .tagify__dropdown__wrapper {
+    background: #111;
+  }
+  .tagify__dropdown__item {
+    color: #CCC;
   }
 }

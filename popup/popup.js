@@ -771,6 +771,7 @@ function editBookmark(bookmarkId) {
       whitelist: tags,
       trim: true,
       transformTag: transformTag,
+      skipInvalid: false,
       editTags            : {
         clicks: 1,
         keepInvalid: false,
