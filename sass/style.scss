@@ -22,7 +22,7 @@ body {
   }
 }
 
-#popup {
+#search {
   width: 100%;
   overflow: hidden;
 }
@@ -76,6 +76,10 @@ body {
 }
 .last-visited {
   background: rgb(142, 187, 38);
+  color: #FFF;
+}
+.visit-counter {
+  background: rgb(187, 172, 38);
   color: #FFF;
 }
 .url {

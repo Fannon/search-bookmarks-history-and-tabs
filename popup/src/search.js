@@ -1,74 +1,11 @@
 performance.mark('init-start')
+import { options } from './options.js'
 
 const ext = window.ext = {
   /** Extension options */
-  opts: {},
+  opts: options,
   /** Extension data / model */
   data: {},
-}
-
-//////////////////////////////////////////
-// OPTIONS                              //
-//////////////////////////////////////////
-
-ext.opts.general = {
-  /** Extract tags from title and display it as a badge with different search prio */
-  tags: true,
-  /** Highlight search matches in result */
-  highlight: true,
-  /** Display  last visit */
-  lastVisit: true,
-  /** Display search result score */
-  displayScore: true,
-  /**
-   * Enables fuse.js extended search, which additional operators to fine-tune results.
-   * @see https://fusejs.io/examples.html#weighted-search
-   */
-  extendedSearch: true,
-}
-ext.opts.search = {
-  /** Max results to render. Reduce for better performance */
-  maxResults: 256,
-  /** Min characters that need to match */
-  minMatchCharLength: 2,
-  /** Fuzzy search threshold (increase to increase fuzziness) */
-  threshold: 0.4,
-  /** Filters out all search results below this minimum score */
-  minScore: 30,
-  /** Weight for a title match. From 0-1. */
-  titleWeight: 1,
-  /** Weight for a tag match. From 0-1. */
-  tagWeight: 0.7,
-  /** Weight for an url match. From 0-1. */
-  urlWeight: 0.55,
-  /** Weight for a folder match. From 0-1. */
-  folderWeight: 0.2,
-  /** Base score for bookmark results */
-  bookmarkBaseScore: 100,
-  /** Base score for tab results */
-  tabBaseScore: 90,
-  /** Base score for history results */
-  historyBaseScore: 50,
-  /** Additional score points per visit within history hoursAgo */
-  visitedBonusScore: 3,
-  /** Maximum score points for visitied bonus */
-  maxVisitedBonusScore: 40,
-  /** 
-   * Additional score points if title, url and tag starts exactly with search text.
-   * The points can be added multiple times, if more than one has a "starts with" match.
-   */
-  startsWithBonusScore: 30,
-}
-ext.opts.tabs = {
-  enabled: true,
-}
-ext.opts.bookmarks = {
-  enabled: true,
-}
-ext.opts.history = {
-  enabled: true,
-  hoursAgo: 24,
-  maxItems: 1024,
 }
 
 //////////////////////////////////////////
@@ -84,7 +21,7 @@ initExtension().catch((err) => {
  * Initialize the extension
  * This includes indexing the current bookmarks and history
  */
-async function initExtension() {
+export async function initExtension() {
 
   console.debug('Initialized with options', ext.opts)
 
@@ -550,11 +487,17 @@ function renderResult(result) {
       folder.innerHTML = resultEntry.folderHighlighted || resultEntry.folder
       titleDiv.appendChild(folder)
     }
-    if (resultEntry.lastVisit) {
+    if (ext.opts.general.lastVisit && resultEntry.lastVisit) {
       const lastVisited = document.createElement('span')
       lastVisited.classList.add('badge', 'last-visited')
       lastVisited.innerText = '-' + resultEntry.lastVisit
       titleDiv.appendChild(lastVisited)
+    }
+    if (ext.opts.general.visitCounter && resultEntry.visitCount) {
+      const visitCounter = document.createElement('span')
+      visitCounter.classList.add('badge', 'visit-counter')
+      visitCounter.innerText = resultEntry.visitCount
+      titleDiv.appendChild(visitCounter)
     }
     if (ext.opts.general.displayScore && resultEntry.score) {
       const score = document.createElement('span')

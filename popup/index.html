@@ -4,28 +4,28 @@
 <head>
   <meta charset="utf-8" />
   <link rel="stylesheet" href="./lib/tagify.css">
-  <link rel="stylesheet" href="./popup.css">
+  <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
 
-  <!-- Main popup -->
-  <div id="popup">
+  <!-- Search View -->
+  <div id="search">
     <input id="search-input" class="input" type="text" placeholder="Search bookmarks and history" spellcheck="false" autofocus>
     <ul id="result-list"></ul>
   </div>
   
-  <!-- Tags Overview View -->
+  <!-- Tags Overview Overlay -->
   <div id="tags-overview" style="display: none;">
     <div id="tags-list"></div>
   </div>
   
-  <!-- Folders Overview View -->
+  <!-- Folders Overview Overlay -->
   <div id="folders-overview" style="display: none;">
     <div id="folders-list"></div>
   </div>
 
-  <!-- Edit Bookmark View -->
+  <!-- Edit Bookmark Overlay -->
   <div id="edit-bookmark" style="display: none;">
     <div class="inputs">
       <div class="input-description">EDIT TITLE:</div>
@@ -39,17 +39,17 @@
     </div>
   </div>
 
-  <!-- Navigation Bar -->
-  <div id="links">
+  <!-- Footer Navigation -->
+  <footer id="links">
     <a href="#search/">SEARCH</a> | 
     <a href="#tags/">TAGS</a> | 
     <a href="#folders/">FOLDERS</a> | 
     <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab">INFO</a>
-  </div>
+  </footer>
 
   <!-- JS sources -->
   <script src="./lib/fuse.min.js"></script>
-  <script src="./popup.js"></script>
+  <script src="./src/search.js" type="module"></script>
   <script src="./lib/tagify.min.js"></script>
 </body>
 
