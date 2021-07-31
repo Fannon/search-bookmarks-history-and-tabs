@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+
+  <!-- Edit User Config -->
+  <div id="options">
+    <div class="inputs">
+      <div class="input-description">USER OPTIONS <span class="badge error-message" id="error-message" style="display: none;"></span></div>
+      <textarea id="user-config" class="input" type="text" spellcheck="false" autofocus></textarea>
+    </div>
+    <div class="controls">
+      <a id="edit-options-cancel" class="button cancel-button" href="./index.html#search/">CANCEL</a>
+      <a id="edit-options-help" class="button help-button" href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration" target="_newtab">HELP</a>
+      <a id="edit-options-reset" class="button reset-button" href="#reset">RESET</a>
+      <a id="edit-options-save" class="button save-button" href="#save">SAVE</a>
+    </div>
+  </div>
+
+  <!-- Footer Navigation -->
+  <footer id="links">
+    <a href="./index.html#search/">SEARCH</a> | 
+    <a href="./index.html#tags/">TAGS</a> | 
+    <a href="./index.html#folders/">FOLDERS</a> | 
+    <a href="#folders/">OPTIONS</a> | 
+    <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab">INFO</a>
+  </footer>
+
+  <!-- JS sources -->
+  <script src="./src/editOptions.js" type="module"></script>
+</body>
+
+</html>

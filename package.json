@@ -1,6 +1,6 @@
 {
   "name": "search-tabs-bookmarks-and-history",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Browser extension to search and navigate browser tabs, local bookmarks and history.",
   "main": "index.js",
   "dependencies": {},
@@ -12,7 +12,7 @@
   "scripts": {
     "build": "npm run css-build && npm run create-dist",
     "create-dist": "sh bin/createDist.sh",
-    "css-build": "node-sass sass/style.scss popup/style.css --omit-source-map-url --output-style compressed",
+    "css-build": "node-sass sass/ -o popup/ --omit-source-map-url --output-style compressed",
     "css-watch": "npm run css-build -- --watch"
   },
   "repository": {

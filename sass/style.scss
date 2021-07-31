@@ -82,11 +82,46 @@ body {
   background: rgb(187, 172, 38);
   color: #FFF;
 }
+.error-message {
+  background: rgb(187, 38, 38);
+  color: #FFF;
+}
 .url {
   font-size: 13px;
   margin: 0;
   overflow: hidden;
   white-space: nowrap;
+}
+.controls {
+  text-align: right;
+  position: absolute;
+  bottom: 16px;
+  right: 8px;
+  .cancel-button {
+    background: rgb(201, 68, 68) !important;
+    color: #FFF !important;
+  }
+  .help-button {
+    background: rgb(68, 148, 201) !important;
+    color: #FFF !important;
+  }
+  .reset-button {
+    background: #e1b627 !important;
+    color: #FFF !important;
+  }
+  .save-button {
+    background: rgb(95, 201, 68) !important;
+    color: #FFF !important;
+  }
+  a,
+  a:hover {
+    background: #777;
+    color: #FFF;
+    margin: 0 0 0 8px;
+    padding: 2px 12px 4px 12px;
+    border: none;
+    font-size: 16px;
+  }
 }
 #result-list {
   padding: 4px 6px 0 4px;
@@ -140,8 +175,7 @@ body {
 }
 
 #tags-overview,
-#folders-overview,
-#edit-bookmark {
+#folders-overview {
   position: fixed;
   top: 55px;
   left: 0;
@@ -168,6 +202,15 @@ body {
 
 #edit-bookmark {
 
+  padding: 0;
+  overflow: none;
+  position: fixed;
+  top: 55px;
+  left: 0;
+  width: 500px;
+  height: 524px;
+  background: #EEE;
+
   #bookmark-title {
     height: 136px;
     resize: none;
@@ -184,28 +227,20 @@ body {
     margin: 4px 0 2px 8px;
     font-size: 12px;
   }
-  .controls {
-    text-align: right;
-    position: absolute;
-    bottom: 34px;
-    right: 8px;
-    a,
-    a:hover {
-      background: #777;
-      color: #FFF;
-      margin: 0 0 0 8px;
-      padding: 2px 12px 4px 12px;
-      border: none;
-      font-size: 16px;
-    }
-    #edit-bookmark-cancel {
-      background: rgb(201, 68, 68);
-      color: #FFF;
-    }
-    #edit-bookmark-save {
-      background: rgb(95, 201, 68);
-      color: #FFF;
-    }
+}
+
+#options {
+  width: 500px;
+  height: 580px;
+  position: fixed;
+  
+  .input-description {
+    margin: 4px;
+  }
+  textarea {
+    height: 495px;
+    font-size: 18px;
+    font-family: Consolas, monospace, monospace;
   }
 }
 

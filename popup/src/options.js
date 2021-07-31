@@ -1,9 +1,14 @@
+import { mergeDeep } from "./utils.js";
 
 //////////////////////////////////////////
 // OPTIONS                              //
 //////////////////////////////////////////
 
-export const options = {
+/**
+ * The default options.
+ * They can be customized via user options that are stored on the chrome.storage.sync API
+ */
+export const defaultOptions = {
   general: {
     /** Extract tags from title and display it as a badge with different search prio */
     tags: true,
@@ -12,14 +17,9 @@ export const options = {
     /** Display last visit */
     lastVisit: true,
     /** Display visit count */
-    visitCounter: true,
+    visitCounter: false,
     /** Display search result score */
     displayScore: true,
-    /**
-     * Enables fuse.js extended search, which additional operators to fine-tune results.
-     * @see https://fusejs.io/examples.html#weighted-search
-     */
-    extendedSearch: true,
   },
   search: {
     /** Max results to render. Reduce for better performance */
@@ -55,15 +55,83 @@ export const options = {
     startsWithBonusScore: 10,
   },
   tabs: {
+    /** Whether to index and search for open tabs */
     enabled: true,
   },
   bookmarks: {
+    /** Whether to index and search for bookmarks */
     enabled: true,
   },
   history: {
+    /** 
+     * Whether to index and search for browsing history 
+     * Please note that the history API tends to be slow, 
+     * so be careful about how many items you load.
+     */
     enabled: true,
+    /** How many hours ago the history should be fetched */
     hoursAgo: 24,
+    /** How many history items should be fetched at most */
     maxItems: 1024,
   },
-  
 }
+
+/**
+ * This is the default empty user options
+ */
+export const emptyUserOptions = {
+  general: {},
+  search: {},
+  tabs: {},
+  bookmarks: {},
+  history: {},
+}
+
+/**
+ * Writes user settings to the google chrome sync storage
+ * 
+ * @see https://developer.chrome.com/docs/extensions/reference/storage/
+ */
+export function setUserOptions(userOptions) {
+  return new Promise((resolve, reject) => {
+    if (chrome && chrome.storage) {
+      chrome.storage.sync.set({ userOptions: userOptions }, () => {
+        if (chrome.runtime.lastError) {
+          return reject(chrome.runtime.lastError);
+        }
+        return resolve()
+      });
+    }
+  })
+}
+
+/**
+ * Get user options. 
+ * If none are stored yet, this will return the default empty options
+ */
+export async function getUserOptions() {
+  return new Promise((resolve, reject) => {
+    if (chrome && chrome.storage) {
+      chrome.storage.sync.get(['userOptions'], (result,) => {
+        if (chrome.runtime.lastError) {
+          return reject(chrome.runtime.lastError);
+        }
+        return resolve(result.userOptions || emptyUserOptions)
+      });
+    } else {
+      console.warn('No chrome storage API found. Returning empty user options')
+      return resolve(emptyUserOptions)
+    }
+  })
+}
+
+
+/**
+ * Gets the actual effective options based on the default options
+ * and the overrides of the user options
+ */
+export async function getEffectiveOptions() {
+  const userOptions = await getUserOptions()
+  return mergeDeep(defaultOptions, userOptions)
+}
+

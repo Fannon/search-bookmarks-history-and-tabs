@@ -1,9 +1,9 @@
 performance.mark('init-start')
-import { options } from './options.js'
+import { getEffectiveOptions } from './options.js'
 
 const ext = window.ext = {
   /** Extension options */
-  opts: options,
+  opts: {},
   /** Extension data / model */
   data: {},
 }
@@ -23,6 +23,8 @@ initExtension().catch((err) => {
  */
 export async function initExtension() {
 
+  // Load effective options, including user customizations
+  ext.opts = await getEffectiveOptions()
   console.debug('Initialized with options', ext.opts)
 
   // HTML Element selectors
@@ -90,8 +92,8 @@ function createFuseJsIndex(type, searchData) {
     includeMatches: true,
     ignoreLocation: true,
     findAllMatches: true,
+    useExtendedSearch: true,
     shouldSort: false,
-    useExtendedSearch: ext.opts.general.extendedSearch,
     minMatchCharLength: ext.opts.search.minMatchCharLength,
     threshold: ext.opts.search.threshold,
     keys: [{
@@ -449,8 +451,6 @@ function renderResult(result) {
     resultListItem.setAttribute('x-index', i)
     resultListItem.setAttribute('x-id', resultEntry.originalId)
     resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
-    // Register events for mouse navigation
-    // resultListItem.addEventListener('mouseenter', hoverListItem, { passive: true, })
 
     // Create edit button
     if (resultEntry.type === 'bookmark') {
@@ -654,15 +654,6 @@ function openResultItem(event) {
     })
   } else {
     return window.open(url, '_newtab')
-  }
-}
-
-function hoverListItem(event) {
-  const index = event.target.getAttribute('x-index')
-  if (index) {
-    document.getElementById('selected-result').id = ''
-    event.target.id = 'selected-result'
-    ext.data.currentItem = index
   }
 }
 
