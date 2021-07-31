@@ -34,7 +34,7 @@ ext.opts.search = {
   /** Fuzzy search threshold (increase to increase fuzziness) */
   threshold: 0.4,
   /** Filters out all search results below this minimum score */
-  minScore: 50,
+  minScore: 30,
   /** Weight for a title match. From 0-1. */
   titleWeight: 1,
   /** Weight for a tag match. From 0-1. */
@@ -48,7 +48,7 @@ ext.opts.search = {
   /** Base score for tab results */
   tabBaseScore: 90,
   /** Base score for history results */
-  historyBaseScore: 40,
+  historyBaseScore: 50,
   /** Additional score points per visit within history hoursAgo */
   visitedBonusScore: 3,
   /** Maximum score points for visitied bonus */
@@ -346,7 +346,7 @@ function getUniqueFolders() {
 //////////////////////////////////////////
 
 function updateSearchUrl() {
-  const searchTerm = ext.searchInput.value ? ext.searchInput.value.trim() : ''
+  const searchTerm = ext.searchInput.value ? ext.searchInput.value : ''
   window.location.hash = '#search/' + searchTerm
 }
 
@@ -371,7 +371,7 @@ async function search(event) {
     return
   }
 
-  let searchTerm = ext.searchInput.value ? ext.searchInput.value.trim() : ''
+  let searchTerm = ext.searchInput.value || ''
   ext.data.result = []
   let searchMode = 'all' // OR 'bookmarks' OR 'history'
 
@@ -764,7 +764,7 @@ function highlightResultItem(resultItem) {
 //////////////////////////////////////////
 
 function hashRouter() {
-  const hash = window.location.hash.trim()
+  const hash = window.location.hash
   console.debug('Changing Route: ' + hash)
   closeModals()
   if (!hash || hash === '#') {
