@@ -138,7 +138,7 @@ body {
   top: 55px;
   left: 0;
   width: 500px;
-  height: 511px;
+  height: 524px;
   background: #EEE;
   padding: 4px 8px;
   overflow-x: hidden;
@@ -149,6 +149,8 @@ body {
     a,
     a:hover {
       color: #FFF;
+      font-size: 14px;
+      margin: 4px 4px 0 0;
     }
   }
 }
