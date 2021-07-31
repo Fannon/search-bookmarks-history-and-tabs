@@ -1,8 +1,9 @@
 # Browser Extension: Search Tabs, Bookmarks and History
 
 Browser extension to search and navigate browser tabs, local bookmarks and history.
+
+Bookmarks can be edited and tagged, with autocompletions.
 It works fully offline, so there is no external communication.
-For bookmarks, it supports extraction and search of tags and folder names. 
 
 ## Features
 
