@@ -1,6 +1,6 @@
 {
   "name": "search-tabs-bookmarks-and-history",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Browser extension to search and navigate browser tabs, local bookmarks and history.",
   "main": "index.js",
   "dependencies": {},

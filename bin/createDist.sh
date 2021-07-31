@@ -15,7 +15,6 @@ cp images/logo-48.png dist/images/logo-48.png
 cp images/logo-128.png dist/images/logo-128.png
 
 cp -r popup/ dist/popup/
-cp -r options/ dist/options/
 
 # Remove mock data
 rm -rf dist/popup/mockData

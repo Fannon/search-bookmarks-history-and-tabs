@@ -8,10 +8,19 @@
 </head>
 
 <body>
+
+  <!-- Main popup -->
   <div id="popup">
     <input id="search-input" class="input" type="text" placeholder="Search bookmarks and history" autofocus>
     <ul id="result-list"></ul>
   </div>
+  
+  <!-- Tags Overview View -->
+  <div id="tags-overview" style="display: none;">
+    <div id="tags-list"></div>
+  </div>
+
+  <!-- Edit Bookmark View -->
   <div id="edit-bookmark" style="display: none;">
     <div class="inputs">
       <div class="input-description">EDIT TITLE:</div>
@@ -23,12 +32,21 @@
       <a id="edit-bookmark-cancel" class="button" href="#">CANCEL</a>
       <a id="edit-bookmark-save" class="button" href="#">SAVE</a>
     </div>
-    
   </div>
-  <div id="tags-overview" style="display: none;">
+
+  <!-- How To Overview -->
+  <div id="how-to-overview" style="display: none;">
     <div id="tags-list"></div>
   </div>
-  <div id="links"><a href="#search/">NEW SEARCH</a> | <a href="#tags/">TAGS OVERVIEW</a></div>
+
+  <!-- Navigation Bar -->
+  <div id="links">
+    <a href="#search/">SEARCH</a> | 
+    <a href="#tags/">ALL TAGS</a> | 
+    <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme">INFO</a>
+  </div>
+
+  <!-- JS sources -->
   <script src="./lib/fuse.min.js"></script>
   <script src="./popup.js"></script>
   <script src="./lib/tagify.min.js"></script>
