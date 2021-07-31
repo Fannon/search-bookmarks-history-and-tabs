@@ -15,6 +15,8 @@ cp images/logo-48.png dist/images/logo-48.png
 cp images/logo-128.png dist/images/logo-128.png
 
 cp -r popup/ dist/popup/
+# Minimize JS
+node node_modules/uglify-js/bin/uglifyjs --compress --mangle -- popup/popup.js > dist/popup/popup.js
 
 # Remove mock data
 rm -rf dist/popup/mockData
