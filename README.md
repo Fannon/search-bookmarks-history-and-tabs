@@ -8,8 +8,9 @@ For bookmarks, it supports extraction and search of tags and folder names.
 
 * Local / offline only (no external communication / requests).
 * Searching for open browser tabs, bookmark folder names and tags.
-* Lightweight: Vanilla JS, with only a small search library ([Fuse.js](https://fuse.io/)) and a small subset of [BULMA](https://bulma.io/) CSS styles.
 * Dark mode / light mode (via system settings / [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
+* Bookmark editing and tagging capability (with autocompletion)
+* Lightweight: Written in vanilla JS with the goal to only include the minimun necessary libraries (see [credits](#credits)).
 
 ## Demo
 
@@ -54,14 +55,15 @@ To customize the extension options, adjust the `ext.opts` in `popup/popup.js`
 
 This extension makes use of the following helpful open-source projects (thanks!):
 * https://fusejs.io/ for the fuzzy search algorithm
+* https://github.com/yairEO/tagify for the tag autocomplete widget
 * https://bulma.io/ for some minimal CSS base styling
 * https://github.com/tabler/tabler-icons for the edit icon
 
 ## Ideas and To Dos
 
-* Add autocomplete for tags, based on existing tags (something like select2)
 * Quick add current open site via + button
 * Make extension configurable via UI (requires new `storage` permission)
+* Include inline help how extension is used
 * Improve scoring algorithm?
 * Introduce dedicates and precise search mode for tags and folders
 * Try other search algorithms / libraries that are less fuzzy

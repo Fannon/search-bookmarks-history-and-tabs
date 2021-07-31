@@ -114,7 +114,9 @@ async function initExtension() {
   window.addEventListener("hashchange", hashRouter, false);
 
   // Start with empty search to display default results
-  await search()
+  if (window.location.href === '' || window.location.href === '#') {
+    await search()
+  }
 
   // Do some performance measurements and log it to debug
   performance.mark('init-end')
@@ -616,11 +618,9 @@ function navigationKeyListener(event) {
     ext.data.currentItem++
     selectListItem(ext.data.currentItem)
   } else if (event.key === 'Enter' && ext.data.result.length > 0) {
-    // Depending on which overlay we are, ENTER results in a different action
+    // Enter selects selected search result -> only when in search mode
     if (window.location.hash.startsWith('#search/')) {
       openResultItem()
-    } else if (window.location.hash.startsWith('#edit-bookmark/')) {
-      window.location.hash = window.location.hash.replace('#edit-bookmark/', '#update-bookmark/')
     }
   } else if (event.key === 'Escape') {
     window.location.hash = '#search/'
@@ -761,21 +761,47 @@ function getTagsOverview() {
 
 function editBookmark(bookmarkId) {
   const bookmark = ext.data.searchData.bookmarks.find(el => el.originalId === bookmarkId)
+  const tags = getUniqueTags()
   console.debug('Editing bookmark ' + bookmarkId, bookmark)
   if (bookmark) {
     document.getElementById('edit-bookmark').style = ""
     document.getElementById('bookmark-title').value = bookmark.title
-    document.getElementById('bookmark-tags').value = bookmark.tags
+    // document.getElementById('bookmark-tags').value = bookmark.tags
+    ext.tagify = new Tagify(document.getElementById('bookmark-tags'), {
+      whitelist: tags,
+      trim: true,
+      transformTag: transformTag,
+      skipInvalid: false,
+      editTags            : {
+        clicks: 1,
+        keepInvalid: false,
+      },
+      dropdown : {
+        position      : "all",
+        enabled       : 0,
+        maxItems      : 12,
+        closeOnSelect : false,
+      }
+    })
+    const currentTags = bookmark.tags.split('#').map(el => el.trim()).filter(el => el)
+    ext.tagify.addTags(currentTags)
+
     document.getElementById('edit-bookmark-save').href = "#update-bookmark/" + bookmarkId
   } else {
     console.warn(`Tried to edit bookmark id="${bookmarkId}", but coult not find it in searchData.`)
+  }
+
+  function transformTag(tagData){
+    if (tagData.value.includes('#')) {
+      tagData.value = tagData.value.split('#').join('')
+    }
   }
 }
 
 function updateBookmark(bookmarkId) {
   const bookmark = ext.data.searchData.bookmarks.find(el => el.originalId === bookmarkId)
   const titleInput = document.getElementById('bookmark-title').value.trim()
-  const tagsInput = document.getElementById('bookmark-tags').value.trim()
+  const tagsInput = '#' + ext.tagify.value.map(el => el.value.trim()).join(' #')
 
   // Update search data model of bookmark
   bookmark.title = titleInput
