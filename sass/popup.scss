@@ -1,6 +1,7 @@
 @charset "utf-8";
 @import "../node_modules/bulma/sass/base/minireset.sass";
 @import "../node_modules/bulma/sass/base/generic.sass";
+// @import "../node_modules/@yaireo/tagify/src/tagify.scss";
 
 body {
   width: 500px;
@@ -78,8 +79,7 @@ body {
   white-space: nowrap;
 }
 #result-list {
-  margin: 4px 0 4px 4px;
-  padding: 0 4px 0 0;
+  padding: 4px 6px 0 4px;
   height: 512px;
   overflow-x: hidden;
   overflow-y: scroll;
@@ -119,17 +119,22 @@ body {
   
 }
 #links {
-  height: 25px;
+  height: 22px;
+  width: 500px;
+  position: absolute;
+  top: 578px;
+  left: 0;
   background: #FFF;
   padding: 0 8px;
+  font-size: 14px;
 }
 
 #tags-overview {
   position: fixed;
-  top: 59px;
+  top: 55px;
   left: 0;
   width: 500px;
-  height: 512px;
+  height: 511px;
   background: #EEE;
   padding: 4px 8px;
   overflow-x: hidden;
@@ -157,17 +162,23 @@ body {
   #bookmark-title {
     height: 140px;
   }
-  #bookmark-tags {
-    height: 120px;
+  #bookmark-tags,
+  .tagify  {
+    height: 90px;
+    font-size: 18px;
+    border: none;
+    padding: 4px 2px;
+    overflow-x: hidden;
   }
-
   .input-description {
     margin: 4px 0 2px 8px;
     font-size: 12px;
   }
   .controls {
     text-align: right;
-    margin: 4px 8px;
+    position: absolute;
+    bottom: 34px;
+    right: 8px;
     a,
     a:hover {
       background: #777;
@@ -186,6 +197,31 @@ body {
       color: #FFF;
     }
   }
+}
+
+/** CUSTOMIZE TAGIFY STYLE */
+
+.tagify {
+  height: 90px;
+  border: none;
+
+  --tag-bg                  : #557292;
+  --tag-hover               : #5c84af;
+  --tag-text-color          : #FFF;
+  --tag-text-color--edit    : #111;
+  --tag-remove-bg           : var(--tag-hover);
+  --tag-pad                 : 2px 8px 4px 8px;
+  --tag-inset-shadow-size   : 1.35em;
+  --tag-remove-btn-bg--hover: black;
+}
+.tagify__tag {
+  margin: 6px 0 5px 6px;
+}
+.tagify__tag>div {
+  font-size: 15px;
+}
+.tagify__dropdown {
+  max-height: 240px;
 }
 
 /** SCROLLBAR */

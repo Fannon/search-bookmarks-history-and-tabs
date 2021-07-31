@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {},
   "devDependencies": {
+    "@yaireo/tagify": "^4.6.0",
     "bulma": "^0.9.3",
     "node-sass": "^6.0.1"
   },
