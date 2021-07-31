@@ -9,7 +9,7 @@ It works fully offline, so there is no external communication.
 ## Features
 
 * Search for open browser tabs, bookmark folder names and tags and browsing history.
-* Bookmark editing and tagging capability (with autocompletion)
+* Edit and tag bookmarks with autocompletion for tags
 * Dark mode / light mode (via system settings / [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
 * Lightweight: Written in vanilla JS with the goal to only include the minimun necessary libraries (see [credits](#credits)).
 
@@ -28,7 +28,7 @@ It works fully offline, so there is no external communication.
 ### Developer Installation
 
 * Check out this extension via git or download it as .zip file and unpack it
-* Go to [chrome://extensions/] (chrome) or [edge://extensions/] (edge)
+* Go to `chrome://extensions/` (chrome) or `edge://extensions/` (edge)
   * Enable "Developer mode"
   * Choose "Load unpacked" and open the root folder of the extension
 
@@ -39,7 +39,7 @@ It works fully offline, so there is no external communication.
 * This extension can (and should!) be triggered via keyboard shortcut.
   * The default is `CTRL` + `Shift` + `.`, but you can customize this
 * Just type in your search query and it will fuzzy search through everything
-* In case you want to be more selective, search modes are supported
+* In case you want to be more selective -> use a search mode:
   * If you start your query with `. `: only tabs will be searched
   * If you start your query with `+ `: only history will be searched
   * If you start your query with `- `: only bookmarks will be searched
