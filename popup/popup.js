@@ -462,7 +462,7 @@ function renderResult(result) {
     resultListItem.setAttribute('x-id', resultEntry.originalId)
     resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
     // Register events for mouse navigation
-    resultListItem.addEventListener('mouseenter', hoverListItem, { passive: true, })
+    // resultListItem.addEventListener('mouseenter', hoverListItem, { passive: true, })
 
     // Create edit button
     if (resultEntry.type === 'bookmark') {
