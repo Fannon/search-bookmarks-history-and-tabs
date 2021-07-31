@@ -1,6 +1,6 @@
 {
   "name": "search-tabs-bookmarks-and-history",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Browser extension to search and navigate browser tabs, local bookmarks and history.",
   "main": "index.js",
   "dependencies": {},
@@ -26,7 +26,8 @@
     "fuzzy",
     "search",
     "history",
-    "bookmarks"
+    "bookmarks",
+    "tabs"
   ],
   "author": "Simon Heimler",
   "license": "MIT",

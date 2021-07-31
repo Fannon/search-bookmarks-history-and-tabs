@@ -18,6 +18,7 @@ ext.opts.general = {
   highlight: true,
   /** Display  last visit */
   lastVisit: true,
+  /** Display search result score */
   displayScore: true,
   /**
    * Enables fuse.js extended search, which additional operators to fine-tune results.
@@ -26,19 +27,31 @@ ext.opts.general = {
   extendedSearch: true,
 }
 ext.opts.search = {
-  maxResults: 128,
-  minMatchCharLength: 1,
+  /** Max results to render. Reduce for better performance */
+  maxResults: 256,
+  /** Min characters that need to match */
+  minMatchCharLength: 2,
   /** Fuzzy search threshold (increase to increase fuzziness) */
   threshold: 0.4,
+  /** Filters out all search results below this minimum score */
+  minScore: 50,
+  /** Weight for a title match. From 0-1. */
   titleWeight: 1,
+  /** Weight for a tag match. From 0-1. */
   tagWeight: 0.7,
+  /** Weight for an url match. From 0-1. */
   urlWeight: 0.55,
+  /** Weight for a folder match. From 0-1. */
   folderWeight: 0.2,
-  bookmarkDefaultScore: 100,
-  tabDefaultScore: 90,
-  historyDefaultScore: 40,
+  /** Base score for bookmark results */
+  bookmarkBaseScore: 100,
+  /** Base score for tab results */
+  tabBaseScore: 90,
+  /** Base score for history results */
+  historyBaseScore: 40,
   /** Additional score points per visit within history hoursAgo */
   visitedBonusScore: 3,
+  /** Maximum score points for visitied bonus */
   maxVisitedBonusScore: 40,
   /** 
    * Additional score points if title, url and tag starts exactly with search text.
@@ -138,11 +151,9 @@ function createFuseJsIndex(type, searchData) {
   const options = {
     includeScore: true,
     includeMatches: true,
-    tokenize: true,
-    matchAllTokens: true,
     ignoreLocation: true,
     findAllMatches: true,
-    distance: 1000,
+    shouldSort: false,
     useExtendedSearch: ext.opts.general.extendedSearch,
     minMatchCharLength: ext.opts.search.minMatchCharLength,
     threshold: ext.opts.search.threshold,
@@ -277,20 +288,57 @@ async function getSearchData() {
   return result
 }
 
+/**
+ * Extract tags from bookmark titles
+ * 
+ * @returns a dictionary where the key is the unique tag name 
+ * and the value the number of bookmarks with the tag
+ */
 function getUniqueTags() {
-  // Extract tags from bookmark titles
   const tagsDictionary = {}
   for (const el of ext.data.searchData.bookmarks) {
     if (el.tags) {
-      for (const tag of el.tags.split('#')) {
-        if (tag.trim()) {
-          tagsDictionary[tag.trim()] = true
+      for (let tag of el.tags.split('#')) {
+        tag = tag.trim()
+        if (tag) {
+          if (!tagsDictionary[tag]) {
+            tagsDictionary[tag] = 1
+          } else {
+            tagsDictionary[tag] += 1
+          }
         }
       }
     }
   }
-  ext.data.tags = Object.keys(tagsDictionary).sort()
+  ext.data.tags = tagsDictionary
   return ext.data.tags
+}
+
+/**
+ * Extract folders from bookmark titles
+ * 
+ * @returns a dictionary where the key is the unique tag name 
+ * and the value the number of bookmarks within the folder
+ */
+function getUniqueFolders() {
+  // Extract tags from bookmark titles
+  const foldersDictionary = {}
+  for (const el of ext.data.searchData.bookmarks) {
+    if (el.folder) {
+      for (let folderName of el.folder.split('~')) {
+        folderName = folderName.trim()
+        if (folderName) {
+          if (!foldersDictionary[folderName]) {
+            foldersDictionary[folderName] = 1
+          } else {
+            foldersDictionary[folderName] += 1
+          }
+        }
+      }
+    }
+  }
+  ext.data.folders = foldersDictionary
+  return ext.data.folders
 }
 
 //////////////////////////////////////////
@@ -382,11 +430,6 @@ async function searchWithFuseJs(searchTerm, searchMode) {
       ]
     }
 
-    // Only render maxResults if given (to improve render performance)
-    if (ext.opts.search.maxResults && ext.data.searchResult.length > ext.opts.search.maxResults) {
-      ext.data.searchResult = ext.data.searchResult.slice(0, ext.opts.search.maxResults)
-    }
-
     // Convert search results into result format view model
     ext.data.result = ext.data.searchResult.map((el) => {
       const highlighted = ext.opts.general.highlight ? highlightResultItem(el) : {}
@@ -421,6 +464,14 @@ async function searchWithFuseJs(searchTerm, searchMode) {
   }
 
   sortResult(ext.data.result, searchTerm)
+  
+  // Filter out all search results below a certain score
+  ext.data.result = ext.data.result.filter((el) => el.score >= ext.opts.search.minScore)
+
+  // Only render maxResults if given (to improve render performance)
+  if (ext.data.result.length > ext.opts.search.maxResults) {
+    ext.data.result = ext.data.searchResult.slice(0, ext.opts.search.maxResults)
+  }
 
   renderResult(ext.data.result)
 
@@ -550,11 +601,11 @@ function sortResult(result, searchTerm) {
 
     // Apply result.type weight
     if (el.type === 'bookmark') {
-      score = ext.opts.search.bookmarkDefaultScore
+      score = ext.opts.search.bookmarkBaseScore
     } else if (el.type === 'tab') {
-      score = ext.opts.search.tabDefaultScore
+      score = ext.opts.search.tabBaseScore
     } else if (el.type === 'history') {
-      score = ext.opts.search.historyDefaultScore
+      score = ext.opts.search.historyBaseScore
     }
 
     // Multiply by fuse.js score. 
@@ -715,6 +766,7 @@ function highlightResultItem(resultItem) {
 function hashRouter() {
   const hash = window.location.hash.trim()
   console.debug('Changing Route: ' + hash)
+  closeModals()
   if (!hash || hash === '#') {
     // Index route -> redirect to last known search or empty search
     window.location.hash = '#search/' + (ext.data.searchTerm || '')
@@ -724,9 +776,10 @@ function hashRouter() {
     ext.searchInput.value = decodeURIComponent(searchTerm)
     ext.searchInput.focus()
     search()
-    closeModals()
   } else if (hash.startsWith('#tags/')) {
     getTagsOverview()
+  } else if (hash.startsWith('#folders/')) {
+    getFoldersOverview()
   } else if (hash.startsWith('#edit-bookmark/')) {
     // Edit bookmark route
     const bookmarkId = hash.replace('#edit-bookmark/', '')
@@ -741,6 +794,7 @@ function hashRouter() {
 function closeModals() {
   document.getElementById('edit-bookmark').style = "display: none;"
   document.getElementById('tags-overview').style = "display: none;"
+  document.getElementById('folders-overview').style = "display: none;"
 }
 
 //////////////////////////////////////////
@@ -750,8 +804,22 @@ function closeModals() {
 function getTagsOverview() {
   const tags = getUniqueTags()
   document.getElementById('tags-overview').style = ""
-  document.getElementById('tags-list').innerHTML = tags.map((el) => {
-    return `<a class="badge tags" href="#search/'#${el}">#${el}</a>`
+  const sortedTags = Object.keys(tags).sort()
+  document.getElementById('tags-list').innerHTML = sortedTags.map((el) => {
+    return `<a class="badge tags" href="#search/'#${el}">#${el} <small>(${tags[el]})<small></a>`
+  }).join('')
+}
+
+//////////////////////////////////////////
+// FOLDERS OVERVIEW                        //
+//////////////////////////////////////////
+
+function getFoldersOverview() {
+  const folders = getUniqueFolders()
+  document.getElementById('folders-overview').style = ""
+  const sortedFolders = Object.keys(folders).sort()
+  document.getElementById('folders-list').innerHTML = sortedFolders.map((el) => {
+    return `<a class="badge folder" href="#search/'~${el}">~${el} <small>(${folders[el]})<small></a>`
   }).join('')
 }
 
@@ -761,7 +829,7 @@ function getTagsOverview() {
 
 function editBookmark(bookmarkId) {
   const bookmark = ext.data.searchData.bookmarks.find(el => el.originalId === bookmarkId)
-  const tags = getUniqueTags()
+  const tags = Object.keys(getUniqueTags()).sort()
   console.debug('Editing bookmark ' + bookmarkId, bookmark)
   if (bookmark) {
     document.getElementById('edit-bookmark').style = ""
@@ -902,7 +970,7 @@ function convertChromeBookmarks(bookmarks, folderTrail, depth) {
 
     let folderText = ''
     for (const folder of folderTrail) {
-      folderText += '>' + folder + ' '
+      folderText += '~' + folder + ' '
     }
     folderText = folderText.slice(0, -1)
 

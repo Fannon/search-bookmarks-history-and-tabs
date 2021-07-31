@@ -1,7 +1,6 @@
 @charset "utf-8";
 @import "../node_modules/bulma/sass/base/minireset.sass";
 @import "../node_modules/bulma/sass/base/generic.sass";
-// @import "../node_modules/@yaireo/tagify/src/tagify.scss";
 
 body {
   width: 500px;
@@ -17,6 +16,9 @@ body {
     font-weight: bold;
     color: #356ba9;
     background: none;
+  }
+  small {
+    color: #AAA;
   }
 }
 
@@ -133,7 +135,9 @@ body {
   font-size: 14px;
 }
 
-#tags-overview {
+#tags-overview,
+#folders-overview,
+#edit-bookmark {
   position: fixed;
   top: 55px;
   left: 0;
@@ -144,7 +148,8 @@ body {
   overflow-x: hidden;
   overflow-y: scroll;
 
-  #tags-list {
+  #tags-list,
+  #folders-list {
     width: 100%;
     a,
     a:hover {
@@ -158,12 +163,6 @@ body {
 /** EDIT BOOKMARK */
 
 #edit-bookmark {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 500px;
-  height: 600px;
-  background: #EEE;
 
   #bookmark-title {
     height: 136px;
@@ -245,28 +244,31 @@ body {
 
 /** SCROLLBAR */
 #result-list::-webkit-scrollbar,
-#tags-overview::-webkit-scrollbar{
+#tags-overview::-webkit-scrollbar,
+#folders-overview::-webkit-scrollbar {
   width: 8px;
   margin-left: 4px;
   padding-left: 0px;
 }
 #result-list::-webkit-scrollbar-track,
-#tags-overviewt::-webkit-scrollbar-track {
+#tags-overviewt::-webkit-scrollbar-track,
+#folders-overview::-webkit-scrollbar-track {
   background: #ddd;
   padding-left: 2px;
 }
 #result-list::-webkit-scrollbar-thumb,
-#tags-overview::-webkit-scrollbar-thumb {
+#tags-overview::-webkit-scrollbar-thumb,
+#folders-overview::-webkit-scrollbar-thumb {
   background-color: #999;
 }
-
 
 /** DARK MODE **/
 @media screen and (prefers-color-scheme: dark) {
   html,
   body,
   #edit-bookmark,
-  #tags-overview {
+  #tags-overview,
+  #folders-overview {
     background: #222;
     a,
     a:visited {
@@ -304,11 +306,13 @@ body {
     background: #000;
   }
   #result-list::-webkit-scrollbar-track,
-  #tags-overview::-webkit-scrollbar-track {
+  #tags-overview::-webkit-scrollbar-track,
+  #folders-overview::-webkit-scrollbar-track {
     background: rgb(65, 65, 65);
   }
   #result-list::-webkit-scrollbar-thumb,
-  #tags-overview::-webkit-scrollbar-thumb {
+  #tags-overview::-webkit-scrollbar-thumb,
+  #folders-overview::-webkit-scrollbar-thumb {
     background-color: rgb(95, 95, 95);
   }
   .input-description {
