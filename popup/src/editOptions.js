@@ -21,7 +21,7 @@ async function initOptions() {
 async function saveOptions() {
   const userOptionsString = document.getElementById('user-config').value
   try {
-    const userOptions = JSON.parse(userOptionsString)
+    const userOptions = JSON5.parse(userOptionsString)
     await setUserOptions(userOptions)
     window.location.href = './index.html#search/'
   } catch (e) {

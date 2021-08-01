@@ -50,32 +50,50 @@ It is available for [Google Chrome](https://www.google.com/chrome/) and [Microso
 
 ## User Configuration
 
-Currently the user options can only be written in [JSON format](https://en.wikipedia.org/wiki/JSON). They do not need to be complete, as they just overwrite the default options.
+The user options are written in [JSON format](https://en.wikipedia.org/wiki/JSON) / [JSON5 format](https://json5.org/). They do not need to be complete, as they just overwrite the default options.
 
 To see what configurations are available and what they do, please have a look at the `defaultOptions` in [popup/src/options.js](popup/src/options.js).
 
 If you want to customize some options, it is recommended to *only* add the actually adjusted options to your user config.
 
+The options are not validated properly. Please make sure to use them correctly. 
+If something breaks, consider resetting your options.
+
 An exemplary user-config can look like the following example:
 
 ```json
 {
-  "general": {
-    "visitCounter": false
-  },
-  "search": {},
-  "tabs": {},
-  "bookmarks": {},
+  // Disable search of browsing historyf
   "history": {
     "enabled": false
+  }
+}
+```
+
+If you only want excact search matches, you can reduce the fuzzyness of the search:
+
+```json
+// Make search non-fuzzy
+{
+  "search": {
+    "threshold": 0
   },
-  "score": {}
+  "score": {
+    "minScore": 50
+  }
 }
 ```
 
 ## Scoring System
 
-* 
+The scoring systems works roughly the following:
+
+* Depending on the type of result (bookmark, tab, history) a different base score is taken (e.g. `bookmarkBaseScore`).
+* Depending in which result field (title, url, tag, folder) the match was found, the search match gets weighted. (e.g. `titleMultiplicator`).
+* This base score is now merged with the search library score (fuse.js). A less good match will reduce the score.
+* Depending on certain conditions some bonus score points are added again. E.g. `exactStartsWithBonus` will add score if the title or the url starts excactly with the search term.
+
+For a description of the scoring options and what they do, please see `defaultOptoins.score` in [popup/src/options.js](popup/src/options.js).
 
 ## Credits
 

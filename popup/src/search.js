@@ -306,7 +306,7 @@ async function search(event) {
 
   performance.mark('search-start')
 
-  if (!ext.data.tabIndex || !ext.data.bookmarkIndex || !ext.data.historyIndex) {
+  if (!ext.data.tabIndex  && !ext.data.bookmarkIndex && !ext.data.historyIndex) {
     console.warn('No search index found (yet). Skipping search')
     return
   }
@@ -364,11 +364,16 @@ async function searchWithFuseJs(searchTerm, searchMode) {
     } else if (searchMode === 'tabs' && ext.data.tabIndex) {
       ext.data.searchResult = ext.data.tabIndex.search(searchTerm)
     } else {
-      ext.data.searchResult = [
-        ...ext.data.bookmarkIndex.search(searchTerm),
-        ...ext.data.tabIndex.search(searchTerm),
-        ...ext.data.historyIndex.search(searchTerm),
-      ]
+      ext.data.searchResult = []
+      if (ext.data.bookmarkIndex) {
+        ext.data.searchResult.push(...ext.data.bookmarkIndex.search(searchTerm))
+      }
+      if (ext.data.tabIndex) {
+        ext.data.searchResult.push(...ext.data.tabIndex.search(searchTerm))
+      }
+      if (ext.data.historyIndex) {
+        ext.data.searchResult.push(...ext.data.historyIndex.search(searchTerm))
+      }
     }
 
     // Convert search results into result format view model
@@ -612,15 +617,15 @@ function sortResult(result, searchTerm) {
   });
 
   // Helpful for debugging score algorithm
-  console.table(result.map((el) => {
-    return {
-      score: el.score,
-      fuseScore: el.fuseScore,
-      type: el.type,
-      title: el.title,
-      url: el.originalUrl
-    }
-  }))
+  // console.table(result.map((el) => {
+  //   return {
+  //     score: el.score,
+  //     fuseScore: el.fuseScore,
+  //     type: el.type,
+  //     title: el.title,
+  //     url: el.originalUrl
+  //   }
+  // }))
 
   return result
 }
