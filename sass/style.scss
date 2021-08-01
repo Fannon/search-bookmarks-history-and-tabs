@@ -2,9 +2,13 @@
 @import "../node_modules/bulma/sass/base/minireset.sass";
 @import "../node_modules/bulma/sass/base/generic.sass";
 
-body {
+body,
+#container {
   width: 500px;
   height: 600px;
+}
+
+body {
   background: #eee;
   color: #555;
   padding: 0;

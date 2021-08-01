@@ -50,7 +50,7 @@ It is available for [Google Chrome](https://www.google.com/chrome/) and [Microso
 
 ## User Configuration
 
-The user options are written in [JSON format](https://en.wikipedia.org/wiki/JSON) / [JSON5 format](https://json5.org/). They do not need to be complete, as they just overwrite the default options.
+The user options are written in [JSON format](https://en.wikipedia.org/wiki/JSON) or [JSON5 format](https://json5.org/). They do not need to be complete, as they just overwrite the default options.
 
 To see what configurations are available and what they do, please have a look at the `defaultOptions` in [popup/src/options.js](popup/src/options.js).
 
@@ -61,9 +61,9 @@ If something breaks, consider resetting your options.
 
 An exemplary user-config can look like the following example:
 
-```json
+```json5
+// Disable search of browsing history
 {
-  // Disable search of browsing historyf
   "history": {
     "enabled": false
   }
@@ -72,7 +72,7 @@ An exemplary user-config can look like the following example:
 
 If you only want excact search matches, you can reduce the fuzzyness of the search:
 
-```json
+```json5
 // Make search non-fuzzy
 {
   "search": {
@@ -98,7 +98,7 @@ For a description of the scoring options and what they do, please see `defaultOp
 
 It also helps to enable displaying the score in the result items
 
-```json
+```json5
 // Display score for each result
 {
   "general": {

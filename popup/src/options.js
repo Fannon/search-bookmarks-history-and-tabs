@@ -1,11 +1,8 @@
 import { mergeDeep } from "./utils.js";
 
-//////////////////////////////////////////
-// OPTIONS                              //
-//////////////////////////////////////////
-
 /**
- * The default options.
+ * The default options
+ * 
  * They can be selectively overwritten and customized via user options
  * @see https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration
  */
@@ -27,7 +24,7 @@ export const defaultOptions = {
   search: {
     /** Max search results. Reduce for better performance */
     maxResults: 256,
-    /** Min search string characters that need to consider a match */
+    /** Min search string characters to have a match */
     minMatchCharLength: 2,
     /** 
      * Fuzzy search threshold (0 - 1) 
@@ -94,21 +91,21 @@ export const defaultOptions = {
     /** 
      * Additional score points if title or url starts exactly with the search text.
      */
-     exactStartsWithBonus: 20,
+    exactStartsWithBonus: 20,
     /**
      * If we don't have an excact starts "with match", bonus points for an excact "includes" match
      */
-     exactIncludesBonus: 10,
+    exactIncludesBonus: 10,
 
     /**
      * Additinal points for an exact match of a search term tag (including #)
      */
-     exactTagMatchBonus: 10,
+    exactTagMatchBonus: 10,
 
     /**
      * Additinal points for an exact match of a search term folder name (including ~)
      */
-     exactFolderMatchBonus: 5,
+    exactFolderMatchBonus: 5,
 
     /** 
      * Adds score points for every site visit according to browsing history 
@@ -116,8 +113,7 @@ export const defaultOptions = {
      */
     visitedBonusScore: 2,
     /** Maximum score points for visitied bonus */
-    visitedBonusScoreMaximum: 30, 
-
+    visitedBonusScoreMaximum: 30,
   },
 }
 
