@@ -150,6 +150,8 @@ export function setUserOptions(userOptions) {
 /**
  * Get user options. 
  * If none are stored yet, this will return the default empty options
+ * 
+ * TODO: Add fallback to window.localStorage
  */
 export async function getUserOptions() {
   return new Promise((resolve, reject) => {
@@ -171,6 +173,8 @@ export async function getUserOptions() {
 /**
  * Gets the actual effective options based on the default options
  * and the overrides of the user options
+ * 
+ * TODO: Add fallback to window.localStorage
  */
 export async function getEffectiveOptions() {
   const userOptions = await getUserOptions()

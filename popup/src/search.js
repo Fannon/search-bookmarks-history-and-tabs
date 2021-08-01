@@ -67,9 +67,9 @@ export async function initExtension() {
   window.addEventListener("hashchange", hashRouter, false);
 
   // Start with empty search to display default results
-  if (window.location.href === '' || window.location.href === '#') {
-    await search()
-  }
+  // if (window.location.href === '' || window.location.href === '#') {
+  //   await search()
+  // }
 
   // Do some performance measurements and log it to debug
   performance.mark('init-end')
@@ -83,56 +83,48 @@ export async function initExtension() {
   performance.clearMeasures()
 }
 
-/**
- * Initialize search with Fuse.js
- */
-function createFuseJsIndex(type, searchData) {
-  performance.mark('index-start')
-  const options = {
-    includeScore: true,
-    includeMatches: true,
-    ignoreLocation: true,
-    findAllMatches: true,
-    useExtendedSearch: true,
-    shouldSort: false,
-    minMatchCharLength: ext.opts.search.minMatchCharLength,
-    threshold: ext.opts.search.fuzzyness,
-    keys: [{
-      name: 'title',
-      weight: ext.opts.score.titleMultiplicator,
-    }]
+
+//////////////////////////////////////////
+// NAVIGATION                           //
+//////////////////////////////////////////
+
+function hashRouter() {
+  const hash = window.location.hash
+  console.debug('Changing Route: ' + hash)
+  closeModals()
+  if (!hash || hash === '#') {
+    // Index route -> redirect to last known search or empty search
+    window.location.hash = '#search/' + (ext.data.searchTerm || '')
+  } else if (hash.startsWith('#search/')) {
+    // Search specific term
+    const searchTerm = hash.replace('#search/', '')
+    ext.searchInput.value = decodeURIComponent(searchTerm)
+    ext.searchInput.focus()
+    search()
+  } else if (hash.startsWith('#tags/')) {
+    getTagsOverview()
+  } else if (hash.startsWith('#folders/')) {
+    getFoldersOverview()
+  } else if (hash.startsWith('#edit-bookmark/')) {
+    // Edit bookmark route
+    const bookmarkId = hash.replace('#edit-bookmark/', '')
+    editBookmark(bookmarkId)
+  } else if (hash.startsWith('#update-bookmark/')) {
+    // Update bookmark route
+    const bookmarkId = hash.replace('#update-bookmark/', '')
+    updateBookmark(bookmarkId)
   }
+}
 
-  if (type === 'bookmarks') {
-    options.keys.push({
-      name: 'tags',
-      weight: ext.opts.score.tagMultiplicator,
-    }, {
-      name: 'url',
-      weight: ext.opts.score.urlMultiplicator,
-    }, {
-      name: 'folder',
-      weight: ext.opts.score.folderMultiplicator,
-    })
-  } else if (type === 'history') {
-    options.keys.push({
-      name: 'url',
-      weight: ext.opts.score.urlMultiplicator,
-    })
-  } else if (type === 'tabs') {
-    options.keys.push({
-      name: 'url',
-      weight: ext.opts.score.urlMultiplicator,
-    })
-  } else {
-    throw new Error(`Unsupported index type: ${type}`)
-  }
+function closeModals() {
+  document.getElementById('edit-bookmark').style = "display: none;"
+  document.getElementById('tags-overview').style = "display: none;"
+  document.getElementById('folders-overview').style = "display: none;"
+}
 
-  const index = new window.Fuse(searchData, options);
-
-  performance.mark('index-end')
-  performance.measure('index-' + type, 'index-start', 'index-end');
-  return index
+function updateSearchUrl() {
+  const searchTerm = ext.searchInput.value ? ext.searchInput.value : ''
+  window.location.hash = '#search/' + searchTerm
 }
 
 //////////////////////////////////////////
@@ -281,14 +273,61 @@ function getUniqueFolders() {
   return ext.data.folders
 }
 
+/**
+ * Initialize search with Fuse.js
+ */
+ function createFuseJsIndex(type, searchData) {
+  performance.mark('index-start')
+  const options = {
+    includeScore: true,
+    includeMatches: true,
+    ignoreLocation: true,
+    findAllMatches: true,
+    useExtendedSearch: true,
+    shouldSort: false,
+    minMatchCharLength: ext.opts.search.minMatchCharLength,
+    threshold: ext.opts.search.fuzzyness,
+    keys: [{
+      name: 'title',
+      weight: ext.opts.score.titleMultiplicator,
+    }]
+  }
+
+  if (type === 'bookmarks') {
+    options.keys.push({
+      name: 'tags',
+      weight: ext.opts.score.tagMultiplicator,
+    }, {
+      name: 'url',
+      weight: ext.opts.score.urlMultiplicator,
+    }, {
+      name: 'folder',
+      weight: ext.opts.score.folderMultiplicator,
+    })
+  } else if (type === 'history') {
+    options.keys.push({
+      name: 'url',
+      weight: ext.opts.score.urlMultiplicator,
+    })
+  } else if (type === 'tabs') {
+    options.keys.push({
+      name: 'url',
+      weight: ext.opts.score.urlMultiplicator,
+    })
+  } else {
+    throw new Error(`Unsupported index type: ${type}`)
+  }
+
+  const index = new window.Fuse(searchData, options);
+
+  performance.mark('index-end')
+  performance.measure('index-' + type, 'index-start', 'index-end');
+  return index
+}
+
 //////////////////////////////////////////
 // SEARCH                               //
 //////////////////////////////////////////
-
-function updateSearchUrl() {
-  const searchTerm = ext.searchInput.value ? ext.searchInput.value : ''
-  window.location.hash = '#search/' + searchTerm
-}
 
 async function search(event) {
 
@@ -388,7 +427,16 @@ async function searchWithFuseJs(searchTerm, searchMode) {
         folderHighlighted: highlighted.folder,
       }
     })
+    
+    sortResult(ext.data.result, searchTerm)
+
+    // Filter out all search results below a certain score
+    ext.data.result = ext.data.result.filter((el) => el.score >= ext.opts.score.minScore)
+
   } else {
+
+    console.debug(`Searching for default results`)
+
     // If we don't have a sufficiently long search term, display current tab related entries
     // Find out if there are any bookmarks or history that match our current open URL
 
@@ -401,18 +449,11 @@ async function searchWithFuseJs(searchTerm, searchMode) {
     // Remove trailing slash from URL, so the startsWith search works better
     currentUrl = currentUrl.replace(/\/$/, "")
 
-    const foundBookmarks = ext.data.searchData.bookmarks.filter((el) => el.originalUrl.startsWith(currentUrl))
-    ext.data.result = ext.data.result.concat(foundBookmarks)
-    const foundHistory = ext.data.searchData.history.filter((el) => {
-      return (currentUrl === el.originalUrl || currentUrl === el.originalUrl + '/')
-    })
-    ext.data.result = ext.data.result.concat(foundHistory)
+    const foundBookmarks = ext.data.searchData.bookmarks.filter(el => el.originalUrl.startsWith(currentUrl))
+    ext.data.result.push(...foundBookmarks)
+    const foundHistory = ext.data.searchData.history.filter(el => el.originalUrl === currentUrl)
+    ext.data.result.push(...foundHistory)
   }
-
-  sortResult(ext.data.result, searchTerm)
-
-  // Filter out all search results below a certain score
-  ext.data.result = ext.data.result.filter((el) => el.score >= ext.opts.score.minScore)
 
   // Only render maxResults if given (to improve render performance)
   if (ext.data.result.length > ext.opts.search.maxResults) {
@@ -723,43 +764,6 @@ function highlightResultItem(resultItem) {
   return highlightedResultItem
 };
 
-//////////////////////////////////////////
-// NAVIGATION                           //
-//////////////////////////////////////////
-
-function hashRouter() {
-  const hash = window.location.hash
-  console.debug('Changing Route: ' + hash)
-  closeModals()
-  if (!hash || hash === '#') {
-    // Index route -> redirect to last known search or empty search
-    window.location.hash = '#search/' + (ext.data.searchTerm || '')
-  } else if (hash.startsWith('#search/')) {
-    // Search specific term
-    const searchTerm = hash.replace('#search/', '')
-    ext.searchInput.value = decodeURIComponent(searchTerm)
-    ext.searchInput.focus()
-    search()
-  } else if (hash.startsWith('#tags/')) {
-    getTagsOverview()
-  } else if (hash.startsWith('#folders/')) {
-    getFoldersOverview()
-  } else if (hash.startsWith('#edit-bookmark/')) {
-    // Edit bookmark route
-    const bookmarkId = hash.replace('#edit-bookmark/', '')
-    editBookmark(bookmarkId)
-  } else if (hash.startsWith('#update-bookmark/')) {
-    // Update bookmark route
-    const bookmarkId = hash.replace('#update-bookmark/', '')
-    updateBookmark(bookmarkId)
-  }
-}
-
-function closeModals() {
-  document.getElementById('edit-bookmark').style = "display: none;"
-  document.getElementById('tags-overview').style = "display: none;"
-  document.getElementById('folders-overview').style = "display: none;"
-}
 
 //////////////////////////////////////////
 // TAGS OVERVIEW                        //
