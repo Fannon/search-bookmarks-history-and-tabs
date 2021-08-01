@@ -18,7 +18,7 @@ It works with [Google Chrome](https://www.google.com/chrome/) and [Microsoft Edg
 
 ## Screenshots & Demo
 
-![light and dark theme](/images/bookmark-and-history-search.png "light and dark theme")
+![light and dark theme](/images/bookmark-and-history-search-screenshots.png "light and dark theme")
 
 ![Demo GIF](/images/bookmark-and-history-search.gif "Demo GIF")
 
@@ -123,7 +123,7 @@ This extension makes use of the following helpful open-source projects (thanks!)
 > All ideas, suggestions or bug reports are welcome.
 
 * Introduce dedicates and precise search mode for tags and folders
-* Add alternative search algorithm that isn't based on fuzzy search
+* Add alternative search algorithms that aren't based on fuzzy search?
   * https://github.com/nextapps-de/flexsearch 
   * https://lunrjs.com/
 * Convert project to TypeScript, refactor code and make it more modular
