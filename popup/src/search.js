@@ -29,7 +29,7 @@ export async function initExtension() {
   console.debug('Initialized with options', ext.opts)
 
   // HTML Element selectors
-  ext.popup = document.getElementById('popup');
+  ext.popup = document.getElementById('popup')
   ext.searchInput = document.getElementById('search-input')
   ext.resultList = document.getElementById('result-list')
   ext.searchInput.value = ''
@@ -62,9 +62,9 @@ export async function initExtension() {
   performance.mark('init-search-index')
 
   // Register Events
-  ext.searchInput.addEventListener("keyup", updateSearchUrl);
-  document.addEventListener("keydown", navigationKeyListener);
-  window.addEventListener("hashchange", hashRouter, false);
+  ext.searchInput.addEventListener("keyup", updateSearchUrl)
+  document.addEventListener("keydown", navigationKeyListener)
+  window.addEventListener("hashchange", hashRouter, false)
 
   // Start with empty search to display default results
   // if (window.location.href === '' || window.location.href === '#') {
@@ -73,13 +73,13 @@ export async function initExtension() {
 
   // Do some performance measurements and log it to debug
   performance.mark('init-end')
-  performance.measure('init-end-to-end', 'init-start', 'init-end');
-  performance.measure('init-dom', 'init-start', 'init-dom');
-  performance.measure('init-data-load', 'init-dom', 'init-data-load');
-  performance.measure('init-search-index', 'init-data-load', 'init-search-index');
+  performance.measure('init-end-to-end', 'init-start', 'init-end')
+  performance.measure('init-dom', 'init-start', 'init-dom')
+  performance.measure('init-data-load', 'init-dom', 'init-data-load')
+  performance.measure('init-search-index', 'init-data-load', 'init-search-index')
   const initPerformance = performance.getEntriesByType("measure")
   const totalInitPerformance = performance.getEntriesByName("init-end-to-end")
-  console.debug('Init Performance: ' + totalInitPerformance[0].duration, initPerformance);
+  console.debug('Init Performance: ' + totalInitPerformance[0].duration, initPerformance)
   performance.clearMeasures()
 }
 
@@ -150,21 +150,21 @@ async function getSearchData() {
     const chromeTabs = await getChromeTabs()
     result.tabs = convertChromeTabs(chromeTabs)
     performance.mark('get-data-tabs-end')
-    performance.measure('get-data-tabs', 'get-data-tabs-start', 'get-data-tabs-end');
+    performance.measure('get-data-tabs', 'get-data-tabs-start', 'get-data-tabs-end')
   }
   if (chrome.bookmarks && ext.opts.bookmarks.enabled) {
     performance.mark('get-data-bookmarks-start')
     const chromeBookmarks = await getChromeBookmarks()
     result.bookmarks = convertChromeBookmarks(chromeBookmarks)
     performance.mark('get-data-bookmarks-end')
-    performance.measure('get-data-bookmarks', 'get-data-bookmarks-start', 'get-data-bookmarks-end');
+    performance.measure('get-data-bookmarks', 'get-data-bookmarks-start', 'get-data-bookmarks-end')
   }
   if (chrome.history && ext.opts.history.enabled) {
     performance.mark('get-data-history-start')
     const chromeHistory = await getChromeHistory(ext.opts.history.hoursAgo, ext.opts.history.maxItems)
     result.history = convertChromeHistory(chromeHistory)
     performance.mark('get-data-history-end')
-    performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end');
+    performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end')
   }
 
   // Use mock data (for localhost preview / development)
@@ -186,7 +186,7 @@ async function getSearchData() {
   // SECOND: Merge history with bookmarks and tabs and clean up data
 
   // Build maps with URL as key, so we have fast hashmap access
-  const historyMap = result.history.reduce((obj, item, index) => (obj[item.originalUrl] = { ...item, index }, obj), {});
+  const historyMap = result.history.reduce((obj, item, index) => (obj[item.originalUrl] = { ...item, index }, obj), {})
 
   // merge history with bookmarks
   result.bookmarks = result.bookmarks.map((el) => {
@@ -318,10 +318,10 @@ function getUniqueFolders() {
     throw new Error(`Unsupported index type: ${type}`)
   }
 
-  const index = new window.Fuse(searchData, options);
+  const index = new window.Fuse(searchData, options)
 
   performance.mark('index-end')
-  performance.measure('index-' + type, 'index-start', 'index-end');
+  performance.measure('index-' + type, 'index-start', 'index-end')
   return index
 }
 
@@ -442,8 +442,8 @@ async function searchWithFuseJs(searchTerm, searchMode) {
 
     let currentUrl = window.location.href
     if (chrome && chrome.tabs) {
-      const queryOptions = { active: true, currentWindow: true };
-      const [tab] = await chrome.tabs.query(queryOptions);
+      const queryOptions = { active: true, currentWindow: true }
+      const [tab] = await chrome.tabs.query(queryOptions)
       currentUrl = tab.url
     }
     // Remove trailing slash from URL, so the startsWith search works better
@@ -463,9 +463,9 @@ async function searchWithFuseJs(searchTerm, searchMode) {
   renderResult(ext.data.result)
 
   performance.mark('search-end')
-  performance.measure('search: ' + searchTerm, 'search-start', 'search-end');
+  performance.measure('search: ' + searchTerm, 'search-start', 'search-end')
   const searchPerformance = performance.getEntriesByType("measure")
-  console.debug('Search Performance: ' + searchPerformance[0].duration, searchPerformance);
+  console.debug('Search Performance: ' + searchPerformance[0].duration, searchPerformance)
   performance.clearMeasures()
 }
 
@@ -483,7 +483,7 @@ function renderResult(result) {
   performance.mark('render-start')
 
   // Clean current result set
-  ext.resultList.innerHTML = '';
+  ext.resultList.innerHTML = ''
   ext.data.currentItem = 0
 
   for (let i = 0; i < result.length; i++) {
@@ -494,7 +494,7 @@ function renderResult(result) {
     }
 
     // Create result list item (li)
-    const resultListItem = document.createElement("li");
+    const resultListItem = document.createElement("li")
     resultListItem.classList.add(resultEntry.type)
     resultListItem.setAttribute('x-index', i)
     resultListItem.setAttribute('x-id', resultEntry.originalId)
@@ -514,13 +514,13 @@ function renderResult(result) {
     // Create title div
     const titleDiv = document.createElement('div')
     titleDiv.classList.add('title')
-    const titleLink = document.createElement('a');
-    titleLink.setAttribute('href', resultEntry.originalUrl);
-    titleLink.setAttribute('target', '_newtab');
+    const titleLink = document.createElement('a')
+    titleLink.setAttribute('href', resultEntry.originalUrl)
+    titleLink.setAttribute('target', '_newtab')
     if (ext.opts.general.highlight) {
-      titleLink.innerHTML = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url;
+      titleLink.innerHTML = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
     } else {
-      titleLink.innerText = resultEntry.title;
+      titleLink.innerText = resultEntry.title
     }
     titleDiv.appendChild(titleLink)
     if (ext.opts.general.tags && resultEntry.tags) {
@@ -557,9 +557,9 @@ function renderResult(result) {
     // Create URL div
     const urlDiv = document.createElement('div')
     urlDiv.classList.add('url')
-    const a = document.createElement('a');
-    a.setAttribute('href', resultEntry.originalUrl);
-    a.setAttribute('target', '_newtab');
+    const a = document.createElement('a')
+    a.setAttribute('href', resultEntry.originalUrl)
+    a.setAttribute('target', '_newtab')
     a.innerHTML = resultEntry.urlHighlighted || resultEntry.url
     urlDiv.appendChild(a)
 
@@ -573,9 +573,9 @@ function renderResult(result) {
   selectListItem(0)
 
   performance.mark('render-end')
-  performance.measure('Render DOM', 'render-start', 'render-end');
+  performance.measure('Render DOM', 'render-start', 'render-end')
   const renderPerformance = performance.getEntriesByType("measure")
-  console.debug('Render Performance: ' + renderPerformance[0].duration, renderPerformance);
+  console.debug('Render Performance: ' + renderPerformance[0].duration, renderPerformance)
   performance.clearMeasures()
 }
 
@@ -655,7 +655,7 @@ function sortResult(result, searchTerm) {
 
   result = result.sort((a, b) => {
     return b.score - a.score
-  });
+  })
 
   // Helpful for debugging score algorithm
   // console.table(result.map((el) => {
@@ -723,6 +723,7 @@ function openResultItem(event) {
     chrome.tabs.update(foundTab.originalId, {
       active: true
     })
+    window.close()
   } else {
     return window.open(url, '_newtab')
   }
@@ -737,7 +738,7 @@ function highlightResultItem(resultItem) {
 
     const text = resultItem.item[matchItem.key]
     const result = []
-    const matches = [].concat(matchItem.indices);
+    const matches = [].concat(matchItem.indices)
     let pair = matches.shift()
 
     for (let i = 0; i < text.length; i++) {
@@ -756,13 +757,13 @@ function highlightResultItem(resultItem) {
     // TODO: Didn't try recursion if it works
     if (resultItem.children && resultItem.children.length > 0) {
       resultItem.children.forEach((child) => {
-        highlightedResultItem[matchItem.key] = highlightResultItem(child);
-      });
+        highlightedResultItem[matchItem.key] = highlightResultItem(child)
+      })
     }
   }
 
   return highlightedResultItem
-};
+}
 
 
 //////////////////////////////////////////
@@ -917,7 +918,7 @@ function convertChromeBookmarks(bookmarks, folderTrail, depth) {
 
   for (const entry of bookmarks) {
 
-    let newFolderTrail = folderTrail.slice(); // clone
+    let newFolderTrail = folderTrail.slice() // clone
     // Only consider bookmark folders that have a title and have
     // at least a depth of 2, so we skip the default chrome "system" folders
     if (entry.title && depth > 2) {

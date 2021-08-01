@@ -99,7 +99,7 @@ body {
 .controls {
   text-align: right;
   position: absolute;
-  bottom: 16px;
+  bottom: 12px;
   right: 8px;
   .cancel-button {
     background: rgb(201, 68, 68) !important;
@@ -205,7 +205,6 @@ body {
 /** EDIT BOOKMARK */
 
 #edit-bookmark {
-
   padding: 0;
   overflow: none;
   position: fixed;
@@ -216,7 +215,7 @@ body {
   background: #EEE;
 
   #bookmark-title {
-    height: 136px;
+    height: 105px;
     resize: none;
   }
   #bookmark-tags,
@@ -242,7 +241,7 @@ body {
     margin: 4px;
   }
   textarea {
-    height: 495px;
+    height: 500px;
     font-size: 18px;
     font-family: Consolas, monospace, monospace;
   }
@@ -271,7 +270,7 @@ body {
   font-size: 15px;
 }
 .tagify__dropdown {
-  max-height: 255px;
+  max-height: 235px;
   border: none;
 }
 .tagify__dropdown__wrapper {

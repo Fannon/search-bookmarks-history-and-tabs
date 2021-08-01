@@ -123,7 +123,7 @@ This extension makes use of the following helpful open-source projects (thanks!)
 
 * Improve scoring algorithm?
 * Introduce dedicates and precise search mode for tags and folders
-* Try other search algorithms / libraries that are less fuzzy
+* Add alternative search algorithm that isn't based on fuzzy search
   * https://github.com/nextapps-de/flexsearch 
-* Convert project to TypeScript and make it more modular
-* Quick add current open site via + button (?)
+  * https://lunrjs.com/
+* Convert project to TypeScript, refactor code and make it more modular
