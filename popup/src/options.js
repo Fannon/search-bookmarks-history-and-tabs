@@ -50,8 +50,8 @@ export const defaultOptions = {
      * so be careful about how many items you load.
      */
     enabled: true,
-    /** How many hours ago the history should be fetched */
-    hoursAgo: 48,
+    /** How many days ago the history should be fetched */
+    daysAgo: 3,
     /** How many history items should be fetched at most */
     maxItems: 1024,
   },
@@ -70,7 +70,7 @@ export const defaultOptions = {
     tabBaseScore: 90,
     /** Base score for history results */
     historyBaseScore: 50,
-    /** Additional score points per visit within history hoursAgo */
+    /** Additional score points per visit within history daysAgo */
 
     // MULTIPLICATORS
     // Depending on where the search match was found, the multiplicators
@@ -109,7 +109,7 @@ export const defaultOptions = {
 
     /** 
      * Adds score points for every site visit according to browsing history 
-     * Please note that this is not only within `history.hoursAgo`, but you whole history.
+     * Please note that this is not only within `history.daysAgo`, but you whole history.
      */
     visitedBonusScore: 2,
     /** Maximum score points for visitied bonus */

@@ -74,7 +74,7 @@ export async function initExtension() {
   performance.measure('init-search-index', 'init-data-load', 'init-search-index')
   const initPerformance = performance.getEntriesByType("measure")
   const totalInitPerformance = performance.getEntriesByName("init-end-to-end")
-  console.debug('Init Performance: ' + totalInitPerformance[0].duration, initPerformance)
+  console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)
   performance.clearMeasures()
 }
 
@@ -156,7 +156,7 @@ async function getSearchData() {
   }
   if (chrome.history && ext.opts.history.enabled) {
     performance.mark('get-data-history-start')
-    const chromeHistory = await getChromeHistory(ext.opts.history.hoursAgo, ext.opts.history.maxItems)
+    const chromeHistory = await getChromeHistory(ext.opts.history.daysAgo, ext.opts.history.maxItems)
     result.history = convertChromeHistory(chromeHistory)
     performance.mark('get-data-history-end')
     performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end')
@@ -468,7 +468,7 @@ async function searchWithFuseJs(searchTerm, searchMode) {
   performance.mark('search-end')
   performance.measure('search: ' + searchTerm, 'search-start', 'search-end')
   const searchPerformance = performance.getEntriesByType("measure")
-  console.debug('Search Performance: ' + searchPerformance[0].duration, searchPerformance)
+  console.debug('Search Performance: ' + searchPerformance[0].duration + 'ms', searchPerformance)
   performance.clearMeasures()
 }
 
@@ -578,7 +578,7 @@ function renderResult(result) {
   performance.mark('render-end')
   performance.measure('Render DOM', 'render-start', 'render-end')
   const renderPerformance = performance.getEntriesByType("measure")
-  console.debug('Render Performance: ' + renderPerformance[0].duration, renderPerformance)
+  console.debug('Render Performance: ' + renderPerformance[0].duration + 'ms', renderPerformance)
   performance.clearMeasures()
 }
 
@@ -879,12 +879,12 @@ async function getChromeBookmarks() {
  * Gets chrome browsing history.
  * Warning: This chrome API call tends to be rather slow
  */
-async function getChromeHistory(hoursAgo, maxResults) {
+async function getChromeHistory(daysAgo, maxResults) {
   return new Promise((resolve, reject) => {
     chrome.history.search({
       text: '',
       maxResults: maxResults,
-      startTime: Date.now() - (1000 * 60 * 60 * hoursAgo),
+      startTime: Date.now() - (1000 * 60 * 60 * 24 * daysAgo),
       endTime: Date.now(),
     }, (history, err) => {
       if (err) {
