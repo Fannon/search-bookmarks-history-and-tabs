@@ -77,7 +77,7 @@ If you only want excact search matches, you can reduce the fuzzyness of the sear
 {
   "search": {
     "minMatchCharLength": 3,
-    "threshold": 0
+    "fuzzyness": 0
   },
   "score": {
     "minScore": 50
@@ -95,6 +95,17 @@ The scoring systems works roughly the following:
 * Depending on certain conditions some bonus score points are added again. E.g. `exactStartsWithBonus` will add score if the title or the url starts excactly with the search term.
 
 For a description of the scoring options and what they do, please see `defaultOptoins.score` in [popup/src/options.js](popup/src/options.js).
+
+It also helps to enable displaying the score in the result items
+
+```json
+// Display score for each result
+{
+  "general": {
+    "score": true
+  }
+}
+```
 
 ## Credits
 

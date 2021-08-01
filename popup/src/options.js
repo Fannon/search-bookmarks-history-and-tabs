@@ -14,14 +14,14 @@ export const defaultOptions = {
   general: {
     /** Extract tags from title and display it as a badge with different search prio */
     tags: true,
-    /** Highlight search matches in result */
+    /** Highlight search matches in results */
     highlight: true,
     /** Display last visit */
     lastVisit: true,
     /** Display visit count */
     visitCounter: false,
     /** Display search result score */
-    displayScore: true,
+    score: false,
   },
 
   search: {
@@ -29,8 +29,11 @@ export const defaultOptions = {
     maxResults: 256,
     /** Min search string characters that need to consider a match */
     minMatchCharLength: 2,
-    /** Fuzzy search threshold (increase to increase fuzziness) */
-    threshold: 0.4,
+    /** 
+     * Fuzzy search threshold (0 - 1) 
+     * 0 is no fuzzyness, 1 is full fuzzyness
+     */
+    fuzzyness: 0.4,
   },
 
   tabs: {

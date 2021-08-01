@@ -96,7 +96,7 @@ function createFuseJsIndex(type, searchData) {
     useExtendedSearch: true,
     shouldSort: false,
     minMatchCharLength: ext.opts.search.minMatchCharLength,
-    threshold: ext.opts.search.threshold,
+    threshold: ext.opts.search.fuzzyness,
     keys: [{
       name: 'title',
       weight: ext.opts.score.titleMultiplicator,
@@ -506,7 +506,7 @@ function renderResult(result) {
       visitCounter.innerText = resultEntry.visitCount
       titleDiv.appendChild(visitCounter)
     }
-    if (ext.opts.general.displayScore && resultEntry.score) {
+    if (ext.opts.general.score && resultEntry.score) {
       const score = document.createElement('span')
       score.classList.add('badge', 'score')
       score.innerText = Math.round(resultEntry.score)
