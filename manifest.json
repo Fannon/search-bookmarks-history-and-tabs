@@ -3,7 +3,7 @@
   "description": "Browser extension to search and navigate browser tabs, local bookmarks and history.",
   "homepage_url": "https://github.com/Fannon/search-tabs-bookmarks-and-history",
   "author": "Simon Heimler",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "manifest_version": 3,
   "permissions": [
     "tabs",

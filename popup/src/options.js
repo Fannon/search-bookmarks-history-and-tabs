@@ -6,9 +6,11 @@ import { mergeDeep } from "./utils.js";
 
 /**
  * The default options.
- * They can be customized via user options that are stored on the chrome.storage.sync API
+ * They can be selectively overwritten and customized via user options
+ * @see https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration
  */
 export const defaultOptions = {
+
   general: {
     /** Extract tags from title and display it as a badge with different search prio */
     tags: true,
@@ -21,47 +23,26 @@ export const defaultOptions = {
     /** Display search result score */
     displayScore: true,
   },
+
   search: {
-    /** Max results to render. Reduce for better performance */
+    /** Max search results. Reduce for better performance */
     maxResults: 256,
-    /** Min characters that need to match */
+    /** Min search string characters that need to consider a match */
     minMatchCharLength: 2,
     /** Fuzzy search threshold (increase to increase fuzziness) */
     threshold: 0.4,
-    /** Filters out all search results below this minimum score */
-    minScore: 30,
-    /** Weight for a title match. From 0-1. */
-    titleWeight: 1,
-    /** Weight for a tag match. From 0-1. */
-    tagWeight: 0.7,
-    /** Weight for an url match. From 0-1. */
-    urlWeight: 0.55,
-    /** Weight for a folder match. From 0-1. */
-    folderWeight: 0.2,
-    /** Base score for bookmark results */
-    bookmarkBaseScore: 100,
-    /** Base score for tab results */
-    tabBaseScore: 90,
-    /** Base score for history results */
-    historyBaseScore: 50,
-    /** Additional score points per visit within history hoursAgo */
-    visitedBonusScore: 2,
-    /** Maximum score points for visitied bonus */
-    maxVisitedBonusScore: 40,
-    /** 
-     * Additional score points if title, url and tag starts exactly with search text.
-     * The points can be added multiple times, if more than one has a "starts with" match.
-     */
-    startsWithBonusScore: 10,
   },
+
   tabs: {
     /** Whether to index and search for open tabs */
     enabled: true,
   },
+
   bookmarks: {
     /** Whether to index and search for bookmarks */
     enabled: true,
   },
+
   history: {
     /** 
      * Whether to index and search for browsing history 
@@ -70,9 +51,70 @@ export const defaultOptions = {
      */
     enabled: true,
     /** How many hours ago the history should be fetched */
-    hoursAgo: 24,
+    hoursAgo: 48,
     /** How many history items should be fetched at most */
     maxItems: 1024,
+  },
+
+  score: {
+
+    /** Filter out all search results below this minimum score */
+    minScore: 30,
+
+    // BASE SCORES
+    // Depending on the type of result, they start with a base score
+
+    /** Base score for bookmark results */
+    bookmarkBaseScore: 100,
+    /** Base score for tab results */
+    tabBaseScore: 90,
+    /** Base score for history results */
+    historyBaseScore: 50,
+    /** Additional score points per visit within history hoursAgo */
+
+    // MULTIPLICATORS
+    // Depending on where the search match was found, the multiplicators
+    // define the "weight" of the find.
+
+    /** Multiplicator for a title match*/
+    titleMultiplicator: 1,
+    /** Multiplicator for a tag match*/
+    tagMultiplicator: 0.7,
+    /** Multiplicator for an url match*/
+    urlMultiplicator: 0.55,
+    /** Multiplicator for a folder match*/
+    folderMultiplicator: 0.2,
+
+    // BONUS SCORES
+    // If certain conditions apply, extra score points can be added
+
+    /** 
+     * Additional score points if title or url starts exactly with the search text.
+     */
+     exactStartsWithBonus: 20,
+    /**
+     * If we don't have an excact starts "with match", bonus points for an excact "includes" match
+     */
+     exactIncludesBonus: 10,
+
+    /**
+     * Additinal points for an exact match of a search term tag (including #)
+     */
+     exactTagMatchBonus: 10,
+
+    /**
+     * Additinal points for an exact match of a search term folder name (including ~)
+     */
+     exactFolderMatchBonus: 5,
+
+    /** 
+     * Adds score points for every site visit according to browsing history 
+     * Please note that this is not only within `history.hoursAgo`, but you whole history.
+     */
+    visitedBonusScore: 2,
+    /** Maximum score points for visitied bonus */
+    visitedBonusScoreMaximum: 30, 
+
   },
 }
 
@@ -85,6 +127,7 @@ export const emptyUserOptions = {
   tabs: {},
   bookmarks: {},
   history: {},
+  score: {},
 }
 
 /**

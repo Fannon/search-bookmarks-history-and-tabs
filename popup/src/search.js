@@ -1,5 +1,6 @@
 performance.mark('init-start')
 import { getEffectiveOptions } from './options.js'
+import { cleanUpUrl, timeSince } from './utils.js'
 
 const ext = window.ext = {
   /** Extension options */
@@ -98,30 +99,30 @@ function createFuseJsIndex(type, searchData) {
     threshold: ext.opts.search.threshold,
     keys: [{
       name: 'title',
-      weight: ext.opts.search.titleWeight,
+      weight: ext.opts.score.titleMultiplicator,
     }]
   }
 
   if (type === 'bookmarks') {
     options.keys.push({
       name: 'tags',
-      weight: ext.opts.search.tagWeight,
+      weight: ext.opts.score.tagMultiplicator,
     }, {
       name: 'url',
-      weight: ext.opts.search.urlWeight,
+      weight: ext.opts.score.urlMultiplicator,
     }, {
       name: 'folder',
-      weight: ext.opts.search.folderWeight,
+      weight: ext.opts.score.folderMultiplicator,
     })
   } else if (type === 'history') {
     options.keys.push({
       name: 'url',
-      weight: ext.opts.search.urlWeight,
+      weight: ext.opts.score.urlMultiplicator,
     })
   } else if (type === 'tabs') {
     options.keys.push({
       name: 'url',
-      weight: ext.opts.search.urlWeight,
+      weight: ext.opts.score.urlMultiplicator,
     })
   } else {
     throw new Error(`Unsupported index type: ${type}`)
@@ -347,6 +348,7 @@ async function search(event) {
 async function searchWithFuseJs(searchTerm, searchMode) {
 
   searchMode = searchMode || 'all'
+  searchTerm = searchTerm.toLowerCase()
 
   performance.mark('search-start')
 
@@ -403,9 +405,9 @@ async function searchWithFuseJs(searchTerm, searchMode) {
   }
 
   sortResult(ext.data.result, searchTerm)
-  
+
   // Filter out all search results below a certain score
-  ext.data.result = ext.data.result.filter((el) => el.score >= ext.opts.search.minScore)
+  ext.data.result = ext.data.result.filter((el) => el.score >= ext.opts.score.minScore)
 
   // Only render maxResults if given (to improve render performance)
   if (ext.data.result.length > ext.opts.search.maxResults) {
@@ -544,38 +546,61 @@ function sortResult(result, searchTerm) {
 
     // Apply result.type weight
     if (el.type === 'bookmark') {
-      score = ext.opts.search.bookmarkBaseScore
+      score = ext.opts.score.bookmarkBaseScore
     } else if (el.type === 'tab') {
-      score = ext.opts.search.tabBaseScore
+      score = ext.opts.score.tabBaseScore
     } else if (el.type === 'history') {
-      score = ext.opts.search.historyBaseScore
+      score = ext.opts.score.historyBaseScore
     }
 
     // Multiply by fuse.js score. 
     // This will reduce the score if the search is not a good match
     score = score * (1 - el.fuseScore)
 
-    // Increase score if we have exact "startsWith" matches
-    if (el.title.startsWith(searchTerm)) {
-      score += (ext.opts.search.startsWithBonusScore * ext.opts.search.titleWeight)
+    // Increase score if we have exact "startsWith" or alternatively "includes" matches
+    if (el.title && el.title.toLowerCase().startsWith(searchTerm)) {
+      score += (ext.opts.score.exactStartsWithBonus * ext.opts.score.titleMultiplicator)
+    } else if (el.url.startsWith(searchTerm.split(' ').join('-'))) {
+      score += (ext.opts.score.exactStartsWithBonus * ext.opts.score.urlMultiplicator)
+    } else if (el.title && el.title.toLowerCase().includes(searchTerm)) {
+      score += (ext.opts.score.exactIncludesBonus * ext.opts.score.titleMultiplicator)
+    } else if (el.url.includes(searchTerm.split(' ').join('-'))) {
+      score += (ext.opts.score.exactIncludesBonus * ext.opts.score.urlMultiplicator)
     }
-    if (el.url.startsWith(searchTerm)) {
-      score += (ext.opts.search.startsWithBonusScore * ext.opts.search.urlWeight)
-    }
-    if (searchTerm.includes('#')) {
+
+    // Increase score if we have an exact tag match   
+    // TODO: This could be made better via a dedicated, non-fuzzy tag-mode search 
+    if (el.tags && searchTerm.includes('#')) {
       let searchTermTags = searchTerm.split('#')
       searchTermTags.shift()
-      searchTermTags.forEach((tagName) => {
-        if (el.tags && el.tags.includes('#' + tagName)) {
-          score += ext.opts.search.startsWithBonusScore * ext.opts.search.tagWeight
-        }
+      searchTermTags.forEach((tag) => {
+        el.tagsArray.map((el) => {
+          if (tag === el.toLowerCase()) {
+            score += ext.opts.score.exactTagMatchBonus
+          }
+        })
+      })
+    }
+
+    // Increase score if we have an exact folder name match    
+    // TODO: This could be made better via a dedicated, non-fuzzy folder-mode search 
+    if (el.folder && searchTerm.includes('~')) {
+      let searchTermFolders = searchTerm.split('~')
+      searchTermFolders.shift()
+      searchTermFolders.forEach((folderName) => {
+        el.folderArray.map((el) => {
+          if (folderName === el.toLowerCase()) {
+            score += ext.opts.score.exactFolderMatchBonus
+          }
+        })
       })
     }
 
     // Increase score if result has been open frequently or recently
     if (el.visitCount) {
-      score += Math.min(ext.opts.search.maxVisitedBonusScore,
-        el.visitCount * ext.opts.search.visitedBonusScore
+      score += Math.min(
+        ext.opts.score.visitedBonusScoreMaximum,
+        el.visitCount * ext.opts.score.visitedBonusScore
       )
     }
 
@@ -587,15 +612,15 @@ function sortResult(result, searchTerm) {
   });
 
   // Helpful for debugging score algorithm
-  // console.table(result.map((el) => {
-  //   return {
-  //     score: el.score,
-  //     fuseScore: el.fuseScore,
-  //     type: el.type,
-  //     title: el.title,
-  //     url: el.originalUrl
-  //   }
-  // }))
+  console.table(result.map((el) => {
+    return {
+      score: el.score,
+      fuseScore: el.fuseScore,
+      type: el.type,
+      title: el.title,
+      url: el.originalUrl
+    }
+  }))
 
   return result
 }
@@ -774,15 +799,15 @@ function editBookmark(bookmarkId) {
       trim: true,
       transformTag: transformTag,
       skipInvalid: false,
-      editTags            : {
+      editTags: {
         clicks: 1,
         keepInvalid: false,
       },
-      dropdown : {
-        position      : "all",
-        enabled       : 0,
-        maxItems      : 12,
-        closeOnSelect : false,
+      dropdown: {
+        position: "all",
+        enabled: 0,
+        maxItems: 12,
+        closeOnSelect: false,
       }
     })
     const currentTags = bookmark.tags.split('#').map(el => el.trim()).filter(el => el)
@@ -793,7 +818,7 @@ function editBookmark(bookmarkId) {
     console.warn(`Tried to edit bookmark id="${bookmarkId}", but coult not find it in searchData.`)
   }
 
-  function transformTag(tagData){
+  function transformTag(tagData) {
     if (tagData.value.includes('#')) {
       tagData.value = tagData.value.split('#').join('')
     }
@@ -892,14 +917,16 @@ function convertChromeBookmarks(bookmarks, folderTrail, depth) {
 
     // Parse out tags from bookmark title (starting with #) 
     let title = entry.title
-    let tags = ''
+    let tagsText = ''
+    let tagsArray = []
     if (ext.opts.general.tags && title) {
       const tagSplit = title.split('#')
       title = tagSplit.shift().trim()
+      tagsArray = tagSplit
       for (const tag of tagSplit) {
-        tags += '#' + tag.trim() + ' '
+        tagsText += '#' + tag.trim() + ' '
       }
-      tags = tags.slice(0, -1)
+      tagsText = tagsText.slice(0, -1)
     }
 
     let folderText = ''
@@ -911,12 +938,14 @@ function convertChromeBookmarks(bookmarks, folderTrail, depth) {
     if (entry.url && entry.url.startsWith('http')) {
       result.push({
         type: 'bookmark',
+        originalId: entry.id,
         title: title,
-        tags: tags,
         originalUrl: entry.url.replace(/\/$/, ''),
         url: cleanUpUrl(entry.url),
+        tags: tagsText,
+        tagsArray: tagsArray,
         folder: folderText,
-        originalId: entry.id,
+        folderArray: folderTrail,
       })
     }
     if (entry.children) {
@@ -945,64 +974,4 @@ function convertChromeHistory(history) {
     })
   }
   return result
-}
-
-//////////////////////////////////////////
-// GENERIC HELPERS                      //
-//////////////////////////////////////////
-
-/**
- * Get text how long a date is ago
- * 
- * @see https://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
- */
-function timeSince(date) {
-
-  const seconds = Math.floor((new Date() - date) / 1000);
-
-  let interval = seconds / 31536000;
-
-  if (interval > 1) {
-    return Math.floor(interval) + " years";
-  }
-  interval = seconds / 2592000;
-  if (interval > 1) {
-    return Math.floor(interval) + " months";
-  }
-  interval = seconds / 86400;
-  if (interval > 1) {
-    return Math.floor(interval) + " days";
-  }
-  interval = seconds / 3600;
-  if (interval > 1) {
-    return Math.floor(interval) + " hours";
-  }
-  interval = seconds / 60;
-  if (interval > 1) {
-    return Math.floor(interval) + " minutes";
-  }
-  return Math.floor(seconds) + " seconds";
-}
-
-/**
- * Checks whether DOM element in viewport
- * @see https://gomakethings.com/how-to-test-if-an-element-is-in-the-viewport-with-vanilla-javascript/
- */
-function isInViewport(elem) {
-  var bounding = elem.getBoundingClientRect();
-  return (
-    bounding.top >= 0 &&
-    bounding.left >= 0 &&
-    bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-    bounding.right <= (window.innerWidth || document.documentElement.clientWidth)
-  );
-};
-
-/**
- * Remove http:// or http:// and www from URLs
- * Remove trailing slashes
- * @see https://stackoverflow.com/a/57698415
- */
-function cleanUpUrl(url) {
-  return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '').replace(/\/$/, '')
 }

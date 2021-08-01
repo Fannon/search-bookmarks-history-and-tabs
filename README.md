@@ -2,16 +2,17 @@
 
 Browser extension to search and navigate browser tabs, local bookmarks and history.
 
-It is available for [Google Chrome](https://www.google.com/chrome/) and [Microsoft Edge](https://www.microsoft.com/en-us/edge) browsers.
 Bookmarks can be edited and tagged, with autocompletions.
 It works fully offline (except the optional storing / syncing of user-settings), so there is no external communication on what is indexed and searched.
 
+It is available for [Google Chrome](https://www.google.com/chrome/) and [Microsoft Edge](https://www.microsoft.com/en-us/edge) browsers.
+
 ## Features
 
-* Search for open browser tabs, bookmark folder names and tags and browsing history.
-* Edit and tag bookmarks with autocompletion for tags.
-* Dark mode / light mode (via system settings / [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
-* Can be customized via user options.
+* Quick search your open browser tabs, bookmark folder names and tags and browsing history.
+* Edit and tag bookmarks with autocompletion.
+* Dark theme / light theme via system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
+* Customizable with user options.
 * Lightweight: Written in vanilla JS with the goal to only include the minimun necessary libraries (see [credits](#credits)).
 
 ## Screenshots & Demo
@@ -32,8 +33,6 @@ It works fully offline (except the optional storing / syncing of user-settings),
 * Go to `chrome://extensions/` (chrome) or `edge://extensions/` (edge)
   * Enable "Developer mode"
   * Choose "Load unpacked" and open the root folder of the extension
-
-> If you want to fine-tune the extension, check out `ext.opts` in `popup/popup.js`
 
 ## User Documentation
 
@@ -69,9 +68,14 @@ An exemplary user-config can look like the following example:
   "bookmarks": {},
   "history": {
     "enabled": false
-  }
+  },
+  "score": {}
 }
 ```
+
+## Scoring System
+
+* 
 
 ## Credits
 
