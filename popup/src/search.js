@@ -416,7 +416,7 @@ async function searchWithFuseJs(searchTerm, searchMode) {
 
   // Only render maxResults if given (to improve render performance)
   if (ext.data.result.length > ext.opts.search.maxResults) {
-    ext.data.result = ext.data.searchResult.slice(0, ext.opts.search.maxResults)
+    ext.data.result = ext.data.result.slice(0, ext.opts.search.maxResults)
   }
 
   renderResult(ext.data.result)

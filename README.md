@@ -76,6 +76,7 @@ If you only want excact search matches, you can reduce the fuzzyness of the sear
 // Make search non-fuzzy
 {
   "search": {
+    "minMatchCharLength": 3,
     "threshold": 0
   },
   "score": {
@@ -100,6 +101,7 @@ For a description of the scoring options and what they do, please see `defaultOp
 This extension makes use of the following helpful open-source projects (thanks!):
 * https://fusejs.io/ for the fuzzy search algorithm
 * https://github.com/yairEO/tagify for the tag autocomplete widget
+* https://www.npmjs.com/package/json5 for the user options parsing
 * https://bulma.io/ for some minimal CSS base styling
 * https://github.com/tabler/tabler-icons for the edit icon
 
