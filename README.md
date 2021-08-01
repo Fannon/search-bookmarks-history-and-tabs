@@ -1,18 +1,19 @@
 # Search Tabs, Bookmarks and History
 
-Browser extension to search and navigate browser tabs, local bookmarks and history.
+Browser extension to (fuzzy) search and navigate browser tabs, local bookmarks and history.
 
 Bookmarks can be edited and tagged, with autocompletions.
-It works fully offline (except the optional storing / syncing of user-settings), so there is no external communication on what is indexed and searched.
+The extension works fully local and makes no external requests (except storing / syncing optional user options).
 
-It is available for [Google Chrome](https://www.google.com/chrome/) and [Microsoft Edge](https://www.microsoft.com/en-us/edge) browsers.
+It works with [Google Chrome](https://www.google.com/chrome/) and [Microsoft Edge](https://www.microsoft.com/en-us/edge).
 
 ## Features
 
-* Quick search your open browser tabs, bookmark folder names and tags and browsing history.
+* Quick search your open browser tabs, bookmark and browsing history.
+* Bookmarks are also searched for tags (extracted from title) and folder names.
 * Edit and tag bookmarks with autocompletion.
 * Dark theme / light theme via system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
-* Customizable with user options.
+* Customizable via user options.
 * Lightweight: Written in vanilla JS with the goal to only include the minimun necessary libraries (see [credits](#credits)).
 
 ## Screenshots & Demo
@@ -116,12 +117,11 @@ This extension makes use of the following helpful open-source projects (thanks!)
 * https://bulma.io/ for some minimal CSS base styling
 * https://github.com/tabler/tabler-icons for the edit icon
 
-## Feedback and Ideas Collection
+## Feedback and Ideas
 
 > Please create a [GitHub issue](https://github.com/Fannon/search-tabs-bookmarks-and-history/issues) to give your feedback. 
 > All ideas, suggestions or bug reports are welcome.
 
-* Improve scoring algorithm?
 * Introduce dedicates and precise search mode for tags and folders
 * Add alternative search algorithm that isn't based on fuzzy search
   * https://github.com/nextapps-de/flexsearch 
