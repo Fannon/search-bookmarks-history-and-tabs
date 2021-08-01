@@ -10,7 +10,7 @@ body,
 
 body {
   background: #eee;
-  color: #555;
+  color: #777;
   padding: 0;
   overflow: hidden;
   a {
@@ -64,6 +64,9 @@ body {
   mark {
     color: #7cb3f6;
   }
+  small {
+    color: #a2bbd6;
+  }
 }
 .folder {
   background: #559292;
@@ -72,6 +75,9 @@ body {
   }
   mark {
     color: #85dbdb;
+  }
+  small {
+    color: #a3d0d0;
   }
 }
 .score {
@@ -176,6 +182,10 @@ body {
   background: #FFF;
   padding: 0 8px;
   font-size: 14px;
+
+  #result-counter {
+    float: right;
+  }
 }
 
 #tags-overview,
@@ -196,7 +206,7 @@ body {
     a,
     a:hover {
       color: #FFF;
-      font-size: 14px;
+      font-size: 15px;
       margin: 4px 4px 0 0;
     }
   }

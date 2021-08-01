@@ -461,6 +461,8 @@ async function searchWithFuseJs(searchTerm, searchMode) {
     ext.data.result = ext.data.result.slice(0, ext.opts.search.maxResults)
   }
 
+  document.getElementById('result-counter').innerText = `(${ext.data.result.length})`
+
   renderResult(ext.data.result)
 
   performance.mark('search-end')
@@ -776,7 +778,7 @@ function getTagsOverview() {
   document.getElementById('tags-overview').style = ""
   const sortedTags = Object.keys(tags).sort()
   document.getElementById('tags-list').innerHTML = sortedTags.map((el) => {
-    return `<a class="badge tags" href="#search/'#${el}">#${el} <small>(${tags[el]})<small></a>`
+    return `<a class="badge tags" href="#search/- '#${el}">#${el} <small>(${tags[el]})<small></a>`
   }).join('')
 }
 
@@ -789,7 +791,7 @@ function getFoldersOverview() {
   document.getElementById('folders-overview').style = ""
   const sortedFolders = Object.keys(folders).sort()
   document.getElementById('folders-list').innerHTML = sortedFolders.map((el) => {
-    return `<a class="badge folder" href="#search/'~${el}">~${el} <small>(${folders[el]})<small></a>`
+    return `<a class="badge folder" href="#search/- '~${el}">~${el} <small>(${folders[el]})<small></a>`
   }).join('')
 }
 
