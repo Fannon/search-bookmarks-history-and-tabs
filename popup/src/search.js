@@ -66,11 +66,6 @@ export async function initExtension() {
   document.addEventListener("keydown", navigationKeyListener)
   window.addEventListener("hashchange", hashRouter, false)
 
-  // Start with empty search to display default results
-  // if (window.location.href === '' || window.location.href === '#') {
-  //   await search()
-  // }
-
   // Do some performance measurements and log it to debug
   performance.mark('init-end')
   performance.measure('init-end-to-end', 'init-start', 'init-end')
@@ -449,9 +444,15 @@ async function searchWithFuseJs(searchTerm, searchMode) {
     // Remove trailing slash from URL, so the startsWith search works better
     currentUrl = currentUrl.replace(/\/$/, "")
 
+    // Find if current URL has corresponding bookmark(s)
     const foundBookmarks = ext.data.searchData.bookmarks.filter(el => el.originalUrl.startsWith(currentUrl))
     ext.data.result.push(...foundBookmarks)
-    const foundHistory = ext.data.searchData.history.filter(el => el.originalUrl === currentUrl)
+
+    // Find if we have browser history that starts with same URL and sort them by most visited
+    let foundHistory = ext.data.searchData.history.filter(el => el.originalUrl.startsWith(currentUrl))
+    foundHistory = foundHistory.sort((a, b) => {
+      return b.visitCount - a.visitCount
+    })
     ext.data.result.push(...foundHistory)
   }
 
