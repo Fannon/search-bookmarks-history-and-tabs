@@ -126,4 +126,5 @@ This extension makes use of the following helpful open-source projects (thanks!)
 * Add alternative search algorithms that aren't based on fuzzy search?
   * https://github.com/nextapps-de/flexsearch 
   * https://lunrjs.com/
+* Improve performance or introduce debouncing / throttling searches 
 * Convert project to TypeScript, refactor code and make it more modular

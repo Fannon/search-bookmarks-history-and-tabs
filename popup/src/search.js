@@ -866,8 +866,8 @@ function updateBookmark(bookmarkId) {
 //////////////////////////////////////////
 
 async function getChromeTabs() {
-  return (await chrome.tabs.query({})).filter((el) => {
-    return (!el.incognito && el.url && el.url.startsWith('http'))
+  return (await chrome.tabs.query({ currentWindow: true })).filter((el) => {
+    return (el.url.startsWith('http'))
   })
 }
 
