@@ -23,7 +23,7 @@ export const defaultOptions = {
 
   search: {
     /** Max search results. Reduce for better performance */
-    maxResults: 256,
+    maxResults: 128,
     /** Min search string characters to have a match */
     minMatchCharLength: 2,
     /** 

@@ -16,10 +16,10 @@ cp images/logo-128.png dist/images/logo-128.png
 
 cp -r popup/ dist/popup/
 # Minimize JS
-node node_modules/uglify-js/bin/uglifyjs -cm -- popup/src/search.js > dist/popup/src/search.js
-node node_modules/uglify-js/bin/uglifyjs -cm -- popup/src/options.js > dist/popup/src/options.js
-node node_modules/uglify-js/bin/uglifyjs -cm -- popup/src/editOptions.js > dist/popup/src/editOptions.js
-node node_modules/uglify-js/bin/uglifyjs -cm -- popup/src/utils.js > dist/popup/src/utils.js
+node node_modules/uglify-js/bin/uglifyjs -cm -- popup/js/search.js > dist/popup/js/search.js
+node node_modules/uglify-js/bin/uglifyjs -cm -- popup/js/options.js > dist/popup/js/options.js
+node node_modules/uglify-js/bin/uglifyjs -cm -- popup/js/editOptions.js > dist/popup/js/editOptions.js
+node node_modules/uglify-js/bin/uglifyjs -cm -- popup/js/utils.js > dist/popup/js/utils.js
 
 # Remove mock data
 rm -rf dist/popup/mockData

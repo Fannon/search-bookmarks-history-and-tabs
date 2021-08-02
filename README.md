@@ -2,7 +2,8 @@
 
 Browser extension to (fuzzy) search and navigate browser tabs, local bookmarks and history.
 
-Bookmarks can be edited and tagged, with autocompletions.
+Bookmarks can be edited and tagged, with autocomplete.
+Tags and bookmark folders can be browsed and searched.
 The extension works fully local and makes no external requests (except storing / syncing optional user options).
 
 It works with [Google Chrome](https://www.google.com/chrome/) and [Microsoft Edge](https://www.microsoft.com/en-us/edge).
@@ -53,7 +54,7 @@ It works with [Google Chrome](https://www.google.com/chrome/) and [Microsoft Edg
 
 The user options are written in [JSON format](https://en.wikipedia.org/wiki/JSON) or [JSON5 format](https://json5.org/). They do not need to be complete, as they just overwrite the default options.
 
-To see what configurations are available and what they do, please have a look at the `defaultOptions` in [popup/src/options.js](popup/src/options.js).
+To see what configurations are available and what they do, please have a look at the `defaultOptions` in [popup/js/options.js](popup/js/options.js).
 
 If you want to customize some options, it is recommended to *only* add the actually adjusted options to your user config.
 
@@ -95,7 +96,7 @@ The scoring systems works roughly the following:
 * This base score is now merged with the search library score (fuse.js). A less good match will reduce the score.
 * Depending on certain conditions some bonus score points are added again. E.g. `exactStartsWithBonus` will add score if the title or the url starts excactly with the search term.
 
-For a description of the scoring options and what they do, please see `defaultOptoins.score` in [popup/src/options.js](popup/src/options.js).
+For a description of the scoring options and what they do, please see `defaultOptoins.score` in [popup/js/options.js](popup/js/options.js).
 
 It also helps to enable displaying the score in the result items
 
