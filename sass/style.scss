@@ -2,10 +2,12 @@
 @import "../node_modules/bulma/sass/base/minireset.sass";
 @import "../node_modules/bulma/sass/base/generic.sass";
 
+html,
 body,
 #container {
   width: 500px;
   height: 600px;
+  overflow: hidden;
 }
 
 body {

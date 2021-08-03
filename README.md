@@ -35,7 +35,7 @@ It works with [Google Chrome](https://www.google.com/chrome/), [Microsoft Edge](
 * Go to `chrome://extensions/` (chrome) or `edge://extensions/` (edge)
   * Enable "Developer mode"
   * Choose "Load unpacked" and open the root folder of the extension
-* For Firefox, you need to `npm build` this project and load the extension as a temporary addon (`about:debugging`) from the `dist/firefox` folder.
+* For Firefox, you first need to `npm install` and `npm build` this project (see [Local Development](#local-development)). Now you can load the built extension in `dist/firefox` as a temporary addon in `about:debugging`.
 
 ## User Documentation
 
@@ -109,6 +109,22 @@ It also helps to enable displaying the score in the result items
   }
 }
 ```
+
+## Local Development
+
+Prerequisite: [Node.js](https://nodejs.org/en/)
+
+```sh
+# install dependencies
+npm install
+
+# build extension
+npm run build
+```
+
+The source code for the extension can be found in [popup/](popup/) (HTML, JS and libs) and [sass/](sass/) (SCSS/CSS).
+
+The built extensions can be found in [dist/chrome/](dist/chrome/) for Google Chrome and Microsoft Edge and [dist/firefox/](dist/firefox/) for Firefox.
 
 ## Credits
 

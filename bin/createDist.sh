@@ -28,3 +28,4 @@ rm -rf dist/chrome/popup/mockData
 
 cp -r dist/chrome dist/firefox
 cp manifest.firefox.json dist/firefox/manifest.json
+cp README.md dist/firefox/README.md
