@@ -14,6 +14,7 @@ It works with [Google Chrome](https://www.google.com/chrome/), [Microsoft Edge](
 * Bookmarks are also searched for tags (extracted from title) and folder names.
 * Edit and tag bookmarks with autocompletion.
 * Dark theme / light theme via system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
+* Fallback to use a search engine (multiple options)
 * Customizable via user options.
 * Lightweight: Written in vanilla JS with the goal to only include the minimun necessary libraries (see [credits](#credits)).
 
@@ -66,9 +67,18 @@ An exemplary user-config can look like the following example:
 
 ```json5
 // Disable search of browsing history
+// Only use DuckDuckGo as fallback search engine
 {
   "history": {
     "enabled": false
+  },
+  "general": {
+    "searchEngines": [
+      {
+        "name": "DuckDuckGo",
+        "urlPrefix": "https://duckduckgo.com/?q="
+      }
+    ]
   }
 }
 ```

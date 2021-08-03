@@ -429,6 +429,17 @@ async function searchWithFuseJs(searchTerm, searchMode) {
     // Filter out all search results below a certain score
     ext.data.result = ext.data.result.filter((el) => el.score >= ext.opts.score.minScore)
 
+    if (ext.opts.general.searchEngines) {
+      for (const searchEngine of ext.opts.general.searchEngines) {
+        const url = searchEngine.urlPrefix + encodeURIComponent(searchTerm)
+        ext.data.result.push({
+          type: "search",
+          title: `${searchEngine.name}: "${searchTerm}"`,
+          url: cleanUpUrl(url),
+          originalUrl: url,
+        })
+      }
+    }
   } else {
 
     console.debug(`Searching for default results`)

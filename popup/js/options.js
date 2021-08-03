@@ -19,6 +19,32 @@ export const defaultOptions = {
     visitCounter: false,
     /** Display search result score */
     score: false,
+    /** 
+     * As a fallback, use search machines to find results
+     * 
+     * For each entry here, one result will be created.
+     * The URLs need to include the search querystring (see examples).
+     *
+     * To disable this feature, set `searchEngines` to false or remove all engines.
+     */
+    searchEngines: [
+      {
+        name: "Google",
+        urlPrefix: "https://www.google.com/search?q=",
+      },
+      {
+        name: "Bing",
+        urlPrefix: "https://www.bing.com/search?q=",
+      },
+      {
+        name: "DuckDuckGo",
+        urlPrefix: "https://duckduckgo.com/?q=",
+      },
+      {
+        name: "Ecosia",
+        urlPrefix: "https://www.ecosia.org/search?q=",
+      },
+    ],
   },
 
   search: {
