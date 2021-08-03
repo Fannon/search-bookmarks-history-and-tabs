@@ -362,6 +362,9 @@ async function search(event) {
   } else if (searchTerm.startsWith('. ')) {
     searchMode = 'tabs'
     searchTerm = searchTerm.substring(2)
+  } else if (searchTerm.startsWith('s ')) {
+    searchMode = 'search'
+    searchTerm = searchTerm.substring(2)
   }
 
   // If the search term is below minMatchCharLength, no point in starting search
@@ -398,6 +401,8 @@ async function searchWithFuseJs(searchTerm, searchMode) {
       ext.data.searchResult = ext.data.bookmarkIndex.search(searchTerm)
     } else if (searchMode === 'tabs' && ext.data.tabIndex) {
       ext.data.searchResult = ext.data.tabIndex.search(searchTerm)
+    } else if (searchMode === 'search' && ext.data.tabIndex) {
+      ext.data.searchResult = [] // nothing, because search will be added later
     } else {
       ext.data.searchResult = []
       if (ext.data.bookmarkIndex) {

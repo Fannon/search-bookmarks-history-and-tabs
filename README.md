@@ -47,6 +47,7 @@ It works with [Google Chrome](https://www.google.com/chrome/), [Microsoft Edge](
   * If you start your query with `. `: only tabs will be searched.
   * If you start your query with `+ `: only history will be searched.
   * If you start your query with `- `: only bookmarks will be searched.
+  * If you start your query with `s `: only search engines will be proposed.
 * This extension works best if you avoid:
   * using `#` in bookmark titles that do not indicate a tag.
   * using `~` in bookmark folder names.
