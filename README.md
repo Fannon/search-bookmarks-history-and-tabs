@@ -68,16 +68,20 @@ An exemplary user-config can look like the following example:
 
 ```json5
 // Disable search of browsing history
-// Only use DuckDuckGo as fallback search engine
+// Use DuckDuckGo and dict.cc as fallback search engines
 {
-  "history": {
-    "enabled": false
+  history: {
+    enabled: false
   },
-  "general": {
-    "searchEngines": [
+  general: {
+    searchEngines: [
       {
-        "name": "DuckDuckGo",
-        "urlPrefix": "https://duckduckgo.com/?q="
+        name: "DuckDuckGo",
+        urlPrefix: "https://duckduckgo.com/?q="
+      },
+      {
+        name: "dict.cc",
+        urlPrefix: "https://www.dict.cc/?s="
       }
     ]
   }
@@ -89,12 +93,12 @@ If you only want excact search matches, you can reduce the fuzzyness of the sear
 ```json5
 // Make search non-fuzzy
 {
-  "search": {
-    "minMatchCharLength": 3,
-    "fuzzyness": 0
+  search: {
+    fuzzyness: 0,
+    minMatchCharLength: 3
   },
-  "score": {
-    "minScore": 50
+  score: {
+    minScore: 50
   }
 }
 ```
@@ -110,13 +114,13 @@ The scoring systems works roughly the following:
 
 For a description of the scoring options and what they do, please see `defaultOptoins.score` in [popup/js/options.js](popup/js/options.js).
 
-It also helps to enable displaying the score in the result items
+It also helps to enable the display of the score in the result items:
 
 ```json5
 // Display score for each result
 {
-  "general": {
-    "score": true
+  general: {
+    score: true
   }
 }
 ```

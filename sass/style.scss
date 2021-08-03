@@ -4,17 +4,16 @@
 
 html,
 body,
-#container {
+#container,
+#search {
   width: 500px;
   height: 600px;
   overflow: hidden;
 }
-
 body {
   background: #eee;
   color: #777;
   padding: 0;
-  overflow: hidden;
   a {
     color: #888;
   }
@@ -26,11 +25,6 @@ body {
   small {
     color: #AAA;
   }
-}
-
-#search {
-  width: 100%;
-  overflow: hidden;
 }
 .input,
 .input:active,
@@ -46,6 +40,9 @@ body {
   outline: none;
   background: #fff;
   border-bottom: 1px solid #ccc;
+}
+.input-description {
+  margin: 4px 8px;
 }
 .badge {
   color: #fff;
@@ -205,6 +202,10 @@ body {
   overflow-x: hidden;
   overflow-y: scroll;
 
+  .input-description {
+    margin: 4px 0px;
+  }
+
   #tags-list,
   #folders-list {
     width: 100%;
@@ -223,10 +224,10 @@ body {
   padding: 0;
   overflow: none;
   position: fixed;
-  top: 55px;
+  top: 0;
   left: 0;
   width: 500px;
-  height: 524px;
+  height: 578px;
   background: #EEE;
 
   #bookmark-title {
@@ -241,20 +242,12 @@ body {
     padding: 4px 2px;
     overflow-x: hidden;
   }
-  .input-description {
-    margin: 4px 0 2px 8px;
-    font-size: 12px;
-  }
 }
 
 #options {
   width: 500px;
   height: 580px;
   position: fixed;
-  
-  .input-description {
-    margin: 4px;
-  }
   textarea {
     height: 500px;
     font-size: 18px;
@@ -286,7 +279,7 @@ body {
   font-size: 15px;
 }
 .tagify__dropdown {
-  max-height: 235px;
+  max-height: 270px;
   border: none;
 }
 .tagify__dropdown__wrapper {
@@ -294,6 +287,7 @@ body {
 }
 .tagify__dropdown__item {
   padding: 3px 8px 3px 8px;
+  background: #FFF;
 }
 .tagify__dropdown__item--active {
   background: #557292;
@@ -303,20 +297,23 @@ body {
 /** SCROLLBAR */
 #result-list::-webkit-scrollbar,
 #tags-overview::-webkit-scrollbar,
-#folders-overview::-webkit-scrollbar {
+#folders-overview::-webkit-scrollbar,
+.tagify__dropdown__wrapper::-webkit-scrollbar {
   width: 8px;
   margin-left: 4px;
   padding-left: 0px;
 }
 #result-list::-webkit-scrollbar-track,
 #tags-overviewt::-webkit-scrollbar-track,
-#folders-overview::-webkit-scrollbar-track {
+#folders-overview::-webkit-scrollbar-track,
+.tagify__dropdown__wrapper::-webkit-scrollbar-track {
   background: #ddd;
   padding-left: 2px;
 }
 #result-list::-webkit-scrollbar-thumb,
 #tags-overview::-webkit-scrollbar-thumb,
-#folders-overview::-webkit-scrollbar-thumb {
+#folders-overview::-webkit-scrollbar-thumb,
+.tagify__dropdown__wrapper::-webkit-scrollbar-thumb {
   background-color: #999;
 }
 
@@ -365,12 +362,14 @@ body {
   }
   #result-list::-webkit-scrollbar-track,
   #tags-overview::-webkit-scrollbar-track,
-  #folders-overview::-webkit-scrollbar-track {
+  #folders-overview::-webkit-scrollbar-track,
+  .tagify__dropdown__wrapper::-webkit-scrollbar-track {
     background: rgb(65, 65, 65);
   }
   #result-list::-webkit-scrollbar-thumb,
   #tags-overview::-webkit-scrollbar-thumb,
-  #folders-overview::-webkit-scrollbar-thumb {
+  #folders-overview::-webkit-scrollbar-thumb,
+  .tagify__dropdown__wrapper::-webkit-scrollbar-thumb {
     background-color: rgb(95, 95, 95);
   }
   .input-description {
@@ -381,5 +380,6 @@ body {
   }
   .tagify__dropdown__item {
     color: #CCC;
+    background: #000;
   }
 }
