@@ -4,24 +4,30 @@
   "homepage_url": "https://github.com/Fannon/search-tabs-bookmarks-and-history",
   "author": "Simon Heimler",
   "version": "0.7.8",
-  "manifest_version": 3,
+  "manifest_version": 2,
+  "applications": {
+    "gecko": {
+      "id": "{bd5cec91-8853-40d9-aa80-8388a4544bd3}",
+      "strict_min_version": "75.0"
+    }
+  },
   "permissions": [
     "tabs",
     "bookmarks",
     "history",
     "storage"
   ],
-  "action": {
-    "default_popup": "/popup/index.html",
+  "browser_action": {
     "default_icon": {
       "16": "/images/logo-16.png",
       "32": "/images/logo-32.png",
       "48": "/images/logo-48.png",
       "128": "/images/logo-128.png"
-    }
+    },
+    "default_popup": "/popup/index.html"
   },
   "commands": {
-    "_execute_action": {
+    "_execute_browser_action": {
       "suggested_key": {
         "default": "Ctrl+Shift+Period",
         "mac": "Command+Shift+Period"

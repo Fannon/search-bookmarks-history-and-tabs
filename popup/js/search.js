@@ -27,6 +27,7 @@ export async function initExtension() {
   // Load effective options, including user customizations
   ext.opts = await getEffectiveOptions()
   console.debug('Initialized with options', ext.opts)
+  ext.browser = window.browser || window.chrome || {}
 
   // HTML Element selectors
   ext.popup = document.getElementById('popup')
@@ -140,21 +141,21 @@ async function getSearchData() {
 
   // FIRST: Get data
 
-  if (chrome.tabs) {
+  if (ext.browser.tabs) {
     performance.mark('get-data-tabs-start')
     const chromeTabs = await getChromeTabs()
     result.tabs = convertChromeTabs(chromeTabs)
     performance.mark('get-data-tabs-end')
     performance.measure('get-data-tabs', 'get-data-tabs-start', 'get-data-tabs-end')
   }
-  if (chrome.bookmarks && ext.opts.bookmarks.enabled) {
+  if (ext.browser.bookmarks && ext.opts.bookmarks.enabled) {
     performance.mark('get-data-bookmarks-start')
     const chromeBookmarks = await getChromeBookmarks()
     result.bookmarks = convertChromeBookmarks(chromeBookmarks)
     performance.mark('get-data-bookmarks-end')
     performance.measure('get-data-bookmarks', 'get-data-bookmarks-start', 'get-data-bookmarks-end')
   }
-  if (chrome.history && ext.opts.history.enabled) {
+  if (ext.browser.history && ext.opts.history.enabled) {
     performance.mark('get-data-history-start')
     const chromeHistory = await getChromeHistory(ext.opts.history.daysAgo, ext.opts.history.maxItems)
     result.history = convertChromeHistory(chromeHistory)
@@ -164,7 +165,7 @@ async function getSearchData() {
 
   // Use mock data (for localhost preview / development)
   // To do this, create a http server (e.g. live-server) in popup/
-  if (!chrome.bookmarks || !chrome.history) {
+  if (!ext.browser.bookmarks || !ext.browser.history) {
     console.warn(`No Chrome API found. Switching to local dev mode with mock data only`)
     const requestChromeMockData = await fetch('./mockData/chrome.json')
     const chromeMockData = await requestChromeMockData.json()
@@ -436,9 +437,9 @@ async function searchWithFuseJs(searchTerm, searchMode) {
     // Find out if there are any bookmarks or history that match our current open URL
 
     let currentUrl = window.location.href
-    if (chrome && chrome.tabs) {
+    if (chrome && ext.browser.tabs) {
       const queryOptions = { active: true, currentWindow: true }
-      const [tab] = await chrome.tabs.query(queryOptions)
+      const [tab] = await ext.browser.tabs.query(queryOptions)
       currentUrl = tab.url
     }
     // Remove trailing slash from URL, so the startsWith search works better
@@ -706,7 +707,13 @@ function selectListItem(index) {
   }
   if (ext.resultList.children[index]) {
     ext.resultList.children[index].id = 'selected-result'
-    ext.resultList.children[index].scrollIntoViewIfNeeded(false)
+    if (ext.resultList.children[index].scrollIntoViewIfNeeded) {
+      ext.resultList.children[index].scrollIntoViewIfNeeded(false)
+    } else {
+      ext.resultList.children[index].scrollIntoView({
+        behavior: "smooth", block: "end", inline: "nearest"
+      });
+    }
   }
 }
 
@@ -721,9 +728,9 @@ function openResultItem(event) {
   const foundTab = ext.data.searchData.tabs.find((el) => {
     return el.originalUrl === url
   })
-  if (foundTab && chrome.tabs.highlight) {
+  if (foundTab && ext.browser.tabs.highlight) {
     console.debug('Found tab, setting it active', foundTab)
-    chrome.tabs.update(foundTab.originalId, {
+    ext.browser.tabs.update(foundTab.originalId, {
       active: true
     })
     window.close()
@@ -849,12 +856,12 @@ function updateBookmark(bookmarkId) {
 
   console.debug(`Update bookmark with ID ${bookmarkId}: "${titleInput} ${tagsInput}"`)
 
-  if (chrome.bookmarks) {
-    chrome.bookmarks.update(bookmarkId, {
+  if (ext.browser.bookmarks) {
+    ext.browser.bookmarks.update(bookmarkId, {
       title: `${titleInput} ${tagsInput}`,
     })
   } else {
-    console.warn(`No chrome.bookmarks API found. Bookmark update will not persist.`)
+    console.warn(`No ext.browser.bookmarks API found. Bookmark update will not persist.`)
   }
 
   // Start search again to update the search index and the UI with new bookmark model
@@ -866,13 +873,21 @@ function updateBookmark(bookmarkId) {
 //////////////////////////////////////////
 
 async function getChromeTabs() {
-  return (await chrome.tabs.query({ currentWindow: true })).filter((el) => {
-    return (el.url.startsWith('http'))
+  return new Promise((resolve, reject) => {
+    ext.browser.tabs.query({ currentWindow: true }, (history, err) => {
+      if (err) {
+        return reject(err)
+      }
+      history = history.filter((el) => {
+        return (el.url && el.url.startsWith('http'))
+      })
+      return resolve(history)
+    })
   })
 }
 
 async function getChromeBookmarks() {
-  return await chrome.bookmarks.getTree()
+  return await ext.browser.bookmarks.getTree()
 }
 
 /**
@@ -881,7 +896,7 @@ async function getChromeBookmarks() {
  */
 async function getChromeHistory(daysAgo, maxResults) {
   return new Promise((resolve, reject) => {
-    chrome.history.search({
+    ext.browser.history.search({
       text: '',
       maxResults: maxResults,
       startTime: Date.now() - (1000 * 60 * 60 * 24 * daysAgo),

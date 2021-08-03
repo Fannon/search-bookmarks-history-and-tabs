@@ -6,7 +6,7 @@ Bookmarks can be edited and tagged, with autocomplete.
 Tags and bookmark folders can be browsed and searched.
 The extension works fully local and makes no external requests (except storing / syncing optional user options).
 
-It works with [Google Chrome](https://www.google.com/chrome/) and [Microsoft Edge](https://www.microsoft.com/en-us/edge).
+It works with [Google Chrome](https://www.google.com/chrome/), [Microsoft Edge](https://www.microsoft.com/en-us/edge) and also on [Firefox](https://www.mozilla.org/en-US/firefox/new/). 
 
 ## Features
 
@@ -35,6 +35,7 @@ It works with [Google Chrome](https://www.google.com/chrome/) and [Microsoft Edg
 * Go to `chrome://extensions/` (chrome) or `edge://extensions/` (edge)
   * Enable "Developer mode"
   * Choose "Load unpacked" and open the root folder of the extension
+* For Firefox, you need to `npm build` this project and load the extension as a temporary addon (`about:debugging`) from the `dist/firefox` folder.
 
 ## User Documentation
 
