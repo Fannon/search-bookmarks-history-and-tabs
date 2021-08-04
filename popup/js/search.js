@@ -497,11 +497,8 @@ async function searchDefaultEntries() {
   const foundBookmarks = ext.data.searchData.bookmarks.filter(el => el.originalUrl.startsWith(currentUrl))
   results.push(...foundBookmarks)
 
-  // Find if we have browser history that starts with same URL and sort them by most visited
-  let foundHistory = ext.data.searchData.history.filter(el => el.originalUrl.startsWith(currentUrl))
-  foundHistory = foundHistory.sort((a, b) => {
-    return b.visitCount - a.visitCount
-  })
+  // Find if we have browser history that has the same URL
+  let foundHistory = ext.data.searchData.history.filter(el => currentUrl === el.originalUrl)
   results.push(...foundHistory)
 
   results = results.map((el) => {
