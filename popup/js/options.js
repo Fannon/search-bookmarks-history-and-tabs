@@ -48,6 +48,12 @@ export const defaultOptions = {
   },
 
   search: {
+    /** 
+     * Search library to use.
+     * * 'fuse.js' is the default choice and allows for fuzzy, but slower search
+     * * 'flexsearch' is faster and only allows for precise search 
+    */
+    library: 'fuse.js',
     /** Max search results. Reduce for better performance */
     maxResults: 128,
     /** Min search string characters to have a match */

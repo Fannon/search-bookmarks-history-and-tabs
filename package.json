@@ -6,9 +6,10 @@
   "devDependencies": {
     "@yaireo/tagify": "^4.6.0",
     "bulma": "^0.9.3",
+    "flexsearch": "^0.7.21",
     "fuse.js": "^6.4.6",
     "json5": "^2.2.0",
-    "live-server": "^1.2.1",
+    "live-server": "^1.1.0",
     "node-sass": "^6.0.1",
     "uglify-js": "^3.14.1"
   },
