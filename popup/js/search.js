@@ -49,23 +49,34 @@ export async function initExtension() {
 
   performance.mark('init-data-load')
 
-  // Initialize fuse.js for fuzzy search
-  if (ext.opts.tabs.enabled) {
-    ext.data.tabIndex = createFuseJsIndex('tabs', ext.data.searchData.tabs)
-    ext.data.tabIndexFlex = createFlexSearchIndex('tabs', ext.data.searchData.tabs)
+  if (ext.opts.search.library === 'fuse.js') {
+    // Initialize fuse.js for fuzzy search
+    if (ext.opts.tabs.enabled) {
+      ext.data.tabIndex = createFuseJsIndex('tabs', ext.data.searchData.tabs)
+    }
+    if (ext.opts.bookmarks.enabled) {
+      ext.data.bookmarkIndex = createFuseJsIndex('bookmarks', ext.data.searchData.bookmarks)
+    }
+    if (ext.opts.history.enabled) {
+      ext.data.historyIndex = createFuseJsIndex('history', ext.data.searchData.history)
+    }
+  } else if (ext.opts.search.library === 'flexsearch') {
+    // Initialize fuse.js for fuzzy search
+    if (ext.opts.tabs.enabled) {
+      ext.data.tabIndexFlex = createFlexSearchIndex('tabs', ext.data.searchData.tabs)
+    }
+    if (ext.opts.bookmarks.enabled) {
+      ext.data.bookmarkIndexFlex = createFlexSearchIndex('bookmarks', ext.data.searchData.bookmarks)
+    }
+    if (ext.opts.history.enabled) {
+      ext.data.historyIndexFlex = createFlexSearchIndex('history', ext.data.searchData.history)
+    }
   }
-  if (ext.opts.bookmarks.enabled) {
-    ext.data.bookmarkIndex = createFuseJsIndex('bookmarks', ext.data.searchData.bookmarks)
-    ext.data.bookmarkIndexFlex = createFlexSearchIndex('bookmarks', ext.data.searchData.bookmarks)
-  }
-  if (ext.opts.history.enabled) {
-    ext.data.historyIndex = createFuseJsIndex('history', ext.data.searchData.history)
-    ext.data.historyIndexFlex = createFlexSearchIndex('history', ext.data.searchData.history)
-  }
-
-  hashRouter()
 
   performance.mark('init-search-index')
+  hashRouter()
+
+  performance.mark('init-router')
 
   // Register Events
   ext.searchInput.addEventListener("keyup", updateSearchUrl)
@@ -78,6 +89,7 @@ export async function initExtension() {
   performance.measure('init-dom', 'init-start', 'init-dom')
   performance.measure('init-data-load', 'init-dom', 'init-data-load')
   performance.measure('init-search-index', 'init-data-load', 'init-search-index')
+  performance.measure('init-router', 'init-search-index', 'init-router')
   const initPerformance = performance.getEntriesByType("measure")
   const totalInitPerformance = performance.getEntriesByName("init-end-to-end")
   console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)
@@ -344,8 +356,11 @@ function createFuseJsIndex(type, searchData) {
 function createFlexSearchIndex(type, searchData) {
   performance.mark('index-start')
   const options = {
+    preset: 'match',
     tokenize: "forward",
     // encode: "advanced",
+
+    // optimize: false,
     minlength: ext.opts.search.minMatchCharLength,
     document: {
       id: "index",
@@ -358,12 +373,7 @@ function createFlexSearchIndex(type, searchData) {
   }
 
   if (type === 'bookmarks') {
-    options.document.index.push({
-      field: 'tags',
-    },
-    {
-      field: 'folder',
-    })
+    options.document.index.push({ field: 'tags' }, { field: 'folder' })
   }
 
   const index = new FlexSearch.Document(options)
@@ -394,8 +404,12 @@ async function search(event) {
       return
     }
   }
-  
-  if (!ext.data.tabIndex && !ext.data.bookmarkIndex && !ext.data.historyIndex) {
+
+  if (
+    !ext.data.tabIndex && !ext.data.bookmarkIndex &&
+    !ext.data.historyIndex && !ext.data.tabIndexFlex &&
+    !ext.data.bookmarkIndexFlex && !ext.data.historyIndexFlex
+  ) {
     console.warn('No search index found (yet). Skipping search')
     return
   }
@@ -432,13 +446,21 @@ async function search(event) {
   ext.data.searchMode = searchMode
 
   if (searchTerm) {
-    ext.data.result.push(...await searchWithFuseJs(searchTerm, searchMode))
+    if (ext.opts.search.library === 'fuse.js') {
+      const results = await searchWithFuseJs(searchTerm, searchMode)
+      ext.data.result.push(...results)
+    } else if (ext.opts.search.library === 'flexsearch') {
+      const results = searchWithFlexSearch(searchTerm, searchMode)
+      ext.data.result.push(...results)
+    } else {
+      throw new Error(`Unsupported "ext.opts.search.library": "${ext.opts.search.library}"`)
+    }
     ext.data.result.push(...addSearchEngines(searchTerm))
-
   } else {
-    ext.data.result.push(...await searchDefaultEntries())
+    const defaultEntries = await searchDefaultEntries()
+    ext.data.result.push(...defaultEntries)
   }
-  
+
   // Filter out all search results below a certain score
   ext.data.result = ext.data.result.filter((el) => el.score >= ext.opts.score.minScore)
 
@@ -460,7 +482,7 @@ async function search(event) {
 async function searchDefaultEntries() {
   console.debug(`Searching for default results`)
 
-  const results = []
+  let results = []
 
   let currentUrl = window.location.href
   if (chrome && ext.browser.tabs) {
@@ -481,6 +503,13 @@ async function searchDefaultEntries() {
     return b.visitCount - a.visitCount
   })
   results.push(...foundHistory)
+
+  results = results.map((el) => {
+    return {
+      score: ext.opts.score.minScore,
+      ...el,
+    }
+  })
 
   return results
 }
@@ -517,32 +546,32 @@ async function searchWithFuseJs(searchTerm, searchMode) {
 
   searchMode = searchMode || 'all'
   searchTerm = searchTerm.toLowerCase()
+  let results = []
 
   console.debug(`Searching with mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
   if (searchMode === 'history' && ext.data.historyIndex) {
-    ext.data.searchResult = ext.data.historyIndex.search(searchTerm)
+    results = ext.data.historyIndex.search(searchTerm)
   } else if (searchMode === 'bookmarks' && ext.data.bookmarkIndex) {
-    ext.data.searchResult = ext.data.bookmarkIndex.search(searchTerm)
+    results = ext.data.bookmarkIndex.search(searchTerm)
   } else if (searchMode === 'tabs' && ext.data.tabIndex) {
-    ext.data.searchResult = ext.data.tabIndex.search(searchTerm)
+    results = ext.data.tabIndex.search(searchTerm)
   } else if (searchMode === 'search' && ext.data.tabIndex) {
-    ext.data.searchResult = [] // nothing, because search will be added later
+    // nothing, because search will be added later
   } else {
-    ext.data.searchResult = []
     if (ext.data.bookmarkIndex) {
-      ext.data.searchResult.push(...ext.data.bookmarkIndex.search(searchTerm))
+      results.push(...ext.data.bookmarkIndex.search(searchTerm))
     }
     if (ext.data.tabIndex) {
-      ext.data.searchResult.push(...ext.data.tabIndex.search(searchTerm))
+      results.push(...ext.data.tabIndex.search(searchTerm))
     }
     if (ext.data.historyIndex) {
-      ext.data.searchResult.push(...ext.data.historyIndex.search(searchTerm))
+      results.push(...ext.data.historyIndex.search(searchTerm))
     }
   }
 
   // Convert search results into result format view model
-  const results = ext.data.searchResult.map((el) => {
+  results = results.map((el) => {
     const highlighted = ext.opts.general.highlight ? highlightResultItem(el) : {}
     return {
       ...el.item,
@@ -554,56 +583,87 @@ async function searchWithFuseJs(searchTerm, searchMode) {
     }
   })
 
-  sortResult(results, searchTerm)
+  results = sortResult(results, searchTerm)
 
   performance.mark('search-end')
-  performance.measure('search: ' + searchTerm, 'search-start', 'search-end')
+  performance.measure('search-fusejs: ' + searchTerm, 'search-start', 'search-end')
   const searchPerformance = performance.getEntriesByType("measure")
-  console.debug('Search Performance: ' + searchPerformance[0].duration + 'ms', searchPerformance)
+  console.debug('Search Performance (fuse.js): ' + searchPerformance[0].duration + 'ms', searchPerformance)
   performance.clearMeasures()
 
   return results
 }
 ext.fn.searchWithFuseJs = searchWithFuseJs
 
+/**
+ * Search with the flexsearch library 
+ * 
+ * @see https://github.com/nextapps-de/flexsearch
+ */
 function searchWithFlexSearch(searchTerm, searchMode) {
 
   performance.mark('search-start')
 
   searchMode = searchMode || 'all'
   searchTerm = searchTerm.toLowerCase()
+  let results = []
 
-  // TODO: Just some try out here
-  const bookmarkResults = flexSearchWithScoring(ext.data.bookmarkIndexFlex, searchTerm)
+  console.debug(`Searching with mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
-  console.log(bookmarkResults)
+  if (searchMode === 'history' && ext.data.historyIndexFlex) {
+    results = flexSearchWithScoring(ext.data.historyIndexFlex, searchTerm, ext.data.searchData.history)
+  } else if (searchMode === 'bookmarks' && ext.data.bookmarkIndexFlex) {
+    results = flexSearchWithScoring(ext.data.bookmarkIndexFlex, searchTerm, ext.data.searchData.bookmarks)
+  } else if (searchMode === 'tabs' && ext.data.tabIndexFlex) {
+    results = flexSearchWithScoring(ext.data.tabIndexFlex, searchTerm, ext.data.searchData.tabs)
+  } else if (searchMode === 'search') {
+    // nothing, because search will be added later
+  } else {
+    if (ext.data.bookmarkIndexFlex) {
+      results.push(...flexSearchWithScoring(ext.data.bookmarkIndexFlex, searchTerm, ext.data.searchData.bookmarks))
+    }
+    if (ext.data.tabIndexFlex) {
+      results.push(...flexSearchWithScoring(ext.data.tabIndexFlex, searchTerm, ext.data.searchData.tabs))
+    }
+    if (ext.data.historyIndexFlex) {
+      results.push(...flexSearchWithScoring(ext.data.historyIndexFlex, searchTerm, ext.data.searchData.history))
+    }
+  }
 
-  const results = [
-    ...bookmarkResults,
-  ]
+  // Convert search results into result format view model
+  results = results.map((el) => {
+    // TODO: Highlight results with flexsearch missing
+    return {
+      ...el.item,
+      searchScore: el.searchScore,
+    }
+  })
 
-  document.getElementById('result-counter').innerText = `(${ext.data.result.length})`
+  results = sortResult(results, searchTerm)
+
   performance.mark('search-end')
-  performance.measure('search: ' + searchTerm, 'search-start', 'search-end')
+  performance.measure('search-flexsearch: ' + searchTerm, 'search-start', 'search-end')
   const searchPerformance = performance.getEntriesByType("measure")
-  console.debug('Search Performance: ' + searchPerformance[0].duration + 'ms', searchPerformance)
+  console.debug('Search Performance (flexsearch): ' + searchPerformance[0].duration + 'ms', searchPerformance)
   performance.clearMeasures()
 
-  return results;
+  return results
 }
 
 ext.fn.searchWithFlexSearch = searchWithFlexSearch
 
-function flexSearchWithScoring(index, searchTerm) {
+function flexSearchWithScoring(index, searchTerm, data) {
 
   const results = []
 
-  const searchResults = index.search(searchTerm, ext.opts.search.maxResults, { })
+  const searchResults = index.search(searchTerm, ext.opts.search.maxResults, {})
 
-  console.log(searchResults)
+  if (searchResults.length === 0) {
+    return results // early return when we have no match anyway
+  }
 
-  const titleMatches = searchResults[0].result
-  const urlMatches = searchResults[1].result
+  const titleMatches = searchResults[0] ? searchResults[0].result : []
+  const urlMatches = searchResults[1] ? searchResults[1].result : []
   const tagMatches = searchResults[2] ? searchResults[2].result : []
   const folderMatches = searchResults[3] ? searchResults[3].result : []
 
@@ -614,12 +674,9 @@ function flexSearchWithScoring(index, searchTerm) {
     ...folderMatches,
   ])]
 
-  console.log(uniqueMatches)
-
   ext.data.result = []
   for (const matchId of uniqueMatches) {
-    const el = ext.data.searchData.bookmarks[matchId]
-    console.log(el)
+    const el = data[matchId]
 
     let bestMatchScore = 1
 
@@ -636,13 +693,12 @@ function flexSearchWithScoring(index, searchTerm) {
       bestMatchScore = Math.max(bestMatchScore, ext.opts.score.folderMultiplicator)
     }
 
-    console.log(`Match: ${matchId} (${el.title}): ${bestMatchScore}`)
-
     results.push({
       searchScore: bestMatchScore,
-      ...el,
+      item: el,
     })
   }
+
   return results
 }
 
