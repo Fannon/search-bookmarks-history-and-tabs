@@ -1,42 +1,30 @@
 # Search Tabs, Bookmarks and History
 
-Browser extension to (fuzzy) search and navigate browser tabs, local bookmarks and history.
+**Browser extension to (fuzzy) search and navigate browser tabs, local bookmarks and history.**
 
-Bookmarks can be edited and tagged, with autocomplete.
-Tags and bookmark folders can be browsed and searched.
-The extension works fully local and makes no external requests (except storing / syncing optional user options).
+## Installation and Availability
 
-It works with [Google Chrome](https://www.google.com/chrome/), [Microsoft Edge](https://www.microsoft.com/en-us/edge) and also on [Firefox](https://www.mozilla.org/en-US/firefox/new/). 
+* For [Google Chrome](https://www.google.com/chrome/) on the [chrome web store](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0).
+* For [Firefox](https://www.mozilla.org/en-US/firefox/new/) as a [Firefox Addon](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/).
+* For [Microsoft Edge](https://www.microsoft.com/en-us/edge) only as a [developer installation](#developer-installation). Publishing is pending on the [Edge Addon Store](https://microsoftedge.microsoft.com/addons/Microsoft-Edge-Extensions-Home).
 
 ## Features
 
 * Quick search your open browser tabs, bookmark and browsing history.
-* Bookmarks are also searched for tags (extracted from title) and folder names.
-* Edit and tag bookmarks with autocompletion.
+* Fuzzy search (approximate string matching) by default, but can be configured to be more exact.
+* Bookmarks can be searched for tags (extracted from title) and folder names.
+* Edit and tag bookmarks with auto complete on tags.
 * Dark theme / light theme via system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
-* Fallback to use a search engine (multiple options)
-* Customizable via user options.
-* Lightweight: Written in vanilla JS with the goal to only include the minimun necessary libraries (see [credits](#credits)).
+* Fallback to use search engines like google, dict.cc etc. (multiple options)
+* Customizable via [user options](#user-configuration).
+* Lightweight: Written in vanilla JS with the goal to only include only [a few necessary libraries](#credits).
+* The extension does not collect any data and does not make any external requests.
 
 ## Screenshots & Demo
 
 ![light and dark theme](/images/bookmark-and-history-search-screenshots.png "light and dark theme")
 
 ![Demo GIF](/images/bookmark-and-history-search.gif "Demo GIF")
-
-## Installation
-
-### Stores
-
-> 🚧 The extension will be published on the [chrome web store](https://chrome.google.com/webstore/category/extensions) and the [MS edge store](https://microsoftedge.microsoft.com/addons/Microsoft-Edge-Extensions-Home) soon.
-
-### Developer Installation
-
-* Check out this extension via git or download it as .zip file and unpack it
-* Go to `chrome://extensions/` (chrome) or `edge://extensions/` (edge)
-  * Enable "Developer mode"
-  * Choose "Load unpacked" and open the root folder of the extension
-* For Firefox, you first need to `npm install` and `npm build` this project (see [Local Development](#local-development)). Now you can load the built extension in `dist/firefox` as a temporary addon in `about:debugging`.
 
 ## User Documentation
 
@@ -127,6 +115,8 @@ It also helps to enable the display of the score in the result items:
 
 ## Local Development
 
+### Install and Build
+
 Prerequisite: [Node.js](https://nodejs.org/en/)
 
 ```sh
@@ -140,6 +130,14 @@ npm run build
 The source code for the extension can be found in [popup/](popup/) (HTML, JS and libs) and [sass/](sass/) (SCSS/CSS).
 
 The built extensions can be found in [dist/chrome/](dist/chrome/) for Google Chrome and Microsoft Edge and [dist/firefox/](dist/firefox/) for Firefox.
+
+### Developer Installation
+
+* Check out this extension via git or download it as .zip file and unpack it
+* Go to `chrome://extensions/` (chrome) or `edge://extensions/` (edge)
+  * Enable "Developer mode"
+  * Choose "Load unpacked" and open the root folder of the extension
+* For Firefox, you first need to `npm install` and `npm build` this project (see [Local Development](#local-development)). Now you can load the built extension in `dist/firefox` as a temporary addon in `about:debugging`.
 
 ## Credits
 

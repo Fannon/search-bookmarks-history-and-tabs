@@ -22,10 +22,10 @@ export const defaultOptions = {
     /** 
      * As a fallback, use search machines to find results
      * 
-     * For each entry here, one result will be created.
+     * For each entry here, one result will be created - in the order they are defined.
      * The URLs need to include the search querystring (see examples).
      *
-     * To disable this feature, set `searchEngines` to false or remove all engines.
+     * To disable this feature, set `searchEngines` to false or [] (emtpy array).
      */
     searchEngines: [
       {
@@ -41,9 +41,9 @@ export const defaultOptions = {
         urlPrefix: "https://duckduckgo.com/?q=",
       },
       {
-        name: "Ecosia",
-        urlPrefix: "https://www.ecosia.org/search?q=",
-      },
+        name: "dict.cc",
+        urlPrefix: "https://www.dict.cc/?s="
+      }
     ],
   },
 
