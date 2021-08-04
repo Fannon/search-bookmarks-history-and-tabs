@@ -57,7 +57,7 @@ export const defaultOptions = {
     // library: 'fuse.js',
     library: 'flexsearch',
     /** Max search results. Reduce for better performance */
-    maxResults: 128,
+    maxResults: 64,
     /** Min search string characters to have a match */
     minMatchCharLength: 2,
     /** 

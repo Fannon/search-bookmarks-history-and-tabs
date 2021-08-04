@@ -459,9 +459,10 @@ function renderResult(result) {
   performance.mark('render-start')
 
   // Clean current result set
-  ext.resultList.innerHTML = ''
+  ext.resultList.innerText = ''
   ext.data.currentItem = 0
 
+  const resultListItems = []
   for (let i = 0; i < result.length; i++) {
     const resultEntry = result[i]
 
@@ -540,6 +541,10 @@ function renderResult(result) {
     // Append everything together :)
     resultListItem.appendChild(titleDiv)
     resultListItem.appendChild(urlDiv)
+    resultListItems.push(resultListItem)
+  }
+
+  for (const resultListItem of resultListItems) {
     ext.resultList.appendChild(resultListItem)
   }
 
