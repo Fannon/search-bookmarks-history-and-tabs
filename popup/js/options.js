@@ -115,9 +115,9 @@ export const defaultOptions = {
     /** Multiplicator for a tag match*/
     tagMultiplicator: 0.7,
     /** Multiplicator for an url match*/
-    urlMultiplicator: 0.55,
+    urlMultiplicator: 0.5,
     /** Multiplicator for a folder match*/
-    folderMultiplicator: 0.2,
+    folderMultiplicator: 0.3,
 
     // BONUS SCORES
     // If certain conditions apply, extra score points can be added

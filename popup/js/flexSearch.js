@@ -130,21 +130,24 @@ function flexSearchWithScoring(index, searchTerm, data) {
 
     // TODO: This can be improved for sure. To behave like a "compressor" algorithm
     if (titleMatches.includes(matchId)) {
-      searchScore = Math.max(searchScore, (((titleMatches.length - titleMatches.indexOf(matchId)) / titleMatches.length / 5) + 0.8) * ext.opts.score.titleMultiplicator)
-      // console.log(`id: ${matchId} -> titleMatches score: ${searchScore}`, titleMatches)
+      const titleMatchScore = (((titleMatches.length - titleMatches.indexOf(matchId)) / titleMatches.length / 5) + 0.8) * ext.opts.score.titleMultiplicator
+      searchScore = Math.max(searchScore, titleMatchScore)
+      // console.log(`id: ${matchId}, title: ${el.title} -> titleMatches score: ${searchScore}`, titleMatches)
     }
     if (urlMatches.includes(matchId)) {
       const urlMatchScore = (((urlMatches.length - urlMatches.indexOf(matchId)) / urlMatches.length / 5) + 0.8) * ext.opts.score.urlMultiplicator
       searchScore = Math.max(searchScore, urlMatchScore)
-      // console.log(`id: ${matchId} -> urlMatches score: ${urlMatchScore} (${searchScore})`, titleMatches)
+      // console.log(`id: ${matchId}, title: ${el.title} -> urlMatches score: ${urlMatchScore} (${searchScore})`, titleMatches)
     }
     if (tagMatches.includes(matchId)) {
-      searchScore = Math.max(searchScore, (((tagMatches.length - tagMatches.indexOf(matchId)) / tagMatches.length / 5) + 0.8) * ext.opts.score.tagMultiplicator)
-      // console.log(`id: ${matchId} -> tagMatches score: ${searchScore}`, titleMatches)
+      const tagMatchScore = (((tagMatches.length - tagMatches.indexOf(matchId)) / tagMatches.length / 5) + 0.8) * ext.opts.score.tagMultiplicator
+      searchScore = Math.max(searchScore, tagMatchScore)
+      // console.log(`id: ${matchId}, title: ${el.title} -> tagMatches score: ${searchScore}`, titleMatches)
     }
     if (urlMatches.includes(matchId)) {
-      searchScore = Math.max(searchScore, (((urlMatches.length - urlMatches.indexOf(matchId)) / urlMatches.length / 5) + 0.8) * ext.opts.score.folderMultiplicator)
-      // console.log(`id: ${matchId} -> urlMatches score: ${searchScore}`, titleMatches)
+      const urlMatchScore = (((urlMatches.length - urlMatches.indexOf(matchId)) / urlMatches.length / 5) + 0.8) * ext.opts.score.folderMultiplicator
+      searchScore = Math.max(searchScore, urlMatchScore)
+      // console.log(`id: ${matchId}, title: ${el.title} -> urlMatches score: ${searchScore}`, titleMatches)
     }
 
     results.push({
@@ -152,6 +155,8 @@ function flexSearchWithScoring(index, searchTerm, data) {
       item: el,
     })
   }
+
+  console.log(results)
 
   return results
 }
