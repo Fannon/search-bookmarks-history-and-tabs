@@ -18,7 +18,7 @@ export const defaultOptions = {
     /** Display visit count */
     visitCounter: false,
     /** Display search result score */
-    score: false,
+    score: true,
     /** 
      * As a fallback, use search machines to find results
      * 
