@@ -1,8 +1,9 @@
 performance.mark('init-start')
-import { getEffectiveOptions } from './options.js'
+import { browserApi, convertChromeBookmarks, convertChromeHistory, convertChromeTabs, getChromeTabs, getChromeBookmarks, getChromeHistory } from './browserApi.js'
 import { createFlexSearchIndex, searchWithFlexSearch } from './flexSearch.js'
-import { createFuseJsIndex, searchWithFuseJs, } from './fuseSearch.js'
-import { cleanUpUrl, timeSince } from './utils.js'
+import { createFuseJsIndex, searchWithFuseJs } from './fuseSearch.js'
+import { getEffectiveOptions } from './options.js'
+import { cleanUpUrl } from './utils.js'
 
 const ext = window.ext = {
   /** Extension options */
@@ -29,7 +30,6 @@ export async function initExtension() {
   // Load effective options, including user customizations
   ext.opts = await getEffectiveOptions()
   console.debug('Initialized with options', ext.opts)
-  ext.browser = window.browser || window.chrome || {}
 
   // HTML Element selectors
   ext.popup = document.getElementById('popup')
@@ -158,21 +158,21 @@ async function getSearchData() {
 
   // FIRST: Get data
 
-  if (ext.browser.tabs) {
+  if (browserApi.tabs) {
     performance.mark('get-data-tabs-start')
     const chromeTabs = await getChromeTabs()
     result.tabs = convertChromeTabs(chromeTabs)
     performance.mark('get-data-tabs-end')
     performance.measure('get-data-tabs', 'get-data-tabs-start', 'get-data-tabs-end')
   }
-  if (ext.browser.bookmarks && ext.opts.bookmarks.enabled) {
+  if (browserApi.bookmarks && ext.opts.bookmarks.enabled) {
     performance.mark('get-data-bookmarks-start')
     const chromeBookmarks = await getChromeBookmarks()
     result.bookmarks = convertChromeBookmarks(chromeBookmarks)
     performance.mark('get-data-bookmarks-end')
     performance.measure('get-data-bookmarks', 'get-data-bookmarks-start', 'get-data-bookmarks-end')
   }
-  if (ext.browser.history && ext.opts.history.enabled) {
+  if (browserApi.history && ext.opts.history.enabled) {
     performance.mark('get-data-history-start')
     const chromeHistory = await getChromeHistory(ext.opts.history.daysAgo, ext.opts.history.maxItems)
     result.history = convertChromeHistory(chromeHistory)
@@ -182,7 +182,7 @@ async function getSearchData() {
 
   // Use mock data (for localhost preview / development)
   // To do this, create a http server (e.g. live-server) in popup/
-  if (!ext.browser.bookmarks || !ext.browser.history) {
+  if (!browserApi.bookmarks || !browserApi.history) {
     console.warn(`No Chrome API found. Switching to local dev mode with mock data only`)
     const requestChromeMockData = await fetch('./mockData/big.json')
     const chromeMockData = await requestChromeMockData.json()
@@ -399,9 +399,9 @@ async function searchDefaultEntries() {
   let results = []
 
   let currentUrl = window.location.href
-  if (chrome && ext.browser.tabs) {
+  if (browserApi.tabs) {
     const queryOptions = { active: true, currentWindow: true }
-    const [tab] = await ext.browser.tabs.query(queryOptions)
+    const [tab] = await browserApi.tabs.query(queryOptions)
     currentUrl = tab.url
   }
   // Remove trailing slash from URL, so the startsWith search works better
@@ -700,9 +700,9 @@ function openResultItem(event) {
   const foundTab = ext.data.searchData.tabs.find((el) => {
     return el.originalUrl === url
   })
-  if (foundTab && ext.browser.tabs.highlight) {
+  if (foundTab && browserApi.tabs.highlight) {
     console.debug('Found tab, setting it active', foundTab)
-    ext.browser.tabs.update(foundTab.originalId, {
+    browserApi.tabs.update(foundTab.originalId, {
       active: true
     })
     window.close()
@@ -792,147 +792,14 @@ function updateBookmark(bookmarkId) {
 
   console.debug(`Update bookmark with ID ${bookmarkId}: "${titleInput} ${tagsInput}"`)
 
-  if (ext.browser.bookmarks) {
-    ext.browser.bookmarks.update(bookmarkId, {
+  if (browserApi.bookmarks) {
+    browserApi.bookmarks.update(bookmarkId, {
       title: `${titleInput} ${tagsInput}`,
     })
   } else {
-    console.warn(`No ext.browser.bookmarks API found. Bookmark update will not persist.`)
+    console.warn(`No browser bookmarks API found. Bookmark update will not persist.`)
   }
 
   // Start search again to update the search index and the UI with new bookmark model
   window.location.href = '#'
-}
-
-//////////////////////////////////////////
-// CHROME SPECIFIC                      //
-//////////////////////////////////////////
-
-async function getChromeTabs() {
-  return new Promise((resolve, reject) => {
-    ext.browser.tabs.query({ currentWindow: true }, (history, err) => {
-      if (err) {
-        return reject(err)
-      }
-      history = history.filter((el) => {
-        return (el.url && el.url.startsWith('http'))
-      })
-      return resolve(history)
-    })
-  })
-}
-
-async function getChromeBookmarks() {
-  return await ext.browser.bookmarks.getTree()
-}
-
-/**
- * Gets chrome browsing history.
- * Warning: This chrome API call tends to be rather slow
- */
-async function getChromeHistory(daysAgo, maxResults) {
-  return new Promise((resolve, reject) => {
-    ext.browser.history.search({
-      text: '',
-      maxResults: maxResults,
-      startTime: Date.now() - (1000 * 60 * 60 * 24 * daysAgo),
-      endTime: Date.now(),
-    }, (history, err) => {
-      if (err) {
-        return reject(err)
-      }
-      history = history.filter((el) => {
-        return (el.url && el.url.startsWith('http'))
-      })
-      return resolve(history)
-    })
-  })
-}
-
-function convertChromeTabs(chromeTabs) {
-  return chromeTabs.map((entry) => {
-    return {
-      type: 'tab',
-      title: entry.title,
-      url: cleanUpUrl(entry.url),
-      originalUrl: entry.url.replace(/\/$/, ''),
-      originalId: entry.id,
-      favIconUrl: entry.favIconUrl,
-    }
-  })
-}
-
-/**
- * Recursive function to return bookmarks in our internal, flat array format
- */
-function convertChromeBookmarks(bookmarks, folderTrail, depth) {
-  depth = depth || 1
-  let result = []
-  folderTrail = folderTrail || []
-
-  for (const entry of bookmarks) {
-
-    let newFolderTrail = folderTrail.slice() // clone
-    // Only consider bookmark folders that have a title and have
-    // at least a depth of 2, so we skip the default chrome "system" folders
-    if (entry.title && depth > 2) {
-      newFolderTrail = folderTrail.concat(entry.title)
-    }
-
-    // Parse out tags from bookmark title (starting with #) 
-    let title = entry.title
-    let tagsText = ''
-    let tagsArray = []
-    if (ext.opts.general.tags && title) {
-      const tagSplit = title.split('#')
-      title = tagSplit.shift().trim()
-      tagsArray = tagSplit
-      for (const tag of tagSplit) {
-        tagsText += '#' + tag.trim() + ' '
-      }
-      tagsText = tagsText.slice(0, -1)
-    }
-
-    let folderText = ''
-    for (const folder of folderTrail) {
-      folderText += '~' + folder + ' '
-    }
-    folderText = folderText.slice(0, -1)
-
-    if (entry.url && entry.url.startsWith('http')) {
-      result.push({
-        type: 'bookmark',
-        originalId: entry.id,
-        title: title,
-        originalUrl: entry.url.replace(/\/$/, ''),
-        url: cleanUpUrl(entry.url),
-        tags: tagsText,
-        tagsArray: tagsArray,
-        folder: folderText,
-        folderArray: folderTrail,
-      })
-    }
-    if (entry.children) {
-      result = result.concat(convertChromeBookmarks(entry.children, newFolderTrail, depth + 1))
-    }
-  }
-
-  return result
-}
-
-/**
- * Convert chrome history into our internal, flat array format
- */
-function convertChromeHistory(history) {
-  return history.map((el) => {
-    return {
-      type: 'history',
-      title: el.title,
-      originalUrl: el.url.replace(/\/$/, ''),
-      url: cleanUpUrl(el.url),
-      visitCount: el.visitCount,
-      lastVisit: ext.opts.general.lastVisit ? timeSince(new Date(el.lastVisitTime)) : undefined,
-      originalId: el.id,
-    }
-  })
 }
