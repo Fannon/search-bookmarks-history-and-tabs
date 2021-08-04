@@ -184,7 +184,7 @@ async function getSearchData() {
   // To do this, create a http server (e.g. live-server) in popup/
   if (!ext.browser.bookmarks || !ext.browser.history) {
     console.warn(`No Chrome API found. Switching to local dev mode with mock data only`)
-    const requestChromeMockData = await fetch('./mockData/chrome.json')
+    const requestChromeMockData = await fetch('./mockData/big.json')
     const chromeMockData = await requestChromeMockData.json()
 
     result.tabs = convertChromeTabs(chromeMockData.tabs)
