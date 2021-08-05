@@ -326,9 +326,6 @@ async function search(event) {
     searchTerm = searchTerm.substring(1)
   }
 
-  ext.model.searchTerm = searchTerm
-  ext.model.searchMode = searchMode
-
   if (searchTerm) {
     if (searchMode === 'tags') {
       ext.model.result.push(...searchTags(searchTerm))
@@ -535,6 +532,12 @@ function renderResult(result) {
     resultListItem.appendChild(titleDiv)
     resultListItem.appendChild(urlDiv)
     resultListItems.push(resultListItem)
+  }
+
+  // Use mark.js to highlight search results, if we don't have already done so via fuse.js
+  if (ext.opts.search.approach === 'precise') {
+    const markInstance = new Mark(resultListItems)
+    markInstance.mark(ext.dom.searchInput.value)
   }
 
   // Replace current results with new results

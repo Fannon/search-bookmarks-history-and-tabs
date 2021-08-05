@@ -4,5 +4,5 @@ cp node_modules/\@yaireo/tagify/dist/tagify.css popup/lib/tagify.css
 cp node_modules/json5/dist/index.min.js popup/lib/json5.min.js
 cp node_modules/flexsearch/dist/flexsearch.compact.js popup/lib/flexsearch.min.js
 # cp node_modules/flexsearch/dist/flexsearch.debug.js popup/lib/flexsearch.min.js
-# cp node_modules/mark.js/dist/mark.es6.min.js popup/lib/mark.min.js
+cp node_modules/mark.js/dist/mark.es6.min.js popup/lib/mark.min.js
 

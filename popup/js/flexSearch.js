@@ -46,7 +46,7 @@ export function createFlexSearchIndex(type, searchData) {
 export function searchWithFlexSearch(searchTerm, searchMode) {
   
   let results = []
-  
+
   // If the search term is below minMatchCharLength, no point in starting search
   if (searchTerm.length < ext.opts.search.minMatchCharLength) {
     return results
@@ -81,14 +81,9 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
 
   // Convert search results into result format view model
   results = results.map((el) => {
-    const highlighted = ext.opts.general.highlight ? highlightResultItem(el) : {}
     return {
       ...el.item,
       searchScore: el.searchScore,
-      titleHighlighted: highlighted.title,
-      tagsHighlighted: highlighted.tags,
-      urlHighlighted: highlighted.url,
-      folderHighlighted: highlighted.folder,
     }
   })
 
@@ -155,14 +150,4 @@ function calculateFlexScoreForField(matches, matchId, fieldWeight) {
   } else {
     return 0
   }
-}
-
-/**
- * Highlights search matches in results
- * 
- * TODO: Not implemented yet
- */
- function highlightResultItem(resultItem, searchTerm) {
-  const highlightedResultItem = {}
-  return highlightedResultItem
 }
