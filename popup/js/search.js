@@ -208,7 +208,7 @@ async function getSearchData() {
   // To do this, create a http server (e.g. live-server) in popup/
   if (!browserApi.bookmarks || !browserApi.history) {
     console.warn(`No Chrome API found. Switching to local dev mode with mock data only`)
-    const requestChromeMockData = await fetch('./mockData/big.json')
+    const requestChromeMockData = await fetch('./mockData/chrome.json')
     const chromeMockData = await requestChromeMockData.json()
 
     result.tabs = convertChromeTabs(chromeMockData.tabs)
@@ -303,15 +303,15 @@ async function search(event) {
 
   // Support for various search modes
   // This is detected by looking at the first chars of the search
-  if (searchTerm.startsWith('+ ')) {
+  if (searchTerm.startsWith('h ')) {
     // Only history
     searchMode = 'history'
     searchTerm = searchTerm.substring(2)
-  } else if (searchTerm.startsWith('- ')) {
+  } else if (searchTerm.startsWith('b ')) {
     // Only bookmarks
     searchMode = 'bookmarks'
     searchTerm = searchTerm.substring(2)
-  } else if (searchTerm.startsWith('. ')) {
+  } else if (searchTerm.startsWith('t ')) {
     // Only Tabs
     searchMode = 'tabs'
     searchTerm = searchTerm.substring(2)

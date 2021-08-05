@@ -170,14 +170,7 @@ export const defaultOptions = {
 /**
  * This is the default empty user options
  */
-export const emptyUserOptions = {
-  general: {},
-  search: {},
-  tabs: {},
-  bookmarks: {},
-  history: {},
-  score: {},
-}
+export const emptyUserOptions = {}
 
 /**
  * Writes user settings to the google chrome sync storage

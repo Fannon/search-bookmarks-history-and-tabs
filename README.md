@@ -36,9 +36,9 @@
 * In case you want to be more selective -> use a search mode:
   * If you start your query with `#`: only bookmarks with the tag will be returned (excact "starts with" search)
   * If you start your query with `~`: only bookmarks within the folders will returned (excact "starts with" search)
-  * If you start your query with `. `: only tabs will be searched.
-  * If you start your query with `+ `: only history will be searched.
-  * If you start your query with `- `: only bookmarks will be searched.
+  * If you start your query with `t `: only tabs will be searched.
+  * If you start your query with `h `: only history will be searched.
+  * If you start your query with `b `: only bookmarks will be searched.
   * If you start your query with `s `: only search engines will be proposed.
 * This extension works best if you avoid:
   * using `#` in bookmark titles that do not indicate a tag.
