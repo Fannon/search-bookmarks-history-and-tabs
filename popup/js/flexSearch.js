@@ -1,4 +1,4 @@
-import { calculateScore } from './search.js'
+import { calculateFinalScore } from './search.js'
 
 //////////////////////////////////////////
 // FLEXSEARCH SUPPORT                   //
@@ -55,7 +55,7 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
   searchTerm = searchTerm.toLowerCase()
   let results = []
 
-  console.debug(`Searching with mode="${searchMode}" for searchTerm="${searchTerm}"`)
+  console.debug(`Searching with approach="precise" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
   if (searchMode === 'history' && ext.data.historyIndexFlex) {
     results = flexSearchWithScoring(ext.data.historyIndexFlex, searchTerm, ext.data.searchData.history)
@@ -85,8 +85,6 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
       searchScore: el.searchScore,
     }
   })
-
-  results = calculateScore(results, searchTerm, true)
 
   performance.mark('search-end')
   performance.measure('search-flexsearch: ' + searchTerm, 'search-start', 'search-end')
@@ -126,27 +124,31 @@ function flexSearchWithScoring(index, searchTerm, data) {
   for (const matchId of uniqueMatches) {
     const el = data[matchId]
 
-    let searchScore = 0.5
+    let searchScore = 0
 
     // TODO: This can be improved for sure. To behave like a "compressor" algorithm
-    if (titleMatches.includes(matchId)) {
-      const titleMatchScore = (((titleMatches.length - titleMatches.indexOf(matchId)) / titleMatches.length / 5) + 0.8) * ext.opts.score.titleMultiplicator
+    const titleIndex = titleMatches.indexOf(matchId)
+    if (titleIndex > -1) {
+      const titleMatchScore = (((titleMatches.length - titleIndex) / titleMatches.length / 5) + 0.8) * ext.opts.score.titleWeight
       searchScore = Math.max(searchScore, titleMatchScore)
       // console.log(`id: ${matchId}, title: ${el.title} -> titleMatches score: ${searchScore}`, titleMatches)
     }
-    if (urlMatches.includes(matchId)) {
-      const urlMatchScore = (((urlMatches.length - urlMatches.indexOf(matchId)) / urlMatches.length / 5) + 0.8) * ext.opts.score.urlMultiplicator
+    const urlIndex = urlMatches.indexOf(matchId)
+    if (urlIndex > -1) {
+      const urlMatchScore = (((urlMatches.length - urlIndex) / urlMatches.length / 5) + 0.8) * ext.opts.score.urlWeight
       searchScore = Math.max(searchScore, urlMatchScore)
       // console.log(`id: ${matchId}, title: ${el.title} -> urlMatches score: ${urlMatchScore} (${searchScore})`, titleMatches)
     }
-    if (tagMatches.includes(matchId)) {
-      const tagMatchScore = (((tagMatches.length - tagMatches.indexOf(matchId)) / tagMatches.length / 5) + 0.8) * ext.opts.score.tagMultiplicator
+    const tagIndex = tagMatches.indexOf(matchId)
+    if (tagIndex > -1) {
+      const tagMatchScore = (((tagMatches.length - tagIndex) / tagMatches.length / 5) + 0.8) * ext.opts.score.tagWeight
       searchScore = Math.max(searchScore, tagMatchScore)
       // console.log(`id: ${matchId}, title: ${el.title} -> tagMatches score: ${searchScore}`, titleMatches)
     }
-    if (urlMatches.includes(matchId)) {
-      const urlMatchScore = (((urlMatches.length - urlMatches.indexOf(matchId)) / urlMatches.length / 5) + 0.8) * ext.opts.score.folderMultiplicator
-      searchScore = Math.max(searchScore, urlMatchScore)
+    const folderIndex = urlMatches.indexOf(matchId)
+    if (folderIndex > -1) {
+      const folderMatchScore = (((urlMatches.length - folderIndex) / urlMatches.length / 5) + 0.8) * ext.opts.score.folderWeight
+      searchScore = Math.max(searchScore, folderMatchScore)
       // console.log(`id: ${matchId}, title: ${el.title} -> urlMatches score: ${searchScore}`, titleMatches)
     }
 
@@ -159,4 +161,13 @@ function flexSearchWithScoring(index, searchTerm, data) {
   console.log(results)
 
   return results
+}
+
+function calculateFlexScoreForField(fieldType, matches, matchId, oldScore) {
+  const index = matches.indexOf(matchId)
+    if (index > -1) {
+      const fieldMatchScore = (((index.length - index) / index.length / 5) + 0.8) * ext.opts.score[fieldType + 'Weight']
+      console.log(`FieldScore (${fieldType}) of "${el.title}" -> ${fieldMatchScore}/${Math.max(oldScore, fieldMatchScore)}`)
+      return Math.max(oldScore, fieldMatchScore)
+    }
 }

@@ -10,6 +10,8 @@ const ext = window.ext = {
   opts: {},
   /** Extension data / model */
   data: {},
+  /** Whether extension is already initialized -> ready for search */
+  initialized: false,
 }
 
 //////////////////////////////////////////
@@ -19,6 +21,7 @@ const ext = window.ext = {
 // Trigger initialization
 initExtension().catch((err) => {
   console.error(err)
+  document.getElementById('footer-error').innerText = err.message
 })
 
 /**
@@ -27,6 +30,7 @@ initExtension().catch((err) => {
  */
 export async function initExtension() {
 
+  ext.initialized = false
   // Load effective options, including user customizations
   ext.opts = await getEffectiveOptions()
   console.debug('Initialized with options', ext.opts)
@@ -49,7 +53,7 @@ export async function initExtension() {
 
   performance.mark('init-data-load')
 
-  if (ext.opts.search.library === 'fuse.js') {
+  if (ext.opts.search.approach === 'fuzzy') {
     // Initialize fuse.js for fuzzy search
     if (ext.opts.tabs.enabled) {
       ext.data.tabIndex = createFuseJsIndex('tabs', ext.data.searchData.tabs)
@@ -60,7 +64,7 @@ export async function initExtension() {
     if (ext.opts.history.enabled) {
       ext.data.historyIndex = createFuseJsIndex('history', ext.data.searchData.history)
     }
-  } else if (ext.opts.search.library === 'flexsearch') {
+  } else if (ext.opts.search.approach === 'precise') {
     // Initialize fuse.js for fuzzy search
     if (ext.opts.tabs.enabled) {
       ext.data.tabIndexFlex = createFlexSearchIndex('tabs', ext.data.searchData.tabs)
@@ -71,7 +75,11 @@ export async function initExtension() {
     if (ext.opts.history.enabled) {
       ext.data.historyIndexFlex = createFlexSearchIndex('history', ext.data.searchData.history)
     }
+  } else {
+    throw new Error(`The option "search.approach" has an unsupported value: ${ext.opts.search.approach}`)
   }
+
+  ext.initialized = true
 
   performance.mark('init-search-index')
   hashRouter()
@@ -360,20 +368,22 @@ async function search(event) {
   ext.data.searchMode = searchMode
 
   if (searchTerm) {
-    if (ext.opts.search.library === 'fuse.js') {
+    if (ext.opts.search.approach === 'fuzzy') {
       const results = await searchWithFuseJs(searchTerm, searchMode)
       ext.data.result.push(...results)
-    } else if (ext.opts.search.library === 'flexsearch') {
+    } else if (ext.opts.search.approach === 'precise') {
       const results = searchWithFlexSearch(searchTerm, searchMode)
       ext.data.result.push(...results)
     } else {
-      throw new Error(`Unsupported "ext.opts.search.library": "${ext.opts.search.library}"`)
+      throw new Error(`Unsupported option "search.library" value: "${ext.opts.search.approach}"`)
     }
     ext.data.result.push(...addSearchEngines(searchTerm))
   } else {
     const defaultEntries = await searchDefaultEntries()
     ext.data.result.push(...defaultEntries)
   }
+
+  ext.data.result = calculateFinalScore(ext.data.result, searchTerm, true)
 
   // Filter out all search results below a certain score
   ext.data.result = ext.data.result.filter((el) => el.score >= ext.opts.score.minScore)
@@ -493,21 +503,34 @@ function renderResult(result) {
     titleLink.setAttribute('href', resultEntry.originalUrl)
     titleLink.setAttribute('target', '_newtab')
     if (ext.opts.general.highlight) {
-      titleLink.innerHTML = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
+      const content = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
+      if (content.includes('<mark>')) {
+        titleLink.innerHTML = content
+      } else {
+        titleLink.innerText = content
+      }
     } else {
-      titleLink.innerText = resultEntry.title
+      titleLink.innerText = resultEntry.title | resultEntry.url
     }
     titleDiv.appendChild(titleLink)
     if (ext.opts.general.tags && resultEntry.tags) {
       const tags = document.createElement('span')
       tags.classList.add('badge', 'tags')
-      tags.innerHTML = resultEntry.tagsHighlighted || resultEntry.tags
+      if (ext.opts.general.highlight && resultEntry.tagsHighlighted && resultEntry.tagsHighlighted.includes('<mark>')) {
+        tags.innerHTML = resultEntry.tagsHighlighted
+      } else {
+        tags.innerText = resultEntry.tags
+      }
       titleDiv.appendChild(tags)
     }
     if (resultEntry.folder) {
       const folder = document.createElement('span')
       folder.classList.add('badge', 'folder')
-      folder.innerHTML = resultEntry.folderHighlighted || resultEntry.folder
+      if (ext.opts.general.highlight && resultEntry.folderHighlighted && resultEntry.folderHighlighted.includes('<mark>')) {
+        folder.innerHTML = resultEntry.folderHighlighted
+      } else {
+        folder.innerText = resultEntry.folder
+      }
       titleDiv.appendChild(folder)
     }
     if (ext.opts.general.lastVisit && resultEntry.lastVisit) {
@@ -535,7 +558,11 @@ function renderResult(result) {
     const a = document.createElement('a')
     a.setAttribute('href', resultEntry.originalUrl)
     a.setAttribute('target', '_newtab')
-    a.innerHTML = resultEntry.urlHighlighted || resultEntry.url
+    if (ext.opts.general.highlight && resultEntry.urlHighlighted && resultEntry.urlHighlighted.includes('<mark>')) {
+      urlDiv.innerHTML = resultEntry.urlHighlighted
+    } else {
+      urlDiv.innerText = resultEntry.url
+    }
     urlDiv.appendChild(a)
 
     // Append everything together :)
@@ -559,10 +586,10 @@ function renderResult(result) {
 }
 
 /**
- * Calculates score on basis of the fuse score and some own rules
- * Sorts the result by that score
+ * Calculates the final search item score on basis of the search score and some own rules
+ * Optionally sorts the result by that score
  */
-export function calculateScore(result, searchTerm, sort) {
+export function calculateFinalScore(result, searchTerm, sort) {
 
   // calculate score
   for (let i = 0; i < result.length; i++) {
@@ -584,13 +611,13 @@ export function calculateScore(result, searchTerm, sort) {
 
     // Increase score if we have exact "startsWith" or alternatively "includes" matches
     if (el.title && el.title.toLowerCase().startsWith(searchTerm)) {
-      score += (ext.opts.score.exactStartsWithBonus * ext.opts.score.titleMultiplicator)
+      score += (ext.opts.score.exactStartsWithBonus * ext.opts.score.titleWeight)
     } else if (el.url.startsWith(searchTerm.split(' ').join('-'))) {
-      score += (ext.opts.score.exactStartsWithBonus * ext.opts.score.urlMultiplicator)
+      score += (ext.opts.score.exactStartsWithBonus * ext.opts.score.urlWeight)
     } else if (el.title && el.title.toLowerCase().includes(searchTerm)) {
-      score += (ext.opts.score.exactIncludesBonus * ext.opts.score.titleMultiplicator)
+      score += (ext.opts.score.exactIncludesBonus * ext.opts.score.titleWeight)
     } else if (el.url.includes(searchTerm.split(' ').join('-'))) {
-      score += (ext.opts.score.exactIncludesBonus * ext.opts.score.urlMultiplicator)
+      score += (ext.opts.score.exactIncludesBonus * ext.opts.score.urlWeight)
     }
 
     // Increase score if we have an exact tag match   

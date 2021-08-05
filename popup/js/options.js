@@ -11,7 +11,7 @@ export const defaultOptions = {
   general: {
     /** Extract tags from title and display it as a badge with different search prio */
     tags: true,
-    /** Highlight search matches in results */
+    /** Highlight search matches in results. Reduces performane a little. */
     highlight: true,
     /** Display last visit */
     lastVisit: true,
@@ -49,13 +49,19 @@ export const defaultOptions = {
 
   search: {
     /** 
-     * Search library to use. Choose between:
-     * * 'fuse.js' is the default choice and allows for fuzzy, but slower search
-     * * 'flexsearch' is faster and only allows for precise search 
-     *                'fuzzyness' option will be ignored
+     * Search approach to use. Choose between:
+     * 
+     * * 'fuzzy'   : Default choice that allows for fuzzy (approximate) search.
+     *               It is faster to index / start up, but may be slower when searching.
+     *               It supports all options.
+     *               Uses the https://fusejs.io/ library
+     *             
+     * * 'precise' : Alternative search approach that is more precise.
+     *               It may be slower to index / start up, but faster for searching.
+     *               The 'fuzzyness' option will be ignored
+     *               Uses the https://github.com/nextapps-de/flexsearch library
     */
-    // library: 'fuse.js',
-    library: 'flexsearch',
+    approach: 'precise', // 'precise' or 'fuzzy'
     /** Max search results. Reduce for better performance */
     maxResults: 64,
     /** Min search string characters to have a match */
@@ -95,7 +101,7 @@ export const defaultOptions = {
     /** Filter out all search results below this minimum score */
     minScore: 30,
 
-    // BASE SCORES
+    // RESULT TYPE BASE SCORES
     // Depending on the type of result, they start with a base score
 
     /** Base score for bookmark results */
@@ -106,18 +112,18 @@ export const defaultOptions = {
     historyBaseScore: 50,
     /** Additional score points per visit within history daysAgo */
 
-    // MULTIPLICATORS
-    // Depending on where the search match was found, the multiplicators
-    // define the "weight" of the find.
+    // FIELD WEIGHTS
+    // Depending on in which field the search match was found, 
+    // the match gets a multiplicator applied on how important the match is.
 
-    /** Multiplicator for a title match*/
-    titleMultiplicator: 1,
-    /** Multiplicator for a tag match*/
-    tagMultiplicator: 0.7,
-    /** Multiplicator for an url match*/
-    urlMultiplicator: 0.5,
-    /** Multiplicator for a folder match*/
-    folderMultiplicator: 0.3,
+    /** Weight for a title match*/
+    titleWeight: 1,
+    /** Weight for a tag match*/
+    tagWeight: 0.7,
+    /** Weight for an url match*/
+    urlWeight: 0.5,
+    /** Weight for a folder match*/
+    folderWeight: 0.3,
 
     // BONUS SCORES
     // If certain conditions apply, extra score points can be added

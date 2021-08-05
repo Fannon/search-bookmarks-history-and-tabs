@@ -1,7 +1,3 @@
-//////////////////////////////////////////
-// FUSE.JS SUPPORT                      //
-//////////////////////////////////////////
-
 // @see https://fusejs.io/
 
 /**
@@ -20,33 +16,21 @@ export function createFuseJsIndex(type, searchData) {
     threshold: ext.opts.search.fuzzyness,
     keys: [{
       name: 'title',
-      weight: ext.opts.score.titleMultiplicator,
+      weight: ext.opts.score.titleWeight,
+    }, {
+      name: 'url',
+      weight: ext.opts.score.urlWeight,
     }]
   }
 
   if (type === 'bookmarks') {
     options.keys.push({
       name: 'tags',
-      weight: ext.opts.score.tagMultiplicator,
-    }, {
-      name: 'url',
-      weight: ext.opts.score.urlMultiplicator,
+      weight: ext.opts.score.tagWeight,
     }, {
       name: 'folder',
-      weight: ext.opts.score.folderMultiplicator,
+      weight: ext.opts.score.folderWeight,
     })
-  } else if (type === 'history') {
-    options.keys.push({
-      name: 'url',
-      weight: ext.opts.score.urlMultiplicator,
-    })
-  } else if (type === 'tabs') {
-    options.keys.push({
-      name: 'url',
-      weight: ext.opts.score.urlMultiplicator,
-    })
-  } else {
-    throw new Error(`Unsupported index type: ${type}`)
   }
 
   const index = new window.Fuse(searchData, options)
@@ -70,7 +54,7 @@ export async function searchWithFuseJs(searchTerm, searchMode) {
   searchTerm = searchTerm.toLowerCase()
   let results = []
 
-  console.debug(`Searching with mode="${searchMode}" for searchTerm="${searchTerm}"`)
+  console.debug(`Searching with approach="fuzzy" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
   if (searchMode === 'history' && ext.data.historyIndex) {
     results = ext.data.historyIndex.search(searchTerm)
@@ -104,8 +88,6 @@ export async function searchWithFuseJs(searchTerm, searchMode) {
       folderHighlighted: highlighted.folder,
     }
   })
-
-  results = calculateScore(results, searchTerm, true)
 
   performance.mark('search-end')
   performance.measure('search-fusejs: ' + searchTerm, 'search-start', 'search-end')
