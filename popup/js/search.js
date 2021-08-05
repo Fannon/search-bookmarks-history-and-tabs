@@ -328,7 +328,10 @@ async function search(event) {
 
   if (searchTerm) {
     if (searchMode === 'tags') {
-      ext.model.result.push(...searchTags(searchTerm))
+      const foundTags = searchTags(searchTerm)
+      console.log(foundTags)
+      ext.model.result.push(...foundTags)
+      console.log(ext.model.result)
     } else if (searchMode === 'folders') {
       ext.model.result.push(...searchFolders(searchTerm))
     } else if (ext.opts.search.approach === 'fuzzy') {

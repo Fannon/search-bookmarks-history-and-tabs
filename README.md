@@ -81,17 +81,17 @@ An exemplary user-config can look like the following example:
 }
 ```
 
-If you only want excact search matches, you can use:
+If you only want excact search matches, or have search performance issues,
+you can use the precise search instead of the fuzzy search:
 
 ```json5
 // Make search non-fuzzy
 {
   search: {
-    fuzzyness: 0,
-    minMatchCharLength: 3
+    approach: 'precise',
   },
   score: {
-    minScore: 50
+    minScore: 40
   }
 }
 ```

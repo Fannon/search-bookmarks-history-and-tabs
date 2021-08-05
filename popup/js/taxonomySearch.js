@@ -4,43 +4,63 @@
 
 // This helps finding bookmarks that include tags or are part of a folder
 
+/**
+ * Find bookmarks with given tag
+ * Prefers full tag matches, but will also return "starts with" matches
+ */
 export function searchTags(searchTerm) {
-  const results = []
+  const resultDict = {}
   const tags = getUniqueTags()
   for (const tagName in tags) {
     const tag = tags[tagName]
-
     if (tagName.startsWith(searchTerm)) {
       for (const elIndex of tag) {
         const el = ext.model.bookmarks[elIndex]
-        results.push({
+        const result = {
           searchScore: tagName === searchTerm ? 1 : 0.8,
           ...el
-        })
+        }
+        if (!resultDict[el.index]) {
+          resultDict[el.index] = result
+        }
+        // If we already have a match, the one with the higher score wins
+        if (resultDict[el.index].searchScore < result.searchScore) {
+          resultDict[el.index] = result
+        }
       }
     }
   }
 
-  return results
+  return Object.values(resultDict)
 }
 
+/**
+ * Find bookmarks that are part of given folder name
+ * Prefers full folder name matches, but will also return "starts with" matches
+ */
 export function searchFolders(searchTerm) {
-  const results = []
+  const resultDict = {}
   const folders = getUniqueFolders()
   for (const folderName in folders) {
     const folder = folders[folderName]
     if (folderName.startsWith(searchTerm)) {
       for (const elIndex of folder) {
         const el = ext.model.bookmarks[elIndex]
-        results.push({
+        const result = {
           searchScore: folderName === searchTerm ? 1 : 0.8,
           ...el
-        })
+        }
+        if (!resultDict[el.index]) {
+          resultDict[el.index] = result
+        }
+        if (resultDict[el.index].searchScore < result.searchScore) {
+          resultDict[el.index] = result
+        }
       }
     }
   }
 
-  return results
+  return Object.values(resultDict)
 }
 
 /**

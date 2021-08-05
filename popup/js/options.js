@@ -40,11 +40,11 @@ export const defaultOptions = {
      *               The 'fuzzyness' option will be ignored
      *               Uses the https://github.com/nextapps-de/flexsearch library
     */
-    approach: 'precise', // 'precise' or 'fuzzy'
+    approach: 'fuzzy', // 'precise' or 'fuzzy'
     /** Max search results. Reduce for better performance */
     maxResults: 64,
     /** Min search string characters to have a match */
-    minMatchCharLength: 1,
+    minMatchCharLength: 2,
     /** 
      * Fuzzy search threshold (0 - 1) 
      * 0 is no fuzzyness, 1 is full fuzzyness
