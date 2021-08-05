@@ -276,10 +276,11 @@ body {
   height: 580px;
   position: fixed;
   textarea {
-    height: 500px;
-    font-size: 18px;
+    height: 504px;
+    font-size: 16px;
     font-family: Consolas, monospace, monospace;
     resize: none;
+    padding: 4px;
   }
 }
 

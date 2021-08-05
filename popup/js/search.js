@@ -99,7 +99,7 @@ export async function initExtension() {
 
   // Register Events
   document.addEventListener("keydown", navigationKeyListener)
-  window.addEventListener("hashchange", debounce(hashRouter, ext.opts.general.debounce), false)
+  window.addEventListener("hashchange", hashRouter, false)
   ext.dom.searchInput.addEventListener("keyup", debounce(search, ext.opts.general.debounce))
   ext.dom.searchApproachToggle.addEventListener("mouseup", toggleSearchApproach)
 
@@ -329,12 +329,12 @@ async function search(event) {
     searchTerm = searchTerm.substring(1)
   }
 
+  ext.model.searchTerm = searchTerm
+  ext.model.searchMode = searchMode
+
   if (searchTerm) {
     if (searchMode === 'tags') {
-      const foundTags = searchTags(searchTerm)
-      console.log(foundTags)
-      ext.model.result.push(...foundTags)
-      console.log(ext.model.result)
+      ext.model.result.push(...searchTags(searchTerm))
     } else if (searchMode === 'folders') {
       ext.model.result.push(...searchFolders(searchTerm))
     } else if (ext.opts.search.approach === 'fuzzy') {
@@ -442,6 +442,7 @@ function renderResult(result) {
   performance.mark('render-start')
 
   const resultListItems = []
+  
   for (let i = 0; i < result.length; i++) {
     const resultEntry = result[i]
 
@@ -540,10 +541,13 @@ function renderResult(result) {
     resultListItems.push(resultListItem)
   }
 
-  // Use mark.js to highlight search results, if we don't have already done so via fuse.js
-  if (ext.opts.search.approach === 'precise') {
-    const markInstance = new Mark(resultListItems)
-    markInstance.mark(ext.dom.searchInput.value)
+  if (ext.opts.general.highlight) {
+    // Use mark.js to highlight search results, if we don't have already done so via fuse.js
+    // This applies to flexsearch and taxonomy search results
+    if (ext.opts.search.approach === 'precise' || ext.model.searchMode === 'tags' || ext.model.searchMode === 'folders') {
+      const markInstance = new Mark(resultListItems)
+      markInstance.mark(ext.dom.searchInput.value)
+    }
   }
 
   // Replace current results with new results
