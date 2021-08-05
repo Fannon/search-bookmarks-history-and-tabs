@@ -1,5 +1,3 @@
-import { calculateFinalScore } from './search.js'
-
 //////////////////////////////////////////
 // FLEXSEARCH SUPPORT                   //
 //////////////////////////////////////////
@@ -56,22 +54,22 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
   console.debug(`Searching with approach="precise" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
   if (searchMode === 'history' && ext.index.precise.history) {
-    results = flexSearchWithScoring(ext.index.precise.history, searchTerm, ext.data.searchData.history)
+    results = flexSearchWithScoring(ext.index.precise.history, searchTerm, ext.model.history)
   } else if (searchMode === 'bookmarks' && ext.index.precise.bookmarks) {
-    results = flexSearchWithScoring(ext.index.precise.bookmarks, searchTerm, ext.data.searchData.bookmarks)
+    results = flexSearchWithScoring(ext.index.precise.bookmarks, searchTerm, ext.model.bookmarks)
   } else if (searchMode === 'tabs' && ext.index.precise.tabs) {
-    results = flexSearchWithScoring(ext.index.precise.tabs, searchTerm, ext.data.searchData.tabs)
+    results = flexSearchWithScoring(ext.index.precise.tabs, searchTerm, ext.model.tabs)
   } else if (searchMode === 'search') {
     // nothing, because search will be added later
   } else {
     if (ext.index.precise.bookmarks) {
-      results.push(...flexSearchWithScoring(ext.index.precise.bookmarks, searchTerm, ext.data.searchData.bookmarks))
+      results.push(...flexSearchWithScoring(ext.index.precise.bookmarks, searchTerm, ext.model.bookmarks))
     }
     if (ext.index.precise.tabs) {
-      results.push(...flexSearchWithScoring(ext.index.precise.tabs, searchTerm, ext.data.searchData.tabs))
+      results.push(...flexSearchWithScoring(ext.index.precise.tabs, searchTerm, ext.model.tabs))
     }
     if (ext.index.precise.history) {
-      results.push(...flexSearchWithScoring(ext.index.precise.history, searchTerm, ext.data.searchData.history))
+      results.push(...flexSearchWithScoring(ext.index.precise.history, searchTerm, ext.model.history))
     }
   }
 
@@ -81,6 +79,10 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
     return {
       ...el.item,
       searchScore: el.searchScore,
+      titleHighlighted: highlighted.title,
+      tagsHighlighted: highlighted.tags,
+      urlHighlighted: highlighted.url,
+      folderHighlighted: highlighted.folder,
     }
   })
 
@@ -118,7 +120,7 @@ function flexSearchWithScoring(index, searchTerm, data) {
     ...folderMatches,
   ])]
 
-  ext.data.result = []
+  ext.model.result = []
   for (const matchId of uniqueMatches) {
     const el = data[matchId]
 
@@ -133,7 +135,7 @@ function flexSearchWithScoring(index, searchTerm, data) {
 
     results.push({
       searchScore: searchScore,
-      item: el,
+      item: el
     })
   }
 
@@ -151,10 +153,10 @@ function calculateFlexScoreForField(matches, matchId, fieldWeight) {
 
 /**
  * Highlights search matches in results
+ * 
+ * TODO: Not implemented yet
  */
- function highlightResultItem(resultItem, sarchTerm) {
+ function highlightResultItem(resultItem, searchTerm) {
   const highlightedResultItem = {}
- 
-
   return highlightedResultItem
 }

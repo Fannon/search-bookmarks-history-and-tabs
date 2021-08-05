@@ -6,10 +6,12 @@ import { getEffectiveOptions } from './options.js'
 import { cleanUpUrl } from './utils.js'
 
 const ext = window.ext = {
-  /** Extension options */
+  /** Options */
   opts: {},
-  /** Extension data / model */
-  data: {},
+  /** Model / data */
+  model: {},
+  /** Commonly used DOM Elements */
+  dom: {},
   /** Search indexies */
   index: {
     fuzzy: {},
@@ -42,44 +44,46 @@ export async function initExtension() {
   console.debug('Initialized with options', ext.opts)
 
   // HTML Element selectors
-  ext.popup = document.getElementById('popup')
-  ext.searchInput = document.getElementById('search-input')
-  ext.resultList = document.getElementById('result-list')
-  ext.searchInput.value = ''
+  ext.dom.searchInput = document.getElementById('search-input')
+  ext.dom.resultList = document.getElementById('result-list')
+  ext.dom.resultCounter = document.getElementById('result-counter')
 
   performance.mark('init-dom')
 
   // Model / Data
-  ext.data = {
+  ext.model = {
     currentItem: 0,
     result: [],
   }
 
-  ext.data.searchData = await getSearchData()
+  const { bookmarks, tabs, history }  = await getSearchData()
+  ext.model.tabs = tabs
+  ext.model.bookmarks = bookmarks
+  ext.model.history = history
 
   performance.mark('init-data-load')
 
   if (ext.opts.search.approach === 'fuzzy') {
     // Initialize fuse.js for fuzzy search
     if (ext.opts.tabs.enabled) {
-      ext.index.fuzzy.tabs = createFuseJsIndex('tabs', ext.data.searchData.tabs)
+      ext.index.fuzzy.tabs = createFuseJsIndex('tabs', ext.model.tabs)
     }
     if (ext.opts.bookmarks.enabled) {
-      ext.index.fuzzy.bookmarks = createFuseJsIndex('bookmarks', ext.data.searchData.bookmarks)
+      ext.index.fuzzy.bookmarks = createFuseJsIndex('bookmarks', ext.model.bookmarks)
     }
     if (ext.opts.history.enabled) {
-      ext.index.fuzzy.history = createFuseJsIndex('history', ext.data.searchData.history)
+      ext.index.fuzzy.history = createFuseJsIndex('history', ext.model.history)
     }
   } else if (ext.opts.search.approach === 'precise') {
     // Initialize fuse.js for fuzzy search
     if (ext.opts.tabs.enabled) {
-      ext.index.precise.tabs = createFlexSearchIndex('tabs', ext.data.searchData.tabs)
+      ext.index.precise.tabs = createFlexSearchIndex('tabs', ext.model.tabs)
     }
     if (ext.opts.bookmarks.enabled) {
-      ext.index.precise.bookmarks = createFlexSearchIndex('bookmarks', ext.data.searchData.bookmarks)
+      ext.index.precise.bookmarks = createFlexSearchIndex('bookmarks', ext.model.bookmarks)
     }
     if (ext.opts.history.enabled) {
-      ext.index.precise.history = createFlexSearchIndex('history', ext.data.searchData.history)
+      ext.index.precise.history = createFlexSearchIndex('history', ext.model.history)
     }
   } else {
     throw new Error(`The option "search.approach" has an unsupported value: ${ext.opts.search.approach}`)
@@ -90,7 +94,7 @@ export async function initExtension() {
   performance.mark('init-search-index')
 
   // Register Events
-  ext.searchInput.addEventListener("keyup", updateSearchUrl)
+  ext.dom.searchInput.addEventListener("keyup", updateSearchUrl)
   document.addEventListener("keydown", navigationKeyListener)
   window.addEventListener("hashchange", hashRouter, false)
 
@@ -122,12 +126,12 @@ function hashRouter() {
   closeModals()
   if (!hash || hash === '#') {
     // Index route -> redirect to last known search or empty search
-    window.location.hash = '#search/' + (ext.data.searchTerm || '')
+    window.location.hash = '#search/' + (ext.model.searchTerm || '')
   } else if (hash.startsWith('#search/')) {
     // Search specific term
     const searchTerm = hash.replace('#search/', '')
-    ext.searchInput.value = decodeURIComponent(searchTerm)
-    ext.searchInput.focus()
+    ext.dom.searchInput.value = decodeURIComponent(searchTerm)
+    ext.dom.searchInput.focus()
     search()
   } else if (hash.startsWith('#tags/')) {
     getTagsOverview()
@@ -151,7 +155,7 @@ function closeModals() {
 }
 
 function updateSearchUrl() {
-  const searchTerm = ext.searchInput.value ? ext.searchInput.value : ''
+  const searchTerm = ext.dom.searchInput.value ? ext.dom.searchInput.value : ''
   window.location.hash = '#search/' + searchTerm
 }
 
@@ -271,7 +275,7 @@ async function getSearchData() {
  */
 function getUniqueTags() {
   const tagsDictionary = {}
-  for (const el of ext.data.searchData.bookmarks) {
+  for (const el of ext.model.bookmarks) {
     if (el.tags) {
       for (let tag of el.tags.split('#')) {
         tag = tag.trim()
@@ -285,8 +289,8 @@ function getUniqueTags() {
       }
     }
   }
-  ext.data.tags = tagsDictionary
-  return ext.data.tags
+  ext.model.tags = tagsDictionary
+  return ext.model.tags
 }
 
 /**
@@ -298,7 +302,7 @@ function getUniqueTags() {
 function getUniqueFolders() {
   // Extract tags from bookmark titles
   const foldersDictionary = {}
-  for (const el of ext.data.searchData.bookmarks) {
+  for (const el of ext.model.bookmarks) {
     if (el.folder) {
       for (let folderName of el.folder.split('~')) {
         folderName = folderName.trim()
@@ -312,8 +316,8 @@ function getUniqueFolders() {
       }
     }
   }
-  ext.data.folders = foldersDictionary
-  return ext.data.folders
+  ext.model.folders = foldersDictionary
+  return ext.model.folders
 }
 
 //////////////////////////////////////////
@@ -341,8 +345,8 @@ async function search(event) {
 
   performance.mark('search-start')
 
-  let searchTerm = ext.searchInput.value || ''
-  ext.data.result = []
+  let searchTerm = ext.dom.searchInput.value || ''
+  ext.model.result = []
   let searchMode = 'all' // OR 'bookmarks' OR 'history'
 
   // Support for history and bookmark only mode
@@ -367,38 +371,38 @@ async function search(event) {
     searchTerm = ''
   }
 
-  ext.data.searchTerm = searchTerm
-  ext.data.searchMode = searchMode
+  ext.model.searchTerm = searchTerm
+  ext.model.searchMode = searchMode
 
   if (searchTerm) {
     if (ext.opts.search.approach === 'fuzzy') {
       const results = await searchWithFuseJs(searchTerm, searchMode)
-      ext.data.result.push(...results)
+      ext.model.result.push(...results)
     } else if (ext.opts.search.approach === 'precise') {
       const results = searchWithFlexSearch(searchTerm, searchMode)
-      ext.data.result.push(...results)
+      ext.model.result.push(...results)
     } else {
       throw new Error(`Unsupported option "search.approach" value: "${ext.opts.search.approach}"`)
     }
-    ext.data.result.push(...addSearchEngines(searchTerm))
+    ext.model.result.push(...addSearchEngines(searchTerm))
   } else {
     const defaultEntries = await searchDefaultEntries()
-    ext.data.result.push(...defaultEntries)
+    ext.model.result.push(...defaultEntries)
   }
 
-  ext.data.result = calculateFinalScore(ext.data.result, searchTerm, true)
+  ext.model.result = calculateFinalScore(ext.model.result, searchTerm, true)
 
   // Filter out all search results below a certain score
-  ext.data.result = ext.data.result.filter((el) => el.score >= ext.opts.score.minScore)
+  ext.model.result = ext.model.result.filter((el) => el.score >= ext.opts.score.minScore)
 
   // Only render maxResults if given (to improve render performance)
-  if (ext.data.result.length > ext.opts.search.maxResults) {
-    ext.data.result = ext.data.result.slice(0, ext.opts.search.maxResults)
+  if (ext.model.result.length > ext.opts.search.maxResults) {
+    ext.model.result = ext.model.result.slice(0, ext.opts.search.maxResults)
   }
 
-  document.getElementById('result-counter').innerText = `(${ext.data.result.length})`
+  ext.dom.resultCounter.innerText = `(${ext.model.result.length})`
 
-  renderResult(ext.data.result)
+  renderResult(ext.model.result)
 }
 
 /**
@@ -421,11 +425,11 @@ async function searchDefaultEntries() {
   currentUrl = currentUrl.replace(/\/$/, "")
 
   // Find if current URL has corresponding bookmark(s)
-  const foundBookmarks = ext.data.searchData.bookmarks.filter(el => el.originalUrl.startsWith(currentUrl))
+  const foundBookmarks = ext.model.bookmarks.filter(el => el.originalUrl.startsWith(currentUrl))
   results.push(...foundBookmarks)
 
   // Find if we have browser history that has the same URL
-  let foundHistory = ext.data.searchData.history.filter(el => currentUrl === el.originalUrl)
+  let foundHistory = ext.model.history.filter(el => currentUrl === el.originalUrl)
   results.push(...foundHistory)
 
   results = results.map((el) => {
@@ -467,13 +471,13 @@ function addSearchEngines(searchTerm) {
  */
 function renderResult(result) {
 
-  result = result || ext.data.result
+  result = result || ext.model.result
 
   performance.mark('render-start')
 
   // Clean current result set
-  ext.resultList.innerText = ''
-  ext.data.currentItem = 0
+  ext.dom.resultList.innerText = ''
+  ext.model.currentItem = 0
 
   const resultListItems = []
   for (let i = 0; i < result.length; i++) {
@@ -575,7 +579,7 @@ function renderResult(result) {
   }
 
   for (const resultListItem of resultListItems) {
-    ext.resultList.appendChild(resultListItem)
+    ext.dom.resultList.appendChild(resultListItem)
   }
 
   // mark first result item as selected
@@ -608,6 +612,8 @@ export function calculateFinalScore(result, searchTerm, sort) {
       score = ext.opts.score.historyBaseScore
     } else if (el.type === 'search') {
       score = ext.opts.score.searchEngineBaseScore
+    } else {
+      throw new Error(`Search result type "${el.type}" not supported`)
     }
 
     // Multiply by fuse.js score. 
@@ -689,20 +695,20 @@ export function calculateFinalScore(result, searchTerm, sort) {
  * -> Arrow up, Arrow Down, Enter
  */
 function navigationKeyListener(event) {
-  if (event.key === 'ArrowUp' && ext.data.currentItem > 0) {
-    ext.data.currentItem--
-    selectListItem(ext.data.currentItem)
-  } else if (event.key === 'ArrowDown' && ext.data.currentItem < ext.data.result.length - 1) {
-    ext.data.currentItem++
-    selectListItem(ext.data.currentItem)
-  } else if (event.key === 'Enter' && ext.data.result.length > 0) {
+  if (event.key === 'ArrowUp' && ext.model.currentItem > 0) {
+    ext.model.currentItem--
+    selectListItem(ext.model.currentItem)
+  } else if (event.key === 'ArrowDown' && ext.model.currentItem < ext.model.result.length - 1) {
+    ext.model.currentItem++
+    selectListItem(ext.model.currentItem)
+  } else if (event.key === 'Enter' && ext.model.result.length > 0) {
     // Enter selects selected search result -> only when in search mode
     if (window.location.hash.startsWith('#search/')) {
       openResultItem()
     }
   } else if (event.key === 'Escape') {
     window.location.hash = '#search/'
-    ext.searchInput.focus()
+    ext.dom.searchInput.focus()
   }
 }
 
@@ -714,12 +720,12 @@ function selectListItem(index) {
   if (currentSelection) {
     currentSelection.id = ''
   }
-  if (ext.resultList.children[index]) {
-    ext.resultList.children[index].id = 'selected-result'
-    if (ext.resultList.children[index].scrollIntoViewIfNeeded) {
-      ext.resultList.children[index].scrollIntoViewIfNeeded(false)
+  if (ext.dom.resultList.children[index]) {
+    ext.dom.resultList.children[index].id = 'selected-result'
+    if (ext.dom.resultList.children[index].scrollIntoViewIfNeeded) {
+      ext.dom.resultList.children[index].scrollIntoViewIfNeeded(false)
     } else {
-      ext.resultList.children[index].scrollIntoView({
+      ext.dom.resultList.children[index].scrollIntoView({
         behavior: "smooth", block: "end", inline: "nearest"
       });
     }
@@ -734,7 +740,7 @@ function openResultItem(event) {
   if (event) {
     event.stopPropagation()
   }
-  const foundTab = ext.data.searchData.tabs.find((el) => {
+  const foundTab = ext.model.tabs.find((el) => {
     return el.originalUrl === url
   })
   if (foundTab && browserApi.tabs.highlight) {
@@ -780,13 +786,12 @@ function getFoldersOverview() {
 //////////////////////////////////////////
 
 function editBookmark(bookmarkId) {
-  const bookmark = ext.data.searchData.bookmarks.find(el => el.originalId === bookmarkId)
+  const bookmark = ext.model.bookmarks.find(el => el.originalId === bookmarkId)
   const tags = Object.keys(getUniqueTags()).sort()
   console.debug('Editing bookmark ' + bookmarkId, bookmark)
   if (bookmark) {
     document.getElementById('edit-bookmark').style = ""
     document.getElementById('bookmark-title').value = bookmark.title
-    // document.getElementById('bookmark-tags').value = bookmark.tags
     ext.tagify = new Tagify(document.getElementById('bookmark-tags'), {
       whitelist: tags,
       trim: true,
@@ -819,7 +824,7 @@ function editBookmark(bookmarkId) {
 }
 
 function updateBookmark(bookmarkId) {
-  const bookmark = ext.data.searchData.bookmarks.find(el => el.originalId === bookmarkId)
+  const bookmark = ext.model.bookmarks.find(el => el.originalId === bookmarkId)
   const titleInput = document.getElementById('bookmark-title').value.trim()
   const tagsInput = '#' + ext.tagify.value.map(el => el.value.trim()).join(' #')
 
