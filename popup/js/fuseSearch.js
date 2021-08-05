@@ -14,7 +14,6 @@ export function createFuseJsIndex(type, searchData) {
     includeMatches: true,
     ignoreLocation: true,
     findAllMatches: true,
-    useExtendedSearch: true,
     shouldSort: false,
     minMatchCharLength: ext.opts.search.minMatchCharLength,
     threshold: ext.opts.search.fuzzyness,

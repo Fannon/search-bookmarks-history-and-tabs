@@ -43,8 +43,6 @@
 * This extension works best if you avoid:
   * using `#` in bookmark titles that do not indicate a tag.
   * using `~` in bookmark folder names.
-* In fuzzy search mode only:
-  * [Fuse.js Extended Search](https://fusejs.io/examples.html#extended-search) operators can be used.
 
 ## User Configuration
 
@@ -135,6 +133,7 @@ This extension makes use of the following helpful open-source projects (thanks!)
 * https://fusejs.io/ for the fuzzy search algorithm
 * https://github.com/nextapps-de/flexsearch for the excact search algorithm
 * https://github.com/yairEO/tagify for the tag autocomplete widget
+* https://markjs.io/ for highlighting search matches from flexsearch
 * https://www.npmjs.com/package/json5 for the user options parsing
 * https://bulma.io/ for some minimal CSS base styling
 * https://github.com/tabler/tabler-icons for the edit icon
