@@ -1,5 +1,6 @@
 # Distribution
 dist/
+popup/mockData/big.json
 
 # Logs
 logs

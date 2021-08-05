@@ -11,45 +11,38 @@ export const defaultOptions = {
   general: {
     /** Extract tags from title and display it as a badge with different search prio */
     tags: true,
-    /** Highlight search matches in results */
+    /** Highlight search matches in results. Reduces performane a little. */
     highlight: true,
     /** Display last visit */
     lastVisit: true,
     /** Display visit count */
     visitCounter: false,
     /** Display search result score */
-    score: false,
+    score: true,
     /** 
-     * As a fallback, use search machines to find results
-     * 
-     * For each entry here, one result will be created - in the order they are defined.
-     * The URLs need to include the search querystring (see examples).
-     *
-     * To disable this feature, set `searchEngines` to false or [] (emtpy array).
+     * Debounce time (delaying user input) for searches (in ms).
+     * Increase this in case of performance / CPU load issues
      */
-    searchEngines: [
-      {
-        name: "Google",
-        urlPrefix: "https://www.google.com/search?q=",
-      },
-      {
-        name: "Bing",
-        urlPrefix: "https://www.bing.com/search?q=",
-      },
-      {
-        name: "DuckDuckGo",
-        urlPrefix: "https://duckduckgo.com/?q=",
-      },
-      {
-        name: "dict.cc",
-        urlPrefix: "https://www.dict.cc/?s="
-      }
-    ],
+    debounce: 1000 / 60 * 3, // 3 frames in 60hz
   },
 
   search: {
+    /** 
+     * Search approach to use. Choose between:
+     * 
+     * * 'fuzzy'   : Default choice that allows for fuzzy (approximate) search.
+     *               It is faster to index / start up, but may be slower when searching.
+     *               It supports all options.
+     *               Uses the https://fusejs.io/ library
+     *             
+     * * 'precise' : Alternative search approach that is more precise.
+     *               It may be slower to index / start up, but faster for searching.
+     *               The 'fuzzyness' option will be ignored
+     *               Uses the https://github.com/nextapps-de/flexsearch library
+    */
+    approach: 'fuzzy', // 'precise' or 'fuzzy'
     /** Max search results. Reduce for better performance */
-    maxResults: 128,
+    maxResults: 64,
     /** Min search string characters to have a match */
     minMatchCharLength: 2,
     /** 
@@ -82,12 +75,42 @@ export const defaultOptions = {
     maxItems: 1024,
   },
 
+  /** 
+   * As a fallback, use search machines to find results
+   */
+   searchEngines: {
+     /** Enable or disable search engine links in results */
+     enabled: true,
+     /**
+      * For each entry here, one result will be created - in the order they are defined.
+      * The URLs need to include the search querystring (see examples).
+      */
+     choices: [
+      {
+        name: "Google",
+        urlPrefix: "https://www.google.com/search?q=",
+      },
+      {
+        name: "Bing",
+        urlPrefix: "https://www.bing.com/search?q=",
+      },
+      {
+        name: "DuckDuckGo",
+        urlPrefix: "https://duckduckgo.com/?q=",
+      },
+      {
+        name: "dict.cc",
+        urlPrefix: "https://www.dict.cc/?s="
+      }
+    ]
+   },
+
   score: {
 
     /** Filter out all search results below this minimum score */
     minScore: 30,
 
-    // BASE SCORES
+    // RESULT TYPE BASE SCORES
     // Depending on the type of result, they start with a base score
 
     /** Base score for bookmark results */
@@ -96,20 +119,21 @@ export const defaultOptions = {
     tabBaseScore: 90,
     /** Base score for history results */
     historyBaseScore: 50,
-    /** Additional score points per visit within history daysAgo */
+    /**Base Score for search engine entries */
+    searchEngineBaseScore: 30,
 
-    // MULTIPLICATORS
-    // Depending on where the search match was found, the multiplicators
-    // define the "weight" of the find.
+    // FIELD WEIGHTS
+    // Depending on in which field the search match was found, 
+    // the match gets a multiplicator applied on how important the match is.
 
-    /** Multiplicator for a title match*/
-    titleMultiplicator: 1,
-    /** Multiplicator for a tag match*/
-    tagMultiplicator: 0.7,
-    /** Multiplicator for an url match*/
-    urlMultiplicator: 0.55,
-    /** Multiplicator for a folder match*/
-    folderMultiplicator: 0.2,
+    /** Weight for a title match*/
+    titleWeight: 1,
+    /** Weight for a tag match*/
+    tagWeight: 0.7,
+    /** Weight for an url match*/
+    urlWeight: 0.5,
+    /** Weight for a folder match*/
+    folderWeight: 0.3,
 
     // BONUS SCORES
     // If certain conditions apply, extra score points can be added
@@ -160,7 +184,7 @@ export const emptyUserOptions = {
  * 
  * @see https://developer.chrome.com/docs/extensions/reference/storage/
  */
-export function setUserOptions(userOptions) {
+export async function setUserOptions(userOptions) {
   return new Promise((resolve, reject) => {
     if (chrome && chrome.storage) {
       chrome.storage.sync.set({ userOptions: userOptions }, () => {
@@ -169,6 +193,10 @@ export function setUserOptions(userOptions) {
         }
         return resolve()
       });
+    } else {
+      console.warn('No chrome storage API found. Falling back to local Web Storage')
+      window.localStorage.setItem('userOptions', JSON.stringify(userOptions))
+      return resolve()
     }
   })
 }
@@ -176,8 +204,6 @@ export function setUserOptions(userOptions) {
 /**
  * Get user options. 
  * If none are stored yet, this will return the default empty options
- * 
- * TODO: Add fallback to window.localStorage
  */
 export async function getUserOptions() {
   return new Promise((resolve, reject) => {
@@ -189,8 +215,9 @@ export async function getUserOptions() {
         return resolve(result.userOptions || emptyUserOptions)
       });
     } else {
-      console.warn('No chrome storage API found. Returning empty user options')
-      return resolve(emptyUserOptions)
+      console.warn('No chrome storage API found. Falling back to local Web Storage')
+      const userOptions = window.localStorage.getItem('userOptions')
+      return resolve(userOptions ? JSON.parse(userOptions) : emptyUserOptions)
     }
   })
 }
@@ -199,8 +226,6 @@ export async function getUserOptions() {
 /**
  * Gets the actual effective options based on the default options
  * and the overrides of the user options
- * 
- * TODO: Add fallback to window.localStorage
  */
 export async function getEffectiveOptions() {
   const userOptions = await getUserOptions()

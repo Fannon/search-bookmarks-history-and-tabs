@@ -14,9 +14,12 @@
 
     <!-- Search View -->
     <div id="search">
-      <input id="search-input" class="input" type="text" placeholder="Search tabs, bookmarks and history" spellcheck="false"
-        autofocus>
-      <ul id="result-list"></ul>
+      <input id="search-input" class="input" type="text" placeholder="Search tabs, bookmarks and history"
+        spellcheck="false" autofocus>
+      <div id="search-approach-toggle" class="fuzzy"></div>
+      <ul id="result-list">
+        <li id="results-loading">Loading...</li>
+      </ul>
     </div>
 
     <!-- Tags Overview Overlay -->
@@ -24,7 +27,7 @@
       <div class="input-description">TAGS OVERVIEW</div>
       <div id="tags-list"></div>
     </div>
-    
+
     <!-- Folders Overview Overlay -->
     <div id="folders-overview" style="display: none;">
       <div class="input-description">FOLDERS OVERVIEW</div>
@@ -53,14 +56,17 @@
       <a href="#folders/">FOLDERS</a> |
       <a href="./options.html">OPTIONS</a> |
       <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab">INFO</a>
+      <span id="footer-error"></span>
     </footer>
 
   </div>
 
   <!-- JS sources -->
   <script src="./lib/fuse.min.js"></script>
+  <script src="./lib/flexsearch.min.js"></script>
   <script src="./js/search.js" type="module"></script>
   <script src="./lib/tagify.min.js"></script>
+  <script src="./lib/mark.min.js"></script>
 </body>
 
 </html>

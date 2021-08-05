@@ -11,7 +11,9 @@
 ## Features
 
 * Quick search your open browser tabs, bookmark and browsing history.
-* Fuzzy search (approximate string matching) by default, but can be configured to be more exact.
+* Two search approaches: 
+  * Fuzzy search (approximate string matching): Slower, but more results.
+  * Excact search (starts with matching): Faster and only excact matching results.
 * Bookmarks can be searched for tags (extracted from title) and folder names.
 * Edit and tag bookmarks with auto complete on tags.
 * Dark theme / light theme via system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
@@ -30,8 +32,10 @@
 
 * This extension can (and should!) be triggered via keyboard shortcut.
   * The default is `CTRL` + `Shift` + `.`, but you can customize this.
-* Just type in your search query and it will fuzzy search through everything.
+* Just type in your search query and it will search everything.
 * In case you want to be more selective -> use a search mode:
+  * If you start your query with `#`: only bookmarks with the tag will be returned (excact "starts with" search)
+  * If you start your query with `~`: only bookmarks within the folders will returned (excact "starts with" search)
   * If you start your query with `. `: only tabs will be searched.
   * If you start your query with `+ `: only history will be searched.
   * If you start your query with `- `: only bookmarks will be searched.
@@ -39,7 +43,8 @@
 * This extension works best if you avoid:
   * using `#` in bookmark titles that do not indicate a tag.
   * using `~` in bookmark folder names.
-* [Fuse.js Extended Search](https://fusejs.io/examples.html#extended-search) operators can be used.
+* In fuzzy search mode only:
+  * [Fuse.js Extended Search](https://fusejs.io/examples.html#extended-search) operators can be used.
 
 ## User Configuration
 
@@ -61,8 +66,8 @@ An exemplary user-config can look like the following example:
   history: {
     enabled: false
   },
-  general: {
-    searchEngines: [
+  searchEngines: {
+    choices: [
       {
         name: "DuckDuckGo",
         urlPrefix: "https://duckduckgo.com/?q="
@@ -76,28 +81,13 @@ An exemplary user-config can look like the following example:
 }
 ```
 
-If you only want excact search matches, you can reduce the fuzzyness of the search:
-
-```json5
-// Make search non-fuzzy
-{
-  search: {
-    fuzzyness: 0,
-    minMatchCharLength: 3
-  },
-  score: {
-    minScore: 50
-  }
-}
-```
-
 ## Scoring System
 
 The scoring systems works roughly the following:
 
 * Depending on the type of result (bookmark, tab, history) a different base score is taken (e.g. `bookmarkBaseScore`).
 * Depending in which result field (title, url, tag, folder) the match was found, the search match gets weighted. (e.g. `titleMultiplicator`).
-* This base score is now merged with the search library score (fuse.js). A less good match will reduce the score.
+* This base score is now merged with the search library score. A less good match will usually reduce the score.
 * Depending on certain conditions some bonus score points are added again. E.g. `exactStartsWithBonus` will add score if the title or the url starts excactly with the search term.
 
 For a description of the scoring options and what they do, please see `defaultOptoins.score` in [popup/js/options.js](popup/js/options.js).
@@ -143,6 +133,7 @@ The built extensions can be found in [dist/chrome/](dist/chrome/) for Google Chr
 
 This extension makes use of the following helpful open-source projects (thanks!):
 * https://fusejs.io/ for the fuzzy search algorithm
+* https://github.com/nextapps-de/flexsearch for the excact search algorithm
 * https://github.com/yairEO/tagify for the tag autocomplete widget
 * https://www.npmjs.com/package/json5 for the user options parsing
 * https://bulma.io/ for some minimal CSS base styling
@@ -153,9 +144,4 @@ This extension makes use of the following helpful open-source projects (thanks!)
 > Please create a [GitHub issue](https://github.com/Fannon/search-tabs-bookmarks-and-history/issues) to give your feedback. 
 > All ideas, suggestions or bug reports are welcome.
 
-* Introduce dedicates and precise search mode for tags and folders
-* Add alternative search algorithms that aren't based on fuzzy search?
-  * https://github.com/nextapps-de/flexsearch 
-  * https://lunrjs.com/
-* Improve performance or introduce debouncing / throttling searches 
-* Convert project to TypeScript, refactor code and make it more modular
+* Convert project to TypeScript + refactor code

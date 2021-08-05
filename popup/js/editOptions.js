@@ -10,10 +10,7 @@ initOptions().catch((err) => {
 })
 
 async function initOptions() {
-  const userOptions = await getUserOptions()
-  console.log(userOptions)
-  
-  // document.getElementById('user-config').value = JSON.stringify(userOptions, null, 2)
+  const userOptions = await getUserOptions()  
   document.getElementById('user-config').value = JSON5.stringify(userOptions, null, 2)
   document.getElementById('edit-options-reset').addEventListener('click', resetOptions)
   document.getElementById('edit-options-save').addEventListener('click', saveOptions)
