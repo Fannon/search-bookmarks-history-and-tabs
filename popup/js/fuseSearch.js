@@ -98,7 +98,6 @@ export async function searchWithFuseJs(searchTerm, searchMode) {
   return results
 }
 
-
 /**
  * Inspired from https://github.com/brunocechet/Fuse.js-with-highlight/blob/master/index.js 
  */

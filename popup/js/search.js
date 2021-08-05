@@ -88,14 +88,15 @@ export async function initExtension() {
   ext.initialized = true
 
   performance.mark('init-search-index')
-  hashRouter()
-
-  performance.mark('init-router')
 
   // Register Events
   ext.searchInput.addEventListener("keyup", updateSearchUrl)
   document.addEventListener("keydown", navigationKeyListener)
   window.addEventListener("hashchange", hashRouter, false)
+
+  hashRouter()
+
+  performance.mark('init-router')
 
   // Do some performance measurements and log it to debug
   performance.mark('init-end')
@@ -377,7 +378,7 @@ async function search(event) {
       const results = searchWithFlexSearch(searchTerm, searchMode)
       ext.data.result.push(...results)
     } else {
-      throw new Error(`Unsupported option "search.library" value: "${ext.opts.search.approach}"`)
+      throw new Error(`Unsupported option "search.approach" value: "${ext.opts.search.approach}"`)
     }
     ext.data.result.push(...addSearchEngines(searchTerm))
   } else {
@@ -429,7 +430,7 @@ async function searchDefaultEntries() {
 
   results = results.map((el) => {
     return {
-      score: ext.opts.score.minScore,
+      searchScore: 1,
       ...el,
     }
   })
@@ -442,15 +443,15 @@ async function searchDefaultEntries() {
  */
 function addSearchEngines(searchTerm) {
   const results = []
-  if (ext.opts.general.searchEngines) {
-    for (const searchEngine of ext.opts.general.searchEngines) {
+  if (ext.opts.searchEngines.enabled) {
+    for (const searchEngine of ext.opts.searchEngines.choices) {
       const url = searchEngine.urlPrefix + encodeURIComponent(searchTerm)
       results.push({
         type: "search",
         title: `${searchEngine.name}: "${searchTerm}"`,
         url: cleanUpUrl(url),
         originalUrl: url,
-        score: ext.opts.score.minScore,
+        searchScore: ext.opts.score.titleWeight,
       })
     }
   }
@@ -605,6 +606,8 @@ export function calculateFinalScore(result, searchTerm, sort) {
       score = ext.opts.score.tabBaseScore
     } else if (el.type === 'history') {
       score = ext.opts.score.historyBaseScore
+    } else if (el.type === 'search') {
+      score = ext.opts.score.searchEngineBaseScore
     }
 
     // Multiply by fuse.js score. 

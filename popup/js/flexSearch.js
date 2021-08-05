@@ -14,8 +14,6 @@ export function createFlexSearchIndex(type, searchData) {
   const options = {
     preset: 'match',
     tokenize: "forward",
-    // encode: "advanced",
-    // optimize: false,
     minlength: ext.opts.search.minMatchCharLength,
     document: {
       id: "index",
@@ -79,7 +77,7 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
 
   // Convert search results into result format view model
   results = results.map((el) => {
-    // TODO: Highlight results with flexsearch missing
+    const highlighted = ext.opts.general.highlight ? highlightResultItem(el) : {}
     return {
       ...el.item,
       searchScore: el.searchScore,
@@ -126,30 +124,11 @@ function flexSearchWithScoring(index, searchTerm, data) {
 
     let searchScore = 0
 
-    // TODO: This can be improved for sure. To behave like a "compressor" algorithm
-    const titleIndex = titleMatches.indexOf(matchId)
-    if (titleIndex > -1) {
-      const titleMatchScore = (((titleMatches.length - titleIndex) / titleMatches.length / 5) + 0.8) * ext.opts.score.titleWeight
-      searchScore = Math.max(searchScore, titleMatchScore)
-      // console.log(`id: ${matchId}, title: ${el.title} -> titleMatches score: ${searchScore}`, titleMatches)
-    }
-    const urlIndex = urlMatches.indexOf(matchId)
-    if (urlIndex > -1) {
-      const urlMatchScore = (((urlMatches.length - urlIndex) / urlMatches.length / 5) + 0.8) * ext.opts.score.urlWeight
-      searchScore = Math.max(searchScore, urlMatchScore)
-      // console.log(`id: ${matchId}, title: ${el.title} -> urlMatches score: ${urlMatchScore} (${searchScore})`, titleMatches)
-    }
-    const tagIndex = tagMatches.indexOf(matchId)
-    if (tagIndex > -1) {
-      const tagMatchScore = (((tagMatches.length - tagIndex) / tagMatches.length / 5) + 0.8) * ext.opts.score.tagWeight
-      searchScore = Math.max(searchScore, tagMatchScore)
-      // console.log(`id: ${matchId}, title: ${el.title} -> tagMatches score: ${searchScore}`, titleMatches)
-    }
-    const folderIndex = urlMatches.indexOf(matchId)
-    if (folderIndex > -1) {
-      const folderMatchScore = (((urlMatches.length - folderIndex) / urlMatches.length / 5) + 0.8) * ext.opts.score.folderWeight
-      searchScore = Math.max(searchScore, folderMatchScore)
-      // console.log(`id: ${matchId}, title: ${el.title} -> urlMatches score: ${searchScore}`, titleMatches)
+    searchScore = Math.max(searchScore, calculateFlexScoreForField(titleMatches, matchId, ext.opts.score.titleWeight))
+    searchScore = Math.max(searchScore, calculateFlexScoreForField(urlMatches, matchId, ext.opts.score.urlWeight))
+    if (el.type === 'bookmark') {
+      searchScore = Math.max(searchScore, calculateFlexScoreForField(tagMatches, matchId, ext.opts.score.tagWeight))
+      searchScore = Math.max(searchScore, calculateFlexScoreForField(folderMatches, matchId, ext.opts.score.folderWeight))
     }
 
     results.push({
@@ -158,16 +137,24 @@ function flexSearchWithScoring(index, searchTerm, data) {
     })
   }
 
-  console.log(results)
-
   return results
 }
 
-function calculateFlexScoreForField(fieldType, matches, matchId, oldScore) {
+function calculateFlexScoreForField(matches, matchId, fieldWeight) {
   const index = matches.indexOf(matchId)
-    if (index > -1) {
-      const fieldMatchScore = (((index.length - index) / index.length / 5) + 0.8) * ext.opts.score[fieldType + 'Weight']
-      console.log(`FieldScore (${fieldType}) of "${el.title}" -> ${fieldMatchScore}/${Math.max(oldScore, fieldMatchScore)}`)
-      return Math.max(oldScore, fieldMatchScore)
-    }
+  if (index > -1) {
+    return (((matches.length - index) / matches.length / 5) + 0.8) * fieldWeight
+  } else {
+    return 0
+  }
+}
+
+/**
+ * Highlights search matches in results
+ */
+ function highlightResultItem(resultItem, sarchTerm) {
+  const highlightedResultItem = {}
+ 
+
+  return highlightedResultItem
 }

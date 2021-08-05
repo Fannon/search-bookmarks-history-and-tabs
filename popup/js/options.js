@@ -19,32 +19,6 @@ export const defaultOptions = {
     visitCounter: false,
     /** Display search result score */
     score: true,
-    /** 
-     * As a fallback, use search machines to find results
-     * 
-     * For each entry here, one result will be created - in the order they are defined.
-     * The URLs need to include the search querystring (see examples).
-     *
-     * To disable this feature, set `searchEngines` to false or [] (emtpy array).
-     */
-    searchEngines: [
-      {
-        name: "Google",
-        urlPrefix: "https://www.google.com/search?q=",
-      },
-      {
-        name: "Bing",
-        urlPrefix: "https://www.bing.com/search?q=",
-      },
-      {
-        name: "DuckDuckGo",
-        urlPrefix: "https://duckduckgo.com/?q=",
-      },
-      {
-        name: "dict.cc",
-        urlPrefix: "https://www.dict.cc/?s="
-      }
-    ],
   },
 
   search: {
@@ -96,6 +70,36 @@ export const defaultOptions = {
     maxItems: 1024,
   },
 
+  /** 
+   * As a fallback, use search machines to find results
+   */
+   searchEngines: {
+     /** Enable or disable search engine links in results */
+     enabled: true,
+     /**
+      * For each entry here, one result will be created - in the order they are defined.
+      * The URLs need to include the search querystring (see examples).
+      */
+     choices: [
+      {
+        name: "Google",
+        urlPrefix: "https://www.google.com/search?q=",
+      },
+      {
+        name: "Bing",
+        urlPrefix: "https://www.bing.com/search?q=",
+      },
+      {
+        name: "DuckDuckGo",
+        urlPrefix: "https://duckduckgo.com/?q=",
+      },
+      {
+        name: "dict.cc",
+        urlPrefix: "https://www.dict.cc/?s="
+      }
+    ]
+   },
+
   score: {
 
     /** Filter out all search results below this minimum score */
@@ -110,7 +114,8 @@ export const defaultOptions = {
     tabBaseScore: 90,
     /** Base score for history results */
     historyBaseScore: 50,
-    /** Additional score points per visit within history daysAgo */
+    /**Base Score for search engine entries */
+    searchEngineBaseScore: 30,
 
     // FIELD WEIGHTS
     // Depending on in which field the search match was found, 

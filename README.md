@@ -61,8 +61,9 @@ An exemplary user-config can look like the following example:
   history: {
     enabled: false
   },
-  general: {
-    searchEngines: [
+  searchEngines: {
+    enabled: true,
+    choices: [
       {
         name: "DuckDuckGo",
         urlPrefix: "https://duckduckgo.com/?q="
