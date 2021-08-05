@@ -184,7 +184,7 @@ export const emptyUserOptions = {
  * 
  * @see https://developer.chrome.com/docs/extensions/reference/storage/
  */
-export function setUserOptions(userOptions) {
+export async function setUserOptions(userOptions) {
   return new Promise((resolve, reject) => {
     if (chrome && chrome.storage) {
       chrome.storage.sync.set({ userOptions: userOptions }, () => {

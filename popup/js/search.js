@@ -3,7 +3,7 @@ import { browserApi, convertChromeBookmarks, convertChromeHistory, convertChrome
 import { createFlexSearchIndex, searchWithFlexSearch } from './flexSearch.js'
 import { createFuseJsIndex, searchWithFuseJs } from './fuseSearch.js'
 import { getUniqueTags, getUniqueFolders, searchTags, searchFolders } from './taxonomySearch.js'
-import { getEffectiveOptions } from './options.js'
+import { getEffectiveOptions, getUserOptions, setUserOptions } from './options.js'
 import { cleanUpUrl, debounce } from './utils.js'
 
 /** Browser extension namespace */
@@ -11,7 +11,12 @@ const ext = window.ext = {
   /** Options */
   opts: {},
   /** Model / data */
-  model: {},
+  model: {
+    /** Currently selected result item */
+    currentItem: 0,
+    /** Current search results */
+    result: [],
+  },
   /** Commonly used DOM Elements */
   dom: {},
   /** Search indexies */
@@ -49,14 +54,11 @@ export async function initExtension() {
   ext.dom.searchInput = document.getElementById('search-input')
   ext.dom.resultList = document.getElementById('result-list')
   ext.dom.resultCounter = document.getElementById('result-counter')
+  ext.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
+
+  updateSearchApproachToggle()
 
   performance.mark('init-dom')
-
-  // Model / Data
-  ext.model = {
-    currentItem: 0,
-    result: [],
-  }
 
   const { bookmarks, tabs, history }  = await getSearchData()
   ext.model.tabs = tabs
@@ -99,6 +101,7 @@ export async function initExtension() {
   document.addEventListener("keydown", navigationKeyListener)
   window.addEventListener("hashchange", debounce(hashRouter, ext.opts.general.debounce), false)
   ext.dom.searchInput.addEventListener("keyup", debounce(search, ext.opts.general.debounce))
+  ext.dom.searchApproachToggle.addEventListener("mouseup", toggleSearchApproach)
 
   hashRouter()
 
@@ -716,6 +719,37 @@ function openResultItem(event) {
     window.close()
   } else {
     return window.open(url, '_newtab')
+  }
+}
+
+async function toggleSearchApproach() {
+  const userOptions = getUserOptions()
+
+  if (ext.opts.search.approach === 'fuzzy') {
+    ext.opts.search.approach = 'precise'
+  } else {
+    ext.opts.search.approach = 'fuzzy'
+  }
+
+  if (userOptions.search) {
+    userOptions.search.approach = ext.opts.search.approach
+  } else {
+    userOptions.search = { approach: ext.opts.search.approach }
+  }
+
+  // Update user options
+  await setUserOptions(userOptions)
+  // Init extension again
+  await initExtension()
+}
+
+function updateSearchApproachToggle() {
+  if (ext.opts.search.approach === 'fuzzy') {
+    ext.dom.searchApproachToggle.innerText = 'FUZZY'
+    ext.dom.searchApproachToggle.classList = 'fuzzy'
+  } else if (ext.opts.search.approach === 'precise') {
+    ext.dom.searchApproachToggle.innerText = 'PRECISE'
+    ext.dom.searchApproachToggle.classList = 'precise'
   }
 }
 

@@ -30,8 +30,8 @@ body {
 .input:active,
 .input:focus {
   width: 100%;
-  max-width: 500px;
-  min-width: 500px;
+  max-width: 480px;
+  min-width: 480px;
   height: 55px;
   padding: 4px 8px;
   font-size: 24px;
@@ -43,6 +43,24 @@ body {
 }
 .input-description {
   margin: 4px 8px;
+}
+#search-approach-toggle {
+  float: right;
+  height: 55px;
+  width: 19px;
+  writing-mode: vertical-rl;
+  font-size: 12px;
+  font-weight: 300;
+  text-align: center;
+  background: #fff;
+  border-bottom: 1px solid #ccc;
+  cursor: pointer;
+}
+#search-approach-toggle.fuzzy {
+  color: #89e3e9;
+}
+#search-approach-toggle.precise {
+  color: #b1d354;
 }
 .badge {
   color: #fff;
@@ -187,6 +205,10 @@ body {
 
   #result-counter {
     float: right;
+  }
+  #footer-error {
+    font-size: 10px;
+    color:rgb(201, 68, 68);
   }
 }
 
@@ -339,7 +361,8 @@ body {
  
   .input,
   .input:active,
-  .input:focus {
+  .input:focus,
+  #search-approach-toggle {
     background-color: #000;
     border-bottom: 1px solid #444;
     color: #DDD;

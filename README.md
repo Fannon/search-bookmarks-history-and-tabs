@@ -81,8 +81,8 @@ An exemplary user-config can look like the following example:
 }
 ```
 
-If you only want excact search matches, or have search performance issues,
-you can use the precise search instead of the fuzzy search:
+If you prefer excact search matches or the better performance,
+consider using the precise search instead of the fuzzy search:
 
 ```json5
 // Make search non-fuzzy
