@@ -723,7 +723,8 @@ function openResultItem(event) {
 }
 
 async function toggleSearchApproach() {
-  const userOptions = getUserOptions()
+  const userOptions = await getUserOptions()
+  console.log(userOptions)
 
   if (ext.opts.search.approach === 'fuzzy') {
     ext.opts.search.approach = 'precise'

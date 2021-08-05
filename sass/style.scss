@@ -30,8 +30,8 @@ body {
 .input:active,
 .input:focus {
   width: 100%;
-  max-width: 480px;
-  min-width: 480px;
+  max-width: 500px;
+  min-width: 500px;
   height: 55px;
   padding: 4px 8px;
   font-size: 24px;
@@ -41,26 +41,31 @@ body {
   background: #fff;
   border-bottom: 1px solid #ccc;
 }
+#search-input {
+  max-width: 475px;
+  min-width: 475px;
+}
 .input-description {
   margin: 4px 8px;
 }
 #search-approach-toggle {
   float: right;
   height: 55px;
-  width: 19px;
+  width: 24px;
+  padding: 0 3px 0 0;
   writing-mode: vertical-rl;
   font-size: 12px;
-  font-weight: 300;
+  font-weight: 500;
   text-align: center;
   background: #fff;
   border-bottom: 1px solid #ccc;
   cursor: pointer;
 }
 #search-approach-toggle.fuzzy {
-  color: #89e3e9;
+  color: #8667cd;
 }
 #search-approach-toggle.precise {
-  color: #b1d354;
+  color: #9dcd1b;
 }
 .badge {
   color: #fff;
@@ -366,6 +371,12 @@ body {
     background-color: #000;
     border-bottom: 1px solid #444;
     color: #DDD;
+  }
+  #search-approach-toggle.fuzzy {
+    color: #d593ea;
+  }
+  #search-approach-toggle.precise {
+    color: #b1d354;
   }
   #result-list {
     li {

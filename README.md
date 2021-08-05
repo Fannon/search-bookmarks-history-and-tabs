@@ -66,7 +66,6 @@ An exemplary user-config can look like the following example:
     enabled: false
   },
   searchEngines: {
-    enabled: true,
     choices: [
       {
         name: "DuckDuckGo",

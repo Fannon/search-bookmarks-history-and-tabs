@@ -193,6 +193,10 @@ export async function setUserOptions(userOptions) {
         }
         return resolve()
       });
+    } else {
+      console.warn('No chrome storage API found. Falling back to local Web Storage')
+      window.localStorage.setItem('userOptions', JSON.stringify(userOptions))
+      return resolve()
     }
   })
 }
@@ -200,8 +204,6 @@ export async function setUserOptions(userOptions) {
 /**
  * Get user options. 
  * If none are stored yet, this will return the default empty options
- * 
- * TODO: Add fallback to window.localStorage
  */
 export async function getUserOptions() {
   return new Promise((resolve, reject) => {
@@ -213,8 +215,9 @@ export async function getUserOptions() {
         return resolve(result.userOptions || emptyUserOptions)
       });
     } else {
-      console.warn('No chrome storage API found. Returning empty user options')
-      return resolve(emptyUserOptions)
+      console.warn('No chrome storage API found. Falling back to local Web Storage')
+      const userOptions = window.localStorage.getItem('userOptions')
+      return resolve(userOptions ? JSON.parse(userOptions) : emptyUserOptions)
     }
   })
 }
@@ -223,8 +226,6 @@ export async function getUserOptions() {
 /**
  * Gets the actual effective options based on the default options
  * and the overrides of the user options
- * 
- * TODO: Add fallback to window.localStorage
  */
 export async function getEffectiveOptions() {
   const userOptions = await getUserOptions()
