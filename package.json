@@ -1,6 +1,6 @@
 {
   "name": "search-tabs-bookmarks-and-history",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "Browser extension to (fuzzy) search and navigate browser tabs, bookmarks and history.",
   "main": "index.js",
   "devDependencies": {
@@ -9,7 +9,7 @@
     "flexsearch": "^0.7.21",
     "fuse.js": "^6.4.6",
     "json5": "^2.2.0",
-    "live-server": "^1.1.0",
+    "live-server": "^1.2.1",
     "mark.js": "^8.11.1",
     "node-sass": "^6.0.1",
     "uglify-js": "^3.14.1"
