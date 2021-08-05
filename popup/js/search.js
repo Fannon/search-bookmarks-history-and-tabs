@@ -2,9 +2,11 @@ performance.mark('init-start')
 import { browserApi, convertChromeBookmarks, convertChromeHistory, convertChromeTabs, getChromeTabs, getChromeBookmarks, getChromeHistory } from './browserApi.js'
 import { createFlexSearchIndex, searchWithFlexSearch } from './flexSearch.js'
 import { createFuseJsIndex, searchWithFuseJs } from './fuseSearch.js'
+import { getUniqueTags, getUniqueFolders, searchTags, searchFolders } from './taxonomySearch.js'
 import { getEffectiveOptions } from './options.js'
-import { cleanUpUrl } from './utils.js'
+import { cleanUpUrl, debounce } from './utils.js'
 
+/** Browser extension namespace */
 const ext = window.ext = {
   /** Options */
   opts: {},
@@ -94,9 +96,9 @@ export async function initExtension() {
   performance.mark('init-search-index')
 
   // Register Events
-  ext.dom.searchInput.addEventListener("keyup", updateSearchUrl)
   document.addEventListener("keydown", navigationKeyListener)
-  window.addEventListener("hashchange", hashRouter, false)
+  window.addEventListener("hashchange", debounce(hashRouter, ext.opts.general.debounce), false)
+  ext.dom.searchInput.addEventListener("keyup", debounce(search, ext.opts.general.debounce))
 
   hashRouter()
 
@@ -126,11 +128,13 @@ function hashRouter() {
   closeModals()
   if (!hash || hash === '#') {
     // Index route -> redirect to last known search or empty search
-    window.location.hash = '#search/' + (ext.model.searchTerm || '')
+    window.location.hash = '#search/'
   } else if (hash.startsWith('#search/')) {
     // Search specific term
     const searchTerm = hash.replace('#search/', '')
-    ext.dom.searchInput.value = decodeURIComponent(searchTerm)
+    if (searchTerm) {
+      ext.dom.searchInput.value = decodeURIComponent(searchTerm)
+    }
     ext.dom.searchInput.focus()
     search()
   } else if (hash.startsWith('#tags/')) {
@@ -152,11 +156,9 @@ function closeModals() {
   document.getElementById('edit-bookmark').style = "display: none;"
   document.getElementById('tags-overview').style = "display: none;"
   document.getElementById('folders-overview').style = "display: none;"
-}
 
-function updateSearchUrl() {
-  const searchTerm = ext.dom.searchInput.value ? ext.dom.searchInput.value : ''
-  window.location.hash = '#search/' + searchTerm
+  // reset error messages
+  document.getElementById('footer-error').innerText = ''
 }
 
 //////////////////////////////////////////
@@ -267,59 +269,6 @@ async function getSearchData() {
   return result
 }
 
-/**
- * Extract tags from bookmark titles
- * 
- * @returns a dictionary where the key is the unique tag name 
- * and the value the number of bookmarks with the tag
- */
-function getUniqueTags() {
-  const tagsDictionary = {}
-  for (const el of ext.model.bookmarks) {
-    if (el.tags) {
-      for (let tag of el.tags.split('#')) {
-        tag = tag.trim()
-        if (tag) {
-          if (!tagsDictionary[tag]) {
-            tagsDictionary[tag] = 1
-          } else {
-            tagsDictionary[tag] += 1
-          }
-        }
-      }
-    }
-  }
-  ext.model.tags = tagsDictionary
-  return ext.model.tags
-}
-
-/**
- * Extract folders from bookmark titles
- * 
- * @returns a dictionary where the key is the unique tag name 
- * and the value the number of bookmarks within the folder
- */
-function getUniqueFolders() {
-  // Extract tags from bookmark titles
-  const foldersDictionary = {}
-  for (const el of ext.model.bookmarks) {
-    if (el.folder) {
-      for (let folderName of el.folder.split('~')) {
-        folderName = folderName.trim()
-        if (folderName) {
-          if (!foldersDictionary[folderName]) {
-            foldersDictionary[folderName] = 1
-          } else {
-            foldersDictionary[folderName] += 1
-          }
-        }
-      }
-    }
-  }
-  ext.model.folders = foldersDictionary
-  return ext.model.folders
-}
-
 //////////////////////////////////////////
 // SEARCH                               //
 //////////////////////////////////////////
@@ -349,33 +298,43 @@ async function search(event) {
   ext.model.result = []
   let searchMode = 'all' // OR 'bookmarks' OR 'history'
 
-  // Support for history and bookmark only mode
-  // This is detected by looking at the first char of the search
-  // TODO: This could be optimized by having two separate search indexes?
+  // Support for various search modes
+  // This is detected by looking at the first chars of the search
   if (searchTerm.startsWith('+ ')) {
+    // Only history
     searchMode = 'history'
     searchTerm = searchTerm.substring(2)
   } else if (searchTerm.startsWith('- ')) {
+    // Only bookmarks
     searchMode = 'bookmarks'
     searchTerm = searchTerm.substring(2)
   } else if (searchTerm.startsWith('. ')) {
+    // Only Tabs
     searchMode = 'tabs'
     searchTerm = searchTerm.substring(2)
   } else if (searchTerm.startsWith('s ')) {
+    // Only search engines
     searchMode = 'search'
     searchTerm = searchTerm.substring(2)
-  }
-
-  // If the search term is below minMatchCharLength, no point in starting search
-  if (searchTerm.length < ext.opts.search.minMatchCharLength) {
-    searchTerm = ''
+  } else if (searchTerm.startsWith('#')) {
+    // Tag search
+    searchMode = 'tags'
+    searchTerm = searchTerm.substring(1)
+  } else if (searchTerm.startsWith('~')) {
+    // Tag search
+    searchMode = 'folders'
+    searchTerm = searchTerm.substring(1)
   }
 
   ext.model.searchTerm = searchTerm
   ext.model.searchMode = searchMode
 
   if (searchTerm) {
-    if (ext.opts.search.approach === 'fuzzy') {
+    if (searchMode === 'tags') {
+      ext.model.result.push(...searchTags(searchTerm))
+    } else if (searchMode === 'folders') {
+      ext.model.result.push(...searchFolders(searchTerm))
+    } else if (ext.opts.search.approach === 'fuzzy') {
       const results = await searchWithFuseJs(searchTerm, searchMode)
       ext.model.result.push(...results)
     } else if (ext.opts.search.approach === 'precise') {
@@ -384,7 +343,10 @@ async function search(event) {
     } else {
       throw new Error(`Unsupported option "search.approach" value: "${ext.opts.search.approach}"`)
     }
-    ext.model.result.push(...addSearchEngines(searchTerm))
+    // Add search engine result items
+    if (searchMode === 'all' || searchMode === 'search') {
+      ext.model.result.push(...addSearchEngines(searchTerm))
+    }
   } else {
     const defaultEntries = await searchDefaultEntries()
     ext.model.result.push(...defaultEntries)
@@ -396,7 +358,8 @@ async function search(event) {
   ext.model.result = ext.model.result.filter((el) => el.score >= ext.opts.score.minScore)
 
   // Only render maxResults if given (to improve render performance)
-  if (ext.model.result.length > ext.opts.search.maxResults) {
+  // Not applied on tag and folder search
+  if (searchMode !== 'tags' && searchMode !== 'folders' && ext.model.result.length > ext.opts.search.maxResults) {
     ext.model.result = ext.model.result.slice(0, ext.opts.search.maxResults)
   }
 
@@ -474,10 +437,6 @@ function renderResult(result) {
   result = result || ext.model.result
 
   performance.mark('render-start')
-
-  // Clean current result set
-  ext.dom.resultList.innerText = ''
-  ext.model.currentItem = 0
 
   const resultListItems = []
   for (let i = 0; i < result.length; i++) {
@@ -578,9 +537,8 @@ function renderResult(result) {
     resultListItems.push(resultListItem)
   }
 
-  for (const resultListItem of resultListItems) {
-    ext.dom.resultList.appendChild(resultListItem)
-  }
+  // Replace current results with new results
+  ext.dom.resultList.replaceChildren(...resultListItems);
 
   // mark first result item as selected
   selectListItem(0)
@@ -730,6 +688,7 @@ function selectListItem(index) {
       });
     }
   }
+  ext.model.currentItem = index
 }
 
 /**
@@ -764,7 +723,7 @@ function getTagsOverview() {
   document.getElementById('tags-overview').style = ""
   const sortedTags = Object.keys(tags).sort()
   document.getElementById('tags-list').innerHTML = sortedTags.map((el) => {
-    return `<a class="badge tags" href="#search/- '#${el}">#${el} <small>(${tags[el]})<small></a>`
+    return `<a class="badge tags" href="#search/#${el}">#${el} <small>(${tags[el].length})<small></a>`
   }).join('')
 }
 
@@ -777,7 +736,7 @@ function getFoldersOverview() {
   document.getElementById('folders-overview').style = ""
   const sortedFolders = Object.keys(folders).sort()
   document.getElementById('folders-list').innerHTML = sortedFolders.map((el) => {
-    return `<a class="badge folder" href="#search/- '~${el}">~${el} <small>(${folders[el]})<small></a>`
+    return `<a class="badge folder" href="#search/~${el}">~${el} <small>(${folders[el].length})<small></a>`
   }).join('')
 }
 

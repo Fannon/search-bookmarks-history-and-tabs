@@ -19,6 +19,11 @@ export const defaultOptions = {
     visitCounter: false,
     /** Display search result score */
     score: true,
+    /** 
+     * Debounce time (delaying user input) for searches (in ms).
+     * Increase this in case of performance / CPU load issues
+     */
+    debounce: 1000 / 60 * 3, // 3 frames in 60hz
   },
 
   search: {
@@ -39,7 +44,7 @@ export const defaultOptions = {
     /** Max search results. Reduce for better performance */
     maxResults: 64,
     /** Min search string characters to have a match */
-    minMatchCharLength: 2,
+    minMatchCharLength: 1,
     /** 
      * Fuzzy search threshold (0 - 1) 
      * 0 is no fuzzyness, 1 is full fuzzyness

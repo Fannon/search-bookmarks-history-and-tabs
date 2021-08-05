@@ -52,11 +52,17 @@ export function createFuseJsIndex(type, searchData) {
  */
 export async function searchWithFuseJs(searchTerm, searchMode) {
 
+  let results = []
+  
+  // If the search term is below minMatchCharLength, no point in starting search
+  if (searchTerm.length < ext.opts.search.minMatchCharLength) {
+    return results
+  }
+
   performance.mark('search-start')
 
   searchMode = searchMode || 'all'
   searchTerm = searchTerm.toLowerCase()
-  let results = []
 
   console.debug(`Searching with approach="fuzzy" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 

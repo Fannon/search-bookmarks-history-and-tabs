@@ -44,12 +44,18 @@ export function createFlexSearchIndex(type, searchData) {
  * @see https://github.com/nextapps-de/flexsearch
  */
 export function searchWithFlexSearch(searchTerm, searchMode) {
+  
+  let results = []
+  
+  // If the search term is below minMatchCharLength, no point in starting search
+  if (searchTerm.length < ext.opts.search.minMatchCharLength) {
+    return results
+  }
 
   performance.mark('search-start')
 
   searchMode = searchMode || 'all'
   searchTerm = searchTerm.toLowerCase()
-  let results = []
 
   console.debug(`Searching with approach="precise" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 

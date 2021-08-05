@@ -33,7 +33,7 @@ export function isObject(item) {
  * 
  * @see https://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
  */
- export function timeSince(date) {
+export function timeSince(date) {
 
   const seconds = Math.floor((new Date() - date) / 1000);
 
@@ -69,3 +69,35 @@ export function isObject(item) {
 export function cleanUpUrl(url) {
   return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '').replace(/\/$/, '').toLowerCase()
 }
+
+// export function throttle(func, timeFrame) {
+//   let lastTime = 0;
+//   return function () {
+//     const now = Date.now();
+//     if (now - lastTime >= timeFrame) {
+//       func();
+//       lastTime = now;
+//     }
+//   };
+// }
+
+/**
+ * Debounce function
+ * 
+ * @see https://davidwalsh.name/javascript-debounce-function
+ */
+export function debounce(func, wait, immediate) {
+  console.log('Debounce: ' + wait)
+	let timeout;
+	return function() {
+		const context = this, args = arguments;
+		const later = function() {
+			timeout = null;
+			if (!immediate) func.apply(context, args);
+		};
+		const callNow = immediate && !timeout;
+		clearTimeout(timeout);
+		timeout = setTimeout(later, wait);
+		if (callNow) func.apply(context, args);
+	};
+};

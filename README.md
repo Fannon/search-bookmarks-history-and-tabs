@@ -11,7 +11,9 @@
 ## Features
 
 * Quick search your open browser tabs, bookmark and browsing history.
-* Fuzzy search (approximate string matching) by default, but can be configured to be more exact.
+* Two search approaches: 
+  * Fuzzy search (approximate string matching): Slower, but more results.
+  * Excact search (starts with matching): Faster and only excact matching results.
 * Bookmarks can be searched for tags (extracted from title) and folder names.
 * Edit and tag bookmarks with auto complete on tags.
 * Dark theme / light theme via system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
@@ -32,6 +34,8 @@
   * The default is `CTRL` + `Shift` + `.`, but you can customize this.
 * Just type in your search query and it will fuzzy search through everything.
 * In case you want to be more selective -> use a search mode:
+  * If you start your query with `#`: only bookmarks with the tag will be returned (excact "start with" search)
+  * If you start your query with `~`: only bookmarks within the folders will returned (excact "start with" search)
   * If you start your query with `. `: only tabs will be searched.
   * If you start your query with `+ `: only history will be searched.
   * If you start your query with `- `: only bookmarks will be searched.
@@ -77,7 +81,7 @@ An exemplary user-config can look like the following example:
 }
 ```
 
-If you only want excact search matches, you can reduce the fuzzyness of the search:
+If you only want excact search matches, you can use:
 
 ```json5
 // Make search non-fuzzy
@@ -144,6 +148,7 @@ The built extensions can be found in [dist/chrome/](dist/chrome/) for Google Chr
 
 This extension makes use of the following helpful open-source projects (thanks!):
 * https://fusejs.io/ for the fuzzy search algorithm
+* https://github.com/nextapps-de/flexsearch for the excact search algorithm
 * https://github.com/yairEO/tagify for the tag autocomplete widget
 * https://www.npmjs.com/package/json5 for the user options parsing
 * https://bulma.io/ for some minimal CSS base styling
@@ -154,9 +159,4 @@ This extension makes use of the following helpful open-source projects (thanks!)
 > Please create a [GitHub issue](https://github.com/Fannon/search-tabs-bookmarks-and-history/issues) to give your feedback. 
 > All ideas, suggestions or bug reports are welcome.
 
-* Introduce dedicates and precise search mode for tags and folders
-* Add alternative search algorithms that aren't based on fuzzy search?
-  * https://github.com/nextapps-de/flexsearch 
-  * https://lunrjs.com/
-* Improve performance or introduce debouncing / throttling searches 
 * Convert project to TypeScript, refactor code and make it more modular
