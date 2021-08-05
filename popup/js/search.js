@@ -10,6 +10,12 @@ const ext = window.ext = {
   opts: {},
   /** Extension data / model */
   data: {},
+  /** Search indexies */
+  index: {
+    fuzzy: {},
+    precise: {},
+    taxonomy: {},
+  },
   /** Whether extension is already initialized -> ready for search */
   initialized: false,
 }
@@ -56,24 +62,24 @@ export async function initExtension() {
   if (ext.opts.search.approach === 'fuzzy') {
     // Initialize fuse.js for fuzzy search
     if (ext.opts.tabs.enabled) {
-      ext.data.tabIndex = createFuseJsIndex('tabs', ext.data.searchData.tabs)
+      ext.index.fuzzy.tabs = createFuseJsIndex('tabs', ext.data.searchData.tabs)
     }
     if (ext.opts.bookmarks.enabled) {
-      ext.data.bookmarkIndex = createFuseJsIndex('bookmarks', ext.data.searchData.bookmarks)
+      ext.index.fuzzy.bookmarks = createFuseJsIndex('bookmarks', ext.data.searchData.bookmarks)
     }
     if (ext.opts.history.enabled) {
-      ext.data.historyIndex = createFuseJsIndex('history', ext.data.searchData.history)
+      ext.index.fuzzy.history = createFuseJsIndex('history', ext.data.searchData.history)
     }
   } else if (ext.opts.search.approach === 'precise') {
     // Initialize fuse.js for fuzzy search
     if (ext.opts.tabs.enabled) {
-      ext.data.tabIndexFlex = createFlexSearchIndex('tabs', ext.data.searchData.tabs)
+      ext.index.precise.tabs = createFlexSearchIndex('tabs', ext.data.searchData.tabs)
     }
     if (ext.opts.bookmarks.enabled) {
-      ext.data.bookmarkIndexFlex = createFlexSearchIndex('bookmarks', ext.data.searchData.bookmarks)
+      ext.index.precise.bookmarks = createFlexSearchIndex('bookmarks', ext.data.searchData.bookmarks)
     }
     if (ext.opts.history.enabled) {
-      ext.data.historyIndexFlex = createFlexSearchIndex('history', ext.data.searchData.history)
+      ext.index.precise.history = createFlexSearchIndex('history', ext.data.searchData.history)
     }
   } else {
     throw new Error(`The option "search.approach" has an unsupported value: ${ext.opts.search.approach}`)
@@ -327,12 +333,8 @@ async function search(event) {
     }
   }
 
-  if (
-    !ext.data.tabIndex && !ext.data.bookmarkIndex &&
-    !ext.data.historyIndex && !ext.data.tabIndexFlex &&
-    !ext.data.bookmarkIndexFlex && !ext.data.historyIndexFlex
-  ) {
-    console.warn('No search index found (yet). Skipping search')
+  if (!ext.initialized) {
+    console.warn('Extension not initialized (yet). Skipping search')
     return
   }
 

@@ -57,23 +57,23 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
 
   console.debug(`Searching with approach="precise" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
-  if (searchMode === 'history' && ext.data.historyIndexFlex) {
-    results = flexSearchWithScoring(ext.data.historyIndexFlex, searchTerm, ext.data.searchData.history)
-  } else if (searchMode === 'bookmarks' && ext.data.bookmarkIndexFlex) {
-    results = flexSearchWithScoring(ext.data.bookmarkIndexFlex, searchTerm, ext.data.searchData.bookmarks)
-  } else if (searchMode === 'tabs' && ext.data.tabIndexFlex) {
-    results = flexSearchWithScoring(ext.data.tabIndexFlex, searchTerm, ext.data.searchData.tabs)
+  if (searchMode === 'history' && ext.index.precise.history) {
+    results = flexSearchWithScoring(ext.index.precise.history, searchTerm, ext.data.searchData.history)
+  } else if (searchMode === 'bookmarks' && ext.index.precise.bookmarks) {
+    results = flexSearchWithScoring(ext.index.precise.bookmarks, searchTerm, ext.data.searchData.bookmarks)
+  } else if (searchMode === 'tabs' && ext.index.precise.tabs) {
+    results = flexSearchWithScoring(ext.index.precise.tabs, searchTerm, ext.data.searchData.tabs)
   } else if (searchMode === 'search') {
     // nothing, because search will be added later
   } else {
-    if (ext.data.bookmarkIndexFlex) {
-      results.push(...flexSearchWithScoring(ext.data.bookmarkIndexFlex, searchTerm, ext.data.searchData.bookmarks))
+    if (ext.index.precise.bookmarks) {
+      results.push(...flexSearchWithScoring(ext.index.precise.bookmarks, searchTerm, ext.data.searchData.bookmarks))
     }
-    if (ext.data.tabIndexFlex) {
-      results.push(...flexSearchWithScoring(ext.data.tabIndexFlex, searchTerm, ext.data.searchData.tabs))
+    if (ext.index.precise.tabs) {
+      results.push(...flexSearchWithScoring(ext.index.precise.tabs, searchTerm, ext.data.searchData.tabs))
     }
-    if (ext.data.historyIndexFlex) {
-      results.push(...flexSearchWithScoring(ext.data.historyIndexFlex, searchTerm, ext.data.searchData.history))
+    if (ext.index.precise.history) {
+      results.push(...flexSearchWithScoring(ext.index.precise.history, searchTerm, ext.data.searchData.history))
     }
   }
 

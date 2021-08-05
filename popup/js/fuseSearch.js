@@ -56,23 +56,23 @@ export async function searchWithFuseJs(searchTerm, searchMode) {
 
   console.debug(`Searching with approach="fuzzy" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
-  if (searchMode === 'history' && ext.data.historyIndex) {
-    results = ext.data.historyIndex.search(searchTerm)
-  } else if (searchMode === 'bookmarks' && ext.data.bookmarkIndex) {
-    results = ext.data.bookmarkIndex.search(searchTerm)
-  } else if (searchMode === 'tabs' && ext.data.tabIndex) {
-    results = ext.data.tabIndex.search(searchTerm)
-  } else if (searchMode === 'search' && ext.data.tabIndex) {
+  if (searchMode === 'history' && ext.index.fuzzy.history) {
+    results = ext.index.fuzzy.history.search(searchTerm)
+  } else if (searchMode === 'bookmarks' && ext.index.fuzzy.bookmarks) {
+    results = ext.index.fuzzy.bookmarks.search(searchTerm)
+  } else if (searchMode === 'tabs' && ext.index.fuzzy.tabs) {
+    results = ext.index.fuzzy.tabs.search(searchTerm)
+  } else if (searchMode === 'search' && ext.index.fuzzy.tabs) {
     // nothing, because search will be added later
   } else {
-    if (ext.data.bookmarkIndex) {
-      results.push(...ext.data.bookmarkIndex.search(searchTerm))
+    if (ext.index.fuzzy.bookmarks) {
+      results.push(...ext.index.fuzzy.bookmarks.search(searchTerm))
     }
-    if (ext.data.tabIndex) {
-      results.push(...ext.data.tabIndex.search(searchTerm))
+    if (ext.index.fuzzy.tabs) {
+      results.push(...ext.index.fuzzy.tabs.search(searchTerm))
     }
-    if (ext.data.historyIndex) {
-      results.push(...ext.data.historyIndex.search(searchTerm))
+    if (ext.index.fuzzy.history) {
+      results.push(...ext.index.fuzzy.history.search(searchTerm))
     }
   }
 
