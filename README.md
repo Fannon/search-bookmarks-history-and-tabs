@@ -10,16 +10,16 @@
 
 ## Features
 
-* Quick search your open browser tabs, bookmark and browsing history.
-* Two search approaches: 
+* Quick search your open browser tabs, bookmarks and browsing history.
+* Supports two different search approaches: 
   * Fuzzy search (approximate string matching): Slower, but more results.
-  * Excact search (starts with matching): Faster and only excact matching results.
+  * Exact search (starts with matching): Faster and only excact matching results.
 * Bookmarks can be searched for tags (extracted from title) and folder names.
 * Edit and tag bookmarks with auto complete on tags.
 * Dark theme / light theme via system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
 * Fallback to use search engines like google, dict.cc etc. (multiple options)
-* Customizable via [user options](#user-configuration).
-* Lightweight: Written in vanilla JS with the goal to only include only [a few necessary libraries](#credits).
+* Customization via [user options](#user-configuration).
+* Lightweight: Written in vanilla JavaScript with the goal to only include only [a few necessary libraries](#credits).
 * The extension does not collect any data and does not make any external requests.
 
 ## Screenshots & Demo
