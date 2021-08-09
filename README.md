@@ -1,12 +1,12 @@
 # Search Tabs, Bookmarks and History
 
-**Browser extension to (fuzzy) search and navigate browser tabs, local bookmarks and history.**
+> Browser extension to (fuzzy) search and navigate browser tabs, local bookmarks and history.
 
 ## Installation and Availability
 
 * For [Google Chrome](https://www.google.com/chrome/) on the [chrome web store](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0).
 * For [Firefox](https://www.mozilla.org/en-US/firefox/new/) as a [Firefox Addon](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/).
-* For [Microsoft Edge](https://www.microsoft.com/en-us/edge) only as a [developer installation](#developer-installation). Publishing is pending on the [Edge Addon Store](https://microsoftedge.microsoft.com/addons/Microsoft-Edge-Extensions-Home).
+* For [Microsoft Edge](https://www.microsoft.com/en-us/edge) on the [Edge Addon Store](https://microsoftedge.microsoft.com/addons/detail/search-tabs-bookmarks-an/ldmbegkendnchhjppahaadhhakgfbfpo).
 
 ## Features
 
@@ -46,26 +46,22 @@
 
 ## User Configuration
 
-The user options are written in [JSON format](https://en.wikipedia.org/wiki/JSON) or [JSON5 format](https://json5.org/). They do not need to be complete, as they just overwrite the default options.
+The user options are written in [JSON format](https://en.wikipedia.org/wiki/JSON) or [JSON5 format](https://json5.org/). You only need to define the options that you want to overwrite options.
 
 To see what configurations are available and what they do, please have a look at the `defaultOptions` in [popup/js/options.js](popup/js/options.js).
 
-If you want to customize some options, it is recommended to *only* add the actually adjusted options to your user config.
-
-The options are not validated properly. Please make sure to use them correctly. 
-If something breaks, consider resetting your options.
+> The options are not validated properly. Please make sure to use them correctly.<br/>
+> If something breaks, consider resetting your options.
 
 An exemplary user-config can look like the following example:
 
 ```json5
-// Disable search of browsing history
-// Use DuckDuckGo and dict.cc as fallback search engines
 {
   history: {
-    enabled: false
+    enabled: false // Disable search of browsing history
   },
   searchEngines: {
-    choices: [
+    choices: [ // Use only DuckDuckGo and dict.cc as fallback search engines
       {
         name: "DuckDuckGo",
         urlPrefix: "https://duckduckgo.com/?q="
@@ -84,19 +80,18 @@ An exemplary user-config can look like the following example:
 The scoring systems works roughly the following:
 
 * Depending on the type of result (bookmark, tab, history) a different base score is taken (e.g. `bookmarkBaseScore`).
-* Depending in which result field (title, url, tag, folder) the match was found, the search match gets weighted. (e.g. `titleMultiplicator`).
-* This base score is now merged with the search library score. A less good match will usually reduce the score.
-* Depending on certain conditions some bonus score points are added again. E.g. `exactStartsWithBonus` will add score if the title or the url starts excactly with the search term.
+* Depending on in which result field (title, url, tag, folder) the match was found, the search match gets weighted by multiplication. (e.g. `titleWeight`).
+* This base score is now merged / multiplicated with the search library score. A less good match will usually reduce the score and a perfect / highest ranked match will keep it at .
+* Depending on certain conditions some bonus score points are added on top. For example, `exactStartsWithBonus` will add score if either the title or the url start excactly with the search term, including spaces.
 
-For a description of the scoring options and what they do, please see `defaultOptoins.score` in [popup/js/options.js](popup/js/options.js).
+For a description of the scoring options and what they do, please see `defaultOptions.score` in [popup/js/options.js](popup/js/options.js).
 
 It also helps to enable the display of the score in the result items:
 
 ```json5
-// Display score for each result
 {
   general: {
-    score: true
+    score: true // Display score for each result
   }
 }
 ```
@@ -122,10 +117,13 @@ The built extensions can be found in [dist/chrome/](dist/chrome/) for Google Chr
 ### Developer Installation
 
 * Check out this extension via git or download it as .zip file and unpack it
-* Go to `chrome://extensions/` (chrome) or `edge://extensions/` (edge)
+* **For Chrome / Edge**:
+  * Navigate to extensions page (`chrome://extensions/` on Chrome and `edge://extensions/` on Edge).
   * Enable "Developer mode"
-  * Choose "Load unpacked" and open the root folder of the extension
-* For Firefox, you first need to `npm install` and `npm build` this project (see [Local Development](#local-development)). Now you can load the built extension in `dist/firefox` as a temporary addon in `about:debugging`.
+  * Choose "Load unpacked" and open the root folder of this repository
+* **For Firefox**: 
+  * First [install and build](#install-and-build) this project. 
+  * Load the built extension in `dist/firefox` as a temporary addon in `about:debugging`.
 
 ## Credits
 
