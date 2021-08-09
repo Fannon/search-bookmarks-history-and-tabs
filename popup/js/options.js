@@ -23,7 +23,7 @@ export const defaultOptions = {
      * Debounce time (delaying user input) for searches (in ms).
      * Increase this in case of performance / CPU load issues
      */
-    debounce: 1000 / 60 * 2, // 2 frames in 60hz
+    debounce: 1000 / 60 * 0, // 0 frames in 60hz -> disabled
   },
 
   search: {

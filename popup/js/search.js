@@ -1,4 +1,3 @@
-performance.mark('init-start')
 import { browserApi, convertChromeBookmarks, convertChromeHistory, convertChromeTabs, getChromeTabs, getChromeBookmarks, getChromeHistory } from './browserApi.js'
 import { createFlexSearchIndex, searchWithFlexSearch } from './flexSearch.js'
 import { createFuseJsIndex, searchWithFuseJs } from './fuseSearch.js'
@@ -45,6 +44,8 @@ initExtension().catch((err) => {
  */
 export async function initExtension() {
 
+  performance.mark('init-start')
+  
   ext.initialized = false
   // Load effective options, including user customizations
   ext.opts = await getEffectiveOptions()
@@ -100,8 +101,12 @@ export async function initExtension() {
   // Register Events
   document.addEventListener("keydown", navigationKeyListener)
   window.addEventListener("hashchange", hashRouter, false)
-  ext.dom.searchInput.addEventListener("keyup", debounce(search, ext.opts.general.debounce))
   ext.dom.searchApproachToggle.addEventListener("mouseup", toggleSearchApproach)
+  if (ext.opts.general.debounce) {
+    ext.dom.searchInput.addEventListener("keyup", debounce(search, ext.opts.general.debounce))
+  } else {
+    ext.dom.searchInput.addEventListener("keyup", search)
+  }
 
   hashRouter()
 
