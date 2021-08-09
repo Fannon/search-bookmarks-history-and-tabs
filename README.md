@@ -2,11 +2,11 @@
 
 > Browser extension to (fuzzy) search and navigate browser tabs, local bookmarks and history.
 
-## Installation and Availability
+## Installation via Store
 
-* For [Google Chrome](https://www.google.com/chrome/) on the [chrome web store](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0).
-* For [Firefox](https://www.mozilla.org/en-US/firefox/new/) as a [Firefox Addon](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/).
-* For [Microsoft Edge](https://www.microsoft.com/en-us/edge) on the [Edge Addon Store](https://microsoftedge.microsoft.com/addons/detail/search-tabs-bookmarks-an/ldmbegkendnchhjppahaadhhakgfbfpo).
+* [Chrome Extension](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0)
+* [Firefox Addon](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/)
+* [Microsoft Edge Addon](https://microsoftedge.microsoft.com/addons/detail/search-tabs-bookmarks-an/ldmbegkendnchhjppahaadhhakgfbfpo)
 
 ## Features
 
@@ -34,12 +34,12 @@
   * The default is `CTRL` + `Shift` + `.`, but you can customize this.
 * Just type in your search query and it will search everything.
 * In case you want to be more selective -> use a search mode:
-  * If you start your query with `#`: only bookmarks with the tag will be returned (excact "starts with" search)
-  * If you start your query with `~`: only bookmarks within the folders will returned (excact "starts with" search)
-  * If you start your query with `t `: only tabs will be searched.
-  * If you start your query with `h `: only history will be searched.
-  * If you start your query with `b `: only bookmarks will be searched.
-  * If you start your query with `s `: only search engines will be proposed.
+  * Start your query with `#`: only **bookmarks with the tag** will be returned (excact "starts with" search)
+  * Start your query with `~`: only **bookmarks within the folder** will be returned (excact "starts with" search)
+  * Start your query with `t `: only **tabs** will be searched.
+  * Start your query with `b `: only **bookmarks** will be searched.
+  * Start your query with `h `: only **history** will be searched.
+  * Start your query with `s `: only **search engines** will be proposed.
 * This extension works best if you avoid:
   * using `#` in bookmark titles that do not indicate a tag.
   * using `~` in bookmark folder names.
