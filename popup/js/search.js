@@ -33,6 +33,7 @@ const ext = window.ext = {
 //////////////////////////////////////////
 
 // Trigger initialization
+ext.initialized = false
 initExtension().catch((err) => {
   console.error(err)
   document.getElementById('footer-error').innerText = err.message
@@ -46,7 +47,6 @@ export async function initExtension() {
 
   performance.mark('init-start')
   
-  ext.initialized = false
   // Load effective options, including user customizations
   ext.opts = await getEffectiveOptions()
   console.debug('Initialized with options', ext.opts)
@@ -70,24 +70,24 @@ export async function initExtension() {
 
   if (ext.opts.search.approach === 'fuzzy') {
     // Initialize fuse.js for fuzzy search
-    if (ext.opts.tabs.enabled) {
+    if (ext.opts.tabs.enabled && !ext.index.fuzzy.tabs) {
       ext.index.fuzzy.tabs = createFuseJsIndex('tabs', ext.model.tabs)
     }
-    if (ext.opts.bookmarks.enabled) {
+    if (ext.opts.bookmarks.enabled && !ext.index.fuzzy.bookmarks ) {
       ext.index.fuzzy.bookmarks = createFuseJsIndex('bookmarks', ext.model.bookmarks)
     }
-    if (ext.opts.history.enabled) {
+    if (ext.opts.history.enabled && !ext.index.fuzzy.history) {
       ext.index.fuzzy.history = createFuseJsIndex('history', ext.model.history)
     }
   } else if (ext.opts.search.approach === 'precise') {
     // Initialize fuse.js for fuzzy search
-    if (ext.opts.tabs.enabled) {
+    if (ext.opts.tabs.enabled && !ext.index.precise.tabs) {
       ext.index.precise.tabs = createFlexSearchIndex('tabs', ext.model.tabs)
     }
-    if (ext.opts.bookmarks.enabled) {
+    if (ext.opts.bookmarks.enabled && !ext.index.precise.bookmarks) {
       ext.index.precise.bookmarks = createFlexSearchIndex('bookmarks', ext.model.bookmarks)
     }
-    if (ext.opts.history.enabled) {
+    if (ext.opts.history.enabled &&!ext.index.precise.history) {
       ext.index.precise.history = createFlexSearchIndex('history', ext.model.history)
     }
   } else {
@@ -733,7 +733,6 @@ function openResultItem(event) {
 
 async function toggleSearchApproach() {
   const userOptions = await getUserOptions()
-  console.log(userOptions)
 
   if (ext.opts.search.approach === 'fuzzy') {
     ext.opts.search.approach = 'precise'
