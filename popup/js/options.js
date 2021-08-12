@@ -72,7 +72,7 @@ export const defaultOptions = {
     /** How many days ago the history should be fetched */
     daysAgo: 3,
     /** How many history items should be fetched at most */
-    maxItems: 1024,
+    maxItems: 512,
   },
 
   /** 
