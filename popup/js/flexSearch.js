@@ -5,6 +5,24 @@
 // @see https://github.com/nextapps-de/flexsearch
 
 /**
+ * Creates precise search indexes with flexsearch
+ */
+export function createPreciseIndexes() {
+  if (ext.opts.tabs.enabled && !ext.index.precise.tabs) {
+    ext.index.precise.tabs = createFlexSearchIndex('tabs', ext.model.tabs)
+  }
+  if (ext.opts.bookmarks.enabled && !ext.index.precise.bookmarks) {
+    ext.index.precise.bookmarks = createFlexSearchIndex('bookmarks', ext.model.bookmarks)
+  }
+  if (ext.opts.history.enabled &&!ext.index.precise.history) {
+    ext.index.precise.history = createFlexSearchIndex('history', ext.model.history)
+  }
+  if (ext.opts.browserPages.enabled &&!ext.index.precise.browserPages) {
+    ext.index.precise.browserPages = createFlexSearchIndex('browserPages', ext.model.browserPages)
+  }
+}
+
+/**
  * Creates flexsearch index
  */
 export function createFlexSearchIndex(type, searchData) {
@@ -77,6 +95,9 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
     if (ext.index.precise.history) {
       results.push(...flexSearchWithScoring(ext.index.precise.history, searchTerm, ext.model.history))
     }
+    if (ext.index.precise.browserPages) {
+      results.push(...flexSearchWithScoring(ext.index.precise.browserPages, searchTerm, ext.model.browserPages))
+    }
   }
 
   // Convert search results into result format view model
@@ -86,6 +107,8 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
       searchScore: el.searchScore,
     }
   })
+
+  console.log('Search Results', results)
 
   performance.mark('search-end')
   performance.measure('search-flexsearch: ' + searchTerm, 'search-start', 'search-end')

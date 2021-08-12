@@ -5,9 +5,27 @@
 // @see https://fusejs.io/
 
 /**
+ * Creates fuzzy search indexes with fuse.js
+ */
+export function createFuzzyIndexes() {
+  if (ext.opts.tabs.enabled && !ext.index.fuzzy.tabs) {
+    ext.index.fuzzy.tabs = createFuseJsIndex('tabs', ext.model.tabs)
+  }
+  if (ext.opts.bookmarks.enabled && !ext.index.fuzzy.bookmarks ) {
+    ext.index.fuzzy.bookmarks = createFuseJsIndex('bookmarks', ext.model.bookmarks)
+  }
+  if (ext.opts.history.enabled && !ext.index.fuzzy.history) {
+    ext.index.fuzzy.history = createFuseJsIndex('history', ext.model.history)
+  }
+  if (ext.opts.browserPages.enabled && !ext.index.fuzzy.browserPages) {
+    ext.index.fuzzy.browserPages = createFuseJsIndex('browserPages', ext.model.browserPages)
+  }
+}
+
+/**
  * Initialize search with Fuse.js
  */
-export function createFuseJsIndex(type, searchData) {
+function createFuseJsIndex(type, searchData) {
   performance.mark('index-start')
   const options = {
     includeScore: true,
@@ -42,7 +60,6 @@ export function createFuseJsIndex(type, searchData) {
   performance.measure('index-fusejs-' + type, 'index-start', 'index-end')
   return index
 }
-
 
 /**
  * Uses Fuse.js to do a fuzzy search
@@ -82,6 +99,10 @@ export async function searchWithFuseJs(searchTerm, searchMode) {
     }
     if (ext.index.fuzzy.history) {
       results.push(...ext.index.fuzzy.history.search(searchTerm))
+    }
+    if (ext.index.fuzzy.browserPages) {
+      console.log('Browser pages!')
+      results.push(...ext.index.fuzzy.browserPages.search(searchTerm))
     }
   }
 

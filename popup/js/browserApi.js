@@ -13,14 +13,11 @@ export const browserApi = window.browser || window.chrome || {}
 
 export async function getChromeTabs() {
   return new Promise((resolve, reject) => {
-    browserApi.tabs.query({ currentWindow: true }, (history, err) => {
+    browserApi.tabs.query({ currentWindow: true }, (tabs, err) => {
       if (err) {
         return reject(err)
       }
-      history = history.filter((el) => {
-        return (el.url && el.url.startsWith('http'))
-      })
-      return resolve(history)
+      return resolve(tabs)
     })
   })
 }
@@ -83,7 +80,7 @@ export async function getChromeBookmarks() {
     }
     folderText = folderText.slice(0, -1)
 
-    if (entry.url && entry.url.startsWith('http')) {
+    if (entry.url) {
       result.push({
         type: 'bookmark',
         originalId: entry.id,
@@ -123,9 +120,6 @@ export async function getChromeBookmarks() {
       if (err) {
         return reject(err)
       }
-      history = history.filter((el) => {
-        return (el.url && el.url.startsWith('http'))
-      })
       return resolve(history)
     })
   })
@@ -146,4 +140,62 @@ export function convertChromeHistory(history) {
       originalId: el.id,
     }
   })
+}
+
+//////////////////////////////////////////
+// BROWSER SPECIAL PAGES                //
+//////////////////////////////////////////
+
+/**
+ * returns browser special pages like settings, bookmarks and history overview
+ * Only works for chromium based browsers
+ */
+export function getBrowserBrowserPages() {
+
+  if (ext.opts.browserPages.enabled) {
+
+    // Only chrome based browsers are supported
+    if (!!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime)) {
+      
+      console.log('TADA')
+      // Chrome Browser
+      return [
+        {
+          title: 'Browser Bookmarks',
+          originalUrl: 'chrome://bookmarks/',
+        },
+        {
+          title: 'Browser History',
+          originalUrl: 'chrome://history/',
+        },
+        {
+          title: 'Browser Settings',
+          originalUrl: 'chrome://settings/',
+        }, 
+        {
+          title: 'Browser Downloads',
+          originalUrl: 'chrome://downloads/',
+        }, 
+        {
+          title: 'Browser Extensions',
+          originalUrl: 'chrome://extensions/',
+        },
+        {
+          type: 'browserPage',
+          title: 'Browser Apps',
+          originalUrl: 'chrome://apps/',
+        },
+      ].map((el, index) => {
+        return {
+          type: 'browserPage',
+          url: el.originalUrl,
+          index: index,
+          searchScore: ext.opts.score.titleWeight,
+          ...el
+        }
+      })
+    }
+  }
+  
+  return []
 }

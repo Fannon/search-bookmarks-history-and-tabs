@@ -1,8 +1,8 @@
-import { browserApi, convertChromeBookmarks, convertChromeHistory, convertChromeTabs, getChromeTabs, getChromeBookmarks, getChromeHistory } from './browserApi.js'
-import { createFlexSearchIndex, searchWithFlexSearch } from './flexSearch.js'
-import { createFuseJsIndex, searchWithFuseJs } from './fuseSearch.js'
-import { getUniqueTags, getUniqueFolders, searchTags, searchFolders } from './taxonomySearch.js'
+import { browserApi, convertChromeBookmarks, convertChromeHistory, convertChromeTabs, getBrowserBrowserPages, getChromeBookmarks, getChromeHistory, getChromeTabs } from './browserApi.js'
+import { createFlexSearchIndex, createPreciseIndexes, searchWithFlexSearch } from './flexSearch.js'
+import { createFuzzyIndexes, searchWithFuseJs } from './fuseSearch.js'
 import { getEffectiveOptions, getUserOptions, setUserOptions } from './options.js'
+import { getUniqueFolders, getUniqueTags, searchFolders, searchTags } from './taxonomySearch.js'
 import { cleanUpUrl, debounce } from './utils.js'
 
 /** Browser extension namespace */
@@ -61,35 +61,18 @@ export async function initExtension() {
 
   performance.mark('init-dom')
 
-  const { bookmarks, tabs, history }  = await getSearchData()
+  const { bookmarks, tabs, history, browserPages }  = await getSearchData()
   ext.model.tabs = tabs
   ext.model.bookmarks = bookmarks
   ext.model.history = history
+  ext.model.browserPages = browserPages
 
   performance.mark('init-data-load')
 
   if (ext.opts.search.approach === 'fuzzy') {
-    // Initialize fuse.js for fuzzy search
-    if (ext.opts.tabs.enabled && !ext.index.fuzzy.tabs) {
-      ext.index.fuzzy.tabs = createFuseJsIndex('tabs', ext.model.tabs)
-    }
-    if (ext.opts.bookmarks.enabled && !ext.index.fuzzy.bookmarks ) {
-      ext.index.fuzzy.bookmarks = createFuseJsIndex('bookmarks', ext.model.bookmarks)
-    }
-    if (ext.opts.history.enabled && !ext.index.fuzzy.history) {
-      ext.index.fuzzy.history = createFuseJsIndex('history', ext.model.history)
-    }
+    createFuzzyIndexes()
   } else if (ext.opts.search.approach === 'precise') {
-    // Initialize fuse.js for fuzzy search
-    if (ext.opts.tabs.enabled && !ext.index.precise.tabs) {
-      ext.index.precise.tabs = createFlexSearchIndex('tabs', ext.model.tabs)
-    }
-    if (ext.opts.bookmarks.enabled && !ext.index.precise.bookmarks) {
-      ext.index.precise.bookmarks = createFlexSearchIndex('bookmarks', ext.model.bookmarks)
-    }
-    if (ext.opts.history.enabled &&!ext.index.precise.history) {
-      ext.index.precise.history = createFlexSearchIndex('history', ext.model.history)
-    }
+    createPreciseIndexes()
   } else {
     throw new Error(`The option "search.approach" has an unsupported value: ${ext.opts.search.approach}`)
   }
@@ -183,6 +166,7 @@ async function getSearchData() {
     tabs: [],
     bookmarks: [],
     history: [],
+    browserPages: [],
   }
 
   // FIRST: Get data
@@ -225,17 +209,34 @@ async function getSearchData() {
     }
   }
 
+  if (ext.opts.browserPages && ext.opts.browserPages.enabled) {
+    // Get browser special pages and treat them like bookmarks
+    result.browserPages = getBrowserBrowserPages()
+  }
+
   // SECOND: Merge history with bookmarks and tabs and clean up data
 
   // Build maps with URL as key, so we have fast hashmap access
   const historyMap = result.history.reduce((obj, item, index) => (obj[item.originalUrl] = { ...item, index }, obj), {})
 
   // merge history with bookmarks
-  result.bookmarks = result.bookmarks.map((el, index) => {
+  result.bookmarks = result.bookmarks.map((el) => {
     if (historyMap[el.originalUrl]) {
       delete result.history[historyMap[el.originalUrl].index]
       return {
-        index: index,
+        ...el,
+        ...historyMap[el.originalUrl],
+      }
+    } else {
+      return el
+    }
+  })
+
+  // merge history with open tabs
+  result.tabs = result.tabs.map((el) => {
+    if (historyMap[el.originalUrl]) {
+      delete result.history[historyMap[el.originalUrl].index]
+      return {
         ...historyMap[el.originalUrl],
         ...el,
       }
@@ -244,14 +245,13 @@ async function getSearchData() {
     }
   })
 
-  // merge history with open tabs
-  result.tabs = result.tabs.map((el, index) => {
+  // merge history with browser pages
+  result.browserPages = result.browserPages.map((el) => {
     if (historyMap[el.originalUrl]) {
       delete result.history[historyMap[el.originalUrl].index]
       return {
-        index: index,
-        ...historyMap[el.originalUrl],
         ...el,
+        ...historyMap[el.originalUrl],
       }
     } else {
       return el
@@ -588,13 +588,15 @@ export function calculateFinalScore(result, searchTerm, sort) {
       score = ext.opts.score.historyBaseScore
     } else if (el.type === 'search') {
       score = ext.opts.score.searchEngineBaseScore
+    } else if (el.type === 'browserPage') {
+      score = ext.opts.score.browserPageBaseScore
     } else {
       throw new Error(`Search result type "${el.type}" not supported`)
     }
 
-    // Multiply by fuse.js score. 
+    // Multiply by search library score. 
     // This will reduce the score if the search is not a good match
-    score = score * el.searchScore
+    score = score * (el.searchScore || ext.opts.score.titleWeight)
 
     // Increase score if we have exact "startsWith" or alternatively "includes" matches
     if (el.title && el.title.toLowerCase().startsWith(searchTerm)) {
@@ -723,11 +725,14 @@ function openResultItem(event) {
   if (foundTab && browserApi.tabs.highlight) {
     console.debug('Found tab, setting it active', foundTab)
     browserApi.tabs.update(foundTab.originalId, {
-      active: true
+      active: true,
     })
     window.close()
   } else {
-    return window.open(url, '_newtab')
+    browserApi.tabs.create({
+      active: true,
+      url: url,
+    })
   }
 }
 

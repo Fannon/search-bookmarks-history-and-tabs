@@ -78,14 +78,14 @@ export const defaultOptions = {
   /** 
    * As a fallback, use search machines to find results
    */
-   searchEngines: {
-     /** Enable or disable search engine links in results */
-     enabled: true,
-     /**
-      * For each entry here, one result will be created - in the order they are defined.
-      * The URLs need to include the search querystring (see examples).
-      */
-     choices: [
+  searchEngines: {
+    /** Enable or disable search engine links in results */
+    enabled: true,
+    /**
+     * For each entry here, one result will be created - in the order they are defined.
+     * The URLs need to include the search querystring (see examples).
+     */
+    choices: [
       {
         name: "Google",
         urlPrefix: "https://www.google.com/search?q=",
@@ -103,7 +103,14 @@ export const defaultOptions = {
         urlPrefix: "https://www.dict.cc/?s="
       }
     ]
-   },
+  },
+  /**
+   * Support for browser "special" pages like settings, history, downloads etc.
+   * Only supports chrome based browsers
+   */
+  browserPages: {
+    enabled: true,
+  },
 
   score: {
 
@@ -119,8 +126,10 @@ export const defaultOptions = {
     tabBaseScore: 90,
     /** Base score for history results */
     historyBaseScore: 50,
-    /**Base Score for search engine entries */
+    /** Base score for search engine entries */
     searchEngineBaseScore: 30,
+    /** Base score for browser special pages */
+    browserPageBaseScore: 60,
 
     // FIELD WEIGHTS
     // Depending on in which field the search match was found, 
