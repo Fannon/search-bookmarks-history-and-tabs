@@ -267,10 +267,12 @@ async function getSearchData() {
     {}
   );
 
+  const historyToDelete = []
+
   // merge history into bookmarks
   result.bookmarks = result.bookmarks.map((el) => {
     if (historyMap[el.originalUrl]) {
-      delete result.history[historyMap[el.originalUrl].index];
+      historyToDelete.push(historyMap[el.originalUrl].index)
       return {
         ...historyMap[el.originalUrl],
         ...el,
@@ -279,11 +281,11 @@ async function getSearchData() {
       return el;
     }
   });
-
+  
   // merge history into open tabs
   result.tabs = result.tabs.map((el) => {
     if (historyMap[el.originalUrl]) {
-      delete result.history[historyMap[el.originalUrl].index];
+      historyToDelete.push(historyMap[el.originalUrl].index)
       return {
         ...historyMap[el.originalUrl],
         ...el,
@@ -293,7 +295,11 @@ async function getSearchData() {
     }
   });
 
-  // Clean up array and remove all deleted items from it
+  // Remove all history entries that have been merged
+  for (const index of historyToDelete) {
+    console.log('DELETE ' + index)
+    delete result.history[index];
+  }
   result.history = result.history.filter((el) => el);
 
   // Add index to all search results
