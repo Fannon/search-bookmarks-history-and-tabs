@@ -56,7 +56,7 @@ export async function getChromeBookmarks() {
     let newFolderTrail = folderTrail.slice() // clone
     // Only consider bookmark folders that have a title and have
     // at least a depth of 2, so we skip the default chrome "system" folders
-    if (entry.title && depth > 2) {
+    if (depth > 2) {
       newFolderTrail = folderTrail.concat(entry.title)
     }
 

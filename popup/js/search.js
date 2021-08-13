@@ -272,8 +272,8 @@ async function getSearchData() {
     if (historyMap[el.originalUrl]) {
       delete result.history[historyMap[el.originalUrl].index];
       return {
-        ...el,
         ...historyMap[el.originalUrl],
+        ...el,
       };
     } else {
       return el;
@@ -803,7 +803,7 @@ function openResultItem(event) {
     event.stopPropagation();
     const target = event.target ? event.target : event.srcElement;
     console.log("open", url, target, event);
-    
+
     // If the event is a click event on the edit image:
     // Do not go to the URL itself, but to the internal edit bookmark url
     if (target && target.src) {
