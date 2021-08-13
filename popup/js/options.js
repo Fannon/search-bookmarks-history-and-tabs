@@ -172,11 +172,6 @@ export const defaultOptions = {
 }
 
 /**
- * This is the default empty user options
- */
-export const emptyUserOptions = {}
-
-/**
  * Writes user settings to the google chrome sync storage
  * 
  * @see https://developer.chrome.com/docs/extensions/reference/storage/
@@ -209,12 +204,12 @@ export async function getUserOptions() {
         if (chrome.runtime.lastError) {
           return reject(chrome.runtime.lastError);
         }
-        return resolve(result.userOptions || emptyUserOptions)
+        return resolve(result.userOptions || {})
       });
     } else {
       console.warn('No chrome storage API found. Falling back to local Web Storage')
       const userOptions = window.localStorage.getItem('userOptions')
-      return resolve(userOptions ? JSON.parse(userOptions) : emptyUserOptions)
+      return resolve(userOptions ? JSON.parse(userOptions) : {})
     }
   })
 }

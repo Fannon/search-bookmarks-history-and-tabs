@@ -2,7 +2,7 @@
 // INITIALIZE                           //
 //////////////////////////////////////////
 
-import { emptyUserOptions, getUserOptions, setUserOptions } from "./options.js"
+import { getUserOptions, setUserOptions } from "./options.js"
 
 // Trigger initialization
 initOptions().catch((err) => {
@@ -31,5 +31,5 @@ async function saveOptions() {
 }
 
 async function resetOptions() {
-  document.getElementById('user-config').value = JSON.stringify(emptyUserOptions, null, 2)
+  document.getElementById('user-config').value = "{\n  \n}"
 }
