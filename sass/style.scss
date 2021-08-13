@@ -167,6 +167,7 @@ body {
     padding: 4px;
     border-radius: 3px;
     overflow: hidden;    
+    cursor: pointer;
   }
   #selected-result {
     background-color: #dadada;
@@ -193,11 +194,7 @@ body {
     font-size: 18px;
     margin: 0;
     font-weight: 400;
-
-    a {
-      color: #333;
-      margin-right: 4px;
-    }
+    color: #333;
   }
   
 }
@@ -390,9 +387,7 @@ body {
       background-color: #333;
     }
     .title {
-      a {
-        color: #d4d4d4;
-      }
+      color: #d4d4d4;
     }
   }
   #links {

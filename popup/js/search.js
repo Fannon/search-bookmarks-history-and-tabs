@@ -16,14 +16,17 @@ const ext = window.ext = {
     /** Current search results */
     result: [],
   },
-  /** Commonly used DOM Elements */
-  dom: {},
   /** Search indexies */
   index: {
     fuzzy: {},
     precise: {},
     taxonomy: {},
   },
+  /** Commonly used DOM Elements */
+  dom: {},
+  /** The browser / extension API */
+  browserApi: browserApi,
+
   /** Whether extension is already initialized -> ready for search */
   initialized: false,
 }
@@ -46,7 +49,7 @@ initExtension().catch((err) => {
 export async function initExtension() {
 
   performance.mark('init-start')
-  
+
   // Load effective options, including user customizations
   ext.opts = await getEffectiveOptions()
   console.debug('Initialized with options', ext.opts)
@@ -61,7 +64,7 @@ export async function initExtension() {
 
   performance.mark('init-dom')
 
-  const { bookmarks, tabs, history }  = await getSearchData()
+  const { bookmarks, tabs, history } = await getSearchData()
   ext.model.tabs = tabs
   ext.model.bookmarks = bookmarks
   ext.model.history = history
@@ -427,7 +430,7 @@ function renderResult(result) {
   performance.mark('render-start')
 
   const resultListItems = []
-  
+
   for (let i = 0; i < result.length; i++) {
     const resultEntry = result[i]
 
@@ -439,35 +442,31 @@ function renderResult(result) {
     const resultListItem = document.createElement("li")
     resultListItem.classList.add(resultEntry.type)
     resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
+    resultListItem.setAttribute('x-index', i)
+    resultListItem.setAttribute('x-original-id', resultEntry.originalId)
 
-    // Create edit button
+    // Create edit button / image
     if (resultEntry.type === 'bookmark') {
-      const editButton = document.createElement('a')
-      editButton.href = "#edit-bookmark/" + resultEntry.originalId
-      editButton.classList.add('edit-button')
       const editImg = document.createElement('img')
+      editImg.classList.add('edit-button')
       editImg.src = "../images/edit.svg"
-      editButton.appendChild(editImg)
-      resultListItem.appendChild(editButton)
+      resultListItem.appendChild(editImg)
     }
 
     // Create title div
     const titleDiv = document.createElement('div')
     titleDiv.classList.add('title')
-    const titleLink = document.createElement('a')
-    titleLink.setAttribute('href', resultEntry.originalUrl)
-    titleLink.setAttribute('target', '_newtab')
+
     if (ext.opts.general.highlight) {
       const content = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
       if (content.includes('<mark>')) {
-        titleLink.innerHTML = content
+        titleDiv.innerHTML = content + ' '
       } else {
-        titleLink.innerText = content
+        titleDiv.innerText = content + ' '
       }
     } else {
-      titleLink.innerText = resultEntry.title | resultEntry.url
+      titleDiv.innerText = resultEntry.title | resultEntry.url + ' '
     }
-    titleDiv.appendChild(titleLink)
     if (ext.opts.general.tags && resultEntry.tags) {
       const tags = document.createElement('span')
       tags.classList.add('badge', 'tags')
@@ -510,19 +509,17 @@ function renderResult(result) {
     // Create URL div
     const urlDiv = document.createElement('div')
     urlDiv.classList.add('url')
-    const a = document.createElement('a')
-    a.setAttribute('href', resultEntry.originalUrl)
-    a.setAttribute('target', '_newtab')
     if (ext.opts.general.highlight && resultEntry.urlHighlighted && resultEntry.urlHighlighted.includes('<mark>')) {
       urlDiv.innerHTML = resultEntry.urlHighlighted
     } else {
       urlDiv.innerText = resultEntry.url
     }
-    urlDiv.appendChild(a)
 
     // Append everything together :)
     resultListItem.appendChild(titleDiv)
     resultListItem.appendChild(urlDiv)
+    resultListItem.addEventListener('mouseenter', hoverResultItem)
+    resultListItem.addEventListener('mouseup', openResultItem)
     resultListItems.push(resultListItem)
   }
 
@@ -694,25 +691,53 @@ function selectListItem(index) {
 /**
  * When clicked on a list-item, we want to navigate like pressing "Enter"
  */
+function hoverResultItem(event) {
+  const target = (event.target) ? event.target : event.srcElement;
+  const index = target.getAttribute('x-index')
+  if (index) {
+    selectListItem(index)
+  } else {
+    console.warn('Could not hover result item', target, event)
+  }
+}
+
+/**
+ * When clicked on a list-item, we want to navigate like pressing "Enter"
+ */
 function openResultItem(event) {
-  let url = document.getElementById('selected-result').getAttribute('x-open-url')
+  const resultEntry = document.getElementById('selected-result')
+  const url = resultEntry.getAttribute('x-open-url')
   if (event) {
     event.stopPropagation()
   }
+  const target = (event.target) ? event.target : event.srcElement;
+
+  console.log('open', url, target, event)
+
+  // If the event is a click event on the edit image:
+  // Do not go to the URL itself, but to the internal edit bookmark url 
+  if (target && target.src) {
+    window.location = "#edit-bookmark/" + resultEntry.getAttribute('x-original-id')
+    return
+  }
+
+  // Else: Navigate to selected tab or link
   const foundTab = ext.model.tabs.find((el) => {
     return el.originalUrl === url
   })
-  if (foundTab && browserApi.tabs.highlight) {
+  if (foundTab && ext.browserApi.tabs.highlight) {
     console.debug('Found tab, setting it active', foundTab)
-    browserApi.tabs.update(foundTab.originalId, {
+    ext.browserApi.tabs.update(foundTab.originalId, {
       active: true,
     })
     window.close()
-  } else {
-    browserApi.tabs.create({
+  } else if (ext.browserApi.tabs) {
+    ext.browserApi.tabs.create({
       active: true,
       url: url,
     })
+  } else {
+    window.open(url, '_newtab')
   }
 }
 

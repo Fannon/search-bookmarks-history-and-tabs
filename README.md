@@ -43,6 +43,7 @@
 * This extension works best if you avoid:
   * using `#` in bookmark titles that do not indicate a tag.
   * using `~` in bookmark folder names.
+* TIPP: You can also add special browser pages to your bookmarks, like `chrome://downloads`.
 
 ## User Configuration
 
