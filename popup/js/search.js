@@ -912,22 +912,30 @@ function editBookmark(bookmarkId) {
   if (bookmark) {
     document.getElementById("edit-bookmark").style = "";
     document.getElementById("bookmark-title").value = bookmark.title;
-    ext.tagify = new Tagify(document.getElementById("bookmark-tags"), {
-      whitelist: tags,
-      trim: true,
-      transformTag: transformTag,
-      skipInvalid: false,
-      editTags: {
-        clicks: 1,
-        keepInvalid: false,
-      },
-      dropdown: {
-        position: "all",
-        enabled: 0,
-        maxItems: 12,
-        closeOnSelect: false,
-      },
-    });
+    if (!ext.tagify) {
+      ext.tagify = new Tagify(document.getElementById("bookmark-tags"), {
+        whitelist: tags,
+        trim: true,
+        transformTag: transformTag,
+        skipInvalid: false,
+        editTags: {
+          clicks: 1,
+          keepInvalid: false,
+        },
+        dropdown: {
+          position: "all",
+          enabled: 0,
+          maxItems: 12,
+          closeOnSelect: false,
+        },
+      });
+    } else {
+      // If tagify was already initialized: 
+      // reset current and available tags to new state
+      ext.tagify.removeAllTags()
+      ext.tagify.whitelist = tags
+    }
+
     const currentTags = bookmark.tags
       .split("#")
       .map((el) => el.trim())
@@ -950,12 +958,9 @@ function editBookmark(bookmarkId) {
 }
 
 function updateBookmark(bookmarkId) {
-  const bookmark = ext.model.bookmarks.find(
-    (el) => el.originalId === bookmarkId
-  );
+  const bookmark = ext.model.bookmarks.find(el => el.originalId === bookmarkId);
   const titleInput = document.getElementById("bookmark-title").value.trim();
-  const tagsInput =
-    "#" + ext.tagify.value.map((el) => el.value.trim()).join(" #");
+  const tagsInput = "#" + ext.tagify.value.map((el) => el.value.trim()).join(" #");
 
   // Update search data model of bookmark
   bookmark.title = titleInput;

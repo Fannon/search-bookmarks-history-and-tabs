@@ -70,26 +70,21 @@ export function searchFolders(searchTerm) {
  * and the value is an array of the found bookmarks index
  */
 export function getUniqueTags() {
-
-  if (!ext || !ext.index.taxonomy.tags) {
-    const tagsDictionary = {}
-    for (const el of ext.model.bookmarks) {
-      if (el.tags) {
-        for (let tag of el.tags.split('#')) {
-          tag = tag.trim()
-          if (tag) {
-            if (!tagsDictionary[tag]) {
-              tagsDictionary[tag] = [el.index]
-            } else {
-              tagsDictionary[tag].push(el.index)
-            }
+  ext.index.taxonomy.tags = {}
+  for (const el of ext.model.bookmarks) {
+    if (el.tags) {
+      for (let tag of el.tags.split('#')) {
+        tag = tag.trim()
+        if (tag) {
+          if (!ext.index.taxonomy.tags[tag]) {
+            ext.index.taxonomy.tags[tag] = [el.index]
+          } else {
+            ext.index.taxonomy.tags[tag].push(el.index)
           }
         }
       }
     }
-    ext.index.taxonomy.tags = tagsDictionary
   }
-
   return ext.index.taxonomy.tags
 }
 
@@ -101,6 +96,7 @@ export function getUniqueTags() {
  */
 export function getUniqueFolders() {
 
+  // This function is memoized, as the folders don't change while the extension is open
   if (!ext || !ext.index.taxonomy.folders) {
     const foldersDictionary = {}
     for (const el of ext.model.bookmarks) {
