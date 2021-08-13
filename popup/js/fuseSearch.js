@@ -17,9 +17,6 @@ export function createFuzzyIndexes() {
   if (ext.opts.history.enabled && !ext.index.fuzzy.history) {
     ext.index.fuzzy.history = createFuseJsIndex('history', ext.model.history)
   }
-  if (ext.opts.browserPages.enabled && !ext.index.fuzzy.browserPages) {
-    ext.index.fuzzy.browserPages = createFuseJsIndex('browserPages', ext.model.browserPages)
-  }
 }
 
 /**
@@ -99,10 +96,6 @@ export async function searchWithFuseJs(searchTerm, searchMode) {
     }
     if (ext.index.fuzzy.history) {
       results.push(...ext.index.fuzzy.history.search(searchTerm))
-    }
-    if (ext.index.fuzzy.browserPages) {
-      console.log('Browser pages!')
-      results.push(...ext.index.fuzzy.browserPages.search(searchTerm))
     }
   }
 

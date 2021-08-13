@@ -17,9 +17,6 @@ export function createPreciseIndexes() {
   if (ext.opts.history.enabled &&!ext.index.precise.history) {
     ext.index.precise.history = createFlexSearchIndex('history', ext.model.history)
   }
-  if (ext.opts.browserPages.enabled &&!ext.index.precise.browserPages) {
-    ext.index.precise.browserPages = createFlexSearchIndex('browserPages', ext.model.browserPages)
-  }
 }
 
 /**
@@ -94,9 +91,6 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
     }
     if (ext.index.precise.history) {
       results.push(...flexSearchWithScoring(ext.index.precise.history, searchTerm, ext.model.history))
-    }
-    if (ext.index.precise.browserPages) {
-      results.push(...flexSearchWithScoring(ext.index.precise.browserPages, searchTerm, ext.model.browserPages))
     }
   }
 

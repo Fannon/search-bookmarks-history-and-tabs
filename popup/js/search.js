@@ -1,5 +1,5 @@
-import { browserApi, convertChromeBookmarks, convertChromeHistory, convertChromeTabs, getBrowserBrowserPages, getChromeBookmarks, getChromeHistory, getChromeTabs } from './browserApi.js'
-import { createFlexSearchIndex, createPreciseIndexes, searchWithFlexSearch } from './flexSearch.js'
+import { browserApi, convertChromeBookmarks, convertChromeHistory, convertChromeTabs, getChromeBookmarks, getChromeHistory, getChromeTabs } from './browserApi.js'
+import { createPreciseIndexes, searchWithFlexSearch } from './flexSearch.js'
 import { createFuzzyIndexes, searchWithFuseJs } from './fuseSearch.js'
 import { getEffectiveOptions, getUserOptions, setUserOptions } from './options.js'
 import { getUniqueFolders, getUniqueTags, searchFolders, searchTags } from './taxonomySearch.js'
@@ -61,11 +61,10 @@ export async function initExtension() {
 
   performance.mark('init-dom')
 
-  const { bookmarks, tabs, history, browserPages }  = await getSearchData()
+  const { bookmarks, tabs, history }  = await getSearchData()
   ext.model.tabs = tabs
   ext.model.bookmarks = bookmarks
   ext.model.history = history
-  ext.model.browserPages = browserPages
 
   performance.mark('init-data-load')
 
@@ -166,7 +165,6 @@ async function getSearchData() {
     tabs: [],
     bookmarks: [],
     history: [],
-    browserPages: [],
   }
 
   // FIRST: Get data
@@ -209,11 +207,6 @@ async function getSearchData() {
     }
   }
 
-  if (ext.opts.browserPages && ext.opts.browserPages.enabled) {
-    // Get browser special pages and treat them like bookmarks
-    result.browserPages = getBrowserBrowserPages()
-  }
-
   // SECOND: Merge history with bookmarks and tabs and clean up data
 
   // Build maps with URL as key, so we have fast hashmap access
@@ -239,19 +232,6 @@ async function getSearchData() {
       return {
         ...historyMap[el.originalUrl],
         ...el,
-      }
-    } else {
-      return el
-    }
-  })
-
-  // merge history with browser pages
-  result.browserPages = result.browserPages.map((el) => {
-    if (historyMap[el.originalUrl]) {
-      delete result.history[historyMap[el.originalUrl].index]
-      return {
-        ...el,
-        ...historyMap[el.originalUrl],
       }
     } else {
       return el
