@@ -267,7 +267,7 @@ async function getSearchData() {
     {}
   );
 
-  // merge history with bookmarks
+  // merge history into bookmarks
   result.bookmarks = result.bookmarks.map((el) => {
     if (historyMap[el.originalUrl]) {
       delete result.history[historyMap[el.originalUrl].index];
@@ -280,7 +280,7 @@ async function getSearchData() {
     }
   });
 
-  // merge history with open tabs
+  // merge history into open tabs
   result.tabs = result.tabs.map((el) => {
     if (historyMap[el.originalUrl]) {
       delete result.history[historyMap[el.originalUrl].index];
@@ -637,12 +637,11 @@ function renderResult(result) {
  * Optionally sorts the result by that score
  */
 export function calculateFinalScore(result, searchTerm, sort) {
-  // calculate score
   for (let i = 0; i < result.length; i++) {
-    const el = result[i];
-    let score = 100;
+    const el = result[i]
+    let score
 
-    // Apply result.type weight
+    // Decide which base Score to chose
     if (el.type === "bookmark") {
       score = ext.opts.score.bookmarkBaseScore;
     } else if (el.type === "tab") {
@@ -651,8 +650,6 @@ export function calculateFinalScore(result, searchTerm, sort) {
       score = ext.opts.score.historyBaseScore;
     } else if (el.type === "search") {
       score = ext.opts.score.searchEngineBaseScore;
-    } else if (el.type === "browserPage") {
-      score = ext.opts.score.browserPageBaseScore;
     } else {
       throw new Error(`Search result type "${el.type}" not supported`);
     }
@@ -661,15 +658,23 @@ export function calculateFinalScore(result, searchTerm, sort) {
     // This will reduce the score if the search is not a good match
     score = score * (el.searchScore || ext.opts.score.titleWeight);
 
+    // Treat each search term separated by a space individually
+    // TODO: Adjust score depending on the proportion of the search text and the matches?
+    searchTerm.split(' ').forEach((term) => {
+      if (term) {
+        if (el.title && el.title.toLowerCase().includes(term)) {
+          score += ext.opts.score.exactIncludesBonus * ext.opts.score.titleWeight;
+        } else if (el.url.includes(searchTerm.split(" ").join("-"))) {
+          score += ext.opts.score.exactIncludesBonus * ext.opts.score.urlWeight;
+        }
+      }
+    })
+
     // Increase score if we have exact "startsWith" or alternatively "includes" matches
     if (el.title && el.title.toLowerCase().startsWith(searchTerm)) {
       score += ext.opts.score.exactStartsWithBonus * ext.opts.score.titleWeight;
     } else if (el.url.startsWith(searchTerm.split(" ").join("-"))) {
       score += ext.opts.score.exactStartsWithBonus * ext.opts.score.urlWeight;
-    } else if (el.title && el.title.toLowerCase().includes(searchTerm)) {
-      score += ext.opts.score.exactIncludesBonus * ext.opts.score.titleWeight;
-    } else if (el.url.includes(searchTerm.split(" ").join("-"))) {
-      score += ext.opts.score.exactIncludesBonus * ext.opts.score.urlWeight;
     }
 
     // Increase score if we have an exact tag match

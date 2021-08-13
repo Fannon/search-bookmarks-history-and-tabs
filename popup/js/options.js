@@ -9,9 +9,9 @@ import { mergeDeep } from "./utils.js";
 export const defaultOptions = {
 
   general: {
-    /** Extract tags from title and display it as a badge with different search prio */
+    /** Extract tags from title and display it as a badge with different search priority */
     tags: true,
-    /** Highlight search matches in results. Reduces performane a little. */
+    /** Highlight search matches in results. Reduces rendering performance a little. */
     highlight: true,
     /** Display last visit */
     lastVisit: true,
@@ -42,7 +42,7 @@ export const defaultOptions = {
     */
     approach: 'fuzzy', // 'precise' or 'fuzzy'
     /** Max search results. Reduce for better performance */
-    maxResults: 64,
+    maxResults: 50,
     /** Min search string characters to have a match */
     minMatchCharLength: 2,
     /** 
@@ -104,14 +104,10 @@ export const defaultOptions = {
       }
     ]
   },
-  /**
-   * Support for browser "special" pages like settings, history, downloads etc.
-   * Only supports chrome based browsers
-   */
-  browserPages: {
-    enabled: true,
-  },
 
+  /**
+   * Options for the score calculation
+   */
   score: {
 
     /** Filter out all search results below this minimum score */
@@ -128,12 +124,10 @@ export const defaultOptions = {
     historyBaseScore: 50,
     /** Base score for search engine entries */
     searchEngineBaseScore: 30,
-    /** Base score for browser special pages */
-    browserPageBaseScore: 60,
 
     // FIELD WEIGHTS
     // Depending on in which field the search match was found, 
-    // the match gets a multiplicator applied on how important the match is.
+    // the match gets a multiplier applied on how important the match is.
 
     /** Weight for a title match*/
     titleWeight: 1,
@@ -147,22 +141,23 @@ export const defaultOptions = {
     // BONUS SCORES
     // If certain conditions apply, extra score points can be added
 
-    /** 
-     * Additional score points if title or url starts exactly with the search text.
-     */
-    exactStartsWithBonus: 20,
     /**
-     * If we don't have an excact starts "with match", bonus points for an excact "includes" match
+     * For each exact "includes" match we add some bonus points
      */
     exactIncludesBonus: 10,
+    /** 
+     * Additional score points if title or url starts exactly with the search text.
+     * This comes on top of an include bonus.
+     */
+    exactStartsWithBonus: 10,
 
     /**
-     * Additinal points for an exact match of a search term tag (including #)
+     * Additional points for an exact match of a search term tag (including #)
      */
     exactTagMatchBonus: 10,
 
     /**
-     * Additinal points for an exact match of a search term folder name (including ~)
+     * Additional points for an exact match of a search term folder name (including ~)
      */
     exactFolderMatchBonus: 5,
 
@@ -171,7 +166,7 @@ export const defaultOptions = {
      * Please note that this is not only within `history.daysAgo`, but you whole history.
      */
     visitedBonusScore: 2,
-    /** Maximum score points for visitied bonus */
+    /** Maximum score points for visited bonus */
     visitedBonusScoreMaximum: 30,
   },
 }
