@@ -297,7 +297,6 @@ async function getSearchData() {
 
   // Remove all history entries that have been merged
   for (const index of historyToDelete) {
-    console.log('DELETE ' + index)
     delete result.history[index];
   }
   result.history = result.history.filter((el) => el);
@@ -345,6 +344,8 @@ async function search(event) {
   performance.mark("search-start");
 
   let searchTerm = ext.dom.searchInput.value || "";
+  searchTerm = searchTerm.trim().toLowerCase()
+  searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
   ext.model.result = [];
   let searchMode = "all"; // OR 'bookmarks' OR 'history'
 
@@ -681,6 +682,11 @@ export function calculateFinalScore(result, searchTerm, sort) {
       score += ext.opts.score.exactStartsWithBonus * ext.opts.score.titleWeight;
     } else if (el.url.startsWith(searchTerm.split(" ").join("-"))) {
       score += ext.opts.score.exactStartsWithBonus * ext.opts.score.urlWeight;
+    }
+
+    // Increase score if we have an exact equal match in the title
+    if (el.title && el.title.toLowerCase() === searchTerm) {
+      score += ext.opts.score.exactEqualsBonus * ext.opts.score.titleWeight;
     }
 
     // Increase score if we have an exact tag match
