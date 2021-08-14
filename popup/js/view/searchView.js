@@ -13,6 +13,7 @@ export function renderSearchResults(result) {
 
   performance.mark("render-start")
 
+  ext.model.mouseHoverEnabled = false
   const resultListItems = []
 
   for (let i = 0; i < result.length; i++) {
@@ -42,7 +43,8 @@ export function renderSearchResults(result) {
     titleDiv.classList.add("title")
 
     if (ext.opts.general.highlight) {
-      const content = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
+      const content =
+        resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
       if (content.includes("<mark>")) {
         titleDiv.innerHTML = content + " "
       } else {
@@ -148,10 +150,10 @@ export function renderSearchResults(result) {
 export function navigationKeyListener(event) {
   if (event.key === "ArrowUp" && ext.model.currentItem > 0) {
     ext.model.currentItem--
-    selectListItem(ext.model.currentItem)
+    selectListItem(ext.model.currentItem, true)
   } else if (event.key === "ArrowDown" && ext.model.currentItem < ext.model.result.length - 1) {
     ext.model.currentItem++
-    selectListItem(ext.model.currentItem)
+    selectListItem(ext.model.currentItem, true)
   } else if (event.key === "Enter" && ext.model.result.length > 0) {
     // Enter selects selected search result -> only when in search mode
     if (window.location.hash.startsWith("#search/")) {
@@ -166,22 +168,22 @@ export function navigationKeyListener(event) {
 /**
  * Marks the list item with a specific index as selected
  */
-export function selectListItem(index) {
+export function selectListItem(index, scroll = false) {
   const currentSelection = document.getElementById("selected-result")
   if (currentSelection) {
     currentSelection.id = ""
   }
   if (ext.dom.resultList.children[index]) {
     ext.dom.resultList.children[index].id = "selected-result"
-    if (ext.dom.resultList.children[index].scrollIntoViewIfNeeded) {
-      ext.dom.resultList.children[index].scrollIntoViewIfNeeded(false)
-    } else {
+
+    if (scroll) {
       ext.dom.resultList.children[index].scrollIntoView({
-        behavior: "smooth",
-        block: "end",
-        inline: "nearest",
+        behavior: "auto",
+        block: "nearest",
       })
     }
+  } else {
+    console.error("Tried to select non-existing list item: " + index)
   }
   ext.model.currentItem = index
 }
@@ -192,6 +194,14 @@ export function selectListItem(index) {
 export function hoverResultItem(event) {
   const target = event.target ? event.target : event.srcElement
   const index = target.getAttribute("x-index")
+
+  // Workaround to avoid that we get a mouse hover event
+  // just by rendering the results "below" the pointer
+  if (!ext.model.mouseHoverEnabled) {
+    ext.model.mouseHoverEnabled = true
+    return
+  }
+
   if (index) {
     selectListItem(index)
   } else {

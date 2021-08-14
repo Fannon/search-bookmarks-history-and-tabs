@@ -23,7 +23,7 @@
   },
   "scripts": {
     "clean": "rm -rf ./dist",
-    "build": "npm run test && npm run clean && npm run css-build && npm run update-libs && npm run create-dist",
+    "build": "npm run format && npm run lint && npm run clean && npm run css-build && npm run update-libs && npm run create-dist",
     "update-libs": "sh bin/updateLibs.sh",
     "create-dist": "sh bin/createDist.sh",
     "test": "npm run prettier-check && npm run lint",
