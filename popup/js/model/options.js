@@ -217,7 +217,6 @@ export async function getUserOptions() {
   })
 }
 
-
 /**
  * Gets the actual effective options based on the default options
  * and the overrides of the user options
@@ -226,4 +225,3 @@ export async function getEffectiveOptions() {
   const userOptions = await getUserOptions()
   return mergeDeep(defaultOptions, userOptions)
 }
-
