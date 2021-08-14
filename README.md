@@ -12,7 +12,7 @@
 
 - Quick search your open browser tabs, bookmarks and browsing history.
 - Supports two different search approaches:
-  - Fuzzy search (approximate string matching): Slower, but more results.
+  - Fuzzy search (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
   - Exact search (starts with matching): Faster and only excact matching results.
 - Bookmarks can be searched for tags (extracted from title) and folder names.
 - Edit and tag bookmarks with auto complete on tags.
@@ -20,13 +20,13 @@
 - Fallback to use search engines like google, dict.cc etc. (multiple options)
 - Customization via [user options](#user-configuration).
 - Lightweight: Written in vanilla JavaScript with the goal to only include only [a few necessary libraries](#credits).
-- The extension does not collect any data and does not make any external requests.
+- The extension does not collect any data nor does it make any external requests.
 
 ## Screenshots & Demo
 
-![light and dark theme](/images/bookmark-and-history-search-screenshots.png "light and dark theme")
+![Screenshots](/images/bookmark-and-history-search-screenshots.png "Screenshots")
 
-![Demo GIF](/images/bookmark-and-history-search.gif "Demo GIF")
+![Demo Animation](/images/bookmark-and-history-search.gif "Demo Animation")
 
 ## User Documentation
 
