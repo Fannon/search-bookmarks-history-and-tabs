@@ -130,6 +130,20 @@ export async function getChromeHistory(daysAgo, maxResults) {
  * Convert chrome history into our internal, flat array format
  */
 export function convertChromeHistory(history) {
+  if (ext.opts.history.ignoreList && ext.opts.history.ignoreList.length) {
+    let ignoredHistoryCounter = 0
+    history = history.filter((el) => {
+      for (const ignoreUrlPrefix of ext.opts.history.ignoreList) {
+        if (el.url.startsWith(ignoreUrlPrefix)) {
+          ignoredHistoryCounter += 1
+          return false
+        }
+      }
+      return true
+    })
+    console.debug(`Ignored ${ignoredHistoryCounter} history items due to ignore list`)
+  }
+
   return history.map((el) => {
     return {
       type: "history",
