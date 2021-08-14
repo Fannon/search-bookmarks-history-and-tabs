@@ -208,7 +208,7 @@ export async function setUserOptions(userOptions) {
 export async function getUserOptions() {
   return new Promise((resolve, reject) => {
     if (chrome && chrome.storage) {
-      chrome.storage.sync.get(['userOptions'], (result,) => {
+      chrome.storage.sync.get(['userOptions'], (result) => {
         if (chrome.runtime.lastError) {
           return reject(chrome.runtime.lastError);
         }

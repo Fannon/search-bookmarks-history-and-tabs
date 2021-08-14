@@ -56,7 +56,7 @@ export async function getSearchData() {
     console.warn(
       `No Chrome API found. Switching to local dev mode with mock data only`
     );
-    const requestChromeMockData = await fetch("./mockData/big.json");
+    const requestChromeMockData = await fetch("./mockData/chrome.json");
     const chromeMockData = await requestChromeMockData.json();
 
     result.tabs = convertChromeTabs(chromeMockData.tabs);

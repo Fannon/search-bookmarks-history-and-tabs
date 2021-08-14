@@ -3,6 +3,9 @@
 // BOOKMARK EDITING                     //
 //////////////////////////////////////////
 
+import { browserApi } from "../helper/browserApi.js";
+import { getUniqueTags } from "../search/taxonomySearch.js";
+
 export function editBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find(
     (el) => el.originalId === bookmarkId

@@ -6,6 +6,7 @@
   "devDependencies": {
     "@yaireo/tagify": "^4.6.0",
     "bulma": "^0.9.3",
+    "eslint": "^7.32.0",
     "flexsearch": "^0.7.21",
     "fuse.js": "^6.4.6",
     "json5": "^2.2.0",
@@ -16,9 +17,11 @@
   },
   "scripts": {
     "clean": "rm -rf ./dist",
-    "build": "npm run clean && npm run css-build && npm run update-libs && npm run create-dist",
+    "build": "npm run test && npm run clean && npm run css-build && npm run update-libs && npm run create-dist",
     "update-libs": "sh bin/updateLibs.sh",
     "create-dist": "sh bin/createDist.sh",
+    "test": "npm run lint",
+    "lint": "eslint popup/**/*.js --fix --format stylish",
     "css-build": "node-sass sass/ -o popup/css --omit-source-map-url --output-style compressed",
     "css-watch": "npm run css-build -- --watch",
     "start": "live-server --open=./popup/"
