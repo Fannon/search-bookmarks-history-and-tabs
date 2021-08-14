@@ -1,72 +1,72 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <title>Search Tabs, Bookmarks and History: Options</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="./lib/tagify.css" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="icon" type="image/png" href="../images/logo-32.png" />
+  </head>
 
-<head>
-  <title>Search Tabs, Bookmarks and History: Options</title>
-  <meta charset="utf-8" />
-  <link rel="stylesheet" href="./lib/tagify.css">
-  <link rel="stylesheet" href="./css/style.css">
-  <link rel="icon" type="image/png" href="../images/logo-32.png">
-</head>
-
-<body>
-  <div id="container">
-
-    <!-- Search View -->
-    <div id="search">
-      <input id="search-input" class="input" type="text" placeholder="Search tabs, bookmarks and history"
-        spellcheck="false" autofocus>
-      <div id="search-approach-toggle" class="fuzzy"></div>
-      <ul id="result-list">
-        <li id="results-loading">Loading...</li>
-      </ul>
-    </div>
-
-    <!-- Tags Overview Overlay -->
-    <div id="tags-overview" style="display: none;">
-      <div class="input-description">TAGS OVERVIEW</div>
-      <div id="tags-list"></div>
-    </div>
-
-    <!-- Folders Overview Overlay -->
-    <div id="folders-overview" style="display: none;">
-      <div class="input-description">FOLDERS OVERVIEW</div>
-      <div id="folders-list"></div>
-    </div>
-
-    <!-- Edit Bookmark Overlay -->
-    <div id="edit-bookmark" style="display: none;">
-      <div class="inputs">
-        <div class="input-description">EDIT TITLE:</div>
-        <textarea id="bookmark-title" class="input" type="text"></textarea>
-        <div class="input-description">EDIT TAGS:</div>
-        <textarea id="bookmark-tags" class="input" type="text"></textarea>
+  <body>
+    <div id="container">
+      <!-- Search View -->
+      <div id="search">
+        <input
+          id="search-input"
+          class="input"
+          type="text"
+          placeholder="Search tabs, bookmarks and history"
+          spellcheck="false"
+          autofocus
+        />
+        <div id="search-approach-toggle" class="fuzzy"></div>
+        <ul id="result-list">
+          <li id="results-loading">Loading...</li>
+        </ul>
       </div>
-      <div class="controls">
-        <a id="edit-bookmark-cancel" class="button cancel-button" href="#">CANCEL</a>
-        <a id="edit-bookmark-save" class="button save-button" href="#">SAVE</a>
+
+      <!-- Tags Overview Overlay -->
+      <div id="tags-overview" style="display: none">
+        <div class="input-description">TAGS OVERVIEW</div>
+        <div id="tags-list"></div>
       </div>
+
+      <!-- Folders Overview Overlay -->
+      <div id="folders-overview" style="display: none">
+        <div class="input-description">FOLDERS OVERVIEW</div>
+        <div id="folders-list"></div>
+      </div>
+
+      <!-- Edit Bookmark Overlay -->
+      <div id="edit-bookmark" style="display: none">
+        <div class="inputs">
+          <div class="input-description">EDIT TITLE:</div>
+          <textarea id="bookmark-title" class="input" type="text"></textarea>
+          <div class="input-description">EDIT TAGS:</div>
+          <textarea id="bookmark-tags" class="input" type="text"></textarea>
+        </div>
+        <div class="controls">
+          <a id="edit-bookmark-cancel" class="button cancel-button" href="#">CANCEL</a>
+          <a id="edit-bookmark-save" class="button save-button" href="#">SAVE</a>
+        </div>
+      </div>
+
+      <!-- Footer Navigation -->
+      <footer id="links">
+        <span id="result-counter"></span>
+        <a href="#search/">SEARCH</a> | <a href="#tags/">TAGS</a> | <a href="#folders/">FOLDERS</a> |
+        <a href="./options.html">OPTIONS</a> |
+        <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab">INFO</a>
+        <span id="footer-error"></span>
+      </footer>
     </div>
 
-    <!-- Footer Navigation -->
-    <footer id="links">
-      <span id="result-counter"></span>
-      <a href="#search/">SEARCH</a> |
-      <a href="#tags/">TAGS</a> |
-      <a href="#folders/">FOLDERS</a> |
-      <a href="./options.html">OPTIONS</a> |
-      <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab">INFO</a>
-      <span id="footer-error"></span>
-    </footer>
-
-  </div>
-
-  <!-- JS sources -->
-  <script src="./lib/fuse.min.js"></script>
-  <script src="./lib/flexsearch.min.js"></script>
-  <script src="./js/initSearch.js" type="module"></script>
-  <script src="./lib/tagify.min.js"></script>
-  <script src="./lib/mark.min.js"></script>
-</body>
-
+    <!-- JS sources -->
+    <script src="./lib/fuse.min.js"></script>
+    <script src="./lib/flexsearch.min.js"></script>
+    <script src="./js/initSearch.js" type="module"></script>
+    <script src="./lib/tagify.min.js"></script>
+    <script src="./lib/mark.min.js"></script>
+  </body>
 </html>

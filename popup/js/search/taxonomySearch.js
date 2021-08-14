@@ -18,7 +18,7 @@ export function searchTags(searchTerm) {
         const el = ext.model.bookmarks[elIndex]
         const result = {
           searchScore: tagName === searchTerm ? 1 : 0.8,
-          ...el
+          ...el,
         }
         if (!resultDict[el.index]) {
           resultDict[el.index] = result
@@ -48,7 +48,7 @@ export function searchFolders(searchTerm) {
         const el = ext.model.bookmarks[elIndex]
         const result = {
           searchScore: folderName === searchTerm ? 1 : 0.8,
-          ...el
+          ...el,
         }
         if (!resultDict[el.index]) {
           resultDict[el.index] = result
@@ -65,15 +65,15 @@ export function searchFolders(searchTerm) {
 
 /**
  * Extract tags from bookmark titles
- * 
- * @returns a dictionary where the key is the unique tag name 
+ *
+ * @returns a dictionary where the key is the unique tag name
  * and the value is an array of the found bookmarks index
  */
 export function getUniqueTags() {
   ext.index.taxonomy.tags = {}
   for (const el of ext.model.bookmarks) {
     if (el.tags) {
-      for (let tag of el.tags.split('#')) {
+      for (let tag of el.tags.split("#")) {
         tag = tag.trim()
         if (tag) {
           if (!ext.index.taxonomy.tags[tag]) {
@@ -90,18 +90,17 @@ export function getUniqueTags() {
 
 /**
  * Extract folders from bookmarks
- * 
- * @returns a dictionary where the key is the unique tag name 
+ *
+ * @returns a dictionary where the key is the unique tag name
  * and the value is an array of the found bookmarks index
  */
 export function getUniqueFolders() {
-
   // This function is memoized, as the folders don't change while the extension is open
   if (!ext || !ext.index.taxonomy.folders) {
     const foldersDictionary = {}
     for (const el of ext.model.bookmarks) {
       if (el.folder) {
-        for (let folderName of el.folder.split('~')) {
+        for (let folderName of el.folder.split("~")) {
           folderName = folderName.trim()
           if (folderName) {
             if (!foldersDictionary[folderName]) {

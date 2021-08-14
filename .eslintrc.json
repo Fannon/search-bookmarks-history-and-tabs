@@ -1,8 +1,5 @@
 {
-  "extends": [
-    "eslint:recommended",
-    "prettier"
-  ],
+  "extends": ["eslint:recommended", "prettier"],
   "env": {
     "browser": true,
     "es2021": true,
@@ -22,9 +19,7 @@
   "ignorePatterns": ["**/lib/*.js"],
   "rules": {
     "no-console": "off",
-    "comma-dangle": [
-      "warn",
-      "only-multiline"
-    ]
+    "semi": ["warn", "never"],
+    "comma-dangle": ["warn", "only-multiline"]
   }
 }

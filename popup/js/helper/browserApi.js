@@ -1,9 +1,8 @@
-
-import { cleanUpUrl, timeSince } from './utils.js'
+import { cleanUpUrl, timeSince } from "./utils.js"
 
 // CHROME API (Manifest v2 / v3)
 
-// Location of browser API. 
+// Location of browser API.
 // This is `browser` for firefox, and `chrome` for Chrome and Edge.
 export const browserApi = window.browser || window.chrome || {}
 
@@ -25,10 +24,10 @@ export async function getChromeTabs() {
 export function convertChromeTabs(chromeTabs) {
   return chromeTabs.map((entry) => {
     return {
-      type: 'tab',
+      type: "tab",
       title: entry.title,
       url: cleanUpUrl(entry.url),
-      originalUrl: entry.url.replace(/\/$/, ''),
+      originalUrl: entry.url.replace(/\/$/, ""),
       originalId: entry.id,
       favIconUrl: entry.favIconUrl,
     }
@@ -46,13 +45,12 @@ export async function getChromeBookmarks() {
 /**
  * Recursive function to return bookmarks in our internal, flat array format
  */
- export function convertChromeBookmarks(bookmarks, folderTrail, depth) {
+export function convertChromeBookmarks(bookmarks, folderTrail, depth) {
   depth = depth || 1
   let result = []
   folderTrail = folderTrail || []
 
   for (const entry of bookmarks) {
-
     let newFolderTrail = folderTrail.slice() // clone
     // Only consider bookmark folders that have a title and have
     // at least a depth of 2, so we skip the default chrome "system" folders
@@ -60,32 +58,32 @@ export async function getChromeBookmarks() {
       newFolderTrail = folderTrail.concat(entry.title)
     }
 
-    // Parse out tags from bookmark title (starting with #) 
+    // Parse out tags from bookmark title (starting with #)
     let title = entry.title
-    let tagsText = ''
+    let tagsText = ""
     let tagsArray = []
     if (ext.opts.general.tags && title) {
-      const tagSplit = title.split('#')
+      const tagSplit = title.split("#")
       title = tagSplit.shift().trim()
       tagsArray = tagSplit
       for (const tag of tagSplit) {
-        tagsText += '#' + tag.trim() + ' '
+        tagsText += "#" + tag.trim() + " "
       }
       tagsText = tagsText.slice(0, -1)
     }
 
-    let folderText = ''
+    let folderText = ""
     for (const folder of folderTrail) {
-      folderText += '~' + folder + ' '
+      folderText += "~" + folder + " "
     }
     folderText = folderText.slice(0, -1)
 
     if (entry.url) {
       result.push({
-        type: 'bookmark',
+        type: "bookmark",
         originalId: entry.id,
         title: title,
-        originalUrl: entry.url.replace(/\/$/, ''),
+        originalUrl: entry.url.replace(/\/$/, ""),
         url: cleanUpUrl(entry.url),
         tags: tagsText,
         tagsArray: tagsArray,
@@ -109,19 +107,22 @@ export async function getChromeBookmarks() {
  * Gets chrome browsing history.
  * Warning: This chrome API call tends to be rather slow
  */
- export  async function getChromeHistory(daysAgo, maxResults) {
+export async function getChromeHistory(daysAgo, maxResults) {
   return new Promise((resolve, reject) => {
-    browserApi.history.search({
-      text: '',
-      maxResults: maxResults,
-      startTime: Date.now() - (1000 * 60 * 60 * 24 * daysAgo),
-      endTime: Date.now(),
-    }, (history, err) => {
-      if (err) {
-        return reject(err)
-      }
-      return resolve(history)
-    })
+    browserApi.history.search(
+      {
+        text: "",
+        maxResults: maxResults,
+        startTime: Date.now() - 1000 * 60 * 60 * 24 * daysAgo,
+        endTime: Date.now(),
+      },
+      (history, err) => {
+        if (err) {
+          return reject(err)
+        }
+        return resolve(history)
+      },
+    )
   })
 }
 
@@ -131,9 +132,9 @@ export async function getChromeBookmarks() {
 export function convertChromeHistory(history) {
   return history.map((el) => {
     return {
-      type: 'history',
+      type: "history",
       title: el.title,
-      originalUrl: el.url.replace(/\/$/, ''),
+      originalUrl: el.url.replace(/\/$/, ""),
       url: cleanUpUrl(el.url),
       visitCount: el.visitCount,
       lastVisit: ext.opts.general.lastVisit ? timeSince(new Date(el.lastVisitTime)) : undefined,

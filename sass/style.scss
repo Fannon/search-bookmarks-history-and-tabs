@@ -23,7 +23,7 @@ body {
     background: none;
   }
   small {
-    color: #AAA;
+    color: #aaa;
   }
 }
 .input,
@@ -104,19 +104,19 @@ body {
 }
 .score {
   background: rgb(116, 116, 116);
-  color: #DDD;
+  color: #ddd;
 }
 .last-visited {
   background: rgb(142, 187, 38);
-  color: #FFF;
+  color: #fff;
 }
 .visit-counter {
   background: rgb(187, 172, 38);
-  color: #FFF;
+  color: #fff;
 }
 .error-message {
   background: rgb(187, 38, 38);
-  color: #FFF;
+  color: #fff;
 }
 .url {
   font-size: 13px;
@@ -131,24 +131,24 @@ body {
   right: 8px;
   .cancel-button {
     background: rgb(201, 68, 68) !important;
-    color: #FFF !important;
+    color: #fff !important;
   }
   .help-button {
     background: rgb(68, 148, 201) !important;
-    color: #FFF !important;
+    color: #fff !important;
   }
   .reset-button {
     background: #777 !important;
-    color: #FFF !important;
+    color: #fff !important;
   }
   .save-button {
     background: rgb(95, 201, 68) !important;
-    color: #FFF !important;
+    color: #fff !important;
   }
   a,
   a:hover {
     background: #777;
-    color: #FFF;
+    color: #fff;
     margin: 0 0 0 8px;
     padding: 2px 12px 4px 12px;
     border: none;
@@ -166,7 +166,7 @@ body {
     margin: 0 0 4px 0;
     padding: 4px;
     border-radius: 3px;
-    overflow: hidden;    
+    overflow: hidden;
     cursor: pointer;
   }
   #selected-result {
@@ -193,7 +193,6 @@ body {
     font-weight: 400;
     color: #333;
   }
-  
 }
 #links {
   height: 22px;
@@ -201,7 +200,7 @@ body {
   position: absolute;
   top: 578px;
   left: 0;
-  background: #FFF;
+  background: #fff;
   padding: 0 8px;
   font-size: 14px;
 
@@ -210,7 +209,7 @@ body {
   }
   #footer-error {
     font-size: 10px;
-    color:rgb(201, 68, 68);
+    color: rgb(201, 68, 68);
   }
 }
 
@@ -221,7 +220,7 @@ body {
   left: 0;
   width: 500px;
   height: 524px;
-  background: #EEE;
+  background: #eee;
   padding: 4px 8px;
   overflow-x: hidden;
   overflow-y: scroll;
@@ -235,7 +234,7 @@ body {
     width: 100%;
     a,
     a:hover {
-      color: #FFF;
+      color: #fff;
       font-size: 15px;
       margin: 4px 4px 0 0;
     }
@@ -252,14 +251,14 @@ body {
   left: 0;
   width: 500px;
   height: 578px;
-  background: #EEE;
+  background: #eee;
 
   #bookmark-title {
     height: 105px;
     resize: none;
   }
   #bookmark-tags,
-  .tagify  {
+  .tagify {
     height: 85px;
     font-size: 18px;
     border: none;
@@ -287,20 +286,20 @@ body {
   height: 90px;
   border: none;
 
-  --tag-bg                  : #557292;
-  --tag-hover               : #5c84af;
-  --tagify-dd-color-primary : #557292;
-  --tag-text-color          : #FFF;
-  --tag-text-color--edit    : #111;
-  --tag-remove-bg           : var(--tag-hover);
-  --tag-pad                 : 2px 8px 4px 8px;
-  --tag-inset-shadow-size   : 1.35em;
+  --tag-bg: #557292;
+  --tag-hover: #5c84af;
+  --tagify-dd-color-primary: #557292;
+  --tag-text-color: #fff;
+  --tag-text-color--edit: #111;
+  --tag-remove-bg: var(--tag-hover);
+  --tag-pad: 2px 8px 4px 8px;
+  --tag-inset-shadow-size: 1.35em;
   --tag-remove-btn-bg--hover: black;
 }
 .tagify__tag {
   margin: 6px 0 5px 6px;
 }
-.tagify__tag>div {
+.tagify__tag > div {
   font-size: 15px;
 }
 .tagify__dropdown {
@@ -312,12 +311,11 @@ body {
 }
 .tagify__dropdown__item {
   padding: 3px 8px 3px 8px;
-  background: #FFF;
+  background: #fff;
 }
 .tagify__dropdown__item--active {
   background: #557292 !important;
 }
-
 
 /** SCROLLBAR */
 #result-list::-webkit-scrollbar,
@@ -353,22 +351,22 @@ body {
     a,
     a:visited {
       color: #999;
-    }  
+    }
     a:hover {
-      color: #BBB;
+      color: #bbb;
     }
     mark {
       color: #6b92c0;
     }
   }
- 
+
   .input,
   .input:active,
   .input:focus,
   #search-approach-toggle {
     background-color: #000;
     border-bottom: 1px solid #444;
-    color: #DDD;
+    color: #ddd;
   }
   #search-approach-toggle.fuzzy {
     color: #d593ea;
@@ -409,7 +407,7 @@ body {
     background: #111;
   }
   .tagify__dropdown__item {
-    color: #CCC;
+    color: #ccc;
     background: #000;
   }
 }

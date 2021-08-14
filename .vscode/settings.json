@@ -1,7 +1,8 @@
 {
-    "cSpell.words": [
-        "BULMA",
-        "fuzzyness",
-        "tagify"
-    ]
+  "cSpell.words": ["BULMA", "fuzzyness", "tagify"],
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
+  "[javascript]": {
+    "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+  }
 }
