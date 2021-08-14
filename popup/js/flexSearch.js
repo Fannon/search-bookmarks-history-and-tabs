@@ -26,7 +26,6 @@ export function createFlexSearchIndex(type, searchData) {
   performance.mark('index-start')
 
   const indexOptions = {
-    preset: 'match',
     tokenize: 'forward',
     minlength: ext.opts.search.minMatchCharLength,
   }
@@ -95,9 +94,7 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
       results.push(...flexSearchWithScoring(ext.index.precise.history, searchTerm, ext.model.history))
     }
   }
-
-  console.log('Search Results', results)
-
+  
   performance.mark('search-end')
   performance.measure('search-flexsearch: ' + searchTerm, 'search-start', 'search-end')
   const searchPerformance = performance.getEntriesByType("measure")
@@ -179,10 +176,13 @@ function flexSearchWithScoring(index, searchTerm, data) {
       if (!resultDict[matchIndex]) {
         resultDict[matchIndex] = searchResult
       } else if (resultDict[matchIndex].searchScore < searchResult.searchScore) {
+        // Add a tiny bit of the search score if we have matches in more than just one field
+        const newScore = searchResult.searchScore + (resultDict[matchIndex].searchScore / 5)
         resultDict[matchIndex] = searchResult
+        resultDict[matchIndex].searchScore = newScore
       } else {
         // Add a tiny bit of the search score if we have matches in more than just one field
-        resultDict[matchIndex].searchScore += searchResult.searchScore / 10
+        resultDict[matchIndex].searchScore += searchResult.searchScore / 5
       }
     }
   }
