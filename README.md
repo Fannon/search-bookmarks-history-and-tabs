@@ -59,7 +59,11 @@ An exemplary user-config can look like the following example:
 ```json5
 {
   history: {
-    enabled: false, // Disable search of browsing history
+    ignoreList: [
+      // Ignore some localhost URLs in browser history
+      "http://localhost",
+      "http://127.0.0.1",
+    ],
   },
   searchEngines: {
     choices: [
@@ -144,5 +148,4 @@ This extension makes use of the following helpful open-source projects (thanks!)
 > Please create a [GitHub issue](https://github.com/Fannon/search-tabs-bookmarks-and-history/issues) to give your feedback.
 > All ideas, suggestions or bug reports are welcome.
 
-- Convert project to TypeScript
-- Add blocklists for history (startsWith match?)
+- Convert project to TypeScript?

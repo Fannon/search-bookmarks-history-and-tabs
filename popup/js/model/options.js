@@ -70,6 +70,8 @@ export const defaultOptions = {
     daysAgo: 3,
     /** How many history items should be fetched at most */
     maxItems: 512,
+    /** All history items that start with the URLs given here will be skipped */
+    ignoreList: [],
   },
 
   /**
