@@ -20,37 +20,38 @@ export function createPreciseIndexes() {
 }
 
 /**
- * Creates flexsearch index
+ * Creates flexsearch index of a specific type
  */
 export function createFlexSearchIndex(type, searchData) {
   performance.mark('index-start')
-  const options = {
-    preset: 'match',
-    tokenize: "forward",
+
+  const indexOptions = {
+    tokenize: 'forward',
     minlength: ext.opts.search.minMatchCharLength,
-    document: {
-      id: "index",
-      index: [{
-        field: "title",
-      }, {
-        field: 'url',
-      }]
-    }
   }
+
+  const indexes = {}
+  indexes.title = new FlexSearch.Index(indexOptions)
+  indexes.url = new FlexSearch.Index(indexOptions)
 
   if (type === 'bookmarks') {
-    options.document.index.push({ field: 'tags' }, { field: 'folder' })
+    indexes.tag = new FlexSearch.Index(indexOptions)
+    indexes.folder = new FlexSearch.Index(indexOptions)
   }
 
-  const index = new FlexSearch.Document(options)
-
   for (const entry of searchData) {
-    index.add(entry)
+    indexes.title.add(entry.index, entry.title)
+    indexes.url.add(entry.index, entry.url)
+
+    if (type === 'bookmarks') {
+      indexes.tag.add(entry.index, entry.tags)
+      indexes.folder.add(entry.index, entry.folder)
+    }
   }
 
   performance.mark('index-end')
   performance.measure('index-flexsearch-' + type, 'index-start', 'index-end')
-  return index
+  return indexes
 }
 
 /**
@@ -93,17 +94,7 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
       results.push(...flexSearchWithScoring(ext.index.precise.history, searchTerm, ext.model.history))
     }
   }
-
-  // Convert search results into result format view model
-  results = results.map((el) => {
-    return {
-      ...el.item,
-      searchScore: el.searchScore,
-    }
-  })
-
-  console.log('Search Results', results)
-
+  
   performance.mark('search-end')
   performance.measure('search-flexsearch: ' + searchTerm, 'search-start', 'search-end')
   const searchPerformance = performance.getEntriesByType("measure")
@@ -115,56 +106,86 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
 
 /**
  * Helper function to make a flexsearch search and include the element along with a score
+ * This also includes some custom boolean logic how search terms lead to a match across multiple fields
  */
 function flexSearchWithScoring(index, searchTerm, data) {
 
-  const results = []
-
-  const searchResults = index.search(searchTerm, ext.opts.search.maxResults, {})
-
-  if (searchResults.length === 0) {
-    return results // early return when we have no match anyway
+  const matchesDict = {
+    title: [],
+    url: [],
+  }
+  if (index.tag) {
+    matchesDict.tag = []
+  }
+  if (index.folder) {
+    matchesDict.folder = []
   }
 
-  const titleMatches = searchResults[0] ? searchResults[0].result : []
-  const urlMatches = searchResults[1] ? searchResults[1].result : []
-  const tagMatches = searchResults[2] ? searchResults[2].result : []
-  const folderMatches = searchResults[3] ? searchResults[3].result : []
+  // Simulate an OR search with the terms in searchTerm, separated by spaces
+  let searchTermArray = searchTerm.split(' ')
+  // filter out all search terms that do not match the min char match length
+  searchTermArray = searchTermArray.filter(el => el.length > ext.opts.search.minMatchCharLength)
+  
+  let matchCounter = 0
+  for (const term of searchTermArray) {
+    // Search title field
+    const titleMatches = index.title.search(term, ext.opts.search.maxResults)
+    matchesDict.title.push(...titleMatches)
 
-  const uniqueMatches = [...new Set([
-    ...titleMatches,
-    ...urlMatches,
-    ...tagMatches,
-    ...folderMatches,
-  ])]
+    // Search url field
+    const urlMatches = index.url.search(term, ext.opts.search.maxResults)
+    matchesDict.url.push(...urlMatches)
 
-  ext.model.result = []
-  for (const matchId of uniqueMatches) {
-    const el = data[matchId]
-
-    let searchScore = 0
-
-    searchScore = Math.max(searchScore, calculateFlexScoreForField(titleMatches, matchId, ext.opts.score.titleWeight))
-    searchScore = Math.max(searchScore, calculateFlexScoreForField(urlMatches, matchId, ext.opts.score.urlWeight))
-    if (el.type === 'bookmark') {
-      searchScore = Math.max(searchScore, calculateFlexScoreForField(tagMatches, matchId, ext.opts.score.tagWeight))
-      searchScore = Math.max(searchScore, calculateFlexScoreForField(folderMatches, matchId, ext.opts.score.folderWeight))
+    // search tags if available (only bookmars)
+    let tagMatches = []
+    if (index.tag) {
+      tagMatches = index.tag.search(term, ext.opts.search.maxResults)
+      matchesDict.tag.push(...tagMatches)
+    }
+    
+    // search folder if available (only bookmars)
+    let folderMatches = []
+    if (index.folder) {
+      folderMatches = index.folder.search(term, ext.opts.search.maxResults)
+      matchesDict.folder.push(...folderMatches)
     }
 
-    results.push({
-      searchScore: searchScore,
-      item: el
-    })
+    // Count how many individual search terms we have found across all the fields
+    if (titleMatches.length + urlMatches.length + tagMatches.length + folderMatches.length) {
+      matchCounter += 1
+    }
   }
 
-  return results
-}
-
-function calculateFlexScoreForField(matches, matchId, fieldWeight) {
-  const index = matches.indexOf(matchId)
-  if (index > -1) {
-    return (((matches.length - index) / matches.length / 5) + 0.8) * fieldWeight
-  } else {
-    return 0
+  // We need to have at least one field match per search term to have an overall match 
+  if (matchCounter < searchTermArray.length) {
+    return []
   }
+
+  const resultDict = {}
+
+  for (const field in matchesDict) {
+    const matches = matchesDict[field]
+    
+    for (const matchIndex of matches) {
+      const el = data[matchIndex]
+      const searchResult = {
+        searchScore: ext.opts.score[`${field}Weight`],
+        ...el
+      }
+
+      if (!resultDict[matchIndex]) {
+        resultDict[matchIndex] = searchResult
+      } else if (resultDict[matchIndex].searchScore < searchResult.searchScore) {
+        // Add a tiny bit of the search score if we have matches in more than just one field
+        const newScore = searchResult.searchScore + (resultDict[matchIndex].searchScore / 5)
+        resultDict[matchIndex] = searchResult
+        resultDict[matchIndex].searchScore = newScore
+      } else {
+        // Add a tiny bit of the search score if we have matches in more than just one field
+        resultDict[matchIndex].searchScore += searchResult.searchScore / 5
+      }
+    }
+  }
+
+  return Object.values(resultDict)
 }

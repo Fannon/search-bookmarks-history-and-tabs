@@ -13,7 +13,7 @@ export function searchTags(searchTerm) {
   const tags = getUniqueTags()
   for (const tagName in tags) {
     const tag = tags[tagName]
-    if (tagName.startsWith(searchTerm)) {
+    if (tagName.toLowerCase().startsWith(searchTerm)) {
       for (const elIndex of tag) {
         const el = ext.model.bookmarks[elIndex]
         const result = {
@@ -43,7 +43,7 @@ export function searchFolders(searchTerm) {
   const folders = getUniqueFolders()
   for (const folderName in folders) {
     const folder = folders[folderName]
-    if (folderName.startsWith(searchTerm)) {
+    if (folderName.toLowerCase().startsWith(searchTerm)) {
       for (const elIndex of folder) {
         const el = ext.model.bookmarks[elIndex]
         const result = {

@@ -147,6 +147,9 @@ export async function initExtension() {
 // NAVIGATION                           //
 //////////////////////////////////////////
 
+/**
+ * URL Hash Router
+ */
 function hashRouter() {
   const hash = window.location.hash;
   console.debug("Changing Route: " + hash);
@@ -181,8 +184,6 @@ function closeModals() {
   document.getElementById("edit-bookmark").style = "display: none;";
   document.getElementById("tags-overview").style = "display: none;";
   document.getElementById("folders-overview").style = "display: none;";
-
-  // reset error messages
   document.getElementById("footer-error").innerText = "";
 }
 
@@ -297,7 +298,6 @@ async function getSearchData() {
 
   // Remove all history entries that have been merged
   for (const index of historyToDelete) {
-    console.log('DELETE ' + index)
     delete result.history[index];
   }
   result.history = result.history.filter((el) => el);
@@ -345,6 +345,8 @@ async function search(event) {
   performance.mark("search-start");
 
   let searchTerm = ext.dom.searchInput.value || "";
+  searchTerm = searchTerm.trim().toLowerCase()
+  searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
   ext.model.result = [];
   let searchMode = "all"; // OR 'bookmarks' OR 'history'
 
@@ -664,28 +666,36 @@ export function calculateFinalScore(result, searchTerm, sort) {
     // This will reduce the score if the search is not a good match
     score = score * (el.searchScore || ext.opts.score.titleWeight);
 
-    // Treat each search term separated by a space individually
-    // TODO: Adjust score depending on the proportion of the search text and the matches?
-    searchTerm.split(' ').forEach((term) => {
-      if (term) {
-        if (el.title && el.title.toLowerCase().includes(term)) {
-          score += ext.opts.score.exactIncludesBonus * ext.opts.score.titleWeight;
-        } else if (el.url.includes(searchTerm.split(" ").join("-"))) {
-          score += ext.opts.score.exactIncludesBonus * ext.opts.score.urlWeight;
+    // Increse score if we have an exact "includes" match in title or url
+    if (ext.opts.score.exactIncludesBonus) {
+      // Treat each search term separated by a space individually
+      searchTerm.split(' ').forEach((term) => {
+        if (term) {
+          if (el.title && el.title.toLowerCase().includes(term)) {
+            score += ext.opts.score.exactIncludesBonus * ext.opts.score.titleWeight;
+          } else if (el.url.includes(searchTerm.split(" ").join("-"))) {
+            score += ext.opts.score.exactIncludesBonus * ext.opts.score.urlWeight;
+          }
         }
-      }
-    })
+      })
+    }
 
-    // Increase score if we have exact "startsWith" or alternatively "includes" matches
-    if (el.title && el.title.toLowerCase().startsWith(searchTerm)) {
-      score += ext.opts.score.exactStartsWithBonus * ext.opts.score.titleWeight;
-    } else if (el.url.startsWith(searchTerm.split(" ").join("-"))) {
-      score += ext.opts.score.exactStartsWithBonus * ext.opts.score.urlWeight;
+    // Increase score if we have exact "startsWith" match in title or url
+    if (ext.opts.score.exactStartsWithBonus) {
+      if (el.title && el.title.toLowerCase().startsWith(searchTerm)) {
+        score += ext.opts.score.exactStartsWithBonus * ext.opts.score.titleWeight;
+      } else if (el.url.startsWith(searchTerm.split(" ").join("-"))) {
+        score += ext.opts.score.exactStartsWithBonus * ext.opts.score.urlWeight;
+      }
+    }
+
+    // Increase score if we have an exact equal match in the title
+    if (ext.opts.score.exactEqualsBonus && el.title && el.title.toLowerCase() === searchTerm) {
+      score += ext.opts.score.exactEqualsBonus * ext.opts.score.titleWeight;
     }
 
     // Increase score if we have an exact tag match
-    // TODO: This could be made better via a dedicated, non-fuzzy tag-mode search
-    if (el.tags && searchTerm.includes("#")) {
+    if (ext.opts.score.exactTagMatchBonus && el.tags && searchTerm.includes("#")) {
       let searchTermTags = searchTerm.split("#");
       searchTermTags.shift();
       searchTermTags.forEach((tag) => {
@@ -698,8 +708,7 @@ export function calculateFinalScore(result, searchTerm, sort) {
     }
 
     // Increase score if we have an exact folder name match
-    // TODO: This could be made better via a dedicated, non-fuzzy folder-mode search
-    if (el.folder && searchTerm.includes("~")) {
+    if (ext.opts.score.exactFolderMatchBonus && el.folder && searchTerm.includes("~")) {
       let searchTermFolders = searchTerm.split("~");
       searchTermFolders.shift();
       searchTermFolders.forEach((folderName) => {

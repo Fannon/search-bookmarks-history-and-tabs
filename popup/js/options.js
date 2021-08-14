@@ -41,7 +41,10 @@ export const defaultOptions = {
      *               Uses the https://github.com/nextapps-de/flexsearch library
     */
     approach: 'fuzzy', // 'precise' or 'fuzzy'
-    /** Max search results. Reduce for better performance */
+    /** 
+     * Max search results. Reduce for better performance.
+     * Does not apply for tag and folder search
+     */
     maxResults: 50,
     /** Min search string characters to have a match */
     minMatchCharLength: 2,
@@ -134,9 +137,9 @@ export const defaultOptions = {
     /** Weight for a tag match*/
     tagWeight: 0.7,
     /** Weight for an url match*/
-    urlWeight: 0.5,
+    urlWeight: 0.6,
     /** Weight for a folder match*/
-    folderWeight: 0.3,
+    folderWeight: 0.5,
 
     // BONUS SCORES
     // If certain conditions apply, extra score points can be added
@@ -150,6 +153,11 @@ export const defaultOptions = {
      * This comes on top of an include bonus.
      */
     exactStartsWithBonus: 10,
+    /**
+     * Additional score points if title matches excactly with the search text.
+     * This comes on top of an include and starts with bonus.
+     */
+    exactEqualsBonus: 10,
 
     /**
      * Additional points for an exact match of a search term tag (including #)
