@@ -57,7 +57,10 @@ export function editBookmark(bookmarkId) {
 export function updateBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
   const titleInput = document.getElementById("bookmark-title").value.trim()
-  const tagsInput = "#" + ext.tagify.value.map((el) => el.value.trim()).join(" #")
+  let tagsInput = ""
+  if (ext.tagify.value.length) {
+    tagsInput = "#" + ext.tagify.value.map((el) => el.value.trim()).join(" #")
+  }
 
   // Update search data model of bookmark
   bookmark.title = titleInput
