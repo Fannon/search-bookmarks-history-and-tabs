@@ -1,6 +1,6 @@
 {
   "name": "search-tabs-bookmarks-and-history",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "Browser extension to (fuzzy) search and navigate browser tabs, bookmarks and history.",
   "main": "index.js",
   "dependencies": {
@@ -23,7 +23,7 @@
   },
   "scripts": {
     "clean": "rm -rf ./dist",
-    "build": "npm run format && npm run lint && npm run clean && npm run css-build && npm run update-libs && npm run create-dist",
+    "build": "npm run clean && npm run css-build && npm run update-libs && npm run create-dist",
     "update-libs": "sh bin/updateLibs.sh",
     "create-dist": "sh bin/createDist.sh",
     "test": "npm run prettier-check && npm run lint",
