@@ -241,6 +241,7 @@ export function openResultItem(event) {
       active: true,
       url: url,
     })
+    window.close()
   } else {
     window.open(url, "_newtab")
   }
