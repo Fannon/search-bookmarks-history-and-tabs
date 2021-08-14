@@ -41,8 +41,11 @@ export const defaultOptions = {
      *               Uses the https://github.com/nextapps-de/flexsearch library
     */
     approach: 'fuzzy', // 'precise' or 'fuzzy'
-    /** Max search results. Reduce for better performance */
-    maxResults: 50,
+    /** 
+     * Max search results. Reduce for better performance.
+     * Does not apply for tag and folder search
+     */
+    maxResults: 32,
     /** Min search string characters to have a match */
     minMatchCharLength: 2,
     /** 
