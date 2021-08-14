@@ -1,4 +1,4 @@
-import { mergeDeep } from "./utils.js";
+import { mergeDeep } from "../helper/utils.js";
 
 /**
  * The default options

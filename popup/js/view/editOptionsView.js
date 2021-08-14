@@ -1,15 +1,10 @@
 //////////////////////////////////////////
-// INITIALIZE                           //
+// EDIT OPTIONS VIEW                    //
 //////////////////////////////////////////
 
-import { getUserOptions, setUserOptions } from "./options.js"
+import { getUserOptions, setUserOptions } from "../model/options.js"
 
-// Trigger initialization
-initOptions().catch((err) => {
-  console.error(err)
-})
-
-async function initOptions() {
+export async function initOptions() {
   const userOptions = await getUserOptions()  
   document.getElementById('user-config').value = JSON5.stringify(userOptions, null, 2)
   document.getElementById('edit-options-reset').addEventListener('click', resetOptions)
