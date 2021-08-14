@@ -14,7 +14,6 @@
   "devDependencies": {
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
-    "husky": "^7.0.1",
     "lint-staged": "^11.1.2",
     "live-server": "^1.2.1",
     "node-sass": "^6.0.1",
@@ -27,14 +26,15 @@
     "build": "npm run test && npm run clean && npm run css-build && npm run update-libs && npm run create-dist",
     "update-libs": "sh bin/updateLibs.sh",
     "create-dist": "sh bin/createDist.sh",
-    "test": "npm run lint",
-    "lint": "npm run eslint && npm run prettier",
+    "test": "npm run prettier-check && npm run lint",
+    "lint": "npm run eslint",
+    "format": "npm run eslint && npm run prettier",
     "eslint": "eslint popup/**/*.js --fix --format stylish",
     "css-build": "node-sass sass/ -o popup/css --omit-source-map-url --output-style compressed",
     "css-watch": "npm run css-build -- --watch",
     "start": "live-server --open=./popup/",
     "prettier": "prettier --write --ignore-unknown .",
-    "prepare": "husky install"
+    "prettier-check": "prettier --check --ignore-unknown ."
   },
   "repository": {
     "type": "git",
