@@ -75,22 +75,22 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
   console.debug(`Searching with approach="precise" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
   if (searchMode === "history" && ext.index.precise.history) {
-    results = flexSearchWithScoring(ext.index.precise.history, searchTerm, ext.model.history)
+    results = flexSearchWithScoring("history", searchTerm, ext.model.history)
   } else if (searchMode === "bookmarks" && ext.index.precise.bookmarks) {
-    results = flexSearchWithScoring(ext.index.precise.bookmarks, searchTerm, ext.model.bookmarks)
+    results = flexSearchWithScoring("bookmarks", searchTerm, ext.model.bookmarks)
   } else if (searchMode === "tabs" && ext.index.precise.tabs) {
-    results = flexSearchWithScoring(ext.index.precise.tabs, searchTerm, ext.model.tabs)
+    results = flexSearchWithScoring("tabs", searchTerm, ext.model.tabs)
   } else if (searchMode === "search") {
     // nothing, because search will be added later
   } else {
     if (ext.index.precise.bookmarks) {
-      results.push(...flexSearchWithScoring(ext.index.precise.bookmarks, searchTerm, ext.model.bookmarks))
+      results.push(...flexSearchWithScoring("bookmarks", searchTerm, ext.model.bookmarks))
     }
     if (ext.index.precise.tabs) {
-      results.push(...flexSearchWithScoring(ext.index.precise.tabs, searchTerm, ext.model.tabs))
+      results.push(...flexSearchWithScoring("tabs", searchTerm, ext.model.tabs))
     }
     if (ext.index.precise.history) {
-      results.push(...flexSearchWithScoring(ext.index.precise.history, searchTerm, ext.model.history))
+      results.push(...flexSearchWithScoring("history", searchTerm, ext.model.history))
     }
   }
 
@@ -107,83 +107,97 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
  * Helper function to make a flexsearch search and include the element along with a score
  * This also includes some custom boolean logic how search terms lead to a match across multiple fields
  */
-function flexSearchWithScoring(index, searchTerm, data) {
-  const matchesDict = {
-    title: [],
-    url: [],
-  }
-  if (index.tag) {
-    matchesDict.tag = []
-  }
-  if (index.folder) {
-    matchesDict.folder = []
-  }
+function flexSearchWithScoring(indexName, searchTerm, data) {
+  const index = ext.index.precise[indexName]
+
+  /** Dictionary to hold all search matches, grouped by search term and field name */
+  const matchesDict = {}
 
   // Simulate an OR search with the terms in searchTerm, separated by spaces
   let searchTermArray = searchTerm.split(" ")
   // filter out all search terms that do not match the min char match length
-  searchTermArray = searchTermArray.filter((el) => el.length > ext.opts.search.minMatchCharLength)
+  searchTermArray = searchTermArray.filter((el) => el.length >= ext.opts.search.minMatchCharLength)
 
-  let matchCounter = 0
+  if (!searchTermArray.length) {
+    // Early return if none of the search terms have enough char length
+    return []
+  }
+
+  let overallMatchCounter = 0
   for (const term of searchTermArray) {
+    matchesDict[term] = {}
+
     // Search title field
-    const titleMatches = index.title.search(term, ext.opts.search.maxResults)
-    matchesDict.title.push(...titleMatches)
+    matchesDict[term].title = index.title.search(term, ext.opts.search.maxResults)
 
     // Search url field
-    const urlMatches = index.url.search(term, ext.opts.search.maxResults)
-    matchesDict.url.push(...urlMatches)
+    matchesDict[term].url = index.url.search(term, ext.opts.search.maxResults)
 
     // search tags if available (only bookmars)
-    let tagMatches = []
     if (index.tag) {
-      tagMatches = index.tag.search(term, ext.opts.search.maxResults)
-      matchesDict.tag.push(...tagMatches)
+      matchesDict[term].tag = index.tag.search(term, ext.opts.search.maxResults)
     }
 
     // search folder if available (only bookmars)
-    let folderMatches = []
     if (index.folder) {
-      folderMatches = index.folder.search(term, ext.opts.search.maxResults)
-      matchesDict.folder.push(...folderMatches)
+      matchesDict[term].folder = index.folder.search(term, ext.opts.search.maxResults)
     }
 
     // Count how many individual search terms we have found across all the fields
-    if (titleMatches.length + urlMatches.length + tagMatches.length + folderMatches.length) {
-      matchCounter += 1
+    if (
+      matchesDict[term].title.length +
+      matchesDict[term].url.length +
+      (matchesDict[term].tag || []).length +
+      (matchesDict[term].folder || []).length
+    ) {
+      overallMatchCounter += 1
     }
   }
 
-  // We need to have at least one field match per search term to have an overall match
-  if (matchCounter < searchTermArray.length) {
+  // Early return if we don't have at least one field match
+  if (overallMatchCounter === 0) {
     return []
   }
 
   const resultDict = {}
 
-  for (const field in matchesDict) {
-    const matches = matchesDict[field]
+  for (const term in matchesDict) {
+    for (const field in matchesDict[term]) {
+      const matches = matchesDict[term][field]
 
-    for (const matchIndex of matches) {
-      const el = data[matchIndex]
-      const searchResult = {
-        searchScore: ext.opts.score[`${field}Weight`],
-        ...el,
-      }
+      for (const matchIndex of matches) {
+        const el = data[matchIndex]
 
-      if (!resultDict[matchIndex]) {
-        resultDict[matchIndex] = searchResult
-      } else if (resultDict[matchIndex].searchScore < searchResult.searchScore) {
-        // Add a tiny bit of the search score if we have matches in more than just one field
-        const newScore = searchResult.searchScore + resultDict[matchIndex].searchScore / 5
-        resultDict[matchIndex] = searchResult
-        resultDict[matchIndex].searchScore = newScore
-      } else {
-        // Add a tiny bit of the search score if we have matches in more than just one field
-        resultDict[matchIndex].searchScore += searchResult.searchScore / 5
+        if (!resultDict[matchIndex]) {
+          resultDict[matchIndex] = {
+            searchScore: ext.opts.score[`${field}Weight`],
+            searchTermMatches: {},
+            ...el,
+          }
+        } else {
+          // Result is already there, we just need to update the score and counters
+          let searchScore = ext.opts.score[`${field}Weight`]
+          if (resultDict[matchIndex].searchScore < searchScore) {
+            const newScore = searchScore + resultDict[matchIndex].searchScore / 5
+            resultDict[matchIndex].searchScore = newScore
+          } else {
+            resultDict[matchIndex].searchScore += searchScore / 5
+          }
+        }
+
+        resultDict[matchIndex].searchTermMatches[term] = true
       }
     }
   }
 
-  return Object.values(resultDict)
+  // Now reduce the searchScore by the ratio of search terms found vs. search terms given
+  const results = Object.values(resultDict).map((el) => {
+    const searchTermMatchRatio = Object.keys(el.searchTermMatches).length / searchTermArray.length
+    return {
+      ...el,
+      searchScore: el.searchScore * searchTermMatchRatio,
+    }
+  })
+
+  return Object.values(results)
 }

@@ -43,8 +43,7 @@ export function renderSearchResults(result) {
     titleDiv.classList.add("title")
 
     if (ext.opts.general.highlight) {
-      const content =
-        resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
+      const content = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
       if (content.includes("<mark>")) {
         titleDiv.innerHTML = content + " "
       } else {
@@ -182,8 +181,6 @@ export function selectListItem(index, scroll = false) {
         block: "nearest",
       })
     }
-  } else {
-    console.error("Tried to select non-existing list item: " + index)
   }
   ext.model.currentItem = index
 }

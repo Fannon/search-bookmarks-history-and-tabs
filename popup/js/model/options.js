@@ -111,6 +111,7 @@ export const defaultOptions = {
 
     // RESULT TYPE BASE SCORES
     // Depending on the type of result, they start with a base score
+    // Please make sure that this is not below the minScore :)
 
     /** Base score for bookmark results */
     bookmarkBaseScore: 100,
@@ -140,7 +141,7 @@ export const defaultOptions = {
     /**
      * For each exact "includes" match we add some bonus points
      */
-    exactIncludesBonus: 10,
+    exactIncludesBonus: 5,
     /**
      * Additional score points if title or url starts exactly with the search text.
      * This comes on top of an include bonus.
@@ -151,12 +152,10 @@ export const defaultOptions = {
      * This comes on top of an include and starts with bonus.
      */
     exactEqualsBonus: 10,
-
     /**
      * Additional points for an exact match of a search term tag (including #)
      */
     exactTagMatchBonus: 10,
-
     /**
      * Additional points for an exact match of a search term folder name (including ~)
      */

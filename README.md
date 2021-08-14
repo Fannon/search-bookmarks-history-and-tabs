@@ -144,4 +144,5 @@ This extension makes use of the following helpful open-source projects (thanks!)
 > Please create a [GitHub issue](https://github.com/Fannon/search-tabs-bookmarks-and-history/issues) to give your feedback.
 > All ideas, suggestions or bug reports are welcome.
 
-- Convert project to TypeScript + refactor code
+- Convert project to TypeScript
+- Add blocklists for history (startsWith match?)
