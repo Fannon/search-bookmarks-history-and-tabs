@@ -109,6 +109,15 @@ export const defaultOptions = {
     /** Filter out all search results below this minimum score */
     minScore: 30,
 
+    /**
+     * Minimum ratio of search term matchs to consider a match.
+     * Set to 1 to only return results that match all search terms
+     * Set to 0 to return all results that match any search term, allthough with reduced score
+     *
+     * This setting only applies to precise search
+     */
+    minSearchTermMatchRatio: 0.6,
+
     // RESULT TYPE BASE SCORES
     // Depending on the type of result, they start with a base score
     // Please make sure that this is not below the minScore :)

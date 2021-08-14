@@ -190,8 +190,16 @@ function flexSearchWithScoring(indexName, searchTerm, data) {
     }
   }
 
+  let results = Object.values(resultDict)
+
+  // Filter out all results that don't meed the minimum required search term match ratio
+  results = results.filter((el) => {
+    const searchTermMatchRatio = Object.keys(el.searchTermMatches).length / searchTermArray.length
+    return searchTermMatchRatio >= ext.opts.score.minSearchTermMatchRatio
+  })
+
   // Now reduce the searchScore by the ratio of search terms found vs. search terms given
-  const results = Object.values(resultDict).map((el) => {
+  results = results.map((el) => {
     const searchTermMatchRatio = Object.keys(el.searchTermMatches).length / searchTermArray.length
     return {
       ...el,
@@ -199,5 +207,5 @@ function flexSearchWithScoring(indexName, searchTerm, data) {
     }
   })
 
-  return Object.values(results)
+  return results
 }
