@@ -15,11 +15,6 @@ cp images/logo-48.png dist/chrome/images/logo-48.png
 cp images/logo-128.png dist/chrome/images/logo-128.png
 
 cp -r popup/ dist/chrome/popup/
-# Minimize JS
-#node node_modules/uglify-js/bin/uglifyjs -cm -- popup/js/search.js > dist/chrome/popup/js/search.js
-#node node_modules/uglify-js/bin/uglifyjs -cm -- popup/js/options.js > dist/chrome/popup/js/options.js
-#node node_modules/uglify-js/bin/uglifyjs -cm -- popup/js/editOptions.js > dist/chrome/popup/js/editOptions.js
-#node node_modules/uglify-js/bin/uglifyjs -cm -- popup/js/utils.js > dist/chrome/popup/js/utils.js
 
 # Remove mock data
 rm -rf dist/chrome/popup/mockData

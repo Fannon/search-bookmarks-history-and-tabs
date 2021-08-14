@@ -1,0 +1,25 @@
+{
+  "extends": ["eslint:recommended", "prettier"],
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "webextensions": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module"
+  },
+  "globals": {
+    "ext": "writable",
+    "Tagify": "readonly",
+    "Mark": "readonly",
+    "JSON5": "readonly",
+    "FlexSearch": "readonly"
+  },
+  "ignorePatterns": ["**/lib/*.js"],
+  "rules": {
+    "no-console": "off",
+    "semi": ["warn", "never"],
+    "comma-dangle": ["warn", "only-multiline"]
+  }
+}

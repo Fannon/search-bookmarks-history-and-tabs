@@ -5,12 +5,7 @@
   "author": "Simon Heimler",
   "version": "0.9.4",
   "manifest_version": 3,
-  "permissions": [
-    "tabs",
-    "bookmarks",
-    "history",
-    "storage"
-  ],
+  "permissions": ["tabs", "bookmarks", "history", "storage"],
   "action": {
     "default_popup": "/popup/index.html",
     "default_icon": {

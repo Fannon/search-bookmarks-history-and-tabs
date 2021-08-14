@@ -3,25 +3,38 @@
   "version": "0.9.4",
   "description": "Browser extension to (fuzzy) search and navigate browser tabs, bookmarks and history.",
   "main": "index.js",
-  "devDependencies": {
+  "dependencies": {
     "@yaireo/tagify": "^4.6.0",
     "bulma": "^0.9.3",
     "flexsearch": "^0.7.21",
     "fuse.js": "^6.4.6",
     "json5": "^2.2.0",
-    "live-server": "^1.1.0",
-    "mark.js": "^8.11.1",
+    "mark.js": "^8.11.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "lint-staged": "^11.1.2",
+    "live-server": "^1.2.1",
     "node-sass": "^6.0.1",
+    "prettier": "2.3.2",
+    "prettier-eslint": "^13.0.0",
     "uglify-js": "^3.14.1"
   },
   "scripts": {
     "clean": "rm -rf ./dist",
-    "build": "npm run clean && npm run css-build && npm run update-libs && npm run create-dist",
+    "build": "npm run test && npm run clean && npm run css-build && npm run update-libs && npm run create-dist",
     "update-libs": "sh bin/updateLibs.sh",
     "create-dist": "sh bin/createDist.sh",
+    "test": "npm run prettier-check && npm run lint",
+    "lint": "npm run eslint",
+    "format": "npm run eslint && npm run prettier",
+    "eslint": "eslint popup/**/*.js --fix --format stylish",
     "css-build": "node-sass sass/ -o popup/css --omit-source-map-url --output-style compressed",
     "css-watch": "npm run css-build -- --watch",
-    "start": "live-server --open=./popup/"
+    "start": "live-server --open=./popup/",
+    "prettier": "prettier --write --ignore-unknown .",
+    "prettier-check": "prettier --check --ignore-unknown ."
   },
   "repository": {
     "type": "git",

@@ -1,0 +1,4 @@
+# Ignore artifacts:
+dist
+popup/lib
+popup/css
