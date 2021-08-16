@@ -1,6 +1,6 @@
-# Search Tabs, Bookmarks and History
+# Search Bookmarks, History and Browser Tabs
 
-> Browser extension to (fuzzy) search and navigate browser tabs, local bookmarks and history.
+> Browser extension to (fuzzy) search and navigate bookmarks, history and browser tabs.
 
 ## Installation via Store
 
@@ -10,10 +10,10 @@
 
 ## Features
 
-- Quick search your open browser tabs, bookmarks and browsing history.
+- Quick search your bookmarks, browsing history and open browser tabs.
 - Supports two different search approaches:
   - Fuzzy search (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
-  - Exact search (starts with matching): Faster and only excact matching results.
+  - Exact search (starts with matching): Faster and only exact matching results.
 - Bookmarks can be searched for tags (extracted from title) and folder names.
 - Edit and tag bookmarks with auto complete on tags.
 - Dark theme / light theme via system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
