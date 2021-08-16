@@ -1,7 +1,7 @@
 {
   "name": "search-bookmarks-history-and-tabs",
   "version": "0.9.5",
-  "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and browser tabs.",
+  "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.",
   "main": "index.js",
   "dependencies": {
     "@yaireo/tagify": "^4.6.0",
