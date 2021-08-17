@@ -1,6 +1,6 @@
 # Search Bookmarks, History and Browser Tabs
 
-> Browser extension to (fuzzy) search and navigate bookmarks, history and browser tabs.
+> Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.
 
 ## Installation via Store
 
@@ -10,7 +10,7 @@
 
 ## Features
 
-- Quick search your bookmarks, browsing history and open browser tabs.
+- Quick search your browser bookmarks, history and open tabs.
 - Supports two different search approaches:
   - Fuzzy search (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
   - Exact search (starts with matching): Faster and only exact matching results.
@@ -49,7 +49,7 @@
 
 The user options are written in [JSON format](https://en.wikipedia.org/wiki/JSON) or [JSON5 format](https://json5.org/). You only need to define the options that you want to overwrite options.
 
-To see what configurations are available and what they do, please have a look at the `defaultOptions` in [popup/js/options.js](popup/js/options.js).
+To see what configurations are available and what they do, please have a look at the `defaultOptions` in [popup/js/model/options.js](popup/js/model/options.js).
 
 > The options are not validated properly. Please make sure to use them correctly.<br/>
 > If something breaks, consider resetting your options.
