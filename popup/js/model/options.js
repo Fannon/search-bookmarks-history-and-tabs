@@ -35,18 +35,36 @@ export const defaultOptions = {
      *               Uses the https://github.com/nextapps-de/flexsearch library
      */
     approach: "fuzzy", // 'precise' or 'fuzzy'
+
     /**
      * Max search results. Reduce for better performance.
      * Does not apply for tag and folder search
      */
     maxResults: 50,
-    /** Min search string characters to have a match */
+
+    /** Min string characters of the search term to consider a match */
     minMatchCharLength: 2,
+
     /**
      * Fuzzy search threshold (0 - 1)
      * 0 is no fuzzyness, 1 is full fuzzyness
+     *
+     * This applies only to search approach 'fuzzy'.
+     * For precise this is always 0 (no fuzzyness)
      */
     fuzzyness: 0.4,
+
+    /**
+     * How search matches are considered
+     * 'startsWith' is only considering a match if the search term starts with the term
+     * 'includes' also considers matches where the term is included anywhere.
+     *
+     * Setting this to 'includes' will drastically increase precise indexing time
+     *
+     * This applies only to search approach 'precise'.
+     * For fuzzy this is always 'includes'
+     */
+    matchAlgorithm: "startsWith", // or 'includes'
   },
 
   tabs: {
