@@ -30,6 +30,10 @@ export function createFlexSearchIndex(type, searchData) {
     minlength: ext.opts.search.minMatchCharLength,
   }
 
+  if (ext.opts.search.matchAlgorithm === 'includes') {
+    indexOptions.tokenize = 'full'
+  }
+
   const indexes = {}
   indexes.title = new FlexSearch.Index(indexOptions)
   indexes.url = new FlexSearch.Index(indexOptions)
