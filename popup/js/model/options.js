@@ -48,7 +48,7 @@ export const defaultOptions = {
     /**
      * Fuzzy search threshold (0 - 1)
      * 0 is no fuzzyness, 1 is full fuzzyness
-     * 
+     *
      * This applies only to search approach 'fuzzy'.
      * For precise this is always 0 (no fuzzyness)
      */
@@ -57,14 +57,14 @@ export const defaultOptions = {
     /**
      * How search matches are considered
      * 'startsWith' is only considering a match if the search term starts with the term
-     * 'includes' also considers matches where the term is included anywhere. 
-     * 
+     * 'includes' also considers matches where the term is included anywhere.
+     *
      * Setting this to 'includes' will drastically increase precise indexing time
-     * 
+     *
      * This applies only to search approach 'precise'.
      * For fuzzy this is always 'includes'
      */
-    matchAlgorithm: 'startsWith', // or 'includes'
+    matchAlgorithm: "startsWith", // or 'includes'
   },
 
   tabs: {
