@@ -24,9 +24,9 @@
 
 ## Screenshots & Demo
 
-![Screenshots](/images/bookmark-and-history-search-screenshots.png "Screenshots")
-
 ![Demo Animation](/images/bookmark-and-history-search.gif "Demo Animation")
+
+![Screenshots](/images/bookmark-and-history-search-screenshots.png "Screenshots")
 
 ## User Documentation
 
