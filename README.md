@@ -11,6 +11,7 @@
 ## Features
 
 - Quick search your browser bookmarks, history and open tabs.
+- The extension does not collect any data nor does it make any external requests.
 - Supports two different search approaches:
   - Fuzzy search (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
   - Exact search (starts with matching): Faster and only exact matching results.
@@ -20,7 +21,6 @@
 - Fallback to use search engines like google, dict.cc etc. (multiple options)
 - Customization via [user options](#user-configuration).
 - Lightweight: Written in vanilla JavaScript with the goal to only include only [a few necessary libraries](#credits).
-- The extension does not collect any data nor does it make any external requests.
 
 ## Screenshots & Demo
 
