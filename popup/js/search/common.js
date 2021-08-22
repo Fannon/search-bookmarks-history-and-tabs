@@ -199,9 +199,21 @@ export function calculateFinalScore(result, searchTerm, sort) {
       })
     }
 
-    // Increase score if result has been open frequently or recently
-    if (el.visitCount) {
+    // Increase score if result has been open frequently
+    if (ext.opts.score.visitedBonusScore && el.visitCount) {
       score += Math.min(ext.opts.score.visitedBonusScoreMaximum, el.visitCount * ext.opts.score.visitedBonusScore)
+    }
+
+    // Increase score if result has been opened recently
+    if (ext.opts.score.recentBonusScorePerHour && el.lastVisitSecondsAgo != null) {
+      // Bonus score is always at least 0 (no negative scores)
+      // Take the recentBonusScoreMaximum
+      // Substract recentBonusScorePerHour points for each hour in the past
+      score += Math.max(
+        0,
+        ext.opts.score.recentBonusScoreMaximum -
+          (el.lastVisitSecondsAgo / 60 / 60) * ext.opts.score.recentBonusScorePerHour,
+      )
     }
 
     el.score = score

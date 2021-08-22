@@ -1,6 +1,6 @@
 # Search Bookmarks, History and Browser Tabs
 
-> Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.
+> 🔎 Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.
 
 ## Installation via Store
 

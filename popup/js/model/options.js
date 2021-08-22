@@ -180,7 +180,7 @@ export const defaultOptions = {
      * Additional score points if title matches excactly with the search text.
      * This comes on top of an include and starts with bonus.
      */
-    exactEqualsBonus: 10,
+    exactEqualsBonus: 15,
     /**
      * Additional points for an exact match of a search term tag (including #)
      */
@@ -192,11 +192,26 @@ export const defaultOptions = {
 
     /**
      * Adds score points for every site visit according to browsing history
-     * Please note that this is not only within `history.daysAgo`, but you whole history.
+     * Please note that only history items within `history.daysAgo` can be considered,
+     * however the visited counter itself considers your complete history.
      */
-    visitedBonusScore: 2,
+    visitedBonusScore: 0.25,
     /** Maximum score points for visited bonus */
-    visitedBonusScoreMaximum: 30,
+    visitedBonusScoreMaximum: 10,
+
+    /**
+     * Adds score points when a bookmark or history has been accessed recently.
+     * Calculated by taking the recentBonusScoreMaximum and substracting recentBonusScorePerHour
+     * for each hour the access happened in the past.
+     * There is no negative score.
+     *
+     * Example: If maximum is 24 and perHour is 0.5:
+     * * For a page just opened there will be ~20 bonus score
+     * * For a page opened 24 hours ago there will be 10 bonus score
+     * * For a page opened 48 hours ago there will be 0 bonus score
+     */
+    recentBonusScorePerHour: 0.5,
+    recentBonusScoreMaximum: 20,
   },
 }
 

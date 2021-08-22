@@ -144,6 +144,7 @@ export function convertChromeHistory(history) {
     console.debug(`Ignored ${ignoredHistoryCounter} history items due to ignore list`)
   }
 
+  const now = Date.now()
   return history.map((el) => {
     return {
       type: "history",
@@ -152,6 +153,7 @@ export function convertChromeHistory(history) {
       url: cleanUpUrl(el.url),
       visitCount: el.visitCount,
       lastVisit: ext.opts.general.lastVisit ? timeSince(new Date(el.lastVisitTime)) : undefined,
+      lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
       originalId: el.id,
     }
   })
