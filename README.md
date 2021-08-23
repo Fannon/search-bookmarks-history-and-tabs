@@ -60,6 +60,16 @@ An exemplary user-config can look like the following example:
 
 ```json5
 {
+  visitCounter: true, // Show number of visits counter
+  dateAdded: true, // Show date added for bookmarks
+  dateAddedBonusScoreMaximum: 20, // Increase max score for recently added bookmarks
+}
+```
+
+Or a more advanced example
+
+```json5
+{
   history: {
     ignoreList: [
       // Ignore some localhost URLs in browser history

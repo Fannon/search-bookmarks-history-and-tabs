@@ -16,6 +16,8 @@ export const defaultOptions = {
     lastVisit: true,
     /** Display visit count */
     visitCounter: false,
+    /** Display added date for bookmarks */
+    dateAdded: false,
     /** Display search result score */
     score: true,
   },
@@ -220,6 +222,15 @@ export const defaultOptions = {
      */
     recentBonusScorePerHour: 0.5,
     recentBonusScoreMaximum: 20,
+
+    /**
+     * Adds score points when a bookmark has been added more recently.
+     * Calculated by taking the dateAddedBonusScoreMaximum and substracting dateAddedBonusScorePerDay
+     * for each day the bookmark has been added in the past.
+     * There is no negative score.
+     */
+    dateAddedBonusScorePerDay: 0.1,
+    dateAddedBonusScoreMaximum: 5,
   },
 }
 

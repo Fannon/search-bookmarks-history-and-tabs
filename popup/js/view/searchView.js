@@ -54,6 +54,7 @@ export function renderSearchResults(result) {
     }
     if (ext.opts.general.tags && resultEntry.tags) {
       const tags = document.createElement("span")
+      tags.title = "Bookmark Tags"
       tags.classList.add("badge", "tags")
       if (ext.opts.general.highlight && resultEntry.tagsHighlighted && resultEntry.tagsHighlighted.includes("<mark>")) {
         tags.innerHTML = resultEntry.tagsHighlighted
@@ -64,6 +65,7 @@ export function renderSearchResults(result) {
     }
     if (resultEntry.folder) {
       const folder = document.createElement("span")
+      folder.title = "Bookmark Folder"
       folder.classList.add("badge", "folder")
       if (
         ext.opts.general.highlight &&
@@ -78,18 +80,28 @@ export function renderSearchResults(result) {
     }
     if (ext.opts.general.lastVisit && resultEntry.lastVisit) {
       const lastVisited = document.createElement("span")
+      lastVisited.title = "Last Visited"
       lastVisited.classList.add("badge", "last-visited")
       lastVisited.innerText = "-" + resultEntry.lastVisit
       titleDiv.appendChild(lastVisited)
     }
     if (ext.opts.general.visitCounter && resultEntry.visitCount) {
       const visitCounter = document.createElement("span")
+      visitCounter.title = "Visited Counter"
       visitCounter.classList.add("badge", "visit-counter")
       visitCounter.innerText = resultEntry.visitCount
       titleDiv.appendChild(visitCounter)
     }
+    if (ext.opts.general.dateAdded && resultEntry.dateAdded) {
+      const dateAdded = document.createElement("span")
+      dateAdded.title = "Date Added"
+      dateAdded.classList.add("badge", "date-added")
+      dateAdded.innerText = new Date(resultEntry.dateAdded).toISOString().split("T")[0]
+      titleDiv.appendChild(dateAdded)
+    }
     if (ext.opts.general.score && resultEntry.score) {
       const score = document.createElement("span")
+      score.title = "Score"
       score.classList.add("badge", "score")
       score.innerText = Math.round(resultEntry.score)
       titleDiv.appendChild(score)

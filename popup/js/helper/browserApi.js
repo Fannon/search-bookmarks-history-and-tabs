@@ -85,6 +85,7 @@ export function convertChromeBookmarks(bookmarks, folderTrail, depth) {
         title: title,
         originalUrl: entry.url.replace(/\/$/, ""),
         url: cleanUpUrl(entry.url),
+        dateAdded: entry.dateAdded,
         tags: tagsText,
         tagsArray: tagsArray,
         folder: folderText,
