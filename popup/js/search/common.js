@@ -244,13 +244,6 @@ export function calculateFinalScore(result, searchTerm, sort) {
         ext.opts.score.dateAddedBonusScoreMaximum -
           ((now - el.dateAdded) / 1000 / 60 / 60 / 24) * ext.opts.score.dateAddedBonusScorePerDay,
       )
-
-      console.log(
-        "dateAddedBonusScore",
-        ext.opts.score.dateAddedBonusScoreMaximum -
-          ((now - el.dateAdded) / 1000 / 60 / 60 / 24) * ext.opts.score.dateAddedBonusScorePerDay,
-        el,
-      )
     }
 
     el.score = score
