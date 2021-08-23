@@ -37,3 +37,5 @@ jspm_packages/
 .env
 .env.test
 
+# Temporary files
+temp/

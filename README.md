@@ -122,7 +122,8 @@ The built extensions can be found in [dist/chrome/](dist/chrome/) for Google Chr
 
 ### Developer Installation
 
-- Check out this extension via git or download it as .zip file and unpack it
+- Check out this extension via git
+- Run `npm install` and `npm run build` (via bash / git bash)
 - **For Chrome / Edge**:
   - Navigate to extensions page (`chrome://extensions/` on Chrome and `edge://extensions/` on Edge).
   - Enable "Developer mode"

@@ -4,7 +4,7 @@
   "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.",
   "main": "index.js",
   "dependencies": {
-    "@yaireo/tagify": "^4.7.0",
+    "@yaireo/tagify": "^4.7.2",
     "bulma": "^0.9.3",
     "flexsearch": "^0.7.21",
     "fuse.js": "^6.4.6",
