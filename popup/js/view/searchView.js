@@ -228,7 +228,6 @@ export function openResultItem(event) {
   if (event) {
     event.stopPropagation()
     const target = event.target ? event.target : event.srcElement
-    console.log("open", url, target, event)
 
     // If the event is a click event on the edit image:
     // Do not go to the URL itself, but to the internal edit bookmark url
