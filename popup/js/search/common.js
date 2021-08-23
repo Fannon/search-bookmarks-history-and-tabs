@@ -159,6 +159,19 @@ export function calculateFinalScore(result, searchTerm, sort) {
       })
     }
 
+    // Add custom bonus score to bookmarks
+    if (ext.opts.score.customBonusScore && el.type === "bookmark") {
+      const regex = /[ ][+]([0-9]+)/
+      const match = el.title.match(regex)
+      if (match && match.length > 0) {
+        el.title = el.title.replace(match[0], "")
+        score += parseInt(match[1])
+        if (match.length !== 2) {
+          console.error(`Unexpected custom bonus score match length`, match, el)
+        }
+      }
+    }
+
     // Increase score if we have exact "startsWith" match in title or url
     if (ext.opts.score.exactStartsWithBonus) {
       if (el.title && el.title.toLowerCase().startsWith(searchTerm)) {

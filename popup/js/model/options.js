@@ -168,6 +168,14 @@ export const defaultOptions = {
     // If certain conditions apply, extra score points can be added
 
     /**
+     * If enabled, bookmarks can add custom bonus scores by putting it in the title
+     * HowTo: Add a ` +<score>` (space, plus sign, whole number) in the title before tags.
+     * Do not add bonus scores more than once in a single bookmark title.
+     * E.g: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`
+     * */
+    customBonusScore: true,
+
+    /**
      * For each exact "includes" match we add some bonus points
      */
     exactIncludesBonus: 5,

@@ -40,6 +40,8 @@
   - Start your query with `b `: only **bookmarks** will be searched.
   - Start your query with `h `: only **history** will be searched.
   - Start your query with `s `: only **search engines** will be proposed.
+- Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
+  - Examples: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`
 - This extension works best if you avoid:
   - using `#` in bookmark titles that do not indicate a tag.
   - using `~` in bookmark folder names.
