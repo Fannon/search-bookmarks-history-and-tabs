@@ -1,6 +1,7 @@
 # Distribution
 dist/
 popup/lib/
+popup/css/
 popup/mockData/big.json
 
 # Logs

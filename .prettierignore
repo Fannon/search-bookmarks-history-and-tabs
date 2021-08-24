@@ -1,4 +1,4 @@
 # Ignore artifacts:
-dist
-popup/lib
-popup/css
+dist/
+popup/lib/
+popup/css/
