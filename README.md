@@ -65,7 +65,8 @@ This extension is built to respect your privacy:
 
 ## User Configuration
 
-The user options are written in [JSON format](https://en.wikipedia.org/wiki/JSON) or [JSON5 format](https://json5.org/). You only need to define the options that you want to overwrite options.
+The user options are written in [JSON format](https://en.wikipedia.org/wiki/JSON) or [JSON5 format](https://json5.org/). 
+You only need to define the options that you want to overwrite from the default.
 
 To see what configurations are available and what they do, please have a look at the `defaultOptions` in [popup/js/model/options.js](popup/js/model/options.js).
 
