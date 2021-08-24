@@ -5,8 +5,8 @@
 - NEW: Show default results when in bookmark, tab or history search mode
   - Tab search mode: Shows all open tabs, sorted by last visit
   - History search mode: Shows most recent history results, sorted by last visit
-  - Bookmark search mode: Shows highest ranked bookmars, sorted by score
-- Minor bugfixes and improvements
+  - Bookmark search mode: Shows highest ranked bookmarks, sorted by score
+- Minor bug fixes and improvements
 
 ## v0.9.8
 

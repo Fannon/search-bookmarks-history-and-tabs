@@ -10,17 +10,14 @@
 
 ## Features
 
-- Quick search your browser bookmarks, history and open tabs.
-- The extension does not collect any data nor does it make any external requests.
-- Supports two different search approaches:
+- **The extension does not collect any data nor does it make any external requests.** (see [Privacy](#privacy--data-protection))
+- Support for two different search approaches:
   - Fuzzy search (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
   - Exact search (starts with matching): Faster and only exact matching results.
-- Bookmarks can be searched for tags (extracted from title) and folder names.
-- Edit and tag bookmarks with auto complete on tags.
+- Tagging for bookmarks with auto completions.
 - Dark theme / light theme via system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
-- Fallback to use search engines like google, dict.cc etc. (multiple options)
+- Fallback to use search engines like Google, Dict.cc etc. (multiple options)
 - Customization via [user options](#user-configuration).
-- Lightweight: Written in vanilla JavaScript with the goal to only include only [a few necessary libraries](#credits).
 
 For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
 
@@ -29,6 +26,21 @@ For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
 ![Demo Animation](/images/bookmark-and-history-search.gif 'Demo Animation')
 
 ![Screenshots](/images/bookmark-and-history-search-screenshots.png 'Screenshots')
+
+## Privacy / Data Protection
+
+This extension is built to respect your privacy:
+
+* It does not have permissions for outside communication, so none of your data is shared or exposed externally.
+* The extension does not store any information except for your user settings. 
+  Every time the extension is closed, it forgets everything and starts from a blank slate. 
+* The extension only requests the necessary permissions:
+  * **bookmarks**: Necessary to read and edit the bookmarks. Can be disabled via [user configuration](#user-configuration).
+  * **history**: Necessary to read the browsing history. Can be disabled or limited via [user configuration](#user-configuration).
+  * **tabs**: Necessary to find open tabs and to use tabs for navigation.
+  * **storage**: Used to remember the [user configuration](#user-configuration). 
+    If the browser has setting synchronization enabled, the extension settings will be synced (in this case you already trust your browser to sync everything else anyway). 
+    If browser sync is disabled, the user configuration is only stored locally.
 
 ## User Documentation
 
