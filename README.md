@@ -32,8 +32,8 @@ For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
 This extension is built to respect your privacy:
 
 * It does not have permissions for outside communication, so none of your data is shared or exposed externally.
-* The extension does not even store any information except your user settings:
-  Every time the extension popup is closed, it forgets everything and starts from a blank slate next time you open it. 
+* The extension does not even store any information except your user settings.
+  Every time the extension popup is closed, it "forgets" everything and starts from a blank slate next time you open it. 
 * There is no background job / processing. If the popup is not explicitly opened by the user, the extension is not executed.
 * The extension only requests the following permissions for the given reasons:
   * **bookmarks**: Necessary to read and edit the bookmarks. Can be disabled via [user configuration](#user-configuration).
