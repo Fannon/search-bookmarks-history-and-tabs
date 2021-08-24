@@ -28,6 +28,14 @@ export async function addDefaultEntries() {
         ...el,
       }
     })
+  } else if (ext.model.searchMode === "bookmarks") {
+    // Display all bookmarks by default
+    results = ext.model.bookmarks.map((el) => {
+      return {
+        searchScore: 1,
+        ...el,
+      }
+    })
   } else {
     // All other modes: Find bookmark / history that matches current page URL
     let currentUrl = window.location.href

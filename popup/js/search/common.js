@@ -99,10 +99,16 @@ export async function search(event) {
       ext.model.result.push(...addSearchEngines(searchTerm))
     }
 
-    ext.model.result = calculateFinalScore(ext.model.result, searchTerm, "score")
+    ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
+    ext.model.result = sortResults(ext.model.result, "score")
   } else {
     ext.model.result = await addDefaultEntries()
-    ext.model.result = calculateFinalScore(ext.model.result, searchTerm, "lastVisited")
+    ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
+    if (searchMode === "history" || searchMode === "tabs") {
+      ext.model.result = sortResults(ext.model.result, "lastVisited")
+    } else {
+      ext.model.result = sortResults(ext.model.result, "score")
+    }
   }
 
   // Filter out all search results below a certain score
@@ -121,13 +127,12 @@ export async function search(event) {
 
 /**
  * Calculates the final search item score on basis of the search score and some own rules
- * Optionally sorts the result by that score
  *
  * @param sortMode: "score" | "lastVisited"
  */
-export function calculateFinalScore(result, searchTerm, sortMode) {
-  for (let i = 0; i < result.length; i++) {
-    const el = result[i]
+export function calculateFinalScore(results, searchTerm) {
+  for (let i = 0; i < results.length; i++) {
+    const el = results[i]
     const now = Date.now()
     let score
 
@@ -251,15 +256,25 @@ export function calculateFinalScore(result, searchTerm, sortMode) {
     el.score = score
   }
 
-  if (sortMode === "lastVisited") {
-    result = result.sort((a, b) => {
-      return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo
+  return results
+}
+
+/**
+ * Sorts the results according to some modes
+ *
+ * @param sortMode: "score" | "lastVisited"
+ */
+export function sortResults(results, sortMode) {
+  // results = results || []
+  if (sortMode === "score") {
+    results = results.sort((a, b) => {
+      return b.score || 99999999 - a.score || 99999999
     })
-  } else if (sortMode === "score") {
-    result = result.sort((a, b) => {
-      return b.score - a.score
+  } else if (sortMode === "lastVisited") {
+    results = results.sort((a, b) => {
+      return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo
     })
   }
 
-  return result
+  return results
 }

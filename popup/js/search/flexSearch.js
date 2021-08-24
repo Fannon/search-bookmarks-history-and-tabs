@@ -29,7 +29,7 @@ export function createFlexSearchIndex(type, searchData) {
     tokenize: "forward",
     encoder: "simple",
     matcher: {
-      "-": " ",
+      // "-": " ", // Useful?
       "_": " ",
       "/": " ",
     },
