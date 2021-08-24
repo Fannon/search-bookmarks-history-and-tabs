@@ -32,13 +32,14 @@ For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
 This extension is built to respect your privacy:
 
 * It does not have permissions for outside communication, so none of your data is shared or exposed externally.
-* The extension does not store any information except for your user settings. 
-  Every time the extension is closed, it forgets everything and starts from a blank slate. 
-* The extension only requests the necessary permissions:
+* The extension does not even store any information except your user settings:
+  Every time the extension popup is closed, it forgets everything and starts from a blank slate next time you open it. 
+* There is no background job / processing. If the popup is not explicitly opened by the user, the extension is not executed.
+* The extension only requests the following permissions for the given reasons:
   * **bookmarks**: Necessary to read and edit the bookmarks. Can be disabled via [user configuration](#user-configuration).
   * **history**: Necessary to read the browsing history. Can be disabled or limited via [user configuration](#user-configuration).
-  * **tabs**: Necessary to find open tabs and to use tabs for navigation.
-  * **storage**: Used to remember the [user configuration](#user-configuration). 
+  * **tabs**: Necessary to find open tabs and to use tabs for navigation. Can be disabled via [user configuration](#user-configuration).
+  * **storage**: Necessary to store and retrieve the [user configuration](#user-configuration). 
     If the browser has setting synchronization enabled, the extension settings will be synced (in this case you already trust your browser to sync everything else anyway). 
     If browser sync is disabled, the user configuration is only stored locally.
 
