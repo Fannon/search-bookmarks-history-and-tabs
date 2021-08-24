@@ -98,7 +98,6 @@ export async function search(event) {
     if (searchMode === "all" || searchMode === "search") {
       ext.model.result.push(...addSearchEngines(searchTerm))
     }
-
     ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
     ext.model.result = sortResults(ext.model.result, "score")
   } else {
@@ -115,8 +114,13 @@ export async function search(event) {
   ext.model.result = ext.model.result.filter((el) => el.score >= ext.opts.score.minScore)
 
   // Only render maxResults if given (to improve render performance)
-  // Not applied on tag and folder search
-  if (searchMode !== "tags" && searchMode !== "folders" && ext.model.result.length > ext.opts.search.maxResults) {
+  // Not applied on tabs, tag and folder search
+  if (
+    searchMode !== "tags" &&
+    searchMode !== "folders" &&
+    searchMode !== "tabs" &&
+    ext.model.result.length > ext.opts.search.maxResults
+  ) {
     ext.model.result = ext.model.result.slice(0, ext.opts.search.maxResults)
   }
 
@@ -180,44 +184,46 @@ export function calculateFinalScore(results, searchTerm) {
       }
     }
 
-    // Increase score if we have exact "startsWith" match in title or url
-    if (ext.opts.score.exactStartsWithBonus) {
-      if (el.title && el.title.toLowerCase().startsWith(searchTerm)) {
-        score += ext.opts.score.exactStartsWithBonus * ext.opts.score.titleWeight
-      } else if (el.url.startsWith(searchTerm.split(" ").join("-"))) {
-        score += ext.opts.score.exactStartsWithBonus * ext.opts.score.urlWeight
+    if (ext.model.searchTerm) {
+      // Increase score if we have exact "startsWith" match in title or url
+      if (ext.opts.score.exactStartsWithBonus) {
+        if (el.title && el.title.toLowerCase().startsWith(searchTerm)) {
+          score += ext.opts.score.exactStartsWithBonus * ext.opts.score.titleWeight
+        } else if (el.url.startsWith(searchTerm.split(" ").join("-"))) {
+          score += ext.opts.score.exactStartsWithBonus * ext.opts.score.urlWeight
+        }
       }
-    }
 
-    // Increase score if we have an exact equal match in the title
-    if (ext.opts.score.exactEqualsBonus && el.title && el.title.toLowerCase() === searchTerm) {
-      score += ext.opts.score.exactEqualsBonus * ext.opts.score.titleWeight
-    }
+      // Increase score if we have an exact equal match in the title
+      if (ext.opts.score.exactEqualsBonus && el.title && el.title.toLowerCase() === searchTerm) {
+        score += ext.opts.score.exactEqualsBonus * ext.opts.score.titleWeight
+      }
 
-    // Increase score if we have an exact tag match
-    if (ext.opts.score.exactTagMatchBonus && el.tags && searchTerm.includes("#")) {
-      let searchTermTags = searchTerm.split("#")
-      searchTermTags.shift()
-      searchTermTags.forEach((tag) => {
-        el.tagsArray.map((el) => {
-          if (tag === el.toLowerCase()) {
-            score += ext.opts.score.exactTagMatchBonus
-          }
+      // Increase score if we have an exact tag match
+      if (ext.opts.score.exactTagMatchBonus && el.tags && searchTerm.includes("#")) {
+        let searchTermTags = searchTerm.split("#")
+        searchTermTags.shift()
+        searchTermTags.forEach((tag) => {
+          el.tagsArray.map((el) => {
+            if (tag === el.toLowerCase()) {
+              score += ext.opts.score.exactTagMatchBonus
+            }
+          })
         })
-      })
-    }
+      }
 
-    // Increase score if we have an exact folder name match
-    if (ext.opts.score.exactFolderMatchBonus && el.folder && searchTerm.includes("~")) {
-      let searchTermFolders = searchTerm.split("~")
-      searchTermFolders.shift()
-      searchTermFolders.forEach((folderName) => {
-        el.folderArray.map((el) => {
-          if (folderName === el.toLowerCase()) {
-            score += ext.opts.score.exactFolderMatchBonus
-          }
+      // Increase score if we have an exact folder name match
+      if (ext.opts.score.exactFolderMatchBonus && el.folder && searchTerm.includes("~")) {
+        let searchTermFolders = searchTerm.split("~")
+        searchTermFolders.shift()
+        searchTermFolders.forEach((folderName) => {
+          el.folderArray.map((el) => {
+            if (folderName === el.toLowerCase()) {
+              score += ext.opts.score.exactFolderMatchBonus
+            }
+          })
         })
-      })
+      }
     }
 
     // Increase score if result has been open frequently
@@ -268,12 +274,14 @@ export function sortResults(results, sortMode) {
   // results = results || []
   if (sortMode === "score") {
     results = results.sort((a, b) => {
-      return b.score || 99999999 - a.score || 99999999
+      return b.score - a.score
     })
   } else if (sortMode === "lastVisited") {
     results = results.sort((a, b) => {
-      return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo
+      return (a.lastVisitSecondsAgo || 99999999) - (b.lastVisitSecondsAgo || 99999999)
     })
+  } else {
+    throw new Error(`Unknown sortMode="${sortMode}"`)
   }
 
   return results
