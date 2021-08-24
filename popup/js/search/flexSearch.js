@@ -27,6 +27,12 @@ export function createFlexSearchIndex(type, searchData) {
 
   const indexOptions = {
     tokenize: "forward",
+    encoder: "simple",
+    matcher: {
+      // "-": " ", // Useful?
+      "_": " ",
+      "/": " ",
+    },
     minlength: ext.opts.search.minMatchCharLength,
   }
 

@@ -44,7 +44,7 @@ export async function search(event) {
   performance.mark("search-start")
 
   let searchTerm = ext.dom.searchInput.value || ""
-  searchTerm = searchTerm.trim().toLowerCase()
+  searchTerm = searchTerm.trimLeft().toLowerCase()
   searchTerm = searchTerm.replace(/ +(?= )/g, "") // Remove duplicate spaces
   ext.model.result = []
   let searchMode = "all" // OR 'bookmarks' OR 'history'
@@ -77,20 +77,20 @@ export async function search(event) {
     searchTerm = searchTerm.substring(1)
   }
 
+  searchTerm = searchTerm.trim()
+
   ext.model.searchTerm = searchTerm
   ext.model.searchMode = searchMode
 
   if (searchTerm) {
     if (searchMode === "tags") {
-      ext.model.result.push(...searchTags(searchTerm))
+      ext.model.result = searchTags(searchTerm)
     } else if (searchMode === "folders") {
-      ext.model.result.push(...searchFolders(searchTerm))
+      ext.model.result = searchFolders(searchTerm)
     } else if (ext.opts.search.approach === "fuzzy") {
-      const results = await searchWithFuseJs(searchTerm, searchMode)
-      ext.model.result.push(...results)
+      ext.model.result = await searchWithFuseJs(searchTerm, searchMode)
     } else if (ext.opts.search.approach === "precise") {
-      const results = searchWithFlexSearch(searchTerm, searchMode)
-      ext.model.result.push(...results)
+      ext.model.result = searchWithFlexSearch(searchTerm, searchMode)
     } else {
       throw new Error(`Unsupported option "search.approach" value: "${ext.opts.search.approach}"`)
     }
@@ -98,19 +98,29 @@ export async function search(event) {
     if (searchMode === "all" || searchMode === "search") {
       ext.model.result.push(...addSearchEngines(searchTerm))
     }
+    ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
+    ext.model.result = sortResults(ext.model.result, "score")
   } else {
-    const defaultEntries = await addDefaultEntries()
-    ext.model.result.push(...defaultEntries)
+    ext.model.result = await addDefaultEntries()
+    ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
+    if (searchMode === "history" || searchMode === "tabs") {
+      ext.model.result = sortResults(ext.model.result, "lastVisited")
+    } else {
+      ext.model.result = sortResults(ext.model.result, "score")
+    }
   }
-
-  ext.model.result = calculateFinalScore(ext.model.result, searchTerm, true)
 
   // Filter out all search results below a certain score
   ext.model.result = ext.model.result.filter((el) => el.score >= ext.opts.score.minScore)
 
   // Only render maxResults if given (to improve render performance)
-  // Not applied on tag and folder search
-  if (searchMode !== "tags" && searchMode !== "folders" && ext.model.result.length > ext.opts.search.maxResults) {
+  // Not applied on tabs, tag and folder search
+  if (
+    searchMode !== "tags" &&
+    searchMode !== "folders" &&
+    searchMode !== "tabs" &&
+    ext.model.result.length > ext.opts.search.maxResults
+  ) {
     ext.model.result = ext.model.result.slice(0, ext.opts.search.maxResults)
   }
 
@@ -121,11 +131,12 @@ export async function search(event) {
 
 /**
  * Calculates the final search item score on basis of the search score and some own rules
- * Optionally sorts the result by that score
+ *
+ * @param sortMode: "score" | "lastVisited"
  */
-export function calculateFinalScore(result, searchTerm, sort) {
-  for (let i = 0; i < result.length; i++) {
-    const el = result[i]
+export function calculateFinalScore(results, searchTerm) {
+  for (let i = 0; i < results.length; i++) {
+    const el = results[i]
     const now = Date.now()
     let score
 
@@ -173,44 +184,46 @@ export function calculateFinalScore(result, searchTerm, sort) {
       }
     }
 
-    // Increase score if we have exact "startsWith" match in title or url
-    if (ext.opts.score.exactStartsWithBonus) {
-      if (el.title && el.title.toLowerCase().startsWith(searchTerm)) {
-        score += ext.opts.score.exactStartsWithBonus * ext.opts.score.titleWeight
-      } else if (el.url.startsWith(searchTerm.split(" ").join("-"))) {
-        score += ext.opts.score.exactStartsWithBonus * ext.opts.score.urlWeight
+    if (ext.model.searchTerm) {
+      // Increase score if we have exact "startsWith" match in title or url
+      if (ext.opts.score.exactStartsWithBonus) {
+        if (el.title && el.title.toLowerCase().startsWith(searchTerm)) {
+          score += ext.opts.score.exactStartsWithBonus * ext.opts.score.titleWeight
+        } else if (el.url.startsWith(searchTerm.split(" ").join("-"))) {
+          score += ext.opts.score.exactStartsWithBonus * ext.opts.score.urlWeight
+        }
       }
-    }
 
-    // Increase score if we have an exact equal match in the title
-    if (ext.opts.score.exactEqualsBonus && el.title && el.title.toLowerCase() === searchTerm) {
-      score += ext.opts.score.exactEqualsBonus * ext.opts.score.titleWeight
-    }
+      // Increase score if we have an exact equal match in the title
+      if (ext.opts.score.exactEqualsBonus && el.title && el.title.toLowerCase() === searchTerm) {
+        score += ext.opts.score.exactEqualsBonus * ext.opts.score.titleWeight
+      }
 
-    // Increase score if we have an exact tag match
-    if (ext.opts.score.exactTagMatchBonus && el.tags && searchTerm.includes("#")) {
-      let searchTermTags = searchTerm.split("#")
-      searchTermTags.shift()
-      searchTermTags.forEach((tag) => {
-        el.tagsArray.map((el) => {
-          if (tag === el.toLowerCase()) {
-            score += ext.opts.score.exactTagMatchBonus
-          }
+      // Increase score if we have an exact tag match
+      if (ext.opts.score.exactTagMatchBonus && el.tags && searchTerm.includes("#")) {
+        let searchTermTags = searchTerm.split("#")
+        searchTermTags.shift()
+        searchTermTags.forEach((tag) => {
+          el.tagsArray.map((el) => {
+            if (tag === el.toLowerCase()) {
+              score += ext.opts.score.exactTagMatchBonus
+            }
+          })
         })
-      })
-    }
+      }
 
-    // Increase score if we have an exact folder name match
-    if (ext.opts.score.exactFolderMatchBonus && el.folder && searchTerm.includes("~")) {
-      let searchTermFolders = searchTerm.split("~")
-      searchTermFolders.shift()
-      searchTermFolders.forEach((folderName) => {
-        el.folderArray.map((el) => {
-          if (folderName === el.toLowerCase()) {
-            score += ext.opts.score.exactFolderMatchBonus
-          }
+      // Increase score if we have an exact folder name match
+      if (ext.opts.score.exactFolderMatchBonus && el.folder && searchTerm.includes("~")) {
+        let searchTermFolders = searchTerm.split("~")
+        searchTermFolders.shift()
+        searchTermFolders.forEach((folderName) => {
+          el.folderArray.map((el) => {
+            if (folderName === el.toLowerCase()) {
+              score += ext.opts.score.exactFolderMatchBonus
+            }
+          })
         })
-      })
+      }
     }
 
     // Increase score if result has been open frequently
@@ -249,11 +262,27 @@ export function calculateFinalScore(result, searchTerm, sort) {
     el.score = score
   }
 
-  if (sort) {
-    result = result.sort((a, b) => {
+  return results
+}
+
+/**
+ * Sorts the results according to some modes
+ *
+ * @param sortMode: "score" | "lastVisited"
+ */
+export function sortResults(results, sortMode) {
+  // results = results || []
+  if (sortMode === "score") {
+    results = results.sort((a, b) => {
       return b.score - a.score
     })
+  } else if (sortMode === "lastVisited") {
+    results = results.sort((a, b) => {
+      return (a.lastVisitSecondsAgo || 99999999) - (b.lastVisitSecondsAgo || 99999999)
+    })
+  } else {
+    throw new Error(`Unknown sortMode="${sortMode}"`)
   }
 
-  return result
+  return results
 }
