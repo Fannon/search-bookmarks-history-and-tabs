@@ -22,6 +22,8 @@
 - Customization via [user options](#user-configuration).
 - Lightweight: Written in vanilla JavaScript with the goal to only include only [a few necessary libraries](#credits).
 
+For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
+
 ## Screenshots & Demo
 
 ![Demo Animation](/images/bookmark-and-history-search.gif "Demo Animation")
