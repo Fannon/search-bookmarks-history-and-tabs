@@ -45,7 +45,7 @@ export const defaultOptions = {
     maxResults: 50,
 
     /** Min string characters of the search term to consider a match */
-    minMatchCharLength: 2,
+    minMatchCharLength: 1,
 
     /**
      * Fuzzy search threshold (0 - 1)

@@ -124,7 +124,7 @@ export function renderSearchResults(result) {
     resultListItems.push(resultListItem)
   }
 
-  if (ext.opts.general.highlight) {
+  if (ext.opts.general.highlight && ext.model.searchTerm) {
     // Use mark.js to highlight search results, if we don't have already done so via fuse.js
     // This applies to flexsearch and taxonomy search results
     if (
@@ -133,7 +133,7 @@ export function renderSearchResults(result) {
       ext.model.searchMode === "folders"
     ) {
       const markInstance = new Mark(resultListItems)
-      markInstance.mark(ext.dom.searchInput.value)
+      markInstance.mark(ext.model.searchTerm)
     }
   }
 
