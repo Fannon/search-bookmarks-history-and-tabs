@@ -42,6 +42,7 @@ This extension is built to respect your privacy:
   * **storage**: Necessary to store and retrieve the [user configuration](#user-configuration). 
     If the browser has setting synchronization enabled, the extension settings will be synced (in this case you already trust your browser to sync everything else anyway). 
     If browser sync is disabled, the user configuration is only stored locally.
+* The extension is open source, so feel free to convince yourself :)
 
 ## User Documentation
 
