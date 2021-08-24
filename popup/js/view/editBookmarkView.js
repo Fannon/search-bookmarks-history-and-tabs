@@ -2,18 +2,18 @@
 // BOOKMARK EDITING                     //
 //////////////////////////////////////////
 
-import { browserApi } from "../helper/browserApi.js"
-import { getUniqueTags } from "../search/taxonomySearch.js"
+import { browserApi } from '../helper/browserApi.js'
+import { getUniqueTags } from '../search/taxonomySearch.js'
 
 export function editBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
   const tags = Object.keys(getUniqueTags()).sort()
-  console.debug("Editing bookmark " + bookmarkId, bookmark)
+  console.debug('Editing bookmark ' + bookmarkId, bookmark)
   if (bookmark) {
-    document.getElementById("edit-bookmark").style = ""
-    document.getElementById("bookmark-title").value = bookmark.title
+    document.getElementById('edit-bookmark').style = ''
+    document.getElementById('bookmark-title').value = bookmark.title
     if (!ext.tagify) {
-      ext.tagify = new Tagify(document.getElementById("bookmark-tags"), {
+      ext.tagify = new Tagify(document.getElementById('bookmark-tags'), {
         whitelist: tags,
         trim: true,
         transformTag: transformTag,
@@ -23,7 +23,7 @@ export function editBookmark(bookmarkId) {
           keepInvalid: false,
         },
         dropdown: {
-          position: "all",
+          position: 'all',
           enabled: 0,
           maxItems: 12,
           closeOnSelect: false,
@@ -37,29 +37,29 @@ export function editBookmark(bookmarkId) {
     }
 
     const currentTags = bookmark.tags
-      .split("#")
+      .split('#')
       .map((el) => el.trim())
       .filter((el) => el)
     ext.tagify.addTags(currentTags)
 
-    document.getElementById("edit-bookmark-save").href = "#update-bookmark/" + bookmarkId
+    document.getElementById('edit-bookmark-save').href = '#update-bookmark/' + bookmarkId
   } else {
     console.warn(`Tried to edit bookmark id="${bookmarkId}", but coult not find it in searchData.`)
   }
 
   function transformTag(tagData) {
-    if (tagData.value.includes("#")) {
-      tagData.value = tagData.value.split("#").join("")
+    if (tagData.value.includes('#')) {
+      tagData.value = tagData.value.split('#').join('')
     }
   }
 }
 
 export function updateBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
-  const titleInput = document.getElementById("bookmark-title").value.trim()
-  let tagsInput = ""
+  const titleInput = document.getElementById('bookmark-title').value.trim()
+  let tagsInput = ''
   if (ext.tagify.value.length) {
-    tagsInput = "#" + ext.tagify.value.map((el) => el.value.trim()).join(" #")
+    tagsInput = '#' + ext.tagify.value.map((el) => el.value.trim()).join(' #')
   }
 
   // Update search data model of bookmark
@@ -77,5 +77,5 @@ export function updateBookmark(bookmarkId) {
   }
 
   // Start search again to update the search index and the UI with new bookmark model
-  window.location.href = "#"
+  window.location.href = '#'
 }

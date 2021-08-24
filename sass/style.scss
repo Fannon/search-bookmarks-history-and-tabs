@@ -1,6 +1,6 @@
 @charset "utf-8";
-@import "../node_modules/bulma/sass/base/minireset.sass";
-@import "../node_modules/bulma/sass/base/generic.sass";
+@import '../node_modules/bulma/sass/base/minireset.sass';
+@import '../node_modules/bulma/sass/base/generic.sass';
 
 html,
 body,
@@ -81,7 +81,7 @@ body {
 .tags {
   background: #557292;
   .divider:before {
-    content: " ";
+    content: ' ';
   }
   mark {
     color: #7cb3f6;
@@ -93,7 +93,7 @@ body {
 .folder {
   background: #559292;
   .divider:before {
-    content: " \276F \0020";
+    content: ' \276F \0020';
   }
   mark {
     color: #85dbdb;

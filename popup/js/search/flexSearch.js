@@ -9,13 +9,13 @@
  */
 export function createPreciseIndexes() {
   if (ext.opts.tabs.enabled && !ext.index.precise.tabs) {
-    ext.index.precise.tabs = createFlexSearchIndex("tabs", ext.model.tabs)
+    ext.index.precise.tabs = createFlexSearchIndex('tabs', ext.model.tabs)
   }
   if (ext.opts.bookmarks.enabled && !ext.index.precise.bookmarks) {
-    ext.index.precise.bookmarks = createFlexSearchIndex("bookmarks", ext.model.bookmarks)
+    ext.index.precise.bookmarks = createFlexSearchIndex('bookmarks', ext.model.bookmarks)
   }
   if (ext.opts.history.enabled && !ext.index.precise.history) {
-    ext.index.precise.history = createFlexSearchIndex("history", ext.model.history)
+    ext.index.precise.history = createFlexSearchIndex('history', ext.model.history)
   }
 }
 
@@ -23,28 +23,28 @@ export function createPreciseIndexes() {
  * Creates flexsearch index of a specific type
  */
 export function createFlexSearchIndex(type, searchData) {
-  performance.mark("index-start")
+  performance.mark('index-start')
 
   const indexOptions = {
-    tokenize: "forward",
-    encoder: "simple",
+    tokenize: 'forward',
+    encoder: 'simple',
     matcher: {
       // "-": " ", // Useful?
-      "_": " ",
-      "/": " ",
+      '_': ' ',
+      '/': ' ',
     },
     minlength: ext.opts.search.minMatchCharLength,
   }
 
-  if (ext.opts.search.matchAlgorithm === "includes") {
-    indexOptions.tokenize = "full"
+  if (ext.opts.search.matchAlgorithm === 'includes') {
+    indexOptions.tokenize = 'full'
   }
 
   const indexes = {}
   indexes.title = new FlexSearch.Index(indexOptions)
   indexes.url = new FlexSearch.Index(indexOptions)
 
-  if (type === "bookmarks") {
+  if (type === 'bookmarks') {
     indexes.tag = new FlexSearch.Index(indexOptions)
     indexes.folder = new FlexSearch.Index(indexOptions)
   }
@@ -53,14 +53,14 @@ export function createFlexSearchIndex(type, searchData) {
     indexes.title.add(entry.index, entry.title)
     indexes.url.add(entry.index, entry.url)
 
-    if (type === "bookmarks") {
+    if (type === 'bookmarks') {
       indexes.tag.add(entry.index, entry.tags)
       indexes.folder.add(entry.index, entry.folder)
     }
   }
 
-  performance.mark("index-end")
-  performance.measure("index-flexsearch-" + type, "index-start", "index-end")
+  performance.mark('index-end')
+  performance.measure('index-flexsearch-' + type, 'index-start', 'index-end')
   return indexes
 }
 
@@ -77,37 +77,37 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
     return results
   }
 
-  performance.mark("search-start")
+  performance.mark('search-start')
 
-  searchMode = searchMode || "all"
+  searchMode = searchMode || 'all'
   searchTerm = searchTerm.toLowerCase()
 
   console.debug(`Searching with approach="precise" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
-  if (searchMode === "history" && ext.index.precise.history) {
-    results = flexSearchWithScoring("history", searchTerm, ext.model.history)
-  } else if (searchMode === "bookmarks" && ext.index.precise.bookmarks) {
-    results = flexSearchWithScoring("bookmarks", searchTerm, ext.model.bookmarks)
-  } else if (searchMode === "tabs" && ext.index.precise.tabs) {
-    results = flexSearchWithScoring("tabs", searchTerm, ext.model.tabs)
-  } else if (searchMode === "search") {
+  if (searchMode === 'history' && ext.index.precise.history) {
+    results = flexSearchWithScoring('history', searchTerm, ext.model.history)
+  } else if (searchMode === 'bookmarks' && ext.index.precise.bookmarks) {
+    results = flexSearchWithScoring('bookmarks', searchTerm, ext.model.bookmarks)
+  } else if (searchMode === 'tabs' && ext.index.precise.tabs) {
+    results = flexSearchWithScoring('tabs', searchTerm, ext.model.tabs)
+  } else if (searchMode === 'search') {
     // nothing, because search will be added later
   } else {
     if (ext.index.precise.bookmarks) {
-      results.push(...flexSearchWithScoring("bookmarks", searchTerm, ext.model.bookmarks))
+      results.push(...flexSearchWithScoring('bookmarks', searchTerm, ext.model.bookmarks))
     }
     if (ext.index.precise.tabs) {
-      results.push(...flexSearchWithScoring("tabs", searchTerm, ext.model.tabs))
+      results.push(...flexSearchWithScoring('tabs', searchTerm, ext.model.tabs))
     }
     if (ext.index.precise.history) {
-      results.push(...flexSearchWithScoring("history", searchTerm, ext.model.history))
+      results.push(...flexSearchWithScoring('history', searchTerm, ext.model.history))
     }
   }
 
-  performance.mark("search-end")
-  performance.measure("search-flexsearch: " + searchTerm, "search-start", "search-end")
-  const searchPerformance = performance.getEntriesByType("measure")
-  console.debug("Search Performance (flexsearch): " + searchPerformance[0].duration + "ms", searchPerformance)
+  performance.mark('search-end')
+  performance.measure('search-flexsearch: ' + searchTerm, 'search-start', 'search-end')
+  const searchPerformance = performance.getEntriesByType('measure')
+  console.debug('Search Performance (flexsearch): ' + searchPerformance[0].duration + 'ms', searchPerformance)
   performance.clearMeasures()
 
   return results
@@ -124,7 +124,7 @@ function flexSearchWithScoring(indexName, searchTerm, data) {
   const matchesDict = {}
 
   // Simulate an OR search with the terms in searchTerm, separated by spaces
-  let searchTermArray = searchTerm.split(" ")
+  let searchTermArray = searchTerm.split(' ')
   // filter out all search terms that do not match the min char match length
   searchTermArray = searchTermArray.filter((el) => el.length >= ext.opts.search.minMatchCharLength)
 

@@ -1,4 +1,4 @@
-import { cleanUpUrl, timeSince } from "./utils.js"
+import { cleanUpUrl, timeSince } from './utils.js'
 
 // CHROME API (Manifest v2 / v3)
 
@@ -24,10 +24,10 @@ export async function getChromeTabs() {
 export function convertChromeTabs(chromeTabs) {
   return chromeTabs.map((entry) => {
     return {
-      type: "tab",
+      type: 'tab',
       title: entry.title,
       url: cleanUpUrl(entry.url),
-      originalUrl: entry.url.replace(/\/$/, ""),
+      originalUrl: entry.url.replace(/\/$/, ''),
       originalId: entry.id,
       favIconUrl: entry.favIconUrl,
     }
@@ -60,30 +60,30 @@ export function convertChromeBookmarks(bookmarks, folderTrail, depth) {
 
     // Parse out tags from bookmark title (starting with #)
     let title = entry.title
-    let tagsText = ""
+    let tagsText = ''
     let tagsArray = []
     if (ext.opts.general.tags && title) {
-      const tagSplit = title.split("#")
+      const tagSplit = title.split('#')
       title = tagSplit.shift().trim()
       tagsArray = tagSplit
       for (const tag of tagSplit) {
-        tagsText += "#" + tag.trim() + " "
+        tagsText += '#' + tag.trim() + ' '
       }
       tagsText = tagsText.slice(0, -1)
     }
 
-    let folderText = ""
+    let folderText = ''
     for (const folder of folderTrail) {
-      folderText += "~" + folder + " "
+      folderText += '~' + folder + ' '
     }
     folderText = folderText.slice(0, -1)
 
     if (entry.url) {
       result.push({
-        type: "bookmark",
+        type: 'bookmark',
         originalId: entry.id,
         title: title,
-        originalUrl: entry.url.replace(/\/$/, ""),
+        originalUrl: entry.url.replace(/\/$/, ''),
         url: cleanUpUrl(entry.url),
         dateAdded: entry.dateAdded,
         tags: tagsText,
@@ -112,7 +112,7 @@ export async function getChromeHistory(daysAgo, maxResults) {
   return new Promise((resolve, reject) => {
     browserApi.history.search(
       {
-        text: "",
+        text: '',
         maxResults: maxResults,
         startTime: Date.now() - 1000 * 60 * 60 * 24 * daysAgo,
         endTime: Date.now(),
@@ -148,9 +148,9 @@ export function convertChromeHistory(history) {
   const now = Date.now()
   return history.map((el) => {
     return {
-      type: "history",
+      type: 'history',
       title: el.title,
-      originalUrl: el.url.replace(/\/$/, ""),
+      originalUrl: el.url.replace(/\/$/, ''),
       url: cleanUpUrl(el.url),
       visitCount: el.visitCount,
       lastVisit: ext.opts.general.lastVisit ? timeSince(new Date(el.lastVisitTime)) : undefined,

@@ -26,9 +26,9 @@ For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
 
 ## Screenshots & Demo
 
-![Demo Animation](/images/bookmark-and-history-search.gif "Demo Animation")
+![Demo Animation](/images/bookmark-and-history-search.gif 'Demo Animation')
 
-![Screenshots](/images/bookmark-and-history-search-screenshots.png "Screenshots")
+![Screenshots](/images/bookmark-and-history-search-screenshots.png 'Screenshots')
 
 ## User Documentation
 
@@ -75,20 +75,20 @@ Or a more advanced example
   history: {
     ignoreList: [
       // Ignore some localhost URLs in browser history
-      "http://localhost",
-      "http://127.0.0.1",
+      'http://localhost',
+      'http://127.0.0.1',
     ],
   },
   searchEngines: {
     choices: [
       // Use only DuckDuckGo and dict.cc as fallback search engines
       {
-        name: "DuckDuckGo",
-        urlPrefix: "https://duckduckgo.com/?q=",
+        name: 'DuckDuckGo',
+        urlPrefix: 'https://duckduckgo.com/?q=',
       },
       {
-        name: "dict.cc",
-        urlPrefix: "https://www.dict.cc/?s=",
+        name: 'dict.cc',
+        urlPrefix: 'https://www.dict.cc/?s=',
       },
     ],
   },

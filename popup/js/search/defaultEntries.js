@@ -1,4 +1,4 @@
-import { browserApi } from "../helper/browserApi.js"
+import { browserApi } from '../helper/browserApi.js'
 
 /**
  * If we don't have a search term yet (or not sufficiently long), display current tab related entries.
@@ -10,25 +10,25 @@ export async function addDefaultEntries() {
 
   let results = []
 
-  if (ext.model.searchMode === "history") {
+  if (ext.model.searchMode === 'history') {
     // Display recent history by default
-    console.log("Default history results")
+    console.log('Default history results')
     results = ext.model.history.map((el) => {
       return {
         searchScore: 1,
         ...el,
       }
     })
-  } else if (ext.model.searchMode === "tabs") {
+  } else if (ext.model.searchMode === 'tabs') {
     // Display last opened tabs by default
-    console.log("Default tabs results")
+    console.log('Default tabs results')
     results = ext.model.tabs.map((el) => {
       return {
         searchScore: 1,
         ...el,
       }
     })
-  } else if (ext.model.searchMode === "bookmarks") {
+  } else if (ext.model.searchMode === 'bookmarks') {
     // Display all bookmarks by default
     results = ext.model.bookmarks.map((el) => {
       return {
@@ -45,7 +45,7 @@ export async function addDefaultEntries() {
       currentUrl = tab.url
     }
     // Remove trailing slash from URL, so the startsWith search works better
-    currentUrl = currentUrl.replace(/\/$/, "")
+    currentUrl = currentUrl.replace(/\/$/, '')
 
     // Find if current URL has corresponding bookmark(s)
     const foundBookmarks = ext.model.bookmarks.filter((el) => el.originalUrl.startsWith(currentUrl))

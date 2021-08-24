@@ -2,8 +2,8 @@
 // SEARCH VIEW                          //
 //////////////////////////////////////////
 
-import { initExtension } from "../initSearch.js"
-import { getUserOptions, setUserOptions } from "../model/options.js"
+import { initExtension } from '../initSearch.js'
+import { getUserOptions, setUserOptions } from '../model/options.js'
 
 /**
  * Render the search results in UI as result items
@@ -11,7 +11,7 @@ import { getUserOptions, setUserOptions } from "../model/options.js"
 export function renderSearchResults(result) {
   result = result || ext.model.result
 
-  performance.mark("render-start")
+  performance.mark('render-start')
 
   ext.model.mouseHoverEnabled = false
   const resultListItems = []
@@ -24,39 +24,39 @@ export function renderSearchResults(result) {
     }
 
     // Create result list item (li)
-    const resultListItem = document.createElement("li")
+    const resultListItem = document.createElement('li')
     resultListItem.classList.add(resultEntry.type)
-    resultListItem.setAttribute("x-open-url", resultEntry.originalUrl)
-    resultListItem.setAttribute("x-index", i)
-    resultListItem.setAttribute("x-original-id", resultEntry.originalId)
+    resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
+    resultListItem.setAttribute('x-index', i)
+    resultListItem.setAttribute('x-original-id', resultEntry.originalId)
 
     // Create edit button / image
-    if (resultEntry.type === "bookmark") {
-      const editImg = document.createElement("img")
-      editImg.classList.add("edit-button")
-      editImg.src = "../images/edit.svg"
+    if (resultEntry.type === 'bookmark') {
+      const editImg = document.createElement('img')
+      editImg.classList.add('edit-button')
+      editImg.src = '../images/edit.svg'
       resultListItem.appendChild(editImg)
     }
 
     // Create title div
-    const titleDiv = document.createElement("div")
-    titleDiv.classList.add("title")
+    const titleDiv = document.createElement('div')
+    titleDiv.classList.add('title')
 
     if (ext.opts.general.highlight) {
       const content = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
-      if (content.includes("<mark>")) {
-        titleDiv.innerHTML = content + " "
+      if (content.includes('<mark>')) {
+        titleDiv.innerHTML = content + ' '
       } else {
-        titleDiv.innerText = content + " "
+        titleDiv.innerText = content + ' '
       }
     } else {
-      titleDiv.innerText = resultEntry.title | (resultEntry.url + " ")
+      titleDiv.innerText = resultEntry.title | (resultEntry.url + ' ')
     }
     if (ext.opts.general.tags && resultEntry.tags) {
-      const tags = document.createElement("span")
-      tags.title = "Bookmark Tags"
-      tags.classList.add("badge", "tags")
-      if (ext.opts.general.highlight && resultEntry.tagsHighlighted && resultEntry.tagsHighlighted.includes("<mark>")) {
+      const tags = document.createElement('span')
+      tags.title = 'Bookmark Tags'
+      tags.classList.add('badge', 'tags')
+      if (ext.opts.general.highlight && resultEntry.tagsHighlighted && resultEntry.tagsHighlighted.includes('<mark>')) {
         tags.innerHTML = resultEntry.tagsHighlighted
       } else {
         tags.innerText = resultEntry.tags
@@ -64,13 +64,13 @@ export function renderSearchResults(result) {
       titleDiv.appendChild(tags)
     }
     if (resultEntry.folder) {
-      const folder = document.createElement("span")
-      folder.title = "Bookmark Folder"
-      folder.classList.add("badge", "folder")
+      const folder = document.createElement('span')
+      folder.title = 'Bookmark Folder'
+      folder.classList.add('badge', 'folder')
       if (
         ext.opts.general.highlight &&
         resultEntry.folderHighlighted &&
-        resultEntry.folderHighlighted.includes("<mark>")
+        resultEntry.folderHighlighted.includes('<mark>')
       ) {
         folder.innerHTML = resultEntry.folderHighlighted
       } else {
@@ -79,38 +79,38 @@ export function renderSearchResults(result) {
       titleDiv.appendChild(folder)
     }
     if (ext.opts.general.lastVisit && resultEntry.lastVisit) {
-      const lastVisited = document.createElement("span")
-      lastVisited.title = "Last Visited"
-      lastVisited.classList.add("badge", "last-visited")
-      lastVisited.innerText = "-" + resultEntry.lastVisit
+      const lastVisited = document.createElement('span')
+      lastVisited.title = 'Last Visited'
+      lastVisited.classList.add('badge', 'last-visited')
+      lastVisited.innerText = '-' + resultEntry.lastVisit
       titleDiv.appendChild(lastVisited)
     }
     if (ext.opts.general.visitCounter && resultEntry.visitCount) {
-      const visitCounter = document.createElement("span")
-      visitCounter.title = "Visited Counter"
-      visitCounter.classList.add("badge", "visit-counter")
+      const visitCounter = document.createElement('span')
+      visitCounter.title = 'Visited Counter'
+      visitCounter.classList.add('badge', 'visit-counter')
       visitCounter.innerText = resultEntry.visitCount
       titleDiv.appendChild(visitCounter)
     }
     if (ext.opts.general.dateAdded && resultEntry.dateAdded) {
-      const dateAdded = document.createElement("span")
-      dateAdded.title = "Date Added"
-      dateAdded.classList.add("badge", "date-added")
-      dateAdded.innerText = new Date(resultEntry.dateAdded).toISOString().split("T")[0]
+      const dateAdded = document.createElement('span')
+      dateAdded.title = 'Date Added'
+      dateAdded.classList.add('badge', 'date-added')
+      dateAdded.innerText = new Date(resultEntry.dateAdded).toISOString().split('T')[0]
       titleDiv.appendChild(dateAdded)
     }
     if (ext.opts.general.score && resultEntry.score) {
-      const score = document.createElement("span")
-      score.title = "Score"
-      score.classList.add("badge", "score")
+      const score = document.createElement('span')
+      score.title = 'Score'
+      score.classList.add('badge', 'score')
       score.innerText = Math.round(resultEntry.score)
       titleDiv.appendChild(score)
     }
 
     // Create URL div
-    const urlDiv = document.createElement("div")
-    urlDiv.classList.add("url")
-    if (ext.opts.general.highlight && resultEntry.urlHighlighted && resultEntry.urlHighlighted.includes("<mark>")) {
+    const urlDiv = document.createElement('div')
+    urlDiv.classList.add('url')
+    if (ext.opts.general.highlight && resultEntry.urlHighlighted && resultEntry.urlHighlighted.includes('<mark>')) {
       urlDiv.innerHTML = resultEntry.urlHighlighted
     } else {
       urlDiv.innerText = resultEntry.url
@@ -119,8 +119,8 @@ export function renderSearchResults(result) {
     // Append everything together :)
     resultListItem.appendChild(titleDiv)
     resultListItem.appendChild(urlDiv)
-    resultListItem.addEventListener("mouseenter", hoverResultItem)
-    resultListItem.addEventListener("mouseup", openResultItem)
+    resultListItem.addEventListener('mouseenter', hoverResultItem)
+    resultListItem.addEventListener('mouseup', openResultItem)
     resultListItems.push(resultListItem)
   }
 
@@ -128,9 +128,9 @@ export function renderSearchResults(result) {
     // Use mark.js to highlight search results, if we don't have already done so via fuse.js
     // This applies to flexsearch and taxonomy search results
     if (
-      ext.opts.search.approach === "precise" ||
-      ext.model.searchMode === "tags" ||
-      ext.model.searchMode === "folders"
+      ext.opts.search.approach === 'precise' ||
+      ext.model.searchMode === 'tags' ||
+      ext.model.searchMode === 'folders'
     ) {
       const markInstance = new Mark(resultListItems)
       markInstance.mark(ext.model.searchTerm)
@@ -143,10 +143,10 @@ export function renderSearchResults(result) {
   // mark first result item as selected
   selectListItem(0)
 
-  performance.mark("render-end")
-  performance.measure("Render DOM", "render-start", "render-end")
-  const renderPerformance = performance.getEntriesByType("measure")
-  console.debug("Render Performance: " + renderPerformance[0].duration + "ms", renderPerformance)
+  performance.mark('render-end')
+  performance.measure('Render DOM', 'render-start', 'render-end')
+  const renderPerformance = performance.getEntriesByType('measure')
+  console.debug('Render Performance: ' + renderPerformance[0].duration + 'ms', renderPerformance)
   performance.clearMeasures()
 }
 
@@ -159,19 +159,19 @@ export function renderSearchResults(result) {
  * -> Arrow up, Arrow Down, Enter
  */
 export function navigationKeyListener(event) {
-  if (event.key === "ArrowUp" && ext.model.currentItem > 0) {
+  if (event.key === 'ArrowUp' && ext.model.currentItem > 0) {
     ext.model.currentItem--
     selectListItem(ext.model.currentItem, true)
-  } else if (event.key === "ArrowDown" && ext.model.currentItem < ext.model.result.length - 1) {
+  } else if (event.key === 'ArrowDown' && ext.model.currentItem < ext.model.result.length - 1) {
     ext.model.currentItem++
     selectListItem(ext.model.currentItem, true)
-  } else if (event.key === "Enter" && ext.model.result.length > 0) {
+  } else if (event.key === 'Enter' && ext.model.result.length > 0) {
     // Enter selects selected search result -> only when in search mode
-    if (window.location.hash.startsWith("#search/")) {
+    if (window.location.hash.startsWith('#search/')) {
       openResultItem()
     }
-  } else if (event.key === "Escape") {
-    window.location.hash = "#search/"
+  } else if (event.key === 'Escape') {
+    window.location.hash = '#search/'
     ext.dom.searchInput.focus()
   }
 }
@@ -180,17 +180,17 @@ export function navigationKeyListener(event) {
  * Marks the list item with a specific index as selected
  */
 export function selectListItem(index, scroll = false) {
-  const currentSelection = document.getElementById("selected-result")
+  const currentSelection = document.getElementById('selected-result')
   if (currentSelection) {
-    currentSelection.id = ""
+    currentSelection.id = ''
   }
   if (ext.dom.resultList.children[index]) {
-    ext.dom.resultList.children[index].id = "selected-result"
+    ext.dom.resultList.children[index].id = 'selected-result'
 
     if (scroll) {
       ext.dom.resultList.children[index].scrollIntoView({
-        behavior: "auto",
-        block: "nearest",
+        behavior: 'auto',
+        block: 'nearest',
       })
     }
   }
@@ -202,7 +202,7 @@ export function selectListItem(index, scroll = false) {
  */
 export function hoverResultItem(event) {
   const target = event.target ? event.target : event.srcElement
-  const index = target.getAttribute("x-index")
+  const index = target.getAttribute('x-index')
 
   // Workaround to avoid that we get a mouse hover event
   // just by rendering the results "below" the pointer
@@ -214,7 +214,7 @@ export function hoverResultItem(event) {
   if (index) {
     selectListItem(index)
   } else {
-    console.warn("Could not hover result item", target, event)
+    console.warn('Could not hover result item', target, event)
   }
 }
 
@@ -222,8 +222,8 @@ export function hoverResultItem(event) {
  * When clicked on a list-item, we want to navigate like pressing "Enter"
  */
 export function openResultItem(event) {
-  const resultEntry = document.getElementById("selected-result")
-  const url = resultEntry.getAttribute("x-open-url")
+  const resultEntry = document.getElementById('selected-result')
+  const url = resultEntry.getAttribute('x-open-url')
 
   if (event) {
     event.stopPropagation()
@@ -232,7 +232,7 @@ export function openResultItem(event) {
     // If the event is a click event on the edit image:
     // Do not go to the URL itself, but to the internal edit bookmark url
     if (target && target.src) {
-      window.location = "#edit-bookmark/" + resultEntry.getAttribute("x-original-id")
+      window.location = '#edit-bookmark/' + resultEntry.getAttribute('x-original-id')
       return
     }
   }
@@ -242,7 +242,7 @@ export function openResultItem(event) {
     return el.originalUrl === url
   })
   if (foundTab && ext.browserApi.tabs.highlight) {
-    console.debug("Found tab, setting it active", foundTab)
+    console.debug('Found tab, setting it active', foundTab)
     ext.browserApi.tabs.update(foundTab.originalId, {
       active: true,
     })
@@ -254,7 +254,7 @@ export function openResultItem(event) {
     })
     window.close()
   } else {
-    window.open(url, "_newtab")
+    window.open(url, '_newtab')
   }
 }
 
@@ -264,10 +264,10 @@ export function openResultItem(event) {
 export async function toggleSearchApproach() {
   const userOptions = await getUserOptions()
 
-  if (ext.opts.search.approach === "fuzzy") {
-    ext.opts.search.approach = "precise"
+  if (ext.opts.search.approach === 'fuzzy') {
+    ext.opts.search.approach = 'precise'
   } else {
-    ext.opts.search.approach = "fuzzy"
+    ext.opts.search.approach = 'fuzzy'
   }
 
   if (userOptions.search) {
@@ -286,11 +286,11 @@ export async function toggleSearchApproach() {
  * Toggles the text and class of the search aproach button
  */
 export function updateSearchApproachToggle() {
-  if (ext.opts.search.approach === "fuzzy") {
-    ext.dom.searchApproachToggle.innerText = "FUZZY"
-    ext.dom.searchApproachToggle.classList = "fuzzy"
-  } else if (ext.opts.search.approach === "precise") {
-    ext.dom.searchApproachToggle.innerText = "PRECISE"
-    ext.dom.searchApproachToggle.classList = "precise"
+  if (ext.opts.search.approach === 'fuzzy') {
+    ext.dom.searchApproachToggle.innerText = 'FUZZY'
+    ext.dom.searchApproachToggle.classList = 'fuzzy'
+  } else if (ext.opts.search.approach === 'precise') {
+    ext.dom.searchApproachToggle.innerText = 'PRECISE'
+    ext.dom.searchApproachToggle.classList = 'precise'
   }
 }

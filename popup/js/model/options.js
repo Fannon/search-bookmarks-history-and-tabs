@@ -1,4 +1,4 @@
-import { mergeDeep } from "../helper/utils.js"
+import { mergeDeep } from '../helper/utils.js'
 
 /**
  * The default options
@@ -36,7 +36,7 @@ export const defaultOptions = {
      *               The 'fuzzyness' option will be ignored
      *               Uses the https://github.com/nextapps-de/flexsearch library
      */
-    approach: "fuzzy", // 'precise' or 'fuzzy'
+    approach: 'fuzzy', // 'precise' or 'fuzzy'
 
     /**
      * Max search results. Reduce for better performance.
@@ -66,7 +66,7 @@ export const defaultOptions = {
      * This applies only to search approach 'precise'.
      * For fuzzy this is always 'includes'
      */
-    matchAlgorithm: "startsWith", // or 'includes'
+    matchAlgorithm: 'startsWith', // or 'includes'
   },
 
   tabs: {
@@ -106,20 +106,20 @@ export const defaultOptions = {
      */
     choices: [
       {
-        name: "Google",
-        urlPrefix: "https://www.google.com/search?q=",
+        name: 'Google',
+        urlPrefix: 'https://www.google.com/search?q=',
       },
       {
-        name: "Bing",
-        urlPrefix: "https://www.bing.com/search?q=",
+        name: 'Bing',
+        urlPrefix: 'https://www.bing.com/search?q=',
       },
       {
-        name: "DuckDuckGo",
-        urlPrefix: "https://duckduckgo.com/?q=",
+        name: 'DuckDuckGo',
+        urlPrefix: 'https://duckduckgo.com/?q=',
       },
       {
-        name: "dict.cc",
-        urlPrefix: "https://www.dict.cc/?s=",
+        name: 'dict.cc',
+        urlPrefix: 'https://www.dict.cc/?s=',
       },
     ],
   },
@@ -249,8 +249,8 @@ export async function setUserOptions(userOptions) {
         return resolve()
       })
     } else {
-      console.warn("No chrome storage API found. Falling back to local Web Storage")
-      window.localStorage.setItem("userOptions", JSON.stringify(userOptions))
+      console.warn('No chrome storage API found. Falling back to local Web Storage')
+      window.localStorage.setItem('userOptions', JSON.stringify(userOptions))
       return resolve()
     }
   })
@@ -263,15 +263,15 @@ export async function setUserOptions(userOptions) {
 export async function getUserOptions() {
   return new Promise((resolve, reject) => {
     if (chrome && chrome.storage) {
-      chrome.storage.sync.get(["userOptions"], (result) => {
+      chrome.storage.sync.get(['userOptions'], (result) => {
         if (chrome.runtime.lastError) {
           return reject(chrome.runtime.lastError)
         }
         return resolve(result.userOptions || {})
       })
     } else {
-      console.warn("No chrome storage API found. Falling back to local Web Storage")
-      const userOptions = window.localStorage.getItem("userOptions")
+      console.warn('No chrome storage API found. Falling back to local Web Storage')
+      const userOptions = window.localStorage.getItem('userOptions')
       return resolve(userOptions ? JSON.parse(userOptions) : {})
     }
   })

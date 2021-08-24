@@ -1,8 +1,12 @@
 {
-  "cSpell.words": ["BULMA", "fuzzyness", "tagify"],
+  "cSpell.words": ["BULMA", "flexsearch", "fuzzyness", "readonly", "tagify", "webextensions", "yaireo"],
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
+  "editor.formatOnSaveMode": "file",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[javascript]": {
-    "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
   }
 }

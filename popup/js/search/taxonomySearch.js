@@ -73,7 +73,7 @@ export function getUniqueTags() {
   ext.index.taxonomy.tags = {}
   for (const el of ext.model.bookmarks) {
     if (el.tags) {
-      for (let tag of el.tags.split("#")) {
+      for (let tag of el.tags.split('#')) {
         tag = tag.trim()
         if (tag) {
           if (!ext.index.taxonomy.tags[tag]) {
@@ -100,7 +100,7 @@ export function getUniqueFolders() {
     const foldersDictionary = {}
     for (const el of ext.model.bookmarks) {
       if (el.folder) {
-        for (let folderName of el.folder.split("~")) {
+        for (let folderName of el.folder.split('~')) {
           folderName = folderName.trim()
           if (folderName) {
             if (!foldersDictionary[folderName]) {
