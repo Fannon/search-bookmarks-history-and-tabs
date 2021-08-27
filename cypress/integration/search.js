@@ -55,6 +55,45 @@ describe('Search View', () => {
     })
   })
 
+  describe('Search result item', () => {
+    it('includes everything expected (title, URL etc.)', () => {
+      cy.get('#search-input')
+        .type(`JSON`)
+        .get('#result-list')
+        .find('[x-original-id=9]')
+
+        // Check that we have a result with a title returned
+        .get('[x-original-id=9]')
+        .find('.title')
+        .contains('JSON')
+
+        // Check that we have a result with an URL returned
+        .get('[x-original-id=9]')
+        .find('.url')
+        .contains('json')
+
+        // expect #json tag
+        .get('[x-original-id=9]')
+        .find('span.tags')
+        .contains('#json')
+
+        // expect ~Tools folder
+        .get('[x-original-id=9]')
+        .find('span.folder')
+        .contains('~Tools')
+
+        // expect lastVistited badge
+        .get('[x-original-id=9]')
+        .find('span.last-visited')
+
+        // expect score badge
+        .get('[x-original-id=9]')
+        .find('span.score')
+
+        .checkNoErrors()
+    })
+  })
+
   describe('Fuzzy search', () => {
     it('can execute a fuzzy search sucessfully', () => {
       cy.get('#search-input')
@@ -63,6 +102,7 @@ describe('Search View', () => {
         .get('#result-list')
         .should('not.have.length', 0)
         .find('[x-original-id=9]')
+        // Check that we have all kinds of results
         .get('#result-list')
         .find('li.bookmark')
         .get('#result-list')
