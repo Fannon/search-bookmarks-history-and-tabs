@@ -2,7 +2,7 @@
 
 ## v1.0.1
 
-- Changed default keyboard shortcut to `CTRL` + `Shift` + `J` (for better Opera compatibility)
+- Changed icon to dark icon and improved display at small size
 
 ## v1.0.0
 
