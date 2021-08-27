@@ -183,6 +183,7 @@ export function selectListItem(index, scroll = false) {
   const currentSelection = document.getElementById('selected-result')
   if (currentSelection) {
     currentSelection.id = ''
+    delete currentSelection.id
   }
   if (ext.dom.resultList.children[index]) {
     ext.dom.resultList.children[index].id = 'selected-result'

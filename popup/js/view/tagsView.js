@@ -10,7 +10,7 @@ export function loadTagsOverview() {
   const sortedTags = Object.keys(tags).sort()
   document.getElementById('tags-list').innerHTML = sortedTags
     .map((el) => {
-      return `<a class="badge tags" href="#search/#${el}">#${el} <small>(${tags[el].length})<small></a>`
+      return `<a class="badge tags" href="#search/#${el}" x-tag="${el}">#${el} <small>(${tags[el].length})<small></a>`
     })
     .join('')
 }

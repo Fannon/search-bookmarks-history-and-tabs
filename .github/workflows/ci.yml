@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Lint
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version:
+          - 14.x
+          # - 16.x
+
+    steps:
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Lint
+        run: npm run lint
+
+  cypress-run:
+    name: E2E Testing (Electron)
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Increase file watches size
+        run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+
+        with:
+          build: |
+            npm run build
+          start: npm start
+          wait-on: http://localhost:8080
+
+  # cypress-run-chrome-headless:
+  #   name: E2E Testing (Chrome Headless)
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #     - name: Cypress run
+  #       uses: cypress-io/github-action@v2
+  #       with:
+  #         browser: chrome
+  #         headless: true
+  #         build: npm run build
+  #         start: npm start
+  #         wait-on: http://localhost:8080
+
+  cypress-run-firefox:
+    name: E2E Testing (Firefox)
+    runs-on: ubuntu-20.04
+    # container:
+    #   # https://github.com/cypress-io/cypress-docker-images
+    #   image: cypress/browsers:node14.17.0-chrome88-ff89
+    #   options: --user 1001
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Increase file watches size
+        run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+        with:
+          browser: firefox
+          build: npm run build
+          start: npm start
+          wait-on: http://localhost:8080
+
+  cypress-run-edge:
+    name: E2E Testing (Edge)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+        with:
+          browser: edge
+          build: npm run build
+          start: npm start
+          wait-on: http://localhost:8080
