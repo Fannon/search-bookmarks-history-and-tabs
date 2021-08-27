@@ -12,8 +12,11 @@
     "mark.js": "^8.11.1"
   },
   "devDependencies": {
+    "cypress": "^8.3.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-cypress": "^2.11.3",
+    "jest": "^27.0.6",
     "lint-staged": "^11.1.2",
     "live-server": "^1.2.1",
     "node-sass": "^6.0.1",
@@ -28,13 +31,14 @@
     "create-dist": "sh bin/createDist.sh",
     "test": "npm run prettier-check && npm run lint",
     "lint": "npm run eslint",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,scss}\"",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,scss,yml,yaml}\"",
     "eslint": "eslint popup/**/*.js --fix --format stylish",
     "css-build": "node-sass sass/ -o popup/css --omit-source-map-url --output-style compressed",
     "css-watch": "npm run css-build -- --watch",
     "start": "live-server --open=./popup/",
     "prettier": "prettier --write --ignore-unknown .",
-    "prettier-check": "prettier --check --ignore-unknown ."
+    "prettier-check": "prettier --check --ignore-unknown .",
+    "cypress": "./node_modules/.bin/cypress open"
   },
   "repository": {
     "type": "git",
