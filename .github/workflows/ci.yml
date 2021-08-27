@@ -13,7 +13,9 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x, 16.x]
+        node-version:
+          - 14.x
+          # - 16.x
 
     steps:
       - name: Cache node modules
@@ -47,9 +49,6 @@ jobs:
   cypress-run:
     name: E2E Testing
     runs-on: ubuntu-20.04
-    # strategy:
-    #   matrix:
-    #     browser: ['chrome', 'firefox', 'edge']
     steps:
       - name: Checkout
         uses: actions/checkout@v2
