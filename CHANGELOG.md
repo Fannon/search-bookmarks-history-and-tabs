@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v1.0.0
+
+- Official 1.0 stable release
+- No feature changes, just adding tests and ensuring stability
+
 ## v0.9.9
 
 - NEW: Show default results when in bookmark, tab or history search mode
