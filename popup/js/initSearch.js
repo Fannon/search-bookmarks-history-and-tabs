@@ -1,4 +1,4 @@
-import { browserApi } from './helper/browserApi.js'
+import { extensionNamespace } from './model/namespace.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { createSearchIndexes, search } from './search/common.js'
@@ -7,42 +7,15 @@ import { loadFoldersOverview } from './view/foldersView.js'
 import { navigationKeyListener, toggleSearchApproach, updateSearchApproachToggle } from './view/searchView.js'
 import { loadTagsOverview } from './view/tagsView.js'
 
-//////////////////////////////////////////
-// EXTENSION NAMESPACE                  //
-//////////////////////////////////////////
-
-/** Browser extension namespace */
-const ext = (window.ext = {
-  /** Options */
-  opts: {},
-  /** Model / data */
-  model: {
-    /** Currently selected result item */
-    currentItem: 0,
-    /** Current search results */
-    result: [],
-  },
-  /** Search indexies */
-  index: {
-    fuzzy: {},
-    precise: {},
-    taxonomy: {},
-  },
-  /** Commonly used DOM Elements */
-  dom: {},
-  /** The browser / extension API */
-  browserApi: browserApi,
-
-  /** Whether extension is already initialized -> ready for search */
-  initialized: false,
-})
+const ext = extensionNamespace
+window.ext = ext
 
 //////////////////////////////////////////
 // INITIALIZE EXTENSION                 //
 //////////////////////////////////////////
 
 // Trigger initialization
-ext.initialized = false
+extensionNamespace.initialized = false
 initExtension().catch((err) => {
   console.error(err)
   document.getElementById('footer-error').innerText = err.message
@@ -56,37 +29,37 @@ export async function initExtension() {
   performance.mark('init-start')
 
   // Load effective options, including user customizations
-  ext.opts = await getEffectiveOptions()
-  console.debug('Initialized with options', ext.opts)
+  extensionNamespace.opts = await getEffectiveOptions()
+  console.debug('Initialized with options', extensionNamespace.opts)
 
   // HTML Element selectors
-  ext.dom.searchInput = document.getElementById('search-input')
-  ext.dom.resultList = document.getElementById('result-list')
-  ext.dom.resultCounter = document.getElementById('result-counter')
-  ext.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
+  extensionNamespace.dom.searchInput = document.getElementById('search-input')
+  extensionNamespace.dom.resultList = document.getElementById('result-list')
+  extensionNamespace.dom.resultCounter = document.getElementById('result-counter')
+  extensionNamespace.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
 
   updateSearchApproachToggle()
 
   performance.mark('init-dom')
 
   const { bookmarks, tabs, history } = await getSearchData()
-  ext.model.tabs = tabs
-  ext.model.bookmarks = bookmarks
-  ext.model.history = history
+  extensionNamespace.model.tabs = tabs
+  extensionNamespace.model.bookmarks = bookmarks
+  extensionNamespace.model.history = history
 
   performance.mark('init-data-load')
 
   createSearchIndexes()
 
-  ext.initialized = true
+  extensionNamespace.initialized = true
 
   performance.mark('init-search-index')
 
   // Register Events
   document.addEventListener('keydown', navigationKeyListener)
   window.addEventListener('hashchange', hashRouter, false)
-  ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
-  ext.dom.searchInput.addEventListener('keyup', search)
+  extensionNamespace.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
+  extensionNamespace.dom.searchInput.addEventListener('keyup', search)
 
   // Initialize the router by executing it for the first time
   hashRouter()
@@ -123,9 +96,9 @@ export function hashRouter() {
     // Search specific term
     const searchTerm = hash.replace('#search/', '')
     if (searchTerm) {
-      ext.dom.searchInput.value = decodeURIComponent(searchTerm)
+      extensionNamespace.dom.searchInput.value = decodeURIComponent(searchTerm)
     }
-    ext.dom.searchInput.focus()
+    extensionNamespace.dom.searchInput.focus()
     search()
   } else if (hash.startsWith('#tags/')) {
     loadTagsOverview()

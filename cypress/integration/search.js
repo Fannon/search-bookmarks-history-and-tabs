@@ -13,6 +13,9 @@ describe('Search View', () => {
     it('completes the initializing phase without errors', () => {
       cy.wait(initTime).get('#results-loading').should('not.exist').checkNoErrors()
     })
+    it('starts with no results', () => {
+      cy.get('#result-counter').contains('(0)')
+    })
   })
 
   describe('Result Navigation', () => {
@@ -48,6 +51,7 @@ describe('Search View', () => {
             expect(el[0].id).to.not.equal('selected-result')
           }
         })
+        .checkNoErrors()
     })
   })
 
@@ -55,8 +59,7 @@ describe('Search View', () => {
     it('can execute a fuzzy search sucessfully', () => {
       cy.get('#search-input')
         .type(`JSON`)
-        .wait(initTime)
-        // Make sure we get result of all types
+        .get('li.bookmark')
         .get('#result-list')
         .should('not.have.length', 0)
         .find('[x-original-id=9]')
@@ -80,7 +83,9 @@ describe('Search View', () => {
         .click()
         .wait(interactionTime)
         .contains('PRECISE')
-        .wait(initTime)
+        .get('#search-input')
+        .type(`JSON`)
+        .get('li.bookmark')
         .checkNoErrors()
     })
 
@@ -134,6 +139,8 @@ describe('Search View', () => {
         .should('not.exist')
         .get('.history')
         .should('not.exist')
+        .get('#result-counter')
+        .contains('(5)')
         .checkNoErrors()
     })
   })
@@ -152,7 +159,7 @@ describe('Search View', () => {
         .should('not.exist')
         .checkNoErrors()
     })
-    it('only the history result', () => {
+    it('only the history results', () => {
       cy.get('#search-input')
         .type(`h JSON`)
         .get('#result-list')
@@ -161,6 +168,8 @@ describe('Search View', () => {
         .should('not.exist')
         .get('.bookmark')
         .should('not.exist')
+        .get('#result-counter')
+        .contains('(3)')
         .checkNoErrors()
     })
   })
@@ -190,6 +199,8 @@ describe('Search View', () => {
         .should('not.exist')
         .get('.history')
         .should('not.exist')
+        .get('#result-counter')
+        .contains('(1)')
         .checkNoErrors()
     })
   })

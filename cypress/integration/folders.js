@@ -8,7 +8,7 @@ describe('Folder View', () => {
       cy.get('#folders-overview').find('#folders-list')
     })
     it('contains a list of folders', () => {
-      cy.get('#folders-overview').find('#folders-list').find('[x-folder=Tools]')
+      cy.get('#folders-overview').find('#folders-list').find('[x-folder=Tools]').checkNoErrors()
     })
     it('can use folders for navigation', () => {
       cy.get('#folders-overview')
@@ -22,6 +22,7 @@ describe('Folder View', () => {
         .find('[x-original-id=9]')
         .get('#result-list')
         .find('li.bookmark')
+        .checkNoErrors()
     })
   })
 })

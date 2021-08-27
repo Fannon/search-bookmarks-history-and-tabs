@@ -16,12 +16,7 @@
 // Import commands.js using ES2015 syntax:
 import './commands'
 
-Cypress.on('window:before:load', (win) => {
-  cy.spy(win.console, 'error')
-})
+// Fail on console.errors
+import failOnConsoleError from 'cypress-fail-on-console-error'
 
-afterEach(() => {
-  cy.window().then((win) => {
-    expect(win.console.error).to.have.callCount(0)
-  })
-})
+failOnConsoleError()

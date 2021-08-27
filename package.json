@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "cypress": "^8.3.0",
+    "cypress-fail-on-console-error": "^2.1.2",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-cypress": "^2.11.3",
@@ -26,8 +27,12 @@
     "build": "npm run clean && npm run css-build && npm run update-libs && npm run create-dist",
     "update-libs": "sh bin/updateLibs.sh",
     "create-dist": "sh bin/createDist.sh",
-    "test": "npm run test-chrome",
-    "test-chrome": "cypress run --spec cypress/integration/**/*",
+    "test": "npm run e2e",
+    "e2e": "cypress run --spec 'cypress/integration/**/*'",
+    "e2e-all": "npm run e2e-chrome && npm run e2e-firefox && npm run e2e-edge",
+    "e2e-chrome": "cypress run --browser chrome --headed --spec 'cypress/integration/**/*'",
+    "e2e-firefox": "cypress run --browser firefox --headed --spec 'cypress/integration/**/*'",
+    "e2e-edge": "cypress run --browser edge --headed --spec 'cypress/integration/**/*'",
     "lint": "npm run prettier-check && npm run eslint",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,scss,yml,yaml}\"",
     "eslint": "eslint popup/**/*.js --fix --format stylish",
@@ -36,8 +41,7 @@
     "start": "live-server --open=./popup/",
     "prettier": "prettier --write --ignore-unknown .",
     "prettier-check": "prettier --check --ignore-unknown .",
-    "cy:run": "cypress run",
-    "cy:info": "cypress info",
+    "cypress-info": "cypress info",
     "cypress": "./node_modules/.bin/cypress open"
   },
   "repository": {

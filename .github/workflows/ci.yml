@@ -52,11 +52,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Increase file watches size
+        run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
       - name: Cypress run
         uses: cypress-io/github-action@v2
+
         with:
           build: |
-            npm run cy:info
             npm run build
           start: npm start
           wait-on: http://localhost:8080
@@ -76,37 +78,37 @@ jobs:
   #         start: npm start
   #         wait-on: http://localhost:8080
 
-  cypress-run-firefox:
-    name: E2E Testing (Firefox)
-    runs-on: ubuntu-20.04
-    # container:
-    #   image: cypress/browsers:node12.16.1-chrome80-ff73
-    #   options: --user 1001
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Cypress run
-        uses: cypress-io/github-action@v2
-        with:
-          browser: firefox
-          build: |
-            npm run cy:info
-            npm run build
-          start: npm start
-          wait-on: http://localhost:8080
+  # cypress-run-firefox:
+  #   name: E2E Testing (Firefox)
+  #   runs-on: ubuntu-20.04
+  #   # container:
+  #   #   image: cypress/browsers:node12.16.1-chrome80-ff73
+  #   #   options: --user 1001
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #     - name: Cypress run
+  #       uses: cypress-io/github-action@v2
+  #       with:
+  #         browser: firefox
+  #         build: |
+  #           npm run cypress-info
+  #           npm run build
+  #         start: npm start
+  #         wait-on: http://localhost:8080
 
-  cypress-run-edge:
-    name: E2E Testing (Edge)
-    runs-on: windows-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Cypress run
-        uses: cypress-io/github-action@v2
-        with:
-          browser: edge
-          build: |
-            npm run cy:info
-            npm run build
-          start: npm start
-          wait-on: http://localhost:8080
+  # cypress-run-edge:
+  #   name: E2E Testing (Edge)
+  #   runs-on: windows-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #     - name: Cypress run
+  #       uses: cypress-io/github-action@v2
+  #       with:
+  #         browser: edge
+  #         build: |
+  #           npm run cypress-info
+  #           npm run build
+  #         start: npm start
+  #         wait-on: http://localhost:8080

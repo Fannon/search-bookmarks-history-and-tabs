@@ -8,7 +8,7 @@ describe('Options View', () => {
       cy.get('#options').find('#user-config')
     })
     it('successfully loads the default user config', () => {
-      cy.get('#user-config').should('have.value', '{}')
+      cy.get('#user-config').should('have.value', '{}').checkNoErrors()
     })
     it('can save a new user config', () => {
       const newConfig = JSON.stringify(
@@ -29,6 +29,7 @@ describe('Options View', () => {
         .get('#user-config')
         .should('include.value', 'visitCounter')
         .should('include.value', 'dateAdded')
+        .checkNoErrors()
     })
   })
 })

@@ -8,7 +8,7 @@ describe('Tag View', () => {
       cy.get('#tags-overview').find('#tags-list')
     })
     it('contains a list of tags', () => {
-      cy.get('#tags-overview').find('#tags-list').find('[x-tag=json]')
+      cy.get('#tags-overview').find('#tags-list').find('[x-tag=json]').checkNoErrors()
     })
     it('can use tags for navigation', () => {
       cy.get('#tags-overview')
@@ -22,6 +22,7 @@ describe('Tag View', () => {
         .find('[x-original-id=9]')
         .get('#result-list')
         .find('li.bookmark')
+        .checkNoErrors()
     })
   })
 })
