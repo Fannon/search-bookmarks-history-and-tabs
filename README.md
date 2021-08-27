@@ -47,7 +47,7 @@ This extension is built to respect your privacy:
 ## User Documentation
 
 - This extension can (and should!) be triggered via keyboard shortcut.
-  - The default is `CTRL` + `Shift` + `J`, but you can customize this.
+  - The default is `CTRL` + `Shift` + `.`, but you can customize this.
 - Just type in your search query and it will search everything.
 - In case you want to be more selective -> use a search mode:
   - Start your query with `#`: only **bookmarks with the tag** will be returned (excact "starts with" search)
