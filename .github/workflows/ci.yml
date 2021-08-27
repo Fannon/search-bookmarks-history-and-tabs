@@ -47,7 +47,7 @@ jobs:
         run: npm run lint
 
   cypress-run:
-    name: E2E Testing
+    name: E2E Testing (Chrome)
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
@@ -55,7 +55,52 @@ jobs:
       - name: Cypress run
         uses: cypress-io/github-action@v2
         with:
+          build: npm run build
+          start: npm start
+          wait-on: http://localhost:8080
+
+  cypress-run-chrome-headless:
+    name: E2E Testing (Chrome Headless)
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+        with:
+          browser: chrome
           headless: true
+          build: npm run build
+          start: npm start
+          wait-on: http://localhost:8080
+
+  cypress-run-firefox:
+    name: E2E Testing (Firefox)
+    runs-on: ubuntu-20.04
+    container:
+      image: cypress/browsers:node12.16.1-chrome80-ff73
+      options: --user 1001
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+        with:
+          browser: firefox
+          build: npm run build
+          start: npm start
+          wait-on: http://localhost:8080
+
+  cypress-run-edge:
+    name: E2E Testing (Edge)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+        with:
+          browser: edge
           build: npm run build
           start: npm start
           wait-on: http://localhost:8080
