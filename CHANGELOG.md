@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.0.1
+
+- Changed default keyboard shortcut to `CTRL` + `Shift` + `J` (for better Opera compatibility)
+
 ## v1.0.0
 
 - Official 1.0 stable release
