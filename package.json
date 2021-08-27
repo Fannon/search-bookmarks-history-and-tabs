@@ -37,6 +37,7 @@
     "prettier": "prettier --write --ignore-unknown .",
     "prettier-check": "prettier --check --ignore-unknown .",
     "cy:run": "cypress run",
+    "cy:info": "cypress info",
     "cypress": "./node_modules/.bin/cypress open"
   },
   "repository": {

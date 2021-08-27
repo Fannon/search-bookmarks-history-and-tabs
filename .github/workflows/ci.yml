@@ -56,7 +56,7 @@ jobs:
         uses: cypress-io/github-action@v2
         with:
           build: |
-            npx cypress info
+            npm run cy:info
             npm run build
           start: npm start
           wait-on: http://localhost:8080
@@ -90,7 +90,7 @@ jobs:
         with:
           browser: firefox
           build: |
-            npx cypress info
+            npm run cy:info
             npm run build
           start: npm start
           wait-on: http://localhost:8080
@@ -106,7 +106,7 @@ jobs:
         with:
           browser: edge
           build: |
-            npx cypress info
+            npm run cy:info
             npm run build
           start: npm start
           wait-on: http://localhost:8080
