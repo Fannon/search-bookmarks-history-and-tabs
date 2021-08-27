@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: CI
 
 on:
   push:
@@ -55,31 +55,33 @@ jobs:
       - name: Cypress run
         uses: cypress-io/github-action@v2
         with:
-          build: npm run build
+          build: |
+            npx cypress info
+            npm run build
           start: npm start
           wait-on: http://localhost:8080
 
-  cypress-run-chrome-headless:
-    name: E2E Testing (Chrome Headless)
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Cypress run
-        uses: cypress-io/github-action@v2
-        with:
-          browser: chrome
-          headless: true
-          build: npm run build
-          start: npm start
-          wait-on: http://localhost:8080
+  # cypress-run-chrome-headless:
+  #   name: E2E Testing (Chrome Headless)
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #     - name: Cypress run
+  #       uses: cypress-io/github-action@v2
+  #       with:
+  #         browser: chrome
+  #         headless: true
+  #         build: npm run build
+  #         start: npm start
+  #         wait-on: http://localhost:8080
 
   cypress-run-firefox:
     name: E2E Testing (Firefox)
     runs-on: ubuntu-20.04
-    container:
-      image: cypress/browsers:node12.16.1-chrome80-ff73
-      options: --user 1001
+    # container:
+    #   image: cypress/browsers:node12.16.1-chrome80-ff73
+    #   options: --user 1001
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -87,7 +89,9 @@ jobs:
         uses: cypress-io/github-action@v2
         with:
           browser: firefox
-          build: npm run build
+          build: |
+            npx cypress info
+            npm run build
           start: npm start
           wait-on: http://localhost:8080
 
@@ -101,6 +105,8 @@ jobs:
         uses: cypress-io/github-action@v2
         with:
           browser: edge
-          build: npm run build
+          build: |
+            npx cypress info
+            npm run build
           start: npm start
           wait-on: http://localhost:8080
