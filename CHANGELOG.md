@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.0.1
+
+- Changed icon to dark icon and improved display at small size
+
 ## v1.0.0
 
 - Official 1.0 stable release
