@@ -10,20 +10,21 @@ export const browserApi = window.browser || window.chrome || {}
 // BROWSER TABS                         //
 //////////////////////////////////////////
 
-export async function getBrowserTabs() {
-  if (browserApi.tabs) {
-    return new Promise((resolve, reject) => {
-      browserApi.tabs.query({ currentWindow: true }, (tabs, err) => {
+export async function getBrowserTabs(queryOptions) {
+  queryOptions = queryOptions || { currentWindow: true }
+  return new Promise((resolve, reject) => {
+    if (browserApi.tabs) {
+      browserApi.tabs.query(queryOptions, (tabs, err) => {
         if (err) {
           return reject(err)
         }
         return resolve(tabs)
       })
-    })
-  } else {
-    console.warn(`No browser tab API found. Returning no results.`)
-    return []
-  }
+    } else {
+      console.warn(`No browser tab API found. Returning no results.`)
+      return resolve([])
+    }
+  })
 }
 
 export function convertBrowserTabs(chromeTabs) {
@@ -44,12 +45,19 @@ export function convertBrowserTabs(chromeTabs) {
 //////////////////////////////////////////
 
 export async function getBrowserBookmarks() {
-  if (browserApi.bookmarks) {
-    return await browserApi.bookmarks.getTree()
-  } else {
-    console.warn(`No browser bookmark API found. Returning no results.`)
-    return []
-  }
+  return new Promise((resolve, reject) => {
+    if (browserApi.bookmarks && browserApi.bookmarks.getTree) {
+      browserApi.bookmarks.getTree((bookmarks, err) => {
+        if (err) {
+          return reject(err)
+        }
+        return resolve(bookmarks)
+      })
+    } else {
+      console.warn(`No browser bookmark API found. Returning no results.`)
+      return resolve([])
+    }
+  })
 }
 
 /**

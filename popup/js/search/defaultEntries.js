@@ -1,4 +1,4 @@
-import { browserApi } from '../helper/browserApi.js'
+import { getBrowserTabs } from '../helper/browserApi.js'
 
 /**
  * If we don't have a search term yet (or not sufficiently long), display current tab related entries.
@@ -39,11 +39,8 @@ export async function addDefaultEntries() {
   } else {
     // All other modes: Find bookmark / history that matches current page URL
     let currentUrl = window.location.href
-    if (browserApi.tabs) {
-      const queryOptions = { active: true, currentWindow: true }
-      const [tab] = await browserApi.tabs.query(queryOptions)
-      currentUrl = tab.url
-    }
+    const [tab] = await getBrowserTabs({ active: true, currentWindow: true })
+    currentUrl = tab.url
     // Remove trailing slash from URL, so the startsWith search works better
     currentUrl = currentUrl.replace(/\/$/, '')
 
