@@ -40,6 +40,13 @@ export async function addDefaultEntries() {
     // All other modes: Find bookmark / history that matches current page URL
     let currentUrl = window.location.href
     const [tab] = await getBrowserTabs({ active: true, currentWindow: true })
+
+    // If we find no open tab, we're most likely not having a browser API
+    // and work in local / test mode. Return nothing.
+    if (!tab) {
+      return []
+    }
+
     currentUrl = tab.url
     // Remove trailing slash from URL, so the startsWith search works better
     currentUrl = currentUrl.replace(/\/$/, '')
