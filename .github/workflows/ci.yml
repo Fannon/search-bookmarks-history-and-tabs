@@ -46,8 +46,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-  cypress-run:
-    name: E2E Testing (Electron)
+  cypress-run-chrome:
+    name: E2E Testing (Chrome)
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
@@ -58,26 +58,11 @@ jobs:
         uses: cypress-io/github-action@v2
 
         with:
+          browser: chrome
           build: |
             npm run build
           start: npm start
           wait-on: http://localhost:8080
-
-  # cypress-run-chrome-headless:
-  #   name: E2E Testing (Chrome Headless)
-  #   runs-on: ubuntu-20.04
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v2
-  #     - name: Increase file watches size
-  #       run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
-  #     - name: Cypress run
-  #       uses: cypress-io/github-action@v2
-  #       with:
-  #         browser: chrome
-  #         build: npm run build
-  #         start: npm start
-  #         wait-on: http://localhost:8080
 
   cypress-run-firefox:
     name: E2E Testing (Firefox)
