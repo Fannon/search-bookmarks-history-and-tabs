@@ -147,7 +147,7 @@ export const defaultOptions = {
     /** Base score for bookmark results */
     bookmarkBaseScore: 100,
     /** Base score for tab results */
-    tabBaseScore: 90,
+    tabBaseScore: 70,
     /** Base score for history results */
     historyBaseScore: 50,
     /** Base score for search engine entries */
