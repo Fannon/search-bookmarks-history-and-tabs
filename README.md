@@ -7,6 +7,7 @@
 - [Chrome Extension](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0)
 - [Firefox Addon](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/)
 - [Microsoft Edge Addon](https://microsoftedge.microsoft.com/addons/detail/search-tabs-bookmarks-an/ldmbegkendnchhjppahaadhhakgfbfpo)
+- [Opera Addon](https://addons.opera.com/en/extensions/details/search-bookmarks-history-and-tabs/)
 
 ## Features
 
@@ -61,7 +62,7 @@ This extension is built to respect your privacy:
 - This extension works best if you avoid:
   - using `#` in bookmark titles that do not indicate a tag.
   - using `~` in bookmark folder names.
-- TIPP: You can also add special browser pages to your bookmarks, like `chrome://downloads`.
+- You can also add special browser pages to your bookmarks, like `chrome://downloads`.
 
 ## User Configuration
 
@@ -147,7 +148,11 @@ npm run build
 
 The source code for the extension can be found in [popup/](popup/) (HTML, JS and libs) and [sass/](sass/) (SCSS/CSS).
 
-The built extensions can be found in [dist/chrome/](dist/chrome/) for Google Chrome and Microsoft Edge and [dist/firefox/](dist/firefox/) for Firefox.
+The built extensions can be found
+
+- [dist/chrome/](dist/chrome/) for Google Chrome and Microsoft Edge
+- [dist/firefox/](dist/firefox/) for Firefox
+- [dist/opera/](dist/firefox/) for Opera
 
 ### Developer Installation
 

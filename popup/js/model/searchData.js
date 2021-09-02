@@ -1,11 +1,11 @@
 import {
   browserApi,
-  convertChromeBookmarks,
-  convertChromeHistory,
-  convertChromeTabs,
-  getChromeBookmarks,
-  getChromeHistory,
-  getChromeTabs,
+  convertBrowserBookmarks,
+  convertBrowserHistory,
+  convertBrowserTabs,
+  getBrowserBookmarks,
+  getBrowserHistory,
+  getBrowserTabs,
 } from '../helper/browserApi.js'
 
 /**
@@ -23,22 +23,22 @@ export async function getSearchData() {
   // FIRST: Get data
   if (browserApi.tabs) {
     performance.mark('get-data-tabs-start')
-    const chromeTabs = await getChromeTabs()
-    result.tabs = convertChromeTabs(chromeTabs)
+    const browserTabs = await getBrowserTabs()
+    result.tabs = convertBrowserTabs(browserTabs)
     performance.mark('get-data-tabs-end')
     performance.measure('get-data-tabs', 'get-data-tabs-start', 'get-data-tabs-end')
   }
   if (browserApi.bookmarks && ext.opts.bookmarks.enabled) {
     performance.mark('get-data-bookmarks-start')
-    const chromeBookmarks = await getChromeBookmarks()
-    result.bookmarks = convertChromeBookmarks(chromeBookmarks)
+    const browserBookmarks = await getBrowserBookmarks()
+    result.bookmarks = convertBrowserBookmarks(browserBookmarks)
     performance.mark('get-data-bookmarks-end')
     performance.measure('get-data-bookmarks', 'get-data-bookmarks-start', 'get-data-bookmarks-end')
   }
   if (browserApi.history && ext.opts.history.enabled) {
     performance.mark('get-data-history-start')
-    const chromeHistory = await getChromeHistory(ext.opts.history.daysAgo, ext.opts.history.maxItems)
-    result.history = convertChromeHistory(chromeHistory)
+    const browserHistory = await getBrowserHistory(ext.opts.history.daysAgo, ext.opts.history.maxItems)
+    result.history = convertBrowserHistory(browserHistory)
     performance.mark('get-data-history-end')
     performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end')
   }
@@ -50,12 +50,12 @@ export async function getSearchData() {
     const requestChromeMockData = await fetch('./mockData/chrome.json')
     const chromeMockData = await requestChromeMockData.json()
 
-    result.tabs = convertChromeTabs(chromeMockData.tabs)
+    result.tabs = convertBrowserTabs(chromeMockData.tabs)
     if (ext.opts.bookmarks.enabled) {
-      result.bookmarks = convertChromeBookmarks(chromeMockData.bookmarks)
+      result.bookmarks = convertBrowserBookmarks(chromeMockData.bookmarks)
     }
     if (ext.opts.history.enabled) {
-      result.history = convertChromeHistory(chromeMockData.history)
+      result.history = convertBrowserHistory(chromeMockData.history)
     }
   }
 

@@ -3,25 +3,31 @@ import { cleanUpUrl, timeSince } from './utils.js'
 // CHROME API (Manifest v2 / v3)
 
 // Location of browser API.
-// This is `browser` for firefox, and `chrome` for Chrome and Edge.
+// This is `browser` for firefox, and `chrome` for Chrome, Edge and Opera.
 export const browserApi = window.browser || window.chrome || {}
 
 //////////////////////////////////////////
 // BROWSER TABS                         //
 //////////////////////////////////////////
 
-export async function getChromeTabs() {
+export async function getBrowserTabs(queryOptions) {
+  queryOptions = queryOptions || { currentWindow: true }
   return new Promise((resolve, reject) => {
-    browserApi.tabs.query({ currentWindow: true }, (tabs, err) => {
-      if (err) {
-        return reject(err)
-      }
-      return resolve(tabs)
-    })
+    if (browserApi.tabs) {
+      browserApi.tabs.query(queryOptions, (tabs, err) => {
+        if (err) {
+          return reject(err)
+        }
+        return resolve(tabs)
+      })
+    } else {
+      console.warn(`No browser tab API found. Returning no results.`)
+      return resolve([])
+    }
   })
 }
 
-export function convertChromeTabs(chromeTabs) {
+export function convertBrowserTabs(chromeTabs) {
   return chromeTabs.map((entry) => {
     return {
       type: 'tab',
@@ -38,14 +44,26 @@ export function convertChromeTabs(chromeTabs) {
 // BOOKMARKS                            //
 //////////////////////////////////////////
 
-export async function getChromeBookmarks() {
-  return await browserApi.bookmarks.getTree()
+export async function getBrowserBookmarks() {
+  return new Promise((resolve, reject) => {
+    if (browserApi.bookmarks && browserApi.bookmarks.getTree) {
+      browserApi.bookmarks.getTree((bookmarks, err) => {
+        if (err) {
+          return reject(err)
+        }
+        return resolve(bookmarks)
+      })
+    } else {
+      console.warn(`No browser bookmark API found. Returning no results.`)
+      return resolve([])
+    }
+  })
 }
 
 /**
  * Recursive function to return bookmarks in our internal, flat array format
  */
-export function convertChromeBookmarks(bookmarks, folderTrail, depth) {
+export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
   depth = depth || 1
   let result = []
   folderTrail = folderTrail || []
@@ -93,7 +111,7 @@ export function convertChromeBookmarks(bookmarks, folderTrail, depth) {
       })
     }
     if (entry.children) {
-      result = result.concat(convertChromeBookmarks(entry.children, newFolderTrail, depth + 1))
+      result = result.concat(convertBrowserBookmarks(entry.children, newFolderTrail, depth + 1))
     }
   }
 
@@ -108,29 +126,34 @@ export function convertChromeBookmarks(bookmarks, folderTrail, depth) {
  * Gets chrome browsing history.
  * Warning: This chrome API call tends to be rather slow
  */
-export async function getChromeHistory(daysAgo, maxResults) {
+export async function getBrowserHistory(daysAgo, maxResults) {
   return new Promise((resolve, reject) => {
-    browserApi.history.search(
-      {
-        text: '',
-        maxResults: maxResults,
-        startTime: Date.now() - 1000 * 60 * 60 * 24 * daysAgo,
-        endTime: Date.now(),
-      },
-      (history, err) => {
-        if (err) {
-          return reject(err)
-        }
-        return resolve(history)
-      },
-    )
+    if (browserApi.history) {
+      browserApi.history.search(
+        {
+          text: '',
+          maxResults: maxResults,
+          startTime: Date.now() - 1000 * 60 * 60 * 24 * daysAgo,
+          endTime: Date.now(),
+        },
+        (history, err) => {
+          if (err) {
+            return reject(err)
+          }
+          return resolve(history)
+        },
+      )
+    } else {
+      console.warn(`No browser history API found. Returning no results.`)
+      return []
+    }
   })
 }
 
 /**
  * Convert chrome history into our internal, flat array format
  */
-export function convertChromeHistory(history) {
+export function convertBrowserHistory(history) {
   if (ext.opts.history.ignoreList && ext.opts.history.ignoreList.length) {
     let ignoredHistoryCounter = 0
     history = history.filter((el) => {

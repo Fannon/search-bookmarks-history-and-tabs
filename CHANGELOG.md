@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v1.0.3
+
+- Support for Opera when delivered through Opera addons
+- Burned v1.0.2 on the way :)
+
 ## v1.0.1
 
 - Changed icon to dark icon and improved display at small size
