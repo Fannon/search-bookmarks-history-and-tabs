@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## unreleased
+
+- Reduced default base score for open tabs
+
 ## v1.0.3
 
 - Support for Opera when delivered through Opera addons

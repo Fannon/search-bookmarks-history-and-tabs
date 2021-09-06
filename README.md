@@ -88,7 +88,12 @@ Or a more advanced example
 
 ```json5
 {
+  search: {
+    approach: 'precise', // Use precise instead of fuzzy search
+  },
   history: {
+    daysAgo: 7,
+    maxItems: 1024,
     ignoreList: [
       // Ignore some localhost URLs in browser history
       'http://localhost',
@@ -97,16 +102,19 @@ Or a more advanced example
   },
   searchEngines: {
     choices: [
-      // Use only DuckDuckGo and dict.cc as fallback search engines
+      // Use only Google and dict.cc as fallback search engines
       {
-        name: 'DuckDuckGo',
-        urlPrefix: 'https://duckduckgo.com/?q=',
+        name: 'Google',
+        urlPrefix: 'https://www.google.com/search?q=',
       },
       {
         name: 'dict.cc',
         urlPrefix: 'https://www.dict.cc/?s=',
       },
     ],
+  },
+  score: {
+    tabBaseScore: 70, // customize base score for open tabs
   },
 }
 ```
