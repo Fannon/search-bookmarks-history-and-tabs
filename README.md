@@ -11,14 +11,18 @@
 
 ## Features
 
-- **The extension does not collect any data nor does it make any external requests.** (see [Privacy](#privacy--data-protection))
-- Support for two different search approaches:
-  - Fuzzy search (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
-  - Exact search (starts with matching): Faster and only exact matching results.
-- Tagging for bookmarks with auto completions.
-- Dark theme / light theme via system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme))
-- Fallback to use search engines like Google, Dict.cc etc. (multiple options)
-- Customization via [user options](#user-configuration).
+**This extension does not collect any data nor does it make any external requests** (see [Privacy](#privacy--data-protection)).
+
+I created this extension, because I really like to use keyboard navigation where possible. The inspiration for this extension was VSCode (command palette) and similar tools.
+
+It supports two different search approaches:
+
+- Fuzzy search (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
+- Exact search (starts with matching): Faster, but only exact matching results.
+
+With this extension you can also **tag your bookmarks** including auto completions. The tags are then considered when searching and can be used for navigation.
+
+In general, the extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)).
 
 For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
 
@@ -62,7 +66,7 @@ This extension is built to respect your privacy:
 - This extension works best if you avoid:
   - using `#` in bookmark titles that do not indicate a tag.
   - using `~` in bookmark folder names.
-- You can also add special browser pages to your bookmarks, like `chrome://downloads`.
+- Tip: You can also add special browser pages to your bookmarks, like `chrome://downloads`.
 
 ## User Configuration
 
