@@ -96,9 +96,6 @@ Or a more advanced example
 
 ```json5
 {
-  search: {
-    approach: 'precise', // Use precise instead of fuzzy search
-  },
   history: {
     daysAgo: 7,
     maxItems: 1024,
