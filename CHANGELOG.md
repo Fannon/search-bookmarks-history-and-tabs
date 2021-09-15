@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## v1.0.4
+## v1.1.0
 
 - Adjusted default options
   - precise search is now standard
