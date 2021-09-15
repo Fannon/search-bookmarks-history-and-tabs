@@ -26,17 +26,17 @@ export const defaultOptions = {
     /**
      * Search approach to use. Choose between:
      *
-     * * 'fuzzy'   : Default choice that allows for fuzzy (approximate) search.
-     *               It is faster to index / start up, but may be slower when searching.
-     *               It supports all options.
-     *               Uses the https://fusejs.io/ library
-     *
      * * 'precise' : Alternative search approach that is more precise.
      *               It may be slower to index / start up, but faster for searching.
      *               The 'fuzzyness' option will be ignored
      *               Uses the https://github.com/nextapps-de/flexsearch library
+     *
+     * * 'fuzzy'   : Default choice that allows for fuzzy (approximate) search.
+     *               It is faster to index / start up, but may be slower when searching.
+     *               It supports all options.
+     *               Uses the https://fusejs.io/ library
      */
-    approach: 'fuzzy', // 'precise' or 'fuzzy'
+    approach: 'precise', // 'precise' or 'fuzzy'
 
     /**
      * Max search results. Reduce for better performance.
@@ -87,7 +87,7 @@ export const defaultOptions = {
      */
     enabled: true,
     /** How many days ago the history should be fetched */
-    daysAgo: 3,
+    daysAgo: 7,
     /** How many history items should be fetched at most */
     maxItems: 512,
     /** All history items that start with the URLs given here will be skipped */
@@ -99,7 +99,7 @@ export const defaultOptions = {
    */
   searchEngines: {
     /** Enable or disable search engine links in results */
-    enabled: true,
+    enabled: false,
     /**
      * For each entry here, one result will be created - in the order they are defined.
      * The URLs need to include the search querystring (see examples).

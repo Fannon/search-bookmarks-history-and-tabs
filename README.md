@@ -82,9 +82,13 @@ An exemplary user-config can look like the following example:
 
 ```json5
 {
-  visitCounter: true, // Show number of visits counter
-  dateAdded: true, // Show date added for bookmarks
-  dateAddedBonusScoreMaximum: 20, // Increase max score for recently added bookmarks
+  general: {
+    visitCounter: true, // Show number of visits counter
+    dateAdded: true, // Show date added for bookmarks
+  },
+  searchEngines: {
+    enabled: true, // Enable fallback to search engines
+  },
 }
 ```
 
@@ -105,6 +109,7 @@ Or a more advanced example
     ],
   },
   searchEngines: {
+    enabled: true, // Enable fallback to search engines
     choices: [
       // Use only Google and dict.cc as fallback search engines
       {
