@@ -1,8 +1,12 @@
 # CHANGELOG
 
-## unreleased
+## v1.1.0
 
-- Reduced default base score for open tabs
+- Adjusted default options
+  - precise search is now standard
+  - history goes back 7 days
+  - search engines are disabled by default
+  - Reduced default base score for open tabs
 
 ## v1.0.3
 
