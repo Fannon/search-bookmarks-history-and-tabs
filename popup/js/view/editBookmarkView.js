@@ -3,9 +3,18 @@
 //////////////////////////////////////////
 
 import { browserApi } from '../helper/browserApi.js'
+import { loadScript } from '../helper/utils.js'
 import { getUniqueTags } from '../search/taxonomySearch.js'
 
-export function editBookmark(bookmarkId) {
+let tagifyLoaded = false
+
+export async function editBookmark(bookmarkId) {
+  // Lazy load tagify if it has not been loaded already
+  if (!tagifyLoaded) {
+    await loadScript('./lib/tagify.min.js')
+    tagifyLoaded = true
+  }
+
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
   const tags = Object.keys(getUniqueTags()).sort()
   console.debug('Editing bookmark ' + bookmarkId, bookmark)

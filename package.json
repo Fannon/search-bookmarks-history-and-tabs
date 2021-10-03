@@ -4,7 +4,7 @@
   "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.",
   "main": "index.js",
   "dependencies": {
-    "@yaireo/tagify": "^4.7.2",
+    "@yaireo/tagify": "^4.8.1",
     "bulma": "^0.9.3",
     "flexsearch": "^0.7.21",
     "fuse.js": "^6.4.6",
@@ -12,14 +12,14 @@
     "mark.js": "^8.11.1"
   },
   "devDependencies": {
-    "cypress": "^8.4.0",
+    "cypress": "^8.5.0",
     "cypress-fail-on-console-error": "^2.1.2",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-cypress": "^2.12.1",
     "live-server": "^1.2.1",
     "node-sass": "^6.0.1",
-    "prettier": "2.4.0",
+    "prettier": "2.4.1",
     "prettier-eslint": "^13.0.0"
   },
   "scripts": {

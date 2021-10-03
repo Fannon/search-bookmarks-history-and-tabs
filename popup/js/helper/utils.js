@@ -69,3 +69,16 @@ export function cleanUpUrl(url) {
     .replace(/\/$/, '')
     .toLowerCase()
 }
+
+/**
+ * Dynamically load a Javascript file
+ */
+export async function loadScript(url) {
+  return new Promise(function (resolve) {
+    const script = document.createElement('script')
+    script.type = 'text/javascript'
+    script.onload = resolve
+    script.src = url
+    document.getElementsByTagName('head')[0].appendChild(script)
+  })
+}

@@ -1,6 +1,7 @@
 @charset "utf-8";
 @import '../node_modules/bulma/sass/base/minireset.sass';
 @import '../node_modules/bulma/sass/base/generic.sass';
+@import '../node_modules/@yaireo/tagify/dist/tagify';
 
 html,
 body,
@@ -413,5 +414,8 @@ body {
   .tagify__dropdown__item {
     color: #ccc;
     background: #000;
+  }
+  .tagify__tag > div > [contenteditable] {
+    color: #eee;
   }
 }
