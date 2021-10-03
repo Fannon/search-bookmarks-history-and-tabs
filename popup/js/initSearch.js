@@ -85,7 +85,7 @@ export async function initExtension() {
 /**
  * URL Hash Router
  */
-export function hashRouter() {
+export async function hashRouter() {
   const hash = window.location.hash
   console.debug('Changing Route: ' + hash)
   closeModals()
