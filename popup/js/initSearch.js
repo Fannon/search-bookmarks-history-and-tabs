@@ -85,7 +85,7 @@ export async function initExtension() {
 /**
  * URL Hash Router
  */
-export function hashRouter() {
+export async function hashRouter() {
   const hash = window.location.hash
   console.debug('Changing Route: ' + hash)
   closeModals()
@@ -107,7 +107,7 @@ export function hashRouter() {
   } else if (hash.startsWith('#edit-bookmark/')) {
     // Edit bookmark route
     const bookmarkId = hash.replace('#edit-bookmark/', '')
-    editBookmark(bookmarkId)
+    void editBookmark(bookmarkId)
   } else if (hash.startsWith('#update-bookmark/')) {
     // Update bookmark route
     const bookmarkId = hash.replace('#update-bookmark/', '')

@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## unreleased
+
+- Fix tag edit text not well readable in dark mode
+- Minor performance optimizations (load time)
+
 ## v1.1.0
 
 - Adjusted default options
