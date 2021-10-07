@@ -91,7 +91,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
         // Parse out tags from bookmark title (starting with #)
         let tagsText = ''
         let tagsArray = []
-        if (ext.opts.general.tags && title) {
+        if (title) {
           const tagSplit = title.split('#')
           title = tagSplit.shift().trim()
           tagsArray = tagSplit
@@ -101,6 +101,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
           tagsText = tagsText.slice(0, -1)
         }
 
+        mappedEntry.title = title
         mappedEntry.tags = tagsText
         mappedEntry.tagsArray = tagsArray
       }
