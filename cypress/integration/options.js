@@ -8,7 +8,7 @@ describe('Options View', () => {
       cy.get('#options').find('#user-config')
     })
     it('successfully loads the default user config', () => {
-      cy.get('#user-config').should('have.value', '{}').checkNoErrors()
+      cy.get('#user-config').should('include.value', '{').checkNoErrors()
     })
     it('can save a new user config', () => {
       const newConfig = JSON.stringify(
@@ -20,7 +20,7 @@ describe('Options View', () => {
         2,
       )
       cy.get('#user-config')
-        .type('{backspace}{backspace}')
+        .clear()
         .should('have.value', '')
         .type(newConfig)
         .get('#edit-options-save')

@@ -248,7 +248,7 @@ export const defaultOptions = {
 /**
  * If there are no options yet, use this as an empty options template
  */
-const emptyOptions = {
+export const emptyOptions = {
   general: {},
   search: {},
 }
