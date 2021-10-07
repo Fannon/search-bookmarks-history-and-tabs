@@ -76,40 +76,50 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
       newFolderTrail = folderTrail.concat(entry.title)
     }
 
-    // Parse out tags from bookmark title (starting with #)
-    let title = entry.title
-    let tagsText = ''
-    let tagsArray = []
-    if (ext.opts.general.tags && title) {
-      const tagSplit = title.split('#')
-      title = tagSplit.shift().trim()
-      tagsArray = tagSplit
-      for (const tag of tagSplit) {
-        tagsText += '#' + tag.trim() + ' '
-      }
-      tagsText = tagsText.slice(0, -1)
-    }
-
-    let folderText = ''
-    for (const folder of folderTrail) {
-      folderText += '~' + folder + ' '
-    }
-    folderText = folderText.slice(0, -1)
-
     if (entry.url) {
-      result.push({
+      let title = entry.title
+      const mappedEntry = {
         type: 'bookmark',
         originalId: entry.id,
         title: title,
         originalUrl: entry.url.replace(/\/$/, ''),
         url: cleanUpUrl(entry.url),
         dateAdded: entry.dateAdded,
-        tags: tagsText,
-        tagsArray: tagsArray,
-        folder: folderText,
-        folderArray: folderTrail,
-      })
+      }
+
+      if (ext.opts.general.tags) {
+        // Parse out tags from bookmark title (starting with #)
+        let tagsText = ''
+        let tagsArray = []
+        if (ext.opts.general.tags && title) {
+          const tagSplit = title.split('#')
+          title = tagSplit.shift().trim()
+          tagsArray = tagSplit
+          for (const tag of tagSplit) {
+            tagsText += '#' + tag.trim() + ' '
+          }
+          tagsText = tagsText.slice(0, -1)
+        }
+
+        mappedEntry.tags = tagsText
+        mappedEntry.tagsArray = tagsArray
+      }
+
+      if (ext.opts.general.folderName) {
+        // Consider the folder names / structure of bookmarks
+        let folderText = ''
+        for (const folder of folderTrail) {
+          folderText += '~' + folder + ' '
+        }
+        folderText = folderText.slice(0, -1)
+
+        mappedEntry.folder = folderText
+        mappedEntry.folderArray = folderTrail
+      }
+
+      result.push(mappedEntry)
     }
+
     if (entry.children) {
       result = result.concat(convertBrowserBookmarks(entry.children, newFolderTrail, depth + 1))
     }

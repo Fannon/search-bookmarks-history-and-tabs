@@ -10,6 +10,8 @@ export const defaultOptions = {
   general: {
     /** Extract tags from title and display it as a badge with different search priority */
     tags: true,
+    /** Display and search the folder names of bookmarks */
+    folderName: true,
     /** Highlight search matches in results. Reduces rendering performance a little. */
     highlight: true,
     /** Display last visit */
