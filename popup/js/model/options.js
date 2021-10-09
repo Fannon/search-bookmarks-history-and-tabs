@@ -8,9 +8,20 @@ import { mergeDeep } from '../helper/utils.js'
  */
 export const defaultOptions = {
   general: {
-    /** Extract tags from title and display it as a badge with different search priority */
+    /**
+     * Extract tags from title and display it as a badge with different search priority
+     * Disabling this will also disable the tag overview and the tag search mode.
+     */
     tags: true,
-    /** Highlight search matches in results. Reduces rendering performance a little. */
+    /**
+     * Display and search the folder names of bookmarks.
+     * Disabling this will also disable the folder overview and the folder search mode.
+     */
+    folderName: true,
+    /**
+     * Highlight search matches in results.
+     * Reduces rendering performance a little.
+     */
     highlight: true,
     /** Display last visit */
     lastVisit: true,
@@ -235,6 +246,14 @@ export const defaultOptions = {
 }
 
 /**
+ * If there are no options yet, use this as an empty options template
+ */
+export const emptyOptions = {
+  general: {},
+  search: {},
+}
+
+/**
  * Writes user settings to the google chrome sync storage
  *
  * @see https://developer.chrome.com/docs/extensions/reference/storage/
@@ -267,12 +286,12 @@ export async function getUserOptions() {
         if (ext.browserApi.runtime.lastError) {
           return reject(ext.browserApi.runtime.lastError)
         }
-        return resolve(result.userOptions || {})
+        return resolve(result.userOptions || emptyOptions)
       })
     } else {
       console.warn('No storage API found. Falling back to local Web Storage')
       const userOptions = window.localStorage.getItem('userOptions')
-      return resolve(userOptions ? JSON.parse(userOptions) : {})
+      return resolve(userOptions ? JSON.parse(userOptions) : emptyOptions)
     }
   })
 }
