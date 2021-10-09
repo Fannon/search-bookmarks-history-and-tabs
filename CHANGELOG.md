@@ -2,9 +2,12 @@
 
 ## v1.2.0
 
-- When pressing `CTRL` or `ALT` while selecting an search entry, it will be opened in current tab
-- Fix tag edit text not well readable in dark mode
-- Minor performance optimizations (load time)
+- NEW: When pressing `CTRL` or `ALT` while selecting an search entry, it will be opened in current tab
+- NEW: Added new option to optionally disable use of folder names in bookmarks:
+  - `{ "general": {"folderName": true } }`
+- IMPROVEMENT: Minor performance optimizations (load time)
+- FIX: Tag edit text was not well readable in dark mode
+- FIX: Disabling `general.tags` was not fully implemented.
 
 ## v1.1.0
 
