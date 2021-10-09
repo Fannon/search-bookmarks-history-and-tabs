@@ -1,7 +1,8 @@
 # CHANGELOG
 
-## unreleased
+## v1.2.0
 
+- When pressing `CTRL` or `ALT` while selecting an search entry, it will be opened in current tab
 - Fix tag edit text not well readable in dark mode
 - Minor performance optimizations (load time)
 

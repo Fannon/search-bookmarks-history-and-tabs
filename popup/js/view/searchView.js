@@ -168,7 +168,7 @@ export function navigationKeyListener(event) {
   } else if (event.key === 'Enter' && ext.model.result.length > 0) {
     // Enter selects selected search result -> only when in search mode
     if (window.location.hash.startsWith('#search/')) {
-      openResultItem()
+      openResultItem(event)
     }
   } else if (event.key === 'Escape') {
     window.location.hash = '#search/'
@@ -236,6 +236,28 @@ export function openResultItem(event) {
       window.location = '#edit-bookmark/' + resultEntry.getAttribute('x-original-id')
       return
     }
+  }
+
+  // If we press CTRL or ALT while selecting an entry
+  // -> Open it in current tab
+  if (event.ctrlKey || event.altKey) {
+    if (ext.browserApi.tabs) {
+      ext.browserApi.tabs
+        .query({
+          active: true,
+          currentWindow: true,
+        })
+        .then(([currentTab]) => {
+          ext.browserApi.tabs.update(currentTab.id, {
+            url: url,
+          })
+          window.close()
+        })
+        .catch(console.error)
+    } else {
+      window.location.href = url
+    }
+    return
   }
 
   // Else: Navigate to selected tab or link. Prefer browser tab API if available
