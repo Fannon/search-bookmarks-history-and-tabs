@@ -35,26 +35,28 @@ function createFuseJsIndex(type, searchData) {
     keys: [
       {
         name: 'title',
-        weight: ext.opts.score.titleWeight,
+        weight: ext.opts.score.titleWeight || 0.1,
       },
       {
         name: 'url',
-        weight: ext.opts.score.urlWeight,
+        weight: ext.opts.score.urlWeight || 0.1,
       },
     ],
   }
 
   if (type === 'bookmarks') {
-    options.keys.push(
-      {
+    if (ext.opts.general.tags && ext.opts.score.tagWeight) {
+      options.keys.push({
         name: 'tags',
         weight: ext.opts.score.tagWeight,
-      },
-      {
+      })
+    }
+    if (ext.opts.general.folderName && ext.opts.score.folderWeight) {
+      options.keys.push({
         name: 'folder',
         weight: ext.opts.score.folderWeight,
-      },
-    )
+      })
+    }
   }
 
   const index = new window.Fuse(searchData, options)
