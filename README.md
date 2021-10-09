@@ -54,6 +54,7 @@ This extension is built to respect your privacy:
 - This extension can (and should!) be triggered via keyboard shortcut.
   - The default is `CTRL` + `Shift` + `.`, but you can customize this.
 - Just type in your search query and it will search everything.
+- By default, the extension will look if you already have a tab with the selected URL switch to it. If not, a new tab is opened. Press `CTRL` or `ALT` to open the result in the current tab.
 - In case you want to be more selective -> use a search mode:
   - Start your query with `#`: only **bookmarks with the tag** will be returned (excact "starts with" search)
   - Start your query with `~`: only **bookmarks within the folder** will be returned (excact "starts with" search)
