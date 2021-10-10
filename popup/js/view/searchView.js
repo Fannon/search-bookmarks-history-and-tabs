@@ -238,9 +238,10 @@ export function openResultItem(event) {
     }
   }
 
-  // If we press CTRL or ALT while selecting an entry
+  // If we press SHIFT or ALT while selecting an entry:
   // -> Open it in current tab
-  if (event.ctrlKey || event.altKey) {
+  if (event.shiftKey || event.altKey) {
+    console.debug('Open in current tab: ' + url)
     if (ext.browserApi.tabs) {
       ext.browserApi.tabs
         .query({
@@ -251,7 +252,10 @@ export function openResultItem(event) {
           ext.browserApi.tabs.update(currentTab.id, {
             url: url,
           })
-          window.close()
+          // Only close popup if CTRL is not pressed
+          if (!event.ctrlKey) {
+            window.close()
+          }
         })
         .catch(console.error)
     } else {
@@ -260,17 +264,34 @@ export function openResultItem(event) {
     return
   }
 
-  // Else: Navigate to selected tab or link. Prefer browser tab API if available
+  // // If we press CTRL while seleting an entry
+  // // -> Open it in new tab in the background (don't close popup)
+  if (event.ctrlKey) {
+    console.debug('Open in background tab: ' + url)
+    if (ext.browserApi.tabs) {
+      ext.browserApi.tabs.create({
+        active: false,
+        url: url,
+      })
+    } else {
+      window.open(url, '_newtab')
+    }
+    return
+  }
+
+  // // If we use no modifier when selecting an entry:
+  // // -> Navigate to selected tab or link. Prefer browser tab API if available.
   const foundTab = ext.model.tabs.find((el) => {
     return el.originalUrl === url
   })
   if (foundTab && ext.browserApi.tabs.highlight) {
-    console.debug('Found tab, setting it active', foundTab)
+    console.debug('Open in existing tab: ' + url)
     ext.browserApi.tabs.update(foundTab.originalId, {
       active: true,
     })
     window.close()
   } else if (ext.browserApi.tabs) {
+    console.debug('Open in new, active tab: ' + url)
     ext.browserApi.tabs.create({
       active: true,
       url: url,

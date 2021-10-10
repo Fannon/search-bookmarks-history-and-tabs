@@ -2,7 +2,10 @@
 
 ## v1.2.0
 
-- NEW: When pressing `CTRL` or `ALT` while selecting an search entry, it will be opened in current tab
+- NEW: Results can now be opened in current tab or background tab
+  - By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
+  - Hold `Shift` or `Alt` to open the result in the current tab
+  - Hold `Ctrl` to open the result without closing the popup.
 - NEW: Added new option to optionally disable use of folder names in bookmarks:
   - `{ "general": {"folderName": true } }`
 - IMPROVEMENT: Minor performance optimizations (load time)

@@ -1,6 +1,6 @@
 # Search Bookmarks, History and Browser Tabs
 
-> 🔎 Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.
+🔎 Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.
 
 ## Installation via Store
 
@@ -13,14 +13,13 @@
 
 **This extension does not collect any data nor does it make any external requests** (see [Privacy](#privacy--data-protection)).
 
-I created this extension, because I really like to use keyboard navigation where possible. The inspiration for this extension was VSCode (command palette) and similar tools.
-
 It supports two different search approaches:
 
 - Fuzzy search (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
 - Exact search (starts with matching): Faster, but only exact matching results.
 
-With this extension you can also **tag your bookmarks** including auto completions. The tags are then considered when searching and can be used for navigation.
+With this extension you can also **tag your bookmarks** including auto completions.
+The tags are then considered when searching and can be used for navigation.
 
 In general, the extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)).
 
@@ -54,7 +53,9 @@ This extension is built to respect your privacy:
 - This extension can (and should!) be triggered via keyboard shortcut.
   - The default is `CTRL` + `Shift` + `.`, but you can customize this.
 - Just type in your search query and it will search everything.
-- By default, the extension will look if you already have a tab with the selected URL switch to it. If not, a new tab is opened. Press `CTRL` or `ALT` to open the result in the current tab.
+- By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
+  - Hold `Shift` or `Alt` to open the result in the current tab
+  - Hold `Ctrl` to open the result without closing the popup.
 - In case you want to be more selective -> use a search mode:
   - Start your query with `#`: only **bookmarks with the tag** will be returned (excact "starts with" search)
   - Start your query with `~`: only **bookmarks within the folder** will be returned (excact "starts with" search)
