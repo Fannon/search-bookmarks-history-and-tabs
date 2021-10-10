@@ -34,6 +34,10 @@ export async function search(event) {
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter' || event.key === 'Escape') {
       return
     }
+    // Don't execute search on modifier keys
+    if (event.key === 'Control' || event.key === 'Alt' || event.key === 'Shift') {
+      return
+    }
   }
 
   if (!ext.initialized) {

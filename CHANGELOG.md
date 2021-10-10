@@ -1,9 +1,16 @@
 # CHANGELOG
 
-## unreleased
+## v1.2.0
 
-- Fix tag edit text not well readable in dark mode
-- Minor performance optimizations (load time)
+- NEW: Results can now be opened in current tab or background tab
+  - By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
+  - Hold `Shift` or `Alt` to open the result in the current tab
+  - Hold `Ctrl` to open the result without closing the popup.
+- NEW: Added new option to optionally disable use of folder names in bookmarks:
+  - `{ "general": {"folderName": true } }`
+- IMPROVEMENT: Minor performance optimizations (load time)
+- FIX: Tag edit text was not well readable in dark mode
+- FIX: Disabling `general.tags` was not fully implemented.
 
 ## v1.1.0
 
