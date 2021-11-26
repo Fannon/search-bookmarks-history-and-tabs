@@ -179,8 +179,17 @@ The built extensions can be found
   - Enable "Developer mode"
   - Choose "Load unpacked" and open the root folder of this repository
 - **For Firefox**:
+
   - First [install and build](#install-and-build) this project.
   - Load the built extension in `dist/firefox` as a temporary addon in `about:debugging`.
+
+### Developer Workflow
+
+- Typical developer actions
+  - `npm run build` for a complete build
+  - `npm run start` to start the extension locally in a browser (with mock data)
+  - `npm run test` to run end to end tests
+  - for more, see `npm run`
 
 ## Credits
 
