@@ -22,12 +22,16 @@ export async function addDefaultEntries() {
   } else if (ext.model.searchMode === 'tabs') {
     // Display last opened tabs by default
     console.log('Default tabs results')
-    results = ext.model.tabs.map((el) => {
-      return {
-        searchScore: 1,
-        ...el,
-      }
-    })
+    results = ext.model.tabs
+      .filter((el) => {
+        return el.active === false
+      })
+      .map((el) => {
+        return {
+          searchScore: 1,
+          ...el,
+        }
+      })
   } else if (ext.model.searchMode === 'bookmarks') {
     // Display all bookmarks by default
     results = ext.model.bookmarks.map((el) => {
@@ -65,6 +69,9 @@ export async function addDefaultEntries() {
       const lastVisitedTabs = ext.model.tabs
         .filter((el) => {
           return el.lastVisitSecondsAgo
+        })
+        .filter((el) => {
+          return el.active === false
         })
         .sort((a, b) => {
           return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo

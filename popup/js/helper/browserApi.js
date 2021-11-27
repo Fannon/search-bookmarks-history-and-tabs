@@ -36,6 +36,7 @@ export function convertBrowserTabs(chromeTabs) {
       originalUrl: entry.url.replace(/\/$/, ''),
       originalId: entry.id,
       favIconUrl: entry.favIconUrl,
+      active: entry.active,
     }
   })
 }
