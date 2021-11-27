@@ -83,6 +83,11 @@ export const defaultOptions = {
   tabs: {
     /** Whether to index and search for open tabs */
     enabled: true,
+    /**
+     * When initializing search, show a certain number of tabs, sorted by last visited
+     * Set this to 0 to disable.
+     */
+    displayLastVisited: 7,
   },
 
   bookmarks: {
