@@ -47,7 +47,7 @@ export const defaultOptions = {
      *               It supports all options.
      *               Uses the https://fusejs.io/ library
      */
-    approach: 'precise', // 'precise' or 'fuzzy'
+    approach: 'fuzzy', // 'precise' or 'fuzzy'
 
     /**
      * Max search results. Reduce for better performance.
@@ -72,7 +72,7 @@ export const defaultOptions = {
      * 'startsWith' is only considering a match if the search term starts with the term
      * 'includes' also considers matches where the term is included anywhere.
      *
-     * Setting this to 'includes' will drastically increase precise indexing time
+     * Setting this to 'includes' will increase the time for indexing (slower startup)
      *
      * This applies only to search approach 'precise'.
      * For fuzzy this is always 'includes'
