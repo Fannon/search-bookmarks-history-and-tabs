@@ -225,8 +225,6 @@ export function hoverResultItem(event) {
 export function openResultItem(event) {
   const resultEntry = document.getElementById('selected-result')
   const url = resultEntry.getAttribute('x-open-url')
-  const originalId = parseInt(resultEntry.getAttribute('x-original-id'), 10)
-  const type = resultEntry.getAttribute('class')
 
   if (event) {
     event.stopPropagation()
@@ -287,20 +285,18 @@ export function openResultItem(event) {
     return el.originalUrl === url
   })
 
-  console.info(foundTab)
   if (foundTab && ext.browserApi.tabs.highlight) {
     console.debug('Open in existing tab: ' + url)
+
+    // Set the found tab active
     ext.browserApi.tabs.update(foundTab.originalId, {
       active: true,
     })
 
-    // If we picked a result entry of type tab, we
-    if (type === 'tab') {
-      const item = ext.model.tabs.find((el) => (el.originalId = originalId))
-      console.info({ url, id: originalId, type, item })
-    }
-
-    debugger
+    // Switch browser window focus if necessary
+    ext.browserApi.windows.update(foundTab.windowId, {
+      focused: true,
+    })
 
     window.close()
   } else if (ext.browserApi.tabs) {
