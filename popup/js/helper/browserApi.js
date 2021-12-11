@@ -18,7 +18,6 @@ export async function getBrowserTabs(queryOptions) {
   return new Promise((resolve, reject) => {
     if (browserApi.tabs) {
       browserApi.tabs.query(queryOptions, (tabs, err) => {
-        console.debug(tabs)
         if (err) {
           return reject(err)
         }
