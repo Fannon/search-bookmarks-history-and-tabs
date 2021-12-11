@@ -225,9 +225,8 @@ export function hoverResultItem(event) {
 export function openResultItem(event) {
   const resultEntry = document.getElementById('selected-result')
   const url = resultEntry.getAttribute('x-open-url')
-
-  console.log(event)
-  debugger
+  const originalId = parseInt(resultEntry.getAttribute('x-original-id'), 10)
+  const type = resultEntry.getAttribute('class')
 
   if (event) {
     event.stopPropagation()
@@ -254,7 +253,6 @@ export function openResultItem(event) {
           ext.browserApi.tabs.update(currentTab.id, {
             url: url,
           })
-          // if (ext.browserApi.windows.WINDOW_ID_CURRENT !== )
 
           // Only close popup if CTRL is not pressed
           if (!event.ctrlKey) {
@@ -268,8 +266,8 @@ export function openResultItem(event) {
     return
   }
 
-  // // If we press CTRL while seleting an entry
-  // // -> Open it in new tab in the background (don't close popup)
+  // If we press CTRL while seleting an entry
+  // -> Open it in new tab in the background (don't close popup)
   if (event.ctrlKey) {
     console.debug('Open in background tab: ' + url)
     if (ext.browserApi.tabs) {
@@ -283,16 +281,27 @@ export function openResultItem(event) {
     return
   }
 
-  // // If we use no modifier when selecting an entry:
-  // // -> Navigate to selected tab or link. Prefer browser tab API if available.
+  // If we use no modifier when selecting an entry:
+  // -> Navigate to selected tab or link. Prefer browser tab API if available.
   const foundTab = ext.model.tabs.find((el) => {
     return el.originalUrl === url
   })
+
+  console.info(foundTab)
   if (foundTab && ext.browserApi.tabs.highlight) {
     console.debug('Open in existing tab: ' + url)
     ext.browserApi.tabs.update(foundTab.originalId, {
       active: true,
     })
+
+    // If we picked a result entry of type tab, we
+    if (type === 'tab') {
+      const item = ext.model.tabs.find((el) => (el.originalId = originalId))
+      console.info({ url, id: originalId, type, item })
+    }
+
+    debugger
+
     window.close()
   } else if (ext.browserApi.tabs) {
     console.debug('Open in new, active tab: ' + url)
