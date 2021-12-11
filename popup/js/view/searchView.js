@@ -226,6 +226,9 @@ export function openResultItem(event) {
   const resultEntry = document.getElementById('selected-result')
   const url = resultEntry.getAttribute('x-open-url')
 
+  console.log(event)
+  debugger
+
   if (event) {
     event.stopPropagation()
     const target = event.target ? event.target : event.srcElement
@@ -246,12 +249,13 @@ export function openResultItem(event) {
       ext.browserApi.tabs
         .query({
           active: true,
-          currentWindow: true,
         })
         .then(([currentTab]) => {
           ext.browserApi.tabs.update(currentTab.id, {
             url: url,
           })
+          // if (ext.browserApi.windows.WINDOW_ID_CURRENT !== )
+
           // Only close popup if CTRL is not pressed
           if (!event.ctrlKey) {
             window.close()
