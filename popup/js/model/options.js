@@ -47,7 +47,7 @@ export const defaultOptions = {
      *               It supports all options.
      *               Uses the https://fusejs.io/ library
      */
-    approach: 'fuzzy', // 'precise' or 'fuzzy'
+    approach: 'precise', // 'precise' or 'fuzzy'
 
     /**
      * Max search results. Reduce for better performance.
