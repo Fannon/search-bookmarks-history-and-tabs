@@ -22,12 +22,16 @@ export async function addDefaultEntries() {
   } else if (ext.model.searchMode === 'tabs') {
     // Display last opened tabs by default
     console.log('Default tabs results')
-    results = ext.model.tabs.map((el) => {
-      return {
-        searchScore: 1,
-        ...el,
-      }
-    })
+    results = ext.model.tabs
+      .filter((el) => {
+        return el.active === false
+      })
+      .map((el) => {
+        return {
+          searchScore: 1,
+          ...el,
+        }
+      })
   } else if (ext.model.searchMode === 'bookmarks') {
     // Display all bookmarks by default
     results = ext.model.bookmarks.map((el) => {
@@ -59,12 +63,21 @@ export async function addDefaultEntries() {
     let foundHistory = ext.model.history.filter((el) => currentUrl === el.originalUrl)
     results.push(...foundHistory)
 
-    results = results.map((el) => {
-      return {
-        searchScore: 1,
-        ...el,
-      }
-    })
+    // Optional: Add a given number of last visited tabs for quick navigation
+    // This is similar to the `t ` special search behavior
+    if (ext.opts.tabs && ext.opts.tabs.displayLastVisited && ext.model.tabs) {
+      const lastVisitedTabs = ext.model.tabs
+        .filter((el) => {
+          return el.lastVisitSecondsAgo
+        })
+        .filter((el) => {
+          return el.active === false
+        })
+        .sort((a, b) => {
+          return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo
+        })
+      results.push(...lastVisitedTabs.slice(0, ext.opts.tabs.displayLastVisited))
+    }
   }
 
   ext.model.result = results

@@ -109,8 +109,6 @@ export async function search(event) {
     ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
     if (searchMode === 'history' || searchMode === 'tabs') {
       ext.model.result = sortResults(ext.model.result, 'lastVisited')
-    } else {
-      ext.model.result = sortResults(ext.model.result, 'score')
     }
   }
 
@@ -275,7 +273,6 @@ export function calculateFinalScore(results, searchTerm) {
  * @param sortMode: "score" | "lastVisited"
  */
 export function sortResults(results, sortMode) {
-  // results = results || []
   if (sortMode === 'score') {
     results = results.sort((a, b) => {
       return b.score - a.score

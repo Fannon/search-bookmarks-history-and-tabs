@@ -72,7 +72,7 @@ export const defaultOptions = {
      * 'startsWith' is only considering a match if the search term starts with the term
      * 'includes' also considers matches where the term is included anywhere.
      *
-     * Setting this to 'includes' will drastically increase precise indexing time
+     * Setting this to 'includes' will increase the time for indexing (slower startup)
      *
      * This applies only to search approach 'precise'.
      * For fuzzy this is always 'includes'
@@ -83,6 +83,12 @@ export const defaultOptions = {
   tabs: {
     /** Whether to index and search for open tabs */
     enabled: true,
+
+    /**
+     * When initializing search, show a certain number of tabs, sorted by last visited
+     * Set this to 0 to disable.
+     */
+    displayLastVisited: 7,
 
     /**
      * If true, only the current browser window is considered for tab indexing and switching
