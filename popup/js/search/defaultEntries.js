@@ -63,7 +63,7 @@ export async function addDefaultEntries() {
     let foundHistory = ext.model.history.filter((el) => currentUrl === el.originalUrl)
     results.push(...foundHistory)
 
-    // Optinally: Add a given number of last visited tabs for quick navigation
+    // Optional: Add a given number of last visited tabs for quick navigation
     // This is similar to the `t ` special search behavior
     if (ext.opts.tabs && ext.opts.tabs.displayLastVisited && ext.model.tabs) {
       const lastVisitedTabs = ext.model.tabs

@@ -99,6 +99,13 @@ export function renderSearchResults(result) {
       dateAdded.innerText = new Date(resultEntry.dateAdded).toISOString().split('T')[0]
       titleDiv.appendChild(dateAdded)
     }
+    if (ext.opts.tabs.displayWindowId && resultEntry.windowId) {
+      const windowId = document.createElement('span')
+      windowId.title = 'Window'
+      windowId.classList.add('badge', 'window')
+      windowId.innerText = Math.round(resultEntry.windowId)
+      titleDiv.appendChild(windowId)
+    }
     if (ext.opts.general.score && resultEntry.score) {
       const score = document.createElement('span')
       score.title = 'Score'
@@ -246,12 +253,12 @@ export function openResultItem(event) {
       ext.browserApi.tabs
         .query({
           active: true,
-          currentWindow: true,
         })
         .then(([currentTab]) => {
           ext.browserApi.tabs.update(currentTab.id, {
             url: url,
           })
+
           // Only close popup if CTRL is not pressed
           if (!event.ctrlKey) {
             window.close()
@@ -264,8 +271,8 @@ export function openResultItem(event) {
     return
   }
 
-  // // If we press CTRL while seleting an entry
-  // // -> Open it in new tab in the background (don't close popup)
+  // If we press CTRL while seleting an entry
+  // -> Open it in new tab in the background (don't close popup)
   if (event.ctrlKey) {
     console.debug('Open in background tab: ' + url)
     if (ext.browserApi.tabs) {
@@ -279,16 +286,25 @@ export function openResultItem(event) {
     return
   }
 
-  // // If we use no modifier when selecting an entry:
-  // // -> Navigate to selected tab or link. Prefer browser tab API if available.
+  // If we use no modifier when selecting an entry:
+  // -> Navigate to selected tab or link. Prefer browser tab API if available.
   const foundTab = ext.model.tabs.find((el) => {
     return el.originalUrl === url
   })
+
   if (foundTab && ext.browserApi.tabs.highlight) {
     console.debug('Open in existing tab: ' + url)
+
+    // Set the found tab active
     ext.browserApi.tabs.update(foundTab.originalId, {
       active: true,
     })
+
+    // Switch browser window focus if necessary
+    ext.browserApi.windows.update(foundTab.windowId, {
+      focused: true,
+    })
+
     window.close()
   } else if (ext.browserApi.tabs) {
     console.debug('Open in new, active tab: ' + url)
