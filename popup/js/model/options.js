@@ -83,6 +83,17 @@ export const defaultOptions = {
   tabs: {
     /** Whether to index and search for open tabs */
     enabled: true,
+
+    /**
+     * If true, only the current browser window is considered for tab indexing and switching
+     */
+    onlyCurrentWindow: false,
+
+    /**
+     * If true, the windowId of the tab result will be displayed
+     * This can help to with multi-window situations
+     * */
+    displayWindowId: false,
   },
 
   bookmarks: {

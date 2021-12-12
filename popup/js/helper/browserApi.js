@@ -11,7 +11,10 @@ export const browserApi = window.browser || window.chrome || {}
 //////////////////////////////////////////
 
 export async function getBrowserTabs(queryOptions) {
-  queryOptions = queryOptions || { currentWindow: true }
+  queryOptions = queryOptions || {}
+  if (ext.opts.tabs.onlyCurrentWindow) {
+    queryOptions.currentWindow = true
+  }
   return new Promise((resolve, reject) => {
     if (browserApi.tabs) {
       browserApi.tabs.query(queryOptions, (tabs, err) => {
@@ -36,6 +39,7 @@ export function convertBrowserTabs(chromeTabs) {
       originalUrl: entry.url.replace(/\/$/, ''),
       originalId: entry.id,
       favIconUrl: entry.favIconUrl,
+      windowId: entry.windowId,
     }
   })
 }
