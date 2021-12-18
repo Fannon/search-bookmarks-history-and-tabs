@@ -1,8 +1,13 @@
 # CHANGELOG
 
+## V1.2.1
+
+- Added inline tipps to popup [#27](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/27).
+- New option: `tabs.displayLastVisited` allows to display the last accessed tabs in the default results when popup is opened [#22](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/22).
+
 ## v1.2.0
 
-- NEW: Results can now be opened in current tab or background tab
+- NEW: Results can now be opened in current tab or background tab [#18](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/18).
   - By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
   - Hold `Shift` or `Alt` to open the result in the current tab
   - Hold `Ctrl` to open the result without closing the popup.

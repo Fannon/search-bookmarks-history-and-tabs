@@ -68,6 +68,13 @@ body {
 #search-approach-toggle.precise {
   color: #9dcd1b;
 }
+code {
+  background-color: #222;
+  color: #cecda6;
+  border-radius: 3px;
+  font-size: 0.75em;
+  padding: 1px 4px;
+}
 .badge {
   color: #fff;
   font-size: 11px;
@@ -289,6 +296,24 @@ body {
   }
 }
 
+#tipps {
+  // overflow-y: scroll;
+  .tipp {
+    margin: 4px;
+    padding: 2px 4px;
+    background: #000;
+    border-radius: 3px;
+    // border-bottom: 1px dotted #555;
+  }
+
+  .fuzzy {
+    color: #d593ea;
+  }
+  .precise {
+    color: #b1d354;
+  }
+}
+
 /** CUSTOMIZE TAGIFY STYLE */
 
 .tagify {
@@ -330,6 +355,7 @@ body {
 #result-list::-webkit-scrollbar,
 #tags-overview::-webkit-scrollbar,
 #folders-overview::-webkit-scrollbar,
+#tipps::-webkit-scrollbar,
 .tagify__dropdown__wrapper::-webkit-scrollbar {
   width: 8px;
   margin-left: 4px;
@@ -338,6 +364,7 @@ body {
 #result-list::-webkit-scrollbar-track,
 #tags-overviewt::-webkit-scrollbar-track,
 #folders-overview::-webkit-scrollbar-track,
+#tipp::-webkit-scrollbar-track,
 .tagify__dropdown__wrapper::-webkit-scrollbar-track {
   background: #ddd;
   padding-left: 2px;
@@ -345,6 +372,7 @@ body {
 #result-list::-webkit-scrollbar-thumb,
 #tags-overview::-webkit-scrollbar-thumb,
 #folders-overview::-webkit-scrollbar-thumb,
+#tipps::-webkit-scrollbar-thumb,
 .tagify__dropdown__wrapper::-webkit-scrollbar-thumb {
   background-color: #999;
 }
@@ -367,6 +395,9 @@ body {
     mark {
       color: #6b92c0;
     }
+  }
+  strong {
+    color: #898989;
   }
 
   .input,
@@ -400,12 +431,14 @@ body {
   #result-list::-webkit-scrollbar-track,
   #tags-overview::-webkit-scrollbar-track,
   #folders-overview::-webkit-scrollbar-track,
+  #tipps::-webkit-scrollbar-track,
   .tagify__dropdown__wrapper::-webkit-scrollbar-track {
     background: rgb(65, 65, 65);
   }
   #result-list::-webkit-scrollbar-thumb,
   #tags-overview::-webkit-scrollbar-thumb,
   #folders-overview::-webkit-scrollbar-thumb,
+  #tipps::-webkit-scrollbar-thumb,
   .tagify__dropdown__wrapper::-webkit-scrollbar-thumb {
     background-color: rgb(95, 95, 95);
   }

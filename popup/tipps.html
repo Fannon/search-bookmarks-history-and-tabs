@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Search Bookmarks, History and Tabs: Tipps</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="icon" type="image/png" href="../images/logo-32.png" />
+  </head>
+
+  <body>
+    <div id="container">
+      <!-- Tipps -->
+      <div id="tipps">
+        <div class="tipp">
+          <strong>Search Strategies</strong>: Switch between <span class="precise">precise</span> (faster) or
+          <span class="fuzzy">fuzzy</span> mode (more results) by clicking on the <span class="fuzzy">FUZZY</span> or
+          <span class="precise">PRECISE</span> button in the search bar (top right).
+        </div>
+        <div class="tipp">
+          <strong>Keyboard Shortcut</strong>: Trigger the extension via keyboard. <br />
+          The default is <code>CTRL</code> + <code>Shift</code> + <code>.</code>, but you can customize this in your
+          browsers extensions settings.
+        </div>
+        <div class="tipp">
+          <strong>Open selected results</strong>: By default, the extension will open the selected result in a new tab
+          or switch to an existing tab if fitting.<br />
+          Hold <code>Shift</code> or <code>Alt</code> to open the result in the current tab.<br />
+          Hold <code>Ctrl</code> to open the result without closing the popup.
+        </div>
+        <div class="tipp">
+          <strong>Search Modes</strong>: Use search modes to be more selective.<br />
+          Start your search query with the search mode key and space.
+          <ul>
+            <li>- <code># </code>: Only <strong>bookmarks with the tag</strong> will be returned</li>
+            <li>- <code>~ </code>: Only <strong>bookmarks within the folder</strong> will be returned</li>
+            <li>- <code>t </code>: Only <strong>tabs</strong> will be searched.</li>
+            <li>- <code>b </code>: Only <strong>bookmarks</strong> will be searched.</li>
+            <li>- <code>h </code>: Only <strong>history</strong> will be searched.</li>
+            <li>- <code>s </code>: Only <strong>search engines</strong> will be proposed.</li>
+          </ul>
+        </div>
+        <div class="tipp">
+          Add custom bonus scores by putting <code> + [whole number]</code> to your bookmark title (before tags).
+          Example: <code>Another Bookmark +10 #tag1</code>
+        </div>
+        <div class="tipp">
+          You can also add special browser pages to your bookmarks, like
+          <a href="chrome://downloads">chrome://downloads</a>.
+        </div>
+      </div>
+
+      <!-- Footer Navigation -->
+      <footer id="links">
+        <a href="./index.html#search/">SEARCH</a> | <a href="./index.html#tags/">TAGS</a> |
+        <a href="./index.html#folders/">FOLDERS</a> | <a href="./options.html">OPTIONS</a> |
+        <a href="./tipps.html">TIPPS</a> |
+        <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab">INFO & HELP</a>
+        <span id="footer-error"></span>
+      </footer>
+    </div>
+  </body>
+</html>
