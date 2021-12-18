@@ -68,6 +68,13 @@ body {
 #search-approach-toggle.precise {
   color: #9dcd1b;
 }
+code {
+  background-color: #222;
+  color: #cecda6;
+  border-radius: 3px;
+  font-size: 0.75em;
+  padding: 1px 4px;
+}
 .badge {
   color: #fff;
   font-size: 11px;
@@ -286,6 +293,23 @@ body {
     font-family: Consolas, monospace, monospace;
     resize: none;
     padding: 4px;
+  }
+}
+
+#tipps {
+  .tipp {
+    margin: 4px;
+    padding: 2px 4px;
+    background: #000;
+    border-radius: 3px;
+    // border-bottom: 1px dotted #555;
+  }
+
+  .fuzzy {
+    color: #d593ea;
+  }
+  .precise {
+    color: #b1d354;
   }
 }
 
