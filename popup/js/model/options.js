@@ -88,7 +88,7 @@ export const defaultOptions = {
      * When initializing search, show a certain number of tabs, sorted by last visited
      * Set this to 0 to disable.
      */
-    displayLastVisited: 7,
+    displayLastVisited: 0,
 
     /**
      * If true, only the current browser window is considered for tab indexing and switching
