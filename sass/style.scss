@@ -288,11 +288,16 @@ code {
   height: 580px;
   position: fixed;
   textarea {
-    height: 504px;
+    height: 445px;
     font-size: 16px;
     font-family: Consolas, monospace, monospace;
     resize: none;
     padding: 4px;
+  }
+  .help {
+    padding: 2px 6px;
+    background: #000000;
+    border-left: 4px solid #4494c9;
   }
 }
 

@@ -10,15 +10,24 @@
 
 <body>
   <div id="container">
+
     <!-- Edit User Config -->
     <div id="options">
       <div class="inputs">
         <div class="input-description">
-          USER OPTIONS <small>(in <a href="https://en.wikipedia.org/wiki/YAML" target="_newtab">YAML</a>)</small>
+          USER OPTIONS
           <span class="badge error-message" id="error-message" style="display: none"></span>
         </div>
         <textarea id="user-config" class="input" type="text" spellcheck="false" autofocus></textarea>
       </div>
+      <div class="help">
+        The options are written in <a href="https://en.wikipedia.org/wiki/YAML" target="_newtab">YAML</a>
+        notation.<br />
+        Please have a look at the <a class="button help-button"
+          href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration"
+          target="_newtab">available configuration options</a>.
+      </div>
+
       <div class="controls">
         <a id="edit-options-cancel" class="button cancel-button" href="./index.html#search/">CANCEL</a>
         <a id="edit-options-help" class="button help-button"
