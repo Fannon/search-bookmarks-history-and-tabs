@@ -71,10 +71,16 @@ This extension is built to respect your privacy:
 
 ## User Configuration
 
-The user options are written in [YAML format](https://en.wikipedia.org/wiki/YAML).
-You only need to define the options that you want to overwrite from the default.
+The extension is highly customizable.
+Finding and setting options is a bit technical, though.
+The user options are written in [YAML](https://en.wikipedia.org/wiki/YAML) or [JSON](https://en.wikipedia.org/wiki/JSON) notation.
 
-> The options are not validated properly. Please make sure to use them correctly.<br/>
+For now, there is no nice options overview, so you have to look into the [popup/js/options.js](popup/js/options.js) source code and have a look at the `defaultOptions`.
+From there you can see the available optoins, their names, default values and descriptions.
+
+When defining your custom config, you only need to define the options that you want to overwrite from the defaults.
+
+> ⚠ The options are not validated properly. Please make sure to use them correctly.<br/>
 > If something breaks, consider resetting your options.
 
 An exemplary user config can look like the following example:
@@ -101,23 +107,6 @@ searchEngineChoices:
     urlPrefix: https://www.dict.cc/?s=
 scoreTabBaseScore: 70 # customize base score for open tabs
 ```
-
-### Configuration Options
-
-#### Search Options
-
-- `searchStrategy`
-
-  - Default: `precise`
-  - Description: Search strategy to use. Choose between:
-    - `precise`: Alternative search approach that is more precise.
-      It may be slower to index / start up, but faster for searching.
-      The 'fuzzyness' option will be ignored.
-      Uses the https://github.com/nextapps-de/flexsearch library.
-    - `fuzzy`: Default choice that allows for fuzzy (approximate) search.
-      It is faster to index / start up, but may be slower when searching.
-      Uses the https://fusejs.io/ library
-  - Example: `searchStrategy: fuzzy`
 
 ## Scoring System
 
