@@ -1,49 +1,47 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Search Bookmarks, History and Tabs: Options</title>
-    <meta charset="utf-8" />
-    <link rel="stylesheet" href="./css/style.css" />
-    <link rel="icon" type="image/png" href="../images/logo-32.png" />
-  </head>
 
-  <body>
-    <div id="container">
-      <!-- Edit User Config -->
-      <div id="options">
-        <div class="inputs">
-          <div class="input-description">
-            USER OPTIONS <small>(in <a href="https://json5.org/" target="_newtab">JSON5</a>)</small>
-            <span class="badge error-message" id="error-message" style="display: none"></span>
-          </div>
-          <textarea id="user-config" class="input" type="text" spellcheck="false" autofocus></textarea>
+<head>
+  <title>Search Bookmarks, History and Tabs: Options</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="icon" type="image/png" href="../images/logo-32.png" />
+</head>
+
+<body>
+  <div id="container">
+    <!-- Edit User Config -->
+    <div id="options">
+      <div class="inputs">
+        <div class="input-description">
+          USER OPTIONS <small>(in <a href="https://en.wikipedia.org/wiki/YAML" target="_newtab">YAML</a>)</small>
+          <span class="badge error-message" id="error-message" style="display: none"></span>
         </div>
-        <div class="controls">
-          <a id="edit-options-cancel" class="button cancel-button" href="./index.html#search/">CANCEL</a>
-          <a
-            id="edit-options-help"
-            class="button help-button"
-            href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration"
-            target="_newtab"
-            >HELP</a
-          >
-          <a id="edit-options-reset" class="button reset-button" href="#reset">RESET</a>
-          <a id="edit-options-save" class="button save-button" href="#save">SAVE</a>
-        </div>
+        <textarea id="user-config" class="input" type="text" spellcheck="false" autofocus></textarea>
       </div>
-
-      <!-- Footer Navigation -->
-      <footer id="links">
-        <a href="./index.html#search/">SEARCH</a> | <a href="./index.html#tags/">TAGS</a> |
-        <a href="./index.html#folders/">FOLDERS</a> | <a href="#folders/">OPTIONS</a> |
-        <a href="./tipps.html">TIPPS</a> |
-        <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab">INFO & HELP</a>
-        <span id="footer-error"></span>
-      </footer>
+      <div class="controls">
+        <a id="edit-options-cancel" class="button cancel-button" href="./index.html#search/">CANCEL</a>
+        <a id="edit-options-help" class="button help-button"
+          href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration"
+          target="_newtab">HELP</a>
+        <a id="edit-options-reset" class="button reset-button" href="#reset">RESET</a>
+        <a id="edit-options-save" class="button save-button" href="#save">SAVE</a>
+      </div>
     </div>
 
-    <!-- JS sources -->
-    <script src="./lib/json5.min.js"></script>
-    <script src="./js/initOptions.js" type="module"></script>
-  </body>
+    <!-- Footer Navigation -->
+    <footer id="links">
+      <a href="./index.html#search/">SEARCH</a> | <a href="./index.html#tags/">TAGS</a> |
+      <a href="./index.html#folders/">FOLDERS</a> | <a href="#folders/">OPTIONS</a> |
+      <a href="./tipps.html">TIPPS</a> |
+      <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab">INFO & HELP</a>
+      <span id="footer-error"></span>
+    </footer>
+  </div>
+
+  <!-- JS sources -->
+  <script src="./lib/js-yaml.min.js"></script>
+  <script src="./js/initOptions.js" type="module"></script>
+</body>
+
 </html>

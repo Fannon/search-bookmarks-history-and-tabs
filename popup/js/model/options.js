@@ -267,7 +267,7 @@ export const defaultOptions = {
  */
 export const emptyOptions = {
   general: {},
-  search: {},
+  search: { approach: 'precise' },
 }
 
 /**

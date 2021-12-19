@@ -1,6 +1,8 @@
 # CHANGELOG
 
-## V1.2.1
+## [unreleased]
+
+## v1.2.1
 
 - Added inline tipps to popup [#27](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/27).
 - New option: `tabs.displayLastVisited` allows to display the last accessed tabs in the default results when popup is opened [#22](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/22).

@@ -8,7 +8,7 @@
     "bulma": "^0.9.3",
     "flexsearch": "^0.7.21",
     "fuse.js": "^6.4.6",
-    "json5": "^2.2.0",
+    "js-yaml": "^4.1.0",
     "mark.js": "^8.11.1"
   },
   "devDependencies": {
