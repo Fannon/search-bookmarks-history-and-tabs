@@ -1,12 +1,98 @@
 import { mergeDeep } from '../helper/utils.js'
 
+export const defaultOptions = {
+  // Search Options
+  searchStrategy: 'precise', // 'precise' or 'fuzzy'
+  searchMaxResults: 50,
+  searchMinMatchCharLength: 1,
+  searchFuzzyness: 0.4,
+  searchPreciseMatchAlgorithm: 'startsWith', // or 'includes'
+
+  // Enable search sources
+  enableTabs: true,
+  enableBookmarks: true,
+  enableHistory: true,
+  enableSearchEngines: true,
+
+  // Display Options
+  displayTags: true,
+  displayFolderName: true,
+  displaySearchMatchHighlight: true,
+  displayLastVisit: true,
+  displayVisitCounter: false,
+  displayDateAdded: false,
+  displayScore: true,
+
+  // Additional tabs options
+  tabsDisplayLastVisited: 0,
+  tabsOnlyCurrentWindow: false,
+  tabsDisplayWindowId: false,
+
+  // Additinal history options
+  historyDaysAgo: 7,
+  historyMaxItems: 512,
+  historyIgnoreList: [],
+
+  // Additinoal search engines options
+  searchEngineChoices: [
+    {
+      name: 'Google',
+      urlPrefix: 'https://www.google.com/search?q=',
+    },
+    {
+      name: 'Bing',
+      urlPrefix: 'https://www.bing.com/search?q=',
+    },
+    {
+      name: 'DuckDuckGo',
+      urlPrefix: 'https://duckduckgo.com/?q=',
+    },
+    {
+      name: 'dict.cc',
+      urlPrefix: 'https://www.dict.cc/?s=',
+    },
+  ],
+
+  // Score Calculation Options
+  scoreCalcMinScore: 30,
+  scoreCalcMinSearchTermMatchRatio: 0.6,
+  // RESULT TYPE BASE SCORES
+  // Depending on the type of result, they start with a base score
+  // Please make sure that this is not below the minScore :)
+  scoreCalcBookmarkBaseScore: 100,
+  scoreCalcTabBaseScore: 70,
+  scoreCalcHistoryBaseScore: 50,
+  scoreCalcSearchEngineBaseScore: 30,
+  // FIELD WEIGHTS
+  // Depending on in which field the search match was found,
+  // the match gets a multiplier applied on how important the match is.
+  scoreCalcTitleWeight: 1,
+  scoreCalcTagWeight: 0.7,
+  scoreCalcUrlWeight: 0.6,
+  scoreCalcFolderWeight: 0.5,
+  // BONUS SCORES
+  // If certain conditions apply, extra score points can be added
+  scoreCalcCustomBonusScore: true,
+  scoreCalcExactIncludesBonus: 5,
+  scoreCalcExactStartsWithBonus: 10,
+  scoreCalcExactEqualsBonus: 15,
+  scoreCalcExactTagMatchBonus: 10,
+  scoreCalcExactFolderMatchBonus: 5,
+  scoreCalcEisitedBonusScore: 0.25,
+  scoreCalcVisitedBonusScoreMaximum: 10,
+  scoreCalcRecentBonusScorePerHour: 0.5,
+  scoreCalcRecentBonusScoreMaximum: 20,
+  scoreCalcDateAddedBonusScorePerDay: 0.1,
+  scoreCalcDateAddedBonusScoreMaximum: 5,
+}
+
 /**
  * The default options
  *
  * They can be selectively overwritten and customized via user options
  * @see https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration
  */
-export const defaultOptions = {
+export const defaultOptionsOldStructure = {
   general: {
     /**
      * Extract tags from title and display it as a badge with different search priority
@@ -319,5 +405,11 @@ export async function getUserOptions() {
  */
 export async function getEffectiveOptions() {
   const userOptions = await getUserOptions()
-  return mergeDeep(defaultOptions, userOptions)
+  return mergeDeep(defaultOptionsOldStructure, userOptions)
+}
+
+function upgradeOldOptions(oldOptions) {
+  return {
+    ...emptyOptions,
+  }
 }
