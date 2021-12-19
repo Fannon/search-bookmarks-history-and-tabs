@@ -8,13 +8,13 @@
  * Creates fuzzy search indexes with fuse.js
  */
 export function createFuzzyIndexes() {
-  if (ext.opts.tabs.enabled && !ext.index.fuzzy.tabs) {
+  if (ext.opts.enableTabs && !ext.index.fuzzy.tabs) {
     ext.index.fuzzy.tabs = createFuseJsIndex('tabs', ext.model.tabs)
   }
-  if (ext.opts.bookmarks.enabled && !ext.index.fuzzy.bookmarks) {
+  if (ext.opts.enableBookmarks && !ext.index.fuzzy.bookmarks) {
     ext.index.fuzzy.bookmarks = createFuseJsIndex('bookmarks', ext.model.bookmarks)
   }
-  if (ext.opts.history.enabled && !ext.index.fuzzy.history) {
+  if (ext.opts.enableHistory && !ext.index.fuzzy.history) {
     ext.index.fuzzy.history = createFuseJsIndex('history', ext.model.history)
   }
 }
@@ -30,31 +30,31 @@ function createFuseJsIndex(type, searchData) {
     ignoreLocation: true,
     findAllMatches: true,
     shouldSort: false,
-    minMatchCharLength: ext.opts.search.minMatchCharLength,
-    threshold: ext.opts.search.fuzzyness,
+    minMatchCharLength: ext.opts.searchMinMatchCharLength,
+    threshold: ext.opts.searchFuzzyness,
     keys: [
       {
         name: 'title',
-        weight: ext.opts.score.titleWeight || 0.1,
+        weight: ext.opts.scoreTitleWeight || 0.1,
       },
       {
         name: 'url',
-        weight: ext.opts.score.urlWeight || 0.1,
+        weight: ext.opts.scoreUrlWeight || 0.1,
       },
     ],
   }
 
   if (type === 'bookmarks') {
-    if (ext.opts.general.tags && ext.opts.score.tagWeight) {
+    if (ext.opts.displayTags && ext.opts.scoreTagWeight) {
       options.keys.push({
         name: 'tags',
-        weight: ext.opts.score.tagWeight,
+        weight: ext.opts.scoreTagWeight,
       })
     }
-    if (ext.opts.general.folderName && ext.opts.score.folderWeight) {
+    if (ext.opts.displayFolderName && ext.opts.scoreFolderWeight) {
       options.keys.push({
         name: 'folder',
-        weight: ext.opts.score.folderWeight,
+        weight: ext.opts.scoreFolderWeight,
       })
     }
   }
@@ -75,7 +75,7 @@ export async function searchWithFuseJs(searchTerm, searchMode) {
   let results = []
 
   // If the search term is below minMatchCharLength, no point in starting search
-  if (searchTerm.length < ext.opts.search.minMatchCharLength) {
+  if (searchTerm.length < ext.opts.searchMinMatchCharLength) {
     return results
   }
 
@@ -108,7 +108,7 @@ export async function searchWithFuseJs(searchTerm, searchMode) {
 
   // Convert search results into result format view model
   results = results.map((el) => {
-    const highlighted = ext.opts.general.highlight ? highlightResultItem(el) : {}
+    const highlighted = ext.opts.displaySearchMatchHighlight ? highlightResultItem(el) : {}
     return {
       ...el.item,
       searchScore: 1 - el.score,

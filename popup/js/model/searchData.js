@@ -21,23 +21,23 @@ export async function getSearchData() {
   }
 
   // FIRST: Get data
-  if (browserApi.tabs) {
+  if (browserApi.tabs && ext.opts.enableTabs) {
     performance.mark('get-data-tabs-start')
     const browserTabs = await getBrowserTabs()
     result.tabs = convertBrowserTabs(browserTabs)
     performance.mark('get-data-tabs-end')
     performance.measure('get-data-tabs', 'get-data-tabs-start', 'get-data-tabs-end')
   }
-  if (browserApi.bookmarks && ext.opts.bookmarks.enabled) {
+  if (browserApi.bookmarks && ext.opts.enableBookmarks) {
     performance.mark('get-data-bookmarks-start')
     const browserBookmarks = await getBrowserBookmarks()
     result.bookmarks = convertBrowserBookmarks(browserBookmarks)
     performance.mark('get-data-bookmarks-end')
     performance.measure('get-data-bookmarks', 'get-data-bookmarks-start', 'get-data-bookmarks-end')
   }
-  if (browserApi.history && ext.opts.history.enabled) {
+  if (browserApi.history && ext.opts.enableHistory) {
     performance.mark('get-data-history-start')
-    const browserHistory = await getBrowserHistory(ext.opts.history.daysAgo, ext.opts.history.maxItems)
+    const browserHistory = await getBrowserHistory(ext.opts.historyDaysAgo, ext.opts.historyMaxItems)
     result.history = convertBrowserHistory(browserHistory)
     performance.mark('get-data-history-end')
     performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end')
@@ -51,10 +51,10 @@ export async function getSearchData() {
     const chromeMockData = await requestChromeMockData.json()
 
     result.tabs = convertBrowserTabs(chromeMockData.tabs)
-    if (ext.opts.bookmarks.enabled) {
+    if (ext.opts.enableBookmarks) {
       result.bookmarks = convertBrowserBookmarks(chromeMockData.bookmarks)
     }
-    if (ext.opts.history.enabled) {
+    if (ext.opts.enableBookmarks) {
       result.history = convertBrowserHistory(chromeMockData.history)
     }
   }

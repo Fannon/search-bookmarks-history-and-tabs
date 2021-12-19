@@ -12,7 +12,7 @@ export const browserApi = window.browser || window.chrome || {}
 
 export async function getBrowserTabs(queryOptions) {
   queryOptions = queryOptions || {}
-  if (ext.opts.tabs.onlyCurrentWindow) {
+  if (ext.opts.tabsOnlyCurrentWindow) {
     queryOptions.currentWindow = true
   }
   return new Promise((resolve, reject) => {
@@ -92,7 +92,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
         dateAdded: entry.dateAdded,
       }
 
-      if (ext.opts.general.tags) {
+      if (ext.opts.displayTags) {
         // Parse out tags from bookmark title (starting with #)
         let tagsText = ''
         let tagsArray = []
@@ -111,7 +111,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
         mappedEntry.tagsArray = tagsArray
       }
 
-      if (ext.opts.general.folderName) {
+      if (ext.opts.displayFolderName) {
         // Consider the folder names / structure of bookmarks
         let folderText = ''
         for (const folder of folderTrail) {
@@ -170,10 +170,10 @@ export async function getBrowserHistory(daysAgo, maxResults) {
  * Convert chrome history into our internal, flat array format
  */
 export function convertBrowserHistory(history) {
-  if (ext.opts.history.ignoreList && ext.opts.history.ignoreList.length) {
+  if (ext.opts.historyIgnoreList && ext.opts.historyIgnoreList.length) {
     let ignoredHistoryCounter = 0
     history = history.filter((el) => {
-      for (const ignoreUrlPrefix of ext.opts.history.ignoreList) {
+      for (const ignoreUrlPrefix of ext.opts.historyIgnoreList) {
         if (el.url.startsWith(ignoreUrlPrefix)) {
           ignoredHistoryCounter += 1
           return false
@@ -192,7 +192,7 @@ export function convertBrowserHistory(history) {
       originalUrl: el.url.replace(/\/$/, ''),
       url: cleanUpUrl(el.url),
       visitCount: el.visitCount,
-      lastVisit: ext.opts.general.lastVisit ? timeSince(new Date(el.lastVisitTime)) : undefined,
+      lastVisit: ext.opts.displayLastVisit ? timeSince(new Date(el.lastVisitTime)) : undefined,
       lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
       originalId: el.id,
     }

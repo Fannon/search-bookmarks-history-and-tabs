@@ -54,36 +54,36 @@ export const defaultOptions = {
   ],
 
   // Score Calculation Options
-  scoreCalcMinScore: 30,
-  scoreCalcMinSearchTermMatchRatio: 0.6,
+  scoreMinScore: 30,
+  scoreMinSearchTermMatchRatio: 0.6,
   // RESULT TYPE BASE SCORES
   // Depending on the type of result, they start with a base score
   // Please make sure that this is not below the minScore :)
-  scoreCalcBookmarkBaseScore: 100,
-  scoreCalcTabBaseScore: 70,
-  scoreCalcHistoryBaseScore: 50,
-  scoreCalcSearchEngineBaseScore: 30,
+  scoreBookmarkBaseScore: 100,
+  scoreTabBaseScore: 70,
+  scoreHistoryBaseScore: 50,
+  scoreSearchEngineBaseScore: 30,
   // FIELD WEIGHTS
   // Depending on in which field the search match was found,
   // the match gets a multiplier applied on how important the match is.
-  scoreCalcTitleWeight: 1,
-  scoreCalcTagWeight: 0.7,
-  scoreCalcUrlWeight: 0.6,
-  scoreCalcFolderWeight: 0.5,
+  scoreTitleWeight: 1,
+  scoreTagWeight: 0.7,
+  scoreUrlWeight: 0.6,
+  scoreFolderWeight: 0.5,
   // BONUS SCORES
   // If certain conditions apply, extra score points can be added
-  scoreCalcCustomBonusScore: true,
-  scoreCalcExactIncludesBonus: 5,
-  scoreCalcExactStartsWithBonus: 10,
-  scoreCalcExactEqualsBonus: 15,
-  scoreCalcExactTagMatchBonus: 10,
-  scoreCalcExactFolderMatchBonus: 5,
-  scoreCalcEisitedBonusScore: 0.25,
-  scoreCalcVisitedBonusScoreMaximum: 10,
-  scoreCalcRecentBonusScorePerHour: 0.5,
-  scoreCalcRecentBonusScoreMaximum: 20,
-  scoreCalcDateAddedBonusScorePerDay: 0.1,
-  scoreCalcDateAddedBonusScoreMaximum: 5,
+  scoreCustomBonusScore: true,
+  scoreExactIncludesBonus: 5,
+  scoreExactStartsWithBonus: 10,
+  scoreExactEqualsBonus: 15,
+  scoreExactTagMatchBonus: 10,
+  scoreExactFolderMatchBonus: 5,
+  scoreEisitedBonusScore: 0.25,
+  scoreVisitedBonusScoreMaximum: 10,
+  scoreRecentBonusScorePerHour: 0.5,
+  scoreRecentBonusScoreMaximum: 20,
+  scoreDateAddedBonusScorePerDay: 0.1,
+  scoreDateAddedBonusScoreMaximum: 5,
 }
 
 /**
@@ -352,8 +352,7 @@ export const defaultOptionsOldStructure = {
  * If there are no options yet, use this as an empty options template
  */
 export const emptyOptions = {
-  general: {},
-  search: { approach: 'precise' },
+  searchStrategy: 'precise',
 }
 
 /**
@@ -389,12 +388,12 @@ export async function getUserOptions() {
         if (ext.browserApi.runtime.lastError) {
           return reject(ext.browserApi.runtime.lastError)
         }
-        return resolve(result.userOptions || emptyOptions)
+        return resolve(upgradeOldOptions(result.userOptions) || emptyOptions)
       })
     } else {
       console.warn('No storage API found. Falling back to local Web Storage')
       const userOptions = window.localStorage.getItem('userOptions')
-      return resolve(userOptions ? JSON.parse(userOptions) : emptyOptions)
+      return resolve(userOptions ? upgradeOldOptions(JSON.parse(userOptions)) : emptyOptions)
     }
   })
 }
@@ -405,11 +404,75 @@ export async function getUserOptions() {
  */
 export async function getEffectiveOptions() {
   const userOptions = await getUserOptions()
-  return mergeDeep(defaultOptionsOldStructure, userOptions)
+  return mergeDeep(defaultOptions, userOptions)
 }
 
-function upgradeOldOptions(oldOptions) {
-  return {
-    ...emptyOptions,
+/**
+ * Convert the old (legacy) option structure to the new flat structure
+ *
+ * TODO: Remove this after a while, as it's just an interim migration
+ */
+function upgradeOldOptions(options) {
+  // Only do the conversion if we detect the old option structure
+  if (
+    options.search ||
+    options.general ||
+    options.tabs ||
+    options.bookmarks ||
+    options.history ||
+    options.searchEngines ||
+    options.score
+  ) {
+    const newOptions = {
+      ...emptyOptions,
+    }
+    if (options.search) {
+      newOptions.searchStrategy = options.search.approach
+      newOptions.searchMaxResults = options.search.maxResults
+      newOptions.searchMinMatchCharLength = options.search.minMatchCharLength
+      newOptions.searchFuzzyness = options.search.fuzzyness
+      newOptions.searchPreciseMatchAlgorithm = options.search.matchAlgorithm
+    }
+    if (options.general) {
+      newOptions.displayTags = options.general.tags
+      newOptions.displayFolderName = options.general.folderName
+      newOptions.displaySearchMatchHighlight = options.general.highlight
+      newOptions.displayLastVisit = options.general.lastVisit
+      newOptions.displayVisitCounter = options.general.visitCounter
+      newOptions.displayDateAdded = options.general.dateAdded
+      newOptions.displayScore = options.general.score
+    }
+    if (options.tabs) {
+      newOptions.enableTabs = options.tabs.enabled
+      newOptions.tabsDisplayLastVisited = options.tabs.displayLastVisited
+      newOptions.tabsOnlyCurrentWindow = options.tabs.onlyCurrentWindow
+      newOptions.tabsDisplayWindowId = options.tabs.displayWindowId
+    }
+    if (options.bookmarks) {
+      newOptions.enableBookmarks = options.bookmarks.enabled
+    }
+    if (options.history) {
+      newOptions.enableHistory = options.history.enabled
+      newOptions.historyDaysAgo = options.history.daysAgo
+      newOptions.historyMaxItems = options.history.maxItems
+      newOptions.historyIgnoreList = options.history.ignoreList
+    }
+    if (options.searchEngines) {
+      newOptions.enableSearchEngines = options.searchEngines.enabled
+      newOptions.searchEngineChoices = options.searchEngines.choices
+    }
+    if (options.score) {
+      for (const scoreOptionName in options.score) {
+        const newOptionName = 'score' + scoreOptionName.charAt(0).toUpperCase() + scoreOptionName.slice(1)
+        newOptions[newOptionName] = options.score[scoreOptionName]
+      }
+    }
+
+    console.info(options, newOptions)
+
+    // remove all properties with `undefined` value and return new result
+    return JSON.parse(JSON.stringify(newOptions))
+  } else {
+    return options
   }
 }

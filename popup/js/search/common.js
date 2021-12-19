@@ -14,12 +14,12 @@ import { searchFolders, searchTags } from './taxonomySearch.js'
  * Depending on search approach this is either fuzzy or precise
  */
 export function createSearchIndexes() {
-  if (ext.opts.search.approach === 'fuzzy') {
+  if (ext.opts.searchStrategy === 'fuzzy') {
     createFuzzyIndexes()
-  } else if (ext.opts.search.approach === 'precise') {
+  } else if (ext.opts.searchStrategy === 'precise') {
     createPreciseIndexes()
   } else {
-    throw new Error(`The option "search.approach" has an unsupported value: ${ext.opts.search.approach}`)
+    throw new Error(`The option "search.approach" has an unsupported value: ${ext.opts.searchStrategy}`)
   }
 }
 
@@ -91,12 +91,12 @@ export async function search(event) {
       ext.model.result = searchTags(searchTerm)
     } else if (searchMode === 'folders') {
       ext.model.result = searchFolders(searchTerm)
-    } else if (ext.opts.search.approach === 'fuzzy') {
+    } else if (ext.opts.searchStrategy === 'fuzzy') {
       ext.model.result = await searchWithFuseJs(searchTerm, searchMode)
-    } else if (ext.opts.search.approach === 'precise') {
+    } else if (ext.opts.searchStrategy === 'precise') {
       ext.model.result = searchWithFlexSearch(searchTerm, searchMode)
     } else {
-      throw new Error(`Unsupported option "search.approach" value: "${ext.opts.search.approach}"`)
+      throw new Error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
     }
     // Add search engine result items
     if (searchMode === 'all' || searchMode === 'search') {
@@ -113,7 +113,7 @@ export async function search(event) {
   }
 
   // Filter out all search results below a certain score
-  ext.model.result = ext.model.result.filter((el) => el.score >= ext.opts.score.minScore)
+  ext.model.result = ext.model.result.filter((el) => el.score >= ext.opts.scoreMinScore)
 
   // Only render maxResults if given (to improve render performance)
   // Not applied on tabs, tag and folder search
@@ -121,9 +121,9 @@ export async function search(event) {
     searchMode !== 'tags' &&
     searchMode !== 'folders' &&
     searchMode !== 'tabs' &&
-    ext.model.result.length > ext.opts.search.maxResults
+    ext.model.result.length > ext.opts.searchMaxResults
   ) {
-    ext.model.result = ext.model.result.slice(0, ext.opts.search.maxResults)
+    ext.model.result = ext.model.result.slice(0, ext.opts.searchMaxResults)
   }
 
   ext.dom.resultCounter.innerText = `(${ext.model.result.length})`
@@ -144,37 +144,37 @@ export function calculateFinalScore(results, searchTerm) {
 
     // Decide which base Score to chose
     if (el.type === 'bookmark') {
-      score = ext.opts.score.bookmarkBaseScore
+      score = ext.opts.scoreBookmarkBaseScore
     } else if (el.type === 'tab') {
-      score = ext.opts.score.tabBaseScore
+      score = ext.opts.scoreTabBaseScore
     } else if (el.type === 'history') {
-      score = ext.opts.score.historyBaseScore
+      score = ext.opts.scoreHistoryBaseScore
     } else if (el.type === 'search') {
-      score = ext.opts.score.searchEngineBaseScore
+      score = ext.opts.scoreSearchEngineBaseScore
     } else {
       throw new Error(`Search result type "${el.type}" not supported`)
     }
 
     // Multiply by search library score.
     // This will reduce the score if the search is not a good match
-    score = score * (el.searchScore || ext.opts.score.titleWeight)
+    score = score * (el.searchScore || ext.opts.scoreTitleWeight)
 
     // Increase score if we have an exact "includes" match in title or url
-    if (ext.opts.score.exactIncludesBonus) {
+    if (ext.opts.scoreExactIncludesBonus) {
       // Treat each search term separated by a space individually
       searchTerm.split(' ').forEach((term) => {
         if (term) {
           if (el.title && el.title.toLowerCase().includes(term)) {
-            score += ext.opts.score.exactIncludesBonus * ext.opts.score.titleWeight
+            score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTitleWeight
           } else if (el.url.includes(searchTerm.split(' ').join('-'))) {
-            score += ext.opts.score.exactIncludesBonus * ext.opts.score.urlWeight
+            score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreUrlWeight
           }
         }
       })
     }
 
     // Add custom bonus score to bookmarks
-    if (ext.opts.score.customBonusScore && el.type === 'bookmark') {
+    if (ext.opts.scoreCustomBonusScore && el.type === 'bookmark') {
       const regex = /[ ][+]([0-9]+)/
       const match = el.title.match(regex)
       if (match && match.length > 0) {
@@ -188,40 +188,40 @@ export function calculateFinalScore(results, searchTerm) {
 
     if (ext.model.searchTerm) {
       // Increase score if we have exact "startsWith" match in title or url
-      if (ext.opts.score.exactStartsWithBonus) {
+      if (ext.opts.scoreExactStartsWithBonus) {
         if (el.title && el.title.toLowerCase().startsWith(searchTerm)) {
-          score += ext.opts.score.exactStartsWithBonus * ext.opts.score.titleWeight
+          score += ext.opts.scoreExactStartsWithBonus * ext.opts.scoreTitleWeight
         } else if (el.url.startsWith(searchTerm.split(' ').join('-'))) {
-          score += ext.opts.score.exactStartsWithBonus * ext.opts.score.urlWeight
+          score += ext.opts.scoreExactStartsWithBonus * ext.opts.scoreUrlWeight
         }
       }
 
       // Increase score if we have an exact equal match in the title
-      if (ext.opts.score.exactEqualsBonus && el.title && el.title.toLowerCase() === searchTerm) {
-        score += ext.opts.score.exactEqualsBonus * ext.opts.score.titleWeight
+      if (ext.opts.scoreExactEqualsBonus && el.title && el.title.toLowerCase() === searchTerm) {
+        score += ext.opts.scoreExactEqualsBonus * ext.opts.scoreTitleWeight
       }
 
       // Increase score if we have an exact tag match
-      if (ext.opts.score.exactTagMatchBonus && el.tags && searchTerm.includes('#')) {
+      if (ext.opts.scoreExactTagMatchBonus && el.tags && searchTerm.includes('#')) {
         let searchTermTags = searchTerm.split('#')
         searchTermTags.shift()
         searchTermTags.forEach((tag) => {
           el.tagsArray.map((el) => {
             if (tag === el.toLowerCase()) {
-              score += ext.opts.score.exactTagMatchBonus
+              score += ext.opts.scoreExactTagMatchBonus
             }
           })
         })
       }
 
       // Increase score if we have an exact folder name match
-      if (ext.opts.score.exactFolderMatchBonus && el.folder && searchTerm.includes('~')) {
+      if (ext.opts.scoreExactFolderMatchBonus && el.folder && searchTerm.includes('~')) {
         let searchTermFolders = searchTerm.split('~')
         searchTermFolders.shift()
         searchTermFolders.forEach((folderName) => {
           el.folderArray.map((el) => {
             if (folderName === el.toLowerCase()) {
-              score += ext.opts.score.exactFolderMatchBonus
+              score += ext.opts.scoreExactFolderMatchBonus
             }
           })
         })
@@ -229,14 +229,14 @@ export function calculateFinalScore(results, searchTerm) {
     }
 
     // Increase score if result has been open frequently
-    if (ext.opts.score.visitedBonusScore && el.visitCount) {
-      score += Math.min(ext.opts.score.visitedBonusScoreMaximum, el.visitCount * ext.opts.score.visitedBonusScore)
+    if (ext.opts.scoreVisitedBonusScore && el.visitCount) {
+      score += Math.min(ext.opts.scoreVisitedBonusScoreMaximum, el.visitCount * ext.opts.scoreVisitedBonusScore)
     }
 
     // Increase score if result has been opened recently
     if (
-      ext.opts.score.recentBonusScoreMaximum &&
-      ext.opts.score.recentBonusScorePerHour &&
+      ext.opts.scoreRecentBonusScoreMaximum &&
+      ext.opts.scoreRecentBonusScorePerHour &&
       el.lastVisitSecondsAgo != null
     ) {
       // Bonus score is always at least 0 (no negative scores)
@@ -244,20 +244,20 @@ export function calculateFinalScore(results, searchTerm) {
       // Substract recentBonusScorePerHour points for each hour in the past
       score += Math.max(
         0,
-        ext.opts.score.recentBonusScoreMaximum -
-          (el.lastVisitSecondsAgo / 60 / 60) * ext.opts.score.recentBonusScorePerHour,
+        ext.opts.scoreRecentBonusScoreMaximum -
+          (el.lastVisitSecondsAgo / 60 / 60) * ext.opts.scoreRecentBonusScorePerHour,
       )
     }
 
     // Increase score if bookmark has been added more recently
-    if (ext.opts.score.dateAddedBonusScoreMaximum && ext.opts.score.dateAddedBonusScorePerDay && el.dateAdded != null) {
+    if (ext.opts.scoreDateAddedBonusScoreMaximum && ext.opts.scoreDateAddedBonusScorePerDay && el.dateAdded != null) {
       // Bonus score is always at least 0 (no negative scores)
       // Take the dateAddedBonusScoreMaximum
       // Substract dateAddedBonusScorePerDay points for each hour in the past
       score += Math.max(
         0,
-        ext.opts.score.dateAddedBonusScoreMaximum -
-          ((now - el.dateAdded) / 1000 / 60 / 60 / 24) * ext.opts.score.dateAddedBonusScorePerDay,
+        ext.opts.scoreDateAddedBonusScoreMaximum -
+          ((now - el.dateAdded) / 1000 / 60 / 60 / 24) * ext.opts.scoreDateAddedBonusScorePerDay,
       )
     }
 

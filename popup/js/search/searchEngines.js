@@ -5,15 +5,15 @@ import { cleanUpUrl } from '../helper/utils.js'
  */
 export function addSearchEngines(searchTerm) {
   const results = []
-  if (ext.opts.searchEngines.enabled) {
-    for (const searchEngine of ext.opts.searchEngines.choices) {
+  if (ext.opts.enableSearchEngines) {
+    for (const searchEngine of ext.opts.searchEngineChoices) {
       const url = searchEngine.urlPrefix + encodeURIComponent(searchTerm)
       results.push({
         type: 'search',
         title: `${searchEngine.name}: "${searchTerm}"`,
         url: cleanUpUrl(url),
         originalUrl: url,
-        searchScore: ext.opts.score.titleWeight,
+        searchScore: ext.opts.scoreTitleWeight,
       })
     }
   }
