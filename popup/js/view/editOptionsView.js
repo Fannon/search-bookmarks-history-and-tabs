@@ -5,14 +5,10 @@
 import { getUserOptions, setUserOptions } from '../model/options.js'
 
 export async function initOptions() {
-  try {
-    const userOptions = await getUserOptions()
-    document.getElementById('user-config').value = jsyaml.dump(userOptions)
-    document.getElementById('edit-options-reset').addEventListener('click', resetOptions)
-    document.getElementById('edit-options-save').addEventListener('click', saveOptions)
-  } catch (err) {
-    console.error(err)
-  }
+  const userOptions = await getUserOptions()
+  document.getElementById('user-config').value = jsyaml.dump(userOptions)
+  document.getElementById('edit-options-reset').addEventListener('click', resetOptions)
+  document.getElementById('edit-options-save').addEventListener('click', saveOptions)
 }
 
 async function saveOptions() {

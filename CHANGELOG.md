@@ -2,6 +2,11 @@
 
 ## [unreleased]
 
+- Simplified the user options
+  - The options can now be written in YAML or JSON (instead of JSON5 / JSON before)
+  - The structure is now flat, so there is no need for object nesting except for advanced options
+  - Added inline help to option screen
+
 ## v1.2.1
 
 - Added inline tipps to popup [#27](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/27).
