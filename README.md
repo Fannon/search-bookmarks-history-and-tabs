@@ -52,7 +52,6 @@ This extension is built to respect your privacy:
 
 - This extension can (and should!) be triggered via keyboard shortcut.
   - The default is `CTRL` + `Shift` + `.`, but you can customize this.
-- Just type in your search query and it will search everything.
 - By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
   - Hold `Shift` or `Alt` to open the result in the current tab
   - Hold `Ctrl` to open the result without closing the popup.
@@ -72,81 +71,64 @@ This extension is built to respect your privacy:
 
 ## User Configuration
 
-The user options are written in [JSON format](https://en.wikipedia.org/wiki/JSON) or [JSON5 format](https://json5.org/).
+The user options are written in [YAML format](https://en.wikipedia.org/wiki/YAML).
 You only need to define the options that you want to overwrite from the default.
-
-To see what configurations are available and what they do, please have a look at the `defaultOptions` in [popup/js/model/options.js](popup/js/model/options.js).
 
 > The options are not validated properly. Please make sure to use them correctly.<br/>
 > If something breaks, consider resetting your options.
 
-An exemplary user-config can look like the following example:
+An exemplary user config can look like the following example:
 
-```json5
-{
-  general: {
-    visitCounter: true, // Show number of visits counter
-    dateAdded: true, // Show date added for bookmarks
-  },
-  searchEngines: {
-    enabled: true, // Enable fallback to search engines
-  },
-}
+```yaml
+searchStrategy: fuzzy
+displayVisitCounter: true
+displayDateAdded: true
 ```
 
-Or a more advanced example
+Or a more advanced example:
 
-```json5
-{
-  history: {
-    daysAgo: 7,
-    maxItems: 1024,
-    ignoreList: [
-      // Ignore some localhost URLs in browser history
-      'http://localhost',
-      'http://127.0.0.1',
-    ],
-  },
-  searchEngines: {
-    enabled: true, // Enable fallback to search engines
-    choices: [
-      // Use only Google and dict.cc as fallback search engines
-      {
-        name: 'Google',
-        urlPrefix: 'https://www.google.com/search?q=',
-      },
-      {
-        name: 'dict.cc',
-        urlPrefix: 'https://www.dict.cc/?s=',
-      },
-    ],
-  },
-  score: {
-    tabBaseScore: 70, // customize base score for open tabs
-  },
-}
+```yaml
+searchStrategy: precise
+historyDaysAgo: 5
+historyMaxItems: 1024
+historyIgnoreList:
+  - http://localhost
+  - http://127.0.0.1
+searchEngineChoices:
+  - name: Google
+    urlPrefix: https://google.com/search?q=
+  - name: dict.cc
+    urlPrefix: https://www.dict.cc/?s=
+scoreTabBaseScore: 70 # customize base score for open tabs
 ```
+
+### Configuration Options
+
+#### Search Options
+
+- `searchStrategy`
+
+  - Default: `precise`
+  - Description: Search strategy to use. Choose between:
+    - `precise`: Alternative search approach that is more precise.
+      It may be slower to index / start up, but faster for searching.
+      The 'fuzzyness' option will be ignored.
+      Uses the https://github.com/nextapps-de/flexsearch library.
+    - `fuzzy`: Default choice that allows for fuzzy (approximate) search.
+      It is faster to index / start up, but may be slower when searching.
+      Uses the https://fusejs.io/ library
+  - Example: `searchStrategy: fuzzy`
 
 ## Scoring System
 
 The scoring systems works roughly the following:
 
-- Depending on the type of result (bookmark, tab, history) a different base score is taken (e.g. `bookmarkBaseScore`).
-- Depending on in which result field (title, url, tag, folder) the match was found, the search match gets weighted by multiplication. (e.g. `titleWeight`).
+- Depending on the type of result (bookmark, tab, history) a different base score is taken (e.g. `scoreBookmarkBaseScore`).
+- Depending on in which result field (title, url, tag, folder) the match was found, the search match gets weighted by multiplication. (e.g. `scoreTitleWeight`).
 - This base score is now merged / multiplicated with the search library score. A less good match will usually reduce the score and a perfect / highest ranked match will keep it at .
 - Depending on certain conditions some bonus score points are added on top. For example, `exactStartsWithBonus` will add score if either the title or the url start excactly with the search term, including spaces.
 
-For a description of the scoring options and what they do, please see `defaultOptions.score` in [popup/js/options.js](popup/js/options.js).
-
-It also helps to enable the display of the score in the result items:
-
-```json5
-{
-  general: {
-    score: true, // Display score for each result
-  },
-}
-```
+For a description of the scoring options and what they do, please see [popup/js/options.js](popup/js/options.js).
 
 ## Local Development
 
@@ -199,7 +181,7 @@ This extension makes use of the following helpful open-source projects (thanks!)
 - https://github.com/nextapps-de/flexsearch for the excact search algorithm
 - https://github.com/yairEO/tagify for the tag autocomplete widget
 - https://markjs.io/ for highlighting search matches from flexsearch
-- https://www.npmjs.com/package/json5 for the user options parsing
+- https://www.npmjs.com/package/js-yaml for the user options parsing
 - https://bulma.io/ for some minimal CSS base styling
 - https://github.com/tabler/tabler-icons for the edit icon
 
