@@ -10,11 +10,11 @@ describe('Options View', () => {
     it('successfully loads the default user config', () => {
       cy.get('#user-config').should('include.value', '{').checkNoErrors()
     })
-    it('can save a new user config', () => {
+    it('can save a new user config in JSON format', () => {
       const newConfig = JSON.stringify(
         {
-          visitCounter: true,
-          dateAdded: true,
+          displayVisitCounter: true,
+          displayDateAdded: true,
         },
         null,
         2,
@@ -27,8 +27,22 @@ describe('Options View', () => {
         .click()
         .visit('/options.html')
         .get('#user-config')
-        .should('include.value', 'visitCounter')
-        .should('include.value', 'dateAdded')
+        .should('include.value', 'displayVisitCounter')
+        .should('include.value', 'displayDateAdded')
+        .checkNoErrors()
+    })
+    it('can save a new user config in YAML format', () => {
+      const newConfig = `displayVisitCounter: true\ndisplayDateAdded: true`
+      cy.get('#user-config')
+        .clear()
+        .should('have.value', '')
+        .type(newConfig)
+        .get('#edit-options-save')
+        .click()
+        .visit('/options.html')
+        .get('#user-config')
+        .should('include.value', 'displayVisitCounter')
+        .should('include.value', 'displayDateAdded')
         .checkNoErrors()
     })
   })
