@@ -93,8 +93,8 @@ Or a more advanced example:
 
 ```yaml
 searchStrategy: precise
-historyDaysAgo: 5
-historyMaxItems: 1024
+historyDaysAgo: 14
+historyMaxItems: 1200
 historyIgnoreList:
   - http://localhost
   - http://127.0.0.1
