@@ -306,8 +306,8 @@ code {
   }
 }
 
-#tipps {
-  .tipp {
+#tips {
+  .tip {
     margin: 4px;
     padding: 2px 4px;
     background: #fff;
@@ -363,7 +363,7 @@ code {
 #result-list::-webkit-scrollbar,
 #tags-overview::-webkit-scrollbar,
 #folders-overview::-webkit-scrollbar,
-#tipps::-webkit-scrollbar,
+#tips::-webkit-scrollbar,
 .tagify__dropdown__wrapper::-webkit-scrollbar {
   width: 8px;
   margin-left: 4px;
@@ -372,7 +372,7 @@ code {
 #result-list::-webkit-scrollbar-track,
 #tags-overviewt::-webkit-scrollbar-track,
 #folders-overview::-webkit-scrollbar-track,
-#tipp::-webkit-scrollbar-track,
+#tip::-webkit-scrollbar-track,
 .tagify__dropdown__wrapper::-webkit-scrollbar-track {
   background: #ddd;
   padding-left: 2px;
@@ -380,7 +380,7 @@ code {
 #result-list::-webkit-scrollbar-thumb,
 #tags-overview::-webkit-scrollbar-thumb,
 #folders-overview::-webkit-scrollbar-thumb,
-#tipps::-webkit-scrollbar-thumb,
+#tips::-webkit-scrollbar-thumb,
 .tagify__dropdown__wrapper::-webkit-scrollbar-thumb {
   background-color: #999;
 }
@@ -416,8 +416,8 @@ code {
       background: #000000;
     }
   }
-  #tipps {
-    .tipp {
+  #tips {
+    .tip {
       background: #000;
     }
   }
@@ -453,14 +453,14 @@ code {
   #result-list::-webkit-scrollbar-track,
   #tags-overview::-webkit-scrollbar-track,
   #folders-overview::-webkit-scrollbar-track,
-  #tipps::-webkit-scrollbar-track,
+  #tips::-webkit-scrollbar-track,
   .tagify__dropdown__wrapper::-webkit-scrollbar-track {
     background: rgb(65, 65, 65);
   }
   #result-list::-webkit-scrollbar-thumb,
   #tags-overview::-webkit-scrollbar-thumb,
   #folders-overview::-webkit-scrollbar-thumb,
-  #tipps::-webkit-scrollbar-thumb,
+  #tips::-webkit-scrollbar-thumb,
   .tagify__dropdown__wrapper::-webkit-scrollbar-thumb {
     background-color: rgb(95, 95, 95);
   }

@@ -55,8 +55,8 @@ This extension is built to respect your privacy:
   - Hold `Shift` or `Alt` to open the result in the current tab
   - Hold `Ctrl` to open the result without closing the popup.
 - **Search Modes**: In case you want to be more selective -> use a search mode:
-  - Start your query with `#`: only **bookmarks with the tag** will be returned (excact "starts with" search)
-  - Start your query with `~`: only **bookmarks within the folder** will be returned (excact "starts with" search)
+  - Start your query with `#`: only **bookmarks with the tag** will be returned (exact "starts with" search)
+  - Start your query with `~`: only **bookmarks within the folder** will be returned (exact "starts with" search)
   - Start your query with `t `: only **tabs** will be searched.
   - Start your query with `b `: only **bookmarks** will be searched.
   - Start your query with `h `: only **history** will be searched.
@@ -72,10 +72,11 @@ This extension is built to respect your privacy:
 
 The extension is highly customizable.
 Finding and setting options is a bit technical, though.
+
 The user options are written in [YAML](https://en.wikipedia.org/wiki/YAML) or [JSON](https://en.wikipedia.org/wiki/JSON) notation.
 
-For now, there is no nice options overview, so you have to look into the [popup/js/options.js](popup/js/options.js) source code and have a look at the `defaultOptions`.
-From there you can see the available optoins, their names, default values and descriptions.
+For now, there is no nice options overview, so you have to find them in the [popup/js/options.js](popup/js/options.js) file in the `defaultOptions` object.
+From there you can see the available options, their names, default values and descriptions.
 
 When defining your custom config, you only need to define the options that you want to overwrite from the defaults.
 
@@ -113,8 +114,8 @@ The scoring systems works roughly the following:
 
 - Depending on the type of result (bookmark, tab, history) a different base score is taken (e.g. `scoreBookmarkBaseScore`).
 - Depending on in which result field (title, url, tag, folder) the match was found, the search match gets weighted by multiplication. (e.g. `scoreTitleWeight`).
-- This base score is now merged / multiplicated with the search library score. A less good match will usually reduce the score and a perfect / highest ranked match will keep it at .
-- Depending on certain conditions some bonus score points are added on top. For example, `exactStartsWithBonus` will add score if either the title or the url start excactly with the search term, including spaces.
+- This base score is now merged / multiplied with the search library score. A less good match will usually reduce the score and a perfect / highest ranked match will keep it at .
+- Depending on certain conditions some bonus score points are added on top. For example, `exactStartsWithBonus` will add score if either the title or the url start exactly with the search term, including spaces.
 
 For a description of the scoring options and what they do, please see [popup/js/options.js](popup/js/options.js).
 
@@ -166,7 +167,7 @@ The built extensions can be found
 This extension makes use of the following helpful open-source projects (thanks!):
 
 - https://fusejs.io/ for the fuzzy search algorithm
-- https://github.com/nextapps-de/flexsearch for the excact search algorithm
+- https://github.com/nextapps-de/flexsearch for the exact search algorithm
 - https://github.com/yairEO/tagify for the tag autocomplete widget
 - https://markjs.io/ for highlighting search matches from flexsearch
 - https://www.npmjs.com/package/js-yaml for the user options parsing
