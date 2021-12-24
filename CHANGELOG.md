@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [unreleased]
+## [v1.3.0]
 
 - Simplified the user options
   - The options can now be written in YAML or JSON (instead of JSON5 / JSON before)
