@@ -301,7 +301,7 @@ export const defaultOptions = {
  * If there are no options yet, use this as an empty options template
  */
 export const emptyOptions = {
-  searchStrategy: 'precise',
+  searchStrategy: defaultOptions.searchStrategy,
 }
 
 /**
@@ -416,8 +416,6 @@ function upgradeOldOptions(options) {
         newOptions[newOptionName] = options.score[scoreOptionName]
       }
     }
-
-    console.info(options, newOptions)
 
     // remove all properties with `undefined` value and return new result
     return JSON.parse(JSON.stringify(newOptions))
