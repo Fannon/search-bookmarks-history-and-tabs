@@ -34,7 +34,7 @@
     "e2e-firefox": "cypress run --browser firefox --headed --spec 'cypress/integration/**/*'",
     "e2e-edge": "cypress run --browser edge --headed --spec 'cypress/integration/**/*'",
     "lint": "npm run prettier-check && npm run eslint",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,scss,yml,yaml}\"",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,scss,yml,yaml,html}\"",
     "eslint": "eslint popup/**/*.js --fix --format stylish",
     "css-build": "sass sass/style.scss popup/css/style.css --style=compressed",
     "css-watch": "npm run css-build -- --watch",

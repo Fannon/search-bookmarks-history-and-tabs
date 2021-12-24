@@ -337,7 +337,7 @@ export async function getUserOptions() {
         if (ext.browserApi.runtime.lastError) {
           return reject(ext.browserApi.runtime.lastError)
         }
-        return resolve(upgradeOldOptions(result.userOptions) || emptyOptions)
+        return resolve(upgradeOldOptions(result.userOptions || emptyOptions))
       })
     } else {
       console.warn('No storage API found. Falling back to local Web Storage')
