@@ -361,8 +361,12 @@ export async function getEffectiveOptions() {
  *
  * TODO: Remove this after a while, as it's just an interim migration
  */
-function upgradeOldOptions(options) {
+function upgradeOldOptions(options = {}) {
   // Only do the conversion if we detect the old option structure
+  options = options || {}
+  const newOptions = {
+    ...emptyOptions,
+  }
   if (
     options.search ||
     options.general ||
@@ -372,9 +376,6 @@ function upgradeOldOptions(options) {
     options.searchEngines ||
     options.score
   ) {
-    const newOptions = {
-      ...emptyOptions,
-    }
     if (options.search) {
       newOptions.searchStrategy = options.search.approach
       newOptions.searchMaxResults = options.search.maxResults
@@ -416,6 +417,8 @@ function upgradeOldOptions(options) {
         newOptions[newOptionName] = options.score[scoreOptionName]
       }
     }
+
+    console.debug('Options Conversion', options, newOptions)
 
     // remove all properties with `undefined` value and return new result
     return JSON.parse(JSON.stringify(newOptions))
