@@ -8,13 +8,13 @@
  * Creates precise search indexes with flexsearch
  */
 export function createPreciseIndexes() {
-  if (ext.opts.tabs.enabled && !ext.index.precise.tabs) {
+  if (ext.opts.enableTabs && !ext.index.precise.tabs) {
     ext.index.precise.tabs = createFlexSearchIndex('tabs', ext.model.tabs)
   }
-  if (ext.opts.bookmarks.enabled && !ext.index.precise.bookmarks) {
+  if (ext.opts.enableBookmarks && !ext.index.precise.bookmarks) {
     ext.index.precise.bookmarks = createFlexSearchIndex('bookmarks', ext.model.bookmarks)
   }
-  if (ext.opts.history.enabled && !ext.index.precise.history) {
+  if (ext.opts.enableHistory && !ext.index.precise.history) {
     ext.index.precise.history = createFlexSearchIndex('history', ext.model.history)
   }
 }
@@ -33,10 +33,10 @@ export function createFlexSearchIndex(type, searchData) {
       '_': ' ',
       '/': ' ',
     },
-    minlength: ext.opts.search.minMatchCharLength,
+    minlength: ext.opts.searchMinMatchCharLength,
   }
 
-  if (ext.opts.search.matchAlgorithm === 'includes') {
+  if (ext.opts.searchPreciseMatchAlgorithm === 'includes') {
     indexOptions.tokenize = 'full'
   }
 
@@ -73,7 +73,7 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
   let results = []
 
   // If the search term is below minMatchCharLength, no point in starting search
-  if (searchTerm.length < ext.opts.search.minMatchCharLength) {
+  if (searchTerm.length < ext.opts.searchMinMatchCharLength) {
     return results
   }
 
@@ -126,7 +126,7 @@ function flexSearchWithScoring(indexName, searchTerm, data) {
   // Simulate an OR search with the terms in searchTerm, separated by spaces
   let searchTermArray = searchTerm.split(' ')
   // filter out all search terms that do not match the min char match length
-  searchTermArray = searchTermArray.filter((el) => el.length >= ext.opts.search.minMatchCharLength)
+  searchTermArray = searchTermArray.filter((el) => el.length >= ext.opts.searchMinMatchCharLength)
 
   if (!searchTermArray.length) {
     // Early return if none of the search terms have enough char length
@@ -138,19 +138,19 @@ function flexSearchWithScoring(indexName, searchTerm, data) {
     matchesDict[term] = {}
 
     // Search title field
-    matchesDict[term].title = index.title.search(term, ext.opts.search.maxResults)
+    matchesDict[term].title = index.title.search(term, ext.opts.searchMaxResults)
 
     // Search url field
-    matchesDict[term].url = index.url.search(term, ext.opts.search.maxResults)
+    matchesDict[term].url = index.url.search(term, ext.opts.searchMaxResults)
 
     // search tags if available (only bookmars)
     if (index.tag) {
-      matchesDict[term].tag = index.tag.search(term, ext.opts.search.maxResults)
+      matchesDict[term].tag = index.tag.search(term, ext.opts.searchMaxResults)
     }
 
     // search folder if available (only bookmars)
     if (index.folder) {
-      matchesDict[term].folder = index.folder.search(term, ext.opts.search.maxResults)
+      matchesDict[term].folder = index.folder.search(term, ext.opts.searchMaxResults)
     }
 
     // Count how many individual search terms we have found across all the fields
@@ -174,19 +174,20 @@ function flexSearchWithScoring(indexName, searchTerm, data) {
   for (const term in matchesDict) {
     for (const field in matchesDict[term]) {
       const matches = matchesDict[term][field]
+      const optionName = 'score' + field.charAt(0).toUpperCase() + field.slice(1) + 'Weight'
 
       for (const matchIndex of matches) {
         const el = data[matchIndex]
 
         if (!resultDict[matchIndex]) {
           resultDict[matchIndex] = {
-            searchScore: ext.opts.score[`${field}Weight`],
+            searchScore: ext.opts[optionName],
             searchTermMatches: {},
             ...el,
           }
         } else {
           // Result is already there, we just need to update the score and counters
-          let searchScore = ext.opts.score[`${field}Weight`]
+          let searchScore = ext.opts[optionName]
           if (resultDict[matchIndex].searchScore < searchScore) {
             const newScore = searchScore + resultDict[matchIndex].searchScore / 5
             resultDict[matchIndex].searchScore = newScore
@@ -205,7 +206,7 @@ function flexSearchWithScoring(indexName, searchTerm, data) {
   // Filter out all results that don't meed the minimum required search term match ratio
   results = results.filter((el) => {
     const searchTermMatchRatio = Object.keys(el.searchTermMatches).length / searchTermArray.length
-    return searchTermMatchRatio >= ext.opts.score.minSearchTermMatchRatio
+    return searchTermMatchRatio >= ext.opts.scoreMinSearchTermMatchRatio
   })
 
   // Now reduce the searchScore by the ratio of search terms found vs. search terms given

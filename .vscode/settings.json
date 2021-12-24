@@ -1,9 +1,12 @@
 {
-  "cSpell.words": ["BULMA", "flexsearch", "fuzzyness", "readonly", "tagify", "webextensions", "yaireo"],
+  "cSpell.words": ["BULMA", "flexsearch", "fuzzyness", "newtab", "readonly", "tagify", "webextensions", "yaireo"],
   "editor.formatOnSave": true,
   "editor.formatOnSaveMode": "file",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[html]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "editor.codeActionsOnSave": {

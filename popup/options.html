@@ -13,11 +13,24 @@
       <div id="options">
         <div class="inputs">
           <div class="input-description">
-            USER OPTIONS <small>(in <a href="https://json5.org/" target="_newtab">JSON5</a>)</small>
+            USER OPTIONS
             <span class="badge error-message" id="error-message" style="display: none"></span>
           </div>
           <textarea id="user-config" class="input" type="text" spellcheck="false" autofocus></textarea>
         </div>
+        <div class="help">
+          The options are written in
+          <a href="https://en.wikipedia.org/wiki/YAML" target="_newtab">YAML</a> notation.<br />
+          Please have a look at the
+          <a
+            class="button help-button"
+            href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration"
+            target="_newtab"
+            >user configuration help</a
+          >
+          what options are available and what they do.
+        </div>
+
         <div class="controls">
           <a id="edit-options-cancel" class="button cancel-button" href="./index.html#search/">CANCEL</a>
           <a
@@ -35,15 +48,14 @@
       <!-- Footer Navigation -->
       <footer id="links">
         <a href="./index.html#search/">SEARCH</a> | <a href="./index.html#tags/">TAGS</a> |
-        <a href="./index.html#folders/">FOLDERS</a> | <a href="#folders/">OPTIONS</a> |
-        <a href="./tipps.html">TIPPS</a> |
+        <a href="./index.html#folders/">FOLDERS</a> | <a href="#folders/">OPTIONS</a> | <a href="./tips.html">TIPS</a> |
         <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab">INFO & HELP</a>
         <span id="footer-error"></span>
       </footer>
     </div>
 
     <!-- JS sources -->
-    <script src="./lib/json5.min.js"></script>
+    <script src="./lib/js-yaml.min.js"></script>
     <script src="./js/initOptions.js" type="module"></script>
   </body>
 </html>

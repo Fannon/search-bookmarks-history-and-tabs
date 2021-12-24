@@ -13,23 +13,21 @@
 
 **This extension does not collect any data nor does it make any external requests** (see [Privacy](#privacy--data-protection)).
 
-It supports two different search approaches:
+It supports two different search strategies:
 
-- Fuzzy search (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
-- Exact search (starts with matching): Faster, but only exact matching results.
+- **Exact search** (starts with matching): Faster, but only exact matching results.
+- **Fuzzy search** (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
 
 With this extension you can also **tag your bookmarks** including auto completions.
-The tags are then considered when searching and can be used for navigation.
+The tags are considered when searching and can be used for navigation.
 
-In general, the extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)).
+The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)).
 
 For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
 
 ## Screenshots & Demo
 
 ![Demo Animation](/images/bookmark-and-history-search.gif 'Demo Animation')
-
-![Screenshots](/images/bookmark-and-history-search-screenshots.png 'Screenshots')
 
 ## Privacy / Data Protection
 
@@ -50,103 +48,76 @@ This extension is built to respect your privacy:
 
 ## User Documentation
 
-- This extension can (and should!) be triggered via keyboard shortcut.
+- **Search Strategies**: Switch between precise and fuzzy approach by clicking on the FUZZY or PRECISE button in the search bar (top right).
+- **Keyboard Shortcut**: Trigger the extension via keyboard.
   - The default is `CTRL` + `Shift` + `.`, but you can customize this.
-- Just type in your search query and it will search everything.
-- By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
+- **Open selected results**: By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
   - Hold `Shift` or `Alt` to open the result in the current tab
   - Hold `Ctrl` to open the result without closing the popup.
-- In case you want to be more selective -> use a search mode:
-  - Start your query with `#`: only **bookmarks with the tag** will be returned (excact "starts with" search)
-  - Start your query with `~`: only **bookmarks within the folder** will be returned (excact "starts with" search)
+- **Search Modes**: In case you want to be more selective -> use a search mode:
+  - Start your query with `#`: only **bookmarks with the tag** will be returned (exact "starts with" search)
+  - Start your query with `~`: only **bookmarks within the folder** will be returned (exact "starts with" search)
   - Start your query with `t `: only **tabs** will be searched.
   - Start your query with `b `: only **bookmarks** will be searched.
   - Start your query with `h `: only **history** will be searched.
   - Start your query with `s `: only **search engines** will be proposed.
-- Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
+- **Special Browser Pages**: You can add special browser pages to your bookmarks, like `chrome://downloads`.
+- **Custom Scores**: Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
   - Examples: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`
 - This extension works best if you avoid:
   - using `#` in bookmark titles that do not indicate a tag.
   - using `~` in bookmark folder names.
-- Tip: You can also add special browser pages to your bookmarks, like `chrome://downloads`.
 
 ## User Configuration
 
-The user options are written in [JSON format](https://en.wikipedia.org/wiki/JSON) or [JSON5 format](https://json5.org/).
-You only need to define the options that you want to overwrite from the default.
+The extension is highly customizable.
+Finding and setting options is a bit technical, though.
 
-To see what configurations are available and what they do, please have a look at the `defaultOptions` in [popup/js/model/options.js](popup/js/model/options.js).
+The user options are written in [YAML](https://en.wikipedia.org/wiki/YAML) or [JSON](https://en.wikipedia.org/wiki/JSON) notation.
 
-> The options are not validated properly. Please make sure to use them correctly.<br/>
+For now, there is no nice options overview, so you have to find them in the [popup/js/options.js](popup/js/options.js) file in the `defaultOptions` object.
+From there you can see the available options, their names, default values and descriptions.
+
+When defining your custom config, you only need to define the options that you want to overwrite from the defaults.
+
+> ⚠ The options are not validated properly. Please make sure to use them correctly.<br/>
 > If something breaks, consider resetting your options.
 
-An exemplary user-config can look like the following example:
+An exemplary user config can look like the following example:
 
-```json5
-{
-  general: {
-    visitCounter: true, // Show number of visits counter
-    dateAdded: true, // Show date added for bookmarks
-  },
-  searchEngines: {
-    enabled: true, // Enable fallback to search engines
-  },
-}
+```yaml
+searchStrategy: fuzzy
+displayVisitCounter: true
+displayDateAdded: true
 ```
 
-Or a more advanced example
+Or a more advanced example:
 
-```json5
-{
-  history: {
-    daysAgo: 7,
-    maxItems: 1024,
-    ignoreList: [
-      // Ignore some localhost URLs in browser history
-      'http://localhost',
-      'http://127.0.0.1',
-    ],
-  },
-  searchEngines: {
-    enabled: true, // Enable fallback to search engines
-    choices: [
-      // Use only Google and dict.cc as fallback search engines
-      {
-        name: 'Google',
-        urlPrefix: 'https://www.google.com/search?q=',
-      },
-      {
-        name: 'dict.cc',
-        urlPrefix: 'https://www.dict.cc/?s=',
-      },
-    ],
-  },
-  score: {
-    tabBaseScore: 70, // customize base score for open tabs
-  },
-}
+```yaml
+searchStrategy: precise
+historyDaysAgo: 14
+historyMaxItems: 1200
+historyIgnoreList:
+  - http://localhost
+  - http://127.0.0.1
+searchEngineChoices:
+  - name: Google
+    urlPrefix: https://google.com/search?q=
+  - name: dict.cc
+    urlPrefix: https://www.dict.cc/?s=
+scoreTabBaseScore: 70 # customize base score for open tabs
 ```
 
 ## Scoring System
 
 The scoring systems works roughly the following:
 
-- Depending on the type of result (bookmark, tab, history) a different base score is taken (e.g. `bookmarkBaseScore`).
-- Depending on in which result field (title, url, tag, folder) the match was found, the search match gets weighted by multiplication. (e.g. `titleWeight`).
-- This base score is now merged / multiplicated with the search library score. A less good match will usually reduce the score and a perfect / highest ranked match will keep it at .
-- Depending on certain conditions some bonus score points are added on top. For example, `exactStartsWithBonus` will add score if either the title or the url start excactly with the search term, including spaces.
+- Depending on the type of result (bookmark, tab, history) a different base score is taken (e.g. `scoreBookmarkBaseScore`).
+- Depending on in which result field (title, url, tag, folder) the match was found, the search match gets weighted by multiplication. (e.g. `scoreTitleWeight`).
+- This base score is now merged / multiplied with the search library score. A less good match will usually reduce the score and a perfect / highest ranked match will keep it at .
+- Depending on certain conditions some bonus score points are added on top. For example, `exactStartsWithBonus` will add score if either the title or the url start exactly with the search term, including spaces.
 
-For a description of the scoring options and what they do, please see `defaultOptions.score` in [popup/js/options.js](popup/js/options.js).
-
-It also helps to enable the display of the score in the result items:
-
-```json5
-{
-  general: {
-    score: true, // Display score for each result
-  },
-}
-```
+For a description of the scoring options and what they do, please see [popup/js/options.js](popup/js/options.js).
 
 ## Local Development
 
@@ -196,10 +167,10 @@ The built extensions can be found
 This extension makes use of the following helpful open-source projects (thanks!):
 
 - https://fusejs.io/ for the fuzzy search algorithm
-- https://github.com/nextapps-de/flexsearch for the excact search algorithm
+- https://github.com/nextapps-de/flexsearch for the exact search algorithm
 - https://github.com/yairEO/tagify for the tag autocomplete widget
 - https://markjs.io/ for highlighting search matches from flexsearch
-- https://www.npmjs.com/package/json5 for the user options parsing
+- https://www.npmjs.com/package/js-yaml for the user options parsing
 - https://bulma.io/ for some minimal CSS base styling
 - https://github.com/tabler/tabler-icons for the edit icon
 

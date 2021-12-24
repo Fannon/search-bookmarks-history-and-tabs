@@ -1,8 +1,15 @@
 # CHANGELOG
 
-## V1.2.1
+## [v1.3.0]
 
-- Added inline tipps to popup [#27](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/27).
+- Simplified the user options
+  - The options can now be written in YAML or JSON (instead of JSON5 / JSON before)
+  - The structure is now flat, so there is no need for object nesting except for advanced options
+  - Added inline help to option screen
+
+## v1.2.1
+
+- Added inline tips to popup [#27](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/27).
 - New option: `tabs.displayLastVisited` allows to display the last accessed tabs in the default results when popup is opened [#22](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/22).
 
 ## v1.2.0

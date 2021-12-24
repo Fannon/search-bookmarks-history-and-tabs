@@ -42,7 +42,7 @@ export function renderSearchResults(result) {
     const titleDiv = document.createElement('div')
     titleDiv.classList.add('title')
 
-    if (ext.opts.general.highlight) {
+    if (ext.opts.displaySearchMatchHighlight) {
       const content = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
       if (content.includes('<mark>')) {
         titleDiv.innerHTML = content + ' '
@@ -52,11 +52,15 @@ export function renderSearchResults(result) {
     } else {
       titleDiv.innerText = resultEntry.title | (resultEntry.url + ' ')
     }
-    if (ext.opts.general.tags && resultEntry.tags) {
+    if (ext.opts.displayTags && resultEntry.tags) {
       const tags = document.createElement('span')
       tags.title = 'Bookmark Tags'
       tags.classList.add('badge', 'tags')
-      if (ext.opts.general.highlight && resultEntry.tagsHighlighted && resultEntry.tagsHighlighted.includes('<mark>')) {
+      if (
+        ext.opts.displaySearchMatchHighlight &&
+        resultEntry.tagsHighlighted &&
+        resultEntry.tagsHighlighted.includes('<mark>')
+      ) {
         tags.innerHTML = resultEntry.tagsHighlighted
       } else {
         tags.innerText = resultEntry.tags
@@ -68,7 +72,7 @@ export function renderSearchResults(result) {
       folder.title = 'Bookmark Folder'
       folder.classList.add('badge', 'folder')
       if (
-        ext.opts.general.highlight &&
+        ext.opts.displaySearchMatchHighlight &&
         resultEntry.folderHighlighted &&
         resultEntry.folderHighlighted.includes('<mark>')
       ) {
@@ -78,35 +82,35 @@ export function renderSearchResults(result) {
       }
       titleDiv.appendChild(folder)
     }
-    if (ext.opts.general.lastVisit && resultEntry.lastVisit) {
+    if (ext.opts.displayLastVisit && resultEntry.lastVisit) {
       const lastVisited = document.createElement('span')
       lastVisited.title = 'Last Visited'
       lastVisited.classList.add('badge', 'last-visited')
       lastVisited.innerText = '-' + resultEntry.lastVisit
       titleDiv.appendChild(lastVisited)
     }
-    if (ext.opts.general.visitCounter && resultEntry.visitCount) {
+    if (ext.opts.displayVisitCounter && resultEntry.visitCount) {
       const visitCounter = document.createElement('span')
       visitCounter.title = 'Visited Counter'
       visitCounter.classList.add('badge', 'visit-counter')
       visitCounter.innerText = resultEntry.visitCount
       titleDiv.appendChild(visitCounter)
     }
-    if (ext.opts.general.dateAdded && resultEntry.dateAdded) {
+    if (ext.opts.displayDateAdded && resultEntry.dateAdded) {
       const dateAdded = document.createElement('span')
       dateAdded.title = 'Date Added'
       dateAdded.classList.add('badge', 'date-added')
       dateAdded.innerText = new Date(resultEntry.dateAdded).toISOString().split('T')[0]
       titleDiv.appendChild(dateAdded)
     }
-    if (ext.opts.tabs.displayWindowId && resultEntry.windowId) {
+    if (ext.opts.tabsDisplayWindowId && resultEntry.windowId) {
       const windowId = document.createElement('span')
       windowId.title = 'Window'
       windowId.classList.add('badge', 'window')
       windowId.innerText = Math.round(resultEntry.windowId)
       titleDiv.appendChild(windowId)
     }
-    if (ext.opts.general.score && resultEntry.score) {
+    if (ext.opts.displayScore && resultEntry.score) {
       const score = document.createElement('span')
       score.title = 'Score'
       score.classList.add('badge', 'score')
@@ -117,7 +121,11 @@ export function renderSearchResults(result) {
     // Create URL div
     const urlDiv = document.createElement('div')
     urlDiv.classList.add('url')
-    if (ext.opts.general.highlight && resultEntry.urlHighlighted && resultEntry.urlHighlighted.includes('<mark>')) {
+    if (
+      ext.opts.displaySearchMatchHighlight &&
+      resultEntry.urlHighlighted &&
+      resultEntry.urlHighlighted.includes('<mark>')
+    ) {
       urlDiv.innerHTML = resultEntry.urlHighlighted
     } else {
       urlDiv.innerText = resultEntry.url
@@ -131,11 +139,11 @@ export function renderSearchResults(result) {
     resultListItems.push(resultListItem)
   }
 
-  if (ext.opts.general.highlight && ext.model.searchTerm) {
+  if (ext.opts.displaySearchMatchHighlight && ext.model.searchTerm) {
     // Use mark.js to highlight search results, if we don't have already done so via fuse.js
     // This applies to flexsearch and taxonomy search results
     if (
-      ext.opts.search.approach === 'precise' ||
+      ext.opts.searchStrategy === 'precise' ||
       ext.model.searchMode === 'tags' ||
       ext.model.searchMode === 'folders'
     ) {
@@ -324,16 +332,16 @@ export function openResultItem(event) {
 export async function toggleSearchApproach() {
   const userOptions = await getUserOptions()
 
-  if (ext.opts.search.approach === 'fuzzy') {
-    ext.opts.search.approach = 'precise'
+  if (ext.opts.searchStrategy === 'fuzzy') {
+    ext.opts.searchStrategy = 'precise'
   } else {
-    ext.opts.search.approach = 'fuzzy'
+    ext.opts.searchStrategy = 'fuzzy'
   }
 
   if (userOptions.search) {
-    userOptions.search.approach = ext.opts.search.approach
+    userOptions.search.approach = ext.opts.searchStrategy
   } else {
-    userOptions.search = { approach: ext.opts.search.approach }
+    userOptions.search = { approach: ext.opts.searchStrategy }
   }
 
   // Update user options
@@ -346,10 +354,10 @@ export async function toggleSearchApproach() {
  * Toggles the text and class of the search aproach button
  */
 export function updateSearchApproachToggle() {
-  if (ext.opts.search.approach === 'fuzzy') {
+  if (ext.opts.searchStrategy === 'fuzzy') {
     ext.dom.searchApproachToggle.innerText = 'FUZZY'
     ext.dom.searchApproachToggle.classList = 'fuzzy'
-  } else if (ext.opts.search.approach === 'precise') {
+  } else if (ext.opts.searchStrategy === 'precise') {
     ext.dom.searchApproachToggle.innerText = 'PRECISE'
     ext.dom.searchApproachToggle.classList = 'precise'
   }

@@ -16,7 +16,7 @@
     "ext": "writable",
     "Tagify": "readonly",
     "Mark": "readonly",
-    "JSON5": "readonly",
+    "jsyaml": "readonly",
     "FlexSearch": "readonly"
   },
   "ignorePatterns": ["**/lib/*.js"],
