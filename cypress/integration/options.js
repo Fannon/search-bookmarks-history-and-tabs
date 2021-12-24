@@ -8,7 +8,7 @@ describe('Options View', () => {
       cy.get('#options').find('#user-config')
     })
     it('successfully loads the default user config', () => {
-      cy.get('#user-config').should('include.value', '{').checkNoErrors()
+      cy.get('#user-config').should('include.value', 'searchStrategy').checkNoErrors()
     })
     it('can save a new user config in JSON format', () => {
       const newConfig = JSON.stringify(

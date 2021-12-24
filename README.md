@@ -29,8 +29,6 @@ For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
 
 ![Demo Animation](/images/bookmark-and-history-search.gif 'Demo Animation')
 
-![Screenshots](/images/bookmark-and-history-search-screenshots.png 'Screenshots')
-
 ## Privacy / Data Protection
 
 This extension is built to respect your privacy:
