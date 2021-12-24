@@ -13,15 +13,15 @@
 
 **This extension does not collect any data nor does it make any external requests** (see [Privacy](#privacy--data-protection)).
 
-It supports two different search approaches:
+It supports two different search strategies:
 
-- Fuzzy search (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
-- Exact search (starts with matching): Faster, but only exact matching results.
+- **Exact search** (starts with matching): Faster, but only exact matching results.
+- **Fuzzy search** (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
 
 With this extension you can also **tag your bookmarks** including auto completions.
-The tags are then considered when searching and can be used for navigation.
+The tags are considered when searching and can be used for navigation.
 
-In general, the extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)).
+The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)).
 
 For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
 
@@ -48,24 +48,25 @@ This extension is built to respect your privacy:
 
 ## User Documentation
 
-- This extension can (and should!) be triggered via keyboard shortcut.
+- **Search Strategies**: Switch between precise and fuzzy approach by clicking on the FUZZY or PRECISE button in the search bar (top right).
+- **Keyboard Shortcut**: Trigger the extension via keyboard.
   - The default is `CTRL` + `Shift` + `.`, but you can customize this.
-- By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
+- **Open selected results**: By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
   - Hold `Shift` or `Alt` to open the result in the current tab
   - Hold `Ctrl` to open the result without closing the popup.
-- In case you want to be more selective -> use a search mode:
+- **Search Modes**: In case you want to be more selective -> use a search mode:
   - Start your query with `#`: only **bookmarks with the tag** will be returned (excact "starts with" search)
   - Start your query with `~`: only **bookmarks within the folder** will be returned (excact "starts with" search)
   - Start your query with `t `: only **tabs** will be searched.
   - Start your query with `b `: only **bookmarks** will be searched.
   - Start your query with `h `: only **history** will be searched.
   - Start your query with `s `: only **search engines** will be proposed.
-- Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
+- **Special Browser Pages**: You can add special browser pages to your bookmarks, like `chrome://downloads`.
+- **Custom Scores**: Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
   - Examples: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`
 - This extension works best if you avoid:
   - using `#` in bookmark titles that do not indicate a tag.
   - using `~` in bookmark folder names.
-- Tip: You can also add special browser pages to your bookmarks, like `chrome://downloads`.
 
 ## User Configuration
 
