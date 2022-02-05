@@ -159,15 +159,19 @@ export function calculateFinalScore(results, searchTerm) {
     // This will reduce the score if the search is not a good match
     score = score * (el.searchScore || ext.opts.scoreTitleWeight)
 
-    // Increase score if we have an exact "includes" match in title or url
-    if (ext.opts.scoreExactIncludesBonus) {
+    // Increase score if we have an exact "includes" match
+    if (ext.opts.scoreExactIncludesBonus && searchTerm.length >= ext.opts.scoreExactIncludesBonusMinChars) {
       // Treat each search term separated by a space individually
       searchTerm.split(' ').forEach((term) => {
-        if (term) {
+        if (term && term.length >= ext.opts.scoreExactIncludesBonusMinChars) {
           if (el.title && el.title.toLowerCase().includes(term)) {
             score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTitleWeight
-          } else if (el.url.includes(searchTerm.split(' ').join('-'))) {
+          } else if (el.url && el.url.includes(searchTerm.split(' ').join('-'))) {
             score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreUrlWeight
+          } else if (el.tags && el.tags.toLowerCase().includes(searchTerm)) {
+            score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTagWeight
+          } else if (el.folderName && el.folderName.toLowerCase().includes(searchTerm)) {
+            score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreFolderWeight
           }
         }
       })
@@ -202,9 +206,8 @@ export function calculateFinalScore(results, searchTerm) {
       }
 
       // Increase score if we have an exact tag match
-      if (ext.opts.scoreExactTagMatchBonus && el.tags && searchTerm.includes('#')) {
-        let searchTermTags = searchTerm.split('#')
-        searchTermTags.shift()
+      if (ext.opts.scoreExactTagMatchBonus && el.tags) {
+        let searchTermTags = searchTerm.split('#').join('').split(' ')
         searchTermTags.forEach((tag) => {
           el.tagsArray.map((el) => {
             if (tag === el.toLowerCase()) {
@@ -215,9 +218,8 @@ export function calculateFinalScore(results, searchTerm) {
       }
 
       // Increase score if we have an exact folder name match
-      if (ext.opts.scoreExactFolderMatchBonus && el.folder && searchTerm.includes('~')) {
-        let searchTermFolders = searchTerm.split('~')
-        searchTermFolders.shift()
+      if (ext.opts.scoreExactFolderMatchBonus && el.folder) {
+        let searchTermFolders = searchTerm.split('~').join('').split(' ')
         searchTermFolders.forEach((folderName) => {
           el.folderArray.map((el) => {
             if (folderName === el.toLowerCase()) {

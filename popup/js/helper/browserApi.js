@@ -97,8 +97,8 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
         let tagsText = ''
         let tagsArray = []
         if (title) {
-          const tagSplit = title.split('#')
-          title = tagSplit.shift().trim()
+          const tagSplit = title.split('#').map((el) => el.trim())
+          title = tagSplit.shift()
           tagsArray = tagSplit
           for (const tag of tagSplit) {
             tagsText += '#' + tag.trim() + ' '
