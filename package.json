@@ -19,7 +19,11 @@
     "eslint-plugin-cypress": "^2.12.1",
     "live-server": "^1.1.0",
     "prettier": "2.5.1",
+<<<<<<< HEAD
     "prettier-eslint": "^8.2.2",
+=======
+    "prettier-eslint": "^13.0.0",
+>>>>>>> origin
     "sass": "^1.49.7"
   },
   "scripts": {
