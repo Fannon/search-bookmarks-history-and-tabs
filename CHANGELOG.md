@@ -2,11 +2,13 @@
 
 ## [v1.3.1]
 
-- Improved search behavior around `scoreExactIncludesBonus`
+- **NEW**: Added support for OR tag and folder search
+  - Supports queries like `#github #pr` and `~Sites ~Blogs`
+- **Improved**: Search behavior around `scoreExactIncludesBonus`
   - Introduced new option `scoreExactIncludesBonusMinChars` which introduces a minimum character match for above option
-- Improved behavior of `scoreExactTagMatchBonus` and `scoreExactFolderMatchBonus` to make it work in more situations
-- Added very rudimentary user option validation, to ensure it at least is a proper YAML / JSON object
-- Removed legacy option migration
+- **Improved**: behavior of `scoreExactTagMatchBonus` and `scoreExactFolderMatchBonus` to make it work in more situations
+- **NEW**: Rudimentary user option validation, to ensure it at least is a proper YAML / JSON object
+- **REMOVED**: Legacy option migration
 
 ## [v1.3.0]
 
