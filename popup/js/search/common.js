@@ -161,24 +161,6 @@ export function calculateFinalScore(results, searchTerm) {
     // This will reduce the score if the search is not a good match
     score = score * (el.searchScore || ext.opts.scoreTitleWeight)
 
-    // Increase score if we have an exact "includes" match
-    if (ext.opts.scoreExactIncludesBonus && searchTerm.length >= ext.opts.scoreExactIncludesBonusMinChars) {
-      // Treat each search term separated by a space individually
-      searchTerm.split(' ').forEach((term) => {
-        if (term && term.length >= ext.opts.scoreExactIncludesBonusMinChars) {
-          if (el.title && el.title.toLowerCase().includes(term)) {
-            score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTitleWeight
-          } else if (el.url && el.url.includes(searchTerm.split(' ').join('-'))) {
-            score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreUrlWeight
-          } else if (el.tags && el.tags.toLowerCase().includes(searchTerm)) {
-            score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTagWeight
-          } else if (el.folderName && el.folderName.toLowerCase().includes(searchTerm)) {
-            score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreFolderWeight
-          }
-        }
-      })
-    }
-
     // Add custom bonus score to bookmarks
     if (ext.opts.scoreCustomBonusScore && el.type === 'bookmark') {
       const regex = /[ ][+]([0-9]+)/
@@ -228,6 +210,24 @@ export function calculateFinalScore(results, searchTerm) {
               score += ext.opts.scoreExactFolderMatchBonus
             }
           })
+        })
+      }
+
+      // Increase score if we have an exact "includes" match
+      if (ext.opts.scoreExactIncludesBonus && searchTerm.length >= ext.opts.scoreExactIncludesBonusMinChars) {
+        // Treat each search term separated by a space individually
+        searchTerm.split(' ').forEach((term) => {
+          if (term && term.length >= ext.opts.scoreExactIncludesBonusMinChars) {
+            if (el.title && el.title.toLowerCase().includes(term)) {
+              score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTitleWeight
+            } else if (el.url && el.url.includes(searchTerm.split(' ').join('-'))) {
+              score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreUrlWeight
+            } else if (el.tags && el.tags.toLowerCase().includes(searchTerm)) {
+              score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTagWeight
+            } else if (el.folderName && el.folderName.toLowerCase().includes(searchTerm)) {
+              score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreFolderWeight
+            }
+          }
         })
       }
     }

@@ -261,11 +261,11 @@ export const defaultOptions = {
    */
   scoreExactEqualsBonus: 15,
   /**
-   * Additional points for an exact match of a search term tag (including #)
+   * Additional points for an exact match of a search term tag
    */
   scoreExactTagMatchBonus: 10,
   /**
-   * Additional points for an exact match of a search term folder name (including ~)
+   * Additional points for an exact match of a search term folder name
    */
   scoreExactFolderMatchBonus: 5,
   /**
