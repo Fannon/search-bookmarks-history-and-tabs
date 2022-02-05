@@ -65,7 +65,7 @@ export async function addDefaultEntries() {
 
     // Optional: Add a given number of last visited tabs for quick navigation
     // This is similar to the `t ` special search behavior
-    if (ext.opts.tabs && ext.opts.tabsDisplayLastVisited && ext.model.tabs) {
+    if (ext.opts.tabsDisplayLastVisited && ext.model.tabs) {
       const lastVisitedTabs = ext.model.tabs
         .filter((el) => {
           return el.lastVisitSecondsAgo
