@@ -117,7 +117,7 @@ The scoring systems works roughly the following:
 - This base score is now merged / multiplied with the search library score. A less good match will usually reduce the score and a perfect / highest ranked match will keep it at .
 - Depending on certain conditions some bonus score points are added on top. For example, `exactStartsWithBonus` will add score if either the title or the url start exactly with the search term, including spaces.
 
-For a description of the scoring options and what they do, please see [popup/js/options.js](popup/js/options.js).
+For a description of the scoring options and what they do, please see [popup/js/model/options.js](popup/js/model/options.js).
 
 ## Local Development
 
