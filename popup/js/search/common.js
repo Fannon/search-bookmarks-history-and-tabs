@@ -245,7 +245,7 @@ export function calculateFinalScore(results, searchTerm) {
     ) {
       // Bonus score is always at least 0 (no negative scores)
       // Take the recentBonusScoreMaximum
-      // Substract recentBonusScorePerHour points for each hour in the past
+      // Subtract recentBonusScorePerHour points for each hour in the past
       score += Math.max(
         0,
         ext.opts.scoreRecentBonusScoreMaximum -
