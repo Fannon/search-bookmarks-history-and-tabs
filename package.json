@@ -42,7 +42,7 @@
     "prettier": "prettier --write --ignore-unknown .",
     "prettier-check": "prettier --check --ignore-unknown .",
     "cypress-info": "cypress info",
-    "cypress": "./node_modules/.bin/cypress open"
+    "cypress": "cypress open"
   },
   "repository": {
     "type": "git",

@@ -49,7 +49,7 @@ export async function search(event) {
 
   // Get and clean up original search query
   let searchTerm = ext.dom.searchInput.value || ''
-  searchTerm = searchTerm.trim().toLowerCase()
+  searchTerm = searchTerm.trimStart().toLowerCase()
   searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
 
   ext.model.result = []
