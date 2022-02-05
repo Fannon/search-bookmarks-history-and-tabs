@@ -6,7 +6,12 @@ import { getUserOptions, setUserOptions } from '../model/options.js'
 
 export async function initOptions() {
   const userOptions = await getUserOptions()
-  document.getElementById('user-config').value = jsyaml.dump(userOptions)
+  const userOptionsYaml = jsyaml.dump(userOptions)
+  if (userOptionsYaml.trim() === '{}') {
+    document.getElementById('user-config').value = ''
+  } else {
+    document.getElementById('user-config').value = userOptionsYaml
+  }
   document.getElementById('edit-options-reset').addEventListener('click', resetOptions)
   document.getElementById('edit-options-save').addEventListener('click', saveOptions)
 }
@@ -26,5 +31,5 @@ async function saveOptions() {
 }
 
 async function resetOptions() {
-  document.getElementById('user-config').value = '{\n  \n}'
+  document.getElementById('user-config').value = ''
 }
