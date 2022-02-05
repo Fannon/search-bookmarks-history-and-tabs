@@ -82,7 +82,6 @@ export async function searchWithFuseJs(searchTerm, searchMode) {
   performance.mark('search-start')
 
   searchMode = searchMode || 'all'
-  searchTerm = searchTerm.toLowerCase()
 
   console.debug(`Searching with approach="fuzzy" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 

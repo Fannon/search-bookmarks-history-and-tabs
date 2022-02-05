@@ -14,12 +14,12 @@ export const defaultOptions = {
   /**
    * Search approach to use. Choose between:
    *
-   * * 'precise': Alternative search approach that is more precise.
+   * * 'precise': Search approach that search for more precise matches.
    *              It may be slower to index / start up, but faster for searching.
    *              The 'fuzzyness' option will be ignored
    *              Uses the https://github.com/nextapps-de/flexsearch library
    *
-   * * 'fuzzy':   Default choice that allows for fuzzy (approximate) search.
+   * * 'fuzzy':   Search mode that implements fuzzy (approximate) search.
    *              It is faster to index / start up, but may be slower when searching.
    *              It supports all options.
    *              Uses the https://fusejs.io/ library
@@ -247,6 +247,10 @@ export const defaultOptions = {
    */
   scoreExactIncludesBonus: 5,
   /**
+   * The minimum characters a search term needs to have to consider a exact includes match
+   */
+  scoreExactIncludesBonusMinChars: 3,
+  /**
    * Additional score points if title or url starts exactly with the search text.
    * This comes on top of an include bonus.
    */
@@ -257,11 +261,11 @@ export const defaultOptions = {
    */
   scoreExactEqualsBonus: 15,
   /**
-   * Additional points for an exact match of a search term tag (including #)
+   * Additional points for an exact match of a search term tag
    */
   scoreExactTagMatchBonus: 10,
   /**
-   * Additional points for an exact match of a search term folder name (including ~)
+   * Additional points for an exact match of a search term folder name
    */
   scoreExactFolderMatchBonus: 5,
   /**
@@ -311,6 +315,16 @@ export const emptyOptions = {
  */
 export async function setUserOptions(userOptions) {
   return new Promise((resolve, reject) => {
+    userOptions = userOptions || {}
+
+    try {
+      validateUserOptions(userOptions)
+    } catch (err) {
+      console.error(err)
+      document.getElementById('footer-error').innerText = err.message
+      return reject(err)
+    }
+
     if (ext.browserApi.storage) {
       ext.browserApi.storage.sync.set({ userOptions: userOptions }, () => {
         if (ext.browserApi.runtime.lastError) {
@@ -337,12 +351,12 @@ export async function getUserOptions() {
         if (ext.browserApi.runtime.lastError) {
           return reject(ext.browserApi.runtime.lastError)
         }
-        return resolve(upgradeOldOptions(result.userOptions || emptyOptions))
+        return resolve(result.userOptions || emptyOptions)
       })
     } else {
       console.warn('No storage API found. Falling back to local Web Storage')
       const userOptions = window.localStorage.getItem('userOptions')
-      return resolve(userOptions ? upgradeOldOptions(JSON.parse(userOptions)) : emptyOptions)
+      return resolve(userOptions ? JSON.parse(userOptions) : emptyOptions)
     }
   })
 }
@@ -356,73 +370,10 @@ export async function getEffectiveOptions() {
   return mergeDeep(defaultOptions, userOptions)
 }
 
-/**
- * Convert the old (legacy) option structure to the new flat structure
- *
- * TODO: Remove this after a while, as it's just an interim migration
- */
-function upgradeOldOptions(options = {}) {
-  // Only do the conversion if we detect the old option structure
-  options = options || {}
-  const newOptions = {
-    ...emptyOptions,
-  }
-  if (
-    options.search ||
-    options.general ||
-    options.tabs ||
-    options.bookmarks ||
-    options.history ||
-    options.searchEngines ||
-    options.score
-  ) {
-    if (options.search) {
-      newOptions.searchStrategy = options.search.approach
-      newOptions.searchMaxResults = options.search.maxResults
-      newOptions.searchMinMatchCharLength = options.search.minMatchCharLength
-      newOptions.searchFuzzyness = options.search.fuzzyness
-      newOptions.searchPreciseMatchAlgorithm = options.search.matchAlgorithm
+export function validateUserOptions(userOptions) {
+  if (userOptions) {
+    if (typeof userOptions !== 'object') {
+      throw new Error('User options must be a valid YAML / JSON object')
     }
-    if (options.general) {
-      newOptions.displayTags = options.general.tags
-      newOptions.displayFolderName = options.general.folderName
-      newOptions.displaySearchMatchHighlight = options.general.highlight
-      newOptions.displayLastVisit = options.general.lastVisit
-      newOptions.displayVisitCounter = options.general.visitCounter
-      newOptions.displayDateAdded = options.general.dateAdded
-      newOptions.displayScore = options.general.score
-    }
-    if (options.tabs) {
-      newOptions.enableTabs = options.tabs.enabled
-      newOptions.tabsDisplayLastVisited = options.tabs.displayLastVisited
-      newOptions.tabsOnlyCurrentWindow = options.tabs.onlyCurrentWindow
-      newOptions.tabsDisplayWindowId = options.tabs.displayWindowId
-    }
-    if (options.bookmarks) {
-      newOptions.enableBookmarks = options.bookmarks.enabled
-    }
-    if (options.history) {
-      newOptions.enableHistory = options.history.enabled
-      newOptions.historyDaysAgo = options.history.daysAgo
-      newOptions.historyMaxItems = options.history.maxItems
-      newOptions.historyIgnoreList = options.history.ignoreList
-    }
-    if (options.searchEngines) {
-      newOptions.enableSearchEngines = options.searchEngines.enabled
-      newOptions.searchEngineChoices = options.searchEngines.choices
-    }
-    if (options.score) {
-      for (const scoreOptionName in options.score) {
-        const newOptionName = 'score' + scoreOptionName.charAt(0).toUpperCase() + scoreOptionName.slice(1)
-        newOptions[newOptionName] = options.score[scoreOptionName]
-      }
-    }
-
-    console.debug('Options Conversion', options, newOptions)
-
-    // remove all properties with `undefined` value and return new result
-    return JSON.parse(JSON.stringify(newOptions))
-  } else {
-    return options
   }
 }

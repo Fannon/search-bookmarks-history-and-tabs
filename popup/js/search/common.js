@@ -47,9 +47,11 @@ export async function search(event) {
 
   performance.mark('search-start')
 
+  // Get and clean up original search query
   let searchTerm = ext.dom.searchInput.value || ''
-  searchTerm = searchTerm.trimLeft().toLowerCase()
+  searchTerm = searchTerm.trimStart().toLowerCase()
   searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
+
   ext.model.result = []
   let searchMode = 'all' // OR 'bookmarks' OR 'history'
 
@@ -159,20 +161,6 @@ export function calculateFinalScore(results, searchTerm) {
     // This will reduce the score if the search is not a good match
     score = score * (el.searchScore || ext.opts.scoreTitleWeight)
 
-    // Increase score if we have an exact "includes" match in title or url
-    if (ext.opts.scoreExactIncludesBonus) {
-      // Treat each search term separated by a space individually
-      searchTerm.split(' ').forEach((term) => {
-        if (term) {
-          if (el.title && el.title.toLowerCase().includes(term)) {
-            score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTitleWeight
-          } else if (el.url.includes(searchTerm.split(' ').join('-'))) {
-            score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreUrlWeight
-          }
-        }
-      })
-    }
-
     // Add custom bonus score to bookmarks
     if (ext.opts.scoreCustomBonusScore && el.type === 'bookmark') {
       const regex = /[ ][+]([0-9]+)/
@@ -202,9 +190,8 @@ export function calculateFinalScore(results, searchTerm) {
       }
 
       // Increase score if we have an exact tag match
-      if (ext.opts.scoreExactTagMatchBonus && el.tags && searchTerm.includes('#')) {
-        let searchTermTags = searchTerm.split('#')
-        searchTermTags.shift()
+      if (ext.opts.scoreExactTagMatchBonus && el.tags) {
+        let searchTermTags = searchTerm.split('#').join('').split(' ')
         searchTermTags.forEach((tag) => {
           el.tagsArray.map((el) => {
             if (tag === el.toLowerCase()) {
@@ -215,15 +202,32 @@ export function calculateFinalScore(results, searchTerm) {
       }
 
       // Increase score if we have an exact folder name match
-      if (ext.opts.scoreExactFolderMatchBonus && el.folder && searchTerm.includes('~')) {
-        let searchTermFolders = searchTerm.split('~')
-        searchTermFolders.shift()
+      if (ext.opts.scoreExactFolderMatchBonus && el.folder) {
+        let searchTermFolders = searchTerm.split('~').join('').split(' ')
         searchTermFolders.forEach((folderName) => {
           el.folderArray.map((el) => {
             if (folderName === el.toLowerCase()) {
               score += ext.opts.scoreExactFolderMatchBonus
             }
           })
+        })
+      }
+
+      // Increase score if we have an exact "includes" match
+      if (ext.opts.scoreExactIncludesBonus && searchTerm.length >= ext.opts.scoreExactIncludesBonusMinChars) {
+        // Treat each search term separated by a space individually
+        searchTerm.split(' ').forEach((term) => {
+          if (term && term.length >= ext.opts.scoreExactIncludesBonusMinChars) {
+            if (el.title && el.title.toLowerCase().includes(term)) {
+              score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTitleWeight
+            } else if (el.url && el.url.includes(searchTerm.split(' ').join('-'))) {
+              score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreUrlWeight
+            } else if (el.tags && el.tags.toLowerCase().includes(searchTerm)) {
+              score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTagWeight
+            } else if (el.folderName && el.folderName.toLowerCase().includes(searchTerm)) {
+              score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreFolderWeight
+            }
+          }
         })
       }
     }
@@ -241,7 +245,7 @@ export function calculateFinalScore(results, searchTerm) {
     ) {
       // Bonus score is always at least 0 (no negative scores)
       // Take the recentBonusScoreMaximum
-      // Substract recentBonusScorePerHour points for each hour in the past
+      // Subtract recentBonusScorePerHour points for each hour in the past
       score += Math.max(
         0,
         ext.opts.scoreRecentBonusScoreMaximum -
@@ -253,7 +257,7 @@ export function calculateFinalScore(results, searchTerm) {
     if (ext.opts.scoreDateAddedBonusScoreMaximum && ext.opts.scoreDateAddedBonusScorePerDay && el.dateAdded != null) {
       // Bonus score is always at least 0 (no negative scores)
       // Take the dateAddedBonusScoreMaximum
-      // Substract dateAddedBonusScorePerDay points for each hour in the past
+      // Subtract dateAddedBonusScorePerDay points for each hour in the past
       score += Math.max(
         0,
         ext.opts.scoreDateAddedBonusScoreMaximum -

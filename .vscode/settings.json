@@ -1,5 +1,17 @@
 {
-  "cSpell.words": ["BULMA", "flexsearch", "fuzzyness", "newtab", "readonly", "tagify", "webextensions", "yaireo"],
+  "cSpell.words": [
+    "BULMA",
+    "flexsearch",
+    "fusejs",
+    "fuzzyness",
+    "Heimler",
+    "jsyaml",
+    "newtab",
+    "readonly",
+    "tagify",
+    "webextensions",
+    "yaireo"
+  ],
   "editor.formatOnSave": true,
   "editor.formatOnSaveMode": "file",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
