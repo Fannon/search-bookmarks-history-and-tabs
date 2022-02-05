@@ -178,7 +178,3 @@ This extension makes use of the following helpful open-source projects (thanks!)
 
 > Please create a [GitHub issue](https://github.com/Fannon/search-tabs-bookmarks-and-history/issues) to give your feedback.
 > All ideas, suggestions or bug reports are welcome.
-
-- Allow delete of bookmark
-- Allow URL edit of bookmark
-- Convert project to TypeScript?
