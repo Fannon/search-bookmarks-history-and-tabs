@@ -257,7 +257,7 @@ export function calculateFinalScore(results, searchTerm) {
     if (ext.opts.scoreDateAddedBonusScoreMaximum && ext.opts.scoreDateAddedBonusScorePerDay && el.dateAdded != null) {
       // Bonus score is always at least 0 (no negative scores)
       // Take the dateAddedBonusScoreMaximum
-      // Substract dateAddedBonusScorePerDay points for each hour in the past
+      // Subtract dateAddedBonusScorePerDay points for each hour in the past
       score += Math.max(
         0,
         ext.opts.scoreDateAddedBonusScoreMaximum -

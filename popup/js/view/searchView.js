@@ -279,7 +279,7 @@ export function openResultItem(event) {
     return
   }
 
-  // If we press CTRL while seleting an entry
+  // If we press CTRL while selecting an entry
   // -> Open it in new tab in the background (don't close popup)
   if (event.ctrlKey) {
     console.debug('Open in background tab: ' + url)
@@ -347,7 +347,7 @@ export async function toggleSearchApproach() {
 }
 
 /**
- * Toggles the text and class of the search aproach button
+ * Toggles the text and class of the search approach button
  */
 export function updateSearchApproachToggle() {
   if (ext.opts.searchStrategy === 'fuzzy') {

@@ -142,12 +142,12 @@ function flexSearchWithScoring(indexName, searchTerm, data) {
     // Search url field
     matchesDict[term].url = index.url.search(term, ext.opts.searchMaxResults)
 
-    // search tags if available (only bookmars)
+    // search tags if available (only bookmarks)
     if (index.tag) {
       matchesDict[term].tag = index.tag.search(term, ext.opts.searchMaxResults)
     }
 
-    // search folder if available (only bookmars)
+    // search folder if available (only bookmarks)
     if (index.folder) {
       matchesDict[term].folder = index.folder.search(term, ext.opts.searchMaxResults)
     }
