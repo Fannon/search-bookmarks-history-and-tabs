@@ -2,6 +2,9 @@
 
 ## [v1.4.0]
 
+- **NEW**: Bookmark edit now supports:
+  - Deleting bookmarks through popup
+  - Editing the bookmark URL
 - **NEW**: Added support for OR tag and folder search
   - Supports queries like `#github #pr` and `~Sites ~Blogs`
 - **Improved**: Search behavior around `scoreExactIncludesBonus`
