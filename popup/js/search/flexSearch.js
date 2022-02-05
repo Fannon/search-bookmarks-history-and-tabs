@@ -80,7 +80,6 @@ export function searchWithFlexSearch(searchTerm, searchMode) {
   performance.mark('search-start')
 
   searchMode = searchMode || 'all'
-  searchTerm = searchTerm.toLowerCase()
 
   console.debug(`Searching with approach="precise" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 

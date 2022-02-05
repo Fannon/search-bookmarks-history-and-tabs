@@ -338,11 +338,7 @@ export async function toggleSearchApproach() {
     ext.opts.searchStrategy = 'fuzzy'
   }
 
-  if (userOptions.search) {
-    userOptions.search.approach = ext.opts.searchStrategy
-  } else {
-    userOptions.search = { approach: ext.opts.searchStrategy }
-  }
+  userOptions.searchStrategy = ext.opts.searchStrategy
 
   // Update user options
   await setUserOptions(userOptions)
