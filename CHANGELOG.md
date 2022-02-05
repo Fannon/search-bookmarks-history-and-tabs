@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [v1.3.1]
+## [v1.4.0]
 
 - **NEW**: Added support for OR tag and folder search
   - Supports queries like `#github #pr` and `~Sites ~Blogs`
