@@ -143,7 +143,7 @@ code {
 .controls {
   text-align: right;
   position: absolute;
-  bottom: 12px;
+  bottom: 8px;
   right: 8px;
   width: 100%;
   padding-left: 8px;
@@ -283,12 +283,12 @@ code {
   background: #eee;
 
   #bookmark-title {
-    height: 88px;
+    height: 112px;
     resize: none;
     font-size: 1.2em;
   }
   #bookmark-url {
-    height: 45px;
+    height: 62px;
     resize: none;
     font-size: 0.85em;
   }
@@ -307,7 +307,7 @@ code {
   height: 580px;
   position: fixed;
   textarea {
-    height: 420px;
+    height: 426px;
     font-size: 18px;
     font-family: Consolas, monospace, monospace;
     resize: none;
@@ -359,7 +359,7 @@ code {
   font-size: 15px;
 }
 .tagify__dropdown {
-  max-height: 270px;
+  max-height: 235px;
   border: none;
 }
 .tagify__dropdown__wrapper {
