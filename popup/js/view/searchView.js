@@ -136,20 +136,15 @@ export function renderSearchResults(result) {
     resultListItem.appendChild(urlDiv)
     resultListItem.addEventListener('mouseenter', hoverResultItem)
     resultListItem.addEventListener('mouseup', openResultItem)
-    resultListItems.push(resultListItem)
-  }
 
-  if (ext.opts.displaySearchMatchHighlight && ext.model.searchTerm) {
-    // Use mark.js to highlight search results, if we don't have already done so via fuse.js
-    // This applies to flexsearch and taxonomy search results
-    if (
-      ext.opts.searchStrategy === 'precise' ||
-      ext.model.searchMode === 'tags' ||
-      ext.model.searchMode === 'folders'
-    ) {
-      const markInstance = new Mark(resultListItems)
-      markInstance.mark(ext.model.searchTerm)
+    if (ext.opts.displaySearchMatchHighlight && ext.model.searchTerm) {
+      // Use mark.js to highlight search results, if we don't have already done so via fuse.js
+      if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
+        const markInstance = new Mark(resultListItem)
+        markInstance.mark(ext.model.searchTerm)
+      }
     }
+    resultListItems.push(resultListItem)
   }
 
   // Replace current results with new results
@@ -332,10 +327,12 @@ export function openResultItem(event) {
 export async function toggleSearchApproach() {
   const userOptions = await getUserOptions()
 
-  if (ext.opts.searchStrategy === 'fuzzy') {
-    ext.opts.searchStrategy = 'precise'
-  } else {
+  if (ext.opts.searchStrategy === 'precise') {
     ext.opts.searchStrategy = 'fuzzy'
+  } else if (ext.opts.searchStrategy === 'fuzzy') {
+    ext.opts.searchStrategy = 'hybrid'
+  } else {
+    ext.opts.searchStrategy = 'precise'
   }
 
   userOptions.searchStrategy = ext.opts.searchStrategy
@@ -356,5 +353,8 @@ export function updateSearchApproachToggle() {
   } else if (ext.opts.searchStrategy === 'precise') {
     ext.dom.searchApproachToggle.innerText = 'PRECISE'
     ext.dom.searchApproachToggle.classList = 'precise'
+  } else if (ext.opts.searchStrategy === 'hybrid') {
+    ext.dom.searchApproachToggle.innerText = 'HYBRID'
+    ext.dom.searchApproachToggle.classList = 'hybrid'
   }
 }

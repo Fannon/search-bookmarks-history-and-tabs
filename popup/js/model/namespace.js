@@ -15,7 +15,7 @@ export const extensionNamespace = {
     /** Current search results */
     result: [],
   },
-  /** Search indexies */
+  /** Search indexes */
   index: {
     fuzzy: {},
     precise: {},

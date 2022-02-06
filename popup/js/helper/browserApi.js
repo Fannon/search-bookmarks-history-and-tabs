@@ -1,7 +1,5 @@
 import { cleanUpUrl, timeSince } from './utils.js'
 
-// CHROME API (Manifest v2 / v3)
-
 // Location of browser API.
 // This is `browser` for firefox, and `chrome` for Chrome, Edge and Opera.
 export const browserApi = window.browser || window.chrome || {}

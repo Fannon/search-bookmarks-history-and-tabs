@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [v1.5.0]
+
+- **NEW**: Added hybrid search approach
+  - This combines precise and fuzzy search results
+  - This also combines the indexing and search time of both approaches, so be aware of the performance impact.
+  - Added two new options to weight precise vs. fuzzy search matches
+    - `scoreHybridPreciseBonus`
+    - `scoreHybridFuzzyBonus`
+
 ## [v1.4.0]
 
 - **NEW**: Bookmark edit now supports:

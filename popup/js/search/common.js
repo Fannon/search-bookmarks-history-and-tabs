@@ -18,6 +18,9 @@ export function createSearchIndexes() {
     createFuzzyIndexes()
   } else if (ext.opts.searchStrategy === 'precise') {
     createPreciseIndexes()
+  } else if (ext.opts.searchStrategy === 'hybrid') {
+    createFuzzyIndexes()
+    createPreciseIndexes()
   } else {
     throw new Error(`The option "search.approach" has an unsupported value: ${ext.opts.searchStrategy}`)
   }
@@ -97,6 +100,24 @@ export async function search(event) {
       ext.model.result = await searchWithFuseJs(searchTerm, searchMode)
     } else if (ext.opts.searchStrategy === 'precise') {
       ext.model.result = searchWithFlexSearch(searchTerm, searchMode)
+    } else if (ext.opts.searchStrategy === 'hybrid') {
+      // in this search mode, both precise and hybrid search is executed
+      // and the search results are merged, with precise results given precedence.
+      ext.model.result = []
+      const preciseResultIndexes = {}
+      const preciseResults = await searchWithFlexSearch(searchTerm, searchMode)
+      const fuzzyResults = await searchWithFuseJs(searchTerm, searchMode)
+      for (const preciseResult of preciseResults) {
+        preciseResult.searchApproach = 'precise'
+        ext.model.result.push(preciseResult)
+        preciseResultIndexes[preciseResult.index] = true
+      }
+      for (const fuzzyResult of fuzzyResults) {
+        if (!preciseResultIndexes[fuzzyResult.index]) {
+          fuzzyResult.searchApproach = 'fuzzy'
+          ext.model.result.push(fuzzyResult)
+        }
+      }
     } else {
       throw new Error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
     }
@@ -155,6 +176,15 @@ export function calculateFinalScore(results, searchTerm) {
       score = ext.opts.scoreSearchEngineBaseScore
     } else {
       throw new Error(`Search result type "${el.type}" not supported`)
+    }
+
+    // Hybrid search: Add bonus / malus for precise and fuzzy matches
+    if (ext.opts.searchStrategy === 'hybrid') {
+      if (el.searchApproach === 'precise') {
+        score += ext.opts.scoreHybridPreciseBonus
+      } else if (el.searchApproach === 'fuzzy') {
+        score += ext.opts.scoreHybridFuzzyBonus
+      }
     }
 
     // Multiply by search library score.

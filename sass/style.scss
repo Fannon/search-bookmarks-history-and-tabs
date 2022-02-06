@@ -43,8 +43,8 @@ body {
   border-bottom: 1px solid #ccc;
 }
 #search-input {
-  max-width: 475px;
-  min-width: 475px;
+  max-width: 473px;
+  min-width: 473px;
 }
 .input-description {
   margin: 2px 4px;
@@ -52,8 +52,8 @@ body {
 #search-approach-toggle {
   float: right;
   height: 55px;
-  width: 24px;
-  padding: 0 3px 0 0;
+  width: 26px;
+  padding: 0 5px 0 0;
   writing-mode: vertical-rl;
   font-size: 12px;
   font-weight: 500;
@@ -67,6 +67,9 @@ body {
 }
 #search-approach-toggle.precise {
   color: #9dcd1b;
+}
+#search-approach-toggle.precise {
+  color: #54c4d3;
 }
 code {
   background-color: #d5d5d5;
@@ -334,6 +337,9 @@ code {
   .precise {
     color: #b1d354;
   }
+  .hybrid {
+    color: #54c4d3;
+  }
 }
 
 /** CUSTOMIZE TAGIFY STYLE */
@@ -384,7 +390,7 @@ code {
   padding-left: 0px;
 }
 #result-list::-webkit-scrollbar-track,
-#tags-overviewt::-webkit-scrollbar-track,
+#tags-overview::-webkit-scrollbar-track,
 #folders-overview::-webkit-scrollbar-track,
 #tip::-webkit-scrollbar-track,
 .tagify__dropdown__wrapper::-webkit-scrollbar-track {
@@ -449,6 +455,9 @@ code {
   }
   #search-approach-toggle.precise {
     color: #b1d354;
+  }
+  #search-approach-toggle.hybrid {
+    color: #54c4d3;
   }
   #result-list {
     li {

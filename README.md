@@ -13,10 +13,11 @@
 
 **This extension does not collect any data nor does it make any external requests** (see [Privacy](#privacy--data-protection)).
 
-It supports two different search strategies:
+It supports three different search approaches:
 
 - **Exact search** (starts with matching): Faster, but only exact matching results.
 - **Fuzzy search** (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
+- **Hybrid search** (combination): Combines results of both approaches, but also the performance implications.
 
 With this extension you can also **tag your bookmarks** including auto completions.
 The tags are considered when searching and can be used for navigation.
@@ -56,11 +57,13 @@ This extension is built to respect your privacy:
   - Hold `Ctrl` to open the result without closing the popup.
 - **Search Modes**: In case you want to be more selective -> use a search mode:
   - Start your query with `#`: only **bookmarks with the tag** will be returned (exact "starts with" search)
+    - Supports AND search, e.g. search for `#github #pr` to only get results which have both tags
   - Start your query with `~`: only **bookmarks within the folder** will be returned (exact "starts with" search)
-  - Start your query with `t `: only **tabs** will be searched.
-  - Start your query with `b `: only **bookmarks** will be searched.
-  - Start your query with `h `: only **history** will be searched.
-  - Start your query with `s `: only **search engines** will be proposed.
+    - Supports AND search, e.g. search for `~Sites ~Blogs` to only get results which have both tags
+  - Start your query with `t ` (including space): only **tabs** will be searched.
+  - Start your query with `b ` (including space): only **bookmarks** will be searched.
+  - Start your query with `h ` (including space): only **history** will be searched.
+  - Start your query with `s ` (including space): only **search engines** will be proposed.
 - **Special Browser Pages**: You can add special browser pages to your bookmarks, like `chrome://downloads`.
 - **Custom Scores**: Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
   - Examples: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`

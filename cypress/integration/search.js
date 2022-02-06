@@ -82,7 +82,7 @@ describe('Search View', () => {
         .find('span.folder')
         .contains('~Tools')
 
-        // expect lastVistited badge
+        // expect lastVisited badge
         .get('[x-original-id=9]')
         .find('span.last-visited')
 
@@ -94,8 +94,30 @@ describe('Search View', () => {
     })
   })
 
+  describe('Precise search', () => {
+    it('can execute a precise search successfully', () => {
+      cy.get('#search-approach-toggle')
+        .get('#search-input')
+        .type(`JSON`)
+        .wait(initTime)
+        // Make sure we get result of all types
+        .get('#result-list')
+        .should('not.have.length', 0)
+        .find('[x-original-id=9]')
+        .get('#result-list')
+        .find('li.bookmark')
+        .get('#result-list')
+        .find('li.history')
+        .get('#result-list')
+        .find('li.tab')
+        .get('#result-list')
+        .find('li.bookmark')
+        .checkNoErrors()
+    })
+  })
+
   describe('Fuzzy search', () => {
-    it('can switch to fuzzy search sucessfully', () => {
+    it('can switch to fuzzy search successfully', () => {
       cy.get('#search-approach-toggle')
         .wait(interactionTime)
         .contains('PRECISE')
@@ -108,7 +130,7 @@ describe('Search View', () => {
         .checkNoErrors()
     })
 
-    it('can execute a fuzzy search sucessfully', () => {
+    it('can execute a fuzzy search successfully', () => {
       cy.get('#search-approach-toggle')
         .wait(interactionTime)
         .contains('PRECISE')
@@ -135,16 +157,41 @@ describe('Search View', () => {
     })
   })
 
-  describe('Precise search', () => {
-    it('can execute a fuzzy search sucessfully', () => {
+  describe('Hybrid search', () => {
+    it('can switch to hybrid search successfully', () => {
       cy.get('#search-approach-toggle')
+        .wait(interactionTime)
+        .contains('PRECISE')
+        .click()
+        .wait(interactionTime)
+        .contains('FUZZY')
+        .click()
+        .wait(interactionTime)
+        .contains('HYBRID')
         .get('#search-input')
         .type(`JSON`)
-        .wait(initTime)
-        // Make sure we get result of all types
+        .get('li.bookmark')
+        .checkNoErrors()
+    })
+
+    it('can execute a hybrid search successfully', () => {
+      cy.get('#search-approach-toggle')
+        .wait(interactionTime)
+        .contains('PRECISE')
+        .click()
+        .wait(interactionTime)
+        .contains('FUZZY')
+        .click()
+        .wait(interactionTime)
+        .contains('HYBRID')
+        .wait(interactionTime)
+        .get('#search-input')
+        .type(`JSON`)
+        .get('li.bookmark')
         .get('#result-list')
         .should('not.have.length', 0)
         .find('[x-original-id=9]')
+        // Check that we have all kinds of results
         .get('#result-list')
         .find('li.bookmark')
         .get('#result-list')
