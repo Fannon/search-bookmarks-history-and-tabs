@@ -13,10 +13,11 @@
 
 **This extension does not collect any data nor does it make any external requests** (see [Privacy](#privacy--data-protection)).
 
-It supports two different search strategies:
+It supports three different search approaches:
 
 - **Exact search** (starts with matching): Faster, but only exact matching results.
 - **Fuzzy search** (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
+- **Hybrid search** (combination): Combines results of both approaches, but also the performance implications.
 
 With this extension you can also **tag your bookmarks** including auto completions.
 The tags are considered when searching and can be used for navigation.
