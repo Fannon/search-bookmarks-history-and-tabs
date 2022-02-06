@@ -68,6 +68,9 @@ body {
 #search-approach-toggle.precise {
   color: #9dcd1b;
 }
+#search-approach-toggle.precise {
+  color: #54c4d3;
+}
 code {
   background-color: #d5d5d5;
   color: #676767;
@@ -335,9 +338,7 @@ code {
     color: #b1d354;
   }
   .hybrid {
-    background: -webkit-linear-gradient(#d593ea, #b1d354);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #54c4d3;
   }
 }
 
