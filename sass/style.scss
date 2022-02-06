@@ -334,6 +334,11 @@ code {
   .precise {
     color: #b1d354;
   }
+  .hybrid {
+    background: -webkit-linear-gradient(#d593ea, #b1d354);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 /** CUSTOMIZE TAGIFY STYLE */
@@ -449,6 +454,9 @@ code {
   }
   #search-approach-toggle.precise {
     color: #b1d354;
+  }
+  #search-approach-toggle.hybrid {
+    color: #54c4d3;
   }
   #result-list {
     li {

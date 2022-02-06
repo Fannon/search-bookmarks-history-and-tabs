@@ -1,5 +1,3 @@
-import { mergeDeep } from '../helper/utils.js'
-
 /**
  * The default options
  *
@@ -24,7 +22,7 @@ export const defaultOptions = {
    *              It supports all options.
    *              Uses the https://fusejs.io/ library
    */
-  searchStrategy: 'precise', // 'precise' or 'fuzzy'
+  searchStrategy: 'precise', // 'precise' or 'fuzzy' or 'hybrid'
   /**
    * Max search results. Reduce for better performance.
    * Does not apply for tag and folder search
@@ -221,6 +219,17 @@ export const defaultOptions = {
    */
   scoreSearchEngineBaseScore: 30,
 
+  /**
+   * If in hybrid mode, this is the score bonus or malus for precise results
+   * This can be positive or negative
+   */
+  scoreHybridPreciseBonus: 40,
+  /**
+   * If in hybrid mode, this is the score bonus or malus for fuzzy results
+   * This can be positive or negative
+   */
+  scoreHybridFuzzyBonus: -10,
+
   // FIELD WEIGHTS
   // Depending on in which field the search match was found,
   // the match gets a multiplier applied on how important the match is.
@@ -367,7 +376,10 @@ export async function getUserOptions() {
  */
 export async function getEffectiveOptions() {
   const userOptions = await getUserOptions()
-  return mergeDeep(defaultOptions, userOptions)
+  return {
+    ...defaultOptions,
+    ...userOptions,
+  }
 }
 
 export function validateUserOptions(userOptions) {
