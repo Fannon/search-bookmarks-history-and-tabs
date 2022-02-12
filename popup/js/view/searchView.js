@@ -4,6 +4,7 @@
 
 import { initExtension } from '../initSearch.js'
 import { getUserOptions, setUserOptions } from '../model/options.js'
+import { createSearchIndexes, search } from '../search/common.js'
 
 /**
  * Render the search results in UI as result items
@@ -34,8 +35,18 @@ export function renderSearchResults(result) {
     if (resultEntry.type === 'bookmark') {
       const editImg = document.createElement('img')
       editImg.classList.add('edit-button')
+      editImg.title = 'Edit Bookmark'
       editImg.src = '../images/edit.svg'
       resultListItem.appendChild(editImg)
+    }
+
+    // Create edit button / image
+    if (resultEntry.type === 'tab') {
+      const closeImg = document.createElement('img')
+      closeImg.classList.add('close-button')
+      closeImg.title = 'Close Tab'
+      closeImg.src = '../images/x.svg'
+      resultListItem.appendChild(closeImg)
     }
 
     // Create title div
@@ -234,6 +245,7 @@ export function hoverResultItem(event) {
  */
 export function openResultItem(event) {
   const resultEntry = document.getElementById('selected-result')
+  const originalId = resultEntry.getAttribute('x-original-id')
   const url = resultEntry.getAttribute('x-open-url')
 
   if (event) {
@@ -242,8 +254,23 @@ export function openResultItem(event) {
 
     // If the event is a click event on the edit image:
     // Do not go to the URL itself, but to the internal edit bookmark url
-    if (target && target.src) {
-      window.location = '#edit-bookmark/' + resultEntry.getAttribute('x-original-id')
+    if (target && target.className.includes('edit-button')) {
+      window.location = '#edit-bookmark/' + originalId
+      return
+    } else if (target && target.className.includes('close-button')) {
+      // TODO: This handling is inefficient and not smart
+      // To improve this, some parts of the extension would need to be refactored a bit.
+      console.info('close', originalId, target)
+      // Close Browser Tab
+      ext.browserApi.tabs.remove(parseInt(originalId))
+      // Remove closed tab from index model
+      const index = ext.model.tabs.findIndex((el) => el.originalId === 210)
+      ext.model.tabs.splice(index, 1)
+      // Remove search result item
+      resultEntry.remove()
+      // Create new
+      createSearchIndexes()
+      search()
       return
     }
   }
