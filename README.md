@@ -78,7 +78,7 @@ Finding and setting options is a bit technical, though.
 
 The user options are written in [YAML](https://en.wikipedia.org/wiki/YAML) or [JSON](https://en.wikipedia.org/wiki/JSON) notation.
 
-For now, there is no nice options overview, so you have to find them in the [popup/js/options.js](popup/js/options.js) file in the `defaultOptions` object.
+For now, there is no nice options overview, so you have to find them in the [popup/js/model/options.js](popup/js/model/options.js) file in the `defaultOptions` object.
 From there you can see the available options, their names, default values and descriptions.
 
 When defining your custom config, you only need to define the options that you want to overwrite from the defaults.
