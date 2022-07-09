@@ -18,7 +18,9 @@ window.ext = ext
 extensionNamespace.initialized = false
 initExtension().catch((err) => {
   console.error(err)
-  document.getElementById('footer-error').innerText = err.message
+  document.getElementById(
+    'links',
+  ).innerHTML = `<span id="footer-error" title="${err.message}"><b>Error</b>: ${err.message}</span>`
 })
 
 /**
