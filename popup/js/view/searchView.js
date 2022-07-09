@@ -258,19 +258,18 @@ export function openResultItem(event) {
       window.location = '#edit-bookmark/' + originalId
       return
     } else if (target && target.className.includes('close-button')) {
-      // TODO: This handling is inefficient and not smart
-      // To improve this, some parts of the extension would need to be refactored a bit.
-      console.info('close', originalId, target)
+      // TODO: Tab close handling is inefficient and not smart.
+
       // Close Browser Tab
       ext.browserApi.tabs.remove(parseInt(originalId))
+
+      // Remove search list entry
+      document.querySelector(`#result-list > li[x-original-id="${originalId}"]`).remove()
+
       // Remove closed tab from index model
       const index = ext.model.tabs.findIndex((el) => el.originalId === 210)
       ext.model.tabs.splice(index, 1)
-      // Remove search result item
-      resultEntry.remove()
-      // Create new
-      createSearchIndexes()
-      search()
+
       return
     }
   }
