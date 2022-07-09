@@ -4,7 +4,6 @@
 
 import { initExtension } from '../initSearch.js'
 import { getUserOptions, setUserOptions } from '../model/options.js'
-import { createSearchIndexes, search } from '../search/common.js'
 
 /**
  * Render the search results in UI as result items
