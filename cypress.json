@@ -1,6 +1,0 @@
-{
-  "baseUrl": "http://localhost:8080/popup",
-  "viewportWidth": 500,
-  "viewportHeight": 600,
-  "video": false
-}
