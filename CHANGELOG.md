@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [v1.6.0]
+
+- **NEW**: Added close tab functionality
+  - See PR [#38](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/38)
+
 ## [v1.5.0]
 
 - **NEW**: Added hybrid search approach

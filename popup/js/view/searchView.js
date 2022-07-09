@@ -34,8 +34,18 @@ export function renderSearchResults(result) {
     if (resultEntry.type === 'bookmark') {
       const editImg = document.createElement('img')
       editImg.classList.add('edit-button')
+      editImg.title = 'Edit Bookmark'
       editImg.src = '../images/edit.svg'
       resultListItem.appendChild(editImg)
+    }
+
+    // Create edit button / image
+    if (resultEntry.type === 'tab') {
+      const closeImg = document.createElement('img')
+      closeImg.classList.add('close-button')
+      closeImg.title = 'Close Tab'
+      closeImg.src = '../images/x.svg'
+      resultListItem.appendChild(closeImg)
     }
 
     // Create title div
@@ -234,6 +244,7 @@ export function hoverResultItem(event) {
  */
 export function openResultItem(event) {
   const resultEntry = document.getElementById('selected-result')
+  const originalId = resultEntry.getAttribute('x-original-id')
   const url = resultEntry.getAttribute('x-open-url')
 
   if (event) {
@@ -242,8 +253,22 @@ export function openResultItem(event) {
 
     // If the event is a click event on the edit image:
     // Do not go to the URL itself, but to the internal edit bookmark url
-    if (target && target.src) {
-      window.location = '#edit-bookmark/' + resultEntry.getAttribute('x-original-id')
+    if (target && target.className.includes('edit-button')) {
+      window.location = '#edit-bookmark/' + originalId
+      return
+    } else if (target && target.className.includes('close-button')) {
+      // TODO: Tab close handling is inefficient and not smart.
+
+      // Close Browser Tab
+      ext.browserApi.tabs.remove(parseInt(originalId))
+
+      // Remove search list entry
+      document.querySelector(`#result-list > li[x-original-id="${originalId}"]`).remove()
+
+      // Remove closed tab from index model
+      const index = ext.model.tabs.findIndex((el) => el.originalId === 210)
+      ext.model.tabs.splice(index, 1)
+
       return
     }
   }

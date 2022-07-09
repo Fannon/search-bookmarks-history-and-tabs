@@ -27,7 +27,6 @@ export function createSearchIndexes() {
 }
 
 /**
- * Executes a search
  * This is the main search entry point.
  * It will decide which approaches and indexes to use.
  */

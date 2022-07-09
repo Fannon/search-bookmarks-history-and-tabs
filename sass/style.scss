@@ -213,7 +213,8 @@ code {
   li.search {
     border-left: 6px solid rgb(206, 150, 47);
   }
-  .edit-button {
+  .edit-button,
+  .close-button {
     float: right;
   }
   .title {
@@ -241,7 +242,8 @@ code {
   }
   #footer-error {
     font-size: 10px;
-    color: rgb(201, 68, 68);
+    color: rgb(204, 88, 88);
+    text-overflow: ellipsis;
   }
 }
 
