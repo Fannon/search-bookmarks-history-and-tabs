@@ -228,7 +228,7 @@ describe('Search View', () => {
         .get('.history')
         .should('not.exist')
         .get('#result-counter')
-        .contains('(4)')
+        .contains('(5)')
         .checkNoErrors()
     })
   })

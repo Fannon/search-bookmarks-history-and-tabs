@@ -69,23 +69,22 @@ function simpleSearchWithScoring(searchTerm, data) {
     return []
   }
 
-  for (const term of searchTermArray) {
-    for (const entry of data) {
-      const searchString = (
-        entry.title + ' ' + entry.url ||
-        '' + ' ' + entry.tags ||
-        '' + ' ' + entry.folder ||
-        ''
-      ).toLowerCase()
+  for (const entry of data) {
+    const searchString = `${entry.title} ${entry.url || ''} ${entry.tags || ''} ${entry.folder || ''}`.toLowerCase()
 
-      const resultEntry = {
-        ...entry,
-        searchScore: 1,
-        searchApproach: 'precise',
-      }
+    const resultEntry = {
+      ...entry,
+      searchScore: 1,
+      searchApproach: 'precise',
+    }
 
-      // Very simple search algorithm :)
+    // Very simple search algorithm :)
+    let searchTermMatches = 0
+    for (const term of searchTermArray) {
       if (searchString.includes(term)) {
+        searchTermMatches++
+      }
+      if (searchTermMatches === searchTermArray.length) {
         results.push(resultEntry)
       }
     }
