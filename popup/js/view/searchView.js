@@ -77,7 +77,7 @@ export function renderSearchResults(result) {
       }
       titleDiv.appendChild(tags)
     }
-    if (resultEntry.folder) {
+    if (ext.opts.displayFolderName && resultEntry.folder) {
       const folder = document.createElement('span')
       folder.title = 'Bookmark Folder'
       folder.classList.add('badge', 'folder')
@@ -352,12 +352,14 @@ export function openResultItem(event) {
 export async function toggleSearchApproach() {
   const userOptions = await getUserOptions()
 
-  if (ext.opts.searchStrategy === 'precise') {
+  if (ext.opts.searchStrategy === 'simple') {
+    ext.opts.searchStrategy = 'precise'
+  } else if (ext.opts.searchStrategy === 'precise') {
     ext.opts.searchStrategy = 'fuzzy'
   } else if (ext.opts.searchStrategy === 'fuzzy') {
     ext.opts.searchStrategy = 'hybrid'
   } else {
-    ext.opts.searchStrategy = 'precise'
+    ext.opts.searchStrategy = 'simple'
   }
 
   userOptions.searchStrategy = ext.opts.searchStrategy
@@ -381,5 +383,8 @@ export function updateSearchApproachToggle() {
   } else if (ext.opts.searchStrategy === 'hybrid') {
     ext.dom.searchApproachToggle.innerText = 'HYBRID'
     ext.dom.searchApproachToggle.classList = 'hybrid'
+  } else if (ext.opts.searchStrategy === 'simple') {
+    ext.dom.searchApproachToggle.innerText = 'SIMPLE'
+    ext.dom.searchApproachToggle.classList = 'simple'
   }
 }

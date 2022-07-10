@@ -45,13 +45,13 @@ function createFuseJsIndex(type, searchData) {
   }
 
   if (type === 'bookmarks') {
-    if (ext.opts.displayTags && ext.opts.scoreTagWeight) {
+    if (ext.opts.scoreTagWeight) {
       options.keys.push({
         name: 'tags',
         weight: ext.opts.scoreTagWeight,
       })
     }
-    if (ext.opts.displayFolderName && ext.opts.scoreFolderWeight) {
+    if (ext.opts.scoreFolderWeight) {
       options.keys.push({
         name: 'folder',
         weight: ext.opts.scoreFolderWeight,

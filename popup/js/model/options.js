@@ -12,6 +12,9 @@ export const defaultOptions = {
   /**
    * Search approach to use. Choose between:
    *
+   * * 'Simple':  Search approach that uses no indexing and only supports exact search
+   *              Best init time, less performant search time if there are MANY items to search through
+   *
    * * 'precise': Search approach that search for more precise matches.
    *              It may be slower to index / start up, but faster for searching.
    *              The 'fuzzyness' option will be ignored
@@ -21,8 +24,10 @@ export const defaultOptions = {
    *              It is faster to index / start up, but may be slower when searching.
    *              It supports all options.
    *              Uses the https://fusejs.io/ library
+   *
+   * * 'hybrid':  Hybrid that uses both 'simple' and 'fuzzy' algorithms combined
    */
-  searchStrategy: 'precise', // 'precise' or 'fuzzy' or 'hybrid'
+  searchStrategy: 'precise', // 'precise' or 'fuzzy' or 'hybrid' or 'simple'
   /**
    * Max search results. Reduce for better performance.
    * Does not apply for tag and folder search

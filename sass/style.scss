@@ -332,7 +332,9 @@ code {
     background: #fff;
     border-radius: 3px;
   }
-
+  .simple {
+    color: #d3cd54;
+  }
   .fuzzy {
     color: #d593ea;
   }
@@ -451,6 +453,9 @@ code {
     background-color: #000;
     border-bottom: 1px solid #444;
     color: #ddd;
+  }
+  #search-approach-toggle.simple {
+    color: #d3cd54;
   }
   #search-approach-toggle.fuzzy {
     color: #d593ea;

@@ -90,36 +90,32 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
         dateAdded: entry.dateAdded,
       }
 
-      if (ext.opts.displayTags) {
-        // Parse out tags from bookmark title (starting with #)
-        let tagsText = ''
-        let tagsArray = []
-        if (title) {
-          const tagSplit = title.split('#').map((el) => el.trim())
-          title = tagSplit.shift()
-          tagsArray = tagSplit
-          for (const tag of tagSplit) {
-            tagsText += '#' + tag.trim() + ' '
-          }
-          tagsText = tagsText.slice(0, -1)
+      // Parse out tags from bookmark title (starting with #)
+      let tagsText = ''
+      let tagsArray = []
+      if (title) {
+        const tagSplit = title.split('#').map((el) => el.trim())
+        title = tagSplit.shift()
+        tagsArray = tagSplit
+        for (const tag of tagSplit) {
+          tagsText += '#' + tag.trim() + ' '
         }
-
-        mappedEntry.title = title
-        mappedEntry.tags = tagsText
-        mappedEntry.tagsArray = tagsArray
+        tagsText = tagsText.slice(0, -1)
       }
 
-      if (ext.opts.displayFolderName) {
-        // Consider the folder names / structure of bookmarks
-        let folderText = ''
-        for (const folder of folderTrail) {
-          folderText += '~' + folder + ' '
-        }
-        folderText = folderText.slice(0, -1)
+      mappedEntry.title = title
+      mappedEntry.tags = tagsText
+      mappedEntry.tagsArray = tagsArray
 
-        mappedEntry.folder = folderText
-        mappedEntry.folderArray = folderTrail
+      // Consider the folder names / structure of bookmarks
+      let folderText = ''
+      for (const folder of folderTrail) {
+        folderText += '~' + folder + ' '
       }
+      folderText = folderText.slice(0, -1)
+
+      mappedEntry.folder = folderText
+      mappedEntry.folderArray = folderTrail
 
       result.push(mappedEntry)
     }
