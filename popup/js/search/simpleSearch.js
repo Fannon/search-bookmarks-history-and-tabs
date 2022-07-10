@@ -52,8 +52,10 @@ export function searchWithSimpleSearch(searchTerm, searchMode) {
 }
 
 /**
- * Helper function to make a flexsearch search and include the element along with a score
- * This also includes some custom boolean logic how search terms lead to a match across multiple fields
+ * Very simple search algorithm :)
+ * This does an `includes` search with an AND condition between the terms
+ *
+ * TODO: Right now there is no real scoring
  */
 function simpleSearchWithScoring(searchTerm, data) {
   /** Search results */
@@ -72,21 +74,19 @@ function simpleSearchWithScoring(searchTerm, data) {
   for (const entry of data) {
     const searchString = `${entry.title} ${entry.url || ''} ${entry.tags || ''} ${entry.folder || ''}`.toLowerCase()
 
-    const resultEntry = {
-      ...entry,
-      searchScore: 1,
-      searchApproach: 'precise',
-    }
-
-    // Very simple search algorithm :)
+    //
     let searchTermMatches = 0
     for (const term of searchTermArray) {
       if (searchString.includes(term)) {
         searchTermMatches++
       }
-      if (searchTermMatches === searchTermArray.length) {
-        results.push(resultEntry)
-      }
+    }
+    if (searchTermMatches === searchTermArray.length) {
+      results.push({
+        ...entry,
+        searchScore: 1,
+        searchApproach: 'precise',
+      })
     }
   }
 

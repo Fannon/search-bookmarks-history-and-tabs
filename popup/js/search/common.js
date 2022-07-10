@@ -7,7 +7,7 @@ import { addDefaultEntries } from './defaultEntries.js'
 import { createFuzzyIndexes, searchWithFuseJs } from './fuseSearch.js'
 import { addSearchEngines } from './searchEngines.js'
 import { searchWithSimpleSearch } from './simpleSearch.js'
-import { searchFolders, searchTags } from './taxonomySearch.js'
+import { searchTaxonomy } from './taxonomySearch.js'
 
 /**
  * Creates the search indexes.
@@ -89,9 +89,9 @@ export async function search(event) {
 
   if (searchTerm) {
     if (searchMode === 'tags') {
-      ext.model.result = searchTags(searchTerm)
+      ext.model.result = searchTaxonomy(searchTerm, 'tags', ext.model.bookmarks)
     } else if (searchMode === 'folders') {
-      ext.model.result = searchFolders(searchTerm)
+      ext.model.result = searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
     } else if (ext.opts.searchStrategy === 'fuzzy') {
       ext.model.result = await searchWithFuseJs(searchTerm, searchMode)
     } else if (ext.opts.searchStrategy === 'precise') {
