@@ -47,15 +47,18 @@ export async function getSearchData() {
   // To do this, create a http server (e.g. live-server) in popup/
   if (!browserApi.bookmarks || !browserApi.history) {
     console.warn(`No Chrome API found. Switching to local dev mode with mock data only`)
-    const requestChromeMockData = await fetch('./mockData/chrome.json')
-    const chromeMockData = await requestChromeMockData.json()
-
-    result.tabs = convertBrowserTabs(chromeMockData.tabs)
-    if (ext.opts.enableBookmarks) {
-      result.bookmarks = convertBrowserBookmarks(chromeMockData.bookmarks)
-    }
-    if (ext.opts.enableBookmarks) {
-      result.history = convertBrowserHistory(chromeMockData.history)
+    try {
+      const requestChromeMockData = await fetch('./mockData/chrome.json')
+      const chromeMockData = await requestChromeMockData.json()
+      result.tabs = convertBrowserTabs(chromeMockData.tabs)
+      if (ext.opts.enableBookmarks) {
+        result.bookmarks = convertBrowserBookmarks(chromeMockData.bookmarks)
+      }
+      if (ext.opts.enableBookmarks) {
+        result.history = convertBrowserHistory(chromeMockData.history)
+      }
+    } catch (err) {
+      console.warn('Could not load example mock data', err)
     }
   }
 

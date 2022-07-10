@@ -1,4 +1,4 @@
-import { extensionNamespace } from './model/namespace.js'
+import { extensionNamespace as ext } from './model/namespace.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { createSearchIndexes, search } from './search/common.js'
@@ -7,7 +7,6 @@ import { loadFoldersOverview } from './view/foldersView.js'
 import { navigationKeyListener, toggleSearchApproach, updateSearchApproachToggle } from './view/searchView.js'
 import { loadTagsOverview } from './view/tagsView.js'
 
-const ext = extensionNamespace
 window.ext = ext
 
 //////////////////////////////////////////
@@ -15,7 +14,7 @@ window.ext = ext
 //////////////////////////////////////////
 
 // Trigger initialization
-extensionNamespace.initialized = false
+ext.initialized = false
 initExtension().catch((err) => {
   console.error(err)
   document.getElementById(
@@ -31,37 +30,37 @@ export async function initExtension() {
   performance.mark('init-start')
 
   // Load effective options, including user customizations
-  extensionNamespace.opts = await getEffectiveOptions()
-  console.debug('Initialized with options', extensionNamespace.opts)
+  ext.opts = await getEffectiveOptions()
+  console.debug('Initialized with options', ext.opts)
 
   // HTML Element selectors
-  extensionNamespace.dom.searchInput = document.getElementById('search-input')
-  extensionNamespace.dom.resultList = document.getElementById('result-list')
-  extensionNamespace.dom.resultCounter = document.getElementById('result-counter')
-  extensionNamespace.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
+  ext.dom.searchInput = document.getElementById('search-input')
+  ext.dom.resultList = document.getElementById('result-list')
+  ext.dom.resultCounter = document.getElementById('result-counter')
+  ext.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
 
   updateSearchApproachToggle()
 
   performance.mark('init-dom')
 
   const { bookmarks, tabs, history } = await getSearchData()
-  extensionNamespace.model.tabs = tabs
-  extensionNamespace.model.bookmarks = bookmarks
-  extensionNamespace.model.history = history
+  ext.model.tabs = tabs
+  ext.model.bookmarks = bookmarks
+  ext.model.history = history
 
   performance.mark('init-data-load')
 
   createSearchIndexes()
 
-  extensionNamespace.initialized = true
+  ext.initialized = true
 
   performance.mark('init-search-index')
 
   // Register Events
   document.addEventListener('keydown', navigationKeyListener)
   window.addEventListener('hashchange', hashRouter, false)
-  extensionNamespace.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
-  extensionNamespace.dom.searchInput.addEventListener('keyup', search)
+  ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
+  ext.dom.searchInput.addEventListener('keyup', search)
 
   // Initialize the router by executing it for the first time
   hashRouter()
@@ -89,7 +88,7 @@ export async function initExtension() {
  */
 export async function hashRouter() {
   const hash = window.location.hash
-  console.debug('Changing Route: ' + hash)
+  // console.debug('Changing Route: "' + hash + '"')
   closeModals()
   if (!hash || hash === '#') {
     // Index route -> redirect to last known search or empty search
@@ -98,9 +97,9 @@ export async function hashRouter() {
     // Search specific term
     const searchTerm = hash.replace('#search/', '')
     if (searchTerm) {
-      extensionNamespace.dom.searchInput.value = decodeURIComponent(searchTerm)
+      ext.dom.searchInput.value = decodeURIComponent(searchTerm)
     }
-    extensionNamespace.dom.searchInput.focus()
+    ext.dom.searchInput.focus()
     search()
   } else if (hash.startsWith('#tags/')) {
     loadTagsOverview()

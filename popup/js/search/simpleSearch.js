@@ -17,7 +17,7 @@ export function searchWithSimpleSearch(searchTerm, searchMode) {
 
   searchMode = searchMode || 'all'
 
-  console.debug(`Searching with approach="simple" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
+  console.debug(`🔍 Searching with approach="precise" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
   if (searchMode === 'history' && ext.index.precise.history) {
     results = simpleSearchWithScoring(searchTerm, ext.model.history)
@@ -42,7 +42,10 @@ export function searchWithSimpleSearch(searchTerm, searchMode) {
   performance.mark('search-end')
   performance.measure('search-simple: ' + searchTerm, 'search-start', 'search-end')
   const searchPerformance = performance.getEntriesByType('measure')
-  console.debug('Search Performance (simple): ' + searchPerformance[0].duration + 'ms', searchPerformance)
+  console.debug(
+    'Found ' + results.length + ' results with approach="precise" in ' + searchPerformance[0].duration + 'ms',
+    searchPerformance,
+  )
   performance.clearMeasures()
 
   return results
@@ -78,7 +81,7 @@ function simpleSearchWithScoring(searchTerm, data) {
       const resultEntry = {
         ...entry,
         searchScore: 1,
-        searchApproach: 'simple',
+        searchApproach: 'precise',
       }
 
       // Very simple search algorithm :)

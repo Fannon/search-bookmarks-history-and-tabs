@@ -83,7 +83,7 @@ export async function searchWithFuseJs(searchTerm, searchMode) {
 
   searchMode = searchMode || 'all'
 
-  console.debug(`Searching with approach="fuzzy" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
+  console.debug(`🔍 Searching with approach="fuzzy" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
   if (searchMode === 'history' && ext.index.fuzzy.history) {
     results = ext.index.fuzzy.history.search(searchTerm)
@@ -121,7 +121,10 @@ export async function searchWithFuseJs(searchTerm, searchMode) {
   performance.mark('search-end')
   performance.measure('search-fusejs: ' + searchTerm, 'search-start', 'search-end')
   const searchPerformance = performance.getEntriesByType('measure')
-  console.debug('Search Performance (fuse.js): ' + searchPerformance[0].duration + 'ms', searchPerformance)
+  console.debug(
+    'Found ' + results.length + ' results with approach="fuzzy" in ' + searchPerformance[0].duration + 'ms',
+    searchPerformance,
+  )
   performance.clearMeasures()
 
   return results

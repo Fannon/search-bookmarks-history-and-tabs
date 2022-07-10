@@ -4,7 +4,6 @@
 
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultEntries.js'
-import { createPreciseIndexes, searchWithFlexSearch } from './flexSearch.js'
 import { createFuzzyIndexes, searchWithFuseJs } from './fuseSearch.js'
 import { addSearchEngines } from './searchEngines.js'
 import { searchWithSimpleSearch } from './simpleSearch.js'
@@ -15,13 +14,9 @@ import { searchFolders, searchTags } from './taxonomySearch.js'
  * Depending on search approach this is either fuzzy or precise
  */
 export function createSearchIndexes() {
-  if (ext.opts.searchStrategy === 'fuzzy') {
-    createFuzzyIndexes()
-  } else if (ext.opts.searchStrategy === 'precise') {
-    createPreciseIndexes()
-  } else if (ext.opts.searchStrategy === 'simple') {
-    // No index needs to be created with 'simple' search
-  } else if (ext.opts.searchStrategy === 'hybrid') {
+  if (ext.opts.searchStrategy === 'precise') {
+    // No index needs to be created with simple 'precise' search
+  } else if (ext.opts.searchStrategy === 'fuzzy' || ext.opts.searchStrategy === 'hybrid') {
     createFuzzyIndexes()
   } else {
     throw new Error(`The option "search.approach" has an unsupported value: ${ext.opts.searchStrategy}`)
@@ -97,12 +92,10 @@ export async function search(event) {
       ext.model.result = searchTags(searchTerm)
     } else if (searchMode === 'folders') {
       ext.model.result = searchFolders(searchTerm)
-    } else if (ext.opts.searchStrategy === 'simple') {
-      ext.model.result = await searchWithSimpleSearch(searchTerm, searchMode)
     } else if (ext.opts.searchStrategy === 'fuzzy') {
       ext.model.result = await searchWithFuseJs(searchTerm, searchMode)
     } else if (ext.opts.searchStrategy === 'precise') {
-      ext.model.result = searchWithFlexSearch(searchTerm, searchMode)
+      ext.model.result = await searchWithSimpleSearch(searchTerm, searchMode)
     } else if (ext.opts.searchStrategy === 'hybrid') {
       // in this search mode, both precise and hybrid search is executed
       // and the search results are merged, with precise results given precedence.
@@ -183,7 +176,7 @@ export function calculateFinalScore(results, searchTerm) {
 
     // Hybrid search: Add bonus / malus for precise and fuzzy matches
     if (ext.opts.searchStrategy === 'hybrid') {
-      if (el.searchApproach === 'simple') {
+      if (el.searchApproach === 'precise') {
         score += ext.opts.scoreHybridPreciseBonus
       } else if (el.searchApproach === 'fuzzy') {
         score += ext.opts.scoreHybridFuzzyBonus

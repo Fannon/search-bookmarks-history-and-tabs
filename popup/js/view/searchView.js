@@ -11,7 +11,7 @@ import { getUserOptions, setUserOptions } from '../model/options.js'
 export function renderSearchResults(result) {
   result = result || ext.model.result
 
-  performance.mark('render-start')
+  // performance.mark('render-start')
 
   ext.model.mouseHoverEnabled = false
   const resultListItems = []
@@ -163,11 +163,11 @@ export function renderSearchResults(result) {
   // mark first result item as selected
   selectListItem(0)
 
-  performance.mark('render-end')
-  performance.measure('Render DOM', 'render-start', 'render-end')
-  const renderPerformance = performance.getEntriesByType('measure')
-  console.debug('Render Performance: ' + renderPerformance[0].duration + 'ms', renderPerformance)
-  performance.clearMeasures()
+  // performance.mark('render-end')
+  // performance.measure('Render DOM', 'render-start', 'render-end')
+  // const renderPerformance = performance.getEntriesByType('measure')
+  // console.debug('Render Performance: ' + renderPerformance[0].duration + 'ms', renderPerformance)
+  // performance.clearMeasures()
 }
 
 //////////////////////////////////////////
@@ -352,14 +352,12 @@ export function openResultItem(event) {
 export async function toggleSearchApproach() {
   const userOptions = await getUserOptions()
 
-  if (ext.opts.searchStrategy === 'simple') {
-    ext.opts.searchStrategy = 'precise'
-  } else if (ext.opts.searchStrategy === 'precise') {
+  if (ext.opts.searchStrategy === 'precise') {
     ext.opts.searchStrategy = 'fuzzy'
   } else if (ext.opts.searchStrategy === 'fuzzy') {
     ext.opts.searchStrategy = 'hybrid'
   } else {
-    ext.opts.searchStrategy = 'simple'
+    ext.opts.searchStrategy = 'precise'
   }
 
   userOptions.searchStrategy = ext.opts.searchStrategy
@@ -383,8 +381,5 @@ export function updateSearchApproachToggle() {
   } else if (ext.opts.searchStrategy === 'hybrid') {
     ext.dom.searchApproachToggle.innerText = 'HYBRID'
     ext.dom.searchApproachToggle.classList = 'hybrid'
-  } else if (ext.opts.searchStrategy === 'simple') {
-    ext.dom.searchApproachToggle.innerText = 'SIMPLE'
-    ext.dom.searchApproachToggle.classList = 'simple'
   }
 }
