@@ -19,11 +19,11 @@ export function searchWithSimpleSearch(searchTerm, searchMode) {
 
   console.debug(`🔍 Searching with approach="precise" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
 
-  if (searchMode === 'history' && ext.index.precise.history) {
+  if (searchMode === 'history') {
     results = simpleSearchWithScoring(searchTerm, ext.model.history)
-  } else if (searchMode === 'bookmarks' && ext.index.precise.bookmarks) {
+  } else if (searchMode === 'bookmarks') {
     results = simpleSearchWithScoring(searchTerm, ext.model.bookmarks)
-  } else if (searchMode === 'tabs' && ext.index.precise.tabs) {
+  } else if (searchMode === 'tabs') {
     results = simpleSearchWithScoring(searchTerm, ext.model.tabs)
   } else if (searchMode === 'search') {
     // nothing, because search will be added later

@@ -36,7 +36,7 @@
     "lint": "npm run prettier-check && npm run eslint",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,scss,yml,yaml,html,htm}\"",
     "eslint": "eslint popup/**/*.js --fix --format stylish",
-    "css-build": "sass sass/style.scss popup/css/style.css --style=compressed",
+    "css-build": "sass sass/style.scss popup/css/style.css --style=compressed --no-source-map",
     "css-watch": "npm run css-build -- --watch",
     "start": "live-server --open=./popup/",
     "prettier": "prettier --write --ignore-unknown .",

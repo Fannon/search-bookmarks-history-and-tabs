@@ -4,6 +4,10 @@
 
 - **NEW**: Added close tab functionality
   - See PR [#38](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/38)
+- **CHANGED**: Removed flexsearch dependency and implemented simpler 'precise' search
+  - With this change, the new precise search does not index anymore and therefore the extension is quicker to load
+  - The search performance got a bit worse (it's a tradeoff), but is still fast enough
+- **IMPROVED**: Code cleanups and better minimized output, which makes the extension smaller.
 
 ## [v1.5.0]
 
