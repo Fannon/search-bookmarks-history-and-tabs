@@ -4,36 +4,37 @@
 
 // This helps finding bookmarks that include tags or are part of a folder
 
+/**
+ * Simple, precise search for bookmark tags and folder names
+ * Executes AND search with the terms in searchTerm, separated by spaces
+ *
+ * @param {string} searchTerm
+ * @param {'tags' | 'folder'} taxonomyType
+ */
 export function searchTaxonomy(searchTerm, taxonomyType, data) {
   /** Search results */
   const results = []
+  /** Marker for taxonomy search mode */
   const taxonomyMarker = taxonomyType === 'tags' ? '#' : '~'
 
-  // Simulate an OR search with the terms in searchTerm, separated by spaces
-  let searchTermArray = searchTerm
-    .split(taxonomyMarker)
-    .map((el) => el.trim())
-    .filter((el) => !!el)
+  let searchTermArray = searchTerm.split(taxonomyMarker)
 
-  if (!searchTermArray.length) {
-    // Early return if none of the search terms have enough char length
-    return []
-  }
-
-  for (const entry of data) {
-    const searchString = `${entry[taxonomyType] || ''}`.toLowerCase()
-    let searchTermMatches = 0
-    for (const term of searchTermArray) {
-      if (searchString.includes(taxonomyMarker + term)) {
-        searchTermMatches++
+  if (searchTermArray.length) {
+    for (const entry of data) {
+      const searchString = `${entry[taxonomyType] || ''}`.toLowerCase()
+      let searchTermMatches = 0
+      for (const term of searchTermArray) {
+        if (searchString.includes(taxonomyMarker + term)) {
+          searchTermMatches++
+        }
       }
-    }
-    if (searchTermMatches === searchTermArray.length) {
-      results.push({
-        ...entry,
-        searchScore: 1,
-        searchApproach: 'taxonomy',
-      })
+      if (searchTermMatches === searchTermArray.length) {
+        results.push({
+          ...entry,
+          searchScore: 1,
+          searchApproach: 'taxonomy',
+        })
+      }
     }
   }
 

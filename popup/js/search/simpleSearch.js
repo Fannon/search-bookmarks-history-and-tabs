@@ -61,32 +61,26 @@ function simpleSearchWithScoring(searchTerm, data) {
   /** Search results */
   const results = []
 
-  // Simulate an OR search with the terms in searchTerm, separated by spaces
   let searchTermArray = searchTerm.split(' ')
-  // filter out all search terms that do not match the min char match length
-  searchTermArray = searchTermArray.filter((el) => el.length >= ext.opts.searchMinMatchCharLength)
 
-  if (!searchTermArray.length) {
-    // Early return if none of the search terms have enough char length
-    return []
-  }
+  if (searchTermArray.length) {
+    for (const entry of data) {
+      const searchString = `${entry.title} ${entry.url || ''} ${entry.tags || ''} ${entry.folder || ''}`.toLowerCase()
 
-  for (const entry of data) {
-    const searchString = `${entry.title} ${entry.url || ''} ${entry.tags || ''} ${entry.folder || ''}`.toLowerCase()
-
-    //
-    let searchTermMatches = 0
-    for (const term of searchTermArray) {
-      if (searchString.includes(term)) {
-        searchTermMatches++
+      //
+      let searchTermMatches = 0
+      for (const term of searchTermArray) {
+        if (searchString.includes(term)) {
+          searchTermMatches++
+        }
       }
-    }
-    if (searchTermMatches === searchTermArray.length) {
-      results.push({
-        ...entry,
-        searchScore: 1,
-        searchApproach: 'precise',
-      })
+      if (searchTermMatches === searchTermArray.length) {
+        results.push({
+          ...entry,
+          searchScore: 1,
+          searchApproach: 'precise',
+        })
+      }
     }
   }
 
