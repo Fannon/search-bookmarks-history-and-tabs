@@ -74,17 +74,6 @@ function createFuseJsIndex(type, searchData) {
 export async function searchWithFuseJs(searchTerm, searchMode) {
   let results = []
 
-  // If the search term is below minMatchCharLength, no point in starting search
-  if (searchTerm.length < ext.opts.searchMinMatchCharLength) {
-    return results
-  }
-
-  performance.mark('search-start')
-
-  searchMode = searchMode || 'all'
-
-  console.debug(`🔍 Searching with approach="fuzzy" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
-
   if (searchMode === 'history' && ext.index.fuzzy.history) {
     results = ext.index.fuzzy.history.search(searchTerm)
   } else if (searchMode === 'bookmarks' && ext.index.fuzzy.bookmarks) {
@@ -117,15 +106,6 @@ export async function searchWithFuseJs(searchTerm, searchMode) {
       folderHighlighted: highlighted.folder,
     }
   })
-
-  performance.mark('search-end')
-  performance.measure('search-fusejs: ' + searchTerm, 'search-start', 'search-end')
-  const searchPerformance = performance.getEntriesByType('measure')
-  console.debug(
-    'Found ' + results.length + ' results with approach="fuzzy" in ' + searchPerformance[0].duration + 'ms',
-    searchPerformance,
-  )
-  performance.clearMeasures()
 
   return results
 }

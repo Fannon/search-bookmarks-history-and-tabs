@@ -93,16 +93,16 @@ export async function search(event) {
     } else if (searchMode === 'folders') {
       ext.model.result = searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
     } else if (ext.opts.searchStrategy === 'fuzzy') {
-      ext.model.result = await searchWithFuseJs(searchTerm, searchMode)
+      ext.model.result = await searchWithAlgorithm('fuzzy', searchTerm, searchMode)
     } else if (ext.opts.searchStrategy === 'precise') {
-      ext.model.result = await searchWithSimpleSearch(searchTerm, searchMode)
+      ext.model.result = await searchWithAlgorithm('precise', searchTerm, searchMode)
     } else if (ext.opts.searchStrategy === 'hybrid') {
       // in this search mode, both precise and hybrid search is executed
       // and the search results are merged, with precise results given precedence.
       ext.model.result = []
       const preciseResultIndexes = {}
-      const preciseResults = await searchWithSimpleSearch(searchTerm, searchMode)
-      const fuzzyResults = await searchWithFuseJs(searchTerm, searchMode)
+      const preciseResults = await searchWithAlgorithm('precise', searchTerm, searchMode)
+      const fuzzyResults = await searchWithAlgorithm('fuzzy', searchTerm, searchMode)
       for (const preciseResult of preciseResults) {
         preciseResult.searchApproach = 'precise'
         ext.model.result.push(preciseResult)
@@ -148,6 +148,49 @@ export async function search(event) {
   ext.dom.resultCounter.innerText = `(${ext.model.result.length})`
 
   renderSearchResults(ext.model.result)
+}
+
+/**
+ * Search with a with a specific approach and combine the results.
+ *
+ * @searchApproach 'precise' | 'fuzzy'
+ */
+export function searchWithAlgorithm(searchApproach, searchTerm, searchMode = 'all') {
+  let results = []
+  // If the search term is below minMatchCharLength, no point in starting search
+  if (searchTerm.length < ext.opts.searchMinMatchCharLength) {
+    return results
+  }
+
+  performance.mark('search-start')
+  console.debug(
+    `🔍 Searching with approach="${searchApproach}" and mode="${searchMode}" for searchTerm="${searchTerm}"`,
+  )
+
+  if (searchApproach === 'precise') {
+    results = searchWithSimpleSearch(searchMode, searchTerm)
+  } else if (searchApproach === 'fuzzy') {
+    results = searchWithFuseJs(searchMode, searchTerm)
+  } else {
+    throw new Error('Unknown search approach: ' + searchApproach)
+  }
+
+  performance.mark('search-end')
+  performance.measure('search: ' + searchTerm, 'search-start', 'search-end')
+  const searchPerformance = performance.getEntriesByType('measure')
+  console.debug(
+    'Found ' +
+      results.length +
+      ' results with approach="' +
+      searchApproach +
+      '" in ' +
+      searchPerformance[0].duration +
+      'ms',
+    searchPerformance,
+  )
+  performance.clearMeasures()
+
+  return results
 }
 
 /**

@@ -1,24 +1,9 @@
 //////////////////////////////////////////
-// SIMPLE SEARCH SUPPORT                   //
+// SIMPLE SEARCH SUPPORT                //
 //////////////////////////////////////////
 
-/**
- * Search with a simple self-implemented search, without creating indexes in the first place.
- */
-export function searchWithSimpleSearch(searchTerm, searchMode) {
+export function searchWithSimpleSearch(searchMode, searchTerm) {
   let results = []
-
-  // If the search term is below minMatchCharLength, no point in starting search
-  if (searchTerm.length < ext.opts.searchMinMatchCharLength) {
-    return results
-  }
-
-  performance.mark('search-start')
-
-  searchMode = searchMode || 'all'
-
-  console.debug(`🔍 Searching with approach="precise" and mode="${searchMode}" for searchTerm="${searchTerm}"`)
-
   if (searchMode === 'history') {
     results = simpleSearchWithScoring(searchTerm, ext.model.history)
   } else if (searchMode === 'bookmarks') {
@@ -38,16 +23,6 @@ export function searchWithSimpleSearch(searchTerm, searchMode) {
       results.push(...simpleSearchWithScoring(searchTerm, ext.model.history))
     }
   }
-
-  performance.mark('search-end')
-  performance.measure('search-simple: ' + searchTerm, 'search-start', 'search-end')
-  const searchPerformance = performance.getEntriesByType('measure')
-  console.debug(
-    'Found ' + results.length + ' results with approach="precise" in ' + searchPerformance[0].duration + 'ms',
-    searchPerformance,
-  )
-  performance.clearMeasures()
-
   return results
 }
 
@@ -55,9 +30,9 @@ export function searchWithSimpleSearch(searchTerm, searchMode) {
  * Very simple search algorithm :)
  * This does an `includes` search with an AND condition between the terms
  *
- * TODO: Right now there is no real scoring
+ * TODO: Right now there is no real scoring, so everything has base score of 1
  */
-function simpleSearchWithScoring(searchTerm, data) {
+export function simpleSearchWithScoring(searchTerm, data) {
   /** Search results */
   const results = []
 
