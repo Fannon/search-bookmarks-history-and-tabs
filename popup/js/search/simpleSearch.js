@@ -2,7 +2,7 @@
 // SIMPLE SEARCH SUPPORT                //
 //////////////////////////////////////////
 
-export function searchWithSimpleSearch(searchMode, searchTerm) {
+export function simpleSearch(searchMode, searchTerm) {
   let results = []
   if (searchMode === 'history') {
     results = simpleSearchWithScoring(searchTerm, ext.model.history)

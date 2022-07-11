@@ -35,8 +35,8 @@ node node_modules/terser/bin/terser popup/js/search/common.js \
   -c -m --module --ecma 2015 -o dist/chrome/popup/js/search/common.js
 node node_modules/terser/bin/terser popup/js/search/defaultEntries.js \
   -c -m --module --ecma 2015 -o dist/chrome/popup/js/search/defaultEntries.js
-node node_modules/terser/bin/terser popup/js/search/fuseSearch.js \
-  -c -m --module --ecma 2015 -o dist/chrome/popup/js/search/fuseSearch.js
+node node_modules/terser/bin/terser popup/js/search/fuzzySearch.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/search/fuzzySearch.js
 node node_modules/terser/bin/terser popup/js/search/searchEngines.js \
   -c -m --module --ecma 2015 -o dist/chrome/popup/js/search/searchEngines.js
 node node_modules/terser/bin/terser popup/js/search/simpleSearch.js \

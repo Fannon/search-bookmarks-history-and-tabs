@@ -71,7 +71,7 @@ function createFuseJsIndex(type, searchData) {
  *
  * @see https://fusejs.io/
  */
-export async function searchWithFuseJs(searchTerm, searchMode) {
+export async function fuzzySearch(searchTerm, searchMode) {
   let results = []
 
   if (searchMode === 'history' && ext.index.fuzzy.history) {

@@ -4,9 +4,9 @@
 
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultEntries.js'
-import { createFuzzyIndexes, searchWithFuseJs } from './fuseSearch.js'
+import { createFuzzyIndexes, fuzzySearch } from './fuzzySearch.js'
 import { addSearchEngines } from './searchEngines.js'
-import { searchWithSimpleSearch } from './simpleSearch.js'
+import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
 
 /**
@@ -155,7 +155,7 @@ export async function search(event) {
  *
  * @searchApproach 'precise' | 'fuzzy'
  */
-export function searchWithAlgorithm(searchApproach, searchTerm, searchMode = 'all') {
+export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode = 'all') {
   let results = []
   // If the search term is below minMatchCharLength, no point in starting search
   if (searchTerm.length < ext.opts.searchMinMatchCharLength) {
@@ -168,9 +168,9 @@ export function searchWithAlgorithm(searchApproach, searchTerm, searchMode = 'al
   )
 
   if (searchApproach === 'precise') {
-    results = searchWithSimpleSearch(searchMode, searchTerm)
+    results = simpleSearch(searchMode, searchTerm)
   } else if (searchApproach === 'fuzzy') {
-    results = searchWithFuseJs(searchMode, searchTerm)
+    results = await fuzzySearch(searchMode, searchTerm)
   } else {
     throw new Error('Unknown search approach: ' + searchApproach)
   }
