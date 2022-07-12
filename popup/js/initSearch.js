@@ -1,7 +1,7 @@
 import { extensionNamespace as ext } from './model/namespace.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
-import { createSearchIndexes, search } from './search/common.js'
+import { search } from './search/common.js'
 import { editBookmark, updateBookmark } from './view/editBookmarkView.js'
 import { loadFoldersOverview } from './view/foldersView.js'
 import { navigationKeyListener, toggleSearchApproach, updateSearchApproachToggle } from './view/searchView.js'
@@ -49,12 +49,7 @@ export async function initExtension() {
   ext.model.history = history
 
   performance.mark('init-data-load')
-
-  createSearchIndexes()
-
   ext.initialized = true
-
-  performance.mark('init-search-index')
 
   // Register Events
   document.addEventListener('keydown', navigationKeyListener)
@@ -71,8 +66,8 @@ export async function initExtension() {
   performance.measure('init-end-to-end', 'init-start', 'init-end')
   performance.measure('init-dom', 'init-start', 'init-dom')
   performance.measure('init-data-load', 'init-dom', 'init-data-load')
-  performance.measure('init-search-index', 'init-data-load', 'init-search-index')
-  performance.measure('init-router', 'init-search-index', 'init-router')
+  // performance.measure('init-search-index', 'init-data-load', 'init-search-index')
+  performance.measure('init-router', 'init-data-load', 'init-router')
   const initPerformance = performance.getEntriesByType('measure')
   const totalInitPerformance = performance.getEntriesByName('init-end-to-end')
   console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)

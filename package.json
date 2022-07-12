@@ -7,6 +7,7 @@
     "@yaireo/tagify": "^4.12.0",
     "bulma": "^0.9.4",
     "fuse.js": "^6.6.2",
+    "fuzzysort": "^2.0.1",
     "js-yaml": "^4.1.0",
     "mark.js": "^8.11.1"
   },

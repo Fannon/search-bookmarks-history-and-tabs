@@ -3,7 +3,8 @@ mkdir popup/lib
 
 # Create minified vendor min.js where we bundle the search popup dependencies
 touch popup/lib/vendor.min.js
-cat node_modules/fuse.js/dist/fuse.basic.min.js >> popup/lib/vendor.min.js
+# cat node_modules/fuse.js/dist/fuse.basic.min.js >> popup/lib/vendor.min.js
+cat node_modules/fuzzysort/fuzzysort.min.js >> popup/lib/vendor.min.js
 echo >> popup/lib/vendor.min.js
 cat node_modules/mark.js/dist/mark.es6.min.js >> popup/lib/vendor.min.js
 

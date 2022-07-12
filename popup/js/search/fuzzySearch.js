@@ -1,146 +1,81 @@
 //////////////////////////////////////////
-// FUSE.JS SUPPORT                      //
+// FUZZY SEARCH SUPPORT                 //
 //////////////////////////////////////////
 
 // @see https://fusejs.io/
-
-/**
- * Creates fuzzy search indexes with fuse.js
- */
-export function createFuzzyIndexes() {
-  if (ext.opts.enableTabs && !ext.index.fuzzy.tabs) {
-    ext.index.fuzzy.tabs = createFuseJsIndex('tabs', ext.model.tabs)
-  }
-  if (ext.opts.enableBookmarks && !ext.index.fuzzy.bookmarks) {
-    ext.index.fuzzy.bookmarks = createFuseJsIndex('bookmarks', ext.model.bookmarks)
-  }
-  if (ext.opts.enableHistory && !ext.index.fuzzy.history) {
-    ext.index.fuzzy.history = createFuseJsIndex('history', ext.model.history)
-  }
-}
-
-/**
- * Initialize search with Fuse.js
- */
-function createFuseJsIndex(type, searchData) {
-  performance.mark('index-start')
-  const options = {
-    includeScore: true,
-    includeMatches: true,
-    ignoreLocation: true,
-    findAllMatches: true,
-    shouldSort: false,
-    minMatchCharLength: ext.opts.searchMinMatchCharLength,
-    threshold: ext.opts.searchFuzzyness,
-    keys: [
-      {
-        name: 'title',
-        weight: ext.opts.scoreTitleWeight || 0.1,
-      },
-      {
-        name: 'url',
-        weight: ext.opts.scoreUrlWeight || 0.1,
-      },
-    ],
-  }
-
-  if (type === 'bookmarks') {
-    if (ext.opts.scoreTagWeight) {
-      options.keys.push({
-        name: 'tags',
-        weight: ext.opts.scoreTagWeight,
-      })
-    }
-    if (ext.opts.scoreFolderWeight) {
-      options.keys.push({
-        name: 'folder',
-        weight: ext.opts.scoreFolderWeight,
-      })
-    }
-  }
-
-  const index = new window.Fuse(searchData, options)
-
-  performance.mark('index-end')
-  performance.measure('index-fusejs-' + type, 'index-start', 'index-end')
-  return index
-}
 
 /**
  * Uses Fuse.js to do a fuzzy search
  *
  * @see https://fusejs.io/
  */
-export async function fuzzySearch(searchTerm, searchMode) {
-  let results = []
-
-  if (searchMode === 'history' && ext.index.fuzzy.history) {
-    results = ext.index.fuzzy.history.search(searchTerm)
-  } else if (searchMode === 'bookmarks' && ext.index.fuzzy.bookmarks) {
-    results = ext.index.fuzzy.bookmarks.search(searchTerm)
-  } else if (searchMode === 'tabs' && ext.index.fuzzy.tabs) {
-    results = ext.index.fuzzy.tabs.search(searchTerm)
-  } else if (searchMode === 'search' && ext.index.fuzzy.tabs) {
-    // nothing, because search will be added later
+export async function fuzzySearch(searchMode, searchTerm) {
+  if (searchMode === 'history') {
+    return fuzzySearchWithScoring(searchTerm, ext.model.history)
+  } else if (searchMode === 'bookmarks') {
+    return fuzzySearchWithScoring(searchTerm, ext.model.bookmarks)
+  } else if (searchMode === 'tabs') {
+    return fuzzySearchWithScoring(searchTerm, ext.model.tabs)
+  } else if (searchMode === 'search') {
+    return []
   } else {
-    if (ext.index.fuzzy.bookmarks) {
-      results.push(...ext.index.fuzzy.bookmarks.search(searchTerm))
-    }
-    if (ext.index.fuzzy.tabs) {
-      results.push(...ext.index.fuzzy.tabs.search(searchTerm))
-    }
-    if (ext.index.fuzzy.history) {
-      results.push(...ext.index.fuzzy.history.search(searchTerm))
-    }
+    return [
+      ...fuzzySearchWithScoring(searchTerm, ext.model.bookmarks),
+      ...fuzzySearchWithScoring(searchTerm, ext.model.tabs),
+      ...fuzzySearchWithScoring(searchTerm, ext.model.history),
+    ]
   }
+}
 
-  // Convert search results into result format view model
-  results = results.map((el) => {
-    const highlighted = ext.opts.displaySearchMatchHighlight ? highlightResultItem(el) : {}
-    return {
-      ...el.item,
-      searchScore: 1 - el.score,
-      titleHighlighted: highlighted.title,
-      tagsHighlighted: highlighted.tags,
-      urlHighlighted: highlighted.url,
-      folderHighlighted: highlighted.folder,
-    }
+/**
+ * Fuzzy search algorithm
+ * Uses https://www.npmjs.com/package/fuzzysort
+ */
+function fuzzySearchWithScoring(searchTerm, data) {
+  /** Search results */
+  const results = []
+
+  // Score with fuzzysort is difficult to handle.
+  // We assume that the worst score we allow is -500.000
+  // and normalize score between this and 0
+  const scoreNormalizationFactor = -500000
+
+  const searchResults = fuzzysort.go(searchTerm, data, {
+    key: 'searchString',
+    limit: ext.opts.searchMaxResults,
+    // subtracting 1, otherwise the library will get confused by -0
+    threshold: ext.opts.searchFuzzyness * scoreNormalizationFactor - 1,
   })
+
+  for (const result of searchResults) {
+    // Calculate Score
+    result.obj.score = normalize(result.score, 0, scoreNormalizationFactor)
+
+    // Apply highlighting
+    const highlight = fuzzysort.highlight(result, '<mark>', '</mark>')
+    const highlightArray = highlight.split(' ° ')
+    if (highlightArray[0].includes('<mark>')) {
+      result.obj.titleHighlighted = highlightArray[0]
+    }
+    if (highlightArray[1].includes('<mark>')) {
+      result.obj.urlHighlighted = highlightArray[1]
+    }
+    if (highlightArray[2] && highlightArray[2].includes('<mark>')) {
+      result.obj.tagsHighlighted = highlightArray[2]
+    }
+    if (highlightArray[3] && highlightArray[3].includes('<mark>')) {
+      result.obj.folderHighlighted = highlightArray[3]
+    }
+
+    results.push(result.obj)
+  }
 
   return results
 }
 
 /**
- * Inspired from https://github.com/brunocechet/Fuse.js-with-highlight/blob/master/index.js
+ * Normalizes a number value according to max and min range
  */
-function highlightResultItem(resultItem) {
-  const highlightedResultItem = {}
-  for (const matchItem of resultItem.matches) {
-    const text = resultItem.item[matchItem.key]
-    const result = []
-    const matches = [].concat(matchItem.indices)
-    let pair = matches.shift()
-
-    for (let i = 0; i < text.length; i++) {
-      const char = text.charAt(i)
-      if (pair && i == pair[0]) {
-        result.push('<mark>')
-      }
-      result.push(char)
-      if (pair && i == pair[1]) {
-        result.push('</mark>')
-        pair = matches.shift()
-      }
-    }
-    highlightedResultItem[matchItem.key] = result.join('')
-
-    // TODO: Didn't try recursion if it works
-    if (resultItem.children && resultItem.children.length > 0) {
-      resultItem.children.forEach((child) => {
-        highlightedResultItem[matchItem.key] = highlightResultItem(child)
-      })
-    }
-  }
-
-  return highlightedResultItem
+function normalize(val, max, min) {
+  return (val - min) / (max - min)
 }

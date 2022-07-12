@@ -41,7 +41,7 @@ export const defaultOptions = {
    * This applies only to search approach 'fuzzy'.
    * For precise this is always 0 (no fuzzyness)
    */
-  searchFuzzyness: 0.4,
+  searchFuzzyness: 0.6,
   /**
    * How search matches are considered
    * 'startsWith' is only considering a match if the search term starts with the term

@@ -4,24 +4,10 @@
 
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultEntries.js'
-import { createFuzzyIndexes, fuzzySearch } from './fuzzySearch.js'
+import { fuzzySearch } from './fuzzySearch.js'
 import { addSearchEngines } from './searchEngines.js'
 import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
-
-/**
- * Creates the search indexes.
- * Depending on search approach this is either fuzzy or precise
- */
-export function createSearchIndexes() {
-  if (ext.opts.searchStrategy === 'precise') {
-    // No index needs to be created with simple 'precise' search
-  } else if (ext.opts.searchStrategy === 'fuzzy' || ext.opts.searchStrategy === 'hybrid') {
-    createFuzzyIndexes()
-  } else {
-    throw new Error(`The option "search.approach" has an unsupported value: ${ext.opts.searchStrategy}`)
-  }
-}
 
 /**
  * This is the main search entry point.

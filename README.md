@@ -169,7 +169,7 @@ The built extensions can be found
 
 This extension makes use of the following helpful open-source projects (thanks!):
 
-- https://fusejs.io/ for the fuzzy search algorithm
+- https://github.com/farzher/fuzzysort for the fuzzy search algorithm
 - https://github.com/yairEO/tagify for the tag autocomplete widget
 - https://markjs.io/ for highlighting search matches
 - https://www.npmjs.com/package/js-yaml for the user options parsing
