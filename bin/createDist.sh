@@ -16,6 +16,46 @@ cp images/logo-128.png dist/chrome/images/logo-128.png
 
 cp -r popup/ dist/chrome/popup/
 
+# Minify js
+node node_modules/terser/bin/terser popup/js/initOptions.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/initOptions.js
+node node_modules/terser/bin/terser popup/js/initSearch.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/initSearch.js
+node node_modules/terser/bin/terser popup/js/model/namespace.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/model/namespace.js
+node node_modules/terser/bin/terser popup/js/model/options.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/model/options.js
+node node_modules/terser/bin/terser popup/js/model/searchData.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/model/searchData.js
+node node_modules/terser/bin/terser popup/js/helper/browserApi.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/helper/browserApi.js
+node node_modules/terser/bin/terser popup/js/helper/utils.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/helper/utils.js
+node node_modules/terser/bin/terser popup/js/search/common.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/search/common.js
+node node_modules/terser/bin/terser popup/js/search/defaultEntries.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/search/defaultEntries.js
+node node_modules/terser/bin/terser popup/js/search/fuzzySearch.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/search/fuzzySearch.js
+node node_modules/terser/bin/terser popup/js/search/searchEngines.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/search/searchEngines.js
+node node_modules/terser/bin/terser popup/js/search/simpleSearch.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/search/simpleSearch.js
+node node_modules/terser/bin/terser popup/js/search/taxonomySearch.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/search/taxonomySearch.js
+node node_modules/terser/bin/terser popup/js/view/editBookmarkView.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/view/editBookmarkView.js
+node node_modules/terser/bin/terser popup/js/view/editOptionsView.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/view/editOptionsView.js
+node node_modules/terser/bin/terser popup/js/view/editOptionsView.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/view/editOptionsView.js
+node node_modules/terser/bin/terser popup/js/view/foldersView.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/view/foldersView.js
+node node_modules/terser/bin/terser popup/js/view/searchView.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/view/searchView.js
+node node_modules/terser/bin/terser popup/js/view/tagsView.js \
+  -c -m --module --ecma 2015 -o dist/chrome/popup/js/view/tagsView.js
+
 # Remove mock data
 rm -rf dist/chrome/popup/mockData
 

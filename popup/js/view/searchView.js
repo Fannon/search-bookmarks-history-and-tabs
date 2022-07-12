@@ -11,7 +11,7 @@ import { getUserOptions, setUserOptions } from '../model/options.js'
 export function renderSearchResults(result) {
   result = result || ext.model.result
 
-  performance.mark('render-start')
+  // performance.mark('render-start')
 
   ext.model.mouseHoverEnabled = false
   const resultListItems = []
@@ -77,7 +77,7 @@ export function renderSearchResults(result) {
       }
       titleDiv.appendChild(tags)
     }
-    if (resultEntry.folder) {
+    if (ext.opts.displayFolderName && resultEntry.folder) {
       const folder = document.createElement('span')
       folder.title = 'Bookmark Folder'
       folder.classList.add('badge', 'folder')
@@ -163,11 +163,11 @@ export function renderSearchResults(result) {
   // mark first result item as selected
   selectListItem(0)
 
-  performance.mark('render-end')
-  performance.measure('Render DOM', 'render-start', 'render-end')
-  const renderPerformance = performance.getEntriesByType('measure')
-  console.debug('Render Performance: ' + renderPerformance[0].duration + 'ms', renderPerformance)
-  performance.clearMeasures()
+  // performance.mark('render-end')
+  // performance.measure('Render DOM', 'render-start', 'render-end')
+  // const renderPerformance = performance.getEntriesByType('measure')
+  // console.debug('Render Performance: ' + renderPerformance[0].duration + 'ms', renderPerformance)
+  // performance.clearMeasures()
 }
 
 //////////////////////////////////////////

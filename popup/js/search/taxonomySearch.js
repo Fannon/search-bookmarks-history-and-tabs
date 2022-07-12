@@ -5,99 +5,40 @@
 // This helps finding bookmarks that include tags or are part of a folder
 
 /**
- * Find bookmarks with given tag
- * Prefers full tag matches, but will also return "starts with" matches
- * Supports AND search, if multiple tags are chosen, e.g. "#github #pr"
+ * Simple, precise search for bookmark tags and folder names
+ * Executes AND search with the terms in searchTerm, separated by spaces
+ *
+ * @param {string} searchTerm
+ * @param {'tags' | 'folder'} taxonomyType
  */
-export function searchTags(searchTerm) {
-  const resultDict = {}
-  const intersectionCalc = []
-  const tags = getUniqueTags()
+export function searchTaxonomy(searchTerm, taxonomyType, data) {
+  /** Search results */
+  const results = []
+  /** Marker for taxonomy search mode */
+  const taxonomyMarker = taxonomyType === 'tags' ? '#' : '~'
 
-  const searchTags = searchTerm.split('#').map((el) => el.trim())
+  let searchTermArray = searchTerm.split(taxonomyMarker)
 
-  for (const searchTag of searchTags) {
-    if (!searchTag) {
-      continue
-    }
-    const foundResults = []
-    for (const tagName in tags) {
-      const tag = tags[tagName]
-      if (tagName.toLowerCase().startsWith(searchTag)) {
-        for (const elIndex of tag) {
-          const el = ext.model.bookmarks[elIndex]
-          const result = {
-            searchScore: tagName === searchTag ? 1 : 0.8,
-            ...el,
-          }
-
-          if (!resultDict[el.index]) {
-            resultDict[el.index] = result
-          }
-          // If we already have a match, the one with the higher score wins
-          if (resultDict[el.index].searchScore < result.searchScore) {
-            resultDict[el.index] = result
-          }
-          foundResults.push(el.index)
+  if (searchTermArray.length) {
+    for (const entry of data) {
+      const searchString = `${entry[taxonomyType] || ''}`.toLowerCase()
+      let searchTermMatches = 0
+      for (const term of searchTermArray) {
+        if (searchString.includes(taxonomyMarker + term)) {
+          searchTermMatches++
         }
       }
-    }
-    intersectionCalc.push(foundResults)
-  }
-
-  const resultIntersection = intersectionCalc.reduce((a, b) => a.filter((c) => b.includes(c)))
-
-  return resultIntersection.map((resultIndex) => {
-    return resultDict[resultIndex]
-  })
-}
-
-/**
- * Find bookmarks that are part of given folder name
- * Prefers full folder name matches, but will also return "starts with" matches
- * Supports AND search, if multiple tags are chosen, e.g. "~Sites ~Blogs"
- */
-export function searchFolders(searchTerm) {
-  const resultDict = {}
-  const intersectionCalc = []
-  const folders = getUniqueFolders()
-
-  const searchFolders = searchTerm.split('~').map((el) => el.trim())
-
-  for (const searchFolder of searchFolders) {
-    if (!searchFolder) {
-      continue
-    }
-    const foundResults = []
-    for (const folderName in folders) {
-      const folder = folders[folderName]
-      if (folderName.toLowerCase().startsWith(searchFolder)) {
-        for (const elIndex of folder) {
-          const el = ext.model.bookmarks[elIndex]
-          const result = {
-            searchScore: folderName === searchFolder ? 1 : 0.8,
-            ...el,
-          }
-          if (!resultDict[el.index]) {
-            resultDict[el.index] = result
-          }
-          if (resultDict[el.index].searchScore < result.searchScore) {
-            resultDict[el.index] = result
-          }
-          foundResults.push(el.index)
-        }
+      if (searchTermMatches === searchTermArray.length) {
+        results.push({
+          ...entry,
+          searchScore: 1,
+          searchApproach: 'taxonomy',
+        })
       }
     }
-    intersectionCalc.push(foundResults)
   }
 
-  const resultIntersection = intersectionCalc.reduce((a, b) => a.filter((c) => b.includes(c)))
-
-  console.info(intersectionCalc, resultIntersection)
-
-  return resultIntersection.map((resultIndex) => {
-    return resultDict[resultIndex]
-  })
+  return results
 }
 
 /**

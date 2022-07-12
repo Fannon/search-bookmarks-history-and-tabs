@@ -169,13 +169,12 @@ The built extensions can be found
 
 This extension makes use of the following helpful open-source projects (thanks!):
 
-- https://fusejs.io/ for the fuzzy search algorithm
-- https://github.com/nextapps-de/flexsearch for the exact search algorithm
+- https://github.com/farzher/fuzzysort for the fuzzy search algorithm
 - https://github.com/yairEO/tagify for the tag autocomplete widget
-- https://markjs.io/ for highlighting search matches from flexsearch
+- https://markjs.io/ for highlighting search matches
 - https://www.npmjs.com/package/js-yaml for the user options parsing
 - https://bulma.io/ for some minimal CSS base styling
-- https://github.com/tabler/tabler-icons for the edit icon
+- https://github.com/tabler/tabler-icons for icons
 
 ## Feedback and Ideas
 

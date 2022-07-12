@@ -4,27 +4,10 @@
 
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultEntries.js'
-import { createPreciseIndexes, searchWithFlexSearch } from './flexSearch.js'
-import { createFuzzyIndexes, searchWithFuseJs } from './fuseSearch.js'
+import { fuzzySearch } from './fuzzySearch.js'
 import { addSearchEngines } from './searchEngines.js'
-import { searchFolders, searchTags } from './taxonomySearch.js'
-
-/**
- * Creates the search indexes.
- * Depending on search approach this is either fuzzy or precise
- */
-export function createSearchIndexes() {
-  if (ext.opts.searchStrategy === 'fuzzy') {
-    createFuzzyIndexes()
-  } else if (ext.opts.searchStrategy === 'precise') {
-    createPreciseIndexes()
-  } else if (ext.opts.searchStrategy === 'hybrid') {
-    createFuzzyIndexes()
-    createPreciseIndexes()
-  } else {
-    throw new Error(`The option "search.approach" has an unsupported value: ${ext.opts.searchStrategy}`)
-  }
-}
+import { simpleSearch } from './simpleSearch.js'
+import { searchTaxonomy } from './taxonomySearch.js'
 
 /**
  * This is the main search entry point.
@@ -92,20 +75,20 @@ export async function search(event) {
 
   if (searchTerm) {
     if (searchMode === 'tags') {
-      ext.model.result = searchTags(searchTerm)
+      ext.model.result = searchTaxonomy(searchTerm, 'tags', ext.model.bookmarks)
     } else if (searchMode === 'folders') {
-      ext.model.result = searchFolders(searchTerm)
+      ext.model.result = searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
     } else if (ext.opts.searchStrategy === 'fuzzy') {
-      ext.model.result = await searchWithFuseJs(searchTerm, searchMode)
+      ext.model.result = await searchWithAlgorithm('fuzzy', searchTerm, searchMode)
     } else if (ext.opts.searchStrategy === 'precise') {
-      ext.model.result = searchWithFlexSearch(searchTerm, searchMode)
+      ext.model.result = await searchWithAlgorithm('precise', searchTerm, searchMode)
     } else if (ext.opts.searchStrategy === 'hybrid') {
       // in this search mode, both precise and hybrid search is executed
       // and the search results are merged, with precise results given precedence.
       ext.model.result = []
       const preciseResultIndexes = {}
-      const preciseResults = await searchWithFlexSearch(searchTerm, searchMode)
-      const fuzzyResults = await searchWithFuseJs(searchTerm, searchMode)
+      const preciseResults = await searchWithAlgorithm('precise', searchTerm, searchMode)
+      const fuzzyResults = await searchWithAlgorithm('fuzzy', searchTerm, searchMode)
       for (const preciseResult of preciseResults) {
         preciseResult.searchApproach = 'precise'
         ext.model.result.push(preciseResult)
@@ -151,6 +134,49 @@ export async function search(event) {
   ext.dom.resultCounter.innerText = `(${ext.model.result.length})`
 
   renderSearchResults(ext.model.result)
+}
+
+/**
+ * Search with a with a specific approach and combine the results.
+ *
+ * @searchApproach 'precise' | 'fuzzy'
+ */
+export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode = 'all') {
+  let results = []
+  // If the search term is below minMatchCharLength, no point in starting search
+  if (searchTerm.length < ext.opts.searchMinMatchCharLength) {
+    return results
+  }
+
+  performance.mark('search-start')
+  console.debug(
+    `🔍 Searching with approach="${searchApproach}" and mode="${searchMode}" for searchTerm="${searchTerm}"`,
+  )
+
+  if (searchApproach === 'precise') {
+    results = simpleSearch(searchMode, searchTerm)
+  } else if (searchApproach === 'fuzzy') {
+    results = await fuzzySearch(searchMode, searchTerm)
+  } else {
+    throw new Error('Unknown search approach: ' + searchApproach)
+  }
+
+  performance.mark('search-end')
+  performance.measure('search: ' + searchTerm, 'search-start', 'search-end')
+  const searchPerformance = performance.getEntriesByType('measure')
+  console.debug(
+    'Found ' +
+      results.length +
+      ' results with approach="' +
+      searchApproach +
+      '" in ' +
+      searchPerformance[0].duration +
+      'ms',
+    searchPerformance,
+  )
+  performance.clearMeasures()
+
+  return results
 }
 
 /**

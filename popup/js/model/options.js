@@ -12,15 +12,17 @@ export const defaultOptions = {
   /**
    * Search approach to use. Choose between:
    *
-   * * 'precise': Search approach that search for more precise matches.
-   *              It may be slower to index / start up, but faster for searching.
+   * * 'precise': Simple search approach that will only find precise matches.
+   *              It provides best init performance and provides good search performance.
    *              The 'fuzzyness' option will be ignored
-   *              Uses the https://github.com/nextapps-de/flexsearch library
    *
-   * * 'fuzzy':   Search mode that implements fuzzy (approximate) search.
-   *              It is faster to index / start up, but may be slower when searching.
+   * * 'fuzzy':   Search approach that implements a fuzzy (approximate) search.
+   *              This search approach will find more results, even if there are no perfect matches.
+   *              It has a moderate impact on init performance, and is slower when searching.
    *              It supports all options.
    *              Uses the https://fusejs.io/ library
+   *
+   * * 'hybrid':  Hybrid that uses both 'precise' and 'fuzzy' algorithms combined
    */
   searchStrategy: 'precise', // 'precise' or 'fuzzy' or 'hybrid'
   /**
@@ -39,7 +41,7 @@ export const defaultOptions = {
    * This applies only to search approach 'fuzzy'.
    * For precise this is always 0 (no fuzzyness)
    */
-  searchFuzzyness: 0.4,
+  searchFuzzyness: 0.6,
   /**
    * How search matches are considered
    * 'startsWith' is only considering a match if the search term starts with the term

@@ -6,11 +6,9 @@ import { getBrowserTabs } from '../helper/browserApi.js'
  * Finds out if there are any bookmarks or history that match our current open URL.
  */
 export async function addDefaultEntries() {
-  console.debug(`Searching for default results`)
-
   let results = []
 
-  if (ext.model.searchMode === 'history') {
+  if (ext.model.searchMode === 'history' && ext.model.history) {
     // Display recent history by default
     console.log('Default history results')
     results = ext.model.history.map((el) => {
@@ -19,7 +17,7 @@ export async function addDefaultEntries() {
         ...el,
       }
     })
-  } else if (ext.model.searchMode === 'tabs') {
+  } else if (ext.model.searchMode === 'tabs' && ext.model.tabs) {
     // Display last opened tabs by default
     console.log('Default tabs results')
     results = ext.model.tabs
@@ -32,7 +30,7 @@ export async function addDefaultEntries() {
           ...el,
         }
       })
-  } else if (ext.model.searchMode === 'bookmarks') {
+  } else if (ext.model.searchMode === 'bookmarks' && ext.model.bookmarks) {
     // Display all bookmarks by default
     results = ext.model.bookmarks.map((el) => {
       return {

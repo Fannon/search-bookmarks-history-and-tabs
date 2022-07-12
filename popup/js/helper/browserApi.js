@@ -30,15 +30,17 @@ export async function getBrowserTabs(queryOptions) {
 
 export function convertBrowserTabs(chromeTabs) {
   return chromeTabs.map((entry) => {
+    const cleanUrl = cleanUpUrl(entry.url)
     return {
       type: 'tab',
       title: entry.title,
-      url: cleanUpUrl(entry.url),
+      url: cleanUrl,
       originalUrl: entry.url.replace(/\/$/, ''),
       originalId: entry.id,
       favIconUrl: entry.favIconUrl,
       active: entry.active,
       windowId: entry.windowId,
+      searchString: createSearchString(entry.title, cleanUrl),
     }
   })
 }
@@ -90,36 +92,34 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
         dateAdded: entry.dateAdded,
       }
 
-      if (ext.opts.displayTags) {
-        // Parse out tags from bookmark title (starting with #)
-        let tagsText = ''
-        let tagsArray = []
-        if (title) {
-          const tagSplit = title.split('#').map((el) => el.trim())
-          title = tagSplit.shift()
-          tagsArray = tagSplit
-          for (const tag of tagSplit) {
-            tagsText += '#' + tag.trim() + ' '
-          }
-          tagsText = tagsText.slice(0, -1)
+      // Parse out tags from bookmark title (starting with #)
+      let tagsText = ''
+      let tagsArray = []
+      if (title) {
+        const tagSplit = title.split('#').map((el) => el.trim())
+        title = tagSplit.shift()
+        tagsArray = tagSplit
+        for (const tag of tagSplit) {
+          tagsText += '#' + tag.trim() + ' '
         }
-
-        mappedEntry.title = title
-        mappedEntry.tags = tagsText
-        mappedEntry.tagsArray = tagsArray
+        tagsText = tagsText.slice(0, -1)
       }
 
-      if (ext.opts.displayFolderName) {
-        // Consider the folder names / structure of bookmarks
-        let folderText = ''
-        for (const folder of folderTrail) {
-          folderText += '~' + folder + ' '
-        }
-        folderText = folderText.slice(0, -1)
+      mappedEntry.title = title
+      mappedEntry.tags = tagsText
+      mappedEntry.tagsArray = tagsArray
 
-        mappedEntry.folder = folderText
-        mappedEntry.folderArray = folderTrail
+      // Consider the folder names / structure of bookmarks
+      let folderText = ''
+      for (const folder of folderTrail) {
+        folderText += '~' + folder + ' '
       }
+      folderText = folderText.slice(0, -1)
+
+      mappedEntry.folder = folderText
+      mappedEntry.folderArray = folderTrail
+
+      mappedEntry.searchString = createSearchString(title, mappedEntry.url, mappedEntry.tags, mappedEntry.folder)
 
       result.push(mappedEntry)
     }
@@ -184,15 +184,29 @@ export function convertBrowserHistory(history) {
 
   const now = Date.now()
   return history.map((el) => {
+    const cleanUrl = cleanUpUrl(el.url)
     return {
       type: 'history',
       title: el.title,
       originalUrl: el.url.replace(/\/$/, ''),
-      url: cleanUpUrl(el.url),
+      url: cleanUrl,
       visitCount: el.visitCount,
       lastVisit: ext.opts.displayLastVisit ? timeSince(new Date(el.lastVisitTime)) : undefined,
       lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
       originalId: el.id,
+      searchString: createSearchString(el.title, cleanUrl),
     }
   })
+}
+
+function createSearchString(title, url, tags, folder) {
+  const separator = ' ° '
+  let searchString = title + separator + url
+  if (tags) {
+    searchString += separator + tags
+  }
+  if (folder) {
+    searchString += separator + folder
+  }
+  return searchString
 }
