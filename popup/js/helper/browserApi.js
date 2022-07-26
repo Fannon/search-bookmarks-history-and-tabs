@@ -199,7 +199,7 @@ export function convertBrowserHistory(history) {
   })
 }
 
-function createSearchString(title, url, tags, folder) {
+export function createSearchString(title, url, tags, folder) {
   const separator = ' ° '
   let searchString = title + separator + url
   if (tags) {
