@@ -20,8 +20,7 @@
     "live-server": "^1.2.2",
     "prettier": "2.7.1",
     "prettier-eslint": "^15.0.1",
-    "sass": "^1.54.0",
-    "terser": "^5.14.2"
+    "sass": "^1.54.0"
   },
   "scripts": {
     "clean": "rm -rf ./dist",
