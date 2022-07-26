@@ -25,7 +25,7 @@
   },
   "scripts": {
     "clean": "rm -rf ./dist",
-    "build": "npm run clean && npm run css-build && npm run update-libs && npm run create-dist",
+    "build": "npm run clean && npm run css-build && npm run update-libs && npm run create-dist && npm run size",
     "update-libs": "sh bin/updateLibs.sh",
     "create-dist": "sh bin/createDist.sh",
     "test": "npm run e2e",
@@ -43,7 +43,8 @@
     "prettier": "prettier --write --ignore-unknown .",
     "prettier-check": "prettier --check --ignore-unknown .",
     "cypress-info": "cypress info",
-    "cypress": "cypress open --config-file=cypress.config.js"
+    "cypress": "cypress open --config-file=cypress.config.js",
+    "size": "du -hc ./dist/chrome/"
   },
   "repository": {
     "type": "git",
