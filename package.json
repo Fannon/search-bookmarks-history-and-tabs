@@ -21,7 +21,7 @@
     "prettier": "2.7.1",
     "prettier-eslint": "^15.0.1",
     "sass": "^1.53.0",
-    "terser": "^5.14.1"
+    "terser": "^5.14.2"
   },
   "scripts": {
     "clean": "rm -rf ./dist",
