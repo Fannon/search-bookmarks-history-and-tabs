@@ -2,7 +2,7 @@
 // BOOKMARK EDITING                     //
 //////////////////////////////////////////
 
-import { browserApi } from '../helper/browserApi.js'
+import { browserApi, createSearchString } from '../helper/browserApi.js'
 import { cleanUpUrl, loadScript } from '../helper/utils.js'
 import { initExtension } from '../initSearch.js'
 import { getUniqueTags } from '../search/taxonomySearch.js'
@@ -84,6 +84,7 @@ export function updateBookmark(bookmarkId) {
   bookmark.originalUrl = urlInput
   bookmark.url = cleanUpUrl(urlInput)
   bookmark.tags = tagsInput
+  bookmark.searchString = createSearchString(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
 
   console.debug(`Update bookmark with ID ${bookmarkId}: "${titleInput} ${tagsInput}"`)
 

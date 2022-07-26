@@ -4,7 +4,7 @@
   "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.",
   "main": "index.js",
   "dependencies": {
-    "@yaireo/tagify": "^4.12.0",
+    "@yaireo/tagify": "^4.14.1",
     "bulma": "^0.9.4",
     "fuse.js": "^6.6.2",
     "fuzzysort": "^2.0.1",
@@ -12,20 +12,19 @@
     "mark.js": "^8.11.1"
   },
   "devDependencies": {
-    "cypress": "^10.3.0",
-    "cypress-fail-on-console-error": "^3.0.0",
-    "eslint": "^8.19.0",
+    "cypress": "^10.3.1",
+    "cypress-fail-on-console-error": "^3.2.0",
+    "eslint": "^8.20.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-cypress": "^2.12.1",
     "live-server": "^1.2.2",
     "prettier": "2.7.1",
     "prettier-eslint": "^15.0.1",
-    "sass": "^1.53.0",
-    "terser": "^5.14.2"
+    "sass": "^1.54.0"
   },
   "scripts": {
     "clean": "rm -rf ./dist",
-    "build": "npm run clean && npm run css-build && npm run update-libs && npm run create-dist",
+    "build": "npm run clean && npm run css-build && npm run update-libs && npm run create-dist && npm run size",
     "update-libs": "sh bin/updateLibs.sh",
     "create-dist": "sh bin/createDist.sh",
     "test": "npm run e2e",
@@ -43,7 +42,8 @@
     "prettier": "prettier --write --ignore-unknown .",
     "prettier-check": "prettier --check --ignore-unknown .",
     "cypress-info": "cypress info",
-    "cypress": "cypress open --config-file=cypress.config.js"
+    "cypress": "cypress open --config-file=cypress.config.js",
+    "size": "du -hc ./dist/chrome/"
   },
   "repository": {
     "type": "git",

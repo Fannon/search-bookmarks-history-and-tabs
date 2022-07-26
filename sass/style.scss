@@ -53,7 +53,7 @@ body {
   float: right;
   height: 55px;
   width: 26px;
-  padding: 0 5px 0 0;
+  padding: 0 3px 0 0;
   writing-mode: vertical-rl;
   font-size: 12px;
   font-weight: 500;
@@ -152,6 +152,7 @@ code {
   padding-left: 8px;
   .button {
     height: 28px;
+    border-radius: 3px;
   }
   .reset-button,
   .delete-button {
