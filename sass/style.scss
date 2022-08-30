@@ -224,6 +224,14 @@ code {
     font-weight: 400;
     color: #333;
   }
+  .message-error {
+    color: rgb(204, 88, 88);
+    border-left: 6px solid rgb(204, 88, 88);
+  }
+  .message-warning {
+    color: rgb(220, 182, 68);
+    border-left: 6px solid rgb(220, 182, 68);
+  }
 }
 #links {
   height: 22px;
@@ -240,11 +248,6 @@ code {
 
   #result-counter {
     float: right;
-  }
-  #footer-error {
-    font-size: 10px;
-    color: rgb(204, 88, 88);
-    text-overflow: ellipsis;
   }
 }
 

@@ -1,3 +1,5 @@
+import { printError } from '../helper/utils.js'
+
 /**
  * The default options
  *
@@ -357,17 +359,21 @@ export async function setUserOptions(userOptions) {
  */
 export async function getUserOptions() {
   return new Promise((resolve, reject) => {
-    if (ext.browserApi.storage) {
-      ext.browserApi.storage.sync.get(['userOptions'], (result) => {
-        if (ext.browserApi.runtime.lastError) {
-          return reject(ext.browserApi.runtime.lastError)
-        }
-        return resolve(result.userOptions || emptyOptions)
-      })
-    } else {
-      console.warn('No storage API found. Falling back to local Web Storage')
-      const userOptions = window.localStorage.getItem('userOptions')
-      return resolve(userOptions ? JSON.parse(userOptions) : emptyOptions)
+    try {
+      if (ext.browserApi.storage && ext.browserApi.storage.sync && ext.browserApi.storage.sync.get) {
+        ext.browserApi.storage.sync.get(['userOptions'], (result) => {
+          if (ext.browserApi.runtime.lastError) {
+            return reject(ext.browserApi.runtime.lastError)
+          }
+          return resolve(result.userOptions || emptyOptions)
+        })
+      } else {
+        console.warn('No storage API found. Falling back to local Web Storage')
+        const userOptions = window.localStorage.getItem('userOptions')
+        return resolve(userOptions ? JSON.parse(userOptions) : emptyOptions)
+      }
+    } catch (err) {
+      return reject(err)
     }
   })
 }
@@ -377,10 +383,16 @@ export async function getUserOptions() {
  * and the overrides of the user options
  */
 export async function getEffectiveOptions() {
-  const userOptions = await getUserOptions()
-  return {
-    ...defaultOptions,
-    ...userOptions,
+  try {
+    const userOptions = await getUserOptions()
+    validateUserOptions(userOptions)
+    return {
+      ...defaultOptions,
+      ...userOptions,
+    }
+  } catch (err) {
+    printError(err, 'Could not get valid user options, falling back to defaults.')
+    return defaultOptions
   }
 }
 
@@ -388,6 +400,11 @@ export function validateUserOptions(userOptions) {
   if (userOptions) {
     if (typeof userOptions !== 'object') {
       throw new Error('User options must be a valid YAML / JSON object')
+    }
+    try {
+      JSON.stringify(userOptions)
+    } catch (err) {
+      throw new Error('User options cannot be parsed into JSON: ' + err.message)
     }
   }
 }
