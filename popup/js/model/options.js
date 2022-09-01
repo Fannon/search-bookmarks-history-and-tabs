@@ -333,8 +333,7 @@ export async function setUserOptions(userOptions) {
     try {
       validateUserOptions(userOptions)
     } catch (err) {
-      console.error(err)
-      document.getElementById('footer-error').innerText = err.message
+      printError(err, 'Could not save user options.')
       return reject(err)
     }
 

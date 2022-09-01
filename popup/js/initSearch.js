@@ -83,32 +83,35 @@ export async function initExtension() {
  * URL Hash Router
  */
 export async function hashRouter() {
-  const hash = window.location.hash
-  // console.debug('Changing Route: "' + hash + '"')
-  closeModals()
-  if (!hash || hash === '#') {
-    // Index route -> redirect to last known search or empty search
-    window.location.hash = '#search/'
-  } else if (hash.startsWith('#search/')) {
-    // Search specific term
-    const searchTerm = hash.replace('#search/', '')
-    if (searchTerm) {
-      ext.dom.searchInput.value = decodeURIComponent(searchTerm)
+  try {
+    const hash = window.location.hash
+    // console.debug('Changing Route: "' + hash + '"')
+    closeModals()
+    if (!hash || hash === '#') {
+      // Index route -> redirect to last known search or empty search
+      window.location.hash = '#search/'
+    } else if (hash.startsWith('#search/')) {
+      // Search specific term
+      const searchTerm = hash.replace('#search/', '')
+      if (searchTerm) {
+        ext.dom.searchInput.value = decodeURIComponent(searchTerm)
+      }
+      ext.dom.searchInput.focus()
+    } else if (hash.startsWith('#tags/')) {
+      loadTagsOverview()
+    } else if (hash.startsWith('#folders/')) {
+      loadFoldersOverview()
+    } else if (hash.startsWith('#edit-bookmark/')) {
+      // Edit bookmark route
+      const bookmarkId = hash.replace('#edit-bookmark/', '')
+      void editBookmark(bookmarkId)
+    } else if (hash.startsWith('#update-bookmark/')) {
+      // Update bookmark route
+      const bookmarkId = hash.replace('#update-bookmark/', '')
+      updateBookmark(bookmarkId)
     }
-    ext.dom.searchInput.focus()
-    search()
-  } else if (hash.startsWith('#tags/')) {
-    loadTagsOverview()
-  } else if (hash.startsWith('#folders/')) {
-    loadFoldersOverview()
-  } else if (hash.startsWith('#edit-bookmark/')) {
-    // Edit bookmark route
-    const bookmarkId = hash.replace('#edit-bookmark/', '')
-    void editBookmark(bookmarkId)
-  } else if (hash.startsWith('#update-bookmark/')) {
-    // Update bookmark route
-    const bookmarkId = hash.replace('#update-bookmark/', '')
-    updateBookmark(bookmarkId)
+  } catch (err) {
+    printError(err)
   }
 }
 
@@ -119,5 +122,5 @@ export function closeModals() {
   document.getElementById('edit-bookmark').style = 'display: none;'
   document.getElementById('tags-overview').style = 'display: none;'
   document.getElementById('folders-overview').style = 'display: none;'
-  document.getElementById('footer-error').innerText = ''
+  document.getElementById('error-list').style = 'display: none;'
 }

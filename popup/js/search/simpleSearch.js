@@ -48,6 +48,5 @@ function simpleSearchWithScoring(searchTerm, data) {
       }
     }
   }
-
   return results
 }

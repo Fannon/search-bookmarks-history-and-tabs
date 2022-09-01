@@ -58,18 +58,16 @@ export async function loadScript(url) {
 export function printError(err, text) {
   let html = ''
   if (text) {
-    html += `<li class="message message-error"><b>Error</b>: ${text}</span>`
+    html += `<li class="error"><b>Error</b>: ${text}</span>`
     console.error(text)
   }
   console.error(err)
-  html += `<li class="message message-error"><b>Error Message</b>: ${err.message}</span>`
+  html += `<li class="error"><b>Error Message</b>: ${err.message}</span>`
   if (err.stack) {
-    html += `<li class="message message-error"><b>Error Stack</b>: ${err.stack}</li>`
+    html += `<li class="error"><b>Error Stack</b>: ${err.stack}</li>`
   }
-  document.getElementById('result-list').innerHTML = html
-}
 
-export function printWarning(text) {
-  console.warn(text)
-  document.getElementById('result-list').innerHTML = `<li class="message message-warning"><b>Warning</b>: ${text}</li>`
+  const errorList = document.getElementById('error-list')
+  errorList.innerHTML = html + errorList.innerHTML
+  errorList.style = 'display: block;'
 }

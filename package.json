@@ -12,7 +12,7 @@
     "mark.js": "^8.11.1"
   },
   "devDependencies": {
-    "cypress": "^10.6.0",
+    "cypress": "^10.7.0",
     "cypress-fail-on-console-error": "^3.2.1",
     "eslint": "^8.23.0",
     "eslint-config-prettier": "^8.5.0",
@@ -20,7 +20,7 @@
     "live-server": "^1.2.2",
     "prettier": "2.7.1",
     "prettier-eslint": "^15.0.1",
-    "sass": "^1.54.6"
+    "sass": "^1.54.8"
   },
   "scripts": {
     "clean": "rm -rf ./dist",
