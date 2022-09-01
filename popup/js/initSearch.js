@@ -74,7 +74,9 @@ export async function initExtension() {
   console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)
   performance.clearMeasures()
 
-  document.getElementById('results-loading').remove()
+  if (document.getElementById('results-loading')) {
+    document.getElementById('results-loading').remove()
+  }
 }
 
 //////////////////////////////////////////
