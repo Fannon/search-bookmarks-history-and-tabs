@@ -73,6 +73,8 @@ export async function initExtension() {
   const totalInitPerformance = performance.getEntriesByName('init-end-to-end')
   console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)
   performance.clearMeasures()
+
+  document.getElementById('results-loading').remove()
 }
 
 //////////////////////////////////////////
@@ -97,6 +99,7 @@ export async function hashRouter() {
         ext.dom.searchInput.value = decodeURIComponent(searchTerm)
       }
       ext.dom.searchInput.focus()
+      search()
     } else if (hash.startsWith('#tags/')) {
       loadTagsOverview()
     } else if (hash.startsWith('#folders/')) {

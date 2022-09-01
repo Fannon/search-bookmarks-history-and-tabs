@@ -3,6 +3,7 @@
 //////////////////////////////////////////
 
 import { printError } from '../helper/utils.js'
+import { closeModals } from '../initSearch.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultEntries.js'
 import { fuzzySearch } from './fuzzySearch.js'
@@ -31,6 +32,8 @@ export async function search(event) {
       console.warn('Extension not initialized (yet). Skipping search')
       return
     }
+
+    closeModals()
 
     performance.mark('search-start')
 
@@ -105,6 +108,7 @@ export async function search(event) {
       } else {
         throw new Error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
       }
+
       // Add search engine result items
       if (searchMode === 'all' || searchMode === 'search') {
         ext.model.result.push(...addSearchEngines(searchTerm))
