@@ -25,5 +25,5 @@
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
 Cypress.Commands.add('checkNoErrors', () => {
-  cy.get('#footer-error').should('have.text', '')
+  cy.get('#error-list').should('be.empty')
 })
