@@ -2,6 +2,8 @@
 // SEARCH                               //
 //////////////////////////////////////////
 
+import { printError } from '../helper/utils.js'
+import { closeModals } from '../initSearch.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultEntries.js'
 import { fuzzySearch } from './fuzzySearch.js'
@@ -14,126 +16,133 @@ import { searchTaxonomy } from './taxonomySearch.js'
  * It will decide which approaches and indexes to use.
  */
 export async function search(event) {
-  if (event) {
-    // Don't execute search on navigation keys
-    if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter' || event.key === 'Escape') {
-      return
-    }
-    // Don't execute search on modifier keys
-    if (event.key === 'Control' || event.key === 'Alt' || event.key === 'Shift') {
-      return
-    }
-  }
-
-  if (!ext.initialized) {
-    console.warn('Extension not initialized (yet). Skipping search')
-    return
-  }
-
-  performance.mark('search-start')
-
-  // Get and clean up original search query
-  let searchTerm = ext.dom.searchInput.value || ''
-  searchTerm = searchTerm.trimStart().toLowerCase()
-  searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
-
-  ext.model.result = []
-  let searchMode = 'all' // OR 'bookmarks' OR 'history'
-
-  // Support for various search modes
-  // This is detected by looking at the first chars of the search
-  if (searchTerm.startsWith('h ')) {
-    // Only history
-    searchMode = 'history'
-    searchTerm = searchTerm.substring(2)
-  } else if (searchTerm.startsWith('b ')) {
-    // Only bookmarks
-    searchMode = 'bookmarks'
-    searchTerm = searchTerm.substring(2)
-  } else if (searchTerm.startsWith('t ')) {
-    // Only Tabs
-    searchMode = 'tabs'
-    searchTerm = searchTerm.substring(2)
-  } else if (searchTerm.startsWith('s ')) {
-    // Only search engines
-    searchMode = 'search'
-    searchTerm = searchTerm.substring(2)
-  } else if (searchTerm.startsWith('#')) {
-    // Tag search
-    searchMode = 'tags'
-    searchTerm = searchTerm.substring(1)
-  } else if (searchTerm.startsWith('~')) {
-    // Tag search
-    searchMode = 'folders'
-    searchTerm = searchTerm.substring(1)
-  }
-
-  searchTerm = searchTerm.trim()
-
-  ext.model.searchTerm = searchTerm
-  ext.model.searchMode = searchMode
-
-  if (searchTerm) {
-    if (searchMode === 'tags') {
-      ext.model.result = searchTaxonomy(searchTerm, 'tags', ext.model.bookmarks)
-    } else if (searchMode === 'folders') {
-      ext.model.result = searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
-    } else if (ext.opts.searchStrategy === 'fuzzy') {
-      ext.model.result = await searchWithAlgorithm('fuzzy', searchTerm, searchMode)
-    } else if (ext.opts.searchStrategy === 'precise') {
-      ext.model.result = await searchWithAlgorithm('precise', searchTerm, searchMode)
-    } else if (ext.opts.searchStrategy === 'hybrid') {
-      // in this search mode, both precise and hybrid search is executed
-      // and the search results are merged, with precise results given precedence.
-      ext.model.result = []
-      const preciseResultIndexes = {}
-      const preciseResults = await searchWithAlgorithm('precise', searchTerm, searchMode)
-      const fuzzyResults = await searchWithAlgorithm('fuzzy', searchTerm, searchMode)
-      for (const preciseResult of preciseResults) {
-        preciseResult.searchApproach = 'precise'
-        ext.model.result.push(preciseResult)
-        preciseResultIndexes[preciseResult.index] = true
+  try {
+    if (event) {
+      // Don't execute search on navigation keys
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter' || event.key === 'Escape') {
+        return
       }
-      for (const fuzzyResult of fuzzyResults) {
-        if (!preciseResultIndexes[fuzzyResult.index]) {
-          fuzzyResult.searchApproach = 'fuzzy'
-          ext.model.result.push(fuzzyResult)
+      // Don't execute search on modifier keys
+      if (event.key === 'Control' || event.key === 'Alt' || event.key === 'Shift') {
+        return
+      }
+    }
+
+    if (!ext.initialized) {
+      console.warn('Extension not initialized (yet). Skipping search')
+      return
+    }
+
+    closeModals()
+
+    performance.mark('search-start')
+
+    // Get and clean up original search query
+    let searchTerm = ext.dom.searchInput.value || ''
+    searchTerm = searchTerm.trimStart().toLowerCase()
+    searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
+
+    ext.model.result = []
+    let searchMode = 'all' // OR 'bookmarks' OR 'history'
+
+    // Support for various search modes
+    // This is detected by looking at the first chars of the search
+    if (searchTerm.startsWith('h ')) {
+      // Only history
+      searchMode = 'history'
+      searchTerm = searchTerm.substring(2)
+    } else if (searchTerm.startsWith('b ')) {
+      // Only bookmarks
+      searchMode = 'bookmarks'
+      searchTerm = searchTerm.substring(2)
+    } else if (searchTerm.startsWith('t ')) {
+      // Only Tabs
+      searchMode = 'tabs'
+      searchTerm = searchTerm.substring(2)
+    } else if (searchTerm.startsWith('s ')) {
+      // Only search engines
+      searchMode = 'search'
+      searchTerm = searchTerm.substring(2)
+    } else if (searchTerm.startsWith('#')) {
+      // Tag search
+      searchMode = 'tags'
+      searchTerm = searchTerm.substring(1)
+    } else if (searchTerm.startsWith('~')) {
+      // Tag search
+      searchMode = 'folders'
+      searchTerm = searchTerm.substring(1)
+    }
+
+    searchTerm = searchTerm.trim()
+
+    ext.model.searchTerm = searchTerm
+    ext.model.searchMode = searchMode
+
+    if (searchTerm) {
+      if (searchMode === 'tags') {
+        ext.model.result = searchTaxonomy(searchTerm, 'tags', ext.model.bookmarks)
+      } else if (searchMode === 'folders') {
+        ext.model.result = searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
+      } else if (ext.opts.searchStrategy === 'fuzzy') {
+        ext.model.result = await searchWithAlgorithm('fuzzy', searchTerm, searchMode)
+      } else if (ext.opts.searchStrategy === 'precise') {
+        ext.model.result = await searchWithAlgorithm('precise', searchTerm, searchMode)
+      } else if (ext.opts.searchStrategy === 'hybrid') {
+        // in this search mode, both precise and hybrid search is executed
+        // and the search results are merged, with precise results given precedence.
+        ext.model.result = []
+        const preciseResultIndexes = {}
+        const preciseResults = await searchWithAlgorithm('precise', searchTerm, searchMode)
+        const fuzzyResults = await searchWithAlgorithm('fuzzy', searchTerm, searchMode)
+        for (const preciseResult of preciseResults) {
+          preciseResult.searchApproach = 'precise'
+          ext.model.result.push(preciseResult)
+          preciseResultIndexes[preciseResult.index] = true
         }
+        for (const fuzzyResult of fuzzyResults) {
+          if (!preciseResultIndexes[fuzzyResult.index]) {
+            fuzzyResult.searchApproach = 'fuzzy'
+            ext.model.result.push(fuzzyResult)
+          }
+        }
+      } else {
+        throw new Error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
       }
+
+      // Add search engine result items
+      if (searchMode === 'all' || searchMode === 'search') {
+        ext.model.result.push(...addSearchEngines(searchTerm))
+      }
+      ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
+      ext.model.result = sortResults(ext.model.result, 'score')
     } else {
-      throw new Error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
+      ext.model.result = await addDefaultEntries()
+      ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
+      if (searchMode === 'history' || searchMode === 'tabs') {
+        ext.model.result = sortResults(ext.model.result, 'lastVisited')
+      }
     }
-    // Add search engine result items
-    if (searchMode === 'all' || searchMode === 'search') {
-      ext.model.result.push(...addSearchEngines(searchTerm))
+
+    // Filter out all search results below a certain score
+    ext.model.result = ext.model.result.filter((el) => el.score >= ext.opts.scoreMinScore)
+
+    // Only render maxResults if given (to improve render performance)
+    // Not applied on tabs, tag and folder search
+    if (
+      searchMode !== 'tags' &&
+      searchMode !== 'folders' &&
+      searchMode !== 'tabs' &&
+      ext.model.result.length > ext.opts.searchMaxResults
+    ) {
+      ext.model.result = ext.model.result.slice(0, ext.opts.searchMaxResults)
     }
-    ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
-    ext.model.result = sortResults(ext.model.result, 'score')
-  } else {
-    ext.model.result = await addDefaultEntries()
-    ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
-    if (searchMode === 'history' || searchMode === 'tabs') {
-      ext.model.result = sortResults(ext.model.result, 'lastVisited')
-    }
+
+    ext.dom.resultCounter.innerText = `(${ext.model.result.length})`
+
+    renderSearchResults(ext.model.result)
+  } catch (err) {
+    printError(err)
   }
-
-  // Filter out all search results below a certain score
-  ext.model.result = ext.model.result.filter((el) => el.score >= ext.opts.scoreMinScore)
-
-  // Only render maxResults if given (to improve render performance)
-  // Not applied on tabs, tag and folder search
-  if (
-    searchMode !== 'tags' &&
-    searchMode !== 'folders' &&
-    searchMode !== 'tabs' &&
-    ext.model.result.length > ext.opts.searchMaxResults
-  ) {
-    ext.model.result = ext.model.result.slice(0, ext.opts.searchMaxResults)
-  }
-
-  ext.dom.resultCounter.innerText = `(${ext.model.result.length})`
-
-  renderSearchResults(ext.model.result)
 }
 
 /**

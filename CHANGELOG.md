@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [v1.6.1]
+
+- **IMPROVED**: Improved error handling
+  - Errors and warnings are now displayed in a dedicated overlay, with more space to show complete context
+  - Error handling is more robust, e.g. when failing to load user settings we now display error but fall back to default options
+
 ## [v1.6.0]
 
 - **NEW**: Removed indexing phase entirely, which leads to faster load times

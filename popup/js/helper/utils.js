@@ -54,3 +54,20 @@ export async function loadScript(url) {
     document.getElementsByTagName('head')[0].appendChild(script)
   })
 }
+
+export function printError(err, text) {
+  let html = ''
+  if (text) {
+    html += `<li class="error"><b>Error</b>: ${text}</span>`
+    console.error(text)
+  }
+  console.error(err)
+  html += `<li class="error"><b>Error Message</b>: ${err.message}</span>`
+  if (err.stack) {
+    html += `<li class="error"><b>Error Stack</b>: ${err.stack}</li>`
+  }
+
+  const errorList = document.getElementById('error-list')
+  errorList.innerHTML = html + errorList.innerHTML
+  errorList.style = 'display: block;'
+}
