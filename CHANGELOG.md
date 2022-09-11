@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [v1.6.2]
+
+- **CHANGED**: No bundling of external libraries into vendor.min.js as Firefox store objected to this
+
 ## [v1.6.1]
 
 - **IMPROVED**: Improved error handling
