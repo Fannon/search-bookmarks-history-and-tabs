@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [v1.6.2]
+## [v1.6.3]
 
 - **CHANGED**: No bundling of external libraries into vendor.min.js as Firefox store objected to this
 
