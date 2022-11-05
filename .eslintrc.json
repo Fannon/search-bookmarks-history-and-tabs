@@ -1,5 +1,8 @@
 {
-  "extends": ["eslint:recommended", "prettier"],
+  "extends": [
+    "eslint:recommended",
+    "prettier"
+  ],
   "env": {
     "browser": true,
     "es2021": true,
@@ -11,19 +14,29 @@
     "ecmaVersion": 2021,
     "sourceType": "module"
   },
-  "plugins": ["cypress"],
+  "plugins": [
+    "cypress"
+  ],
   "globals": {
     "module": "writable",
     "ext": "writable",
     "Tagify": "readonly",
     "Mark": "readonly",
     "jsyaml": "readonly",
-    "fuzzysort": "readonly"
+    "uFuzzy": "readonly"
   },
-  "ignorePatterns": ["**/lib/*.js"],
+  "ignorePatterns": [
+    "**/lib/*.js"
+  ],
   "rules": {
     "no-console": "off",
-    "semi": ["warn", "never"],
-    "comma-dangle": ["warn", "only-multiline"]
+    "semi": [
+      "warn",
+      "never"
+    ],
+    "comma-dangle": [
+      "warn",
+      "only-multiline"
+    ]
   }
 }

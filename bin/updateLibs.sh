@@ -1,7 +1,7 @@
 rm -rf popup/lib
 mkdir popup/lib
 
-cat node_modules/fuzzysort/fuzzysort.min.js >> popup/lib/fuzzysort.min.js
+cat node_modules/\@leeoniya/ufuzzy/dist/uFuzzy.iife.min.js >> popup/lib/uFuzzy.iife.min.js
 cat node_modules/mark.js/dist/mark.es6.min.js >> popup/lib/mark.es6.min.js
 
 # Copy over vendor dependencies that we don't bundle, because they're only loaded on demand
