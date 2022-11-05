@@ -40,8 +40,8 @@ function fuzzySearchWithScoring(searchTerm, data) {
 
   let uf = new uFuzzy({})
   let idxs = uf.filter(haystack, searchTerm)
-  let info = uf.info(idxs, haystack, searchTerm)
-  let order = uf.sort(info, haystack, searchTerm)
+  // let info = uf.info(idxs, haystack, searchTerm)
+  // let order = uf.sort(info, haystack, searchTerm)
   // console.log(info)
   // console.log(order)
 
@@ -102,6 +102,6 @@ function fuzzySearchWithScoring(searchTerm, data) {
 /**
  * Normalizes a number value according to max and min range
  */
-function normalize(val, max, min) {
-  return (val - min) / (max - min)
-}
+// function normalize(val, max, min) {
+//   return (val - min) / (max - min)
+// }
