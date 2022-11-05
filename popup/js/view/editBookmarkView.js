@@ -5,6 +5,7 @@
 import { browserApi, createSearchString } from '../helper/browserApi.js'
 import { cleanUpUrl, loadScript } from '../helper/utils.js'
 import { initExtension } from '../initSearch.js'
+import { resetFuzzySearchState } from '../search/fuzzySearch.js'
 import { getUniqueTags } from '../search/taxonomySearch.js'
 
 let tagifyLoaded = false
@@ -85,6 +86,7 @@ export function updateBookmark(bookmarkId) {
   bookmark.url = cleanUpUrl(urlInput)
   bookmark.tags = tagsInput
   bookmark.searchString = createSearchString(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
+  resetFuzzySearchState('bookmarks')
 
   console.debug(`Update bookmark with ID ${bookmarkId}: "${titleInput} ${tagsInput}"`)
 
@@ -113,6 +115,8 @@ export async function deleteBookmark(bookmarkId) {
   }
 
   // Init extension again
+  // TODO: Optimization: Instead of full re-init, just update the state where necessary?
   await initExtension()
+  resetFuzzySearchState('bookmarks')
   window.location.href = '#'
 }

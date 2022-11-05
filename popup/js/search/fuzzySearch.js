@@ -5,24 +5,30 @@
 // @see https://fusejs.io/
 
 /**
+ * Memoize some state, to avoid re-creating haystack and fuzzy search instances
+ */
+let state = {}
+
+/** Resets state for fuzzy search. Necessary when search data changes */
+export function resetFuzzySearchState(searchMode) {
+  state[searchMode] = undefined
+}
+
+/**
  * Uses Fuse.js to do a fuzzy search
  *
  * @see https://fusejs.io/
  */
 export async function fuzzySearch(searchMode, searchTerm) {
-  if (searchMode === 'history') {
-    return fuzzySearchWithScoring(searchTerm, ext.model.history)
-  } else if (searchMode === 'bookmarks') {
-    return fuzzySearchWithScoring(searchTerm, ext.model.bookmarks)
-  } else if (searchMode === 'tabs') {
-    return fuzzySearchWithScoring(searchTerm, ext.model.tabs)
+  if (searchMode === 'history' || searchMode === 'bookmarks' || searchMode === 'tabs') {
+    return fuzzySearchWithScoring(searchTerm, searchMode)
   } else if (searchMode === 'search') {
     return []
   } else {
     return [
-      ...fuzzySearchWithScoring(searchTerm, ext.model.bookmarks),
-      ...fuzzySearchWithScoring(searchTerm, ext.model.tabs),
-      ...fuzzySearchWithScoring(searchTerm, ext.model.history),
+      ...fuzzySearchWithScoring(searchTerm, 'bookmarks'),
+      ...fuzzySearchWithScoring(searchTerm, 'tabs'),
+      ...fuzzySearchWithScoring(searchTerm, 'history'),
     ]
   }
 }
@@ -31,31 +37,39 @@ export async function fuzzySearch(searchMode, searchTerm) {
  * Fuzzy search algorithm
  * Uses https://www.npmjs.com/package/fuzzysort
  */
-function fuzzySearchWithScoring(searchTerm, data) {
+function fuzzySearchWithScoring(searchTerm, searchMode) {
+  const data = ext.model[searchMode]
+  console.log('State', state)
+  if (!state[searchMode]) {
+    const options = {
+      // How many characters "in between" are allowed -> increased fuzzyness
+      intraIns: Math.round(ext.opts.searchFuzzyness * 4.2),
+    }
+
+    // When searchFuzzyness is set to 0.8 or higher:
+    // allows for a single error in each term of the search phrase
+    // @see https://github.com/leeoniya/uFuzzy#how-it-works
+    if (ext.opts.searchFuzzyness >= 0.8) {
+      options.intraMode = 1
+      options.intraSub = 1 // substitution (replacement)
+      options.intraTrn = 1 // transposition (swap), insertion (addition)
+      options.intraDel = 1 // deletion (omission)
+    }
+
+    state[searchMode] = {
+      haystack: data.map((el) => {
+        return el.searchString
+      }),
+      uf: new uFuzzy(options),
+    }
+  }
+
   /** Search results */
   const results = []
-  const haystack = data.map((el) => {
-    return el.searchString
-  })
+  const s = state[searchMode]
 
-  const options = {
-    // How many characters "in between" are allowed -> increased fuzzyness
-    intraIns: Math.round(ext.opts.searchFuzzyness * 4.2),
-  }
-
-  // When searchFuzzyness is set to 0.8 or higher:
-  // allows for a single error in each term of the search phrase
-  // @see https://github.com/leeoniya/uFuzzy#how-it-works
-  if (ext.opts.searchFuzzyness >= 0.8) {
-    options.intraMode = 1
-    options.intraSub = 1 // substitution (replacement)
-    options.intraTrn = 1 // transposition (swap), insertion (addition)
-    options.intraDel = 1 // deletion (omission)
-  }
-
-  let uf = new uFuzzy(options)
-  let idxs = uf.filter(haystack, searchTerm)
-  let info = uf.info(idxs, haystack, searchTerm)
+  let idxs = s.uf.filter(s.haystack, searchTerm)
+  let info = s.uf.info(idxs, s.haystack, searchTerm)
 
   for (let i = 0; i < info.idx.length; i++) {
     const result = data[idxs[i]]
