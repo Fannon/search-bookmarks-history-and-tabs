@@ -38,12 +38,22 @@ function fuzzySearchWithScoring(searchTerm, data) {
     return el.searchString
   })
 
-  let uf = new uFuzzy({
+  const options = {
     // How many characters "in between" are allowed -> increased fuzzyness
     intraIns: Math.round(ext.opts.searchFuzzyness * 4.2),
-    // When searchFuzzyness is greater than 0.7, also allow one
-    intraMode: ext.opts.searchFuzzyness >= 0.7 ? 1 : 0,
-  })
+  }
+
+  // When searchFuzzyness is set to 0.8 or higher:
+  // allows for a single error in each term of the search phrase
+  // @see https://github.com/leeoniya/uFuzzy#how-it-works
+  if (ext.opts.searchFuzzyness >= 0.8) {
+    options.intraMode = 1
+    options.intraSub = 1 // substitution (replacement)
+    options.intraTrn = 1 // transposition (swap), insertion (addition)
+    options.intraDel = 1 // deletion (omission)
+  }
+
+  let uf = new uFuzzy(options)
   let idxs = uf.filter(haystack, searchTerm)
   let info = uf.info(idxs, haystack, searchTerm)
 
@@ -53,7 +63,7 @@ function fuzzySearchWithScoring(searchTerm, data) {
     // Apply highlighting
     const highlight = uFuzzy.highlight(result.searchString, info.ranges[i])
     // Split highlighted string back into its original multiple properties
-    const highlightArray = highlight.split(' ° ')
+    const highlightArray = highlight.split(' ¦ ')
     if (highlightArray[0].includes('<mark>')) {
       result.titleHighlighted = highlightArray[0]
     }

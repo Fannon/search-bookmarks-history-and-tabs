@@ -200,7 +200,7 @@ export function convertBrowserHistory(history) {
 }
 
 export function createSearchString(title, url, tags, folder) {
-  const separator = ' ° '
+  const separator = ' ¦ '
   let searchString = title + separator + url
   if (tags) {
     searchString += separator + tags
