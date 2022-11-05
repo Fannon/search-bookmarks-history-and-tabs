@@ -38,70 +38,40 @@ function fuzzySearchWithScoring(searchTerm, data) {
     return el.searchString
   })
 
-  let uf = new uFuzzy({})
+  let uf = new uFuzzy({
+    // How many characters "in between" are allowed -> increased fuzzyness
+    intraIns: Math.round(ext.opts.searchFuzzyness * 4.2),
+  })
   let idxs = uf.filter(haystack, searchTerm)
-  // let info = uf.info(idxs, haystack, searchTerm)
-  // let order = uf.sort(info, haystack, searchTerm)
-  // console.log(info)
-  // console.log(order)
+  let info = uf.info(idxs, haystack, searchTerm)
 
-  for (let i = 0; i < idxs.length; i++) {
+  for (let i = 0; i < info.idx.length; i++) {
     const result = data[idxs[i]]
-    // const infoIdx = info[idxs[i]]
 
     // // Apply highlighting
-    // const highlight = uFuzzy.highlight(result.searchString, info.ranges[infoIdx])
-    // console.log(highlight)
-    // const highlightArray = highlight.split(' ° ')
-    // if (highlightArray[0].includes('<mark>')) {
-    //   result.obj.titleHighlighted = highlightArray[0]
-    // }
-    // if (highlightArray[1].includes('<mark>')) {
-    //   result.obj.urlHighlighted = highlightArray[1]
-    // }
-    // if (highlightArray[2] && highlightArray[2].includes('<mark>')) {
-    //   result.obj.tagsHighlighted = highlightArray[2]
-    // }
-    // if (highlightArray[3] && highlightArray[3].includes('<mark>')) {
-    //   result.obj.folderHighlighted = highlightArray[3]
-    // }
+    const highlight = uFuzzy.highlight(result.searchString, info.ranges[i])
+    console.log(highlight)
+    const highlightArray = highlight.split(' ° ')
+    if (highlightArray[0].includes('<mark>')) {
+      result.titleHighlighted = highlightArray[0]
+    }
+    if (highlightArray[1].includes('<mark>')) {
+      result.urlHighlighted = highlightArray[1]
+    }
+    if (highlightArray[2] && highlightArray[2].includes('<mark>')) {
+      result.tagsHighlighted = highlightArray[2]
+    }
+    if (highlightArray[3] && highlightArray[3].includes('<mark>')) {
+      result.folderHighlighted = highlightArray[3]
+    }
 
     results.push({
       ...result,
-      searchScore: 1,
+      // 0 intra chars are perfect score, 5 and more are 0 score.
+      searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
       searchApproach: 'fuzzy',
     })
   }
 
-  // for (const result of searchResults) {
-  //   // Calculate Score
-  //   result.obj.score = normalize(result.score, 0, scoreNormalizationFactor)
-
-  // // Apply highlighting
-  // const highlight = fuzzysort.highlight(result, '<mark>', '</mark>')
-  // const highlightArray = highlight.split(' ° ')
-  // if (highlightArray[0].includes('<mark>')) {
-  //   result.obj.titleHighlighted = highlightArray[0]
-  // }
-  // if (highlightArray[1].includes('<mark>')) {
-  //   result.obj.urlHighlighted = highlightArray[1]
-  // }
-  // if (highlightArray[2] && highlightArray[2].includes('<mark>')) {
-  //   result.obj.tagsHighlighted = highlightArray[2]
-  // }
-  // if (highlightArray[3] && highlightArray[3].includes('<mark>')) {
-  //   result.obj.folderHighlighted = highlightArray[3]
-  // }
-
-  //   results.push(result.obj)
-  // }
-
   return results
 }
-
-/**
- * Normalizes a number value according to max and min range
- */
-// function normalize(val, max, min) {
-//   return (val - min) / (max - min)
-// }
