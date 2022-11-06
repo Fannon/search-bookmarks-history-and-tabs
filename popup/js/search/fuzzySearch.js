@@ -9,9 +9,15 @@
  */
 let state = {}
 
-/** Resets state for fuzzy search. Necessary when search data changes */
+/**
+ * Resets state for fuzzy search. Necessary when search data changes or search string is reset.
+ * If searchMode is given, will only reset that particular state.
+ * Otherwise state will be reset entirely.
+ */
 export function resetFuzzySearchState(searchMode) {
-  state[searchMode] = undefined
+  if (searchMode) {
+    state[searchMode] = undefined
+  }
 }
 
 /**
@@ -68,7 +74,14 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
   const results = []
   const s = state[searchMode]
 
-  let idxs = s.uf.filter(s.haystack, searchTerm)
+  // Invalidate s.idxs cache if the new search term is not just an extension of the last one
+  if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
+    s.idxs = undefined
+  }
+
+  let idxs = s.uf.filter(s.haystack, searchTerm, s.idxs)
+  s.idxs = idxs // Save idxs cache to state
+  s.searchTerm = searchTerm // Remember last search term, to know when to invalidate idxx cache
   let info = s.uf.info(idxs, s.haystack, searchTerm)
 
   for (let i = 0; i < info.idx.length; i++) {
