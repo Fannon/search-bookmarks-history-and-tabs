@@ -83,6 +83,19 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
 
     if (entry.url) {
       let title = entry.title
+      let customBonusScore = 0
+
+      const regex = /[ ][+]([0-9]+)/
+      const match = title.match(regex)
+      if (match && match.length > 0) {
+        title = title.replace(match[0], '')
+        if (match.length !== 2) {
+          console.error(`Unexpected custom bonus score match length`, match, entry)
+        } else {
+          customBonusScore = parseInt(match[1])
+        }
+      }
+
       const mappedEntry = {
         type: 'bookmark',
         originalId: entry.id,
@@ -90,6 +103,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
         originalUrl: entry.url.replace(/\/$/, ''),
         url: cleanUpUrl(entry.url),
         dateAdded: entry.dateAdded,
+        customBonusScore,
       }
 
       // Parse out tags from bookmark title (starting with #)
