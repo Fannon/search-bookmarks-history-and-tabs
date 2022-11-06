@@ -90,7 +90,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
     // Apply highlighting
     const highlight = uFuzzy.highlight(result.searchString, info.ranges[i])
     // Split highlighted string back into its original multiple properties
-    const highlightArray = highlight.split(' ¦ ')
+    const highlightArray = highlight.split('¦')
     if (highlightArray[0].includes('<mark>')) {
       result.titleHighlighted = highlightArray[0]
     }

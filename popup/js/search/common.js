@@ -231,6 +231,7 @@ export function calculateFinalScore(results, searchTerm) {
       const match = el.title.match(regex)
       if (match && match.length > 0) {
         el.title = el.title.replace(match[0], '')
+        el.searchString = el.searchString.replace(match[0], '')
         score += parseInt(match[1])
         if (match.length !== 2) {
           console.error(`Unexpected custom bonus score match length`, match, el)
