@@ -2,8 +2,6 @@
 // FUZZY SEARCH SUPPORT                 //
 //////////////////////////////////////////
 
-// @see https://fusejs.io/
-
 /**
  * Memoize some state, to avoid re-creating haystack and fuzzy search instances
  */
@@ -21,9 +19,9 @@ export function resetFuzzySearchState(searchMode) {
 }
 
 /**
- * Uses Fuse.js to do a fuzzy search
+ * Uses uFuzzy to do a fuzzy search
  *
- * @see https://fusejs.io/
+ * @see https://github.com/leeoniya/uFuzzy
  */
 export async function fuzzySearch(searchMode, searchTerm) {
   if (searchMode === 'history' || searchMode === 'bookmarks' || searchMode === 'tabs') {
