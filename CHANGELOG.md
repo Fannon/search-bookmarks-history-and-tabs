@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [v1.7.0]
+
+- **CHANGED**: Replaced fuzzy search library fuzzysort with [uFuzzy](https://github.com/leeoniya/uFuzzy)
+  - This should give more reliable and relevant search results
+  - Performance is a bit better in most cases
+- **IMPROVED**: General performance improvement for precise and fuzzy search
+  - Interim search results are now cached so the search haystack gets smaller when search term is only expanded
+
 ## [v1.6.3]
 
 - **CHANGED**: No bundling of external libraries into vendor.min.js as Firefox store objected to this

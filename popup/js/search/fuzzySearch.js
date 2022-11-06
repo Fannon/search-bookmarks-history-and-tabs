@@ -38,8 +38,7 @@ export async function fuzzySearch(searchMode, searchTerm) {
 }
 
 /**
- * Fuzzy search algorithm
- * Uses https://www.npmjs.com/package/fuzzysort
+ * Execute a fuzzy search with additional scoring and highlighting of results
  */
 function fuzzySearchWithScoring(searchTerm, searchMode) {
   const data = ext.model[searchMode]

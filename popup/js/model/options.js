@@ -22,7 +22,7 @@ export const defaultOptions = {
    *              This search approach will find more results, even if there are no perfect matches.
    *              It has a moderate impact on init performance, and is slower when searching.
    *              It supports all options.
-   *              Uses the https://fusejs.io/ library
+   *              Uses https://github.com/leeoniya/uFuzzy
    *
    * * 'hybrid':  Hybrid that uses both 'precise' and 'fuzzy' algorithms combined
    */

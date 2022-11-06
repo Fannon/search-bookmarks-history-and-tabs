@@ -148,7 +148,7 @@ export function renderSearchResults(result) {
     resultListItem.addEventListener('mouseup', openResultItem)
 
     if (ext.opts.displaySearchMatchHighlight && ext.model.searchTerm) {
-      // Use mark.js to highlight search results, if we don't have already done so via fuse.js
+      // Use mark.js to highlight search results, if we don't have already done before in fuzzy search
       if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
         const markInstance = new Mark(resultListItem)
         markInstance.mark(ext.model.searchTerm)
