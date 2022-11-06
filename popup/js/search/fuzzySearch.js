@@ -42,7 +42,7 @@ export async function fuzzySearch(searchMode, searchTerm) {
  */
 function fuzzySearchWithScoring(searchTerm, searchMode) {
   const data = ext.model[searchMode]
-  console.log('State', state)
+
   if (!state[searchMode]) {
     const options = {
       // How many characters "in between" are allowed -> increased fuzzyness

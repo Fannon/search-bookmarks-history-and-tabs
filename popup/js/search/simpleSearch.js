@@ -7,6 +7,15 @@
  */
 let state = {}
 
+/**
+ * Resets state for simple search. Necessary when search data changes or search string is reset.
+ */
+export function resetSimpleSearchState(searchMode) {
+  if (searchMode) {
+    state[searchMode] = undefined
+  }
+}
+
 export function simpleSearch(searchMode, searchTerm) {
   let results = []
   if (searchMode === 'history' || searchMode === 'bookmarks' || searchMode === 'tabs') {
