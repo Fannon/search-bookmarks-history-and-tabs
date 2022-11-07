@@ -34,17 +34,18 @@ export function simpleSearch(searchMode, searchTerm) {
  * Very simple search algorithm :)
  * This does an `includes` search with an AND condition between the terms
  *
- * TODO: Right now there is no real scoring, so everything has base score of 1
+ * There is no real scoring, everything has base score of 1
  */
 function simpleSearchWithScoring(searchTerm, searchMode) {
-  const results = []
+  if (!ext.model[searchMode].length) {
+    return [] // early return
+  }
 
   if (!state[searchMode]) {
     state[searchMode] = {
       cachedData: ext.model[searchMode],
     }
   }
-
   const s = state[searchMode]
 
   // Invalidate s.cachedData if the new search term is not just an extension of the last one
@@ -52,28 +53,26 @@ function simpleSearchWithScoring(searchTerm, searchMode) {
     s.cachedData = ext.model[searchMode]
   }
 
+  if (!s.cachedData.length) {
+    return [] // early return
+  }
+
   let searchTermArray = searchTerm.split(' ')
 
-  if (s.cachedData && searchTermArray.length) {
+  for (const term of searchTermArray) {
+    const localResults = []
     for (const entry of s.cachedData) {
-      let searchTermMatches = 0
-      for (const term of searchTermArray) {
-        if (entry.searchString.toLowerCase().includes(term)) {
-          searchTermMatches++
-        }
-      }
-      if (searchTermMatches === searchTermArray.length) {
-        results.push({
+      if (entry.searchString.toLowerCase().includes(term)) {
+        localResults.push({
           ...entry,
           searchScore: 1,
           searchApproach: 'precise',
         })
       }
+      s.cachedData = localResults
     }
   }
 
-  s.cachedData = results
   s.searchTerm = searchTerm
-
-  return results
+  return s.cachedData
 }
