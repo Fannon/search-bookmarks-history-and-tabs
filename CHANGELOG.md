@@ -6,7 +6,7 @@
   - This should give more reliable and relevant search results
   - Performance is a bit better in most cases
   - Related Issue: https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/60
-- **IMPROVED**: General performance improvement for precise and fuzzy search
+- **IMPROVED**: Performance improvement for both precise and fuzzy search
   - Interim search results are now cached so the search haystack gets smaller when search term is only expanded
 - **FIXED**: Custom Bonus Score was sometimes shown in search result title.
 

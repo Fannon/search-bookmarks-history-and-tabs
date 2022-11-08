@@ -15,9 +15,9 @@
 
 It supports three different search approaches:
 
-- **Exact search** (starts with matching): Faster, but only exact matching results.
-- **Fuzzy search** (approximate string matching): Slower, but includes also inexact (fuzzy) matches.
-- **Hybrid search** (combination): Combines results of both approaches, but also the performance implications.
+- **Exact search** (case-insensitive, but exact matching): Faster, but only exact matching results.
+- **Fuzzy search** (approximate matching): Slower, but includes also inexact (fuzzy) matches.
+- **Hybrid search** (combination): Combines results of both approaches.
 
 With this extension you can also **tag your bookmarks** including auto completions.
 The tags are considered when searching and can be used for navigation.

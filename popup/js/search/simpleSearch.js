@@ -33,28 +33,28 @@ export function simpleSearch(searchMode, searchTerm) {
 /**
  * Very simple search algorithm :)
  * This does an `includes` search with an AND condition between the terms
- *
  * There is no real scoring, everything has base score of 1
  */
 function simpleSearchWithScoring(searchTerm, searchMode) {
-  if (!ext.model[searchMode].length) {
-    return [] // early return
+  const data = ext.model[searchMode]
+  if (!data.length) {
+    return [] // early return -> no data to search
   }
 
   if (!state[searchMode]) {
     state[searchMode] = {
-      cachedData: ext.model[searchMode],
+      cachedData: [...data],
     }
   }
   const s = state[searchMode]
 
   // Invalidate s.cachedData if the new search term is not just an extension of the last one
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
-    s.cachedData = ext.model[searchMode]
+    s.cachedData = [...data]
   }
 
   if (!s.cachedData.length) {
-    return [] // early return
+    return [] // early return -> no data left to search
   }
 
   let searchTermArray = searchTerm.split(' ')
@@ -69,7 +69,7 @@ function simpleSearchWithScoring(searchTerm, searchMode) {
           searchApproach: 'precise',
         })
       }
-      s.cachedData = localResults
+      s.cachedData = localResults // reduce cachedData set -> improves performance
     }
   }
 
