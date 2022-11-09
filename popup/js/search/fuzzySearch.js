@@ -86,29 +86,26 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
     const localResults = []
 
     let idxs = s.uf.filter(s.haystack, term, s.idxs)
-
     let info = s.uf.info(idxs, s.haystack, term)
 
     for (let i = 0; i < info.idx.length; i++) {
       const result = data[idxs[i]]
 
-      if (i === info.idx.length - 1) {
-        // Apply highlighting, but only on last iteration
-        const highlight = uFuzzy.highlight(result.searchString, info.ranges[i])
-        // Split highlighted string back into its original multiple properties
-        const highlightArray = highlight.split('¦')
-        if (highlightArray[0].includes('<mark>')) {
-          result.titleHighlighted = highlightArray[0]
-        }
-        if (highlightArray[1].includes('<mark>')) {
-          result.urlHighlighted = highlightArray[1]
-        }
-        if (highlightArray[2] && highlightArray[2].includes('<mark>')) {
-          result.tagsHighlighted = highlightArray[2]
-        }
-        if (highlightArray[3] && highlightArray[3].includes('<mark>')) {
-          result.folderHighlighted = highlightArray[3]
-        }
+      // Apply highlighting, but only on last iteration
+      const highlight = uFuzzy.highlight(result.searchString, info.ranges[i])
+      // Split highlighted string back into its original multiple properties
+      const highlightArray = highlight.split('¦')
+      if (highlightArray[0].includes('<mark>')) {
+        result.titleHighlighted = highlightArray[0]
+      }
+      if (highlightArray[1].includes('<mark>')) {
+        result.urlHighlighted = highlightArray[1]
+      }
+      if (highlightArray[2] && highlightArray[2].includes('<mark>')) {
+        result.tagsHighlighted = highlightArray[2]
+      }
+      if (highlightArray[3] && highlightArray[3].includes('<mark>')) {
+        result.folderHighlighted = highlightArray[3]
       }
 
       localResults.push({
