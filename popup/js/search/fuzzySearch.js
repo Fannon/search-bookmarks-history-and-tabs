@@ -72,7 +72,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
   }
 
   /** Search results */
-  const results = []
+  let results = []
   const s = state[searchMode]
 
   // Invalidate s.idxs cache if the new search term is not just an extension of the last one
@@ -80,38 +80,49 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
     s.idxs = undefined
   }
 
-  let idxs = s.uf.filter(s.haystack, searchTerm, s.idxs)
-  s.idxs = idxs // Save idxs cache to state
-  s.searchTerm = searchTerm // Remember last search term, to know when to invalidate idxx cache
-  let info = s.uf.info(idxs, s.haystack, searchTerm)
+  let searchTermArray = searchTerm.split(' ')
 
-  for (let i = 0; i < info.idx.length; i++) {
-    const result = data[idxs[i]]
+  for (const term of searchTermArray) {
+    const localResults = []
 
-    // Apply highlighting
-    const highlight = uFuzzy.highlight(result.searchString, info.ranges[i])
-    // Split highlighted string back into its original multiple properties
-    const highlightArray = highlight.split('¦')
-    if (highlightArray[0].includes('<mark>')) {
-      result.titleHighlighted = highlightArray[0]
-    }
-    if (highlightArray[1].includes('<mark>')) {
-      result.urlHighlighted = highlightArray[1]
-    }
-    if (highlightArray[2] && highlightArray[2].includes('<mark>')) {
-      result.tagsHighlighted = highlightArray[2]
-    }
-    if (highlightArray[3] && highlightArray[3].includes('<mark>')) {
-      result.folderHighlighted = highlightArray[3]
+    let idxs = s.uf.filter(s.haystack, term, s.idxs)
+
+    let info = s.uf.info(idxs, s.haystack, term)
+
+    for (let i = 0; i < info.idx.length; i++) {
+      const result = data[idxs[i]]
+
+      if (i === info.idx.length - 1) {
+        // Apply highlighting, but only on last iteration
+        const highlight = uFuzzy.highlight(result.searchString, info.ranges[i])
+        // Split highlighted string back into its original multiple properties
+        const highlightArray = highlight.split('¦')
+        if (highlightArray[0].includes('<mark>')) {
+          result.titleHighlighted = highlightArray[0]
+        }
+        if (highlightArray[1].includes('<mark>')) {
+          result.urlHighlighted = highlightArray[1]
+        }
+        if (highlightArray[2] && highlightArray[2].includes('<mark>')) {
+          result.tagsHighlighted = highlightArray[2]
+        }
+        if (highlightArray[3] && highlightArray[3].includes('<mark>')) {
+          result.folderHighlighted = highlightArray[3]
+        }
+      }
+
+      localResults.push({
+        ...result,
+        // 0 intra chars are perfect score, 5 and more are 0 score.
+        searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
+        searchApproach: 'fuzzy',
+      })
+      s.idxs = idxs // Save idxs cache to state
     }
 
-    results.push({
-      ...result,
-      // 0 intra chars are perfect score, 5 and more are 0 score.
-      searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
-      searchApproach: 'fuzzy',
-    })
+    results = localResults // keep and return the last iteration of local results
   }
 
+  s.searchTerm = searchTerm // Remember last search term, to know when to invalidate idxx cache
   return results
 }
