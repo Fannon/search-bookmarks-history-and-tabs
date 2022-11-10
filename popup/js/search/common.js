@@ -226,16 +226,8 @@ export function calculateFinalScore(results, searchTerm) {
     score = score * (el.searchScore || ext.opts.scoreTitleWeight)
 
     // Add custom bonus score to bookmarks
-    if (ext.opts.scoreCustomBonusScore && el.type === 'bookmark') {
-      const regex = /[ ][+]([0-9]+)/
-      const match = el.title.match(regex)
-      if (match && match.length > 0) {
-        el.title = el.title.replace(match[0], '')
-        score += parseInt(match[1])
-        if (match.length !== 2) {
-          console.error(`Unexpected custom bonus score match length`, match, el)
-        }
-      }
+    if (ext.opts.scoreCustomBonusScore && el.customBonusScore) {
+      score += el.customBonusScore
     }
 
     if (ext.model.searchTerm) {

@@ -18,7 +18,7 @@
     "Tagify": "readonly",
     "Mark": "readonly",
     "jsyaml": "readonly",
-    "fuzzysort": "readonly"
+    "uFuzzy": "readonly"
   },
   "ignorePatterns": ["**/lib/*.js"],
   "rules": {

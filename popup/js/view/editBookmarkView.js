@@ -4,8 +4,10 @@
 
 import { browserApi, createSearchString } from '../helper/browserApi.js'
 import { cleanUpUrl, loadScript } from '../helper/utils.js'
-import { initExtension } from '../initSearch.js'
+import { resetFuzzySearchState } from '../search/fuzzySearch.js'
 import { getUniqueTags } from '../search/taxonomySearch.js'
+import { search } from '../search/common.js'
+import { resetSimpleSearchState } from '../search/simpleSearch.js'
 
 let tagifyLoaded = false
 
@@ -85,6 +87,8 @@ export function updateBookmark(bookmarkId) {
   bookmark.url = cleanUpUrl(urlInput)
   bookmark.tags = tagsInput
   bookmark.searchString = createSearchString(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
+  resetFuzzySearchState('bookmarks')
+  resetSimpleSearchState('bookmarks')
 
   console.debug(`Update bookmark with ID ${bookmarkId}: "${titleInput} ${tagsInput}"`)
 
@@ -102,17 +106,20 @@ export function updateBookmark(bookmarkId) {
 }
 
 export async function deleteBookmark(bookmarkId) {
-  const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
-
-  console.log(bookmarkId, bookmark)
-
   if (browserApi.bookmarks) {
     browserApi.bookmarks.remove(bookmarkId)
   } else {
     console.warn(`No browser bookmarks API found. Bookmark remove will not persist.`)
   }
 
-  // Init extension again
-  await initExtension()
-  window.location.href = '#'
+  // Remove item from search data and reset search caches
+  ext.model.bookmarks = ext.model.bookmarks.filter((el) => {
+    el.originalId !== bookmarkId
+  })
+  resetFuzzySearchState('bookmarks')
+  resetSimpleSearchState('bookmarks')
+
+  // Re-execute search
+  await search()
+  window.location.href = '#search/'
 }

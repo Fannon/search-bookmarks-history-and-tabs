@@ -10,7 +10,6 @@ export async function addDefaultEntries() {
 
   if (ext.model.searchMode === 'history' && ext.model.history) {
     // Display recent history by default
-    console.log('Default history results')
     results = ext.model.history.map((el) => {
       return {
         searchScore: 1,
@@ -19,7 +18,6 @@ export async function addDefaultEntries() {
     })
   } else if (ext.model.searchMode === 'tabs' && ext.model.tabs) {
     // Display last opened tabs by default
-    console.log('Default tabs results')
     results = ext.model.tabs
       .filter((el) => {
         return el.active === false
