@@ -108,13 +108,12 @@ historyIgnoreList:
   - http://localhost
   - http://127.0.0.1
 scoreTabBaseScore: 70 # customize base score for open tabs
-
 searchEngineChoices:
+  # Only one search engine as final fallback
   - name: Google
     urlPrefix: https://google.com/search?q=
-  - name: dict.cc
-    urlPrefix: https://www.dict.cc/?s=
 customSearchEngines:
+  # Add your custom search engines with their own aliases
   - alias: g
     name: Google
     urlPrefix: https://www.google.com/search?q=

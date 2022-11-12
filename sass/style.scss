@@ -7,7 +7,7 @@ html,
 body,
 #container,
 #search {
-  width: 500px;
+  width: 520px;
   height: 600px;
   overflow: hidden;
 }
@@ -31,7 +31,7 @@ body {
 .input:active,
 .input:focus {
   width: 100%;
-  max-width: 500px;
+  max-width: 520px;
   min-width: 500px;
   height: 55px;
   padding: 4px 8px;
@@ -43,8 +43,8 @@ body {
   border-bottom: 1px solid #ccc;
 }
 #search-input {
-  max-width: 473px;
-  min-width: 473px;
+  max-width: 493px;
+  min-width: 493px;
 }
 .input-description {
   margin: 2px 4px;
@@ -219,11 +219,18 @@ code {
   .close-button {
     float: right;
   }
+  .favicon {
+    width: 16px;
+    height: 16px;
+    display: inline;
+    margin-right: 4px;
+  }
   .title {
     font-size: 18px;
     margin: 0;
     font-weight: 400;
     color: #333;
+    display: inline;
   }
 }
 #error-list {

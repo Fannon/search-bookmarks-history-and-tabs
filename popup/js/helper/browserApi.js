@@ -135,6 +135,17 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
 
       mappedEntry.searchString = createSearchString(title, mappedEntry.url, mappedEntry.tags, mappedEntry.folder)
 
+      if (ext.opts.displayFavicon) {
+        console.log('displayFavicon')
+        // const favIconUrl = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(
+        //   mappedEntry.originalUrl,
+        // )}&size=16`
+        // const favIconUrl = `chrome://favicon/${encodeURIComponent(mappedEntry.originalUrl)}`
+        const favIconUrl = chrome.runtime.getURL(`_favicon/?page_url=${mappedEntry.originalUrl}`)
+        mappedEntry.favIconUrl = favIconUrl
+        console.log(favIconUrl)
+      }
+
       result.push(mappedEntry)
     }
 

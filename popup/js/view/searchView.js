@@ -52,13 +52,17 @@ export function renderSearchResults(result) {
     const titleDiv = document.createElement('div')
     titleDiv.classList.add('title')
 
+    let content = ''
+    if (ext.opts.displayFavicon && resultEntry.favIconUrl) {
+      console.log('displayFavicon')
+      var favIconImg = document.createElement('img')
+      favIconImg.classList.add('favicon')
+      favIconImg.src = resultEntry.favIconUrl
+      resultListItem.appendChild(favIconImg)
+    }
     if (ext.opts.displaySearchMatchHighlight) {
-      const content = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
-      if (content.includes('<mark>')) {
-        titleDiv.innerHTML = content + ' '
-      } else {
-        titleDiv.innerText = content + ' '
-      }
+      content += resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
+      titleDiv.innerHTML = content + ' '
     } else {
       titleDiv.innerText = resultEntry.title | (resultEntry.url + ' ')
     }
