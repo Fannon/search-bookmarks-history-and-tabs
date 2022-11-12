@@ -7,7 +7,7 @@ import { closeModals } from '../initSearch.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultEntries.js'
 import { fuzzySearch } from './fuzzySearch.js'
-import { addSearchEngines } from './searchEngines.js'
+import { addCustomSearchEngineResult, addSearchEngines } from './searchEngines.js'
 import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
 
@@ -71,6 +71,18 @@ export async function search(event) {
       // Tag search
       searchMode = 'folders'
       searchTerm = searchTerm.substring(1)
+    } else if (ext.opts.customSearchEngines) {
+      // Use custom search mode aliases
+      for (const customSearchEngine of ext.opts.customSearchEngines) {
+        if (searchTerm.startsWith(customSearchEngine.alias + ' ')) {
+          ext.model.result = addCustomSearchEngineResult(
+            searchTerm.replace(customSearchEngine.alias + ' ', ''),
+            customSearchEngine.name,
+            customSearchEngine.urlPrefix,
+          )
+          return renderSearchResults(ext.model.result)
+        }
+      }
     }
 
     searchTerm = searchTerm.trim()

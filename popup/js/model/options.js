@@ -44,17 +44,6 @@ export const defaultOptions = {
    * For precise this is always 0 (no fuzzyness)
    */
   searchFuzzyness: 0.6,
-  /**
-   * How search matches are considered
-   * 'startsWith' is only considering a match if the search term starts with the term
-   * 'includes' also considers matches where the term is included anywhere.
-   *
-   * Setting this to 'includes' will increase the time for indexing (slower startup)
-   *
-   * This applies only to search approach 'precise'.
-   * For fuzzy this is always 'includes'
-   */
-  searchPreciseMatchAlgorithm: 'startsWith', // or 'includes'
 
   //////////////////////////////////////////
   // SEARCH SOURCES                       //
@@ -143,10 +132,10 @@ export const defaultOptions = {
   /**
    * How many days ago the browser history should be fetched
    */
-  historyDaysAgo: 7,
+  historyDaysAgo: 14,
   /**
    * How many history items should be fetched at most
-   * Be careful, as too many items have negative impact on index and search performance
+   * Be careful, as too many items have negative impact on startup and search performance
    */
   historyMaxItems: 512,
   /**
@@ -181,6 +170,23 @@ export const defaultOptions = {
       urlPrefix: 'https://duckduckgo.com/?q=',
     },
     {
+      name: 'dict.cc',
+      urlPrefix: 'https://www.dict.cc/?s=',
+    },
+  ],
+
+  /**
+   * Allows to define custom search engines with their own custom alias
+   * To trigger a search, type in the alias plus space: `<alias> ` to begin the search
+   */
+  customSearchEngines: [
+    {
+      alias: 'g',
+      name: 'Google',
+      urlPrefix: 'https://www.google.com/search?q=',
+    },
+    {
+      alias: 'd',
       name: 'dict.cc',
       urlPrefix: 'https://www.dict.cc/?s=',
     },

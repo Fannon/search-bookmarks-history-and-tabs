@@ -19,3 +19,21 @@ export function addSearchEngines(searchTerm) {
   }
   return results
 }
+
+/**
+ * Adds one search result based for a custom search engine
+ * This is used by the option `customSearchEngines`
+ */
+export function addCustomSearchEngineResult(searchTerm, name, urlPrefix) {
+  const url = urlPrefix + encodeURIComponent(searchTerm)
+  return [
+    {
+      type: 'search',
+      title: `${name}: "${searchTerm}"`,
+      titleHighlighted: `${name}: "${searchTerm}"`,
+      url: cleanUpUrl(url),
+      originalUrl: url,
+      searchScore: ext.opts.scoreTitleWeight,
+    },
+  ]
+}

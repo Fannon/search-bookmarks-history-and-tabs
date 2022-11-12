@@ -64,6 +64,10 @@ This extension is built to respect your privacy:
   - Start your query with `b ` (including space): only **bookmarks** will be searched.
   - Start your query with `h ` (including space): only **history** will be searched.
   - Start your query with `s ` (including space): only **search engines** will be proposed.
+  - Custom Aliases:
+    - The option `customSearchEngines` allows you to define your own search mode aliases
+    - Default: Start your query with `g ` (including space): Do a Google search.
+    - Default: Start your query with `d ` (including space): Do a dict.cc search.
 - **Special Browser Pages**: You can add special browser pages to your bookmarks, like `chrome://downloads`.
 - **Custom Scores**: Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
   - Examples: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`
@@ -103,12 +107,20 @@ historyMaxItems: 1200
 historyIgnoreList:
   - http://localhost
   - http://127.0.0.1
+scoreTabBaseScore: 70 # customize base score for open tabs
+
 searchEngineChoices:
   - name: Google
     urlPrefix: https://google.com/search?q=
   - name: dict.cc
     urlPrefix: https://www.dict.cc/?s=
-scoreTabBaseScore: 70 # customize base score for open tabs
+customSearchEngines:
+  - alias: g
+    name: Google
+    urlPrefix: https://www.google.com/search?q=
+  - alias: d
+    name: dict.cc
+    urlPrefix: https://www.dict.cc/?s=
 ```
 
 ## Scoring System

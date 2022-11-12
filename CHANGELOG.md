@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [v1.8.0]
+
+- **NEW**: Allow definition of custom search engines that are triggered by custom alias
+  - New option: `customSearchEngines`, with one default entry: `g ` for executing a google search.
+
 ## [v1.7.0]
 
 - **CHANGED**: Replaced fuzzy search library fuzzysort with [uFuzzy](https://github.com/leeoniya/uFuzzy)
