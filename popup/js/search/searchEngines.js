@@ -17,7 +17,7 @@ export function addSearchEngines(searchTerm) {
  * Adds one search result based for a custom search engine
  * This is used by the option `customSearchEngines`
  */
-export function getCustomSearchEngineResult(searchTerm, name, urlPrefix) {
+export function getCustomSearchEngineResult(searchTerm, name, urlPrefix, custom) {
   let url
   if (urlPrefix.includes('$s')) {
     url = urlPrefix.replace('$s', encodeURIComponent(searchTerm))
@@ -25,12 +25,12 @@ export function getCustomSearchEngineResult(searchTerm, name, urlPrefix) {
     url = urlPrefix + encodeURIComponent(searchTerm)
   }
   return {
-    type: 'search',
+    type: custom ? 'customSearch' : 'search',
     title: `${name}: "${searchTerm}"`,
     titleHighlighted: `${name}: "<mark>${searchTerm}</mark>"`,
     url: cleanUpUrl(url),
     urlHighlighted: cleanUpUrl(url),
     originalUrl: url,
-    searchScore: ext.opts.scoreTitleWeight,
+    searchScore: 1,
   }
 }

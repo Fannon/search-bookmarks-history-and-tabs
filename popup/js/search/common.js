@@ -80,14 +80,14 @@ export async function search(event) {
         }
         for (const alias of aliases) {
           if (searchTerm.startsWith(alias + ' ')) {
-            ext.model.result = [
+            ext.model.result.push(
               getCustomSearchEngineResult(
                 searchTerm.replace(customSearchEngine.alias + ' ', ''),
                 customSearchEngine.name,
                 customSearchEngine.urlPrefix,
+                true,
               ),
-            ]
-            return renderSearchResults(ext.model.result)
+            )
           }
         }
       }
@@ -104,9 +104,9 @@ export async function search(event) {
       } else if (searchMode === 'folders') {
         ext.model.result = searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
       } else if (ext.opts.searchStrategy === 'fuzzy') {
-        ext.model.result = await searchWithAlgorithm('fuzzy', searchTerm, searchMode)
+        ext.model.result.push(...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode)))
       } else if (ext.opts.searchStrategy === 'precise') {
-        ext.model.result = await searchWithAlgorithm('precise', searchTerm, searchMode)
+        ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
       } else if (ext.opts.searchStrategy === 'hybrid') {
         // in this search mode, both precise and hybrid search is executed
         // and the search results are merged, with precise results given precedence.
@@ -227,6 +227,8 @@ export function calculateFinalScore(results, searchTerm) {
       score = ext.opts.scoreHistoryBaseScore
     } else if (el.type === 'search') {
       score = ext.opts.scoreSearchEngineBaseScore
+    } else if (el.type === 'customSearch') {
+      score = ext.opts.scoreCustomSearchEngineBaseScore
     } else {
       throw new Error(`Search result type "${el.type}" not supported`)
     }

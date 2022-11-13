@@ -236,6 +236,11 @@ export const defaultOptions = {
    * Base score for search engine choices
    */
   scoreSearchEngineBaseScore: 30,
+  /**
+   * Base score for custom search engine choices
+   * This is set very high to ensure that it's the topmost entry
+   */
+  scoreCustomSearchEngineBaseScore: 500,
 
   /**
    * If in hybrid mode, this is the score bonus or malus for precise results
