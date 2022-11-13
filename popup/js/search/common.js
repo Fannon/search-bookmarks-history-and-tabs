@@ -79,10 +79,10 @@ export async function search(event) {
           aliases = [aliases]
         }
         for (const alias of aliases) {
-          if (searchTerm.startsWith(alias + ' ')) {
+          if (searchTerm.startsWith(alias.toLowerCase() + ' ')) {
             ext.model.result.push(
               getCustomSearchEngineResult(
-                searchTerm.replace(alias + ' ', ''.trim()),
+                searchTerm.replace(alias.toLowerCase() + ' ', ''.trim()),
                 customSearchEngine.name,
                 customSearchEngine.urlPrefix,
                 customSearchEngine.blank,
