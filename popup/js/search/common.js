@@ -82,7 +82,7 @@ export async function search(event) {
           if (searchTerm.startsWith(alias + ' ')) {
             ext.model.result = [
               getCustomSearchEngineResult(
-                searchTerm.replace(alias + ' ', ''),
+                searchTerm.replace(customSearchEngine.alias + ' ', ''),
                 customSearchEngine.name,
                 customSearchEngine.urlPrefix,
               ),
@@ -110,7 +110,6 @@ export async function search(event) {
       } else if (ext.opts.searchStrategy === 'hybrid') {
         // in this search mode, both precise and hybrid search is executed
         // and the search results are merged, with precise results given precedence.
-        ext.model.result = []
         const preciseResultIndexes = {}
         const preciseResults = await searchWithAlgorithm('precise', searchTerm, searchMode)
         const fuzzyResults = await searchWithAlgorithm('fuzzy', searchTerm, searchMode)

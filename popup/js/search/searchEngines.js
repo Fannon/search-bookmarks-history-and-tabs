@@ -21,16 +21,15 @@ export function getCustomSearchEngineResult(searchTerm, name, urlPrefix) {
   let url
   if (urlPrefix.includes('$s')) {
     url = urlPrefix.replace('$s', encodeURIComponent(searchTerm))
-    console.log('replace')
   } else {
     url = urlPrefix + encodeURIComponent(searchTerm)
   }
-  console.log(urlPrefix, url)
   return {
     type: 'search',
     title: `${name}: "${searchTerm}"`,
     titleHighlighted: `${name}: "<mark>${searchTerm}</mark>"`,
     url: cleanUpUrl(url),
+    urlHighlighted: cleanUpUrl(url),
     originalUrl: url,
     searchScore: ext.opts.scoreTitleWeight,
   }
