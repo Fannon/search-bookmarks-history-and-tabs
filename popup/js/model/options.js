@@ -186,17 +186,21 @@ export const defaultOptions = {
    * If an '$s' is part of the urlPrefix, it will be replaced with the search term.
    * Otherwise, the search term is appended to the urlPrefix.
    *
+   * Optionally, a "blank" can be given, which is the URL chosen when there is no search string.
+   * With this, they act like a "high-priority" custom bookmark.
    */
   customSearchEngines: [
     {
       alias: ['g', 'google'],
       name: 'Google',
       urlPrefix: 'https://www.google.com/search?q=$s',
+      blank: 'https://www.google.com',
     },
     {
       alias: 'd',
       name: 'dict.cc',
       urlPrefix: 'https://www.dict.cc/?s=$s',
+      blank: 'https://www.dict.cc',
     },
   ],
 

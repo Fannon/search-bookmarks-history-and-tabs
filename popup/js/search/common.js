@@ -82,9 +82,10 @@ export async function search(event) {
           if (searchTerm.startsWith(alias + ' ')) {
             ext.model.result.push(
               getCustomSearchEngineResult(
-                searchTerm.replace(customSearchEngine.alias + ' ', ''),
+                searchTerm.replace(alias + ' ', ''.trim()),
                 customSearchEngine.name,
                 customSearchEngine.urlPrefix,
+                customSearchEngine.blank,
                 true,
               ),
             )

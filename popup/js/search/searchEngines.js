@@ -17,17 +17,23 @@ export function addSearchEngines(searchTerm) {
  * Adds one search result based for a custom search engine
  * This is used by the option `customSearchEngines`
  */
-export function getCustomSearchEngineResult(searchTerm, name, urlPrefix, custom) {
+export function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlank, custom) {
   let url
-  if (urlPrefix.includes('$s')) {
+  let title = `${name}: "${searchTerm}"`
+  let titleHighlighted = `${name}: "<mark>${searchTerm}</mark>"`
+  if (urlBlank && !searchTerm.trim()) {
+    url = urlBlank
+    title = name
+    titleHighlighted = name
+  } else if (urlPrefix.includes('$s')) {
     url = urlPrefix.replace('$s', encodeURIComponent(searchTerm))
   } else {
     url = urlPrefix + encodeURIComponent(searchTerm)
   }
   return {
     type: custom ? 'customSearch' : 'search',
-    title: `${name}: "${searchTerm}"`,
-    titleHighlighted: `${name}: "<mark>${searchTerm}</mark>"`,
+    title: title,
+    titleHighlighted: titleHighlighted,
     url: cleanUpUrl(url),
     urlHighlighted: cleanUpUrl(url),
     originalUrl: url,
