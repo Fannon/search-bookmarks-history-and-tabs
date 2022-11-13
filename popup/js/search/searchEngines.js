@@ -7,14 +7,7 @@ export function addSearchEngines(searchTerm) {
   const results = []
   if (ext.opts.enableSearchEngines) {
     for (const searchEngine of ext.opts.searchEngineChoices) {
-      const url = searchEngine.urlPrefix + encodeURIComponent(searchTerm)
-      results.push({
-        type: 'search',
-        title: `${searchEngine.name}: "${searchTerm}"`,
-        url: cleanUpUrl(url),
-        originalUrl: url,
-        searchScore: ext.opts.scoreTitleWeight,
-      })
+      results.push(getCustomSearchEngineResult(searchTerm, searchEngine.name, searchEngine.urlPrefix))
     }
   }
   return results
@@ -24,16 +17,21 @@ export function addSearchEngines(searchTerm) {
  * Adds one search result based for a custom search engine
  * This is used by the option `customSearchEngines`
  */
-export function addCustomSearchEngineResult(searchTerm, name, urlPrefix) {
-  const url = urlPrefix + encodeURIComponent(searchTerm)
-  return [
-    {
-      type: 'search',
-      title: `${name}: "${searchTerm}"`,
-      titleHighlighted: `${name}: "${searchTerm}"`,
-      url: cleanUpUrl(url),
-      originalUrl: url,
-      searchScore: ext.opts.scoreTitleWeight,
-    },
-  ]
+export function getCustomSearchEngineResult(searchTerm, name, urlPrefix) {
+  let url
+  if (urlPrefix.includes('$s')) {
+    url = urlPrefix.replace('$s', encodeURIComponent(searchTerm))
+    console.log('replace')
+  } else {
+    url = urlPrefix + encodeURIComponent(searchTerm)
+  }
+  console.log(urlPrefix, url)
+  return {
+    type: 'search',
+    title: `${name}: "${searchTerm}"`,
+    titleHighlighted: `${name}: "<mark>${searchTerm}</mark>"`,
+    url: cleanUpUrl(url),
+    originalUrl: url,
+    searchScore: ext.opts.scoreTitleWeight,
+  }
 }

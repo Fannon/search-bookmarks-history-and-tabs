@@ -155,40 +155,48 @@ export const defaultOptions = {
    *
    * For each entry here, one result will be created - in the order they are defined.
    * The URLs need to include the search querystring (see examples).
+   *
+   * If an '$s' is part of the urlPrefix, it will be replaced with the search term.
+   * Otherwise, the search term is appended to the urlPrefix.
    */
   searchEngineChoices: [
     {
       name: 'Google',
-      urlPrefix: 'https://www.google.com/search?q=',
+      urlPrefix: 'https://www.google.com/search?q=$s',
     },
     {
       name: 'Bing',
-      urlPrefix: 'https://www.bing.com/search?q=',
+      urlPrefix: 'https://www.bing.com/search?q=$s',
     },
     {
       name: 'DuckDuckGo',
-      urlPrefix: 'https://duckduckgo.com/?q=',
+      urlPrefix: 'https://duckduckgo.com/?q=$s',
     },
     {
       name: 'dict.cc',
-      urlPrefix: 'https://www.dict.cc/?s=',
+      urlPrefix: 'https://www.dict.cc/?s=$s',
     },
   ],
 
   /**
    * Allows to define custom search engines with their own custom alias
    * To trigger a search, type in the alias plus space: `<alias> ` to begin the search
+   * The alias can be one string or an array of strings
+   *
+   * If an '$s' is part of the urlPrefix, it will be replaced with the search term.
+   * Otherwise, the search term is appended to the urlPrefix.
+   *
    */
   customSearchEngines: [
     {
-      alias: 'g',
+      alias: ['g', 'google'],
       name: 'Google',
-      urlPrefix: 'https://www.google.com/search?q=',
+      urlPrefix: 'https://www.google.com/search?q=$s',
     },
     {
       alias: 'd',
       name: 'dict.cc',
-      urlPrefix: 'https://www.dict.cc/?s=',
+      urlPrefix: 'https://www.dict.cc/?s=$s',
     },
   ],
 

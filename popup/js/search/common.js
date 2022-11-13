@@ -7,7 +7,7 @@ import { closeModals } from '../initSearch.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultEntries.js'
 import { fuzzySearch } from './fuzzySearch.js'
-import { addCustomSearchEngineResult, addSearchEngines } from './searchEngines.js'
+import { addSearchEngines, getCustomSearchEngineResult } from './searchEngines.js'
 import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
 
@@ -74,13 +74,21 @@ export async function search(event) {
     } else if (ext.opts.customSearchEngines) {
       // Use custom search mode aliases
       for (const customSearchEngine of ext.opts.customSearchEngines) {
-        if (searchTerm.startsWith(customSearchEngine.alias + ' ')) {
-          ext.model.result = addCustomSearchEngineResult(
-            searchTerm.replace(customSearchEngine.alias + ' ', ''),
-            customSearchEngine.name,
-            customSearchEngine.urlPrefix,
-          )
-          return renderSearchResults(ext.model.result)
+        let aliases = customSearchEngine.alias
+        if (!Array.isArray(aliases)) {
+          aliases = [aliases]
+        }
+        for (const alias of aliases) {
+          if (searchTerm.startsWith(alias + ' ')) {
+            ext.model.result = [
+              getCustomSearchEngineResult(
+                searchTerm.replace(alias + ' ', ''),
+                customSearchEngine.name,
+                customSearchEngine.urlPrefix,
+              ),
+            ]
+            return renderSearchResults(ext.model.result)
+          }
         }
       }
     }
