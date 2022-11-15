@@ -7,7 +7,7 @@ import { closeModals } from '../initSearch.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultEntries.js'
 import { fuzzySearch } from './fuzzySearch.js'
-import { addCustomSearchEngineResult, addSearchEngines } from './searchEngines.js'
+import { addSearchEngines, getCustomSearchEngineResult } from './searchEngines.js'
 import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
 
@@ -74,13 +74,22 @@ export async function search(event) {
     } else if (ext.opts.customSearchEngines) {
       // Use custom search mode aliases
       for (const customSearchEngine of ext.opts.customSearchEngines) {
-        if (searchTerm.startsWith(customSearchEngine.alias + ' ')) {
-          ext.model.result = addCustomSearchEngineResult(
-            searchTerm.replace(customSearchEngine.alias + ' ', ''),
-            customSearchEngine.name,
-            customSearchEngine.urlPrefix,
-          )
-          return renderSearchResults(ext.model.result)
+        let aliases = customSearchEngine.alias
+        if (!Array.isArray(aliases)) {
+          aliases = [aliases]
+        }
+        for (const alias of aliases) {
+          if (searchTerm.startsWith(alias.toLowerCase() + ' ')) {
+            ext.model.result.push(
+              getCustomSearchEngineResult(
+                searchTerm.replace(alias.toLowerCase() + ' ', ''.trim()),
+                customSearchEngine.name,
+                customSearchEngine.urlPrefix,
+                customSearchEngine.blank,
+                true,
+              ),
+            )
+          }
         }
       }
     }
@@ -96,13 +105,12 @@ export async function search(event) {
       } else if (searchMode === 'folders') {
         ext.model.result = searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
       } else if (ext.opts.searchStrategy === 'fuzzy') {
-        ext.model.result = await searchWithAlgorithm('fuzzy', searchTerm, searchMode)
+        ext.model.result.push(...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode)))
       } else if (ext.opts.searchStrategy === 'precise') {
-        ext.model.result = await searchWithAlgorithm('precise', searchTerm, searchMode)
+        ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
       } else if (ext.opts.searchStrategy === 'hybrid') {
         // in this search mode, both precise and hybrid search is executed
         // and the search results are merged, with precise results given precedence.
-        ext.model.result = []
         const preciseResultIndexes = {}
         const preciseResults = await searchWithAlgorithm('precise', searchTerm, searchMode)
         const fuzzyResults = await searchWithAlgorithm('fuzzy', searchTerm, searchMode)
@@ -220,6 +228,8 @@ export function calculateFinalScore(results, searchTerm) {
       score = ext.opts.scoreHistoryBaseScore
     } else if (el.type === 'search') {
       score = ext.opts.scoreSearchEngineBaseScore
+    } else if (el.type === 'customSearch') {
+      score = ext.opts.scoreCustomSearchEngineBaseScore
     } else {
       throw new Error(`Search result type "${el.type}" not supported`)
     }

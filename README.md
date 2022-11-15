@@ -108,19 +108,25 @@ historyIgnoreList:
   - http://localhost
   - http://127.0.0.1
 scoreTabBaseScore: 70 # customize base score for open tabs
-
 searchEngineChoices:
   - name: Google
     urlPrefix: https://google.com/search?q=
-  - name: dict.cc
-    urlPrefix: https://www.dict.cc/?s=
 customSearchEngines:
-  - alias: g
+  - alias: ['g', 'google']
     name: Google
-    urlPrefix: https://www.google.com/search?q=
+    urlPrefix: https://www.google.com/search?q=$s
+    blank: https://www.google.com
   - alias: d
     name: dict.cc
-    urlPrefix: https://www.dict.cc/?s=
+    urlPrefix: https://www.dict.cc/?s=$s
+  - alias: [gh, github]
+    name: GitHub
+    urlPrefix: https://github.com/search?q=$s
+    blank: https://github.com
+  - alias: npm
+    name: NPM
+    urlPrefix: https://www.npmjs.com/search?q=$s
+    blank: https://www.npmjs.com
 ```
 
 ## Scoring System
