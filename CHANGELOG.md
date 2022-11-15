@@ -4,6 +4,8 @@
 
 - **NEW**: Allow definition of custom search engines that are triggered by custom alias
   - New option: `customSearchEngines`, with one default entry: `g ` for executing a google search.
+  - Also added `blank` option when no search string is given
+  - Allowing for multiple aliases, if defined as an array (`['alias1', 'alias`]`)
 
 ## [v1.7.0]
 
