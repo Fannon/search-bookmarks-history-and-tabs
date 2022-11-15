@@ -197,7 +197,7 @@ export const defaultOptions = {
       blank: 'https://www.google.com',
     },
     {
-      alias: 'd',
+      alias: ['d', 'dict'],
       name: 'dict.cc',
       urlPrefix: 'https://www.dict.cc/?s=$s',
       blank: 'https://www.dict.cc',
