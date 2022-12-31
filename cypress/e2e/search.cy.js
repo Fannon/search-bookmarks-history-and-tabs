@@ -24,7 +24,6 @@ describe('Search View', () => {
         .type(`JSON Edit`)
         .get('#result-list li')
         .each((el, index) => {
-          console.log(el)
           if (index === 0) {
             expect(el[0].id).to.equal('selected-result')
           } else {

@@ -9,6 +9,7 @@ cp manifest.json dist/chrome/manifest.json
 
 mkdir dist/chrome/images/
 cp images/edit.svg dist/chrome/images/edit.svg
+cp images/edit.svg dist/chrome/images/x.svg
 cp images/logo-16.png dist/chrome/images/logo-16.png
 cp images/logo-32.png dist/chrome/images/logo-32.png
 cp images/logo-48.png dist/chrome/images/logo-48.png

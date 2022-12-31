@@ -43,7 +43,7 @@ export async function search(event) {
     searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
 
     ext.model.result = []
-    let searchMode = 'all' // OR 'bookmarks' OR 'history'
+    let searchMode = 'all'
 
     // Support for various search modes
     // This is detected by looking at the first chars of the search
