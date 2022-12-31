@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [v1.8.1]
+
+- **FIXED**: Missing icon for closing open tabs
+  - Tip: This is especially useful if you enter tab search mode via searching `t `
+- **FIXED**: Improved very buggy logic to close tabs and update search results
+
 ## [v1.8.0]
 
 - **NEW**: Allow definition of custom search engines that are triggered by custom alias
