@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [v1.8.2]
+
+- **FIXED**: Used wrong icon (edit) for closing tabs
+
 ## [v1.8.1]
 
 - **FIXED**: Missing icon for closing open tabs
