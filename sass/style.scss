@@ -222,6 +222,11 @@ code {
   .close-button {
     float: right;
   }
+  .edit-button:hover,
+  .close-button:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+  }
   .title {
     font-size: 18px;
     margin: 0;
