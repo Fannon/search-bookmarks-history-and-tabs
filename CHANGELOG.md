@@ -3,6 +3,7 @@
 ## [v1.8.2]
 
 - **FIXED**: Used wrong icon (edit) for closing tabs
+- **IMPROVED**: Hover over edit and close icon is now indicated
 
 ## [v1.8.1]
 
