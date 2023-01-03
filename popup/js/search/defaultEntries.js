@@ -18,12 +18,16 @@ export async function addDefaultEntries() {
     })
   } else if (ext.model.searchMode === 'tabs' && ext.model.tabs) {
     // Display last opened tabs by default
-    results = ext.model.tabs.map((el) => {
-      return {
-        searchScore: 1,
-        ...el,
-      }
-    })
+    results = ext.model.tabs
+      .map((el) => {
+        return {
+          searchScore: 1,
+          ...el,
+        }
+      })
+      .sort((a, b) => {
+        return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo
+      })
   } else if (ext.model.searchMode === 'bookmarks' && ext.model.bookmarks) {
     // Display all bookmarks by default
     results = ext.model.bookmarks.map((el) => {
