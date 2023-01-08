@@ -179,8 +179,11 @@ export function renderSearchResults(result) {
  * -> Arrow up, Arrow Down, Enter
  */
 export function navigationKeyListener(event) {
-  if (event.key === 'ArrowUp' && ext.model.currentItem > 0) {
+  if (event.key === 'ArrowUp' && ext.dom.searchInput.value && ext.model.currentItem == 0) {
+    event.preventDefault()
+  } else if (event.key === 'ArrowUp' && ext.model.currentItem > 0) {
     ext.model.currentItem--
+    event.preventDefault()
     selectListItem(ext.model.currentItem, true)
   } else if (event.key === 'ArrowDown' && ext.model.currentItem < ext.model.result.length - 1) {
     ext.model.currentItem++
