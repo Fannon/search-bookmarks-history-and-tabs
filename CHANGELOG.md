@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [v1.8.3]
+
+- **FIXED**: When navigating result items via arrow up, the search text input box curser moved to the beginning of the search string
+  - Fix contributed by [@c0001](https://github.com/c0001) in [PR #71](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/71). Thanks!
+
 ## [v1.8.2]
 
 - **FIXED**: Used wrong icon (edit) for closing tabs
