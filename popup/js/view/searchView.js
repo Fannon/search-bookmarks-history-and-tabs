@@ -183,8 +183,11 @@ export function renderSearchResults(result) {
  * -> Arrow up, Arrow Down, Enter
  */
 export function navigationKeyListener(event) {
-  if (event.key === 'ArrowUp' && ext.model.currentItem > 0) {
+  if (event.key === 'ArrowUp' && ext.dom.searchInput.value && ext.model.currentItem == 0) {
+    event.preventDefault()
+  } else if (event.key === 'ArrowUp' && ext.model.currentItem > 0) {
     ext.model.currentItem--
+    event.preventDefault()
     selectListItem(ext.model.currentItem, true)
   } else if (event.key === 'ArrowDown' && ext.model.currentItem < ext.model.result.length - 1) {
     ext.model.currentItem++
@@ -261,17 +264,28 @@ export function openResultItem(event) {
       window.location = '#edit-bookmark/' + originalId
       return
     } else if (target && target.className.includes('close-button')) {
-      // TODO: Tab close handling is inefficient and not smart.
+      const targetId = parseInt(originalId)
 
       // Close Browser Tab
-      ext.browserApi.tabs.remove(parseInt(originalId))
+      ext.browserApi.tabs.remove(targetId)
 
       // Remove search list entry
-      document.querySelector(`#result-list > li[x-original-id="${originalId}"]`).remove()
+      document.querySelector(`#result-list > li[x-original-id="${originalId}"]`).remove(targetId)
 
       // Remove closed tab from index model
-      const index = ext.model.tabs.findIndex((el) => el.originalId === 210)
-      ext.model.tabs.splice(index, 1)
+      ext.model.tabs.splice(
+        ext.model.tabs.findIndex((el) => el.originalId === targetId),
+        1,
+      )
+
+      // Remove closed tab from search result
+      ext.model.result.splice(
+        ext.model.result.findIndex((el) => el.originalId === targetId),
+        1,
+      )
+
+      // Render search results again to avoid display bugs
+      renderSearchResults()
 
       return
     }

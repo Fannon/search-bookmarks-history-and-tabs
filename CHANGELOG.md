@@ -1,9 +1,27 @@
 # CHANGELOG
 
+## [v1.8.3]
+
+- **FIXED**: When navigating result items via arrow up, the search text input box curser moved to the beginning of the search string
+  - Fix contributed by [@c0001](https://github.com/c0001) in [PR #71](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/71). Thanks!
+
+## [v1.8.2]
+
+- **FIXED**: Used wrong icon (edit) for closing tabs
+- **IMPROVED**: Hover over edit and close icon is now indicated
+
+## [v1.8.1]
+
+- **FIXED**: Missing icon for closing open tabs
+  - Tip: This is especially useful if you enter tab search mode via searching `t `
+- **FIXED**: Improved very buggy logic to close tabs and update search results
+
 ## [v1.8.0]
 
 - **NEW**: Allow definition of custom search engines that are triggered by custom alias
   - New option: `customSearchEngines`, with one default entry: `g ` for executing a google search.
+  - Also added `blank` option when no search string is given
+  - Allowing for multiple aliases, if defined as an array (`['alias1', 'alias`]`)
 
 ## [v1.7.0]
 

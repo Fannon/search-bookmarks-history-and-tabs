@@ -211,6 +211,9 @@ code {
   li.search {
     border-left: 6px solid rgb(206, 150, 47);
   }
+  li.customSearch {
+    border-left: 6px solid rgb(206, 92, 47);
+  }
   li.error {
     color: rgb(204, 88, 88);
     border-left: 6px solid rgb(204, 88, 88);
@@ -224,6 +227,11 @@ code {
     height: 16px;
     display: inline;
     margin-right: 4px;
+  }
+  .edit-button:hover,
+  .close-button:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
   }
   .title {
     font-size: 18px;

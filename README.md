@@ -113,13 +113,21 @@ searchEngineChoices:
   - name: Google
     urlPrefix: https://google.com/search?q=
 customSearchEngines:
-  # Add your custom search engines with their own aliases
-  - alias: g
+  - alias: ['g', 'google']
     name: Google
-    urlPrefix: https://www.google.com/search?q=
+    urlPrefix: https://www.google.com/search?q=$s
+    blank: https://www.google.com
   - alias: d
     name: dict.cc
-    urlPrefix: https://www.dict.cc/?s=
+    urlPrefix: https://www.dict.cc/?s=$s
+  - alias: [gh, github]
+    name: GitHub
+    urlPrefix: https://github.com/search?q=$s
+    blank: https://github.com
+  - alias: npm
+    name: NPM
+    urlPrefix: https://www.npmjs.com/search?q=$s
+    blank: https://www.npmjs.com
 ```
 
 ## Scoring System

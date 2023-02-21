@@ -157,40 +157,52 @@ export const defaultOptions = {
    *
    * For each entry here, one result will be created - in the order they are defined.
    * The URLs need to include the search querystring (see examples).
+   *
+   * If an '$s' is part of the urlPrefix, it will be replaced with the search term.
+   * Otherwise, the search term is appended to the urlPrefix.
    */
   searchEngineChoices: [
     {
       name: 'Google',
-      urlPrefix: 'https://www.google.com/search?q=',
+      urlPrefix: 'https://www.google.com/search?q=$s',
     },
     {
       name: 'Bing',
-      urlPrefix: 'https://www.bing.com/search?q=',
+      urlPrefix: 'https://www.bing.com/search?q=$s',
     },
     {
       name: 'DuckDuckGo',
-      urlPrefix: 'https://duckduckgo.com/?q=',
+      urlPrefix: 'https://duckduckgo.com/?q=$s',
     },
     {
       name: 'dict.cc',
-      urlPrefix: 'https://www.dict.cc/?s=',
+      urlPrefix: 'https://www.dict.cc/?s=$s',
     },
   ],
 
   /**
    * Allows to define custom search engines with their own custom alias
    * To trigger a search, type in the alias plus space: `<alias> ` to begin the search
+   * The alias can be one string or an array of strings
+   *
+   * If an '$s' is part of the urlPrefix, it will be replaced with the search term.
+   * Otherwise, the search term is appended to the urlPrefix.
+   *
+   * Optionally, a "blank" can be given, which is the URL chosen when there is no search string.
+   * With this, they act like a "high-priority" custom bookmark.
    */
   customSearchEngines: [
     {
-      alias: 'g',
+      alias: ['g', 'google'],
       name: 'Google',
-      urlPrefix: 'https://www.google.com/search?q=',
+      urlPrefix: 'https://www.google.com/search?q=$s',
+      blank: 'https://www.google.com',
     },
     {
-      alias: 'd',
+      alias: ['d', 'dict'],
       name: 'dict.cc',
-      urlPrefix: 'https://www.dict.cc/?s=',
+      urlPrefix: 'https://www.dict.cc/?s=$s',
+      blank: 'https://www.dict.cc',
     },
   ],
 
@@ -230,6 +242,11 @@ export const defaultOptions = {
    * Base score for search engine choices
    */
   scoreSearchEngineBaseScore: 30,
+  /**
+   * Base score for custom search engine choices
+   * This is set very high to ensure that it's the topmost entry
+   */
+  scoreCustomSearchEngineBaseScore: 500,
 
   /**
    * If in hybrid mode, this is the score bonus or malus for precise results
