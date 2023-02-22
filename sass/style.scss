@@ -195,24 +195,10 @@ code {
     border-radius: 3px;
     overflow: hidden;
     cursor: pointer;
+    border-left: 6px solid #ccc;
   }
   #selected-result {
     background-color: #dadada;
-  }
-  li.tab {
-    border-left: 6px solid #b89aff;
-  }
-  li.bookmark {
-    border-left: 6px solid #559292;
-  }
-  li.history {
-    border-left: 6px solid rgb(158, 206, 47);
-  }
-  li.search {
-    border-left: 6px solid rgb(206, 150, 47);
-  }
-  li.customSearch {
-    border-left: 6px solid rgb(206, 92, 47);
   }
   li.error {
     color: rgb(204, 88, 88);

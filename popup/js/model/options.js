@@ -46,6 +46,36 @@ export const defaultOptions = {
   searchFuzzyness: 0.6,
 
   //////////////////////////////////////////
+  // COLORS AND STYLE                     //
+  //////////////////////////////////////////
+
+  /**
+   * Width of the left color marker in search results in pixels
+   */
+  colorStripeWidth: 6,
+
+  /**
+   * Color for bookmark results
+   */
+  bookmarkColor: '#54afaf',
+  /**
+   * Color for tab results
+   */
+  tabColor: '#b89aff',
+  /**
+   * Color for history results
+   */
+  historyColor: '#9ece2f',
+  /**
+   * Color for search results
+   */
+  searchColor: '#e1a535',
+  /**
+   * Color for custom search results
+   */
+  customSearchColor: '#ce5c2f',
+
+  //////////////////////////////////////////
   // SEARCH SOURCES                       //
   //////////////////////////////////////////
 
