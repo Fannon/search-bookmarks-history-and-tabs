@@ -2,9 +2,11 @@
 
 ## [v1.8.4]
 
-- **ADDED**: Added options to configure the color and the width of the color stripe of search results
+- **NEW**: Added options to configure the color and the width of the color stripe of search results
   - `colorStripeWidth` to set the width
   - `bookmarkColor` and similar to set the color (expressed as CSS color)
+- **NEW**: When hovering over an URL, the full URL is displayed as a hover. Requested via [#74](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/74)
+- **IMPROVED**: Updated dependencies
 
 ## [v1.8.3]
 
