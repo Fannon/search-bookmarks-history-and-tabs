@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [v1.8.4]
+
+- **ADDED**: Added options to configure the color and the width of the color stripe of search results
+  - `colorStripeWidth` to set the width
+  - `bookmarkColor` and similar to set the color (expressed as CSS color)
+
 ## [v1.8.3]
 
 - **FIXED**: When navigating result items via arrow up, the search text input box curser moved to the beginning of the search string

@@ -107,6 +107,8 @@ historyMaxItems: 1200
 historyIgnoreList:
   - http://localhost
   - http://127.0.0.1
+colorStripeWidth: 4 # Customize width of search result color stripe
+bookmarkColor: '#46e6e6' # customize color for bookmark results
 scoreTabBaseScore: 70 # customize base score for open tabs
 searchEngineChoices:
   - name: Google

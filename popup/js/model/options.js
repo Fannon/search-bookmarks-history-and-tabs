@@ -55,23 +55,23 @@ export const defaultOptions = {
   colorStripeWidth: 6,
 
   /**
-   * Color for bookmark results
+   * Color for bookmark results, expressed as CSS color
    */
   bookmarkColor: '#54afaf',
   /**
-   * Color for tab results
+   * Color for tab results, expressed as CSS color
    */
   tabColor: '#b89aff',
   /**
-   * Color for history results
+   * Color for history results, expressed as CSS color
    */
   historyColor: '#9ece2f',
   /**
-   * Color for search results
+   * Color for search results, expressed as CSS color
    */
   searchColor: '#e1a535',
   /**
-   * Color for custom search results
+   * Color for custom search results, expressed as CSS color
    */
   customSearchColor: '#ce5c2f',
 
