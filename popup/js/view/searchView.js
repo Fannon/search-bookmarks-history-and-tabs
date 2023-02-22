@@ -131,6 +131,7 @@ export function renderSearchResults(result) {
     // Create URL div
     const urlDiv = document.createElement('div')
     urlDiv.classList.add('url')
+    urlDiv.title = resultEntry.url
     if (
       ext.opts.displaySearchMatchHighlight &&
       resultEntry.urlHighlighted &&
