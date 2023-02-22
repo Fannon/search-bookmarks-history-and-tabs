@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [v1.8.4]
+
+- **NEW**: When hovering over an URL, the full URL is displayed as a hover. Requested via [#74](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/74)
+- **IMPROVED**: Updated dependencies
+
 ## [v1.8.3]
 
 - **FIXED**: When navigating result items via arrow up, the search text input box curser moved to the beginning of the search string
