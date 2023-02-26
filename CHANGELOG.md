@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [v1.8.5]
+
+- **CHANGED**: Extension does not log or do performance measurements by default.
+  - If you want to enable this, use the option: `debug: true`
+
 ## [v1.8.4]
 
 - **NEW**: Added options to configure the color and the width of the color stripe of search results
