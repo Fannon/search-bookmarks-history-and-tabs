@@ -193,7 +193,9 @@ export function convertBrowserHistory(history) {
       }
       return true
     })
-    console.debug(`Ignored ${ignoredHistoryCounter} history items due to ignore list`)
+    if (ext.opts.debug) {
+      console.debug(`Ignored ${ignoredHistoryCounter} history items due to ignore list`)
+    }
   }
 
   const now = Date.now()
