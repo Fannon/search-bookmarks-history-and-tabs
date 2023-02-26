@@ -20,7 +20,9 @@ export async function editBookmark(bookmarkId) {
 
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
   const tags = Object.keys(getUniqueTags()).sort()
-  console.debug('Editing bookmark ' + bookmarkId, bookmark)
+  if (ext.opts.debug) {
+    console.debug('Editing bookmark ' + bookmarkId, bookmark)
+  }
   if (bookmark) {
     document.getElementById('edit-bookmark').style = ''
     document.getElementById('bookmark-title').value = bookmark.title
@@ -90,7 +92,9 @@ export function updateBookmark(bookmarkId) {
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
 
-  console.debug(`Update bookmark with ID ${bookmarkId}: "${titleInput} ${tagsInput}"`)
+  if (ext.opts.debug) {
+    console.debug(`Update bookmark with ID ${bookmarkId}: "${titleInput} ${tagsInput}"`)
+  }
 
   if (browserApi.bookmarks) {
     browserApi.bookmarks.update(bookmarkId, {

@@ -22,25 +22,37 @@ export async function getSearchData() {
 
   // FIRST: Get data
   if (browserApi.tabs && ext.opts.enableTabs) {
-    performance.mark('get-data-tabs-start')
+    if (ext.opts.debug) {
+      performance.mark('get-data-tabs-start')
+    }
     const browserTabs = await getBrowserTabs()
     result.tabs = convertBrowserTabs(browserTabs)
-    performance.mark('get-data-tabs-end')
-    performance.measure('get-data-tabs', 'get-data-tabs-start', 'get-data-tabs-end')
+    if (ext.opts.debug) {
+      performance.mark('get-data-tabs-end')
+      performance.measure('get-data-tabs', 'get-data-tabs-start', 'get-data-tabs-end')
+    }
   }
   if (browserApi.bookmarks && ext.opts.enableBookmarks) {
-    performance.mark('get-data-bookmarks-start')
+    if (ext.opts.debug) {
+      performance.mark('get-data-bookmarks-start')
+    }
     const browserBookmarks = await getBrowserBookmarks()
     result.bookmarks = convertBrowserBookmarks(browserBookmarks)
-    performance.mark('get-data-bookmarks-end')
-    performance.measure('get-data-bookmarks', 'get-data-bookmarks-start', 'get-data-bookmarks-end')
+    if (ext.opts.debug) {
+      performance.mark('get-data-bookmarks-end')
+      performance.measure('get-data-bookmarks', 'get-data-bookmarks-start', 'get-data-bookmarks-end')
+    }
   }
   if (browserApi.history && ext.opts.enableHistory) {
-    performance.mark('get-data-history-start')
+    if (ext.opts.debug) {
+      performance.mark('get-data-history-start')
+    }
     const browserHistory = await getBrowserHistory(ext.opts.historyDaysAgo, ext.opts.historyMaxItems)
     result.history = convertBrowserHistory(browserHistory)
-    performance.mark('get-data-history-end')
-    performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end')
+    if (ext.opts.debug) {
+      performance.mark('get-data-history-end')
+      performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end')
+    }
   }
 
   // Use mock data (for localhost preview / development)
@@ -115,9 +127,11 @@ export async function getSearchData() {
     result.history[i].index = i
   }
 
-  console.debug(
-    `Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items.`,
-  )
+  if (ext.opts.debug) {
+    console.debug(
+      `Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items.`,
+    )
+  }
 
   return result
 }

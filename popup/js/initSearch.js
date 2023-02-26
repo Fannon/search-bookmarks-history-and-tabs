@@ -25,11 +25,15 @@ initExtension().catch((err) => {
  * This includes indexing the current bookmarks and history
  */
 export async function initExtension() {
-  performance.mark('init-start')
+  if (ext.opts.debug) {
+    performance.mark('init-start')
+  }
 
   // Load effective options, including user customizations
   ext.opts = await getEffectiveOptions()
-  console.debug('Initialized with options', ext.opts)
+  if (ext.opts.debug) {
+    console.debug('Initialized with options', ext.opts)
+  }
 
   // HTML Element selectors
   ext.dom.searchInput = document.getElementById('search-input')
@@ -39,14 +43,18 @@ export async function initExtension() {
 
   updateSearchApproachToggle()
 
-  performance.mark('init-dom')
+  if (ext.opts.debug) {
+    performance.mark('init-dom')
+  }
 
   const { bookmarks, tabs, history } = await getSearchData()
   ext.model.tabs = tabs
   ext.model.bookmarks = bookmarks
   ext.model.history = history
 
-  performance.mark('init-data-load')
+  if (ext.opts.debug) {
+    performance.mark('init-data-load')
+  }
   ext.initialized = true
 
   // Register Events
@@ -55,24 +63,27 @@ export async function initExtension() {
   ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
   ext.dom.searchInput.addEventListener('keyup', search)
 
-  performance.mark('init-router')
+  if (ext.opts.debug) {
+    performance.mark('init-router')
+  }
   if (!document.querySelector('#result-list .message')) {
     // Initialize the router by executing it for the first time
     // Only do this if there are no (error / warning) messages displayed
     hashRouter()
   }
 
-  // Do some performance measurements and log it to debug
-  performance.mark('init-end')
-  performance.measure('init-end-to-end', 'init-start', 'init-end')
-  performance.measure('init-dom', 'init-start', 'init-dom')
-  performance.measure('init-data-load', 'init-dom', 'init-data-load')
-  // performance.measure('init-search-index', 'init-data-load', 'init-search-index')
-  performance.measure('init-router', 'init-data-load', 'init-router')
-  const initPerformance = performance.getEntriesByType('measure')
-  const totalInitPerformance = performance.getEntriesByName('init-end-to-end')
-  console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)
-  performance.clearMeasures()
+  if (ext.opts.debug) {
+    // Do some performance measurements and log it to debug
+    performance.mark('init-end')
+    performance.measure('init-end-to-end', 'init-start', 'init-end')
+    performance.measure('init-dom', 'init-start', 'init-dom')
+    performance.measure('init-data-load', 'init-dom', 'init-data-load')
+    performance.measure('init-router', 'init-data-load', 'init-router')
+    const initPerformance = performance.getEntriesByType('measure')
+    const totalInitPerformance = performance.getEntriesByName('init-end-to-end')
+    console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)
+    performance.clearMeasures()
+  }
 
   if (document.getElementById('results-loading')) {
     document.getElementById('results-loading').remove()
@@ -89,7 +100,6 @@ export async function initExtension() {
 export async function hashRouter() {
   try {
     const hash = window.location.hash
-    // console.debug('Changing Route: "' + hash + '"')
     closeModals()
     if (!hash || hash === '#') {
       // Index route -> redirect to last known search or empty search

@@ -8,6 +8,16 @@ import { printError } from '../helper/utils.js'
  */
 export const defaultOptions = {
   //////////////////////////////////////////
+  // GENERAL OPTIONS                      //
+  //////////////////////////////////////////
+
+  /**
+   * When enabled, the extension will log some additional information like what it indexed
+   * and performance measurements
+   */
+  debug: false,
+
+  //////////////////////////////////////////
   // SEARCH OPTIONS                       //
   //////////////////////////////////////////
 
