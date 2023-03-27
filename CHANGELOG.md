@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [unreleased]
+
+- **FIXED**: Fuzzy search to support chinese and other (ideograph?) characters
+
 ## [v1.8.5]
 
 - **CHANGED**: Extension does not log or do performance measurements by default.
