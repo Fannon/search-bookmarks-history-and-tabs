@@ -55,6 +55,13 @@ export const defaultOptions = {
    */
   searchFuzzyness: 0.6,
 
+  /**
+   * Customized options for uFuzzy ('@leeoniya/ufuzzy') defaults and
+   * our builtin specifications. (See also
+   * https://github.com/leeoniya/uFuzzy/blob/main/src/uFuzzy.js#L9)
+   */
+  ufuzzyOptions: [],
+
   //////////////////////////////////////////
   // COLORS AND STYLE                     //
   //////////////////////////////////////////

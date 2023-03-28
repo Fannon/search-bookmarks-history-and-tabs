@@ -131,6 +131,13 @@ customSearchEngines:
     blank: https://www.npmjs.com
 ```
 
+In case of making multilingual searching correctly, you may need to tweak [uFuzzy](https://github.com/leeoniya/uFuzzy) options via option `ufuzzyOptions`, for example:
+```yaml
+# make CJK chars can be searched
+ufuzzyOptions:
+  - interSplit: (p{Unified_Ideograph=yes})+
+```
+
 ## Scoring System
 
 The scoring systems works roughly the following:

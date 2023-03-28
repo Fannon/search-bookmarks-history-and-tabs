@@ -64,6 +64,15 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
       options.intraDel = 1 // deletion (omission)
     }
 
+    // Respect user specifications
+    if (ext.opts.ufuzzyOptions) {
+      for (let i = 0; i < ext.opts.ufuzzyOptions.length; i++) {
+        for (let key in ext.opts.ufuzzyOptions[i]) {
+          options[key] = ext.opts.ufuzzyOptions[i][key]
+        }
+      }
+    }
+
     state[searchMode] = {
       haystack: data.map((el) => {
         return el.searchString
