@@ -132,6 +132,7 @@ customSearchEngines:
 ```
 
 In case of making multilingual searching correctly, you may need to tweak [uFuzzy](https://github.com/leeoniya/uFuzzy) options via option `ufuzzyOptions`, for example:
+
 ```yaml
 # make CJK chars can be searched
 ufuzzyOptions:
