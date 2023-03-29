@@ -51,7 +51,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
     const options = {
       // How many characters "in between" are allowed -> increased fuzzyness
       intraIns: Math.round(ext.opts.searchFuzzyness * 4.2),
-      interSplit: '(p{Unified_Ideograph=yes})+',
+      ...(ext.opts.uFuzzyOptions || {}),
     }
 
     // When searchFuzzyness is set to 0.8 or higher:

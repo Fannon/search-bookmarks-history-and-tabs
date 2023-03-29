@@ -375,6 +375,19 @@ export const defaultOptions = {
    */
   scoreDateAddedBonusScorePerDay: 0.1,
   scoreDateAddedBonusScoreMaximum: 5,
+
+  //////////////////////////////////////////
+  // POWER USER OPTIONS                   //
+  //////////////////////////////////////////
+
+  // Those are only meant for power users who know what they're doing
+  // And those options may also not be long-time stable
+
+  /**
+   * Customized options for the fuzzy search library uFuzzy ('@leeoniya/ufuzzy')
+   * @see https://github.com/leeoniya/uFuzzy/blob/main/src/uFuzzy.js#L9
+   */
+  uFuzzyOptions: {},
 }
 
 /**
