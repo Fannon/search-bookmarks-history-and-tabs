@@ -41,10 +41,8 @@ export function convertBrowserTabs(chromeTabs) {
       active: entry.active,
       windowId: entry.windowId,
       searchString: createSearchString(entry.title, cleanUrl),
-      lastVisitSecondsAgo: entry.lastAccessed
-        ? (Date.now() - entry.lastAccessed) / 1000 : undefined,
-      lastVisit: (entry.lastAccessed && ext.opts.displayLastVisit)
-        ? timeSince(new Date(entry.lastAccessed)) : undefined
+      lastVisitSecondsAgo: entry.lastAccessed ? (Date.now() - entry.lastAccessed) / 1000 : undefined,
+      lastVisit: entry.lastAccessed && ext.opts.displayLastVisit ? timeSince(new Date(entry.lastAccessed)) : undefined,
     }
   })
 }
