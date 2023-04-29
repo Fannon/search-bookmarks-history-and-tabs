@@ -1,25 +1,25 @@
 {
   "name": "search-bookmarks-history-and-tabs",
-  "version": "1.8.6",
+  "version": "1.9.0",
   "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.",
   "main": "index.js",
   "dependencies": {
     "@leeoniya/ufuzzy": "^1.0.6",
-    "@yaireo/tagify": "^4.17.7",
+    "@yaireo/tagify": "^4.17.8",
     "bulma": "^0.9.4",
     "js-yaml": "^4.1.0",
     "mark.js": "^8.11.1"
   },
   "devDependencies": {
-    "cypress": "^12.9.0",
+    "cypress": "^12.11.0",
     "cypress-fail-on-console-error": "^4.0.2",
-    "eslint": "^8.37.0",
+    "eslint": "^8.39.0",
     "eslint-config-prettier": "^8.8.0",
-    "eslint-plugin-cypress": "^2.13.2",
+    "eslint-plugin-cypress": "^2.13.3",
     "live-server": "^1.2.2",
-    "prettier": "2.8.7",
+    "prettier": "2.8.8",
     "prettier-eslint": "^15.0.1",
-    "sass": "^1.60.0"
+    "sass": "^1.62.1"
   },
   "scripts": {
     "clean": "rm -rf ./dist",

@@ -364,8 +364,6 @@ export async function toggleSearchApproach() {
 
   if (ext.opts.searchStrategy === 'precise') {
     ext.opts.searchStrategy = 'fuzzy'
-  } else if (ext.opts.searchStrategy === 'fuzzy') {
-    ext.opts.searchStrategy = 'hybrid'
   } else {
     ext.opts.searchStrategy = 'precise'
   }
@@ -388,8 +386,5 @@ export function updateSearchApproachToggle() {
   } else if (ext.opts.searchStrategy === 'precise') {
     ext.dom.searchApproachToggle.innerText = 'PRECISE'
     ext.dom.searchApproachToggle.classList = 'precise'
-  } else if (ext.opts.searchStrategy === 'hybrid') {
-    ext.dom.searchApproachToggle.innerText = 'HYBRID'
-    ext.dom.searchApproachToggle.classList = 'hybrid'
   }
 }
