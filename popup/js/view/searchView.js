@@ -83,6 +83,10 @@ export function renderSearchResults(result) {
       const folder = document.createElement('span')
       folder.title = 'Bookmark Folder'
       folder.classList.add('badge', 'folder')
+
+      if (ext.opts.bookmarkColor) {
+        folder.style = `background-color: ${ext.opts.bookmarkColor}`
+      }
       if (
         ext.opts.displaySearchMatchHighlight &&
         resultEntry.folderHighlighted &&
