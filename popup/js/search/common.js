@@ -111,7 +111,9 @@ export async function search(event) {
       } else if (ext.opts.searchStrategy === 'precise') {
         ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
       } else {
-        throw new Error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
+        console.error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
+        // Fall back to use precise search instead of crashing entirely
+        ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
       }
 
       // Add search engine result items
