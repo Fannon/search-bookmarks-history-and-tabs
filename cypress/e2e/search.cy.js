@@ -113,6 +113,16 @@ describe('Search View', () => {
         .find('li.bookmark')
         .checkNoErrors()
     })
+    it('can execute a precise search with non-ASCII chars successfully', () => {
+      cy.get('#search-approach-toggle')
+        .get('#search-input')
+        .type(`äe指事字₽`)
+        .wait(initTime)
+        // Only make sure that search doesn't crash
+        .get('#result-list')
+        .should('not.have.length', 0)
+        .checkNoErrors()
+    })
   })
 
   describe('Fuzzy search', () => {
@@ -154,6 +164,23 @@ describe('Search View', () => {
         .find('li.bookmark')
         .checkNoErrors()
     })
+  })
+
+  it('can execute a precise search with non-ASCII chars successfully', () => {
+    cy.get('#search-approach-toggle')
+      .wait(interactionTime)
+      .contains('PRECISE')
+      .click()
+      .wait(interactionTime)
+      .contains('FUZZY')
+      .wait(interactionTime)
+      .get('#search-input')
+      .type(`äe指事字₽`)
+      .wait(initTime)
+      // Only make sure that search doesn't crash
+      .get('#result-list')
+      .should('not.have.length', 0)
+      .checkNoErrors()
   })
 
   describe('Hybrid search', () => {
