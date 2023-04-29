@@ -2,6 +2,8 @@
 // FUZZY SEARCH SUPPORT                 //
 //////////////////////////////////////////
 
+import { printError } from '../helper/utils.js'
+
 /**
  * Memoize some state, to avoid re-creating haystack and fuzzy search instances
  */
@@ -47,12 +49,25 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
     return [] // early return
   }
 
+  // eslint-disable-next-line no-control-regex
+  console.log('nonAsciiCharacters', containsNonASCII(searchTerm))
+
+  if (containsNonASCII(searchTerm)) {
+    state[searchMode] = undefined
+  }
+
   if (!state[searchMode]) {
     const options = {
       // How many characters "in between" are allowed -> increased fuzzyness
       intraIns: Math.round(ext.opts.searchFuzzyness * 4.2),
       ...(ext.opts.uFuzzyOptions || {}),
     }
+
+    if (containsNonASCII(searchTerm)) {
+      options.interSplit = '(p{Unified_Ideograph=yes})+'
+    }
+
+    console.log(options)
 
     // When searchFuzzyness is set to 0.8 or higher:
     // allows for a single error in each term of the search phrase
@@ -86,36 +101,41 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
   for (const term of searchTermArray) {
     const localResults = []
 
-    let idxs = s.uf.filter(s.haystack, term, s.idxs)
-    let info = s.uf.info(idxs, s.haystack, term)
+    try {
+      let idxs = s.uf.filter(s.haystack, term, s.idxs)
+      let info = s.uf.info(idxs, s.haystack, term)
 
-    for (let i = 0; i < info.idx.length; i++) {
-      const result = data[idxs[i]]
+      for (let i = 0; i < info.idx.length; i++) {
+        const result = data[idxs[i]]
 
-      // Apply highlighting, but only on last iteration
-      const highlight = uFuzzy.highlight(result.searchString, info.ranges[i])
-      // Split highlighted string back into its original multiple properties
-      const highlightArray = highlight.split('¦')
-      if (highlightArray[0].includes('<mark>')) {
-        result.titleHighlighted = highlightArray[0]
-      }
-      if (highlightArray[1].includes('<mark>')) {
-        result.urlHighlighted = highlightArray[1]
-      }
-      if (highlightArray[2] && highlightArray[2].includes('<mark>')) {
-        result.tagsHighlighted = highlightArray[2]
-      }
-      if (highlightArray[3] && highlightArray[3].includes('<mark>')) {
-        result.folderHighlighted = highlightArray[3]
-      }
+        // Apply highlighting, but only on last iteration
+        const highlight = uFuzzy.highlight(result.searchString, info.ranges[i])
+        // Split highlighted string back into its original multiple properties
+        const highlightArray = highlight.split('¦')
+        if (highlightArray[0].includes('<mark>')) {
+          result.titleHighlighted = highlightArray[0]
+        }
+        if (highlightArray[1].includes('<mark>')) {
+          result.urlHighlighted = highlightArray[1]
+        }
+        if (highlightArray[2] && highlightArray[2].includes('<mark>')) {
+          result.tagsHighlighted = highlightArray[2]
+        }
+        if (highlightArray[3] && highlightArray[3].includes('<mark>')) {
+          result.folderHighlighted = highlightArray[3]
+        }
 
-      localResults.push({
-        ...result,
-        // 0 intra chars are perfect score, 5 and more are 0 score.
-        searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
-        searchApproach: 'fuzzy',
-      })
-      s.idxs = idxs // Save idxs cache to state
+        localResults.push({
+          ...result,
+          // 0 intra chars are perfect score, 5 and more are 0 score.
+          searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
+          searchApproach: 'fuzzy',
+        })
+        s.idxs = idxs // Save idxs cache to state
+      }
+    } catch (err) {
+      err.message = 'Fuzzy search could not handle search term. Please try precise search instead.'
+      printError(err)
     }
 
     results = localResults // keep and return the last iteration of local results
@@ -123,4 +143,13 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
 
   s.searchTerm = searchTerm // Remember last search term, to know when to invalidate idxx cache
   return results
+}
+
+function containsNonASCII(str) {
+  for (let i = 0; i < str.length; i++) {
+    if (str.charCodeAt(i) > 127) {
+      return true
+    }
+  }
+  return false
 }

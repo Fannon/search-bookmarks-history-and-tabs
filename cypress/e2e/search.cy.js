@@ -113,6 +113,25 @@ describe('Search View', () => {
         .find('li.bookmark')
         .checkNoErrors()
     })
+    it('can execute a precise search with non-ASCII chars successfully', () => {
+      cy.get('#search-approach-toggle')
+        .get('#search-input')
+        .type(`äe指事字₽`)
+        .wait(initTime)
+        // Make sure we get result of all types
+        .get('#result-list')
+        .should('not.have.length', 0)
+        .find('[x-original-id=9]')
+        .get('#result-list')
+        .find('li.bookmark')
+        .get('#result-list')
+        .find('li.history')
+        .get('#result-list')
+        .find('li.tab')
+        .get('#result-list')
+        .find('li.bookmark')
+        .checkNoErrors()
+    })
   })
 
   describe('Fuzzy search', () => {
