@@ -371,6 +371,12 @@ export const defaultOptions = {
   // And those options may also not be long-time stable
 
   /**
+   * If the extension detects that the title is just the URL of the link,
+   * it gets shortened so the result entries are not swamped by long URL patterns
+   */
+  titleLengthRestrictionForUrls: 80,
+
+  /**
    * Customized options for the fuzzy search library uFuzzy ('@leeoniya/ufuzzy')
    * @see https://github.com/leeoniya/uFuzzy/blob/main/src/uFuzzy.js#L9
    */
