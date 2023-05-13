@@ -258,9 +258,12 @@ export function getTitle(title, url) {
 }
 
 export function shortenTitle(title) {
-  const lengthRestriction = 85
-  if (title && title.length > lengthRestriction) {
-    return `${title.substring(0, lengthRestriction - 3)}...`
+  const urlTitleLengthRestriction = 85
+  const maxLengthRestriction = 512
+  if (title && title.length > urlTitleLengthRestriction) {
+    return `${title.substring(0, urlTitleLengthRestriction - 3)}...`
+  } else if (title && title.length > maxLengthRestriction) {
+    return `${title.substring(0, maxLengthRestriction - 3)}...`
   } else {
     return title
   }
