@@ -29,20 +29,20 @@ export async function getBrowserTabs(queryOptions) {
 }
 
 export function convertBrowserTabs(chromeTabs) {
-  return chromeTabs.map((entry) => {
-    const cleanUrl = cleanUpUrl(entry.url)
+  return chromeTabs.map((el) => {
+    const cleanUrl = cleanUpUrl(el.url)
     return {
       type: 'tab',
-      title: entry.title,
+      title: getTitle(el.title, cleanUrl),
       url: cleanUrl,
-      originalUrl: entry.url.replace(/\/$/, ''),
-      originalId: entry.id,
-      favIconUrl: entry.favIconUrl,
-      active: entry.active,
-      windowId: entry.windowId,
-      searchString: createSearchString(entry.title, cleanUrl),
-      lastVisitSecondsAgo: entry.lastAccessed ? (Date.now() - entry.lastAccessed) / 1000 : undefined,
-      lastVisit: entry.lastAccessed && ext.opts.displayLastVisit ? timeSince(new Date(entry.lastAccessed)) : undefined,
+      originalUrl: el.url.replace(/\/$/, ''),
+      originalId: el.id,
+      favIconUrl: el.favIconUrl,
+      active: el.active,
+      windowId: el.windowId,
+      searchString: createSearchString(el.title, cleanUrl),
+      lastVisitSecondsAgo: el.lastAccessed ? (Date.now() - el.lastAccessed) / 1000 : undefined,
+      lastVisit: el.lastAccessed && ext.opts.displayLastVisit ? timeSince(new Date(el.lastAccessed)) : undefined,
     }
   })
 }
@@ -121,7 +121,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
         tagsText = tagsText.slice(0, -1)
       }
 
-      mappedEntry.title = title
+      mappedEntry.title = getTitle(title, mappedEntry.url)
       mappedEntry.tags = tagsText
       mappedEntry.tagsArray = tagsArray
 
@@ -135,7 +135,12 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
       mappedEntry.folder = folderText
       mappedEntry.folderArray = folderTrail
 
-      mappedEntry.searchString = createSearchString(title, mappedEntry.url, mappedEntry.tags, mappedEntry.folder)
+      mappedEntry.searchString = createSearchString(
+        mappedEntry.title,
+        mappedEntry.url,
+        mappedEntry.tags,
+        mappedEntry.folder,
+      )
 
       result.push(mappedEntry)
     }
@@ -203,9 +208,10 @@ export function convertBrowserHistory(history) {
   const now = Date.now()
   return history.map((el) => {
     const cleanUrl = cleanUpUrl(el.url)
+
     return {
       type: 'history',
-      title: el.title,
+      title: getTitle(el.title, cleanUrl),
       originalUrl: el.url.replace(/\/$/, ''),
       url: cleanUrl,
       visitCount: el.visitCount,
@@ -219,7 +225,18 @@ export function convertBrowserHistory(history) {
 
 export function createSearchString(title, url, tags, folder) {
   const separator = '¦'
-  let searchString = title + separator + url
+  let searchString = ''
+  if (!url) {
+    console.error('createSearchString: No URL given', { title, url, tags, folder })
+    return searchString
+  }
+
+  if (title && !title.toLowerCase().includes(url.toLowerCase())) {
+    searchString += title + separator + url
+  } else {
+    searchString += url
+  }
+
   if (tags) {
     searchString += separator + tags
   }
@@ -227,4 +244,27 @@ export function createSearchString(title, url, tags, folder) {
     searchString += separator + folder
   }
   return searchString
+}
+
+export function getTitle(title, url) {
+  let newTitle = title || ''
+  if (newTitle.includes('http://') || newTitle.includes('https://') || newTitle === url) {
+    newTitle = shortenTitle(cleanUpUrl(newTitle))
+  }
+  if (!newTitle.trim()) {
+    newTitle = shortenTitle(cleanUpUrl(url))
+  }
+  return newTitle
+}
+
+export function shortenTitle(title) {
+  const urlTitleLengthRestriction = 85
+  const maxLengthRestriction = 512
+  if (title && title.length > urlTitleLengthRestriction) {
+    return `${title.substring(0, urlTitleLengthRestriction - 3)}...`
+  } else if (title && title.length > maxLengthRestriction) {
+    return `${title.substring(0, maxLengthRestriction - 3)}...`
+  } else {
+    return title
+  }
 }

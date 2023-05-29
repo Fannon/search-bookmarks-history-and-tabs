@@ -219,6 +219,9 @@ code {
     font-weight: 400;
     color: #333;
   }
+  .title-text {
+    line-break: auto;
+  }
 }
 #error-list {
   position: fixed;

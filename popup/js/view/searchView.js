@@ -54,16 +54,22 @@ export function renderSearchResults(result) {
     const titleDiv = document.createElement('div')
     titleDiv.classList.add('title')
 
+    // Create title text
+    const titleText = document.createElement('span')
+    titleText.classList.add('title-text')
+
     if (ext.opts.displaySearchMatchHighlight) {
       const content = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
       if (content.includes('<mark>')) {
-        titleDiv.innerHTML = content + ' '
+        titleText.innerHTML = content + ' '
       } else {
-        titleDiv.innerText = content + ' '
+        titleText.innerText = content + ' '
       }
     } else {
-      titleDiv.innerText = resultEntry.title | (resultEntry.url + ' ')
+      titleText.innerText = resultEntry.title | (resultEntry.url + ' ')
     }
+    titleDiv.appendChild(titleText)
+
     if (ext.opts.displayTags && resultEntry.tags) {
       const tags = document.createElement('span')
       tags.title = 'Bookmark Tags'
