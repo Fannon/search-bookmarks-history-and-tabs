@@ -49,9 +49,6 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
     return [] // early return
   }
 
-  // eslint-disable-next-line no-control-regex
-  console.log('nonAsciiCharacters', containsNonASCII(searchTerm))
-
   if (containsNonASCII(searchTerm)) {
     state[searchMode] = undefined
   }
@@ -66,8 +63,6 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
     if (containsNonASCII(searchTerm)) {
       options.interSplit = '(p{Unified_Ideograph=yes})+'
     }
-
-    console.log(options)
 
     // When searchFuzzyness is set to 0.8 or higher:
     // allows for a single error in each term of the search phrase
@@ -112,10 +107,10 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
         const highlight = uFuzzy.highlight(result.searchString, info.ranges[i])
         // Split highlighted string back into its original multiple properties
         const highlightArray = highlight.split('¦')
-        if (highlightArray[0].includes('<mark>')) {
+        if (highlightArray[0] && highlightArray[0].includes('<mark>')) {
           result.titleHighlighted = highlightArray[0]
         }
-        if (highlightArray[1].includes('<mark>')) {
+        if (highlightArray[1] && highlightArray[1].includes('<mark>')) {
           result.urlHighlighted = highlightArray[1]
         }
         if (highlightArray[2] && highlightArray[2].includes('<mark>')) {
