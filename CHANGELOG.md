@@ -2,7 +2,11 @@
 
 ## [unreleased]
 
-## [v1.8.8]
+## [v1.9.1]
+
+- **IMPROVED**: Better handling of long bookmark titles. Some titles are now abbreviated, especially if they are a subpart of the URL anyway.
+
+## [v1.9.0]
 
 - **FIXED**: Fuzzy search now also works with non-ASCII characters like CKJ chars by default
 - **FIXED**: Option `bookmarkColor` now also applies to the bookmark folder badge in the search results
