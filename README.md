@@ -97,6 +97,22 @@ displayVisitCounter: true
 displayDateAdded: true
 ```
 
+If you have troubles with performance, here are a few options that might help. Feel free to pick & choose and tune the values to your situation:
+
+```yaml
+searchStrategy: precise
+searchMinMatchCharLength: 2
+displaySearchMatchHighlight: false,
+searchMaxResults: 20
+historyMaxItems: 200
+```
+
+> Precise search is faster than fuzzy search.
+> Start searching only when at least 2 characters are entered
+> Highlighting search matches takes some effort, this can be disabled.
+> Number of search results can be further limited
+> Number of browser history items can be further reduced
+
 Or a more advanced example:
 
 ```yaml

@@ -1,6 +1,6 @@
 {
   "name": "search-bookmarks-history-and-tabs",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.",
   "main": "index.js",
   "dependencies": {
@@ -11,15 +11,15 @@
     "mark.js": "^8.11.1"
   },
   "devDependencies": {
-    "cypress": "^12.13.0",
+    "cypress": "^12.16.0",
     "cypress-fail-on-console-error": "^4.0.3",
-    "eslint": "^8.41.0",
+    "eslint": "^8.43.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-cypress": "^2.13.3",
     "live-server": "^1.2.2",
     "prettier": "2.8.8",
     "prettier-eslint": "^15.0.1",
-    "sass": "^1.62.1"
+    "sass": "^1.63.6"
   },
   "scripts": {
     "clean": "rm -rf ./dist",
@@ -33,13 +33,13 @@
     "e2e-firefox": "cypress run --config-file=cypress.config.js --browser firefox --headed --spec 'cypress/e2e/**/*'",
     "e2e-edge": "cypress run --config-file=cypress.config.js --browser edge --headed --spec 'cypress/e2e/**/*'",
     "lint": "npm run prettier-check && npm run eslint",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,scss,yml,yaml,html,htm}\"",
+    "format": "npm run prettier",
     "eslint": "eslint popup/**/*.js --fix --format stylish",
     "css-build": "sass sass/style.scss popup/css/style.css --style=compressed --no-source-map",
     "css-watch": "npm run css-build -- --watch",
     "start": "live-server --open=./popup/",
-    "prettier": "prettier --write --ignore-unknown .",
-    "prettier-check": "prettier --check --ignore-unknown .",
+    "prettier": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,scss,yml,yaml,html,htm}\"",
+    "prettier-check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,scss,yml,yaml,html,htm}\" .",
     "cypress-info": "cypress info",
     "cypress": "cypress open --config-file=cypress.config.js",
     "size": "du -hc ./dist/chrome/"

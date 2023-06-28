@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+- **FIXED**: If `debug: true` has been set, the extension crashed on a performance measurement analysis
+
 ## [v1.9.1]
 
 - **IMPROVED**: Better handling of long bookmark titles. Some titles are now abbreviated, especially if they are a subpart of the URL anyway.
