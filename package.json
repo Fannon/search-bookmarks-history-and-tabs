@@ -39,7 +39,7 @@
     "css-watch": "npm run css-build -- --watch",
     "start": "live-server --open=./popup/",
     "prettier": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,scss,yml,yaml,html,htm}\"",
-    "prettier-check": "prettier --check --ignore-unknown .",
+    "prettier-check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,scss,yml,yaml,html,htm}\" .",
     "cypress-info": "cypress info",
     "cypress": "cypress open --config-file=cypress.config.js",
     "size": "du -hc ./dist/chrome/"

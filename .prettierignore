@@ -2,3 +2,5 @@
 dist/
 popup/lib/
 popup/css/
+node_modules/
+cypress/
