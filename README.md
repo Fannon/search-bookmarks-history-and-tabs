@@ -107,7 +107,7 @@ searchMaxResults: 20
 historyMaxItems: 200
 ```
 
-> Precise search is faster than fuzzy search. 
+> Precise search is faster than fuzzy search.
 > Start searching only when at least 2 characters are entered
 > Highlighting search matches takes some effort, this can be disabled.
 > Number of search results can be further limited
