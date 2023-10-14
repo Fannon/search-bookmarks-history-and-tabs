@@ -186,12 +186,11 @@ export function renderSearchResults(result) {
  * -> Arrow up, Arrow Down, Enter
  */
 export function navigationKeyListener(event) {
-
   console.log(event.key)
 
   // Navigation via arrows or via Vim style
-  const up = (event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p'))
-  const down = (event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n'))
+  const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p')
+  const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n')
 
   if (up && ext.dom.searchInput.value && ext.model.currentItem == 0) {
     event.preventDefault()
