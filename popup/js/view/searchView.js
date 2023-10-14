@@ -186,7 +186,6 @@ export function renderSearchResults(result) {
  * -> Arrow up, Arrow Down, Enter
  */
 export function navigationKeyListener(event) {
-  console.log(event.key)
 
   // Navigation via arrows or via Vim style
   const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p')
@@ -196,12 +195,10 @@ export function navigationKeyListener(event) {
     event.preventDefault()
   } else if (up && ext.model.currentItem > 0) {
     event.preventDefault()
-    ext.model.currentItem--
-    selectListItem(ext.model.currentItem, true)
+    selectListItem(ext.model.currentItem - 1, true)
   } else if (down && ext.model.currentItem < ext.model.result.length - 1) {
     event.preventDefault()
-    ext.model.currentItem++
-    selectListItem(ext.model.currentItem, true)
+    selectListItem(ext.model.currentItem + 1, true)
   } else if (event.key === 'Enter' && ext.model.result.length > 0) {
     // Enter selects selected search result -> only when in search mode
     if (window.location.hash.startsWith('#search/')) {
