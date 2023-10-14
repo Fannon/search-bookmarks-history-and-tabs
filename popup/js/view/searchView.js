@@ -187,8 +187,8 @@ export function renderSearchResults(result) {
  */
 export function navigationKeyListener(event) {
   // Navigation via arrows or via Vim style
-  const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p')
-  const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n')
+  const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p') || (event.ctrlKey && event.key === 'k')
+  const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n') || (event.ctrlKey && event.key === 'j')
 
   if (up && ext.dom.searchInput.value && ext.model.currentItem == 0) {
     event.preventDefault()
