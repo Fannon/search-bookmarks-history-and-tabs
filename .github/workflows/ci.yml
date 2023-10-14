@@ -46,22 +46,17 @@ jobs:
         run: npm run lint
 
   cypress-run-chrome:
-    name: E2E Testing (Chrome)
     runs-on: ubuntu-22.04
+    name: E2E on Chrome
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Increase file watches size
-        run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
-      - name: Cypress run
-        uses: cypress-io/github-action@v6
-
+      - uses: actions/checkout@v4
+      - uses: cypress-io/github-action@v6
         with:
           browser: chrome
-          build: |
+        build: |
             npm run build
-          start: npm start
-          wait-on: http://localhost:8080
+        start: npm start
+        wait-on: http://localhost:8080
 
   cypress-run-firefox:
     name: E2E Testing (Firefox)
