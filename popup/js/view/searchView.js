@@ -186,15 +186,18 @@ export function renderSearchResults(result) {
  * -> Arrow up, Arrow Down, Enter
  */
 export function navigationKeyListener(event) {
-  if (event.key === 'ArrowUp' && ext.dom.searchInput.value && ext.model.currentItem == 0) {
+  // Navigation via arrows or via Vim style
+  const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p')
+  const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n')
+
+  if (up && ext.dom.searchInput.value && ext.model.currentItem == 0) {
     event.preventDefault()
-  } else if (event.key === 'ArrowUp' && ext.model.currentItem > 0) {
-    ext.model.currentItem--
+  } else if (up && ext.model.currentItem > 0) {
     event.preventDefault()
-    selectListItem(ext.model.currentItem, true)
-  } else if (event.key === 'ArrowDown' && ext.model.currentItem < ext.model.result.length - 1) {
-    ext.model.currentItem++
-    selectListItem(ext.model.currentItem, true)
+    selectListItem(ext.model.currentItem - 1, true)
+  } else if (down && ext.model.currentItem < ext.model.result.length - 1) {
+    event.preventDefault()
+    selectListItem(ext.model.currentItem + 1, true)
   } else if (event.key === 'Enter' && ext.model.result.length > 0) {
     // Enter selects selected search result -> only when in search mode
     if (window.location.hash.startsWith('#search/')) {

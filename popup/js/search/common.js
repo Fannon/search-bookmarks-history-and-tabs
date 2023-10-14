@@ -23,7 +23,7 @@ export async function search(event) {
         return
       }
       // Don't execute search on modifier keys
-      if (event.key === 'Control' || event.key === 'Alt' || event.key === 'Shift') {
+      if (event.key === 'Control' || event.ctrlKey || event.key === 'Alt' || event.altKey || event.key === 'Shift') {
         return
       }
     }

@@ -14,11 +14,11 @@ jobs:
     strategy:
       matrix:
         node-version:
-          - 16.x
+          - 20.x
 
     steps:
       - name: Cache node modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         env:
           cache-name: cache-node-modules
         with:
@@ -28,10 +28,10 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -46,16 +46,11 @@ jobs:
         run: npm run lint
 
   cypress-run-chrome:
+    runs-on: ubuntu-22.04
     name: E2E Testing (Chrome)
-    runs-on: ubuntu-20.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Increase file watches size
-        run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
-      - name: Cypress run
-        uses: cypress-io/github-action@v5
-
+      - uses: actions/checkout@v4
+      - uses: cypress-io/github-action@v6
         with:
           browser: chrome
           build: |
@@ -65,18 +60,18 @@ jobs:
 
   cypress-run-firefox:
     name: E2E Testing (Firefox)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     # container:
     #   # https://github.com/cypress-io/cypress-docker-images
     #   image: cypress/browsers:node14.17.0-chrome88-ff89
     #   options: --user 1001
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Increase file watches size
         run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
       - name: Cypress run
-        uses: cypress-io/github-action@v5
+        uses: cypress-io/github-action@v6
         with:
           browser: firefox
           build: npm run build
@@ -88,9 +83,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Cypress run
-        uses: cypress-io/github-action@v5
+        uses: cypress-io/github-action@v6
         with:
           browser: edge
           build: npm run build
