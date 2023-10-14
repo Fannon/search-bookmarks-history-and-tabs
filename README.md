@@ -50,7 +50,7 @@ This extension is built to respect your privacy:
 
 - **Search Strategies**: Switch between precise and fuzzy approach by clicking on the FUZZY or PRECISE button in the search bar (top right).
 - **Keyboard Shortcut**: Trigger the extension via keyboard.
-  - The default is `CTRL` + `Shift` + `.`, but you can customize this.
+  - The default is `CTRL` + `Shift` + `.`, but you can customize this (I personally use `Ctrl+J`).
 - **Open selected results**: By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
   - Hold `Shift` or `Alt` to open the result in the current tab
   - Hold `Ctrl` to open the result without closing the popup.
@@ -67,6 +67,9 @@ This extension is built to respect your privacy:
     - The option `customSearchEngines` allows you to define your own search mode aliases
     - Default: Start your query with `g ` (including space): Do a Google search.
     - Default: Start your query with `d ` (including space): Do a dict.cc search.
+- **Emacs / Vim Navigation**:
+  - `Ctrl+N` and `Ctrl+J` to navigate search results up
+  - `Ctrl+P` and `Ctrl+K` to navigate search results down
 - **Special Browser Pages**: You can add special browser pages to your bookmarks, like `chrome://downloads`.
 - **Custom Scores**: Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
   - Examples: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`

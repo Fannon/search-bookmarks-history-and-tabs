@@ -2,6 +2,11 @@
 
 ## [unreleased]
 
+## [v1.9.3]
+
+- **NEW**: Search results can now also be navigated Emacs or Vim style (feature request [#106](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/106))
+  - `Ctrl+N` and `Ctrl+J` for downward navigation
+  - `Ctrl+P` and `Ctrl+K` for upward navigation
 - **FIXED**: If `debug: true` has been set, the extension crashed on a performance measurement analysis
 
 ## [v1.9.1]
