@@ -186,7 +186,6 @@ export function renderSearchResults(result) {
  * -> Arrow up, Arrow Down, Enter
  */
 export function navigationKeyListener(event) {
-
   // Navigation via arrows or via Vim style
   const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p')
   const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n')
