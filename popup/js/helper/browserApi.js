@@ -83,6 +83,13 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
       newFolderTrail = folderTrail.concat(entry.title)
     }
 
+    // Filter out bookmarks by ignored folder
+    if (ext.opts.bookmarksIgnoreFolderList) {
+      if (folderTrail.some((el) => ext.opts.bookmarksIgnoreFolderList.includes(el))) {
+        continue
+      }
+    }
+
     if (entry.url) {
       let title = entry.title
       let customBonusScore = 0
