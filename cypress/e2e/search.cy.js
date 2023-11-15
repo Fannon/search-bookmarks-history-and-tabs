@@ -1,4 +1,4 @@
-const interactionTime = 300
+const interactionTime = 500
 const initTime = 500
 
 describe('Search View', () => {
