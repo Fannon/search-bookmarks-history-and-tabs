@@ -2,6 +2,9 @@
 
 ## [unreleased]
 
+- **NEW**: Added option `bookmarksIgnoreFolderList`, that excludes all bookmarks from the search that are within the listed folder(s)
+  - This includes sub-folders and their bookmarks
+
 ## [v1.9.3]
 
 - **NEW**: Search results can now also be navigated Emacs or Vim style (feature request [#106](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/106))

@@ -145,6 +145,15 @@ export const defaultOptions = {
   displayScore: true,
 
   //////////////////////////////////////////
+  // BOOKMARKS OPTIONS                    //
+  //////////////////////////////////////////
+
+  /**
+   * Ignores all bookmarks within the folders listed here, including their subfolders.
+   */
+  bookmarksIgnoreFolderList: [],
+
+  //////////////////////////////////////////
   // TABS OPTIONS                         //
   //////////////////////////////////////////
 
