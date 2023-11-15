@@ -148,6 +148,9 @@ export const defaultOptions = {
   // BOOKMARKS OPTIONS                    //
   //////////////////////////////////////////
 
+  /**
+   * Ignores all bookmarks within the folders listed here, including their subfolders.
+   */
   bookmarksIgnoreFolderList: [],
 
   //////////////////////////////////////////
