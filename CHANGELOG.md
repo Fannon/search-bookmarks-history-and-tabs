@@ -2,6 +2,11 @@
 
 ## [unreleased]
 
+## [v1.9.5]
+
+- **FIXED**: Open result in new tab (when holding SHIFT / ALT) was not working when there are multiple browser windows
+  - Reported in [#111](https://github.com/Fannon/search-bookmarks-history-and-tabs/discussions/111) and [#112](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/112)
+
 ## [v1.9.4]
 
 - **NEW**: Added option `bookmarksIgnoreFolderList`, that excludes all bookmarks from the search that are within the listed folder(s)
