@@ -304,6 +304,7 @@ export function openResultItem(event) {
       ext.browserApi.tabs
         .query({
           active: true,
+          currentWindow: true,
         })
         .then(([currentTab]) => {
           ext.browserApi.tabs.update(currentTab.id, {
