@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+## [v1.9.4]
+
 - **NEW**: Added option `bookmarksIgnoreFolderList`, that excludes all bookmarks from the search that are within the listed folder(s)
   - This includes sub-folders and their bookmarks
 
