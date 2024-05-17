@@ -6,9 +6,9 @@
   "dependencies": {
     "@leeoniya/ufuzzy": "^1.0.14",
     "@yaireo/tagify": "^4.26.5",
-    "bulma": "^1.0.0",
     "js-yaml": "^4.1.0",
-    "mark.js": "^8.11.1"
+    "mark.js": "^8.11.1",
+    "minireset.css": "^0.0.7"
   },
   "devDependencies": {
     "cypress": "^13.9.0",

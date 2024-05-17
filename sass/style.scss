@@ -1,6 +1,5 @@
 @charset "utf-8";
-@import '../node_modules/bulma/sass/base/minireset.scss';
-@import '../node_modules/bulma/sass/base/generic.scss';
+@import '../node_modules/minireset.css/minireset.sass';
 @import '../node_modules/@yaireo/tagify/dist/tagify';
 
 html,
@@ -15,8 +14,24 @@ body {
   background: #eee;
   color: #777;
   padding: 0;
+  font-family:
+    BlinkMacSystemFont,
+    -apple-system,
+    'Segoe UI',
+    'Roboto',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    'Helvetica',
+    'Arial',
+    sans-serif;
+
   a {
     color: #4494c9;
+    text-decoration: none;
   }
   mark {
     font-weight: bold;
