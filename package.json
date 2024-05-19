@@ -35,7 +35,7 @@
     "e2e-edge": "cypress run --config-file=cypress.config.js --browser edge --headed --spec 'cypress/e2e/**/*'",
     "lint": "npm run prettier-check && npm run eslint",
     "format": "npm run prettier",
-    "eslint": "eslint -c ./eslint.config.js --fix --format stylish",
+    "eslint": "eslint ./popup/js/",
     "css-build": "sass sass/style.scss popup/css/style.css --style=compressed --no-source-map",
     "css-watch": "npm run css-build -- --watch",
     "start": "live-server --open=./popup/",

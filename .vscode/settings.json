@@ -31,5 +31,6 @@
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
-  }
+  },
+  "eslint.experimental.useFlatConfig": true
 }

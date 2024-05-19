@@ -3,13 +3,15 @@ import { FlatCompat } from '@eslint/eslintrc'
 const compat = new FlatCompat()
 
 export default [
+  {
+    ignores: ['popup/lib/**.*', '/reports/*'],
+  },
   js.configs.recommended,
   ...compat.config({
     extends: ['plugin:cypress/recommended'],
   }),
   {
     files: ['popup/js/**/*.js'],
-    ignores: ['popup/lib/**.*', '/reports/*'],
   },
   {
     languageOptions: {
