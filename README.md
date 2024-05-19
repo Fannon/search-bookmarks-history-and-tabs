@@ -21,7 +21,7 @@ It supports two different search approaches:
 With this extension you can also **tag your bookmarks** including auto completions.
 The tags are considered when searching and can be used for navigation.
 
-The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)).
+The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). It's also very lightweight (< 150kb JavaScript, including dependencies).
 
 For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
 
@@ -218,7 +218,7 @@ This extension makes use of the following helpful open-source projects (thanks!)
 - https://github.com/yairEO/tagify for the tag autocomplete widget
 - https://markjs.io/ for highlighting search matches
 - https://www.npmjs.com/package/js-yaml for the user options parsing
-- https://bulma.io/ for some minimal CSS base styling
+- https://github.com/jgthms/minireset.css for some minimal CSS base styling
 - https://github.com/tabler/tabler-icons for icons
 
 ## Feedback and Ideas
