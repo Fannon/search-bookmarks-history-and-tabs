@@ -41,7 +41,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       - name: Install Dependencies
-        run: npm ci
+        run: npm set cache ~/.npm && npm ci
       - name: Build
         run: npm run build
       - name: Lint
