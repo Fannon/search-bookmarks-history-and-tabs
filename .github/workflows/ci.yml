@@ -80,10 +80,6 @@ jobs:
       image: cypress/browsers:latest
       options: --user 1001
     needs: build
-    # container:
-    #   # https://github.com/cypress-io/cypress-docker-images
-    #   image: cypress/browsers:node14.17.0-chrome88-ff89
-    #   options: --user 1001
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -92,8 +88,6 @@ jobs:
         with:
           name: popup
           path: popup
-      - name: Increase file watches size
-        run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
       - name: Cypress run
         uses: cypress-io/github-action@v6
         with:
