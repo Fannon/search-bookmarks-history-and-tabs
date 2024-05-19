@@ -14,12 +14,9 @@
   "devDependencies": {
     "cypress": "^13.9.0",
     "cypress-fail-on-console-error": "^5.1.1",
-    "eslint": "^9.2.0",
-    "eslint-config-prettier": "^9.1.0",
+    "eslint": "^9.3.0",
     "eslint-plugin-cypress": "^3.2.0",
     "live-server": "^1.2.2",
-    "prettier": "3.2.5",
-    "prettier-eslint": "^16.3.0",
     "sass": "^1.77.2"
   },
   "scripts": {
@@ -33,14 +30,11 @@
     "e2e-chrome": "cypress run --config-file=cypress.config.mjs --browser chrome --headed --spec 'cypress/e2e/**/*'",
     "e2e-firefox": "cypress run --config-file=cypress.config.mjs --browser firefox --headed --spec 'cypress/e2e/**/*'",
     "e2e-edge": "cypress run --config-file=cypress.config.mjs --browser edge --headed --spec 'cypress/e2e/**/*'",
-    "lint": "npm run prettier-check && npm run eslint",
-    "format": "npm run prettier",
+    "lint": "npm run eslint",
     "eslint": "eslint ./popup/js/",
     "css-build": "sass sass/style.scss popup/css/style.css --style=compressed --no-source-map",
     "css-watch": "npm run css-build -- --watch",
     "start": "live-server --open=./popup/",
-    "prettier": "prettier --write .",
-    "prettier-check": "prettier --check .",
     "cypress-info": "cypress info",
     "cypress": "cypress open --config-file=cypress.config.mjs",
     "size": "du -hc ./dist/chrome/"
