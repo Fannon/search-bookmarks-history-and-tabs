@@ -2,6 +2,11 @@
 
 ## [unreleased]
 
+## [v1.9.6]
+
+- **IMPROVED**: Removed Bulma CSS as dependency, instead just use [minireset.css](https://github.com/jgthms/minireset.css) for CSS reset.
+- **CHORE**: Updated dependencies and moved this project to ESM (EcmaScript Modules)
+
 ## [v1.9.5]
 
 - **FIXED**: Open result in new tab (when holding SHIFT / ALT) was not working when there are multiple browser windows
