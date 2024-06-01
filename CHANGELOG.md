@@ -2,7 +2,7 @@
 
 ## [unreleased]
 
-## [v1.9.6]
+## [v1.9.7]
 
 - **FIXED**: Fixed missing CSS font style for tagging view
 
