@@ -31,3 +31,18 @@ cp README.md dist/firefox/README.md
 cp -r dist/firefox dist/opera
 sed -i -e 's/Period/K/g' dist/opera/manifest.json
 
+# Zip dist files for upload to browser stores
+
+if hash 7z 2>/dev/null; then
+  cd ./dist/chrome/
+  7z a ../chrome.zip ./* -r
+
+  cd ../firefox
+  7z a ../firefox.zip ./* -r
+
+  cd ../opera
+  7z a ../opera.zip ./* -r
+else
+  echo "7z could not be found"
+fi
+
