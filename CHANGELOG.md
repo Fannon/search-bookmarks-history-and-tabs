@@ -2,6 +2,10 @@
 
 ## [unreleased]
 
+## [v1.9.7]
+
+- **FIXED**: Fixed missing CSS font style for tagging view
+
 ## [v1.9.6]
 
 - **IMPROVED**: Removed Bulma CSS as dependency, instead just use [minireset.css](https://github.com/jgthms/minireset.css) for CSS reset.
