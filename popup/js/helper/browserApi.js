@@ -1,12 +1,7 @@
 import { cleanUpUrl } from './utils.js'
 
-// Location of browser API.
-// This is `browser` for firefox, and `chrome` for Chrome, Edge and Opera.
+// Location of browser API. This is `browser` for firefox, and `chrome` for Chrome, Edge and Opera.
 export const browserApi = window.browser || window.chrome || {}
-
-//////////////////////////////////////////
-// BROWSER TABS                         //
-//////////////////////////////////////////
 
 export async function getBrowserTabs(queryOptions) {
   queryOptions = queryOptions || {}
@@ -44,10 +39,6 @@ export function convertBrowserTabs(chromeTabs) {
     }
   })
 }
-
-//////////////////////////////////////////
-// BOOKMARKS                            //
-//////////////////////////////////////////
 
 export async function getBrowserBookmarks() {
   return new Promise((resolve, reject) => {
@@ -158,10 +149,6 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
   return result
 }
 
-//////////////////////////////////////////
-// BROWSER HISTORY                      //
-//////////////////////////////////////////
-
 /**
  * Gets chrome browsing history.
  * Warning: This chrome API call tends to be rather slow
@@ -233,13 +220,11 @@ export function createSearchString(title, url, tags, folder) {
     console.error('createSearchString: No URL given', { title, url, tags, folder })
     return searchString
   }
-
   if (title && !title.toLowerCase().includes(url.toLowerCase())) {
     searchString += title + separator + url
   } else {
     searchString += url
   }
-
   if (tags) {
     searchString += separator + tags
   }
