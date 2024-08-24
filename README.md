@@ -37,6 +37,7 @@ For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
 - **Open selected results**: By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
   - Hold `Shift` or `Alt` to open the result in the current tab
   - Hold `Ctrl` to open the result without closing the popup.
+  - Right-click to copy URL to clipboard
 - **Search Modes**: In case you want to be more selective -> use a search mode:
   - Start your query with `#`: only **bookmarks with the tag** will be returned (exact "starts with" search)
     - Supports AND search, e.g. search for `#github #pr` to only get results which have both tags

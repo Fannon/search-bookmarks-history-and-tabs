@@ -29,7 +29,7 @@ describe('Options View', () => {
       cy.visit('/options.html')
       cy.get('#user-config')
         .should('include.value', 'displayVisitCounter')
-        .checkNoErrors()
+      cy.checkNoErrors()
     })
     it('can save a new user config in YAML format', () => {
       const newConfig = `displayVisitCounter: true\n`
@@ -43,7 +43,7 @@ describe('Options View', () => {
       cy.visit('/options.html')
       cy.get('#user-config')
         .should('include.value', 'displayVisitCounter')
-        .checkNoErrors()
+      cy.checkNoErrors()
     })
   })
 })

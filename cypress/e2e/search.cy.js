@@ -39,7 +39,7 @@ describe('Search View', () => {
         })
       cy.get('#search-input')
         .type('{uparrow}')
-      // eslint-disable-next-line cypress/unsafe-to-chain-command
+       
       cy.get('#result-list li')
         .each((el, index) => {
           if (index === 0) {
@@ -48,7 +48,7 @@ describe('Search View', () => {
             expect(el[0].id).to.not.equal('selected-result')
           }
         })
-        .checkNoErrors()
+      cy.checkNoErrors()
     })
   })
 
@@ -89,7 +89,7 @@ describe('Search View', () => {
       cy.get('[x-original-id=7]')
         .find('span.score')
 
-        .checkNoErrors()
+      cy.checkNoErrors()
     })
   })
 
@@ -110,7 +110,7 @@ describe('Search View', () => {
         .find('li.tab')
       cy.get('#result-list')
         .find('li.bookmark')
-        .checkNoErrors()
+      cy.checkNoErrors()
     })
     it('can execute a precise search with non-ASCII chars successfully', () => {
       cy.get('#search-approach-toggle')
@@ -119,31 +119,24 @@ describe('Search View', () => {
         // Only make sure that search doesn't crash
       cy.get('#result-list')
         .should('not.have.length', 0)
-        .checkNoErrors()
+      cy.checkNoErrors()
     })
   })
 
   describe('Fuzzy search', () => {
     it('can switch to fuzzy search successfully', () => {
-      cy.get('#search-approach-toggle')
-        .contains('PRECISE')
-      cy.get('#search-approach-toggle')
-        .click()
-      cy.get('#search-approach-toggle')
-        .contains('FUZZY')
-      cy.get('#search-input')
-        .type(`JSON`)
-      cy.get('li.bookmark')
-        .checkNoErrors()
+      cy.get('#search-approach-toggle').should('have.text', 'PRECISE')     // wait for initial value
+      cy.get('#search-approach-toggle').click()
+      cy.get('#search-approach-toggle').should('not.have.text', 'PRECISE')
+      cy.get('#search-approach-toggle').should('have.text', 'FUZZY')
+      cy.get('#search-input').type(`JSON`)
+      cy.get('li.bookmark').checkNoErrors()
     })
 
     it('can execute a fuzzy search successfully', () => {
-      cy.get('#search-approach-toggle')
-        .contains('PRECISE')
-      cy.get('#search-approach-toggle')
-        .click()
-      cy.get('#search-approach-toggle')
-        .contains('FUZZY')
+      cy.get('#search-approach-toggle').should('have.text', 'PRECISE')
+      cy.get('#search-approach-toggle').click()
+      cy.get('#search-approach-toggle').should('have.text', 'FUZZY')
       cy.get('#search-input')
         .type(`JSON`)
       cy.get('li.bookmark')
@@ -159,23 +152,17 @@ describe('Search View', () => {
         .find('li.tab')
       cy.get('#result-list')
         .find('li.bookmark')
-        .checkNoErrors()
+      cy.checkNoErrors()
     })
   })
 
   it('can execute a precise search with non-ASCII chars successfully', () => {
-    cy.get('#search-approach-toggle')
-      .contains('PRECISE')
-    cy.get('#search-approach-toggle')
-      .click()
-    cy.get('#search-approach-toggle')
-      .contains('FUZZY')
-    cy.get('#search-input')
-      .type(`äe指事字₽`)
+    cy.get('#search-approach-toggle').should('have.text', 'PRECISE')
+    cy.get('#search-input').type(`äe指事字₽`)
       // Only make sure that search doesn't crash
     cy.get('#result-list')
       .should('not.have.length', 0)
-      .checkNoErrors()
+    cy.checkNoErrors()
   })
 
   describe('Bookmark search', () => {
@@ -190,7 +177,7 @@ describe('Search View', () => {
         .should('not.exist')
       cy.get('.history')
         .should('not.exist')
-        .checkNoErrors()
+      cy.checkNoErrors()
     })
     it('returns only bookmark results', () => {
       cy.get('#search-input')
@@ -201,9 +188,8 @@ describe('Search View', () => {
         .should('not.exist')
       cy.get('.history')
         .should('not.exist')
-      cy.get('#result-counter')
-        .contains('(5)')
-        .checkNoErrors()
+      cy.get('#result-counter').should('have.text', '(5)')
+      cy.checkNoErrors()
     })
   })
 
@@ -219,7 +205,7 @@ describe('Search View', () => {
         .should('not.exist')
       cy.get('.bookmark')
         .should('not.exist')
-        .checkNoErrors()
+      cy.checkNoErrors()
     })
     it('only the history and tab results', () => {
       cy.get('#search-input')
@@ -232,7 +218,7 @@ describe('Search View', () => {
         .should('not.exist')
       cy.get('#result-counter')
         .contains('(4)')
-        .checkNoErrors()
+      cy.checkNoErrors()
     })
   })
 
@@ -248,7 +234,7 @@ describe('Search View', () => {
         .should('not.exist')
       cy.get('.history')
         .should('not.exist')
-        .checkNoErrors()
+      cy.checkNoErrors()
     })
     it('returns only the tab results', () => {
       cy.get('#search-input')
@@ -263,7 +249,7 @@ describe('Search View', () => {
         .should('not.exist')
       cy.get('#result-counter')
         .contains('(1)')
-        .checkNoErrors()
+      cy.checkNoErrors()
     })
   })
 })

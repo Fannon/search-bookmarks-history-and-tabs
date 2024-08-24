@@ -154,6 +154,9 @@ export function renderSearchResults(result) {
     resultListItem.appendChild(urlDiv)
     resultListItem.addEventListener('mouseenter', hoverResultItem)
     resultListItem.addEventListener('mouseup', openResultItem)
+    document.addEventListener('contextmenu', (e) => {
+      e.preventDefault() // Disable right mouse context menu
+    })
 
     if (ext.opts.displaySearchMatchHighlight && ext.model.searchTerm) {
       // Use mark.js to highlight search results, if we don't have already done before in fuzzy search
@@ -287,9 +290,15 @@ export function openResultItem(event) {
 
       // Render search results again to avoid display bugs
       renderSearchResults()
-
       return
     }
+  }
+
+  // Right click mouse -> copy URL of result to clipboard
+  if (event.button === 2) {
+    navigator.clipboard.writeText(url)
+    event.preventDefault()
+    return
   }
 
   // If we press SHIFT or ALT while selecting an entry:
