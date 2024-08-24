@@ -135,10 +135,6 @@ export const defaultOptions = {
    */
   displayVisitCounter: false,
   /**
-   * Display date when a bookmark was added
-   */
-  displayDateAdded: false,
-  /**
    * Display result score.
    * The score indicates the relevance of the result and defines the order of results.
    */

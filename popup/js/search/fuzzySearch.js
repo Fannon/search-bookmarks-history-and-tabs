@@ -26,7 +26,9 @@ export function resetFuzzySearchState(searchMode) {
  * @see https://github.com/leeoniya/uFuzzy
  */
 export async function fuzzySearch(searchMode, searchTerm) {
-  if (searchMode === 'history' || searchMode === 'bookmarks' || searchMode === 'tabs') {
+  if (searchMode === 'history') {
+    return [...fuzzySearchWithScoring(searchTerm, 'tabs'), ...fuzzySearchWithScoring(searchTerm, 'history')]
+  } else if (searchMode === 'bookmarks' || searchMode === 'tabs') {
     return fuzzySearchWithScoring(searchTerm, searchMode)
   } else if (searchMode === 'search') {
     return []

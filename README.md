@@ -42,9 +42,9 @@ For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
     - Supports AND search, e.g. search for `#github #pr` to only get results which have both tags
   - Start your query with `~`: only **bookmarks within the folder** will be returned (exact "starts with" search)
     - Supports AND search, e.g. search for `~Sites ~Blogs` to only get results which have both tags
-  - Start your query with `t ` (including space): only **tabs** will be searched.
   - Start your query with `b ` (including space): only **bookmarks** will be searched.
-  - Start your query with `h ` (including space): only **history** will be searched.
+  - Start your query with `h ` (including space): only **history** and **open tabs** will be searched.
+  - Start your query with `t ` (including space): only **open tabs** will be searched.
   - Start your query with `s ` (including space): only **search engines** will be proposed.
   - Custom Aliases:
     - The option `customSearchEngines` allows you to define your own search mode aliases
@@ -80,7 +80,7 @@ An exemplary user config can look like the following example:
 ```yaml
 searchStrategy: fuzzy
 displayVisitCounter: true
-displayDateAdded: true
+historyMaxItems: 2048 # Increase max number of browser history items to load
 ```
 
 If you have **troubles with performance**, here are a few options that might help. Feel free to pick & choose and tune the values to your situation. In particular `historyMaxItems` and how many bookmarks you have will impact init and search performance.
