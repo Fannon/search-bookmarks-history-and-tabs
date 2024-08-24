@@ -54,18 +54,16 @@ export async function getSearchData() {
 
     let historyC = []
     if (lastFetch) {
-      if (lastFetch < Date.now() - 1000 * 60 * 60 * 24) {
-        lastFetch = startTime // Reset cache every day
+      if (lastFetch < Date.now() - 1000 * 60 * 60) {
+        lastFetch = startTime // Reset cache every hour
       } else if (lastFetch > startTime) {
         historyC = JSON.parse(localStorage.getItem('history'))
-        console.debug('History Cache', historyC)
         startTime = lastFetch
       }
     }
 
     // Merge histories
     const historyFromApi = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
-    console.debug('History API', historyFromApi)
     const browserHistory = []
     const idMap = {}
     for (const item of historyFromApi.concat(historyC)) {
