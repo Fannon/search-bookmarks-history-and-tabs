@@ -28,7 +28,10 @@ export function renderSearchResults(result) {
     resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
     resultListItem.setAttribute('x-index', i)
     resultListItem.setAttribute('x-original-id', resultEntry.originalId)
-    resultListItem.setAttribute('style', `border-left: ${ext.opts.colorStripeWidth}px solid ${ext.opts[resultEntry.type + 'Color']}`)
+    resultListItem.setAttribute(
+      'style',
+      `border-left: ${ext.opts.colorStripeWidth}px solid ${ext.opts[resultEntry.type + 'Color']}`,
+    )
 
     // Create edit button / image
     if (resultEntry.type === 'bookmark') {
@@ -72,7 +75,11 @@ export function renderSearchResults(result) {
       const tags = document.createElement('span')
       tags.title = 'Bookmark Tags'
       tags.classList.add('badge', 'tags')
-      if (ext.opts.displaySearchMatchHighlight && resultEntry.tagsHighlighted && resultEntry.tagsHighlighted.includes('<mark>')) {
+      if (
+        ext.opts.displaySearchMatchHighlight &&
+        resultEntry.tagsHighlighted &&
+        resultEntry.tagsHighlighted.includes('<mark>')
+      ) {
         tags.innerHTML = resultEntry.tagsHighlighted
       } else {
         tags.innerText = resultEntry.tags
@@ -87,7 +94,11 @@ export function renderSearchResults(result) {
       if (ext.opts.bookmarkColor) {
         folder.style = `background-color: ${ext.opts.bookmarkColor}`
       }
-      if (ext.opts.displaySearchMatchHighlight && resultEntry.folderHighlighted && resultEntry.folderHighlighted.includes('<mark>')) {
+      if (
+        ext.opts.displaySearchMatchHighlight &&
+        resultEntry.folderHighlighted &&
+        resultEntry.folderHighlighted.includes('<mark>')
+      ) {
         folder.innerHTML = resultEntry.folderHighlighted
       } else {
         folder.innerText = resultEntry.folder
@@ -128,7 +139,11 @@ export function renderSearchResults(result) {
     const urlDiv = document.createElement('div')
     urlDiv.classList.add('url')
     urlDiv.title = resultEntry.url
-    if (ext.opts.displaySearchMatchHighlight && resultEntry.urlHighlighted && resultEntry.urlHighlighted.includes('<mark>')) {
+    if (
+      ext.opts.displaySearchMatchHighlight &&
+      resultEntry.urlHighlighted &&
+      resultEntry.urlHighlighted.includes('<mark>')
+    ) {
       urlDiv.innerHTML = resultEntry.urlHighlighted
     } else {
       urlDiv.innerText = resultEntry.url
