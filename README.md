@@ -182,7 +182,7 @@ npm install
 npm run build
 ```
 
-The source code for the extension can be found in [popup/](popup/) (HTML, JS and libs) and [sass/](sass/) (SCSS/CSS).
+The source code for the extension can be found in [popup/](popup/) (HTML, CSS, JS and libs).
 
 The built extensions can be found
 

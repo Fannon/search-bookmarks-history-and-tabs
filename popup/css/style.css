@@ -1,0 +1,441 @@
+@charset "utf-8";
+ html, body, #container, #search {
+	 width: 500px;
+	 height: 600px;
+	 overflow: hidden;
+}
+ body {
+	 background: #eee;
+	 color: #898989;
+	 padding: 0;
+	 font-size: 1.1em;
+}
+ body a {
+	 color: #4494c9;
+	 text-decoration: none;
+}
+ body mark {
+	 font-weight: bold;
+	 color: #356ba9;
+	 background: none;
+}
+ body small {
+	 color: #aaa;
+}
+ body, textarea {
+	 font-family: -apple-system, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+}
+ .input, .input:active, .input:focus {
+	 width: 100%;
+	 max-width: 500px;
+	 min-width: 500px;
+	 height: 55px;
+	 padding: 4px 8px;
+	 font-size: 24px;
+	 border-radius: 0;
+	 border: none;
+	 outline: none;
+	 background: #fff;
+	 border-bottom: 1px solid #ccc;
+}
+ #search-input {
+	 max-width: 473px;
+	 min-width: 473px;
+}
+ .input-description {
+	 margin: 2px 4px;
+}
+ #search-approach-toggle {
+	 float: right;
+	 height: 55px;
+	 width: 26px;
+	 padding: 0 3px 0 0;
+	 writing-mode: vertical-rl;
+	 font-size: 12px;
+	 font-weight: 500;
+	 text-align: center;
+	 background: #fff;
+	 border-bottom: 1px solid #ccc;
+	 cursor: pointer;
+}
+ #search-approach-toggle.fuzzy {
+	 color: #8667cd;
+}
+ #search-approach-toggle.precise {
+	 color: #9dcd1b;
+}
+ #search-approach-toggle.precise {
+	 color: #54c4d3;
+}
+ code {
+	 background-color: #d5d5d5;
+	 color: #676767;
+	 border-radius: 3px;
+	 font-size: 0.75em;
+	 padding: 1px 4px;
+}
+ .badge {
+	 color: #fff;
+	 font-size: 11px;
+	 border-radius: 3px;
+	 padding: 1px 3px 2px 3px;
+	 margin-right: 4px;
+	 white-space: nowrap;
+	 display: inline-block;
+	 position: relative;
+	 top: -3px;
+}
+ .tags {
+	 background: #557292;
+}
+ .tags .divider:before {
+	 content: ' ';
+}
+ .tags mark {
+	 color: #7cb3f6;
+}
+ .tags small {
+	 color: #a2bbd6;
+}
+ .folder {
+	 background: #559292;
+}
+ .folder .divider:before {
+	 content: ' \276F \0020';
+}
+ .folder mark {
+	 color: #85dbdb;
+}
+ .folder small {
+	 color: #a3d0d0;
+}
+ .window {
+	 background: #8061ca;
+	 color: #efe8ff;
+}
+ .score {
+	 background: #747474;
+	 color: #ddd;
+}
+ .last-visited {
+	 background: #8ebb26;
+	 color: #fff;
+}
+ .visit-counter {
+	 background: #bbac26;
+	 color: #fff;
+}
+ .date-added {
+	 background: #bb8c26;
+	 color: #fff;
+}
+ .url {
+	 font-size: 13px;
+	 margin: 0;
+	 overflow: hidden;
+	 white-space: nowrap;
+}
+ .controls {
+	 text-align: right;
+	 position: absolute;
+	 bottom: 8px;
+	 right: 8px;
+	 width: 100%;
+	 padding-left: 8px;
+}
+ .controls .button {
+	 height: 28px;
+	 border-radius: 3px;
+}
+ .controls .reset-button, .controls .delete-button {
+	 background: #ee4343 !important;
+	 color: #fff !important;
+	 float: left;
+}
+ .controls .cancel-button {
+	 background: #929292 !important;
+	 color: #fff !important;
+}
+ .controls .help-button {
+	 background: #4494c9 !important;
+	 color: #fff !important;
+	 float: left;
+}
+ .controls .save-button {
+	 background: #5fc944 !important;
+	 color: #fff !important;
+}
+ .controls a, .controls a:hover {
+	 background: #777;
+	 color: #fff;
+	 margin: 0 0 0 8px;
+	 padding: 2px 12px 4px 12px;
+	 border: none;
+	 font-size: 16px;
+}
+ #result-list, #error-list {
+	 padding: 4px 6px 0 4px;
+	 height: 523px;
+	 overflow-x: hidden;
+	 overflow-y: scroll;
+}
+ #result-list a, #error-list a {
+	 color: #888;
+}
+ #result-list li, #error-list li {
+	 background-color: #fff;
+	 margin: 0 0 4px 0;
+	 padding: 4px 0px 4px 6px;
+	 border-radius: 3px;
+	 overflow: hidden;
+	 cursor: pointer;
+	 border-left: 6px solid #ccc;
+}
+ #result-list #selected-result, #error-list #selected-result {
+	 background-color: #dadada;
+}
+ #result-list li.error, #error-list li.error {
+	 color: #cc5858;
+	 border-left: 6px solid #cc5858;
+}
+ #result-list .edit-button, #error-list .edit-button, #result-list .close-button, #error-list .close-button {
+	 float: right;
+}
+ #result-list .edit-button:hover, #error-list .edit-button:hover, #result-list .close-button:hover, #error-list .close-button:hover {
+	 background: rgba(255, 255, 255, 0.12);
+	 border-radius: 3px;
+}
+ #result-list .title, #error-list .title {
+	 font-size: 18px;
+	 margin: 0;
+	 font-weight: 400;
+	 color: #333;
+}
+ #result-list .title-text, #error-list .title-text {
+	 line-break: auto;
+}
+ #error-list {
+	 position: fixed;
+	 width: 494px;
+	 top: 55px;
+	 overflow-y: hidden;
+	 display: none;
+}
+ #links {
+	 height: 22px;
+	 width: 500px;
+	 position: absolute;
+	 top: 579px;
+	 left: 0;
+	 background: #fff;
+	 border-top: #595959;
+	 padding: 0 6px;
+	 font-size: 14px;
+}
+ #links a {
+	 color: #888;
+}
+ #links #result-counter {
+	 float: right;
+}
+ #tags-overview, #folders-overview {
+	 position: fixed;
+	 top: 55px;
+	 left: 0;
+	 width: 500px;
+	 height: 524px;
+	 background: #eee;
+	 padding: 4px 8px;
+	 overflow-x: hidden;
+	 overflow-y: scroll;
+}
+ #tags-overview .input-description, #folders-overview .input-description {
+	 margin: 4px 0px;
+}
+ #tags-overview #tags-list, #folders-overview #tags-list, #tags-overview #folders-list, #folders-overview #folders-list {
+	 width: 100%;
+}
+ #tags-overview #tags-list a, #folders-overview #tags-list a, #tags-overview #folders-list a, #folders-overview #folders-list a, #tags-overview #tags-list a:hover, #folders-overview #tags-list a:hover, #tags-overview #folders-list a:hover, #folders-overview #folders-list a:hover {
+	 color: #fff;
+	 font-size: 15px;
+	 margin: 4px 4px 0 0;
+}
+/** EDIT BOOKMARK */
+ #edit-bookmark {
+	 padding: 0;
+	 overflow: none;
+	 position: fixed;
+	 top: 0;
+	 left: 0;
+	 width: 500px;
+	 height: 578px;
+	 background: #eee;
+}
+ #edit-bookmark #bookmark-title {
+	 height: 112px;
+	 resize: none;
+	 font-size: 1.2em;
+}
+ #edit-bookmark #bookmark-url {
+	 height: 62px;
+	 resize: none;
+	 font-size: 0.85em;
+}
+ #edit-bookmark #bookmark-tags, #edit-bookmark .tagify {
+	 height: 85px;
+	 font-size: 18px;
+	 border: none;
+	 padding: 4px 2px;
+	 overflow-x: hidden;
+}
+/** EDIT Options */
+ #options {
+	 width: 500px;
+	 height: 580px;
+	 position: fixed;
+}
+ #options textarea {
+	 height: 426px;
+	 font-size: 18px;
+	 font-family: Consolas, monospace, monospace;
+	 resize: none;
+	 padding: 6px 8px;
+}
+ #options .help {
+	 padding: 2px 6px;
+	 background: #fff;
+	 border-left: 4px solid #4494c9;
+}
+ #tips {
+	 font-size: 0.9em;
+}
+ #tips .tip {
+	 margin: 4px;
+	 padding: 2px 4px;
+	 background: #fff;
+	 border-radius: 3px;
+}
+ #tips .fuzzy {
+	 color: #d593ea;
+}
+ #tips .precise {
+	 color: #b1d354;
+}
+/** CUSTOMIZE TAGIFY STYLE */
+ .tagify {
+	 height: 90px;
+	 border: none;
+	 --tag-bg: #557292;
+	 --tag-hover: #5c84af;
+	 --tagify-dd-color-primary: #557292;
+	 --tag-text-color: #fff;
+	 --tag-text-color--edit: #111;
+	 --tag-remove-bg: var(--tag-hover);
+	 --tag-pad: 2px 8px 4px 8px;
+	 --tag-inset-shadow-size: 1.35em;
+	 --tag-remove-btn-bg--hover: black;
+}
+ .tagify__tag {
+	 margin: 6px 0 5px 6px;
+}
+ .tagify__tag > div {
+	 font-size: 15px;
+}
+ .tagify__dropdown {
+	 max-height: 235px;
+	 border: none;
+}
+ .tagify__dropdown__wrapper {
+	 border: none;
+}
+ .tagify__dropdown__item {
+	 padding: 3px 8px 3px 8px;
+	 background: #fff;
+}
+ .tagify__dropdown__item--active {
+	 background: #557292 !important;
+}
+/** SCROLLBAR */
+ #result-list::-webkit-scrollbar, #tags-overview::-webkit-scrollbar, #folders-overview::-webkit-scrollbar, #tips::-webkit-scrollbar, .tagify__dropdown__wrapper::-webkit-scrollbar {
+	 width: 8px;
+	 margin-left: 4px;
+	 padding-left: 0px;
+}
+ #result-list::-webkit-scrollbar-track, #tags-overview::-webkit-scrollbar-track, #folders-overview::-webkit-scrollbar-track, #tip::-webkit-scrollbar-track, .tagify__dropdown__wrapper::-webkit-scrollbar-track {
+	 background: #ddd;
+	 padding-left: 2px;
+}
+ #result-list::-webkit-scrollbar-thumb, #tags-overview::-webkit-scrollbar-thumb, #folders-overview::-webkit-scrollbar-thumb, #tips::-webkit-scrollbar-thumb, .tagify__dropdown__wrapper::-webkit-scrollbar-thumb {
+	 background-color: #999;
+}
+/** DARK MODE **/
+ @media screen and (prefers-color-scheme: dark) {
+	 html, body, #edit-bookmark, #tags-overview, #folders-overview {
+		 background: #222;
+	}
+	 html a, body a, #edit-bookmark a, #tags-overview a, #folders-overview a, html a:visited, body a:visited, #edit-bookmark a:visited, #tags-overview a:visited, #folders-overview a:visited {
+		 color: #999;
+	}
+	 html a:hover, body a:hover, #edit-bookmark a:hover, #tags-overview a:hover, #folders-overview a:hover {
+		 color: #bbb;
+	}
+	 html mark, body mark, #edit-bookmark mark, #tags-overview mark, #folders-overview mark {
+		 color: #6b92c0;
+	}
+	 strong {
+		 color: #898989;
+	}
+	 code {
+		 color: #898989;
+		 background-color: #333;
+	}
+	 #options .help {
+		 background: #000;
+	}
+	 #tips .tip {
+		 background: #000;
+	}
+	 .input, .input:active, .input:focus, #search-approach-toggle {
+		 background-color: #000;
+		 border-bottom: 1px solid #444;
+		 color: #ddd;
+	}
+	 #search-approach-toggle.fuzzy {
+		 color: #d593ea;
+	}
+	 #search-approach-toggle.precise {
+		 color: #b1d354;
+	}
+	 #result-list li, #error-list li {
+		 background: #111;
+	}
+	 #result-list #selected-result, #error-list #selected-result {
+		 background-color: #333;
+	}
+	 #result-list .title, #error-list .title {
+		 color: #e7e7e7;
+	}
+	 #links {
+		 background: #000;
+	}
+	 #result-list::-webkit-scrollbar-track, #tags-overview::-webkit-scrollbar-track, #folders-overview::-webkit-scrollbar-track, #tips::-webkit-scrollbar-track, .tagify__dropdown__wrapper::-webkit-scrollbar-track {
+		 background: #414141;
+	}
+	 #result-list::-webkit-scrollbar-thumb, #tags-overview::-webkit-scrollbar-thumb, #folders-overview::-webkit-scrollbar-thumb, #tips::-webkit-scrollbar-thumb, .tagify__dropdown__wrapper::-webkit-scrollbar-thumb {
+		 background-color: #5f5f5f;
+	}
+	 .input-description {
+		 color: #777;
+	}
+	 .tagify__dropdown__wrapper {
+		 background: #111;
+	}
+	 .tagify__dropdown__item {
+		 color: #ccc;
+		 background: #000;
+	}
+	 .tagify__tag > div > [contenteditable] {
+		 color: #eee;
+	}
+}
+ 
