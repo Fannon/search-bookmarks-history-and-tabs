@@ -300,7 +300,7 @@ export function calculateFinalScore(results, searchTerm) {
     // Increase score if result has been opened recently
     if (ext.opts.scoreRecentBonusScoreMaximum && el.lastVisitSecondsAgo) {
       const maxSeconds = ext.opts.historyDaysAgo * 24 * 60 * 60
-      score += (1 - el.lastVisitSecondsAgo / maxSeconds) * ext.opts.scoreRecentBonusScoreMaximum
+      score += Math.max(0, (1 - el.lastVisitSecondsAgo / maxSeconds) * ext.opts.scoreRecentBonusScoreMaximum)
     }
 
     // Increase score if bookmark has been added more recently
@@ -314,6 +314,8 @@ export function calculateFinalScore(results, searchTerm) {
 
     el.score = score
   }
+
+  console.log(results)
 
   return results
 }

@@ -50,9 +50,6 @@ export async function initExtension() {
   ext.model.bookmarks = bookmarks
   ext.model.history = history
 
-  if (ext.opts.debug) {
-    performance.mark('init-data-load')
-  }
   ext.initialized = true
 
   // Register Events
@@ -71,8 +68,6 @@ export async function initExtension() {
     // Do some performance measurements and log it to debug
     performance.mark('init-end')
     performance.measure('init-end-to-end', 'init-start', 'init-end')
-    performance.measure('init-dom', 'init-start', 'init-dom')
-    performance.measure('init-data-load', 'init-dom', 'init-data-load')
     const initPerformance = performance.getEntriesByType('measure')
     const totalInitPerformance = performance.getEntriesByName('init-end-to-end')
     console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)

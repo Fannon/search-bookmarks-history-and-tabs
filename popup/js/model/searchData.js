@@ -21,71 +21,7 @@ export async function getSearchData() {
     history: [],
   }
 
-  // FIRST: Get data
-  if (browserApi.tabs && ext.opts.enableTabs) {
-    if (ext.opts.debug) {
-      performance.mark('get-data-tabs-start')
-    }
-    const browserTabs = await getBrowserTabs()
-    result.tabs = convertBrowserTabs(browserTabs)
-    if (ext.opts.debug) {
-      performance.mark('get-data-tabs-end')
-      performance.measure('get-data-tabs', 'get-data-tabs-start', 'get-data-tabs-end')
-    }
-  }
-  if (browserApi.bookmarks && ext.opts.enableBookmarks) {
-    if (ext.opts.debug) {
-      performance.mark('get-data-bookmarks-start')
-    }
-    const browserBookmarks = await getBrowserBookmarks()
-    result.bookmarks = convertBrowserBookmarks(browserBookmarks)
-    if (ext.opts.debug) {
-      performance.mark('get-data-bookmarks-end')
-      performance.measure('get-data-bookmarks', 'get-data-bookmarks-start', 'get-data-bookmarks-end')
-    }
-  }
-  if (browserApi.history && ext.opts.enableHistory) {
-    if (ext.opts.debug) {
-      performance.mark('get-data-history-start')
-    }
-
-    let startTime = Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
-    let lastFetch = parseInt(localStorage.getItem('historyLastFetched') || 0)
-
-    let historyC = []
-    if (lastFetch) {
-      if (lastFetch < Date.now() - 1000 * 60 * 60) {
-        lastFetch = startTime // Reset cache every hour
-      } else if (lastFetch > startTime) {
-        historyC = JSON.parse(localStorage.getItem('history'))
-        startTime = lastFetch
-      }
-    }
-
-    // Merge histories
-    const historyFromApi = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
-    const browserHistory = []
-    const idMap = {}
-    for (const item of historyFromApi.concat(historyC)) {
-      if (!idMap[item.id]) {
-        browserHistory.push(item)
-        idMap[item.id] = true
-      }
-    }
-
-    // Update cache
-    localStorage.setItem('historyLastFetched', Date.now())
-    localStorage.setItem('history', JSON.stringify(browserHistory))
-
-    result.history = convertBrowserHistory(browserHistory)
-    if (ext.opts.debug) {
-      performance.mark('get-data-history-end')
-      performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end')
-    }
-  }
-
   // Use mock data (for localhost preview / development)
-  // To do this, create a http server (e.g. live-server) in popup/
   if (!browserApi.bookmarks || !browserApi.history) {
     console.warn(`No Chrome API found. Switching to local dev mode with mock data only`)
     try {
@@ -101,9 +37,69 @@ export async function getSearchData() {
     } catch (err) {
       console.warn('Could not load example mock data', err)
     }
-  }
+  } else {
+    if (browserApi.tabs && ext.opts.enableTabs) {
+      if (ext.opts.debug) {
+        performance.mark('get-data-tabs-start')
+      }
+      const browserTabs = await getBrowserTabs()
+      result.tabs = convertBrowserTabs(browserTabs)
+      if (ext.opts.debug) {
+        performance.mark('get-data-tabs-end')
+        performance.measure('get-data-tabs', 'get-data-tabs-start', 'get-data-tabs-end')
+      }
+    }
+    if (browserApi.bookmarks && ext.opts.enableBookmarks) {
+      if (ext.opts.debug) {
+        performance.mark('get-data-bookmarks-start')
+      }
+      const browserBookmarks = await getBrowserBookmarks()
+      result.bookmarks = convertBrowserBookmarks(browserBookmarks)
+      if (ext.opts.debug) {
+        performance.mark('get-data-bookmarks-end')
+        performance.measure('get-data-bookmarks', 'get-data-bookmarks-start', 'get-data-bookmarks-end')
+      }
+    }
+    if (browserApi.history && ext.opts.enableHistory) {
+      if (ext.opts.debug) {
+        performance.mark('get-data-history-start')
+      }
 
-  // SECOND: Merge history with bookmarks and tabs and clean up data
+      let startTime = Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
+      let lastFetch = parseInt(localStorage.getItem('historyLastFetched') || 0)
+
+      let historyC = []
+      if (lastFetch) {
+        if (lastFetch < Date.now() - 1000 * 60 * 60) {
+          lastFetch = startTime // Reset cache every hour
+        } else if (lastFetch > startTime) {
+          historyC = JSON.parse(localStorage.getItem('history'))
+          startTime = lastFetch
+        }
+      }
+
+      // Merge histories
+      const historyFromApi = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
+      const browserHistory = []
+      const idMap = {}
+      for (const item of historyFromApi.concat(historyC)) {
+        if (!idMap[item.id]) {
+          browserHistory.push(item)
+          idMap[item.id] = true
+        }
+      }
+
+      // Update cache
+      localStorage.setItem('historyLastFetched', Date.now())
+      localStorage.setItem('history', JSON.stringify(browserHistory))
+
+      result.history = convertBrowserHistory(browserHistory)
+      if (ext.opts.debug) {
+        performance.mark('get-data-history-end')
+        performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end')
+      }
+    }
+  }
 
   // Build maps with URL as key, so we have fast hashmap access
   const historyMap = result.history.reduce(
@@ -174,6 +170,5 @@ export async function getSearchData() {
       } days (Option: historyDaysAgo).`,
     )
   }
-
   return result
 }

@@ -209,10 +209,6 @@ export const defaultOptions = {
       urlPrefix: 'https://www.bing.com/search?q=$s',
     },
     {
-      name: 'DuckDuckGo',
-      urlPrefix: 'https://duckduckgo.com/?q=$s',
-    },
-    {
       name: 'dict.cc',
       urlPrefix: 'https://www.dict.cc/?s=$s',
     },

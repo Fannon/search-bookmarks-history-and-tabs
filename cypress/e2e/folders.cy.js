@@ -19,7 +19,7 @@ describe('Folder View', () => {
         .should('have.value', '~Tools')
       cy.get('#result-list')
         .should('not.have.length', 0)
-        .find('[x-original-id=9]')
+        .find('[x-original-id=6]')
       cy.get('#result-list')
         .find('li.bookmark')
         .checkNoErrors()

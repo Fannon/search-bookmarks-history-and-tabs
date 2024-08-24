@@ -1,6 +1,3 @@
-const interactionTime = 500
-const initTime = 500
-
 describe('Search View', () => {
   beforeEach(() => {
     cy.visit('/')
@@ -42,6 +39,7 @@ describe('Search View', () => {
         })
       cy.get('#search-input')
         .type('{uparrow}')
+      // eslint-disable-next-line cypress/unsafe-to-chain-command
       cy.get('#result-list li')
         .each((el, index) => {
           if (index === 0) {
@@ -59,34 +57,36 @@ describe('Search View', () => {
       cy.get('#search-input')
         .type(`JSON`)
       cy.get('#result-list')
-        .find('[x-original-id=9]')
+      .find('[x-original-id=7]') // Bookmark item
+      cy.get('#result-list')
+      .find('[x-original-id=5]') // Tab item
+      cy.get('#result-list')
+        .find('[x-original-id=6]') // History item
+      cy.get('#result-list')
+        .find('[x-original-id=9]') // Search engine
 
-        // Check that we have a result with a title returned
-      cy.get('[x-original-id=9]')
+      // Check that we have a result with a title returned
+      cy.get('[x-original-id=7]')
         .find('.title')
         .contains('JSON')
 
-        // Check that we have a result with an URL returned
-      cy.get('[x-original-id=9]')
+      // Check that we have a result with an URL returned
+      cy.get('[x-original-id=7]')
         .find('.url')
         .contains('json')
 
-        // expect #json tag
-      cy.get('[x-original-id=9]')
+      // expect #json tag
+      cy.get('[x-original-id=7]')
         .find('span.tags')
         .contains('#json')
 
-        // expect ~Tools folder
-      cy.get('[x-original-id=9]')
+      // expect ~Tools folder
+      cy.get('[x-original-id=7]')
         .find('span.folder')
         .contains('~Tools')
 
-        // expect lastVisited badge
-      cy.get('[x-original-id=9]')
-        .find('span.last-visited')
-
-        // expect score badge
-      cy.get('[x-original-id=9]')
+      // expect score badge
+      cy.get('[x-original-id=7]')
         .find('span.score')
 
         .checkNoErrors()
@@ -98,11 +98,10 @@ describe('Search View', () => {
       cy.get('#search-approach-toggle')
       cy.get('#search-input')
         .type(`JSON`)
-        .wait(initTime)
         // Make sure we get result of all types
       cy.get('#result-list')
         .should('not.have.length', 0)
-        .find('[x-original-id=9]')
+        .find('[x-original-id=7]')
       cy.get('#result-list')
         .find('li.bookmark')
       cy.get('#result-list')
@@ -117,7 +116,6 @@ describe('Search View', () => {
       cy.get('#search-approach-toggle')
       cy.get('#search-input')
         .type(`äe指事字₽`)
-        .wait(initTime)
         // Only make sure that search doesn't crash
       cy.get('#result-list')
         .should('not.have.length', 0)
@@ -128,10 +126,10 @@ describe('Search View', () => {
   describe('Fuzzy search', () => {
     it('can switch to fuzzy search successfully', () => {
       cy.get('#search-approach-toggle')
-        .wait(interactionTime)
         .contains('PRECISE')
+      cy.get('#search-approach-toggle')
         .click()
-        .wait(interactionTime)
+      cy.get('#search-approach-toggle')
         .contains('FUZZY')
       cy.get('#search-input')
         .type(`JSON`)
@@ -141,18 +139,17 @@ describe('Search View', () => {
 
     it('can execute a fuzzy search successfully', () => {
       cy.get('#search-approach-toggle')
-        .wait(interactionTime)
         .contains('PRECISE')
+      cy.get('#search-approach-toggle')
         .click()
-        .wait(interactionTime)
+      cy.get('#search-approach-toggle')
         .contains('FUZZY')
-        .wait(interactionTime)
       cy.get('#search-input')
         .type(`JSON`)
       cy.get('li.bookmark')
       cy.get('#result-list')
         .should('not.have.length', 0)
-        .find('[x-original-id=9]')
+        .find('[x-original-id=7]')
         // Check that we have all kinds of results
       cy.get('#result-list')
         .find('li.bookmark')
@@ -168,15 +165,13 @@ describe('Search View', () => {
 
   it('can execute a precise search with non-ASCII chars successfully', () => {
     cy.get('#search-approach-toggle')
-      .wait(interactionTime)
       .contains('PRECISE')
+    cy.get('#search-approach-toggle')
       .click()
-      .wait(interactionTime)
+    cy.get('#search-approach-toggle')
       .contains('FUZZY')
-      .wait(interactionTime)
     cy.get('#search-input')
       .type(`äe指事字₽`)
-      .wait(initTime)
       // Only make sure that search doesn't crash
     cy.get('#result-list')
       .should('not.have.length', 0)
@@ -190,7 +185,7 @@ describe('Search View', () => {
       cy.get('#result-list')
         .find('li.bookmark')
       cy.get('#result-list')
-        .find('[x-original-id=9]')
+        .find('[x-original-id=7]')
       cy.get('.tab')
         .should('not.exist')
       cy.get('.history')
@@ -201,7 +196,7 @@ describe('Search View', () => {
       cy.get('#search-input')
         .type(`b JSON`)
       cy.get('#result-list')
-        .find('[x-original-id=9]')
+        .find('[x-original-id=7]')
       cy.get('.tab')
         .should('not.exist')
       cy.get('.history')
@@ -219,24 +214,24 @@ describe('Search View', () => {
       cy.get('#result-list')
         .find('li.history')
       cy.get('#result-list')
-        .find('[x-original-id=9]')
+        .find('[x-original-id=6]')
       cy.get('.tab')
         .should('not.exist')
       cy.get('.bookmark')
         .should('not.exist')
         .checkNoErrors()
     })
-    it('only the history results', () => {
+    it('only the history and tab results', () => {
       cy.get('#search-input')
         .type(`h JSON`)
       cy.get('#result-list')
-        .find('[x-original-id=9]')
-      cy.get('.tab')
-        .should('not.exist')
+        .find('[x-original-id=8]') // history
+      cy.get('#result-list')
+        .find('[x-original-id=185]') // tab
       cy.get('.bookmark')
         .should('not.exist')
       cy.get('#result-counter')
-        .contains('(3)')
+        .contains('(4)')
         .checkNoErrors()
     })
   })
