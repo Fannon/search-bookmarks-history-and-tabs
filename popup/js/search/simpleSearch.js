@@ -18,7 +18,10 @@ export function resetSimpleSearchState(searchMode) {
 
 export function simpleSearch(searchMode, searchTerm) {
   let results = []
-  if (searchMode === 'history' || searchMode === 'bookmarks' || searchMode === 'tabs') {
+  if (searchMode === 'history') {
+    results.push(...simpleSearchWithScoring(searchTerm, 'tabs'))
+    results.push(...simpleSearchWithScoring(searchTerm, 'history'))
+  } else if (searchMode === 'bookmarks' || searchMode === 'tabs') {
     return simpleSearchWithScoring(searchTerm, searchMode)
   } else if (searchMode === 'search') {
     // nothing, because search will be added later

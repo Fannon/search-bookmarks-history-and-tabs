@@ -50,7 +50,7 @@ export async function search(event) {
     // Support for various search modes
     // This is detected by looking at the first chars of the search
     if (searchTerm.startsWith('h ')) {
-      // Only history
+      // Only history and tabs
       searchMode = 'history'
       searchTerm = searchTerm.substring(2)
     } else if (searchTerm.startsWith('b ')) {
