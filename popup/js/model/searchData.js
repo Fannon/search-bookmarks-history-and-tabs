@@ -50,27 +50,22 @@ export async function getSearchData() {
     }
 
     let startTime = Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
-    let historyC = []
-
     let lastFetch = parseInt(localStorage.getItem('historyLastFetched') || 0)
 
+    let historyC = []
     if (lastFetch) {
       if (lastFetch < Date.now() - 1000 * 60 * 60 * 24) {
         lastFetch = startTime // Reset cache every day
       } else if (lastFetch > startTime) {
         historyC = JSON.parse(localStorage.getItem('history'))
-        let lastHistoryItem = historyC[0] ? historyC[0].lastVisitTime + 1 : startTime
-        for (const item of historyC) {
-          if (item.lastVisitTime > lastHistoryItem) {
-            lastHistoryItem = item.lastVisitTime + 1
-          }
-        }
-        startTime = lastHistoryItem
+        console.debug('History Cache', historyC)
+        startTime = lastFetch
       }
     }
 
     // Merge histories
     const historyFromApi = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
+    console.debug('History API', historyFromApi)
     const browserHistory = []
     const idMap = {}
     for (const item of historyFromApi.concat(historyC)) {
