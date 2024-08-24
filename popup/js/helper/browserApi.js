@@ -196,7 +196,6 @@ export async function getBrowserHistory(startTime, maxResults) {
  * Convert chrome history into our internal, flat array format
  */
 export function convertBrowserHistory(history) {
-  const ids = {}
   if (ext.opts.historyIgnoreList && ext.opts.historyIgnoreList.length) {
     let ignoredHistoryCounter = 0
     history = history.filter((el) => {
@@ -214,27 +213,20 @@ export function convertBrowserHistory(history) {
   }
 
   const now = Date.now()
-  const convertedHistory = []
-  for (const el of history) {
+  return history.map((el) => {
     const cleanUrl = cleanUpUrl(el.url)
-    if (!ids[el.id]) {
-      ids[el.id] = true
-      convertedHistory.push({
-        type: 'history',
-        title: getTitle(el.title, cleanUrl),
-        originalUrl: el.url.replace(/\/$/, ''),
-        url: cleanUrl,
-        visitCount: el.visitCount,
-        lastVisit: ext.opts.displayLastVisit ? timeSince(new Date(el.lastVisitTime)) : undefined,
-        lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
-        originalId: el.id,
-        searchString: createSearchString(el.title, cleanUrl),
-      })
-    } else {
-      console.warn('Detected duplicated history entry', el)
+    return {
+      type: 'history',
+      title: getTitle(el.title, cleanUrl),
+      originalUrl: el.url.replace(/\/$/, ''),
+      url: cleanUrl,
+      visitCount: el.visitCount,
+      lastVisit: ext.opts.displayLastVisit ? timeSince(new Date(el.lastVisitTime)) : undefined,
+      lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
+      originalId: el.id,
+      searchString: createSearchString(el.title, cleanUrl),
     }
-  }
-  return convertedHistory
+  })
 }
 
 export function createSearchString(title, url, tags, folder) {

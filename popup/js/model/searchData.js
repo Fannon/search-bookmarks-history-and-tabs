@@ -14,6 +14,7 @@ import {
  * Merges and removes some items (e.g. duplicates) before they are indexed
  */
 export async function getSearchData() {
+  const startTime = Date.now()
   const result = {
     tabs: [],
     bookmarks: [],
@@ -58,29 +59,30 @@ export async function getSearchData() {
         lastFetch = startTime // Reset cache every day
       } else if (lastFetch > startTime) {
         historyC = JSON.parse(localStorage.getItem('history'))
-        console.log('history cache', historyC)
-        if (historyC[0] && historyC[0].lastVisitTime > startTime) {
-          startTime = Math.ceil(historyC[0].lastVisitTime)
+        let lastHistoryItem = historyC[0] ? historyC[0].lastVisitTime + 1 : startTime
+        for (const item of historyC) {
+          if (item.lastVisitTime > lastHistoryItem) {
+            lastHistoryItem = item.lastVisitTime + 1
+          }
         }
+        startTime = lastHistoryItem
       }
-    }
-
-    if (ext.opts.debug) {
-      performance.mark('get-data-history-cache')
-      performance.measure('get-data-history-cache', 'get-data-history-start', 'get-data-history-cache')
     }
 
     // Merge histories
     const historyFromApi = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
-    console.debug('history API', historyFromApi)
-    const browserHistory = historyFromApi.concat(historyC)
+    const browserHistory = []
+    const idMap = {}
+    for (const item of historyFromApi.concat(historyC)) {
+      if (!idMap[item.id]) {
+        browserHistory.push(item)
+        idMap[item.id] = true
+      }
+    }
+
+    // Update cache
     localStorage.setItem('historyLastFetched', Date.now())
     localStorage.setItem('history', JSON.stringify(browserHistory))
-
-    if (ext.opts.debug) {
-      performance.mark('get-data-history-api')
-      performance.measure('get-data-history-api', 'get-data-history-cache', 'get-data-history-api')
-    }
 
     result.history = convertBrowserHistory(browserHistory)
     if (ext.opts.debug) {
@@ -163,8 +165,17 @@ export async function getSearchData() {
 
   if (ext.opts.debug) {
     console.debug(
-      `Indexed ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${result.history.length} history items.`,
+      `Loaded ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${
+        result.history.length
+      } history items in ${Date.now() - startTime}ms.`,
     )
+    let oldestHistoryItem = 0
+    for (const item of result.history) {
+      if (item.lastVisitSecondsAgo > oldestHistoryItem) {
+        oldestHistoryItem = item.lastVisitSecondsAgo
+      }
+    }
+    console.debug(`Oldest history item is ${oldestHistoryItem / 60 / 60} hours ago.`)
   }
 
   return result

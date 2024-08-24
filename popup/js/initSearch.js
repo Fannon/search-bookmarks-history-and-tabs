@@ -61,9 +61,6 @@ export async function initExtension() {
   ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
   ext.dom.searchInput.addEventListener('keyup', search)
 
-  if (ext.opts.debug) {
-    performance.mark('init-router')
-  }
   if (!document.querySelector('#result-list .message')) {
     // Initialize the router by executing it for the first time
     // Only do this if there are no (error / warning) messages displayed
@@ -76,7 +73,6 @@ export async function initExtension() {
     performance.measure('init-end-to-end', 'init-start', 'init-end')
     performance.measure('init-dom', 'init-start', 'init-dom')
     performance.measure('init-data-load', 'init-dom', 'init-data-load')
-    performance.measure('init-router', 'init-data-load', 'init-router')
     const initPerformance = performance.getEntriesByType('measure')
     const totalInitPerformance = performance.getEntriesByName('init-end-to-end')
     console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)
