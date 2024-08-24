@@ -60,7 +60,7 @@ export const defaultOptions = {
   /**
    * Width of the left color marker in search results in pixels
    */
-  colorStripeWidth: 6,
+  colorStripeWidth: 5,
 
   /**
    * Color for bookmark results, expressed as CSS color
