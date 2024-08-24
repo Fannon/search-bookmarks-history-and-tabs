@@ -175,7 +175,11 @@ export async function getSearchData() {
         oldestHistoryItem = item.lastVisitSecondsAgo
       }
     }
-    console.debug(`Oldest history item is ${oldestHistoryItem / 60 / 60} hours ago.`)
+    console.debug(
+      `Oldest history item is ${Math.round(oldestHistoryItem / 60 / 60 / 24)} days ago. Max history back is ${
+        ext.opts.historyDaysAgo
+      } days (Option: historyDaysAgo).`,
+    )
   }
 
   return result

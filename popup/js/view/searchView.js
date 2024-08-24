@@ -2,6 +2,7 @@
 // SEARCH VIEW                          //
 //////////////////////////////////////////
 
+import { timeSince } from '../helper/utils.js'
 import { initExtension } from '../initSearch.js'
 import { getUserOptions, setUserOptions } from '../model/options.js'
 
@@ -104,11 +105,12 @@ export function renderSearchResults(result) {
       }
       titleDiv.appendChild(folder)
     }
-    if (ext.opts.displayLastVisit && resultEntry.lastVisit) {
+    if (ext.opts.displayLastVisit && resultEntry.lastVisitSecondsAgo) {
+      const lastVisit = timeSince(new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000))
       const lastVisited = document.createElement('span')
       lastVisited.title = 'Last Visited'
       lastVisited.classList.add('badge', 'last-visited')
-      lastVisited.innerText = '-' + resultEntry.lastVisit
+      lastVisited.innerText = '-' + lastVisit
       titleDiv.appendChild(lastVisited)
     }
     if (ext.opts.displayVisitCounter && resultEntry.visitCount) {

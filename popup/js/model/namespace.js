@@ -17,8 +17,6 @@ export const extensionNamespace = {
   },
   /** Search indexes */
   index: {
-    fuzzy: {},
-    precise: {},
     taxonomy: {},
   },
   /** Commonly used DOM Elements */

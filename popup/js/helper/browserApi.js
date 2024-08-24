@@ -1,4 +1,4 @@
-import { cleanUpUrl, timeSince } from './utils.js'
+import { cleanUpUrl } from './utils.js'
 
 // Location of browser API.
 // This is `browser` for firefox, and `chrome` for Chrome, Edge and Opera.
@@ -37,12 +37,10 @@ export function convertBrowserTabs(chromeTabs) {
       url: cleanUrl,
       originalUrl: el.url.replace(/\/$/, ''),
       originalId: el.id,
-      favIconUrl: el.favIconUrl,
       active: el.active,
       windowId: el.windowId,
       searchString: createSearchString(el.title, cleanUrl),
       lastVisitSecondsAgo: el.lastAccessed ? (Date.now() - el.lastAccessed) / 1000 : undefined,
-      lastVisit: el.lastAccessed && ext.opts.displayLastVisit ? timeSince(new Date(el.lastAccessed)) : undefined,
     }
   })
 }
@@ -221,7 +219,6 @@ export function convertBrowserHistory(history) {
       originalUrl: el.url.replace(/\/$/, ''),
       url: cleanUrl,
       visitCount: el.visitCount,
-      lastVisit: ext.opts.displayLastVisit ? timeSince(new Date(el.lastVisitTime)) : undefined,
       lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
       originalId: el.id,
       searchString: createSearchString(el.title, cleanUrl),
