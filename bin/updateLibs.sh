@@ -7,3 +7,5 @@ cat node_modules/mark.js/dist/mark.es6.min.js >> popup/lib/mark.es6.min.js
 # Copy over vendor dependencies that we don't bundle, because they're only loaded on demand
 cp node_modules/js-yaml/dist/js-yaml.min.js popup/lib/js-yaml.min.js
 cp node_modules/\@yaireo/tagify/dist/tagify.js popup/lib/tagify.min.js
+cp node_modules/\@yaireo/tagify/dist/tagify.css popup/lib/tagify.min.css
+cp node_modules/minireset.css/minireset.min.css popup/lib/minireset.min.css
