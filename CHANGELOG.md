@@ -2,6 +2,17 @@
 
 ## [unreleased]
 
+## [v1.10.0]
+
+- **NEW**: Right-click result to copy URL to clipboard
+- **IMPROVED**: Improved initial loading time by caching browser history in local storage
+  - The browser API to fetch history tends to be slow
+  - The default history size (`historyMaxItems`) to load has been increased to 1024
+- **IMPROVED**: Simplified options for calculating score of recently visited pages
+  - now only `scoreRecentBonusScoreMaximum` (which defaults to +20)
+- **CHORE**: Minor refactoring and cleanups, maybe with a little bit performance improvements.
+- **CHORE**: Removed SCSS build step, now it's just vanilla CSS
+
 ## [v1.9.7]
 
 - **FIXED**: Fixed missing CSS font style for tagging view
