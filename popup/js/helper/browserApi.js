@@ -168,14 +168,14 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
  * Gets chrome browsing history.
  * Warning: This chrome API call tends to be rather slow
  */
-export async function getBrowserHistory(daysAgo, maxResults) {
+export async function getBrowserHistory(startTime, maxResults) {
   return new Promise((resolve, reject) => {
     if (browserApi.history) {
       browserApi.history.search(
         {
           text: '',
           maxResults: maxResults,
-          startTime: Date.now() - 1000 * 60 * 60 * 24 * daysAgo,
+          startTime: startTime,
           endTime: Date.now(),
         },
         (history, err) => {
@@ -196,6 +196,7 @@ export async function getBrowserHistory(daysAgo, maxResults) {
  * Convert chrome history into our internal, flat array format
  */
 export function convertBrowserHistory(history) {
+  const ids = {}
   if (ext.opts.historyIgnoreList && ext.opts.historyIgnoreList.length) {
     let ignoredHistoryCounter = 0
     history = history.filter((el) => {
@@ -213,21 +214,27 @@ export function convertBrowserHistory(history) {
   }
 
   const now = Date.now()
-  return history.map((el) => {
+  const convertedHistory = []
+  for (const el of history) {
     const cleanUrl = cleanUpUrl(el.url)
-
-    return {
-      type: 'history',
-      title: getTitle(el.title, cleanUrl),
-      originalUrl: el.url.replace(/\/$/, ''),
-      url: cleanUrl,
-      visitCount: el.visitCount,
-      lastVisit: ext.opts.displayLastVisit ? timeSince(new Date(el.lastVisitTime)) : undefined,
-      lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
-      originalId: el.id,
-      searchString: createSearchString(el.title, cleanUrl),
+    if (!ids[el.id]) {
+      ids[el.id] = true
+      convertedHistory.push({
+        type: 'history',
+        title: getTitle(el.title, cleanUrl),
+        originalUrl: el.url.replace(/\/$/, ''),
+        url: cleanUrl,
+        visitCount: el.visitCount,
+        lastVisit: ext.opts.displayLastVisit ? timeSince(new Date(el.lastVisitTime)) : undefined,
+        lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
+        originalId: el.id,
+        searchString: createSearchString(el.title, cleanUrl),
+      })
+    } else {
+      console.warn('Detected duplicated history entry', el)
     }
-  })
+  }
+  return convertedHistory
 }
 
 export function createSearchString(title, url, tags, folder) {

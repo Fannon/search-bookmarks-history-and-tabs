@@ -184,7 +184,7 @@ export const defaultOptions = {
    * How many history items should be fetched at most
    * Be careful, as too many items have negative impact on startup and search performance
    */
-  historyMaxItems: 1024,
+  historyMaxItems: 2048,
   /**
    * All history items that start with the URLs given here will be skipped
    *
@@ -400,13 +400,17 @@ export const emptyOptions = {
 }
 
 /**
- * Writes user settings to the google chrome sync storage
+ * Writes user settings to the sync storage, falls back to local storage
  *
  * @see https://developer.chrome.com/docs/extensions/reference/storage/
  */
 export async function setUserOptions(userOptions) {
   return new Promise((resolve, reject) => {
     userOptions = userOptions || {}
+
+    // Invalidate caches
+    localStorage.removeItem('historyLastFetched')
+    localStorage.removeItem('history')
 
     try {
       validateUserOptions(userOptions)
