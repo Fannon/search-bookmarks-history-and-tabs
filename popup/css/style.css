@@ -1,4 +1,4 @@
-﻿@charset "utf-8";
+@charset "utf-8";
  html, body, #container, #search {
 	 width: 500px;
 	 height: 600px;
@@ -299,7 +299,7 @@
 	 font-size: 18px;
 	 font-family: Consolas, monospace, monospace;
 	 resize: none;
-	 padding: 4px;
+	 padding: 6px 8px;
 }
  #options .help {
 	 padding: 2px 6px;
