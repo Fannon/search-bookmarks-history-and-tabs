@@ -184,8 +184,8 @@ export function convertBrowserHistory(history) {
   if (ext.opts.historyIgnoreList && ext.opts.historyIgnoreList.length) {
     let ignoredHistoryCounter = 0
     history = history.filter((el) => {
-      for (const ignoreUrlPrefix of ext.opts.historyIgnoreList) {
-        if (el.url.startsWith(ignoreUrlPrefix)) {
+      for (const ignoreUrl of ext.opts.historyIgnoreList) {
+        if (el.url.includes(ignoreUrl)) {
           ignoredHistoryCounter += 1
           return false
         }
