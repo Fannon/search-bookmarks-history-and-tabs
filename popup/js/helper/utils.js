@@ -5,9 +5,7 @@
  */
 export function timeSince(date) {
   const seconds = Math.floor((new Date() - date) / 1000)
-
   let interval = seconds / 31536000
-
   if (interval > 1) {
     return Math.floor(interval) + ' years'
   }
@@ -31,8 +29,7 @@ export function timeSince(date) {
 }
 
 /**
- * Remove http:// or http:// and www from URLs
- * Remove trailing slashes
+ * Remove http:// or http:// and www from URLs abd trailing slashes
  * @see https://stackoverflow.com/a/57698415
  */
 export function cleanUpUrl(url) {
@@ -66,7 +63,6 @@ export function printError(err, text) {
   if (err.stack) {
     html += `<li class="error"><b>Error Stack</b>: ${err.stack}</li>`
   }
-
   const errorList = document.getElementById('error-list')
   errorList.innerHTML = html + errorList.innerHTML
   errorList.style = 'display: block;'

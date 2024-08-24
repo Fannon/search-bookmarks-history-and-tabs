@@ -1,12 +1,7 @@
-import { cleanUpUrl, timeSince } from './utils.js'
+import { cleanUpUrl } from './utils.js'
 
-// Location of browser API.
-// This is `browser` for firefox, and `chrome` for Chrome, Edge and Opera.
+// Location of browser API. This is `browser` for firefox, and `chrome` for Chrome, Edge and Opera.
 export const browserApi = window.browser || window.chrome || {}
-
-//////////////////////////////////////////
-// BROWSER TABS                         //
-//////////////////////////////////////////
 
 export async function getBrowserTabs(queryOptions) {
   queryOptions = queryOptions || {}
@@ -37,19 +32,13 @@ export function convertBrowserTabs(chromeTabs) {
       url: cleanUrl,
       originalUrl: el.url.replace(/\/$/, ''),
       originalId: el.id,
-      favIconUrl: el.favIconUrl,
       active: el.active,
       windowId: el.windowId,
       searchString: createSearchString(el.title, cleanUrl),
       lastVisitSecondsAgo: el.lastAccessed ? (Date.now() - el.lastAccessed) / 1000 : undefined,
-      lastVisit: el.lastAccessed && ext.opts.displayLastVisit ? timeSince(new Date(el.lastAccessed)) : undefined,
     }
   })
 }
-
-//////////////////////////////////////////
-// BOOKMARKS                            //
-//////////////////////////////////////////
 
 export async function getBrowserBookmarks() {
   return new Promise((resolve, reject) => {
@@ -160,22 +149,18 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
   return result
 }
 
-//////////////////////////////////////////
-// BROWSER HISTORY                      //
-//////////////////////////////////////////
-
 /**
  * Gets chrome browsing history.
  * Warning: This chrome API call tends to be rather slow
  */
-export async function getBrowserHistory(daysAgo, maxResults) {
+export async function getBrowserHistory(startTime, maxResults) {
   return new Promise((resolve, reject) => {
     if (browserApi.history) {
       browserApi.history.search(
         {
           text: '',
           maxResults: maxResults,
-          startTime: Date.now() - 1000 * 60 * 60 * 24 * daysAgo,
+          startTime: startTime,
           endTime: Date.now(),
         },
         (history, err) => {
@@ -199,8 +184,8 @@ export function convertBrowserHistory(history) {
   if (ext.opts.historyIgnoreList && ext.opts.historyIgnoreList.length) {
     let ignoredHistoryCounter = 0
     history = history.filter((el) => {
-      for (const ignoreUrlPrefix of ext.opts.historyIgnoreList) {
-        if (el.url.startsWith(ignoreUrlPrefix)) {
+      for (const ignoreUrl of ext.opts.historyIgnoreList) {
+        if (el.url.includes(ignoreUrl)) {
           ignoredHistoryCounter += 1
           return false
         }
@@ -215,14 +200,12 @@ export function convertBrowserHistory(history) {
   const now = Date.now()
   return history.map((el) => {
     const cleanUrl = cleanUpUrl(el.url)
-
     return {
       type: 'history',
       title: getTitle(el.title, cleanUrl),
       originalUrl: el.url.replace(/\/$/, ''),
       url: cleanUrl,
       visitCount: el.visitCount,
-      lastVisit: ext.opts.displayLastVisit ? timeSince(new Date(el.lastVisitTime)) : undefined,
       lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
       originalId: el.id,
       searchString: createSearchString(el.title, cleanUrl),
@@ -237,13 +220,11 @@ export function createSearchString(title, url, tags, folder) {
     console.error('createSearchString: No URL given', { title, url, tags, folder })
     return searchString
   }
-
   if (title && !title.toLowerCase().includes(url.toLowerCase())) {
     searchString += title + separator + url
   } else {
     searchString += url
   }
-
   if (tags) {
     searchString += separator + tags
   }

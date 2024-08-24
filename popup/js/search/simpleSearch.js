@@ -17,17 +17,19 @@ export function resetSimpleSearchState(searchMode) {
 }
 
 export function simpleSearch(searchMode, searchTerm) {
-  let results = []
-  if (searchMode === 'history' || searchMode === 'bookmarks' || searchMode === 'tabs') {
+  if (searchMode === 'history') {
+    return [...simpleSearchWithScoring(searchTerm, 'tabs'), ...simpleSearchWithScoring(searchTerm, 'history')]
+  } else if (searchMode === 'bookmarks' || searchMode === 'tabs') {
     return simpleSearchWithScoring(searchTerm, searchMode)
   } else if (searchMode === 'search') {
-    // nothing, because search will be added later
+    return [] // nothing, because search will be added later
   } else {
-    results.push(...simpleSearchWithScoring(searchTerm, 'bookmarks'))
-    results.push(...simpleSearchWithScoring(searchTerm, 'tabs'))
-    results.push(...simpleSearchWithScoring(searchTerm, 'history'))
+    return [
+      ...simpleSearchWithScoring(searchTerm, 'bookmarks'),
+      ...simpleSearchWithScoring(searchTerm, 'tabs'),
+      ...simpleSearchWithScoring(searchTerm, 'history'),
+    ]
   }
-  return results
 }
 
 /**

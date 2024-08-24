@@ -50,7 +50,7 @@ export async function search(event) {
     // Support for various search modes
     // This is detected by looking at the first chars of the search
     if (searchTerm.startsWith('h ')) {
-      // Only history
+      // Only history and tabs
       searchMode = 'history'
       searchTerm = searchTerm.substring(2)
     } else if (searchTerm.startsWith('b ')) {
@@ -298,26 +298,13 @@ export function calculateFinalScore(results, searchTerm) {
     }
 
     // Increase score if result has been opened recently
-    if (
-      ext.opts.scoreRecentBonusScoreMaximum &&
-      ext.opts.scoreRecentBonusScorePerHour &&
-      el.lastVisitSecondsAgo != null
-    ) {
-      // Bonus score is always at least 0 (no negative scores)
-      // Take the recentBonusScoreMaximum
-      // Subtract recentBonusScorePerHour points for each hour in the past
-      score += Math.max(
-        0,
-        ext.opts.scoreRecentBonusScoreMaximum -
-          (el.lastVisitSecondsAgo / 60 / 60) * ext.opts.scoreRecentBonusScorePerHour,
-      )
+    if (ext.opts.scoreRecentBonusScoreMaximum && el.lastVisitSecondsAgo) {
+      const maxSeconds = ext.opts.historyDaysAgo * 24 * 60 * 60
+      score += Math.max(0, (1 - el.lastVisitSecondsAgo / maxSeconds) * ext.opts.scoreRecentBonusScoreMaximum)
     }
 
     // Increase score if bookmark has been added more recently
     if (ext.opts.scoreDateAddedBonusScoreMaximum && ext.opts.scoreDateAddedBonusScorePerDay && el.dateAdded != null) {
-      // Bonus score is always at least 0 (no negative scores)
-      // Take the dateAddedBonusScoreMaximum
-      // Subtract dateAddedBonusScorePerDay points for each hour in the past
       score += Math.max(
         0,
         ext.opts.scoreDateAddedBonusScoreMaximum -
@@ -327,6 +314,8 @@ export function calculateFinalScore(results, searchTerm) {
 
     el.score = score
   }
+
+  console.log(results)
 
   return results
 }

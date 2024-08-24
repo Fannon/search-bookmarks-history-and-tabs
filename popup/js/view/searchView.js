@@ -2,6 +2,7 @@
 // SEARCH VIEW                          //
 //////////////////////////////////////////
 
+import { timeSince } from '../helper/utils.js'
 import { initExtension } from '../initSearch.js'
 import { getUserOptions, setUserOptions } from '../model/options.js'
 
@@ -104,11 +105,12 @@ export function renderSearchResults(result) {
       }
       titleDiv.appendChild(folder)
     }
-    if (ext.opts.displayLastVisit && resultEntry.lastVisit) {
+    if (ext.opts.displayLastVisit && resultEntry.lastVisitSecondsAgo) {
+      const lastVisit = timeSince(new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000))
       const lastVisited = document.createElement('span')
       lastVisited.title = 'Last Visited'
       lastVisited.classList.add('badge', 'last-visited')
-      lastVisited.innerText = '-' + resultEntry.lastVisit
+      lastVisited.innerText = '-' + lastVisit
       titleDiv.appendChild(lastVisited)
     }
     if (ext.opts.displayVisitCounter && resultEntry.visitCount) {
@@ -117,13 +119,6 @@ export function renderSearchResults(result) {
       visitCounter.classList.add('badge', 'visit-counter')
       visitCounter.innerText = resultEntry.visitCount
       titleDiv.appendChild(visitCounter)
-    }
-    if (ext.opts.displayDateAdded && resultEntry.dateAdded) {
-      const dateAdded = document.createElement('span')
-      dateAdded.title = 'Date Added'
-      dateAdded.classList.add('badge', 'date-added')
-      dateAdded.innerText = new Date(resultEntry.dateAdded).toISOString().split('T')[0]
-      titleDiv.appendChild(dateAdded)
     }
     if (ext.opts.tabsDisplayWindowId && resultEntry.windowId) {
       const windowId = document.createElement('span')

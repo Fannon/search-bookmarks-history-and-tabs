@@ -19,7 +19,7 @@ describe('Tag View', () => {
         .should('have.value', '#json')
       cy.get('#result-list')
         .should('not.have.length', 0)
-        .find('[x-original-id=9]')
+        .find('[x-original-id=7]')
       cy.get('#result-list')
         .find('li.bookmark')
         .checkNoErrors()

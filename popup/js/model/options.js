@@ -39,7 +39,7 @@ export const defaultOptions = {
    * Max search results. Reduce for better performance.
    * Does not apply for tag and folder search
    */
-  searchMaxResults: 50,
+  searchMaxResults: 32,
   /**
    * Minimum string characters of the search term to consider a match
    */
@@ -135,10 +135,6 @@ export const defaultOptions = {
    */
   displayVisitCounter: false,
   /**
-   * Display date when a bookmark was added
-   */
-  displayDateAdded: false,
-  /**
    * Display result score.
    * The score indicates the relevance of the result and defines the order of results.
    */
@@ -186,10 +182,7 @@ export const defaultOptions = {
    */
   historyMaxItems: 1024,
   /**
-   * All history items that start with the URLs given here will be skipped
-   *
-   * @example
-   * historyIgnoreList: ["http://localhost"]
+   * All history items that where the URL includes the given strings will be skipped
    */
   historyIgnoreList: [],
 
@@ -214,10 +207,6 @@ export const defaultOptions = {
     {
       name: 'Bing',
       urlPrefix: 'https://www.bing.com/search?q=$s',
-    },
-    {
-      name: 'DuckDuckGo',
-      urlPrefix: 'https://duckduckgo.com/?q=$s',
     },
     {
       name: 'dict.cc',
@@ -282,7 +271,7 @@ export const defaultOptions = {
   /**
    * Base score for history results
    */
-  scoreHistoryBaseScore: 50,
+  scoreHistoryBaseScore: 45,
   /**
    * Base score for search engine choices
    */
@@ -345,32 +334,17 @@ export const defaultOptions = {
    * Please note that only history items within `history.daysAgo` can be considered,
    * however the visited counter itself considers your complete history.
    */
-  scoreVisitedBonusScore: 0.25,
+  scoreVisitedBonusScore: 0.5,
   /**
    * Maximum score points for visited bonus
    */
-  scoreVisitedBonusScoreMaximum: 10,
+  scoreVisitedBonusScoreMaximum: 20,
   /**
-   * Adds score points when a bookmark or history has been accessed recently.
-   * Calculated by taking the recentBonusScoreMaximum and subtract recentBonusScorePerHour
-   * for each hour the access happened in the past.
-   * There is no negative score.
-   *
-   * Example: If maximum is 24 and perHour is 0.5:
-   * * For a page just opened there will be ~20 bonus score
-   * * For a page opened 24 hours ago there will be 10 bonus score
-   * * For a page opened 48 hours ago there will be 0 bonus score
+   * Adds score points when item has been visited recently.
+   * If it has been visited just now, score is maximum
+   * If it has been visited at the end of `historyDaysAgo`, score is 0
    */
-  scoreRecentBonusScorePerHour: 0.5,
   scoreRecentBonusScoreMaximum: 20,
-  /**
-   * Adds score points when a bookmark has been added more recently.
-   * Calculated by taking the dateAddedBonusScoreMaximum and subtract dateAddedBonusScorePerDay
-   * for each day the bookmark has been added in the past.
-   * There is no negative score.
-   */
-  scoreDateAddedBonusScorePerDay: 0.1,
-  scoreDateAddedBonusScoreMaximum: 5,
 
   //////////////////////////////////////////
   // POWER USER OPTIONS                   //
@@ -400,13 +374,17 @@ export const emptyOptions = {
 }
 
 /**
- * Writes user settings to the google chrome sync storage
+ * Writes user settings to the sync storage, falls back to local storage
  *
  * @see https://developer.chrome.com/docs/extensions/reference/storage/
  */
 export async function setUserOptions(userOptions) {
   return new Promise((resolve, reject) => {
     userOptions = userOptions || {}
+
+    // Invalidate caches
+    localStorage.removeItem('historyLastFetched')
+    localStorage.removeItem('history')
 
     try {
       validateUserOptions(userOptions)

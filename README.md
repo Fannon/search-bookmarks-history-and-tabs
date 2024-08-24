@@ -42,9 +42,9 @@ For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
     - Supports AND search, e.g. search for `#github #pr` to only get results which have both tags
   - Start your query with `~`: only **bookmarks within the folder** will be returned (exact "starts with" search)
     - Supports AND search, e.g. search for `~Sites ~Blogs` to only get results which have both tags
-  - Start your query with `t ` (including space): only **tabs** will be searched.
   - Start your query with `b ` (including space): only **bookmarks** will be searched.
-  - Start your query with `h ` (including space): only **history** will be searched.
+  - Start your query with `h ` (including space): only **history** and **open tabs** will be searched.
+  - Start your query with `t ` (including space): only **open tabs** will be searched.
   - Start your query with `s ` (including space): only **search engines** will be proposed.
   - Custom Aliases:
     - The option `customSearchEngines` allows you to define your own search mode aliases
@@ -80,31 +80,27 @@ An exemplary user config can look like the following example:
 ```yaml
 searchStrategy: fuzzy
 displayVisitCounter: true
-displayDateAdded: true
+historyMaxItems: 2048 # Increase max number of browser history items to load
 ```
 
-If you have troubles with performance, here are a few options that might help. Feel free to pick & choose and tune the values to your situation:
+If you have **troubles with performance**, here are a few options that might help. Feel free to pick & choose and tune the values to your situation. In particular `historyMaxItems` and how many bookmarks you have will impact init and search performance.
+
+Here is a suggestion for low-performance machines:
 
 ```yaml
-searchStrategy: precise
-searchMinMatchCharLength: 2
-displaySearchMatchHighlight: false,
-searchMaxResults: 20
-historyMaxItems: 200
+searchStrategy: precise # Precise search is faster than fuzzy search.
+searchMinMatchCharLength: 2 # Start searching only when at least 2 characters are entered
+displaySearchMatchHighlight: false, # Not highlighting search matches improves render performance.
+searchMaxResults: 20 # Number of search results can be further limited
+historyMaxItems: 512 # Number of browser history items can be further reduced
 ```
-
-> Precise search is faster than fuzzy search.
-> Start searching only when at least 2 characters are entered
-> Highlighting search matches takes some effort, this can be disabled.
-> Number of search results can be further limited
-> Number of browser history items can be further reduced
 
 Or a more advanced example:
 
 ```yaml
 searchStrategy: precise
 historyDaysAgo: 14
-historyMaxItems: 1200
+historyMaxItems: 2048
 historyIgnoreList:
   - http://localhost
   - http://127.0.0.1

@@ -14,35 +14,35 @@ describe('Options View', () => {
       const newConfig = JSON.stringify(
         {
           displayVisitCounter: true,
-          displayDateAdded: true,
         },
         null,
         2,
       )
       cy.get('#user-config')
         .clear()
+      cy.get('#user-config')
         .should('have.value', '')
+      cy.get('#user-config')
         .type(newConfig)
       cy.get('#edit-options-save')
         .click()
-        .visit('/options.html')
+      cy.visit('/options.html')
       cy.get('#user-config')
         .should('include.value', 'displayVisitCounter')
-        .should('include.value', 'displayDateAdded')
         .checkNoErrors()
     })
     it('can save a new user config in YAML format', () => {
-      const newConfig = `displayVisitCounter: true\ndisplayDateAdded: true`
+      const newConfig = `displayVisitCounter: true\n`
       cy.get('#user-config')
         .clear()
+      cy.get('#user-config')
         .should('have.value', '')
         .type(newConfig)
       cy.get('#edit-options-save')
         .click()
-        .visit('/options.html')
+      cy.visit('/options.html')
       cy.get('#user-config')
         .should('include.value', 'displayVisitCounter')
-        .should('include.value', 'displayDateAdded')
         .checkNoErrors()
     })
   })
