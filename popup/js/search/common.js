@@ -315,8 +315,6 @@ export function calculateFinalScore(results, searchTerm) {
     el.score = score
   }
 
-  console.log(results)
-
   return results
 }
 

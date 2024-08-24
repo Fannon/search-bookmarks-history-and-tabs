@@ -28,10 +28,7 @@ export function renderSearchResults(result) {
     resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
     resultListItem.setAttribute('x-index', i)
     resultListItem.setAttribute('x-original-id', resultEntry.originalId)
-    resultListItem.setAttribute(
-      'style',
-      `border-left: ${ext.opts.colorStripeWidth}px solid ${ext.opts[resultEntry.type + 'Color']}`,
-    )
+    resultListItem.setAttribute('style', `border-left: ${ext.opts.colorStripeWidth}px solid ${ext.opts[resultEntry.type + 'Color']}`)
 
     // Create edit button / image
     if (resultEntry.type === 'bookmark') {
@@ -75,11 +72,7 @@ export function renderSearchResults(result) {
       const tags = document.createElement('span')
       tags.title = 'Bookmark Tags'
       tags.classList.add('badge', 'tags')
-      if (
-        ext.opts.displaySearchMatchHighlight &&
-        resultEntry.tagsHighlighted &&
-        resultEntry.tagsHighlighted.includes('<mark>')
-      ) {
+      if (ext.opts.displaySearchMatchHighlight && resultEntry.tagsHighlighted && resultEntry.tagsHighlighted.includes('<mark>')) {
         tags.innerHTML = resultEntry.tagsHighlighted
       } else {
         tags.innerText = resultEntry.tags
@@ -94,11 +87,7 @@ export function renderSearchResults(result) {
       if (ext.opts.bookmarkColor) {
         folder.style = `background-color: ${ext.opts.bookmarkColor}`
       }
-      if (
-        ext.opts.displaySearchMatchHighlight &&
-        resultEntry.folderHighlighted &&
-        resultEntry.folderHighlighted.includes('<mark>')
-      ) {
+      if (ext.opts.displaySearchMatchHighlight && resultEntry.folderHighlighted && resultEntry.folderHighlighted.includes('<mark>')) {
         folder.innerHTML = resultEntry.folderHighlighted
       } else {
         folder.innerText = resultEntry.folder
@@ -139,11 +128,7 @@ export function renderSearchResults(result) {
     const urlDiv = document.createElement('div')
     urlDiv.classList.add('url')
     urlDiv.title = resultEntry.url
-    if (
-      ext.opts.displaySearchMatchHighlight &&
-      resultEntry.urlHighlighted &&
-      resultEntry.urlHighlighted.includes('<mark>')
-    ) {
+    if (ext.opts.displaySearchMatchHighlight && resultEntry.urlHighlighted && resultEntry.urlHighlighted.includes('<mark>')) {
       urlDiv.innerHTML = resultEntry.urlHighlighted
     } else {
       urlDiv.innerText = resultEntry.url
@@ -154,6 +139,9 @@ export function renderSearchResults(result) {
     resultListItem.appendChild(urlDiv)
     resultListItem.addEventListener('mouseenter', hoverResultItem)
     resultListItem.addEventListener('mouseup', openResultItem)
+    document.addEventListener('contextmenu', (e) => {
+      e.preventDefault() // Disable right mouse context menu
+    })
 
     if (ext.opts.displaySearchMatchHighlight && ext.model.searchTerm) {
       // Use mark.js to highlight search results, if we don't have already done before in fuzzy search
@@ -287,9 +275,15 @@ export function openResultItem(event) {
 
       // Render search results again to avoid display bugs
       renderSearchResults()
-
       return
     }
+  }
+
+  // Right click mouse -> copy URL of result to clipboard
+  if (event.button === 2) {
+    navigator.clipboard.writeText(url)
+    event.preventDefault()
+    return
   }
 
   // If we press SHIFT or ALT while selecting an entry:
