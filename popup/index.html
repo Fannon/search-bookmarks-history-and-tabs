@@ -3,6 +3,7 @@
   <head>
     <title>Search Bookmarks, History and Tabs</title>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="./lib/minireset.min.css" />
     <link rel="stylesheet" href="./lib/tagify.min.css" />
     <link rel="stylesheet" href="./css/style.css" />
@@ -35,9 +36,9 @@
       <div id="edit-bookmark" style="display: none">
         <div class="inputs">
           <div class="input-description">EDIT BOOKMARK:</div>
-          <textarea id="bookmark-title" class="input" type="text"></textarea>
-          <textarea id="bookmark-url" class="input" type="text"></textarea>
-          <textarea id="bookmark-tags" class="input" type="text"></textarea>
+          <textarea id="bookmark-title" title="Bookmark Title" class="input" type="text"></textarea>
+          <textarea id="bookmark-url" title="Bookmark URL" class="input" type="text"></textarea>
+          <textarea id="bookmark-tags" title="Bookmark Tags" class="input" type="text"></textarea>
         </div>
         <div class="controls">
           <a id="edit-bookmark-delete" class="button delete-button" href="#">DELETE</a>

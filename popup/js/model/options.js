@@ -184,7 +184,7 @@ export const defaultOptions = {
    * How many history items should be fetched at most
    * Be careful, as too many items have negative impact on startup and search performance
    */
-  historyMaxItems: 512,
+  historyMaxItems: 1024,
   /**
    * All history items that start with the URLs given here will be skipped
    *
