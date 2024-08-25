@@ -66,16 +66,16 @@ export async function getSearchData() {
       }
 
       let startTime = Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
+      let lastReset = parseInt(localStorage.getItem('historyLastReset') || 0)
       let lastFetch = parseInt(localStorage.getItem('historyLastFetched') || 0)
-
       let historyC = []
-      if (lastFetch) {
-        if (lastFetch < Date.now() - 1000 * 60 * 60) {
-          lastFetch = startTime // Reset cache every hour
-        } else if (lastFetch > startTime) {
-          historyC = JSON.parse(localStorage.getItem('history'))
-          startTime = lastFetch
-        }
+      if (lastReset < Date.now() - 1000 * 60 * 60) {
+        lastFetch = startTime // Reset cache every hour
+        localStorage.setItem('historyLastReset', Date.now())
+      }
+      if (lastFetch && lastFetch > startTime) {
+        historyC = JSON.parse(localStorage.getItem('history'))
+        startTime = lastFetch
       }
 
       // Merge histories
