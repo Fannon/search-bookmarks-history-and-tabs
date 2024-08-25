@@ -388,6 +388,7 @@ export async function setUserOptions(userOptions) {
 
     // Invalidate caches
     localStorage.removeItem('historyLastFetched')
+    localStorage.removeItem('historyLastReset')
     localStorage.removeItem('history')
 
     try {
