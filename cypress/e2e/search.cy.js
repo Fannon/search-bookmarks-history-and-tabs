@@ -10,8 +10,10 @@ describe('Search View', () => {
     it('completes the initializing phase without errors', () => {
       cy.get('#results-loading').should('not.exist').checkNoErrors()
     })
-    it('starts with no results', () => {
-      cy.get('#result-counter').contains('(0)')
+    it('starts with no results, but a random tip', () => {
+      cy.get('#result-list').find('li.tip')
+      cy.get('#result-list')
+        .should('have.length', 1)
     })
   })
 

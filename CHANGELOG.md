@@ -4,6 +4,8 @@
 
 ## [v1.10.0]
 
+- **NEW**: Show random tips on startup
+  - Can be disabled via option `enableHelp: false`
 - **NEW**: Right-click result to copy URL to clipboard
 - **IMPROVED**: Improved initial loading time by caching browser history in local storage
   - The browser API to fetch history tends to be slow

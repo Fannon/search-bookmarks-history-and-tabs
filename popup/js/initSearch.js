@@ -3,9 +3,15 @@ import { extensionNamespace as ext } from './model/namespace.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { search } from './search/common.js'
+import { addDefaultEntries, addHelp } from './search/defaultEntries.js'
 import { editBookmark, updateBookmark } from './view/editBookmarkView.js'
 import { loadFoldersOverview } from './view/foldersView.js'
-import { navigationKeyListener, toggleSearchApproach, updateSearchApproachToggle } from './view/searchView.js'
+import {
+  navigationKeyListener,
+  renderSearchResults,
+  toggleSearchApproach,
+  updateSearchApproachToggle,
+} from './view/searchView.js'
 import { loadTagsOverview } from './view/tagsView.js'
 
 window.ext = ext
@@ -58,10 +64,19 @@ export async function initExtension() {
   ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
   ext.dom.searchInput.addEventListener('keyup', search)
 
-  if (!document.querySelector('#result-list .message')) {
-    // Initialize the router by executing it for the first time
-    // Only do this if there are no (error / warning) messages displayed
+  // Display default entries
+  await addDefaultEntries()
+  renderSearchResults(ext.model.result)
+  if (!window.location.hash || window.location.hash === '/') {
+    if (ext.opts.enableHelp) {
+      addHelp()
+    }
+  } else {
     hashRouter()
+  }
+
+  if (document.getElementById('results-loading')) {
+    document.getElementById('results-loading').remove()
   }
 
   if (ext.opts.debug) {
@@ -72,10 +87,6 @@ export async function initExtension() {
     const totalInitPerformance = performance.getEntriesByName('init-end-to-end')
     console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)
     performance.clearMeasures()
-  }
-
-  if (document.getElementById('results-loading')) {
-    document.getElementById('results-loading').remove()
   }
 }
 

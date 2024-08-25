@@ -106,6 +106,10 @@ export const defaultOptions = {
    * Search engines can be a useful fallback mechanism to search externally for the term
    */
   enableSearchEngines: true,
+  /**
+   * Enable help and tips on startup
+   */
+  enableHelp: true,
 
   //////////////////////////////////////////
   // DISPLAY OPTIONS                      //
@@ -161,11 +165,6 @@ export const defaultOptions = {
    * If true, only the current browser window is considered for tab indexing and switching
    */
   tabsOnlyCurrentWindow: false,
-  /**
-   * When initializing search, show a certain number of tabs, sorted by last visited
-   * Set this to 0 to disable.
-   */
-  tabsDisplayLastVisited: 0,
   /**
    * If true, the windowId of the tab result will be displayed
    * This can help to with multi-window situations
