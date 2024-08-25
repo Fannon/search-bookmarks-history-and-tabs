@@ -80,10 +80,10 @@ export const helpTexts = [
    The default is <code>CTRL</code> + <code>Shift</code> + <code>.</code>. <br/><br/>
    This can be customized in the browsers extensions settings.`,
 
-  `<strong>History Size & History</strong>: By default the extension limits the number of history items it loads.
+  `<strong>History Size & History</strong>: By default the number of history items to load are limited.
    Consider increasing or decreasing this, depending on your performance situation and personal preferences:<br /><br />
-   Add / adjust option: <code>historyMaxItems: 1024</code> to change this. <br/>
-   Add / adjust option: <code>historyDaysAgo: 14</code> to change this.`,
+   Add / adjust option: <code>historyMaxItems: 1024</code> <br/>
+   Add / adjust option: <code>historyDaysAgo: 14</code>`,
 
   `<strong>Open selected results</strong>: By default, the extension will open the selected result in a new tab or switch to an existing tab if fitting.<br/><br/>
    Hold <code>Shift</code> or <code>Alt</code> to open the result in the current tab.<br />

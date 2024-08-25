@@ -67,8 +67,12 @@ export async function initExtension() {
   // Display default entries
   await addDefaultEntries()
   renderSearchResults(ext.model.result)
-  if (ext.opts.enableHelp) {
-    addHelp()
+  if (!window.location.hash || window.location.hash === '/') {
+    if (ext.opts.enableHelp) {
+      addHelp()
+    }
+  } else {
+    hashRouter()
   }
 
   if (document.getElementById('results-loading')) {
