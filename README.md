@@ -103,6 +103,7 @@ searchStrategy: precise
 historyDaysAgo: 14
 historyMaxItems: 2048
 historyIgnoreList:
+  - extension://
   - http://localhost
   - http://127.0.0.1
 colorStripeWidth: 4 # Customize width of search result color stripe

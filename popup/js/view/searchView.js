@@ -120,6 +120,13 @@ export function renderSearchResults(result) {
       visitCounter.innerText = resultEntry.visitCount
       titleDiv.appendChild(visitCounter)
     }
+    if (ext.opts.displayDateAdded && resultEntry.dateAdded) {
+      const dateAdded = document.createElement('span')
+      dateAdded.title = 'Date Added'
+      dateAdded.classList.add('badge', 'date-added')
+      dateAdded.innerText = new Date(resultEntry.dateAdded).toISOString().split('T')[0]
+      titleDiv.appendChild(dateAdded)
+    }
     if (ext.opts.tabsDisplayWindowId && resultEntry.windowId) {
       const windowId = document.createElement('span')
       windowId.title = 'Window'
