@@ -135,6 +135,10 @@ export const defaultOptions = {
    */
   displayVisitCounter: false,
   /**
+   * Display date when a bookmark was added
+   */
+  displayDateAdded: false,
+  /**
    * Display result score.
    * The score indicates the relevance of the result and defines the order of results.
    */
@@ -184,7 +188,7 @@ export const defaultOptions = {
   /**
    * All history items that where the URL includes the given strings will be skipped
    */
-  historyIgnoreList: [],
+  historyIgnoreList: ['extension://'],
 
   //////////////////////////////////////////
   // SEARCH ENGINES OPTIONS               //
