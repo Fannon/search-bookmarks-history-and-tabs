@@ -41,8 +41,7 @@ export async function addDefaultEntries() {
     let currentUrl = window.location.href
     const [tab] = await getBrowserTabs({ active: true, currentWindow: true })
 
-    // If we find no open tab, we're most likely not having a browser API
-    // and work in local / test mode. Return nothing.
+    // If we find no open tab, we're most likely not having a browser API. Return nothing.
     if (!tab) {
       return []
     }
@@ -58,22 +57,6 @@ export async function addDefaultEntries() {
     // Find if we have browser history that has the same URL
     let foundHistory = ext.model.history.filter((el) => currentUrl === el.originalUrl)
     results.push(...foundHistory)
-
-    // Optional: Add a given number of last visited tabs for quick navigation
-    // This is similar to the `t ` special search behavior
-    if (ext.opts.tabsDisplayLastVisited && ext.model.tabs) {
-      const lastVisitedTabs = ext.model.tabs
-        .filter((el) => {
-          return el.lastVisitSecondsAgo
-        })
-        .filter((el) => {
-          return el.active === false
-        })
-        .sort((a, b) => {
-          return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo
-        })
-      results.push(...lastVisitedTabs.slice(0, ext.opts.tabsDisplayLastVisited))
-    }
   }
 
   ext.model.result = results
