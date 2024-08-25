@@ -66,66 +66,57 @@ export async function addDefaultEntries() {
 export function addHelp() {
   const parser = new DOMParser()
   var html = helpTexts[(Math.random() * helpTexts.length) | 0]
-  const doc = parser.parseFromString(html, 'text/html')
+  const doc = parser.parseFromString(`<li class="tip">${html}</li>`, 'text/html')
   document.getElementById('result-list').appendChild(doc.body.firstChild)
 }
 
 export const helpTexts = [
-  `<li class="tip">
-    <strong>Tips on startup</strong>: Can be disabled via the option:<br/> <code>enableHelp: false</code>
-  </li>`,
+  `<strong>Tips on startup</strong>: Disable via the option: <code>enableHelp: false</code>`,
 
-  `<li class="tip">
-    <strong>Search Strategies</strong>: Switch between <span class="precise">PRECISE</span> (faster, exact) and
-    <span class="fuzzy">FUZZY</span> (slower, more results, fuzzy).<br/><br/>
-    This can be done via clicking on the top-right corner of the popup or by setting it in the options like: <code>searchStrategy: precise</code>
-  </li>`,
+  `<strong>Search Strategies</strong>: Switch between <span class="precise">PRECISE</span> (faster, exact) and <span class="fuzzy">FUZZY</span> (slower, more results, fuzzy).<br/><br/>
+   
+   This can be done via clicking on the top-right corner of the popup or by setting it in the options like: <code>searchStrategy: precise</code>`,
 
-  `<li class="tip">
-    <strong>Keyboard Shortcut</strong>: Trigger the extension via keyboard. <br/>
-    The default is <code>CTRL</code> + <code>Shift</code> + <code>.</code>. <br/><br/>
-    This can be customized in the browsers extensions settings.
-  </li>`,
+  `<strong>Keyboard Shortcut</strong>: Trigger the extension via keyboard. <br/>
+   The default is <code>CTRL</code> + <code>Shift</code> + <code>.</code>. <br/><br/>
+   
+   This can be customized in the browsers extensions settings.`,
 
-  `<li class="tip">
-    <strong>History Size & History</strong>: By default the extension limits the number of history items it loads.
-    Consider increasing or decreasing this, depending on your performance situation and personal preferences:<br /><br />
+  `<strong>History Size & History</strong>: By default the extension limits the number of history items it loads.
+   Consider increasing or decreasing this, depending on your performance situation and personal preferences:<br /><br />
+   
+   Add / adjust option: <code>historyMaxItems: 1024</code> to change this. <br/>
+   Add / adjust option: <code>historyDaysAgo: 14</code> to change this.`,
 
-    Add / adjust option: <code>historyMaxItems: 1024</code> to change this.
-    Add / adjust option: <code>historyDaysAgo: 14</code> to change this.
-  </li>`,
+  `<strong>Open selected results</strong>: By default, the extension will open the selected result in a new tab or switch to an existing tab if fitting.<br/><br/>
+    
+   Hold <code>Shift</code> or <code>Alt</code> to open the result in the current tab.<br />
+   Hold <code>Ctrl</code> to open the result without closing the popup.`,
 
-  `<li class="tip">
-    <strong>Open selected results</strong>: By default, the extension will open the selected result in a new tab or switch to an existing tab if fitting.<br/><br/>
-    Hold <code>Shift</code> or <code>Alt</code> to open the result in the current tab.<br />
-    Hold <code>Ctrl</code> to open the result without closing the popup.
-  </li>`,
+  `<strong>Custom Bonus Scores</strong>: Append <code> + [whole number]</code> to your bookmark title (before tags). <br/><br/>
+   Example: <code>Another Bookmark +10 #tag1</code>`,
 
-  `<li class="tip">
-    <strong>Custom Bonus Scores</strong>: Append <code> + [whole number]</code> to your bookmark title (before tags). <br/><br/>
-    Example: <code>Another Bookmark +10 #tag1</code>
-  </li>`,
+  `<strong>Custom Bonus Scores</strong>: Append <code> + [whole number]</code> to your bookmark title (before tags). <br/><br/>
+   Example: <code>Another Bookmark +10 #tag1</code>`,
 
-  `<li class="tip">
-    <strong>Custom Bonus Scores</strong>: Append <code> + [whole number]</code> to your bookmark title (before tags). <br/><br/>
-    Example: <code>Another Bookmark +10 #tag1</code>
-  </li>`,
+  `<strong>Copy to Clipboard</strong>: Right click a result item to copy its URL to the clipboard.`,
 
-  `<li class="tip">
-  <strong>Search Modes</strong>: Use search modes to be more selective.<br/><br/>
-  Start your search query with a search mode prefix:
-    <ul>
+  `<strong>Search Modes</strong>: Use search modes to be more selective.<br/><br/>
+   Start your search query with a search mode prefix:
+   <ul>
     <li><code>#</code>: Only <strong>bookmarks with the tag</strong> will be returned</li>
     <li><code>~</code>: Only <strong>bookmarks within the folder</strong> will be returned</li>
     <li><code>t </code>: Only <strong>tabs</strong> will be searched.</li>
     <li><code>b </code>: Only <strong>bookmarks</strong> will be searched.</li>
     <li><code>h </code>: Only <strong>history</strong> and <strong>tabs</strong> will be searched.</li>
     <li><code>s </code>: Only <strong>search engines</strong> will be proposed.</li>
-    </ul>
-    </li>`,
+   </ul>`,
 
-  `<li class="tip">
-    <strong>Special Browser Pages</strong>: You can add special browser pages to your bookmarks, like
-    <code>chrome://downloads</code>.
-  </li>`,
+  `<strong>Special Browser Pages</strong>: You can add special browser pages to your bookmarks, like
+   <code>chrome://downloads</code>.`,
+
+  `<strong>Keyboard Navigation</strong>: You can navigate result entries Emacs / Vim Style:<br/><br/>
+
+   <code>Ctrl+N</code> and <code>Ctrl+J</code> to navigate search results up.<br/>
+   <code>Ctrl+P</code> and <code>Ctrl+K</code> to navigate search results down.`,
 ]
