@@ -71,6 +71,8 @@ export function addHelp() {
 }
 
 export const helpTexts = [
+  `<strong>Customization</strong>: This extension can be customized via options in many ways. Please refer to the Documentation (link bottom right).`,
+
   `<strong>Tips on startup</strong>: Disable via option: <code>enableHelp: false</code>`,
 
   `<strong>Search Strategies</strong>: Switch between <span class="precise">PRECISE</span> (faster, exact) and <span class="fuzzy">FUZZY</span> (slower, more results, fuzzy).<br/><br/>
@@ -87,7 +89,8 @@ export const helpTexts = [
 
   `<strong>Open selected results</strong>: By default, the extension will open the selected result in a new tab or switch to an existing tab if fitting.<br/><br/>
    Hold <code>Shift</code> or <code>Alt</code> to open the result in the current tab.<br />
-   Hold <code>Ctrl</code> to open the result without closing the popup.`,
+   Hold <code>Ctrl</code> to open the result without closing the popup.<br />
+   Press <code>Right Click</code> to copy URL of result into clipboard without closing the popup.`,
 
   `<strong>Custom Bonus Scores</strong>: Append <code> + [whole number]</code> to your bookmark title (before tags). <br/><br/>
    Example: <code>Another Bookmark +10 #tag1</code>`,
