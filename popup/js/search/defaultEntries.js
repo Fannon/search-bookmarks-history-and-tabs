@@ -71,25 +71,21 @@ export function addHelp() {
 }
 
 export const helpTexts = [
-  `<strong>Tips on startup</strong>: Disable via the option: <code>enableHelp: false</code>`,
+  `<strong>Tips on startup</strong>: Disable via option: <code>enableHelp: false</code>`,
 
   `<strong>Search Strategies</strong>: Switch between <span class="precise">PRECISE</span> (faster, exact) and <span class="fuzzy">FUZZY</span> (slower, more results, fuzzy).<br/><br/>
-   
    This can be done via clicking on the top-right corner of the popup or by setting it in the options like: <code>searchStrategy: precise</code>`,
 
   `<strong>Keyboard Shortcut</strong>: Trigger the extension via keyboard. <br/>
    The default is <code>CTRL</code> + <code>Shift</code> + <code>.</code>. <br/><br/>
-   
    This can be customized in the browsers extensions settings.`,
 
   `<strong>History Size & History</strong>: By default the extension limits the number of history items it loads.
    Consider increasing or decreasing this, depending on your performance situation and personal preferences:<br /><br />
-   
    Add / adjust option: <code>historyMaxItems: 1024</code> to change this. <br/>
    Add / adjust option: <code>historyDaysAgo: 14</code> to change this.`,
 
   `<strong>Open selected results</strong>: By default, the extension will open the selected result in a new tab or switch to an existing tab if fitting.<br/><br/>
-    
    Hold <code>Shift</code> or <code>Alt</code> to open the result in the current tab.<br />
    Hold <code>Ctrl</code> to open the result without closing the popup.`,
 
@@ -116,7 +112,6 @@ export const helpTexts = [
    <code>chrome://downloads</code>.`,
 
   `<strong>Keyboard Navigation</strong>: You can navigate result entries Emacs / Vim Style:<br/><br/>
-
    <code>Ctrl+N</code> and <code>Ctrl+J</code> to navigate search results up.<br/>
    <code>Ctrl+P</code> and <code>Ctrl+K</code> to navigate search results down.`,
 ]
