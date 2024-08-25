@@ -205,7 +205,7 @@ export function navigationKeyListener(event) {
     selectListItem(ext.model.currentItem + 1, true)
   } else if (event.key === 'Enter' && ext.model.result.length > 0) {
     // Enter selects selected search result -> only when in search mode
-    if (window.location.hash.startsWith('#search/')) {
+    if (window.location.hash.startsWith('#search/') || !window.location.hash) {
       openResultItem(event)
     }
   } else if (event.key === 'Escape') {
