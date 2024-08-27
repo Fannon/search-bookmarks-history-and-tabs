@@ -33,7 +33,7 @@ export default [
       },
     },
     rules: {
-      'no-console': 'off',
+      'no-console': ['error', { allow: ['debug', 'warn', 'error'] }],
       'semi': ['warn', 'never'],
       'comma-dangle': ['warn', 'only-multiline'],
     },

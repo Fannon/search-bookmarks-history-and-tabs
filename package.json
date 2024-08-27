@@ -16,10 +16,11 @@
     "cypress-fail-on-console-error": "^5.1.1",
     "eslint": "^9.9.1",
     "eslint-plugin-cypress": "^3.5.0",
+    "fs-extra": "^11.2.0",
     "live-server": "^1.2.2"
   },
   "scripts": {
-    "clean": "rm -rf ./dist",
+    "clean": "node bin/clean.js",
     "build": "npm run clean && npm run update-libs && npm run update-manifests && npm run create-dist && npm run size",
     "update-libs": "sh bin/updateLibs.sh",
     "create-dist": "sh bin/createDist.sh",
