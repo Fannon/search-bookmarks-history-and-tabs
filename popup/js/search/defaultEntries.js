@@ -117,4 +117,7 @@ export const helpTexts = [
   `<strong>Keyboard Navigation</strong>: You can navigate result entries Emacs / Vim Style:<br/><br/>
    <code>Ctrl+N</code> and <code>Ctrl+J</code> to navigate search results up.<br/>
    <code>Ctrl+P</code> and <code>Ctrl+K</code> to navigate search results down.`,
+
+  `<strong>History Ignore List</strong>: Reduce clutter in your history by adding an ignore list.<br/><br/>
+   Use the <code>historyIgnoreList</code> and <code>Ctrl+J</code> option (see documentation) to ignore history entries that exactly *includes* match one of the given search strings.<br/>`,
 ]
