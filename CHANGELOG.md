@@ -2,6 +2,10 @@
 
 ## [unreleased]
 
+## [v1.10.1]
+
+- **FIXED**: Bookmark tagging autocomplete was partly broken. Fixed update of dependency.
+
 ## [v1.10.0]
 
 - **NEW**: Show random tips on startup
