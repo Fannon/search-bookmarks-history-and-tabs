@@ -3,7 +3,7 @@ import { extensionNamespace as ext } from './model/namespace.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { search } from './search/common.js'
-import { addDefaultEntries, addHelp } from './search/defaultEntries.js'
+import { addDefaultEntries } from './search/defaultEntries.js'
 import { editBookmark, updateBookmark } from './view/editBookmarkView.js'
 import { loadFoldersOverview } from './view/foldersView.js'
 import {
@@ -68,9 +68,7 @@ export async function initExtension() {
   await addDefaultEntries()
   renderSearchResults(ext.model.result)
   if (!window.location.hash || window.location.hash === '/') {
-    if (ext.opts.enableHelp) {
-      addHelp()
-    }
+    // Placeholder. We could add help-text here.
   } else {
     hashRouter()
   }
