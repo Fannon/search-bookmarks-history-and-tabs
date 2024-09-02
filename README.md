@@ -23,7 +23,9 @@ The tags are considered when searching and can be used for navigation.
 
 The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). It's also very lightweight (< 150kb JavaScript, including dependencies).
 
-For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
+> 💡 Have a look at the [Tips & Tricks](./Tips.md) collection.
+
+> 🗎 For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
 
 ## Screenshots & Demo
 
