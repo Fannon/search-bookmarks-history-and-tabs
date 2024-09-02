@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+- **CHANGED**: Moved the tips & tricks to markdown file and just link it, instead of random tips on startup.
+
 ## [v1.10.0]
 
 - **NEW**: Show random tips on startup
