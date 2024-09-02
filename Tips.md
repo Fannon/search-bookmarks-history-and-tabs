@@ -1,71 +1,65 @@
 # Tips & Tricks
 
-<strong>Customization</strong>: This extension can be customized via options in many ways. Please refer to the Documentation (link bottom right).
+**Customization**: This extension can be customized via options in many ways. Please refer to the [User Documentation](https://github.com/Fannon/search-bookmarks-history-and-tabs/tree/main?tab=readme-ov-file#user-documentation).
 
 <hr/>
 
-<strong>Tips on startup</strong>: Disable via option: <code>enableHelp: false</code>
+**Keyboard Shortcut**: Trigger the extension via keyboard. <br/>
+The default is `CTRL` + `Shift` + `.`.
+
+This can be customized in the browsers [extensions settings](chrome://extensions/) > "Keyboard Shortcuts".
 
 <hr/>
 
-<strong>Search Strategies</strong>: Switch between <span class="precise">PRECISE</span> (faster, exact) and <span class="fuzzy">FUZZY</span> (slower, more results, fuzzy).<br/><br/>
-This can be done via clicking on the top-right corner of the popup or by setting it in the options like: <code>searchStrategy: precise</code>
+**Search Strategies**: Switch between <span class="precise">PRECISE</span> (faster, exact) and <span class="fuzzy">FUZZY</span> (slower, more results, fuzzy).
+
+This can be done via clicking on the top-right corner of the popup or by setting it in the options like: `searchStrategy: precise`
 
 <hr/>
 
-<strong>Keyboard Shortcut</strong>: Trigger the extension via keyboard. <br/>
-The default is <code>CTRL</code> + <code>Shift</code> + <code>.</code>. <br/><br/>
-This can be customized in the browsers extensions settings.
+**Search Modes**: Use search modes to be more selective.
 
-<hr/>
-
-<strong>History Size & History</strong>: By default the number of history items to load are limited.
-Consider increasing or decreasing this, depending on your performance situation and personal preferences:<br /><br />
-Add / adjust option: <code>historyMaxItems: 1024</code> <br/>
-Add / adjust option: <code>historyDaysAgo: 14</code>
-
-<hr/>
-
-<strong>Open selected results</strong>: By default, the extension will open the selected result in a new tab or switch to an existing tab if fitting.<br/><br/>
-Hold <code>Shift</code> or <code>Alt</code> to open the result in the current tab.<br />
-Hold <code>Ctrl</code> to open the result without closing the popup.<br />
-Press <code>Right Click</code> to copy URL of result into clipboard without closing the popup.
-
-<hr/>
-
-<strong>Custom Bonus Scores</strong>: Append <code> + [whole number]</code> to your bookmark title (before tags). <br/><br/>
-Example: <code>Another Bookmark +10 #tag1</code>
-
-<hr/>
-
-<strong>Custom Bonus Scores</strong>: Append <code> + [whole number]</code> to your bookmark title (before tags). <br/><br/>
-Example: <code>Another Bookmark +10 #tag1</code>
-
-<hr/>
-
-<strong>Copy to Clipboard</strong>: Right click a result item to copy its URL to the clipboard.
-
-<hr/>
-
-<strong>Search Modes</strong>: Use search modes to be more selective.<br/><br/>
 Start your search query with a search mode prefix:
 
-<ul>
- <li><code>#</code>: Only <strong>bookmarks with the tag</strong> will be returned</li>
- <li><code>~</code>: Only <strong>bookmarks within the folder</strong> will be returned</li>
- <li><code>t </code>: Only <strong>tabs</strong> will be searched.</li>
- <li><code>b </code>: Only <strong>bookmarks</strong> will be searched.</li>
- <li><code>h </code>: Only <strong>history</strong> and <strong>tabs</strong> will be searched.</li>
- <li><code>s </code>: Only <strong>search engines</strong> will be proposed.</li>
+- \*`#`: Only **bookmarks with the tag** will be returned
+- `~`: Only **bookmarks within the folder** will be returned
+- `t `: Only **tabs** will be searched.
+- `b `: Only **bookmarks** will be searched.
+- `h `: Only **history** and **tabs** will be searched.
+- `s `: Only **search engines** will be proposed.
 </ul>
 
 <hr/>
 
-<strong>Special Browser Pages</strong>: You can add special browser pages to your bookmarks, like
-<code>chrome://downloads</code>.
+**History Size & History**: By default the number of history items to load are limited.
+Consider increasing or decreasing this, depending on your performance situation and personal preferences:
+
+Add / adjust option: `historyMaxItems: 1024` <br/>
+Add / adjust option: `historyDaysAgo: 14`
 
 <hr/>
 
-<strong>Keyboard Navigation</strong>: You can navigate result entries also in Emacs / Vim style:<br/><br/>
-<code>Ctrl+N</code> and <code>Ctrl+J</code> to navigate search results up.<br/>
-<code>Ctrl+P</code> and <code>Ctrl+K</code> to navigate search results down.
+**Open selected results**: By default, the extension will open the selected result in a new tab or switch to an existing tab if fitting.
+
+Hold `Shift` or `Alt` to open the result in the current tab.<br />
+Hold `Ctrl` to open the result without closing the popup.<br />
+Press `Right Click` to copy URL of result into clipboard without closing the popup.
+
+<hr/>
+
+**Custom Bonus Scores**: Append ` + [whole number]` to your bookmark title (before tags). <br/><br/>
+Example: `Another Bookmark +10 #tag1`
+
+<hr/>
+
+**Copy to Clipboard**: Right click a result item to copy its URL to the clipboard.
+
+<hr/>
+
+**Special Browser Pages**: You can add special browser pages to your bookmarks, like
+[chrome://downloads](chrome://downloads).
+
+<hr/>
+
+**Keyboard Navigation**: You can navigate result entries also in Emacs / Vim style:<br/><br/>
+` Ctrl+N``` and  `Ctrl+J`to navigate search results up.<br/>`Ctrl+P`and`Ctrl+K` to navigate search results down.
