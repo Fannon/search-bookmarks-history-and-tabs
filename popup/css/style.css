@@ -259,7 +259,8 @@ code {
   font-size: 14px;
 }
 #links a {
-  color: #888;
+  color: #87aaca;
+  text-decoration: underline;
 }
 #links #result-counter {
   float: right;
