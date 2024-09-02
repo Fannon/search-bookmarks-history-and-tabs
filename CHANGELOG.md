@@ -2,7 +2,7 @@
 
 ## [unreleased]
 
-## [v1.10.1]
+## [v1.10.2]
 
 - **FIXED**: Bookmark tagging autocomplete was partly broken. Fixed update of dependency.
 - **CHANGED**: Moved the tips & tricks to markdown file and just link it, instead of random tips on startup.
