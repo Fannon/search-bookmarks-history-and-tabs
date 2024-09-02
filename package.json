@@ -6,13 +6,13 @@
   "type": "module",
   "dependencies": {
     "@leeoniya/ufuzzy": "^1.0.14",
-    "@yaireo/tagify": "^4.31.0",
+    "@yaireo/tagify": "^4.31.3",
     "js-yaml": "^4.1.0",
     "mark.js": "^8.11.1",
     "minireset.css": "^0.0.7"
   },
   "devDependencies": {
-    "cypress": "^13.13.3",
+    "cypress": "^13.14.1",
     "cypress-fail-on-console-error": "^5.1.1",
     "eslint": "^9.9.1",
     "eslint-plugin-cypress": "^3.5.0",
