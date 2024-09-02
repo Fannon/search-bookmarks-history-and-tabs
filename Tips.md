@@ -61,5 +61,17 @@ Example: `Another Bookmark +10 #tag1`
 
 <hr/>
 
+**Clean Up History**: There is an option to ignore URLs from history if they include a string.
+Use this to remove unwanted entries from your history from your search index.
+
+```yaml
+historyIgnoreList:
+  - extension://
+  - http://localhost
+  - http://127.0.0.1
+```
+
+<hr/>
+
 **Keyboard Navigation**: You can navigate result entries also in Emacs / Vim style:<br/><br/>
 ` Ctrl+N``` and  `Ctrl+J`to navigate search results up.<br/>`Ctrl+P`and`Ctrl+K` to navigate search results down.
