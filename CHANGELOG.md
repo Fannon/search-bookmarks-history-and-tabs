@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+- **FIXED**: Fixed potential crash when browser returns empty history entries (which it shouldn't do).
+
 ## [v1.10.2]
 
 - **FIXED**: Bookmark tagging autocomplete was partly broken. Fixed update of dependency.
