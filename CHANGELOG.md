@@ -6,6 +6,7 @@
 
 - **FIXED**: Deleting a bookmark via popup accidentally removed all bookmarks from index (temporarily)
 - **FIXED**: Disable browsers inbuilt "autocomplete" / "Saved Data" for the search input field
+- **FIXED**: Fixed potential crash when browser returns empty history entries (which it shouldn't do).
 
 ## [v1.10.2]
 

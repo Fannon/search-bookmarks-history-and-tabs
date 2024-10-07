@@ -83,9 +83,9 @@ export async function getSearchData() {
       const browserHistory = []
       const idMap = {}
       for (const item of historyFromApi.concat(historyC)) {
-        if (!idMap[item.id || item.url]) {
+        if (item && item.id & !idMap[item.id]) {
           browserHistory.push(item)
-          idMap[item.id || item.url] = true
+          idMap[item.id] = true
         }
       }
 
