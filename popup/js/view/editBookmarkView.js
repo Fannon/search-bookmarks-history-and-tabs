@@ -118,7 +118,7 @@ export async function deleteBookmark(bookmarkId) {
 
   // Remove item from search data and reset search caches
   ext.model.bookmarks = ext.model.bookmarks.filter((el) => {
-    el.originalId !== bookmarkId
+    return el.originalId !== bookmarkId
   })
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
