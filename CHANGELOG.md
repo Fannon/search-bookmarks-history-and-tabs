@@ -2,6 +2,11 @@
 
 ## [unreleased]
 
+## [v1.10.3]
+
+- **FIXED**: Deleting a bookmark via popup accidentally removed all bookmarks from index (temporarily)
+- **FIXED**: Disable browsers inbuilt "autocomplete" / "Saved Data" for the search input field
+
 ## [v1.10.2]
 
 - **FIXED**: Bookmark tagging autocomplete was partly broken. Fixed update of dependency.

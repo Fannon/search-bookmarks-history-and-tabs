@@ -11,7 +11,12 @@
       "strict_min_version": "75.0"
     }
   },
-  "permissions": ["tabs", "bookmarks", "history", "storage"],
+  "permissions": [
+    "tabs",
+    "bookmarks",
+    "history",
+    "storage"
+  ],
   "browser_action": {
     "default_icon": {
       "16": "/images/logo-16.png",
