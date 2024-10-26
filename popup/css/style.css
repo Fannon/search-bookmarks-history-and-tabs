@@ -137,7 +137,7 @@ code {
   white-space: nowrap;
   display: inline-block;
   position: relative;
-  top: -3px;
+  top: -2px;
 }
 .tags {
   background: #557292;
@@ -188,6 +188,7 @@ code {
   margin: 0;
   overflow: hidden;
   white-space: nowrap;
+  margin-top: -3px;
 }
 .controls {
   text-align: right;
