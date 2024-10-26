@@ -1,8 +1,6 @@
 @charset "utf-8";
-/* Modern CSS Reset from https://www.joshwcomeau.com/css/custom-css-reset/ */
-*,
-*::before,
-*::after {
+/* CSS Reset https://www.joshwcomeau.com/css/custom-css-reset/ */
+*, *::before, *::after {
   box-sizing: border-box;
 }
 * {
@@ -11,42 +9,23 @@
 body {
   line-height: 1.5;
 }
-img,
-picture,
-video,
-canvas,
-svg {
+img, picture, video, canvas, svg {
   display: block;
   max-width: 100%;
 }
-input,
-button,
-textarea,
-select {
+input, button, textarea, select {
   font: inherit;
 }
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+p, h1, h2, h3, h4, h5, h6 {
   overflow-wrap: break-word;
 }
 p {
   text-wrap: pretty;
 }
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
   text-wrap: balance;
 }
-#root,
-#__next {
+#root, #__next {
   isolation: isolate;
 }
 /** CUSTOM STYLES */
@@ -69,7 +48,7 @@ body a {
   text-decoration: none;
 }
 body mark {
-  font-weight: bold;
+  font-weight: 700;
   color: #356ba9;
   background: none;
 }
@@ -78,8 +57,7 @@ body small {
 }
 body,
 textarea {
-  font-family: -apple-system, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
-    'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Helvetica Neue', sans-serif;
 }
 .input,
 .input:active,
@@ -133,7 +111,7 @@ code {
   color: #fff;
   font-size: 11px;
   border-radius: 3px;
-  padding: 1px 3px 2px 3px;
+  padding: 1px 3px 2px;
   margin-right: 4px;
   white-space: nowrap;
   display: inline-block;
@@ -193,7 +171,7 @@ code {
 .controls {
   text-align: right;
   position: absolute;
-  bottom: 8px;
+  bottom: 6px;
   right: 8px;
   width: 100%;
   padding-left: 8px;
@@ -202,24 +180,18 @@ code {
   height: 28px;
   border-radius: 3px;
 }
-.controls .reset-button,
-.controls .delete-button {
-  background: #ee4343 !important;
-  color: #fff !important;
+#edit-bookmark-delete {
+  background: #ee4343;
+  color: #fff;
   float: left;
 }
-.controls .cancel-button {
-  background: #929292 !important;
-  color: #fff !important;
+#edit-bookmark-cancel {
+  background: #929292;
+  color: #fff;
 }
-.controls .help-button {
-  background: #4494c9 !important;
-  color: #fff !important;
-  float: left;
-}
-.controls .save-button {
-  background: #5fc944 !important;
-  color: #fff !important;
+#edit-bookmark-save {
+  background: #5fc944;
+  color: #fff;
 }
 .controls a,
 .controls a:hover {
@@ -249,43 +221,34 @@ code {
   border-radius: 3px;
   overflow: hidden;
   cursor: pointer;
-  /* border-left: 5px solid #ccc; */
 }
 #result-list ul li {
   border-radius: 0px;
   border-left: 0;
 }
-#result-list #selected-result,
-#error-list #selected-result {
+#selected-result {
   background-color: #dadada;
 }
-#result-list li.error,
-#error-list li.error {
+li.error {
   color: #cc5858;
   border-left: 5px solid #cc5858;
 }
-#result-list .edit-button,
-#error-list .edit-button,
-#result-list .close-button,
-#error-list .close-button {
+.edit-button,
+.close-button {
   float: right;
 }
-#result-list .edit-button:hover,
-#error-list .edit-button:hover,
-#result-list .close-button:hover,
-#error-list .close-button:hover {
+.edit-button:hover,
+.close-button:hover {
   background: rgba(255, 255, 255, 0.12);
   border-radius: 3px;
 }
-#result-list .title,
-#error-list .title {
+.title {
   font-size: 18px;
   margin: 0;
   font-weight: 400;
   color: #333;
 }
-#result-list .title-text,
-#error-list .title-text {
+.title-text {
   line-break: auto;
 }
 #error-list {
@@ -309,7 +272,7 @@ code {
 #links a {
   color: #a3a3a3;
 }
-#links #result-counter {
+#result-counter {
   float: right;
 }
 #tags-overview,
@@ -324,24 +287,17 @@ code {
   overflow-x: hidden;
   overflow-y: scroll;
 }
-#tags-overview .input-description,
-#folders-overview .input-description {
+.input-description {
   margin: 4px 0px;
 }
-#tags-overview #tags-list,
-#folders-overview #tags-list,
-#tags-overview #folders-list,
-#folders-overview #folders-list {
+#tags-list,
+#folders-list {
   width: 100%;
 }
-#tags-overview #tags-list a,
-#folders-overview #tags-list a,
-#tags-overview #folders-list a,
-#folders-overview #folders-list a,
-#tags-overview #tags-list a:hover,
-#folders-overview #tags-list a:hover,
-#tags-overview #folders-list a:hover,
-#folders-overview #folders-list a:hover {
+#tags-list a,
+#folders-list a,
+#tags-list a:hover,
+#folders-list a:hover {
   color: #fff;
   font-size: 15px;
   margin: 4px 4px 0 0;
@@ -357,51 +313,23 @@ code {
   height: 578px;
   background: #eee;
 }
-#edit-bookmark #bookmark-title {
+#bookmark-title {
   height: 112px;
   resize: none;
   font-size: 1.2em;
 }
-#edit-bookmark #bookmark-url {
+#bookmark-url {
   height: 62px;
   resize: none;
   font-size: 0.85em;
 }
-#edit-bookmark #bookmark-tags,
+#bookmark-tags,
 #edit-bookmark .tagify {
   height: 85px;
   font-size: 18px;
   border: none;
   padding: 4px 2px;
   overflow-x: hidden;
-}
-/** EDIT Options */
-#options {
-  width: 500px;
-  height: 580px;
-  position: fixed;
-}
-#options textarea {
-  height: 426px;
-  font-size: 18px;
-  font-family: Consolas, monospace, monospace;
-  resize: none;
-  padding: 6px 8px;
-}
-#options .help {
-  padding: 2px 6px;
-  background: #fff;
-  border-left: 4px solid #4494c9;
-}
-li.tip {
-  font-size: 0.9em;
-  padding: 4px 0 8px 5px !important;
-}
-.tip .fuzzy {
-  color: #d593ea;
-}
-.tip .precise {
-  color: #b1d354;
 }
 /** CUSTOMIZE TAGIFY STYLE */
 .tagify {
@@ -438,30 +366,20 @@ li.tip {
   background: #557292 !important;
 }
 /** SCROLLBAR */
-#result-list::-webkit-scrollbar,
-#tags-overview::-webkit-scrollbar,
-#folders-overview::-webkit-scrollbar,
-#tips::-webkit-scrollbar,
-.tagify__dropdown__wrapper::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 8px;
   margin-left: 4px;
   padding-left: 0px;
 }
-#result-list::-webkit-scrollbar-track,
-#tags-overview::-webkit-scrollbar-track,
-#folders-overview::-webkit-scrollbar-track,
-#tip::-webkit-scrollbar-track,
-.tagify__dropdown__wrapper::-webkit-scrollbar-track {
+
+::-webkit-scrollbar-track {
   background: #ddd;
   padding-left: 2px;
 }
-#result-list::-webkit-scrollbar-thumb,
-#tags-overview::-webkit-scrollbar-thumb,
-#folders-overview::-webkit-scrollbar-thumb,
-#tips::-webkit-scrollbar-thumb,
-.tagify__dropdown__wrapper::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background-color: #999;
 }
+
 /** DARK MODE **/
 @media screen and (prefers-color-scheme: dark) {
   html,
@@ -473,14 +391,8 @@ li.tip {
   }
   html a,
   body a,
-  #edit-bookmark a,
-  #tags-overview a,
-  #folders-overview a,
   html a:visited,
-  body a:visited,
-  #edit-bookmark a:visited,
-  #tags-overview a:visited,
-  #folders-overview a:visited {
+  body a:visited {
     color: #999;
   }
   html a:hover,
@@ -503,9 +415,6 @@ li.tip {
   code {
     color: #9d9d9d;
     background-color: #404040;
-  }
-  #options .help {
-    background: #000;
   }
   .input,
   .input:active,
@@ -539,18 +448,10 @@ li.tip {
   #links {
     background: #000;
   }
-  #result-list::-webkit-scrollbar-track,
-  #tags-overview::-webkit-scrollbar-track,
-  #folders-overview::-webkit-scrollbar-track,
-  #tips::-webkit-scrollbar-track,
-  .tagify__dropdown__wrapper::-webkit-scrollbar-track {
+  ::-webkit-scrollbar-track {
     background: #414141;
   }
-  #result-list::-webkit-scrollbar-thumb,
-  #tags-overview::-webkit-scrollbar-thumb,
-  #folders-overview::-webkit-scrollbar-thumb,
-  #tips::-webkit-scrollbar-thumb,
-  .tagify__dropdown__wrapper::-webkit-scrollbar-thumb {
+  ::-webkit-scrollbar-thumb {
     background-color: #5f5f5f;
   }
   .input-description {
