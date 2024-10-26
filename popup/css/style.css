@@ -323,7 +323,6 @@ li.error {
   font-size: 15px;
   margin: 4px 4px 0 0;
 }
-/** EDIT BOOKMARK */
 #edit-bookmark {
   padding: 0;
   overflow: none;
@@ -359,7 +358,6 @@ li.error {
   margin-left: 4px;
   padding-left: 0;
 }
-
 ::-webkit-scrollbar-track {
   background: #ddd;
   padding-left: 2px;
