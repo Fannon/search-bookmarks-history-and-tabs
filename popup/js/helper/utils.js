@@ -29,7 +29,7 @@ export function timeSince(date) {
 }
 
 /**
- * Remove http:// or http:// and www from URLs abd trailing slashes
+ * Remove http://, http://, www, trailing slashes from URLs
  * @see https://stackoverflow.com/a/57698415
  */
 export function cleanUpUrl(url) {
@@ -39,17 +39,21 @@ export function cleanUpUrl(url) {
     .toLowerCase()
 }
 
-/**
- * Dynamically load a Javascript file
- */
 export async function loadScript(url) {
   return new Promise(function (resolve) {
-    const script = document.createElement('script')
-    script.type = 'text/javascript'
-    script.onload = resolve
-    script.src = url
-    document.getElementsByTagName('head')[0].appendChild(script)
+    const s = document.createElement('script')
+    s.type = 'text/javascript'
+    s.onload = resolve
+    s.src = url
+    document.getElementsByTagName('head')[0].appendChild(s)
   })
+}
+export async function loadCSS(href) {
+  var l = document.createElement('link')
+  l.href = href
+  l.rel = 'stylesheet'
+  l.type = 'text/css'
+  document.getElementsByTagName('head')[0].appendChild(l)
 }
 
 export function printError(err, text) {
