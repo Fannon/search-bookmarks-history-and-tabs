@@ -2,6 +2,10 @@
 
 ## [unreleased]
 
+- **IMPROVED**: Performance of CSS initial load
+  - Cleaned up and simplified CSS
+  - Lazy load CSS necessary for bookmark tagging and options view
+
 ## [v1.10.3]
 
 - **FIXED**: Deleting a bookmark via popup accidentally removed all bookmarks from index (temporarily)
