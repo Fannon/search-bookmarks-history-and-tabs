@@ -1,0 +1,42 @@
+/** EDIT Options */
+#options {
+  width: 500px;
+  height: 580px;
+  position: fixed;
+}
+#options textarea {
+  height: 426px;
+  font-size: 18px;
+  font-family: Consolas, monospace;
+  resize: none;
+}
+#options .help {
+  padding: 2px 6px;
+  background: #fff;
+  border-left: 4px solid #4494c9;
+  font-size: 0.9em;
+}
+#edit-options-help {
+  background: #4494c9 !important;
+  color: #fff !important;
+  float: left;
+}
+#edit-options-cancel {
+  background: #929292;
+  color: #fff;
+}
+#edit-options-reset {
+  background: #ee4343;
+  color: #fff;
+}
+#edit-options-save {
+  background: #5fc944;
+  color: #fff;
+}
+
+/** DARK MODE **/
+@media screen and (prefers-color-scheme: dark) {
+  #options .help {
+    background: #000;
+  }
+}

@@ -1,0 +1,48 @@
+/** CUSTOMIZE TAGIFY STYLE */
+.tagify {
+  height: 90px;
+  border: none;
+  --tag-bg: #557292;
+  --tag-hover: #5c84af;
+  --tagify-dd-color-primary: #557292;
+  --tag-text-color: #fff;
+  --tag-text-color--edit: #111;
+  --tag-remove-bg: var(--tag-hover);
+  --tag-pad: 2px 8px 4px 8px;
+  --tag-inset-shadow-size: 1.35em;
+  --tag-remove-btn-bg--hover: #000;
+}
+.tagify__tag {
+  margin: 6px 0 5px 6px;
+}
+.tagify__tag > div {
+  font-size: 15px;
+}
+.tagify__dropdown {
+  max-height: 235px;
+  border: none;
+}
+.tagify__dropdown__wrapper {
+  border: none;
+}
+.tagify__dropdown__item {
+  padding: 3px 8px;
+  background: #fff;
+}
+.tagify__dropdown__item--active {
+  background: #557292 !important;
+}
+
+/** DARK MODE **/
+@media screen and (prefers-color-scheme: dark) {
+  .tagify__dropdown__wrapper {
+    background: #111;
+  }
+  .tagify__dropdown__item {
+    color: #ccc;
+    background: #000;
+  }
+  .tagify__tag > div > [contenteditable] {
+    color: #eee;
+  }
+}
