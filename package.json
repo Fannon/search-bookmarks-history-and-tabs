@@ -8,8 +8,7 @@
     "@leeoniya/ufuzzy": "^1.0.14",
     "@yaireo/tagify": "^4.31.3",
     "js-yaml": "^4.1.0",
-    "mark.js": "^8.11.1",
-    "minireset.css": "^0.0.7"
+    "mark.js": "^8.11.1"
   },
   "devDependencies": {
     "cypress": "^13.15.0",
