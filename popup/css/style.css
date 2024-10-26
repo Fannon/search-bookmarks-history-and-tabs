@@ -244,7 +244,7 @@ code {
   cursor: pointer;
 }
 #result-list ul li {
-  border-radius: 0px;
+  border-radius: 0;
   border-left: 0;
 }
 #selected-result {
@@ -364,7 +364,7 @@ li.error {
   --tag-remove-bg: var(--tag-hover);
   --tag-pad: 2px 8px 4px 8px;
   --tag-inset-shadow-size: 1.35em;
-  --tag-remove-btn-bg--hover: black;
+  --tag-remove-btn-bg--hover: #000;
 }
 .tagify__tag {
   margin: 6px 0 5px 6px;
@@ -380,7 +380,7 @@ li.error {
   border: none;
 }
 .tagify__dropdown__item {
-  padding: 3px 8px 3px 8px;
+  padding: 3px 8px;
   background: #fff;
 }
 .tagify__dropdown__item--active {
@@ -390,7 +390,7 @@ li.error {
 ::-webkit-scrollbar {
   width: 8px;
   margin-left: 4px;
-  padding-left: 0px;
+  padding-left: 0;
 }
 
 ::-webkit-scrollbar-track {
