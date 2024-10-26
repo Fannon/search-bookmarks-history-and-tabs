@@ -3,4 +3,3 @@ dist/
 popup/lib/
 node_modules/
 cypress/
-popup/css/
