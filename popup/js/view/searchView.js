@@ -5,6 +5,7 @@
 import { timeSince } from '../helper/utils.js'
 import { initExtension } from '../initSearch.js'
 import { getUserOptions, setUserOptions } from '../model/options.js'
+import { search } from '../search/common.js'
 
 /**
  * Render the search results in UI as result items
@@ -391,10 +392,9 @@ export async function toggleSearchApproach() {
 
   userOptions.searchStrategy = ext.opts.searchStrategy
 
-  // Update user options
   await setUserOptions(userOptions)
-  // Init extension again
   await initExtension()
+  search()
 }
 
 /**
