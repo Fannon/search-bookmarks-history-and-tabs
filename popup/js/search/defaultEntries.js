@@ -37,26 +37,18 @@ export async function addDefaultEntries() {
       }
     })
   } else {
-    // All other modes: Find bookmark / history that matches current page URL
+    // All other modes: Find bookmarks / history that matches current page URL
     let currentUrl = window.location.href
     const [tab] = await getBrowserTabs({ active: true, currentWindow: true })
-
-    // If we find no open tab, we're most likely not having a browser API. Return nothing.
     if (!tab) {
       return []
     }
 
-    currentUrl = tab.url
-    // Remove trailing slash from URL, so the startsWith search works better
-    currentUrl = currentUrl.replace(/\/$/, '')
+    // Remove trailing slash or hash from URL, so the comparison works better
+    currentUrl = tab.url.replace(/[/#]$/, '')
 
-    // Find if current URL has corresponding bookmark(s)
-    const foundBookmarks = ext.model.bookmarks.filter((el) => el.originalUrl.startsWith(currentUrl))
-    results.push(...foundBookmarks)
-
-    // Find if we have browser history that has the same URL
-    let foundHistory = ext.model.history.filter((el) => currentUrl === el.originalUrl)
-    results.push(...foundHistory)
+    results.push(...ext.model.bookmarks.filter((el) => el.originalUrl === currentUrl))
+    results.push(...ext.model.history.filter((el) => el.originalUrl === currentUrl))
   }
 
   ext.model.result = results

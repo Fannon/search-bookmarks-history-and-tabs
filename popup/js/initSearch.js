@@ -47,10 +47,6 @@ export async function initExtension() {
 
   updateSearchApproachToggle()
 
-  if (ext.opts.debug) {
-    performance.mark('init-dom')
-  }
-
   const { bookmarks, tabs, history } = await getSearchData()
   ext.model.tabs = tabs
   ext.model.bookmarks = bookmarks
