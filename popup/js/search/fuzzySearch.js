@@ -2,17 +2,14 @@
 // FUZZY SEARCH SUPPORT                 //
 //////////////////////////////////////////
 
-import { printError } from '../helper/utils.js'
+import { loadScript, printError } from '../helper/utils.js'
 
-/**
- * Memoize some state, to avoid re-creating haystack and fuzzy search instances
- */
+/** Memoize some state, to avoid re-creating haystack and fuzzy search instances */
 let state = {}
 
 /**
  * Resets state for fuzzy search. Necessary when search data changes or search string is reset.
  * If searchMode is given, will only reset that particular state.
- * Otherwise state will be reset entirely.
  */
 export function resetFuzzySearchState(searchMode) {
   if (searchMode) {
@@ -20,12 +17,16 @@ export function resetFuzzySearchState(searchMode) {
   }
 }
 
-/**
- * Uses uFuzzy to do a fuzzy search
- *
- * @see https://github.com/leeoniya/uFuzzy
- */
 export async function fuzzySearch(searchMode, searchTerm) {
+  // Lazy load the uFuzzy library if not there already
+  if (!window['uFuzzy']) {
+    try {
+      await loadScript('./lib/uFuzzy.iife.min.js')
+    } catch (err) {
+      printError(err, 'Could not load uFuzzy')
+    }
+  }
+
   if (searchMode === 'history') {
     return [...fuzzySearchWithScoring(searchTerm, 'tabs'), ...fuzzySearchWithScoring(searchTerm, 'history')]
   } else if (searchMode === 'bookmarks' || searchMode === 'tabs') {

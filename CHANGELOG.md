@@ -2,9 +2,11 @@
 
 ## [unreleased]
 
-- **IMPROVED**: Performance of CSS initial load
+- **IMPROVED**: Performance of initial load
   - Cleaned up and simplified CSS
   - Lazy load CSS necessary for bookmark tagging and options view
+  - Lazy load uFuzzy library only when fuzzy search is used
+- **CHANGED**: Initial load now only looks for bookmarks matching the current URL, not starting with it
 
 ## [v1.10.3]
 
