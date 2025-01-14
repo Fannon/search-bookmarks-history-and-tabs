@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+## [v1.10.4]
+
 - **IMPROVED**: Performance of initial load
   - Cleaned up and simplified CSS
   - Lazy load CSS necessary for bookmark tagging and options view
