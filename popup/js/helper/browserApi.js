@@ -104,14 +104,24 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
         customBonusScore,
       }
 
-      // Parse out tags from bookmark title (starting with #)
+      // Parse out tags from bookmark title (starting with " #")
       let tagsText = ''
       let tagsArray = []
       if (title) {
-        const tagSplit = title.split('#').map((el) => el.trim())
+        const tagSplit = title.split(' #').map((el) => el.trim())
         title = tagSplit.shift()
-        tagsArray = tagSplit
-        for (const tag of tagSplit) {
+
+        tagsArray = tagSplit.filter((el) => {
+          if (el.match(/^\d/)) {
+            title += ' #' + el
+            return false
+          } else if (!el.trim()) {
+            return false
+          } else {
+            return el
+          }
+        })
+        for (const tag of tagsArray) {
           tagsText += '#' + tag.trim() + ' '
         }
         tagsText = tagsText.slice(0, -1)

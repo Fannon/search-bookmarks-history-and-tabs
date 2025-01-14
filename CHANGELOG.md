@@ -6,6 +6,7 @@
   - Cleaned up and simplified CSS
   - Lazy load CSS necessary for bookmark tagging and options view
   - Lazy load uFuzzy library only when fuzzy search is used
+- **IMPROVED**: Bookmark tags are filtered: Tags that start with a number (typical for issue / ticket bookmarks) are ignored. Bookmark cannot start with tag. Tag needs to be prefixed with ` #` (incl. space for separation).
 - **CHANGED**: Initial load now only looks for bookmarks and only returns those matching the current URL, not starting with it
 - **FIXED**: Re-apply search when switching search mode between precise and fuzzy
 
