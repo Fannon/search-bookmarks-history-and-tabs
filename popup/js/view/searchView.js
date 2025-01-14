@@ -128,13 +128,6 @@ export function renderSearchResults(result) {
       dateAdded.innerText = new Date(resultEntry.dateAdded).toISOString().split('T')[0]
       titleDiv.appendChild(dateAdded)
     }
-    if (ext.opts.tabsDisplayWindowId && resultEntry.windowId) {
-      const windowId = document.createElement('span')
-      windowId.title = 'Window'
-      windowId.classList.add('badge', 'window')
-      windowId.innerText = Math.round(resultEntry.windowId)
-      titleDiv.appendChild(windowId)
-    }
     if (ext.opts.displayScore && resultEntry.score) {
       const score = document.createElement('span')
       score.title = 'Score'

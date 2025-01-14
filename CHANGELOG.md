@@ -11,6 +11,7 @@
   - Tag needs to be prefixed with ` #` (incl. space for separation).
 - **CHANGED**: Initial load now only looks for bookmarks and only returns those matching the current URL, not starting with it
 - **FIXED**: Re-apply search when switching search mode between precise and fuzzy
+- **REMOVED**: Removed `tabsDisplayWindowId` option, as it didn't work very well (tab IDs are long numbers and not very helpful). This was disabled by default anyway.
 
 ## [v1.10.3]
 
