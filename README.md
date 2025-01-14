@@ -59,6 +59,9 @@ The extension is very customizable (see [user options](#user-configuration)) and
 - **Special Browser Pages**: You can add special browser pages to your bookmarks, like `chrome://downloads`.
 - **Custom Scores**: Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
   - Examples: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`
+- **Tags**:
+  - A bookmark title cannot start with a tag, it needs a title
+  - Tags cannot start with a number. This is how the extension filters out issue / ticket numbers.
 - This extension works best if you avoid:
   - using `#` in bookmark titles that do not indicate a tag.
   - using `~` in bookmark folder names.
