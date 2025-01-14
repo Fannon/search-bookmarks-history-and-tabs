@@ -165,11 +165,6 @@ export const defaultOptions = {
    * If true, only the current browser window is considered for tab indexing and switching
    */
   tabsOnlyCurrentWindow: false,
-  /**
-   * If true, the windowId of the tab result will be displayed
-   * This can help to with multi-window situations
-   * */
-  tabsDisplayWindowId: false,
 
   //////////////////////////////////////////
   // HISTORY OPTIONS                      //
