@@ -2,6 +2,12 @@
 
 ## [unreleased]
 
+## [v1.11.0]
+
+- **IMPROVED**: Firefox build is now using the browser extension Manifest v3, like Chrome or Edge.
+- **REMOVED**: Removed special build for Firefox, using Manifest v2.
+- **REMOVED**: Removed special build for Opera (they did not apply updates to the extension in their store anyway).
+
 ## [v1.10.4]
 
 - **IMPROVED**: Performance of initial load
