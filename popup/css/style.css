@@ -426,7 +426,7 @@ li.error {
   }
   #result-list #selected-result,
   #error-list #selected-result {
-    background-color: #333;
+    background-color: #333 !important;
   }
   #result-list .title,
   #error-list .title {
