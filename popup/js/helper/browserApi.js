@@ -1,7 +1,6 @@
 import { cleanUpUrl } from './utils.js'
 
-// Location of browser API. This is `browser` for firefox, and `chrome` for Chrome, Edge and Opera.
-export const browserApi = window.browser || window.chrome || {}
+export const browserApi = window.chrome || window.browser || {}
 
 export async function getBrowserTabs(queryOptions) {
   queryOptions = queryOptions || {}
