@@ -80,6 +80,7 @@ export async function getSearchData() {
 
       // Merge histories
       const historyFromApi = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
+      console.warn(historyFromApi)
       const browserHistory = []
       const idMap = {}
       for (const item of historyFromApi.concat(historyC)) {

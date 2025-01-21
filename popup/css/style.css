@@ -326,7 +326,7 @@ li.error {
 }
 #edit-bookmark {
   padding: 0;
-  overflow: none;
+  overflow: hidden;
   position: fixed;
   top: 0;
   left: 0;
