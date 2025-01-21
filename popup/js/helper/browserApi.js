@@ -1,26 +1,17 @@
 import { cleanUpUrl } from './utils.js'
 
-// Location of browser API. This is `browser` for firefox, and `chrome` for Chrome, Edge and Opera.
-export const browserApi = window.browser || window.chrome || {}
+export const browserApi = window.chrome || window.browser || {}
 
-export async function getBrowserTabs(queryOptions) {
-  queryOptions = queryOptions || {}
+export async function getBrowserTabs(queryOptions = {}) {
   if (ext.opts.tabsOnlyCurrentWindow) {
     queryOptions.currentWindow = true
   }
-  return new Promise((resolve, reject) => {
-    if (browserApi.tabs) {
-      browserApi.tabs.query(queryOptions, (tabs, err) => {
-        if (err) {
-          return reject(err)
-        }
-        return resolve(tabs)
-      })
-    } else {
-      console.warn(`No browser tab API found. Returning no results.`)
-      return resolve([])
-    }
-  })
+  if (browserApi.tabs) {
+    return await browserApi.tabs.query(queryOptions)
+  } else {
+    console.warn(`No browser tab API found. Returning no results.`)
+    return []
+  }
 }
 
 export function convertBrowserTabs(chromeTabs) {
@@ -41,19 +32,12 @@ export function convertBrowserTabs(chromeTabs) {
 }
 
 export async function getBrowserBookmarks() {
-  return new Promise((resolve, reject) => {
-    if (browserApi.bookmarks && browserApi.bookmarks.getTree) {
-      browserApi.bookmarks.getTree((bookmarks, err) => {
-        if (err) {
-          return reject(err)
-        }
-        return resolve(bookmarks)
-      })
-    } else {
-      console.warn(`No browser bookmark API found. Returning no results.`)
-      return resolve([])
-    }
-  })
+  if (browserApi.bookmarks && browserApi.bookmarks.getTree) {
+    return browserApi.bookmarks.getTree()
+  } else {
+    console.warn(`No browser bookmark API found. Returning no results.`)
+    return []
+  }
 }
 
 /**
@@ -164,27 +148,16 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
  * Warning: This chrome API call tends to be rather slow
  */
 export async function getBrowserHistory(startTime, maxResults) {
-  return new Promise((resolve, reject) => {
-    if (browserApi.history) {
-      browserApi.history.search(
-        {
-          text: '',
-          maxResults: maxResults,
-          startTime: startTime,
-          endTime: Date.now(),
-        },
-        (history, err) => {
-          if (err) {
-            return reject(err)
-          }
-          return resolve(history)
-        },
-      )
-    } else {
-      console.warn(`No browser history API found. Returning no results.`)
-      return []
-    }
-  })
+  if (browserApi.history) {
+    return await browserApi.history.search({
+      text: '',
+      startTime: startTime,
+      maxResults: maxResults,
+    })
+  } else {
+    console.warn(`No browser history API found. Returning no results.`)
+    return []
+  }
 }
 
 /**

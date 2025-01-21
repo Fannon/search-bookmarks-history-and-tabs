@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 rm -rf popup/lib
 mkdir popup/lib
 

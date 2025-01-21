@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # This shell script compiles, minifies and copies the necessary files 
 # to the dist/chrome/ folder for publishing purposes.
 
@@ -20,28 +21,11 @@ cp -r popup/ dist/chrome/popup/
 # Remove mock data
 rm -rf dist/chrome/popup/mockData
 
-## FIREFOX ###################
-
-cp -r dist/chrome dist/firefox
-cp manifest.firefox.json dist/firefox/manifest.json
-cp README.md dist/firefox/README.md
-
-## FIREFOX ###################
-
-cp -r dist/firefox dist/opera
-sed -i -e 's/Period/K/g' dist/opera/manifest.json
-
 # Zip dist files for upload to browser stores
 
 if hash 7z 2>/dev/null; then
   cd ./dist/chrome/
   7z a ../chrome.zip ./* -r
-
-  cd ../firefox
-  7z a ../firefox.zip ./* -r
-
-  cd ../opera
-  7z a ../opera.zip ./* -r
 else
   echo "7z could not be found"
 fi

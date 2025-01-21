@@ -1,6 +1,6 @@
 {
   "name": "search-bookmarks-history-and-tabs",
-  "version": "1.10.4",
+  "version": "1.11.0",
   "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.",
   "main": "index.js",
   "type": "module",
@@ -11,18 +11,18 @@
     "mark.js": "^8.11.1"
   },
   "devDependencies": {
-    "cypress": "^13.17.0",
+    "cypress": "^14.0.0",
     "cypress-fail-on-console-error": "^5.1.1",
     "eslint": "^9.18.0",
     "eslint-plugin-cypress": "^4.1.0",
-    "fs-extra": "^11.2.0",
+    "fs-extra": "^11.3.0",
     "live-server": "^1.2.2"
   },
   "scripts": {
     "clean": "node bin/clean.js",
     "build": "npm run clean && npm run update-libs && npm run update-manifests && npm run create-dist && npm run size",
-    "update-libs": "sh bin/updateLibs.sh",
-    "create-dist": "sh bin/createDist.sh",
+    "update-libs": "bash bin/updateLibs.sh",
+    "create-dist": "bash bin/createDist.sh",
     "update-manifests": "node bin/updateManifests.js",
     "test": "npm run e2e",
     "e2e": "cypress run --config-file=cypress.config.mjs --spec 'cypress/e2e/**/*'",

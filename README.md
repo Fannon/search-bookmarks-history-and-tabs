@@ -5,9 +5,9 @@
 ## Installation via Store
 
 - [Chrome Extension](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0)
-- [Firefox Addon](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/)
 - [Microsoft Edge Addon](https://microsoftedge.microsoft.com/addons/detail/search-tabs-bookmarks-an/ldmbegkendnchhjppahaadhhakgfbfpo)
-- [Opera Addon](https://addons.opera.com/en/extensions/details/search-bookmarks-history-and-tabs/)
+- [Firefox Addon](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/)
+- [Opera Addon](https://addons.opera.com/en/extensions/details/search-bookmarks-history-and-tabs/) (only an old version)
 
 ## Features
 
@@ -175,7 +175,7 @@ This extension is built to respect your privacy:
 
 ### Install and Build
 
-Prerequisite: [Node.js](https://nodejs.org/en/)
+Prerequisite: [Node.js](https://nodejs.org/en/) and use of bash shell.
 
 ```sh
 # install dependencies
@@ -187,11 +187,7 @@ npm run build
 
 The source code for the extension can be found in [popup/](popup/) (HTML, CSS, JS and libs).
 
-The built extensions can be found
-
-- [dist/chrome/](dist/chrome/) for Google Chrome and Microsoft Edge
-- [dist/firefox/](dist/firefox/) for Firefox
-- [dist/opera/](dist/firefox/) for Opera
+The built extensions can be found in [dist/chrome/](dist/chrome/).
 
 ### Developer Installation
 
