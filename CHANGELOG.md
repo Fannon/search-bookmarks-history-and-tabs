@@ -4,6 +4,7 @@
 
 ## [v1.11.0]
 
+- **FIXED**: Highlight of selected result in light-mode
 - **IMPROVED**: Firefox build is now using the browser extension Manifest v3, like Chrome or Edge.
 - **REMOVED**: Removed special build for Firefox, using Manifest v2.
 - **REMOVED**: Removed special build for Opera (they did not apply updates to the extension in their store anyway).

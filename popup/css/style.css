@@ -249,7 +249,7 @@ code {
   border-left: 0;
 }
 #selected-result {
-  background-color: #dadada;
+  background-color: #dadada !important;
 }
 li.error {
   color: #cc5858;
