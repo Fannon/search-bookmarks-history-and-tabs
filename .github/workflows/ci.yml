@@ -54,10 +54,7 @@ jobs:
           if-no-files-found: error
 
   cypress-run-chrome:
-    runs-on: ubuntu-22.04
-    container:
-      image: cypress/browsers:latest
-      options: --user 1001
+    runs-on: ubuntu-24.04
     name: E2E Testing (Chrome)
     needs: build
     steps:
@@ -75,10 +72,7 @@ jobs:
 
   cypress-run-firefox:
     name: E2E Testing (Firefox)
-    runs-on: ubuntu-22.04
-    container:
-      image: cypress/browsers:latest
-      options: --user 1001
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - name: Checkout
@@ -92,6 +86,26 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           browser: firefox
+          start: npm start
+          wait-on: http://localhost:8080
+
+  cypress-run-edge-linux:
+    name: E2E Testing (Edge Ubuntu)
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download the build folder
+        uses: actions/download-artifact@v4
+        with:
+          name: popup
+          path: popup
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          browser: edge
+          # build: npm run build
           start: npm start
           wait-on: http://localhost:8080
 
@@ -111,6 +125,6 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           browser: edge
-          build: npm run build
+          # build: npm run build
           start: npm start
           wait-on: http://localhost:8080
