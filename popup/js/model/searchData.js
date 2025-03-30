@@ -71,59 +71,49 @@ export async function getSearchData() {
         performance.mark('get-data-history-end')
         performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end')
       }
-    }
-  }
 
-  // Build maps with URL as key, so we have fast hashmap access
-  const historyMap = result.history.reduce(
-    (obj, item, index) => ((obj[item.originalUrl] = { ...item, index }), obj),
-    {},
-  )
+      // Build maps with URL as key, so we have fast hashmap access
+      const historyMap = result.history.reduce(
+        (obj, item, index) => ((obj[item.originalUrl] = { ...item, index }), obj),
+        {},
+      )
+      const historyToDelete = []
 
-  const historyToDelete = []
+      // merge history into bookmarks
+      result.bookmarks = result.bookmarks.map((el, i) => {
+        if (historyMap[el.originalUrl]) {
+          historyToDelete.push(i)
+          return {
+            ...historyMap[el.originalUrl],
+            ...el,
+          }
+        } else {
+          return el
+        }
+      })
 
-  // merge history into bookmarks
-  result.bookmarks = result.bookmarks.map((el) => {
-    if (historyMap[el.originalUrl]) {
-      historyToDelete.push(historyMap[el.originalUrl].index)
-      return {
-        ...historyMap[el.originalUrl],
-        ...el,
+      // merge history into open tabs
+      result.tabs = result.tabs.map((el, i) => {
+        if (historyMap[el.originalUrl]) {
+          historyToDelete.push(i)
+          return {
+            ...historyMap[el.originalUrl],
+            ...el,
+          }
+        } else {
+          return el
+        }
+      })
+
+      // Remove all history entries that have been merged
+      for (const index of historyToDelete) {
+        delete result.history[index]
       }
-    } else {
-      return el
-    }
-  })
-
-  // merge history into open tabs
-  result.tabs = result.tabs.map((el) => {
-    if (historyMap[el.originalUrl]) {
-      historyToDelete.push(historyMap[el.originalUrl].index)
-      return {
-        ...historyMap[el.originalUrl],
-        ...el,
+      result.history = result.history.filter((el) => el)
+      if (ext.opts.debug) {
+        console.debug(`Merged ${historyToDelete.length} of  history entries with bookmarks and open tags`)
       }
-    } else {
-      return el
     }
-  })
-
-  // Remove all history entries that have been merged
-  for (const index of historyToDelete) {
-    delete result.history[index]
-  }
-  result.history = result.history.filter((el) => el)
-
-  // TODO: Do we need .index ? Can we drop it?
-  // Add index to search data
-  for (let i = 0; i < result.tabs.length; i++) {
-    result.tabs[i].index = i
-  }
-  for (let i = 0; i < result.bookmarks.length; i++) {
-    result.bookmarks[i].index = i
-  }
-  for (let i = 0; i < result.history.length; i++) {
-    result.history[i].index = i
   }
 
   if (ext.opts.debug) {
