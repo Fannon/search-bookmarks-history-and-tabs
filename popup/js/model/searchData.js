@@ -64,96 +64,48 @@ export async function getSearchData() {
       if (ext.opts.debug) {
         performance.mark('get-data-history-start')
       }
-
       let startTime = Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
-      let lastReset = parseInt(localStorage.getItem('historyLastReset') || 0)
-      let lastFetch = parseInt(localStorage.getItem('historyLastFetched') || 0)
-      let historyC = []
-      if (lastReset < Date.now() - 1000 * 60 * 60) {
-        lastFetch = startTime // Reset cache every hour
-        localStorage.setItem('historyLastReset', Date.now())
-      }
-      if (lastFetch && lastFetch > startTime) {
-        historyC = JSON.parse(localStorage.getItem('history'))
-        startTime = lastFetch
-      }
-
-      // Merge histories
-      const historyFromApi = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
-      const browserHistory = []
-      const idMap = {}
-      for (const item of historyFromApi.concat(historyC)) {
-        if (item && item.url && !idMap[item.url]) {
-          browserHistory.push(item)
-          idMap[item.url] = true
-        } else {
-          console.warn('Invalid history item', item)
-        }
-      }
-
-      // Update cache
-      localStorage.setItem('historyLastFetched', Date.now())
-      localStorage.setItem('history', JSON.stringify(browserHistory))
-
+      const browserHistory = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
       result.history = convertBrowserHistory(browserHistory)
       if (ext.opts.debug) {
         performance.mark('get-data-history-end')
         performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end')
       }
+
+      // Build maps with URL as key, so we have fast hashmap access
+      const historyMap = result.history.reduce(
+        (obj, item, index) => ((obj[item.originalUrl] = { ...item, index }), obj),
+        {},
+      )
+      // merge history into bookmarks
+      result.bookmarks = result.bookmarks.map((el) => {
+        if (historyMap[el.originalUrl]) {
+          delete result.history[historyMap[el.originalUrl].index]
+          return {
+            ...historyMap[el.originalUrl],
+            ...el,
+          }
+        } else {
+          return el
+        }
+      })
+
+      // merge history into open tabs
+      result.tabs = result.tabs.map((el) => {
+        if (historyMap[el.originalUrl]) {
+          delete result.history[historyMap[el.originalUrl].index]
+          return {
+            ...historyMap[el.originalUrl],
+            ...el,
+          }
+        } else {
+          return el
+        }
+      })
+
+      result.history = result.history.filter((el) => el)
     }
   }
-
-  // Build maps with URL as key, so we have fast hashmap access
-  const historyMap = result.history.reduce(
-    (obj, item, index) => ((obj[item.originalUrl] = { ...item, index }), obj),
-    {},
-  )
-
-  const historyToDelete = []
-
-  // merge history into bookmarks
-  result.bookmarks = result.bookmarks.map((el) => {
-    if (historyMap[el.originalUrl]) {
-      historyToDelete.push(historyMap[el.originalUrl].index)
-      return {
-        ...historyMap[el.originalUrl],
-        ...el,
-      }
-    } else {
-      return el
-    }
-  })
-
-  // merge history into open tabs
-  result.tabs = result.tabs.map((el) => {
-    if (historyMap[el.originalUrl]) {
-      historyToDelete.push(historyMap[el.originalUrl].index)
-      return {
-        ...historyMap[el.originalUrl],
-        ...el,
-      }
-    } else {
-      return el
-    }
-  })
-
-  // Remove all history entries that have been merged
-  for (const index of historyToDelete) {
-    delete result.history[index]
-  }
-  result.history = result.history.filter((el) => el)
-
-  // Add index to all search results
-  for (let i = 0; i < result.tabs.length; i++) {
-    result.tabs[i].index = i
-  }
-  for (let i = 0; i < result.bookmarks.length; i++) {
-    result.bookmarks[i].index = i
-  }
-  for (let i = 0; i < result.history.length; i++) {
-    result.history[i].index = i
-  }
-
   if (ext.opts.debug) {
     console.debug(
       `Loaded ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${

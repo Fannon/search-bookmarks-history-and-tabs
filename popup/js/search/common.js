@@ -2,12 +2,11 @@
 // SEARCH                               //
 //////////////////////////////////////////
 
-import { printError } from '../helper/utils.js'
+import { getBrowserTabs } from '../helper/browserApi.js'
+import { cleanUpUrl, printError } from '../helper/utils.js'
 import { closeModals } from '../initSearch.js'
 import { renderSearchResults } from '../view/searchView.js'
-import { addDefaultEntries } from './defaultEntries.js'
 import { fuzzySearch } from './fuzzySearch.js'
-import { addSearchEngines, getCustomSearchEngineResult } from './searchEngines.js'
 import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
 
@@ -33,16 +32,20 @@ export async function search(event) {
       return
     }
 
-    closeModals()
+    // Get and clean up original search query
+    let searchTerm = ext.dom.searchInput.value || ''
+    searchTerm = searchTerm.trimStart().toLowerCase()
+    searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
+
+    if (!searchTerm.trim()) {
+      return // Early return if no search term
+    }
 
     if (ext.opts.debug) {
       performance.mark('search-start')
     }
 
-    // Get and clean up original search query
-    let searchTerm = ext.dom.searchInput.value || ''
-    searchTerm = searchTerm.trimStart().toLowerCase()
-    searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
+    closeModals()
 
     ext.model.result = []
     let searchMode = 'all'
@@ -337,4 +340,97 @@ export function sortResults(results, sortMode) {
   }
 
   return results
+}
+
+/**
+ * If we don't have a search term yet (or not sufficiently long), display current tab related entries.
+ *
+ * Finds out if there are any bookmarks or history that match our current open URL.
+ */
+export async function addDefaultEntries() {
+  let results = []
+
+  if (ext.model.searchMode === 'history' && ext.model.history) {
+    // Display recent history by default
+    results = ext.model.history.map((el) => {
+      return {
+        searchScore: 1,
+        ...el,
+      }
+    })
+  } else if (ext.model.searchMode === 'tabs' && ext.model.tabs) {
+    // Display last opened tabs by default
+    results = ext.model.tabs
+      .map((el) => {
+        return {
+          searchScore: 1,
+          ...el,
+        }
+      })
+      .sort((a, b) => {
+        return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo
+      })
+  } else if (ext.model.searchMode === 'bookmarks' && ext.model.bookmarks) {
+    // Display all bookmarks by default
+    results = ext.model.bookmarks.map((el) => {
+      return {
+        searchScore: 1,
+        ...el,
+      }
+    })
+  } else {
+    // Default: Find bookmarks that match current page URL
+    let currentUrl = window.location.href
+    const [tab] = await getBrowserTabs({ active: true, currentWindow: true })
+    if (!tab) {
+      return []
+    }
+    // Remove trailing slash or hash from URL, so the comparison works better
+    currentUrl = tab.url.replace(/[/#]$/, '')
+    results.push(...ext.model.bookmarks.filter((el) => el.originalUrl === currentUrl))
+  }
+
+  ext.model.result = results
+  return results
+}
+
+/**
+ * Add results that use the configured search engines with the current search term
+ */
+function addSearchEngines(searchTerm) {
+  const results = []
+  if (ext.opts.enableSearchEngines) {
+    for (const searchEngine of ext.opts.searchEngineChoices) {
+      results.push(getCustomSearchEngineResult(searchTerm, searchEngine.name, searchEngine.urlPrefix))
+    }
+  }
+  return results
+}
+
+/**
+ * Adds one search result based for a custom search engine
+ * This is used by the option `customSearchEngines`
+ */
+function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlank, custom) {
+  let url
+  let title = `${name}: "${searchTerm}"`
+  let titleHighlighted = `${name}: "<mark>${searchTerm}</mark>"`
+  if (urlBlank && !searchTerm.trim()) {
+    url = urlBlank
+    title = name
+    titleHighlighted = name
+  } else if (urlPrefix.includes('$s')) {
+    url = urlPrefix.replace('$s', encodeURIComponent(searchTerm))
+  } else {
+    url = urlPrefix + encodeURIComponent(searchTerm)
+  }
+  return {
+    type: custom ? 'customSearch' : 'search',
+    title: title,
+    titleHighlighted: titleHighlighted,
+    url: cleanUpUrl(url),
+    urlHighlighted: cleanUpUrl(url),
+    originalUrl: url,
+    searchScore: 1,
+  }
 }

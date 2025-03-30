@@ -2,10 +2,8 @@
 
 **Customization**: This extension can be customized via options in many ways. Please refer to the [User Documentation](https://github.com/Fannon/search-bookmarks-history-and-tabs/tree/main?tab=readme-ov-file#user-documentation).
 
-<hr/>
-
-**Keyboard Shortcut**: Trigger the extension via keyboard. <br/>
-The default is `CTRL` + `Shift` + `.`.
+**Keyboard Shortcut**: Trigger the extension via keyboard.
+The default is `CTRL` + `Shift` + `.`
 
 This can be customized in the browsers [extensions settings](chrome://extensions/) > "Keyboard Shortcuts".
 
@@ -21,7 +19,7 @@ This can be done via clicking on the top-right corner of the popup or by setting
 
 Start your search query with a search mode prefix:
 
-- \*`#`: Only **bookmarks with the tag** will be returned
+- `#`: Only **bookmarks with the tag** will be returned
 - `~`: Only **bookmarks within the folder** will be returned
 - `t `: Only **tabs** will be searched.
 - `b `: Only **bookmarks** will be searched.
@@ -31,24 +29,37 @@ Start your search query with a search mode prefix:
 
 <hr/>
 
+**Performance**: If you run into performance issues, consider:
+
+- Improve initialize performance:
+  - Clean your browser history from time to time (the history database in browsers tends to get slow, much of the extensions loading time is caused by slow history database access)
+  - Reduce history size (see below)
+- Improve search performance:
+  - Switch to precise search strategy instead of fuzzy
+  - Set option: `searchMinMatchCharLength: 2` (or more) to start searching only when the search string is at least 2 characters long
+  - Reduce option `searchMaxResults` from 32 to something lower
+
+<hr/>
+
 **History Size & History**: By default the number of history items to load are limited.
 Consider increasing or decreasing this, depending on your performance situation and personal preferences:
 
-Add / adjust option: `historyMaxItems: 1024` <br/>
-Add / adjust option: `historyDaysAgo: 14`
+- Add / adjust option: `historyMaxItems: 1024`
+- Add / adjust option: `historyDaysAgo: 14`
 
 <hr/>
 
 **Open selected results**: By default, the extension will open the selected result in a new tab or switch to an existing tab if fitting.
 
-Hold `Shift` or `Alt` to open the result in the current tab.<br />
-Hold `Ctrl` to open the result without closing the popup.<br />
-Press `Right Click` to copy URL of result into clipboard without closing the popup.
+- Hold `Shift` or `Alt` to open the result in the current tab.
+- Hold `Ctrl` to open the result without closing the popup.
+- Press `Right Click` to copy URL of result into clipboard without closing the popup.
 
 <hr/>
 
-**Custom Bonus Scores**: Append ` + [whole number]` to your bookmark title (before tags). <br/><br/>
-Example: `Another Bookmark +10 #tag1`
+**Custom Bonus Scores**: Append ` + [whole number]` to your bookmark title (before tags).
+
+- Example: `Another Bookmark +10 #tag1`
 
 <hr/>
 
@@ -73,5 +84,7 @@ historyIgnoreList:
 
 <hr/>
 
-**Keyboard Navigation**: You can navigate result entries also in Emacs / Vim style:<br/><br/>
-` Ctrl+N``` and  `Ctrl+J`to navigate search results up.<br/>`Ctrl+P`and`Ctrl+K` to navigate search results down.
+**Keyboard Navigation**: You can navigate result entries also in Emacs / Vim style:
+
+- `Ctrl+N` and `Ctrl+J` to navigate search results up.
+- `Ctrl+P`and`Ctrl+K` to navigate search results down.

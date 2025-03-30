@@ -379,15 +379,13 @@ li.error {
   html a,
   body a,
   html a:visited,
-  body a:visited {
-    color: #999;
-  }
+  body a:visited,
   html a:hover,
   body a:hover,
   #edit-bookmark a:hover,
   #tags-overview a:hover,
   #folders-overview a:hover {
-    color: #bbb;
+    color: #f1f1f1;
   }
   html mark,
   body mark,

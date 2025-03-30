@@ -1,11 +1,11 @@
 import { printError } from './helper/utils.js'
-import { extensionNamespace as ext } from './model/namespace.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { search } from './search/common.js'
-import { addDefaultEntries } from './search/defaultEntries.js'
+import { addDefaultEntries } from './search/common.js'
 import { editBookmark, updateBookmark } from './view/editBookmarkView.js'
 import { loadFoldersOverview } from './view/foldersView.js'
+import { browserApi } from './helper/browserApi.js'
 import {
   navigationKeyListener,
   renderSearchResults,
@@ -13,6 +13,34 @@ import {
   updateSearchApproachToggle,
 } from './view/searchView.js'
 import { loadTagsOverview } from './view/tagsView.js'
+
+//////////////////////////////////////////
+// EXTENSION NAMESPACE                  //
+//////////////////////////////////////////
+
+/** Browser extension namespace */
+export const ext = {
+  /** Options */
+  opts: {},
+  /** Model / data */
+  model: {
+    /** Currently selected result item */
+    currentItem: 0,
+    /** Current search results */
+    result: [],
+  },
+  /** Search indexes */
+  index: {
+    taxonomy: {},
+  },
+  /** Commonly used DOM Elements */
+  dom: {},
+  /** The browser / extension API */
+  browserApi: browserApi,
+
+  /** Whether extension is already initialized -> ready for search */
+  initialized: false,
+}
 
 window.ext = ext
 
@@ -82,6 +110,8 @@ export async function initExtension() {
     console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)
     performance.clearMeasures()
   }
+
+  search()
 }
 
 //////////////////////////////////////////

@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         node-version:
-          - 20.x
+          - 22.x
 
     steps:
       - name: Cache node modules
@@ -54,10 +54,7 @@ jobs:
           if-no-files-found: error
 
   cypress-run-chrome:
-    runs-on: ubuntu-22.04
-    container:
-      image: cypress/browsers:latest
-      options: --user 1001
+    runs-on: ubuntu-24.04
     name: E2E Testing (Chrome)
     needs: build
     steps:
@@ -72,13 +69,16 @@ jobs:
           browser: chrome
           start: npm start
           wait-on: http://localhost:8080
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots-chrome
+          path: cypress/screenshots
 
   cypress-run-firefox:
     name: E2E Testing (Firefox)
-    runs-on: ubuntu-22.04
-    container:
-      image: cypress/browsers:latest
-      options: --user 1001
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - name: Checkout
@@ -94,9 +94,41 @@ jobs:
           browser: firefox
           start: npm start
           wait-on: http://localhost:8080
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots-firefox
+          path: cypress/screenshots
+
+  cypress-run-edge-linux:
+    name: E2E Testing (Edge Ubuntu)
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download the build folder
+        uses: actions/download-artifact@v4
+        with:
+          name: popup
+          path: popup
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          browser: edge
+          # build: npm run build
+          start: npm start
+          wait-on: http://localhost:8080
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots-edge-linux
+          path: cypress/screenshots
 
   cypress-run-edge:
-    name: E2E Testing (Edge)
+    name: E2E Testing (Edge Windows)
     runs-on: windows-latest
     needs: build
     steps:
@@ -111,6 +143,12 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           browser: edge
-          build: npm run build
+          # build: npm run build
           start: npm start
           wait-on: http://localhost:8080
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots-edge-windows
+          path: cypress/screenshots

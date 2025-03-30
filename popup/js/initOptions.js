@@ -1,6 +1,13 @@
 import { printError } from './helper/utils.js'
-import { extensionNamespace as ext } from './model/namespace.js'
 import { initOptions } from './view/editOptionsView.js'
+import { browserApi } from './helper/browserApi.js'
+
+export const ext = {
+  opts: {},
+  dom: {},
+  browserApi: browserApi,
+  initialized: false,
+}
 
 window.ext = ext
 

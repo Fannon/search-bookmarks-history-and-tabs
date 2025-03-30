@@ -41,12 +41,6 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
   return results
 }
 
-/**
- * Extract tags from bookmark titles
- *
- * @returns a dictionary where the key is the unique tag name
- * and the value is an array of the found bookmarks index
- */
 export function getUniqueTags() {
   ext.index.taxonomy.tags = {}
   for (const el of ext.model.bookmarks) {
@@ -55,9 +49,9 @@ export function getUniqueTags() {
         tag = tag.trim()
         if (tag) {
           if (!ext.index.taxonomy.tags[tag]) {
-            ext.index.taxonomy.tags[tag] = [el.index]
+            ext.index.taxonomy.tags[tag] = [el.originalId]
           } else {
-            ext.index.taxonomy.tags[tag].push(el.index)
+            ext.index.taxonomy.tags[tag].push(el.originalId)
           }
         }
       }
@@ -66,12 +60,6 @@ export function getUniqueTags() {
   return ext.index.taxonomy.tags
 }
 
-/**
- * Extract folders from bookmarks
- *
- * @returns a dictionary where the key is the unique tag name
- * and the value is an array of the found bookmarks index
- */
 export function getUniqueFolders() {
   // This function is memoized, as the folders don't change while the extension is open
   if (!ext || !ext.index.taxonomy.folders) {
@@ -82,9 +70,9 @@ export function getUniqueFolders() {
           folderName = folderName.trim()
           if (folderName) {
             if (!foldersDictionary[folderName]) {
-              foldersDictionary[folderName] = [el.index]
+              foldersDictionary[folderName] = [el.originalId]
             } else {
-              foldersDictionary[folderName].push(el.index)
+              foldersDictionary[folderName].push(el.originalId)
             }
           }
         }
