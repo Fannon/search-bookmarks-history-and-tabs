@@ -110,7 +110,7 @@ jobs:
           wait-on: http://localhost:8080
 
   cypress-run-edge:
-    name: E2E Testing (Edge)
+    name: E2E Testing (Edge Windows)
     runs-on: windows-latest
     needs: build
     steps:

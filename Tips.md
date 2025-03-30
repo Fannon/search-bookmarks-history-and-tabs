@@ -29,6 +29,18 @@ Start your search query with a search mode prefix:
 
 <hr/>
 
+**Performance**: If you run into performance issues, consider:
+
+- Improve initialize performance:
+  - Clean your browser history from time to time (the history database in browsers tends to get slow, much of the extensions loading time is caused by slow history database access)
+  - Reduce history size (see below)
+- Improve search performance:
+  - Switch to precise search strategy instead of fuzzy
+  - Set option: `searchMinMatchCharLength: 2` (or more) to start searching only when the search string is at least 2 characters long
+  - Reduce option `searchMaxResults` from 32 to something lower
+
+<hr/>
+
 **History Size & History**: By default the number of history items to load are limited.
 Consider increasing or decreasing this, depending on your performance situation and personal preferences:
 
