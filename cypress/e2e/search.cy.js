@@ -1,3 +1,4 @@
+/* eslint-disable cypress/no-unnecessary-waiting */
 describe('Search View', () => {
   beforeEach(() => {
     cy.visit('/')
@@ -127,6 +128,7 @@ describe('Search View', () => {
     it('can switch to fuzzy search successfully', () => {
       cy.get('#search-approach-toggle').should('have.text', 'PRECISE') 
       cy.get('#search-approach-toggle').click()
+      cy.wait(100)
       cy.get('#search-approach-toggle').should('not.have.text', 'PRECISE')
       cy.get('#search-approach-toggle').should('have.text', 'FUZZY')
       cy.get('#search-input').type(`JSON`)
@@ -136,6 +138,7 @@ describe('Search View', () => {
     it('can execute a fuzzy search successfully', () => {
       cy.get('#search-approach-toggle').should('have.text', 'PRECISE')
       cy.get('#search-approach-toggle').click()
+      cy.wait(100)
       cy.get('#search-approach-toggle').should('have.text', 'FUZZY')
       cy.get('#search-input')
         .type(`JSON`)
@@ -158,6 +161,7 @@ describe('Search View', () => {
     it('can execute search with non-ASCII chars successfully', () => {
       cy.get('#search-approach-toggle').should('have.text', 'PRECISE')
       cy.get('#search-approach-toggle').click()
+      cy.wait(100)
       cy.get('#search-approach-toggle').should('have.text', 'FUZZY')
       cy.get('#search-input').type(`äe指事字₽`)
         // Only make sure that search doesn't crash
