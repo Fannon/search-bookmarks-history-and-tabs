@@ -73,7 +73,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: cypress-screenshots
+          name: cypress-screenshots-chrome
           path: cypress/screenshots
 
   cypress-run-firefox:
@@ -98,7 +98,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: cypress-screenshots
+          name: cypress-screenshots-firefox
           path: cypress/screenshots
 
   cypress-run-edge-linux:
@@ -124,7 +124,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: cypress-screenshots
+          name: cypress-screenshots-edge-linux
           path: cypress/screenshots
 
   cypress-run-edge:
@@ -150,5 +150,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: cypress-screenshots
+          name: cypress-screenshots-edge-windows
           path: cypress/screenshots

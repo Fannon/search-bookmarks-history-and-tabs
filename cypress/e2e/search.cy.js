@@ -122,9 +122,9 @@ describe('Search View', () => {
 
   describe('Fuzzy search', () => {
     it('can switch to fuzzy search successfully', () => {
-      Cypress.config('defaultCommandTimeout', 5000)
-      cy.get('#search-approach-toggle').should('have.text', 'PRECISE')     // wait for initial value
-      cy.get('#search-approach-toggle').click()
+      cy.get('#search-approach-toggle').should('have.text', 'PRECISE') 
+      cy.get('#search-approach-toggle').focus()
+      cy.get('#search-approach-toggle').click({ force: true })
       // eslint-disable-next-line cypress/no-unnecessary-waiting
       cy.wait(100)
       cy.get('#search-approach-toggle').should('not.have.text', 'PRECISE')
