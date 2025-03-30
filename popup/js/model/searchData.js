@@ -77,12 +77,10 @@ export async function getSearchData() {
         (obj, item, index) => ((obj[item.originalUrl] = { ...item, index }), obj),
         {},
       )
-      const historyToDelete = []
-
       // merge history into bookmarks
-      result.bookmarks = result.bookmarks.map((el, i) => {
+      result.bookmarks = result.bookmarks.map((el) => {
         if (historyMap[el.originalUrl]) {
-          historyToDelete.push(i)
+          delete result.history[historyMap[el.originalUrl].index]
           return {
             ...historyMap[el.originalUrl],
             ...el,
@@ -93,9 +91,9 @@ export async function getSearchData() {
       })
 
       // merge history into open tabs
-      result.tabs = result.tabs.map((el, i) => {
+      result.tabs = result.tabs.map((el) => {
         if (historyMap[el.originalUrl]) {
-          historyToDelete.push(i)
+          delete result.history[historyMap[el.originalUrl].index]
           return {
             ...historyMap[el.originalUrl],
             ...el,
@@ -105,17 +103,9 @@ export async function getSearchData() {
         }
       })
 
-      // Remove all history entries that have been merged
-      for (const index of historyToDelete) {
-        delete result.history[index]
-      }
       result.history = result.history.filter((el) => el)
-      if (ext.opts.debug) {
-        console.debug(`Merged ${historyToDelete.length} of  history entries with bookmarks and open tags`)
-      }
     }
   }
-
   if (ext.opts.debug) {
     console.debug(
       `Loaded ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${
