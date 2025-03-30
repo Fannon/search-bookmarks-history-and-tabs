@@ -92,7 +92,7 @@ describe('Search View', () => {
 
   describe('Precise search', () => {
     it('can execute a precise search successfully', () => {
-      cy.get('#search-approach-toggle')
+      cy.get('#search-approach-toggle').should('have.text', 'PRECISE')
       cy.get('#search-input')
         .type(`JSON`)
         // Make sure we get result of all types
@@ -122,10 +122,11 @@ describe('Search View', () => {
 
   describe('Fuzzy search', () => {
     it('can switch to fuzzy search successfully', () => {
-      Cypress.config('defaultCommandTimeout', 10000)
-
+      Cypress.config('defaultCommandTimeout', 5000)
       cy.get('#search-approach-toggle').should('have.text', 'PRECISE')     // wait for initial value
       cy.get('#search-approach-toggle').click()
+      // eslint-disable-next-line cypress/no-unnecessary-waiting
+      cy.wait(100)
       cy.get('#search-approach-toggle').should('not.have.text', 'PRECISE')
       cy.get('#search-approach-toggle').should('have.text', 'FUZZY')
       cy.get('#search-input').type(`JSON`)
