@@ -69,6 +69,12 @@ jobs:
           browser: chrome
           start: npm start
           wait-on: http://localhost:8080
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
 
   cypress-run-firefox:
     name: E2E Testing (Firefox)
@@ -88,6 +94,12 @@ jobs:
           browser: firefox
           start: npm start
           wait-on: http://localhost:8080
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
 
   cypress-run-edge-linux:
     name: E2E Testing (Edge Ubuntu)
@@ -108,6 +120,12 @@ jobs:
           # build: npm run build
           start: npm start
           wait-on: http://localhost:8080
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
 
   cypress-run-edge:
     name: E2E Testing (Edge Windows)
@@ -128,3 +146,9 @@ jobs:
           # build: npm run build
           start: npm start
           wait-on: http://localhost:8080
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
