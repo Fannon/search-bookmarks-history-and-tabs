@@ -7,6 +7,7 @@
 - **CHANGED**: History cache has been removed as it caused issues with local storage size on some browser and performance gains were not clear enough.
 - **FIXED**: Dark mode button hover text color contrast was bad
 - **IMPROVED**: Internal code cleanup which leads to less code to load (minimal performance improvement)
+- **IMPROVED**: Trying out a potential fix for [#164](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/164) (Searching too quickly after opening leads to no results found)
 
 ## [v1.11.0]
 

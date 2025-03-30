@@ -110,6 +110,8 @@ export async function initExtension() {
     console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)
     performance.clearMeasures()
   }
+
+  search()
 }
 
 //////////////////////////////////////////

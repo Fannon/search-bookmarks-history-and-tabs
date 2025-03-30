@@ -32,16 +32,20 @@ export async function search(event) {
       return
     }
 
-    closeModals()
+    // Get and clean up original search query
+    let searchTerm = ext.dom.searchInput.value || ''
+    searchTerm = searchTerm.trimStart().toLowerCase()
+    searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
+
+    if (!searchTerm.trim()) {
+      return // Early return if no search term
+    }
 
     if (ext.opts.debug) {
       performance.mark('search-start')
     }
 
-    // Get and clean up original search query
-    let searchTerm = ext.dom.searchInput.value || ''
-    searchTerm = searchTerm.trimStart().toLowerCase()
-    searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
+    closeModals()
 
     ext.model.result = []
     let searchMode = 'all'
