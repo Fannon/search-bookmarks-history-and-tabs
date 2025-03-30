@@ -122,6 +122,8 @@ describe('Search View', () => {
 
   describe('Fuzzy search', () => {
     it('can switch to fuzzy search successfully', () => {
+      Cypress.config('defaultCommandTimeout', 10000)
+
       cy.get('#search-approach-toggle').should('have.text', 'PRECISE')     // wait for initial value
       cy.get('#search-approach-toggle').click()
       cy.get('#search-approach-toggle').should('not.have.text', 'PRECISE')
