@@ -2,6 +2,9 @@
 
 ## [unreleased]
 
+## [v1.12.0]
+
+- **CHANGED**: History cache has been removed as it caused issues with local storage size on some browser and performance gains were not clear enough.
 - **FIXED**: Dark mode button hover text color contrast was bad
 
 ## [v1.11.0]
