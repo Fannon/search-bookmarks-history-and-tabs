@@ -64,37 +64,8 @@ export async function getSearchData() {
       if (ext.opts.debug) {
         performance.mark('get-data-history-start')
       }
-
       let startTime = Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
-      let lastReset = parseInt(localStorage.getItem('historyLastReset') || 0)
-      let lastFetch = parseInt(localStorage.getItem('historyLastFetched') || 0)
-      let historyC = []
-      if (lastReset < Date.now() - 1000 * 60 * 60) {
-        lastFetch = startTime // Reset cache every hour
-        localStorage.setItem('historyLastReset', Date.now())
-      }
-      if (lastFetch && lastFetch > startTime) {
-        historyC = JSON.parse(localStorage.getItem('history'))
-        startTime = lastFetch
-      }
-
-      // Merge histories
-      const historyFromApi = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
-      const browserHistory = []
-      const idMap = {}
-      for (const item of historyFromApi.concat(historyC)) {
-        if (item && item.url && !idMap[item.url]) {
-          browserHistory.push(item)
-          idMap[item.url] = true
-        } else {
-          console.warn('Invalid history item', item)
-        }
-      }
-
-      // Update cache
-      localStorage.setItem('historyLastFetched', Date.now())
-      localStorage.setItem('history', JSON.stringify(browserHistory))
-
+      const browserHistory = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
       result.history = convertBrowserHistory(browserHistory)
       if (ext.opts.debug) {
         performance.mark('get-data-history-end')
@@ -143,7 +114,8 @@ export async function getSearchData() {
   }
   result.history = result.history.filter((el) => el)
 
-  // Add index to all search results
+  // TODO: Do we need .index ? Can we drop it?
+  // Add index to search data
   for (let i = 0; i < result.tabs.length; i++) {
     result.tabs[i].index = i
   }

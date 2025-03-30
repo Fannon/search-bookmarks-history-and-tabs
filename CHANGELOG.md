@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+- **FIXED**: Dark mode button hover text color contrast was bad
+
 ## [v1.11.0]
 
 - **FIXED**: Highlight of selected result in light-mode
