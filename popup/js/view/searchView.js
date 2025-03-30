@@ -3,7 +3,6 @@
 //////////////////////////////////////////
 
 import { timeSince } from '../helper/utils.js'
-import { initExtension } from '../initSearch.js'
 import { getUserOptions, setUserOptions } from '../model/options.js'
 import { search } from '../search/common.js'
 
@@ -376,17 +375,13 @@ export function openResultItem(event) {
  */
 export async function toggleSearchApproach() {
   const userOptions = await getUserOptions()
-
   if (ext.opts.searchStrategy === 'precise') {
     ext.opts.searchStrategy = 'fuzzy'
   } else {
     ext.opts.searchStrategy = 'precise'
   }
-
   userOptions.searchStrategy = ext.opts.searchStrategy
-
   await setUserOptions(userOptions)
-  await initExtension()
   search()
 }
 
