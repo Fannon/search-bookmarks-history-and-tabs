@@ -382,6 +382,7 @@ export async function toggleSearchApproach() {
   }
   userOptions.searchStrategy = ext.opts.searchStrategy
   await setUserOptions(userOptions)
+  updateSearchApproachToggle()
   search()
 }
 
