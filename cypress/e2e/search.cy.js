@@ -91,7 +91,7 @@ describe('Search View', () => {
   })
 
   describe('Precise search', () => {
-    it('can execute a precise search successfully', () => {
+    it('can execute search successfully', () => {
       cy.get('#search-approach-toggle').should('have.text', 'PRECISE')
       cy.get('#search-input')
         .type(`JSON`)
@@ -109,7 +109,7 @@ describe('Search View', () => {
         .find('li.bookmark')
       cy.checkNoErrors()
     })
-    it('can execute a precise search with non-ASCII chars successfully', () => {
+    it('can execute search with non-ASCII chars successfully', () => {
       cy.get('#search-approach-toggle')
       cy.get('#search-input')
         .type(`äe指事字₽`)
@@ -120,13 +120,13 @@ describe('Search View', () => {
     })
   })
 
-  describe('Fuzzy search', () => {
+  describe('Fuzzy search', {
+    // Does not run on firefox headless, but works on firefox desktop
+    browser: '!firefox'
+  }, () => {
     it('can switch to fuzzy search successfully', () => {
       cy.get('#search-approach-toggle').should('have.text', 'PRECISE') 
-      cy.get('#search-approach-toggle').focus()
-      cy.get('#search-approach-toggle').click({ force: true })
-      // eslint-disable-next-line cypress/no-unnecessary-waiting
-      cy.wait(100)
+      cy.get('#search-approach-toggle').click()
       cy.get('#search-approach-toggle').should('not.have.text', 'PRECISE')
       cy.get('#search-approach-toggle').should('have.text', 'FUZZY')
       cy.get('#search-input').type(`JSON`)
@@ -154,15 +154,17 @@ describe('Search View', () => {
         .find('li.bookmark')
       cy.checkNoErrors()
     })
-  })
 
-  it('can execute a precise search with non-ASCII chars successfully', () => {
-    cy.get('#search-approach-toggle').should('have.text', 'PRECISE')
-    cy.get('#search-input').type(`äe指事字₽`)
-      // Only make sure that search doesn't crash
-    cy.get('#result-list')
-      .should('not.have.length', 0)
-    cy.checkNoErrors()
+    it('can execute search with non-ASCII chars successfully', () => {
+      cy.get('#search-approach-toggle').should('have.text', 'PRECISE')
+      cy.get('#search-approach-toggle').click()
+      cy.get('#search-approach-toggle').should('have.text', 'FUZZY')
+      cy.get('#search-input').type(`äe指事字₽`)
+        // Only make sure that search doesn't crash
+      cy.get('#result-list')
+        .should('not.have.length', 0)
+      cy.checkNoErrors()
+    })
   })
 
   describe('Bookmark search', () => {
