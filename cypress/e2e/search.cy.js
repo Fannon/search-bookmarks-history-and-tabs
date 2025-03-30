@@ -214,7 +214,7 @@ describe('Search View', () => {
       cy.get('.bookmark')
         .should('not.exist')
       cy.get('#result-counter')
-        .contains('(4)')
+        .contains('(6)')
       cy.checkNoErrors()
     })
   })
