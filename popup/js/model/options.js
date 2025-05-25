@@ -364,9 +364,6 @@ export const defaultOptions = {
   uFuzzyOptions: {},
 }
 
-/**
- * If there are no options yet, use this as an empty options template
- */
 export const emptyOptions = {
   searchStrategy: defaultOptions.searchStrategy,
 }
