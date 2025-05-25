@@ -17,9 +17,6 @@ export const defaultOptions = {
    */
   debug: false,
 
-  /** Use local storage instead of synced storage for remembering settings */
-  local: false,
-
   //////////////////////////////////////////
   // SEARCH OPTIONS                       //
   //////////////////////////////////////////
