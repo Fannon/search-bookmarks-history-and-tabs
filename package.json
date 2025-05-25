@@ -6,15 +6,15 @@
   "type": "module",
   "dependencies": {
     "@leeoniya/ufuzzy": "^1.0.18",
-    "@yaireo/tagify": "^4.33.2",
+    "@yaireo/tagify": "^4.35.1",
     "js-yaml": "^4.1.0",
     "mark.js": "^8.11.1"
   },
   "devDependencies": {
-    "cypress": "^14.2.1",
+    "cypress": "^14.4.0",
     "cypress-fail-on-console-error": "^5.1.1",
-    "eslint": "^9.23.0",
-    "eslint-plugin-cypress": "^4.2.0",
+    "eslint": "^9.27.0",
+    "eslint-plugin-cypress": "^4.3.0",
     "fs-extra": "^11.3.0",
     "live-server": "^1.2.2"
   },

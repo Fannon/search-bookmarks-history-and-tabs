@@ -17,6 +17,9 @@ export const defaultOptions = {
    */
   debug: false,
 
+  /** Use local storage instead of synced storage for remembering settings */
+  local: false,
+
   //////////////////////////////////////////
   // SEARCH OPTIONS                       //
   //////////////////////////////////////////
@@ -365,35 +368,23 @@ export const defaultOptions = {
 }
 
 /**
- * If there are no options yet, use this as an empty options template
- */
-export const emptyOptions = {
-  searchStrategy: defaultOptions.searchStrategy,
-}
-
-/**
  * Writes user settings to the sync storage, falls back to local storage
  *
  * @see https://developer.chrome.com/docs/extensions/reference/storage/
  */
-export async function setUserOptions(userOptions) {
+export async function setUserOptions(userOptions = {}) {
   return new Promise((resolve, reject) => {
-    userOptions = userOptions || {}
-
-    // Invalidate caches
-    localStorage.removeItem('historyLastFetched')
-    localStorage.removeItem('historyLastReset')
-    localStorage.removeItem('history')
-
     try {
       validateUserOptions(userOptions)
     } catch (err) {
       printError(err, 'Could not save user options.')
       return reject(err)
     }
-
+    ext.opts = getEffectiveOptions(userOptions)
     if (ext.browserApi.storage) {
-      ext.browserApi.storage.sync.set({ userOptions: userOptions }, () => {
+      const store = ext.browserApi.storage.sync
+      store.clear() // TODO: Remove again after release
+      store.set({ userOptions: userOptions }, () => {
         if (ext.browserApi.runtime.lastError) {
           return reject(ext.browserApi.runtime.lastError)
         }
@@ -407,25 +398,22 @@ export async function setUserOptions(userOptions) {
   })
 }
 
-/**
- * Get user options.
- * If none are stored yet, this will return the default empty options
- */
 export async function getUserOptions() {
   return new Promise((resolve, reject) => {
     try {
-      if (ext.browserApi.storage && ext.browserApi.storage.sync && ext.browserApi.storage.sync.get) {
-        ext.browserApi.storage.sync.get(['userOptions'], (result) => {
+      if (ext.browserApi.storage) {
+        const store = ext.browserApi.storage.sync
+        store.get(['userOptions'], (result) => {
           if (ext.browserApi.runtime.lastError) {
             return reject(ext.browserApi.runtime.lastError)
           }
-          const userOptions = migrateOptions(result.userOptions || emptyOptions)
+          const userOptions = result.userOptions || {}
           return resolve(userOptions)
         })
       } else {
         console.warn('No storage API found. Falling back to local Web Storage')
         const userOptionsString = window.localStorage.getItem('userOptions')
-        const userOptions = migrateOptions(userOptionsString ? JSON.parse(userOptionsString) : emptyOptions)
+        const userOptions = userOptionsString ? JSON.parse(userOptionsString) : {}
         return resolve(userOptions)
       }
     } catch (err) {
@@ -438,9 +426,9 @@ export async function getUserOptions() {
  * Gets the actual effective options based on the default options
  * and the overrides of the user options
  */
-export async function getEffectiveOptions() {
+export async function getEffectiveOptions(userOptions) {
   try {
-    const userOptions = await getUserOptions()
+    userOptions = userOptions || (await getUserOptions())
     validateUserOptions(userOptions)
     return {
       ...defaultOptions,
@@ -463,11 +451,4 @@ export function validateUserOptions(userOptions) {
       throw new Error('User options cannot be parsed into JSON: ' + err.message)
     }
   }
-}
-
-function migrateOptions(userOptions) {
-  if (userOptions && userOptions.searchStrategy === 'hybrid') {
-    userOptions.searchStrategy = 'fuzzy'
-  }
-  return userOptions
 }

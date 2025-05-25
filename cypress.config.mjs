@@ -4,7 +4,7 @@ export default defineConfig({
   viewportWidth: 500,
   viewportHeight: 600,
   video: false,
-  defaultCommandTimeout: 4000, // E2E Edge test is slow in CI/CD
+  defaultCommandTimeout: 5000, // E2E Edge test is slow in CI/CD
   e2e: {
     baseUrl: 'http://localhost:8080/popup',
   },
