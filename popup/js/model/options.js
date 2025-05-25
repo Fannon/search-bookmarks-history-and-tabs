@@ -17,9 +17,6 @@ export const defaultOptions = {
    */
   debug: false,
 
-  /** Use local storage instead of synced storage for remembering settings */
-  local: false,
-
   //////////////////////////////////////////
   // SEARCH OPTIONS                       //
   //////////////////////////////////////////
@@ -367,6 +364,10 @@ export const defaultOptions = {
   uFuzzyOptions: {},
 }
 
+export const emptyOptions = {
+  searchStrategy: defaultOptions.searchStrategy,
+}
+
 /**
  * Writes user settings to the sync storage, falls back to local storage
  *
@@ -380,11 +381,9 @@ export async function setUserOptions(userOptions = {}) {
       printError(err, 'Could not save user options.')
       return reject(err)
     }
-    ext.opts = getEffectiveOptions(userOptions)
-    if (ext.browserApi.storage) {
-      const store = ext.browserApi.storage.sync
-      store.clear() // TODO: Remove again after release
-      store.set({ userOptions: userOptions }, () => {
+
+    if (ext.browserApi.storage && ext.browserApi.storage.sync) {
+      ext.browserApi.storage.sync.set({ userOptions: userOptions }, () => {
         if (ext.browserApi.runtime.lastError) {
           return reject(ext.browserApi.runtime.lastError)
         }
@@ -398,22 +397,24 @@ export async function setUserOptions(userOptions = {}) {
   })
 }
 
+/**
+ * Get user options, fall back to default options
+ */
 export async function getUserOptions() {
   return new Promise((resolve, reject) => {
     try {
-      if (ext.browserApi.storage) {
-        const store = ext.browserApi.storage.sync
-        store.get(['userOptions'], (result) => {
+      if (ext.browserApi.storage && ext.browserApi.storage.sync) {
+        ext.browserApi.storage.sync.get(['userOptions'], (result) => {
           if (ext.browserApi.runtime.lastError) {
             return reject(ext.browserApi.runtime.lastError)
           }
-          const userOptions = result.userOptions || {}
+          const userOptions = result.userOptions || emptyOptions
           return resolve(userOptions)
         })
       } else {
         console.warn('No storage API found. Falling back to local Web Storage')
         const userOptionsString = window.localStorage.getItem('userOptions')
-        const userOptions = userOptionsString ? JSON.parse(userOptionsString) : {}
+        const userOptions = userOptionsString ? JSON.parse(userOptionsString) : emptyOptions
         return resolve(userOptions)
       }
     } catch (err) {
@@ -426,9 +427,9 @@ export async function getUserOptions() {
  * Gets the actual effective options based on the default options
  * and the overrides of the user options
  */
-export async function getEffectiveOptions(userOptions) {
+export async function getEffectiveOptions() {
   try {
-    userOptions = userOptions || (await getUserOptions())
+    const userOptions = await getUserOptions()
     validateUserOptions(userOptions)
     return {
       ...defaultOptions,
