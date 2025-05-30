@@ -82,6 +82,10 @@ export const defaultOptions = {
    * Color for custom search results, expressed as CSS color
    */
   customSearchColor: '#ce5c2f',
+  /**
+   * Color for direct URL results, expressed as CSS color
+   */
+  directColor: '#7799CE',
 
   //////////////////////////////////////////
   // SEARCH SOURCES                       //
@@ -110,6 +114,10 @@ export const defaultOptions = {
    * Enable help and tips on startup
    */
   enableHelp: true,
+  /**
+   * Whether to treat URL like terms as directly navigable.
+   */
+  enableDirectUrl: true,
 
   //////////////////////////////////////////
   // DISPLAY OPTIONS                      //
@@ -279,6 +287,10 @@ export const defaultOptions = {
    * This is set very high to ensure that it's the topmost entry
    */
   scoreCustomSearchEngineBaseScore: 500,
+  /**
+   * Base score for a direct URL being typed in
+   */
+  scoreDirectUrlScore: 1000,
 
   // FIELD WEIGHTS
   // Depending on in which field the search match was found,
