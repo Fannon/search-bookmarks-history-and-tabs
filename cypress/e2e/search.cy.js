@@ -171,6 +171,19 @@ describe('Search View', () => {
     })
   })
 
+  describe('Direct URL Search', () => {
+    it('can execute a direct URL search successfully', () => {
+      cy.get('#search-input')
+        .type(`example.com`)
+        cy.get('#result-list')
+        .should('not.have.length', 0)
+      cy.get('li.direct')
+        .should('have.length', 1)
+        .should('have.attr', 'x-open-url', 'https://example.com')
+      cy.checkNoErrors()
+    })
+  })
+
   describe('Bookmark search', () => {
     it('Empty search returns recent bookmarks', () => {
       cy.get('#search-input')
