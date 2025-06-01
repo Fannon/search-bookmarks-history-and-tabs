@@ -260,33 +260,22 @@ export function openResultItem(event) {
       target = target.parentNode
     }
 
-    // If the event is a click event on the edit button or other clickable elements:
-    // Do not go to the URL itself, but to the internal linked url
+    // If the event is a click event on an navigation element (x-link), follow that link
     if (target && target.getAttribute('x-link')) {
       window.location = target.getAttribute('x-link')
       return
     } else if (target && target.className.includes('close-button')) {
       const targetId = parseInt(originalId)
-
-      // Close Browser Tab
-      ext.browserApi.tabs.remove(targetId)
-
-      // Remove search list entry
+      ext.browserApi.tabs.remove(targetId) // Close Browser Tab
       document.querySelector(`#result-list > li[x-original-id="${originalId}"]`).remove(targetId)
-
-      // Remove closed tab from index model
       ext.model.tabs.splice(
         ext.model.tabs.findIndex((el) => el.originalId === targetId),
         1,
       )
-
-      // Remove closed tab from search result
       ext.model.result.splice(
         ext.model.result.findIndex((el) => el.originalId === targetId),
         1,
       )
-
-      // Render search results again to avoid display bugs
       renderSearchResults()
       return
     }
@@ -299,8 +288,7 @@ export function openResultItem(event) {
     return
   }
 
-  // If we press SHIFT or ALT while selecting an entry:
-  // -> Open it in current tab
+  // If we press SHIFT or ALT while selecting an entry: Open it in current tab
   if (event.shiftKey || event.altKey) {
     if (ext.browserApi.tabs) {
       ext.browserApi.tabs
@@ -325,8 +313,7 @@ export function openResultItem(event) {
     return
   }
 
-  // If we press CTRL while selecting an entry
-  // -> Open it in new tab in the background (don't close popup)
+  // If we press CTRL while selecting an entry: Open it in new tab in the background (don't close popup)
   if (event.ctrlKey) {
     if (ext.browserApi.tabs) {
       ext.browserApi.tabs.create({
@@ -339,23 +326,19 @@ export function openResultItem(event) {
     return
   }
 
-  // If we use no modifier when selecting an entry:
-  // -> Navigate to selected tab or link. Prefer browser tab API if available.
+  // If we use no modifier when selecting an entry: Navigate to selected tab or link. Prefer browser tab API if available.
   const foundTab = ext.model.tabs.find((el) => {
     return el.originalUrl === url
   })
-
   if (foundTab && ext.browserApi.tabs.highlight) {
     // Set the found tab active
     ext.browserApi.tabs.update(foundTab.originalId, {
       active: true,
     })
-
     // Switch browser window focus if necessary
     ext.browserApi.windows.update(foundTab.windowId, {
       focused: true,
     })
-
     window.close()
   } else if (ext.browserApi.tabs) {
     ext.browserApi.tabs.create({

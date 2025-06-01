@@ -38,10 +38,9 @@ export async function search(event) {
     searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
 
     if (!searchTerm.trim()) {
-      // Early return if no search term
       ext.model.result = []
       renderSearchResults(ext.model.result)
-      return
+      return // Early return if no search term
     }
 
     if (ext.opts.debug) {
@@ -160,8 +159,6 @@ export async function search(event) {
 
 /**
  * Search with a with a specific approach and combine the results.
- *
- * @searchApproach 'precise' | 'fuzzy'
  */
 export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode = 'all') {
   let results = []
