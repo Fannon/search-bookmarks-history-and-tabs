@@ -3,6 +3,7 @@
 ## [unreleased]
 
 - **ADDED**: The folder and tags label on a bookmark search result are now clickable and will lead to a new search, looking for all bookmarks with the same folder / tags.
+- **IMPROVED**: Folders and Tags are now rendered with a badge for each value, now also clickable for navigation
 
 ## [v1.12.0]
 

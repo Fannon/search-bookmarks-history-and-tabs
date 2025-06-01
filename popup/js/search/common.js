@@ -15,7 +15,6 @@ import { searchTaxonomy } from './taxonomySearch.js'
  * It will decide which approaches and indexes to use.
  */
 export async function search(event) {
-  console.log(event)
   try {
     if (event) {
       // Don't execute search on navigation keys
