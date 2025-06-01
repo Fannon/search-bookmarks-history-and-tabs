@@ -37,6 +37,7 @@ export function renderSearchResults(result) {
     if (resultEntry.type === 'bookmark') {
       const editImg = document.createElement('img')
       editImg.classList.add('edit-button')
+      editImg.setAttribute('x-link', '#edit-bookmark/' + resultEntry.originalId)
       editImg.title = 'Edit Bookmark'
       editImg.src = '../images/edit.svg'
       resultListItem.appendChild(editImg)
@@ -71,36 +72,27 @@ export function renderSearchResults(result) {
     }
     titleDiv.appendChild(titleText)
 
-    if (ext.opts.displayTags && resultEntry.tags) {
-      const tags = document.createElement('span')
-      tags.title = 'Bookmark Tags'
-      tags.classList.add('badge', 'tags')
-      if (
-        ext.opts.displaySearchMatchHighlight &&
-        resultEntry.tagsHighlighted &&
-        resultEntry.tagsHighlighted.includes('<mark>')
-      ) {
-        tags.innerHTML = resultEntry.tagsHighlighted
-      } else {
-        tags.innerText = resultEntry.tags
+    if (ext.opts.displayTags && resultEntry.tagsArray) {
+      for (const tag of resultEntry.tagsArray) {
+        const tagEl = document.createElement('span')
+        tagEl.title = 'Bookmark Tags'
+        tagEl.classList.add('badge', 'tags')
+        tagEl.setAttribute('x-link', `#search/#${tag}`)
+        if (ext.opts.displaySearchMatchHighlight) {
+          tagEl.innerText = '#' + tag
+        }
+        titleDiv.appendChild(tagEl)
       }
-      titleDiv.appendChild(tags)
     }
     if (ext.opts.displayFolderName && resultEntry.folder) {
       const folder = document.createElement('span')
       folder.title = 'Bookmark Folder'
       folder.classList.add('badge', 'folder')
-
+      folder.setAttribute('x-link', `#search/${resultEntry.folder}`)
       if (ext.opts.bookmarkColor) {
         folder.style = `background-color: ${ext.opts.bookmarkColor}`
       }
-      if (
-        ext.opts.displaySearchMatchHighlight &&
-        resultEntry.folderHighlighted &&
-        resultEntry.folderHighlighted.includes('<mark>')
-      ) {
-        folder.innerHTML = resultEntry.folderHighlighted
-      } else {
+      if (ext.opts.displaySearchMatchHighlight) {
         folder.innerText = resultEntry.folder
       }
       titleDiv.appendChild(folder)
@@ -267,16 +259,8 @@ export function openResultItem(event) {
 
     // If the event is a click event on the edit button or other clickable elements:
     // Do not go to the URL itself, but to the internal linked url
-    if (target && target.className.includes('folder')) {
-      const r = ext.model.result.find((el) => el.originalId === originalId)
-      window.location = '#search/' + r.folder
-      return
-    } else if (target && target.className.includes('tags')) {
-      const r = ext.model.result.find((el) => el.originalId === originalId)
-      window.location = '#search/' + r.tags
-      return
-    } else if (target && target.className.includes('edit-button')) {
-      window.location = '#edit-bookmark/' + originalId
+    if (target && target.getAttribute('x-link')) {
+      window.location = target.getAttribute('x-link')
       return
     } else if (target && target.className.includes('close-button')) {
       const targetId = parseInt(originalId)
