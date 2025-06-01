@@ -10,6 +10,9 @@ import { fuzzySearch } from './fuzzySearch.js'
 import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
 
+const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
+const protocolRegex = /^[a-zA-Z]+:\/\//
+
 /**
  * This is the main search entry point.
  * It will decide which approaches and indexes to use.
@@ -121,6 +124,19 @@ export async function search(event) {
         ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
       }
 
+      if (ext.opts.enableDirectUrl && urlRegex.test(searchTerm)) {
+        const url = protocolRegex.test(searchTerm) ? searchTerm : `https://${searchTerm.replace(/^\/+/, '')}`
+        ext.model.result.push({
+          type: 'direct',
+          title: 'Direct',
+          titleHighlighted: 'Direct',
+          url: cleanUpUrl(url),
+          urlHighlighted: cleanUpUrl(url),
+          originalUrl: url,
+          searchScore: 1,
+        })
+      }
+
       // Add search engine result items
       if (searchMode === 'all' || searchMode === 'search') {
         ext.model.result.push(...addSearchEngines(searchTerm))
@@ -224,6 +240,8 @@ export function calculateFinalScore(results, searchTerm) {
       score = ext.opts.scoreSearchEngineBaseScore
     } else if (el.type === 'customSearch') {
       score = ext.opts.scoreCustomSearchEngineBaseScore
+    } else if (el.type === 'direct') {
+      score = ext.opts.scoreDirectUrlScore
     } else {
       throw new Error(`Search result type "${el.type}" not supported`)
     }
