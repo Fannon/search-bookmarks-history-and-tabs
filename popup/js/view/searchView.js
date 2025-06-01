@@ -96,7 +96,7 @@ export function renderSearchResults(result) {
           el.style = `background-color: ${ext.opts.bookmarkColor}`
         }
         if (ext.opts.displaySearchMatchHighlight) {
-          el.innerText = f
+          el.innerText = '~' + f
         }
         titleDiv.appendChild(el)
       }
