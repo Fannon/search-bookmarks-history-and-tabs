@@ -2,7 +2,7 @@
 
 ## [unreleased]
 
-- **ADDED**: The folder and tags label on a bookmark search result are now clickable and will lead to a new search
+- **ADDED**: The folder and tags label on a bookmark search result are now clickable and will lead to a new search, looking for all bookmarks with the same folder / tags.
 
 ## [v1.12.0]
 

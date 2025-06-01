@@ -262,7 +262,7 @@ export function openResultItem(event) {
     event.stopPropagation()
     let target = event.target ? event.target : event.srcElement
     if (target.nodeName === 'MARK') {
-      target = target.parent
+      target = target.parentNode
     }
 
     // If the event is a click event on the edit button or other clickable elements:
@@ -304,10 +304,6 @@ export function openResultItem(event) {
       return
     }
   }
-
-  event.stopPropagation()
-  console.warn('STOP HERE')
-  return
 
   // Right click mouse -> copy URL of result to clipboard
   if (event.button === 2) {
