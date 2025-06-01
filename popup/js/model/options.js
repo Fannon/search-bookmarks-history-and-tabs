@@ -290,7 +290,7 @@ export const defaultOptions = {
   /**
    * Base score for a direct URL being typed in
    */
-  scoreDirectUrlScore: 1000,
+  scoreDirectUrlScore: 500,
 
   // FIELD WEIGHTS
   // Depending on in which field the search match was found,
