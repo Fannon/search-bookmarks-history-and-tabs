@@ -74,28 +74,32 @@ export function renderSearchResults(result) {
 
     if (ext.opts.displayTags && resultEntry.tagsArray) {
       for (const tag of resultEntry.tagsArray) {
-        const tagEl = document.createElement('span')
-        tagEl.title = 'Bookmark Tags'
-        tagEl.classList.add('badge', 'tags')
-        tagEl.setAttribute('x-link', `#search/#${tag}`)
+        const el = document.createElement('span')
+        el.title = 'Bookmark Tags'
+        el.classList.add('badge', 'tags')
+        el.setAttribute('x-link', `#search/#${tag}`)
         if (ext.opts.displaySearchMatchHighlight) {
-          tagEl.innerText = '#' + tag
+          el.innerText = '#' + tag
         }
-        titleDiv.appendChild(tagEl)
+        titleDiv.appendChild(el)
       }
     }
-    if (ext.opts.displayFolderName && resultEntry.folder) {
-      const folder = document.createElement('span')
-      folder.title = 'Bookmark Folder'
-      folder.classList.add('badge', 'folder')
-      folder.setAttribute('x-link', `#search/${resultEntry.folder}`)
-      if (ext.opts.bookmarkColor) {
-        folder.style = `background-color: ${ext.opts.bookmarkColor}`
+    if (ext.opts.displayFolderName && resultEntry.folderArray) {
+      const trail = []
+      for (const f of resultEntry.folderArray) {
+        trail.push(f)
+        const el = document.createElement('span')
+        el.title = 'Bookmark Folder'
+        el.classList.add('badge', 'folder')
+        el.setAttribute('x-link', `#search/~${trail.join(' ~')}`)
+        if (ext.opts.bookmarkColor) {
+          el.style = `background-color: ${ext.opts.bookmarkColor}`
+        }
+        if (ext.opts.displaySearchMatchHighlight) {
+          el.innerText = f
+        }
+        titleDiv.appendChild(el)
       }
-      if (ext.opts.displaySearchMatchHighlight) {
-        folder.innerText = resultEntry.folder
-      }
-      titleDiv.appendChild(folder)
     }
     if (ext.opts.displayLastVisit && resultEntry.lastVisitSecondsAgo) {
       const lastVisit = timeSince(new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000))
@@ -141,7 +145,6 @@ export function renderSearchResults(result) {
       urlDiv.innerText = resultEntry.url
     }
 
-    // Append everything together :)
     resultListItem.appendChild(titleDiv)
     resultListItem.appendChild(urlDiv)
     resultListItem.addEventListener('mouseenter', hoverResultItem)
