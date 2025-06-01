@@ -286,7 +286,7 @@ export const defaultOptions = {
    * Base score for custom search engine choices
    * This is set very high to ensure that it's the topmost entry
    */
-  scoreCustomSearchEngineBaseScore: 500,
+  scoreCustomSearchEngineBaseScore: 400,
   /**
    * Base score for a direct URL being typed in
    */

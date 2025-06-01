@@ -128,8 +128,8 @@ export async function search(event) {
         const url = protocolRegex.test(searchTerm) ? searchTerm : `https://${searchTerm.replace(/^\/+/, '')}`
         ext.model.result.push({
           type: 'direct',
-          title: 'Direct',
-          titleHighlighted: 'Direct',
+          title: `Direct: "${cleanUpUrl(url)}"`,
+          titleHighlighted: `Direct: "<mark>${cleanUpUrl(url)}</mark>"`,
           url: cleanUpUrl(url),
           urlHighlighted: cleanUpUrl(url),
           originalUrl: url,
