@@ -15,6 +15,7 @@ import { searchTaxonomy } from './taxonomySearch.js'
  * It will decide which approaches and indexes to use.
  */
 export async function search(event) {
+  console.log(event)
   try {
     if (event) {
       // Don't execute search on navigation keys
@@ -38,7 +39,10 @@ export async function search(event) {
     searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
 
     if (!searchTerm.trim()) {
-      return // Early return if no search term
+      // Early return if no search term
+      ext.model.result = []
+      renderSearchResults(ext.model.result)
+      return
     }
 
     if (ext.opts.debug) {

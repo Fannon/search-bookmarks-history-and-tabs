@@ -65,7 +65,7 @@ export const defaultOptions = {
   /**
    * Color for bookmark results, expressed as CSS color
    */
-  bookmarkColor: '#54afaf',
+  bookmarkColor: '#3c8d8d',
   /**
    * Color for tab results, expressed as CSS color
    */
