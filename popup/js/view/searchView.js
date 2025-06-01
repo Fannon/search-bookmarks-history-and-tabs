@@ -260,11 +260,22 @@ export function openResultItem(event) {
 
   if (event) {
     event.stopPropagation()
-    const target = event.target ? event.target : event.srcElement
+    let target = event.target ? event.target : event.srcElement
+    if (target.nodeName === 'MARK') {
+      target = target.parent
+    }
 
-    // If the event is a click event on the edit image:
-    // Do not go to the URL itself, but to the internal edit bookmark url
-    if (target && target.className.includes('edit-button')) {
+    // If the event is a click event on the edit button or other clickable elements:
+    // Do not go to the URL itself, but to the internal linked url
+    if (target && target.className.includes('folder')) {
+      const r = ext.model.result.find((el) => el.originalId === originalId)
+      window.location = '#search/' + r.folder
+      return
+    } else if (target && target.className.includes('tags')) {
+      const r = ext.model.result.find((el) => el.originalId === originalId)
+      window.location = '#search/' + r.tags
+      return
+    } else if (target && target.className.includes('edit-button')) {
       window.location = '#edit-bookmark/' + originalId
       return
     } else if (target && target.className.includes('close-button')) {
@@ -293,6 +304,10 @@ export function openResultItem(event) {
       return
     }
   }
+
+  event.stopPropagation()
+  console.warn('STOP HERE')
+  return
 
   // Right click mouse -> copy URL of result to clipboard
   if (event.button === 2) {

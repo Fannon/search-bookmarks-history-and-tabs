@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+- **ADDED**: The folder and tags label on a bookmark search result are now clickable and will lead to a new search
+
 ## [v1.12.0]
 
 - **CHANGED**: History cache has been removed as it caused issues with local storage size on some browser and performance gains were not clear enough.

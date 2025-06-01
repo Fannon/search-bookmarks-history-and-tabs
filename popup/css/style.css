@@ -158,10 +158,14 @@ code {
   content: ' \276F \0020';
 }
 .folder mark {
-  color: #85dbdb;
+  color: #c5e9e9;
 }
 .folder small {
   color: #a3d0d0;
+}
+.folder:hover,
+.tags:hover {
+  filter: brightness(125%);
 }
 .window {
   background: #8061ca;
