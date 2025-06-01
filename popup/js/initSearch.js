@@ -86,7 +86,7 @@ export async function initExtension() {
   document.addEventListener('keydown', navigationKeyListener)
   window.addEventListener('hashchange', hashRouter, false)
   ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
-  ext.dom.searchInput.addEventListener('keyup', search)
+  ext.dom.searchInput.addEventListener('input', search)
 
   // Display default entries
   await addDefaultEntries()

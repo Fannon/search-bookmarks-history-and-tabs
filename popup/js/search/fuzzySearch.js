@@ -116,12 +116,6 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
         if (highlightArray[1] && highlightArray[1].includes('<mark>')) {
           result.urlHighlighted = highlightArray[1]
         }
-        if (highlightArray[2] && highlightArray[2].includes('<mark>')) {
-          result.tagsHighlighted = highlightArray[2]
-        }
-        if (highlightArray[3] && highlightArray[3].includes('<mark>')) {
-          result.folderHighlighted = highlightArray[3]
-        }
 
         localResults.push({
           ...result,

@@ -152,16 +152,20 @@ code {
   color: #a2bbd6;
 }
 .folder {
-  background: #559292;
+  background: #3c8d8d;
 }
 .folder .divider:before {
   content: ' \276F \0020';
 }
 .folder mark {
-  color: #85dbdb;
+  color: #8fefef;
 }
 .folder small {
   color: #a3d0d0;
+}
+.folder:hover,
+.tags:hover {
+  filter: brightness(125%);
 }
 .window {
   background: #8061ca;
@@ -262,7 +266,8 @@ li.error {
 .edit-button:hover,
 .close-button:hover {
   background: rgba(255, 255, 255, 0.12);
-  border-radius: 3px;
+  border-radius: 4px;
+  filter: brightness(135%);
 }
 .title {
   font-size: 18px;

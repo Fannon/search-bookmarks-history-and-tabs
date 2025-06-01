@@ -37,6 +37,7 @@ export function renderSearchResults(result) {
     if (resultEntry.type === 'bookmark') {
       const editImg = document.createElement('img')
       editImg.classList.add('edit-button')
+      editImg.setAttribute('x-link', '#edit-bookmark/' + resultEntry.originalId)
       editImg.title = 'Edit Bookmark'
       editImg.src = '../images/edit.svg'
       resultListItem.appendChild(editImg)
@@ -71,39 +72,34 @@ export function renderSearchResults(result) {
     }
     titleDiv.appendChild(titleText)
 
-    if (ext.opts.displayTags && resultEntry.tags) {
-      const tags = document.createElement('span')
-      tags.title = 'Bookmark Tags'
-      tags.classList.add('badge', 'tags')
-      if (
-        ext.opts.displaySearchMatchHighlight &&
-        resultEntry.tagsHighlighted &&
-        resultEntry.tagsHighlighted.includes('<mark>')
-      ) {
-        tags.innerHTML = resultEntry.tagsHighlighted
-      } else {
-        tags.innerText = resultEntry.tags
+    if (ext.opts.displayTags && resultEntry.tagsArray) {
+      for (const tag of resultEntry.tagsArray) {
+        const el = document.createElement('span')
+        el.title = 'Bookmark Tags'
+        el.classList.add('badge', 'tags')
+        el.setAttribute('x-link', `#search/#${tag}`)
+        if (ext.opts.displaySearchMatchHighlight) {
+          el.innerText = '#' + tag
+        }
+        titleDiv.appendChild(el)
       }
-      titleDiv.appendChild(tags)
     }
-    if (ext.opts.displayFolderName && resultEntry.folder) {
-      const folder = document.createElement('span')
-      folder.title = 'Bookmark Folder'
-      folder.classList.add('badge', 'folder')
-
-      if (ext.opts.bookmarkColor) {
-        folder.style = `background-color: ${ext.opts.bookmarkColor}`
+    if (ext.opts.displayFolderName && resultEntry.folderArray) {
+      const trail = []
+      for (const f of resultEntry.folderArray) {
+        trail.push(f)
+        const el = document.createElement('span')
+        el.title = 'Bookmark Folder'
+        el.classList.add('badge', 'folder')
+        el.setAttribute('x-link', `#search/~${trail.join(' ~')}`)
+        if (ext.opts.bookmarkColor) {
+          el.style = `background-color: ${ext.opts.bookmarkColor}`
+        }
+        if (ext.opts.displaySearchMatchHighlight) {
+          el.innerText = '~' + f
+        }
+        titleDiv.appendChild(el)
       }
-      if (
-        ext.opts.displaySearchMatchHighlight &&
-        resultEntry.folderHighlighted &&
-        resultEntry.folderHighlighted.includes('<mark>')
-      ) {
-        folder.innerHTML = resultEntry.folderHighlighted
-      } else {
-        folder.innerText = resultEntry.folder
-      }
-      titleDiv.appendChild(folder)
     }
     if (ext.opts.displayLastVisit && resultEntry.lastVisitSecondsAgo) {
       const lastVisit = timeSince(new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000))
@@ -149,7 +145,6 @@ export function renderSearchResults(result) {
       urlDiv.innerText = resultEntry.url
     }
 
-    // Append everything together :)
     resultListItem.appendChild(titleDiv)
     resultListItem.appendChild(urlDiv)
     resultListItem.addEventListener('mouseenter', hoverResultItem)
@@ -260,35 +255,27 @@ export function openResultItem(event) {
 
   if (event) {
     event.stopPropagation()
-    const target = event.target ? event.target : event.srcElement
+    let target = event.target ? event.target : event.srcElement
+    if (target.nodeName === 'MARK') {
+      target = target.parentNode
+    }
 
-    // If the event is a click event on the edit image:
-    // Do not go to the URL itself, but to the internal edit bookmark url
-    if (target && target.className.includes('edit-button')) {
-      window.location = '#edit-bookmark/' + originalId
+    // If the event is a click event on an navigation element (x-link), follow that link
+    if (target && target.getAttribute('x-link')) {
+      window.location = target.getAttribute('x-link')
       return
     } else if (target && target.className.includes('close-button')) {
       const targetId = parseInt(originalId)
-
-      // Close Browser Tab
-      ext.browserApi.tabs.remove(targetId)
-
-      // Remove search list entry
+      ext.browserApi.tabs.remove(targetId) // Close Browser Tab
       document.querySelector(`#result-list > li[x-original-id="${originalId}"]`).remove(targetId)
-
-      // Remove closed tab from index model
       ext.model.tabs.splice(
         ext.model.tabs.findIndex((el) => el.originalId === targetId),
         1,
       )
-
-      // Remove closed tab from search result
       ext.model.result.splice(
         ext.model.result.findIndex((el) => el.originalId === targetId),
         1,
       )
-
-      // Render search results again to avoid display bugs
       renderSearchResults()
       return
     }
@@ -301,8 +288,7 @@ export function openResultItem(event) {
     return
   }
 
-  // If we press SHIFT or ALT while selecting an entry:
-  // -> Open it in current tab
+  // If we press SHIFT or ALT while selecting an entry: Open it in current tab
   if (event.shiftKey || event.altKey) {
     if (ext.browserApi.tabs) {
       ext.browserApi.tabs
@@ -327,8 +313,7 @@ export function openResultItem(event) {
     return
   }
 
-  // If we press CTRL while selecting an entry
-  // -> Open it in new tab in the background (don't close popup)
+  // If we press CTRL while selecting an entry: Open it in new tab in the background (don't close popup)
   if (event.ctrlKey) {
     if (ext.browserApi.tabs) {
       ext.browserApi.tabs.create({
@@ -341,23 +326,19 @@ export function openResultItem(event) {
     return
   }
 
-  // If we use no modifier when selecting an entry:
-  // -> Navigate to selected tab or link. Prefer browser tab API if available.
+  // If we use no modifier when selecting an entry: Navigate to selected tab or link. Prefer browser tab API if available.
   const foundTab = ext.model.tabs.find((el) => {
     return el.originalUrl === url
   })
-
   if (foundTab && ext.browserApi.tabs.highlight) {
     // Set the found tab active
     ext.browserApi.tabs.update(foundTab.originalId, {
       active: true,
     })
-
     // Switch browser window focus if necessary
     ext.browserApi.windows.update(foundTab.windowId, {
       focused: true,
     })
-
     window.close()
   } else if (ext.browserApi.tabs) {
     ext.browserApi.tabs.create({

@@ -65,7 +65,7 @@ export const defaultOptions = {
   /**
    * Color for bookmark results, expressed as CSS color
    */
-  bookmarkColor: '#54afaf',
+  bookmarkColor: '#3c8d8d',
   /**
    * Color for tab results, expressed as CSS color
    */
@@ -286,7 +286,7 @@ export const defaultOptions = {
    * Base score for custom search engine choices
    * This is set very high to ensure that it's the topmost entry
    */
-  scoreCustomSearchEngineBaseScore: 500,
+  scoreCustomSearchEngineBaseScore: 400,
   /**
    * Base score for a direct URL being typed in
    */

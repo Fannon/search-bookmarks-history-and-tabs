@@ -41,6 +41,8 @@ export async function search(event) {
     searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
 
     if (!searchTerm.trim()) {
+      ext.model.result = []
+      renderSearchResults(ext.model.result)
       return // Early return if no search term
     }
 
@@ -126,8 +128,8 @@ export async function search(event) {
         const url = protocolRegex.test(searchTerm) ? searchTerm : `https://${searchTerm.replace(/^\/+/, '')}`
         ext.model.result.push({
           type: 'direct',
-          title: 'Direct',
-          titleHighlighted: 'Direct',
+          title: `Direct: "${cleanUpUrl(url)}"`,
+          titleHighlighted: `Direct: "<mark>${cleanUpUrl(url)}</mark>"`,
           url: cleanUpUrl(url),
           urlHighlighted: cleanUpUrl(url),
           originalUrl: url,
@@ -173,8 +175,6 @@ export async function search(event) {
 
 /**
  * Search with a with a specific approach and combine the results.
- *
- * @searchApproach 'precise' | 'fuzzy'
  */
 export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode = 'all') {
   let results = []
