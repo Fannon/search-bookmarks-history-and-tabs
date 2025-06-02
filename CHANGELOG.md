@@ -2,6 +2,10 @@
 
 ## [unreleased]
 
+## [v1.13.1]
+
+- **FIXED**: Fixed init result not showing current bookmark anymore
+
 ## [v1.13.0]
 
 - **Added**: Support for direct URL navigation, contributed by [@berdon](https://github.com/berdon) via [#171](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/171)
