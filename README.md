@@ -53,9 +53,10 @@ The extension is very customizable (see [user options](#user-configuration)) and
     - The option `customSearchEngines` allows you to define your own search mode aliases
     - Default: Start your query with `g ` (including space): Do a Google search.
     - Default: Start your query with `d ` (including space): Do a dict.cc search.
+  - A search term that can be interpreted as URL (e.g. `example.com`) can be navigated to directly.
 - **Emacs / Vim Navigation**:
-  - `Ctrl+N` and `Ctrl+J` to navigate search results up
-  - `Ctrl+P` and `Ctrl+K` to navigate search results down
+  - `Ctrl+J` and `Ctrl+N` to navigate search results up
+  - `Ctrl+K` and `Ctrl+P` to navigate search results down
 - **Special Browser Pages**: You can add special browser pages to your bookmarks, like `chrome://downloads`.
 - **Custom Scores**: Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
   - Examples: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`
