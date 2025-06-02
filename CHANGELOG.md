@@ -2,7 +2,7 @@
 
 ## [unreleased]
 
-## [v1.13.0]
+## [v1.13.1]
 
 - **FIXED**: Fixed init result not showing current bookmark anymore
 
