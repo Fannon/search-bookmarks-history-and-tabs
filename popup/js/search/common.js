@@ -40,12 +40,6 @@ export async function search(event) {
     searchTerm = searchTerm.trimStart().toLowerCase()
     searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
 
-    if (!searchTerm.trim()) {
-      ext.model.result = []
-      renderSearchResults(ext.model.result)
-      return // Early return if no search term
-    }
-
     if (ext.opts.debug) {
       performance.mark('search-start')
     }
