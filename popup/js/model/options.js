@@ -182,7 +182,7 @@ export const defaultOptions = {
    * Maximum number of recent tabs to show when showRecentTabsOnOpen is enabled
    * Limiting this improves performance for users with many open tabs
    */
-  maxRecentTabsToShow: 30,
+  maxRecentTabsToShow: 32,
 
   //////////////////////////////////////////
   // HISTORY OPTIONS                      //
