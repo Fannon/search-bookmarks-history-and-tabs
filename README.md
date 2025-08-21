@@ -209,6 +209,7 @@ The built extensions can be found in [dist/chrome/](dist/chrome/).
   - `npm run start` to start the extension locally in a browser (with mock data)
   - `npm run test` to run end to end tests
   - for more, see `npm run`
+- See also: [.github/copilot-instructions.md](./.github\copilot-instructions.md)
 
 ## Credits
 
