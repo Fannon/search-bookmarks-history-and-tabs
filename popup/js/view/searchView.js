@@ -109,7 +109,7 @@ export function renderSearchResults(result) {
       lastVisited.innerText = '-' + lastVisit
       titleDiv.appendChild(lastVisited)
     }
-    if (ext.opts.displayVisitCounter && resultEntry.visitCount) {
+    if (ext.opts.displayVisitCounter && resultEntry.visitCount !== undefined) {
       const visitCounter = document.createElement('span')
       visitCounter.title = 'Visited Counter'
       visitCounter.classList.add('badge', 'visit-counter')
@@ -183,7 +183,7 @@ export function navigationKeyListener(event) {
   const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p') || (event.ctrlKey && event.key === 'k')
   const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n') || (event.ctrlKey && event.key === 'j')
 
-  if (up && ext.dom.searchInput.value && ext.model.currentItem == 0) {
+  if (up && ext.dom.searchInput.value && ext.model.currentItem === 0) {
     event.preventDefault()
   } else if (up && ext.model.currentItem > 0) {
     event.preventDefault()
