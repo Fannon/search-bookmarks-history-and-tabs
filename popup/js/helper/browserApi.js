@@ -8,7 +8,6 @@ export async function getBrowserTabs(queryOptions = {}) {
   }
   if (browserApi.tabs) {
     return (await browserApi.tabs.query(queryOptions)).filter((el) => {
-      return true
       return !el.url.includes('extension://')
     })
   } else {
