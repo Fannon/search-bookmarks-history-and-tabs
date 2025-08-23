@@ -406,6 +406,25 @@ export async function addDefaultEntries() {
     // Remove trailing slash or hash from URL, so the comparison works better
     currentUrl = tab.url.replace(/[/#]$/, '')
     results.push(...ext.model.bookmarks.filter((el) => el.originalUrl === currentUrl))
+
+    if (ext.model.tabs && ext.opts.maxRecentTabsToShow > 0) {
+      // Add recently visited tabs when option is enabled and no search term
+      results.push(
+        ...ext.model.tabs
+          .map((el) => ({
+            searchScore: 1,
+            ...el,
+          }))
+          .sort((a, b) => {
+            // Sort by lastAccessed time (most recent first)
+            // Handle cases where lastAccessed might be undefined
+            const aTime = a.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
+            const bTime = b.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
+            return aTime - bTime
+          })
+          .slice(1, ext.opts.maxRecentTabsToShow + 1), // Limit number of tabs shown
+      )
+    }
   }
 
   ext.model.result = results

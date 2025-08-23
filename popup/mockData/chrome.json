@@ -19,9 +19,13 @@
       "selected": false,
       "status": "complete",
       "title": "Developer Dashboard",
+      "type": "tab",
       "url": "https://chrome.google.com/webstore/devconsole/1a52e4dd-3773-4dfb-94b4-89e431a09fed",
+      "originalUrl": "https://chrome.google.com/webstore/devconsole/1a52e4dd-3773-4dfb-94b4-89e431a09fed",
       "width": 1334,
-      "windowId": 1
+      "windowId": 1,
+      "lastVisitSecondsAgo": 300,
+      "lastAccessed": 1724182119000
     },
     {
       "active": false,
@@ -42,22 +46,26 @@
       "selected": false,
       "status": "complete",
       "title": "Partner Center",
+      "type": "tab",
       "url": "https://partner.microsoft.com/de-de/dashboard/microsoftedge/overview",
+      "originalUrl": "https://partner.microsoft.com/de-de/dashboard/microsoftedge/overview",
       "width": 1334,
-      "windowId": 1
+      "windowId": 1,
+      "lastVisitSecondsAgo": 60,
+      "lastAccessed": 1724182359000
     },
     {
-      "active": false,
+      "active": true,
       "audible": false,
       "autoDiscardable": true,
       "discarded": false,
-      "favIconUrl": "https://partner.microsoft.com/favicon.ico",
+      "favIconUrl": "https://json-schema.org/favicon.ico",
       "groupId": -1,
       "height": 1172,
       "highlighted": false,
       "id": 185,
       "incognito": false,
-      "index": 1,
+      "index": 2,
       "mutedInfo": {
         "muted": false
       },
@@ -65,9 +73,13 @@
       "selected": false,
       "status": "complete",
       "title": "Getting Started Step-By-Step | JSON Schema",
+      "type": "tab",
       "url": "https://json-schema.org/learn/getting-started-step-by-step.html",
+      "originalUrl": "https://json-schema.org/learn/getting-started-step-by-step.html",
       "width": 1334,
-      "windowId": 1
+      "windowId": 1,
+      "lastVisitSecondsAgo": 10,
+      "lastAccessed": 1724182409000
     }
   ],
   "bookmarks": [

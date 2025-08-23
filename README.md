@@ -100,6 +100,7 @@ searchMinMatchCharLength: 2 # Start searching only when at least 2 characters ar
 displaySearchMatchHighlight: false, # Not highlighting search matches improves render performance.
 searchMaxResults: 20 # Number of search results can be further limited
 historyMaxItems: 512 # Number of browser history items can be further reduced
+maxRecentTabsToShow: 8 # Reduce number of recent tabs for better performance
 ```
 
 Or a more advanced example:

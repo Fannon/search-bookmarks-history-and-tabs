@@ -173,6 +173,11 @@ export const defaultOptions = {
    * If true, only the current browser window is considered for tab indexing and switching
    */
   tabsOnlyCurrentWindow: false,
+  /**
+   * Number of recent tabs to show when popup is opened without search term
+   * Limiting this improves performance for users with many open tabs
+   */
+  maxRecentTabsToShow: 32,
 
   //////////////////////////////////////////
   // HISTORY OPTIONS                      //
