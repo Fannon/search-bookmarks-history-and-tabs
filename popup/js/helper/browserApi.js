@@ -7,7 +7,9 @@ export async function getBrowserTabs(queryOptions = {}) {
     queryOptions.currentWindow = true
   }
   if (browserApi.tabs) {
-    return await browserApi.tabs.query(queryOptions)
+    return (await browserApi.tabs.query(queryOptions)).filter((el) => {
+      return !el.url.includes('extension://')
+    })
   } else {
     console.warn(`No browser tab API found. Returning no results.`)
     return []

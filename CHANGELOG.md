@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+- **FIXED**: Filtering out browser tabs that start not with `http:` or `https:`, e.g. chrome extensions.
+
 ## [v1.13.1]
 
 - **FIXED**: Fixed init result not showing current bookmark anymore
