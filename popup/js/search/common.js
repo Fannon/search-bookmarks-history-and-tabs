@@ -407,7 +407,7 @@ export async function addDefaultEntries() {
     currentUrl = tab.url.replace(/[/#]$/, '')
     results.push(...ext.model.bookmarks.filter((el) => el.originalUrl === currentUrl))
 
-    if (ext.opts.showRecentTabsOnOpen && ext.model.tabs) {
+    if (ext.model.tabs && ext.opts.maxRecentTabsToShow > 0) {
       // Add recently visited tabs when option is enabled and no search term
       results.push(
         ...ext.model.tabs
@@ -422,7 +422,7 @@ export async function addDefaultEntries() {
             const bTime = b.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
             return aTime - bTime
           })
-          .slice(1, ext.opts.maxRecentTabsToShow - 1), // Limit number of tabs shown
+          .slice(1, ext.opts.maxRecentTabsToShow + 1), // Limit number of tabs shown
       )
     }
   }

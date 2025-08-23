@@ -174,15 +174,10 @@ export const defaultOptions = {
    */
   tabsOnlyCurrentWindow: false,
   /**
-   * If true, shows currently-open tabs in last-visited order when the extension popup opens
-   * (when there is no search term entered yet)
-   */
-  showRecentTabsOnOpen: true,
-  /**
-   * Maximum number of recent tabs to show when showRecentTabsOnOpen is enabled
+   * Number of recent tabs to show when popup is opened without search term
    * Limiting this improves performance for users with many open tabs
    */
-  maxRecentTabsToShow: 32,
+  maxRecentTabsToShow: 3,
 
   //////////////////////////////////////////
   // HISTORY OPTIONS                      //
