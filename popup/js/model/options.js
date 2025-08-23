@@ -177,7 +177,7 @@ export const defaultOptions = {
    * Number of recent tabs to show when popup is opened without search term
    * Limiting this improves performance for users with many open tabs
    */
-  maxRecentTabsToShow: 3,
+  maxRecentTabsToShow: 32,
 
   //////////////////////////////////////////
   // HISTORY OPTIONS                      //
