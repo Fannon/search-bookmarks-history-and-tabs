@@ -2,6 +2,9 @@
 
 ## [unreleased]
 
+- **ADDED**: Default result on startup will include most recent tabs.
+  - Added a new option `maxRecentTabsToShow`, which can be set to 0 to disable this feature
+  - Contributed by [@robertjmason](https://github.com/robertjmason) via [#183](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/183). Thanks!
 - **FIXED**: Filtering out browser tabs that start not with `http:` or `https:`, e.g. chrome extensions.
 
 ## [v1.13.1]
@@ -10,7 +13,7 @@
 
 ## [v1.13.0]
 
-- **Added**: Support for direct URL navigation, contributed by [@berdon](https://github.com/berdon) via [#171](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/171)
+- **ADDED**: Support for direct URL navigation, contributed by [@berdon](https://github.com/berdon) via [#171](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/171)
 - **ADDED**: The folder and tags label on a bookmark search result are now clickable and will lead to a new search, looking for all bookmarks with the same folder / tags.
 - **IMPROVED**: Folders and Tags are now rendered with a badge for each value, now also clickable for navigation
 
