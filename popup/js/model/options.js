@@ -174,10 +174,10 @@ export const defaultOptions = {
    */
   tabsOnlyCurrentWindow: false,
   /**
-   * Number of recent tabs to show when popup is opened without search term
+   * Number of recent tabs to show when popup is opened without search term. Set to 0 to disable.
    * Limiting this improves performance for users with many open tabs
    */
-  maxRecentTabsToShow: 32,
+  maxRecentTabsToShow: 16,
 
   //////////////////////////////////////////
   // HISTORY OPTIONS                      //

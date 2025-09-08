@@ -88,8 +88,7 @@ An exemplary user config can look like the following example:
 searchStrategy: fuzzy
 displayVisitCounter: true
 historyMaxItems: 2048 # Increase max number of browser history items to load
-showRecentTabsOnOpen: true # Show currently-open tabs sorted by last visit when popup opens
-maxRecentTabsToShow: 30 # Limit number of recent tabs shown (default: 30)
+maxRecentTabsToShow: 32 # Limit number of recent tabs shown (default: 32)
 ```
 
 If you have **troubles with performance**, here are a few options that might help. Feel free to pick & choose and tune the values to your situation. In particular `historyMaxItems` and how many bookmarks you have will impact init and search performance.
