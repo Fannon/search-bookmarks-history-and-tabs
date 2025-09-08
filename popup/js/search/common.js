@@ -406,31 +406,34 @@ export async function addDefaultEntries() {
         ...el,
       }
     })
-  } else if (ext.opts.showRecentTabsOnOpen && ext.model.tabs) {
-    // Show recently visited tabs when option is enabled and no search term
-    results = ext.model.tabs
-      .map((el) => ({
-        searchScore: 1,
-        ...el,
-      }))
-      .sort((a, b) => {
-        // Sort by lastAccessed time (most recent first)
-        // Handle cases where lastAccessed might be undefined
-        const aTime = a.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
-        const bTime = b.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
-        return aTime - bTime
-      })
-      .slice(0, ext.opts.maxRecentTabsToShow) // Limit number of tabs shown
   } else {
     // Default: Find bookmarks that match current page URL
     let currentUrl = window.location.href
     const [tab] = await getBrowserTabs({ active: true, currentWindow: true })
-    if (!tab) {
-      return []
+    if (tab) {
+      // Remove trailing slash or hash from URL, so the comparison works better
+      currentUrl = tab.url.replace(/[/#]$/, '')
+      results.push(...ext.model.bookmarks.filter((el) => el.originalUrl === currentUrl))
     }
-    // Remove trailing slash or hash from URL, so the comparison works better
-    currentUrl = tab.url.replace(/[/#]$/, '')
-    results.push(...ext.model.bookmarks.filter((el) => el.originalUrl === currentUrl))
+
+    if (ext.model.tabs && ext.opts.maxRecentTabsToShow > 0) {
+      // Add recently visited tabs when option is enabled and no search term
+      results.push(
+        ...ext.model.tabs
+          .map((el) => ({
+            searchScore: 1,
+            ...el,
+          }))
+          .sort((a, b) => {
+            // Sort by last accessed time (most recent first)
+            // Handle cases where last accessed might be undefined
+            const aTime = a.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
+            const bTime = b.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
+            return aTime - bTime
+          })
+          .slice(1, ext.opts.maxRecentTabsToShow + 1), // Limit number of tabs shown
+      )
+    }
   }
 
   ext.model.result = results
