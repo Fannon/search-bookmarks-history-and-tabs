@@ -4,7 +4,7 @@ describe('Recent Tabs on Open Functionality', () => {
     cy.visit('/')
   })
 
-  describe('Default Behavior (maxRecentTabsToShow > 0)', () => {
+  describe('Default Behavior (showRecentTabsOnOpen: true)', () => {
     it('shows tabs sorted by recent access when popup opens with no search term', () => {
       // Wait for initialization to complete
       cy.get('#results-loading').should('not.exist')
@@ -12,7 +12,7 @@ describe('Recent Tabs on Open Functionality', () => {
       // Search input should be empty initially
       cy.get('#search-input').should('have.value', '')
       
-      // Should show tab results by default when maxRecentTabsToShow > 0
+      // Should show tab results by default when showRecentTabsOnOpen is true
       cy.get('#result-list li').should('have.length.at.least', 1)
       
       cy.checkNoErrors()
@@ -58,7 +58,7 @@ describe('Recent Tabs on Open Functionality', () => {
   })
 
   describe('Tab-only Search Mode', () => {
-    it('shows tabs when using "t " prefix even with maxRecentTabsToShow === false', () => {
+    it('shows tabs when using "t " prefix even with showRecentTabsOnOpen', () => {
       // Wait for initialization
       cy.get('#results-loading').should('not.exist')
       
@@ -98,6 +98,7 @@ describe('Recent Tabs on Open Functionality', () => {
     it('respects custom maxRecentTabsToShow limit', () => {
       // Set a lower limit via options UI
       const newConfig = JSON.stringify({
+        showRecentTabsOnOpen: true,
         maxRecentTabsToShow: 5
       }, null, 2)
       
@@ -119,6 +120,7 @@ describe('Recent Tabs on Open Functionality', () => {
     it('handles maxRecentTabsToShow set to 0', () => {
       // Set limit to 0 via options UI
       const newConfig = JSON.stringify({
+        showRecentTabsOnOpen: true,
         maxRecentTabsToShow: 0
       }, null, 2)
       
@@ -153,6 +155,7 @@ describe('Recent Tabs on Open Functionality', () => {
     it('handles maxRecentTabsToShow larger than available tabs', () => {
       // Set very high limit via options UI
       const newConfig = JSON.stringify({
+        showRecentTabsOnOpen: true,
         maxRecentTabsToShow: 1000
       }, null, 2)
       
@@ -175,6 +178,7 @@ describe('Recent Tabs on Open Functionality', () => {
     it('maintains correct result counter with tab limit', () => {
       // Set tab limit via options UI
       const newConfig = JSON.stringify({
+        showRecentTabsOnOpen: true,
         maxRecentTabsToShow: 10,
       }, null, 2)
       
@@ -229,6 +233,42 @@ describe('Recent Tabs on Open Functionality', () => {
       cy.get('#result-list li').should('have.length.at.least', 1)
       cy.get('#selected-result').should('exist')
       
+      cy.checkNoErrors()
+    })
+
+    it('preserves functionality when showRecentTabsOnOpen is disabled via options UI', () => {
+      // Set option to false via options UI
+      const newConfig = JSON.stringify({
+        showRecentTabsOnOpen: false
+      }, null, 2)
+
+      cy.visit('/options.html')
+      cy.get('#user-config').clear()
+      cy.get('#user-config').type(newConfig)
+      cy.get('#edit-options-save').click()
+
+      // Now test the functionality
+      cy.visit('/')
+      cy.get('#results-loading').should('not.exist')
+
+      // Should now show default bookmark behavior instead of recent tabs
+      cy.get('#search-input').should('have.value', '')
+
+      // The results might be empty or show bookmarks matching current page
+      // In test environment (localhost), no bookmarks match so list may be empty
+      cy.get('#result-list').should('exist')
+
+      // Check if any results exist - either empty or only bookmarks (not tabs)
+      cy.get('body').then(($body) => {
+        const hasResults = $body.find('#result-list li').length > 0
+        if (hasResults) {
+          // If results exist, they should be bookmarks (not tabs)
+          cy.get('#result-list li').should('have.class', 'bookmark')
+          cy.get('#result-list li').should('not.have.class', 'tab')
+        }
+        // Empty result list is acceptable when no bookmarks match current page
+      })
+
       cy.checkNoErrors()
     })
   })
@@ -287,7 +327,7 @@ describe('Recent Tabs on Open Functionality', () => {
     it('maintains correct result counter with recent tabs', () => {
       cy.get('#results-loading').should('not.exist')
       
-      // Should have recent tabs displayed by default (maxRecentTabsToShow > 0)
+      // Should have recent tabs displayed by default (showRecentTabsOnOpen: true)
       cy.get('#result-list li').should('have.length.at.least', 1)
       
       // Result counter is NOT displayed for recent tabs (only during search flow)

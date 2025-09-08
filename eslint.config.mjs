@@ -1,20 +1,15 @@
 import js from '@eslint/js'
-import pluginCypress from 'eslint-plugin-cypress'
-import globals from 'globals'
+import { FlatCompat } from '@eslint/eslintrc'
+const compat = new FlatCompat()
 
 export default [
   {
     ignores: ['popup/lib/**.*', '/reports/*'],
   },
   js.configs.recommended,
-  {
-    plugins: {
-      cypress: pluginCypress,
-    },
-    rules: {
-      'cypress/unsafe-to-chain-command': 'error',
-    },
-  },
+  ...compat.config({
+    extends: ['plugin:cypress/recommended'],
+  }),
   {
     files: ['popup/js/**/*.js'],
   },
@@ -23,9 +18,12 @@ export default [
       ecmaVersion: 2022,
       sourceType: 'module',
       globals: {
-        ...globals.browser,
-        ...globals.es2021,
+        'browser': true,
+        'es2021': true,
+        'webextensions': true,
         'cypress/globals': true,
+        'commonjs': true,
+
         'module': 'writable',
         'ext': 'writable',
         'Tagify': 'readonly',
