@@ -89,17 +89,25 @@ export async function search(event) {
           aliases = [aliases]
         }
         for (const alias of aliases) {
-          if (searchTerm.startsWith(alias.toLowerCase() + ' ')) {
+          const prefix = alias.toLowerCase() + ' '
+          if (searchTerm.startsWith(prefix)) {
+            const query = searchTerm.substring(prefix.length)
             ext.model.result.push(
               getCustomSearchEngineResult(
-                searchTerm.replace(alias.toLowerCase() + ' ', ''.trim()),
+                query,
                 customSearchEngine.name,
                 customSearchEngine.urlPrefix,
                 customSearchEngine.blank,
                 true,
               ),
             )
+            searchTerm = query
+            searchMode = 'custom'
+            break
           }
+        }
+        if (searchMode === 'custom') {
+          break
         }
       }
     }
@@ -114,6 +122,8 @@ export async function search(event) {
         ext.model.result = searchTaxonomy(searchTerm, 'tags', ext.model.bookmarks)
       } else if (searchMode === 'folders') {
         ext.model.result = searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
+      } else if (searchMode === 'custom') {
+        // Results already exist, do nothing
       } else if (ext.opts.searchStrategy === 'fuzzy') {
         ext.model.result.push(...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode)))
       } else if (ext.opts.searchStrategy === 'precise') {
