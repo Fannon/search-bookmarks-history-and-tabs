@@ -271,4 +271,43 @@ describe('Search View', () => {
       cy.checkNoErrors()
     })
   })
+
+  describe('Custom Search Engine', () => {
+    it('returns only custom search engine results', () => {
+      cy.visit('/', {
+        onBeforeLoad(win) {
+          win.chrome = {
+            storage: {
+              sync: {
+                get: () => {},
+              },
+            },
+            runtime: {
+              lastError: null,
+            },
+          }
+          cy.stub(win.chrome.storage.sync, 'get').yields({
+            userOptions: {
+              customSearchEngines: [
+                {
+                  name: 'DuckDuckGo',
+                  alias: 'ddg',
+                  urlPrefix: 'https://duckduckgo.com/?q=',
+                },
+              ],
+            },
+          })
+        },
+      })
+
+      cy.get('#search-input').type('ddg test search')
+      cy.get('#result-list li').should('have.length', 1)
+      cy.get('#result-list li.customSearch').should('have.length', 1)
+      cy.get('.bookmark').should('not.exist')
+      cy.get('.history').should('not.exist')
+      cy.get('.tab').should('not.exist')
+      cy.get('#result-counter').contains('(1)')
+      cy.checkNoErrors()
+    })
+  })
 })
