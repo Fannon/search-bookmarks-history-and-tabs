@@ -118,20 +118,20 @@ export async function search(event) {
     ext.model.searchMode = searchMode
 
     if (searchTerm) {
-      if (searchMode === 'tags') {
-        ext.model.result = searchTaxonomy(searchTerm, 'tags', ext.model.bookmarks)
-      } else if (searchMode === 'folders') {
-        ext.model.result = searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
-      } else if (searchMode === 'custom') {
-        // Results already exist, do nothing
-      } else if (ext.opts.searchStrategy === 'fuzzy') {
-        ext.model.result.push(...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode)))
-      } else if (ext.opts.searchStrategy === 'precise') {
-        ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
-      } else {
-        console.error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
-        // Fall back to use precise search instead of crashing entirely
-        ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
+      if (searchMode !== 'custom') {
+        if (searchMode === 'tags') {
+          ext.model.result = searchTaxonomy(searchTerm, 'tags', ext.model.bookmarks)
+        } else if (searchMode === 'folders') {
+          ext.model.result = searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
+        } else if (ext.opts.searchStrategy === 'fuzzy') {
+          ext.model.result.push(...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode)))
+        } else if (ext.opts.searchStrategy === 'precise') {
+          ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
+        } else {
+          console.error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
+          // Fall back to use precise search instead of crashing entirely
+          ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
+        }
       }
 
       if (ext.opts.enableDirectUrl && urlRegex.test(searchTerm)) {
