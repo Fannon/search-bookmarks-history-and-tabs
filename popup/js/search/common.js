@@ -89,17 +89,25 @@ export async function search(event) {
           aliases = [aliases]
         }
         for (const alias of aliases) {
-          if (searchTerm.startsWith(alias.toLowerCase() + ' ')) {
+          const prefix = alias.toLowerCase() + ' '
+          if (searchTerm.startsWith(prefix)) {
+            const query = searchTerm.substring(prefix.length)
             ext.model.result.push(
               getCustomSearchEngineResult(
-                searchTerm.replace(alias.toLowerCase() + ' ', ''.trim()),
+                query,
                 customSearchEngine.name,
                 customSearchEngine.urlPrefix,
                 customSearchEngine.blank,
                 true,
               ),
             )
+            searchTerm = query
+            searchMode = 'custom'
+            break
           }
+        }
+        if (searchMode === 'custom') {
+          break
         }
       }
     }
@@ -110,18 +118,20 @@ export async function search(event) {
     ext.model.searchMode = searchMode
 
     if (searchTerm) {
-      if (searchMode === 'tags') {
-        ext.model.result = searchTaxonomy(searchTerm, 'tags', ext.model.bookmarks)
-      } else if (searchMode === 'folders') {
-        ext.model.result = searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
-      } else if (ext.opts.searchStrategy === 'fuzzy') {
-        ext.model.result.push(...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode)))
-      } else if (ext.opts.searchStrategy === 'precise') {
-        ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
-      } else {
-        console.error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
-        // Fall back to use precise search instead of crashing entirely
-        ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
+      if (searchMode !== 'custom') {
+        if (searchMode === 'tags') {
+          ext.model.result = searchTaxonomy(searchTerm, 'tags', ext.model.bookmarks)
+        } else if (searchMode === 'folders') {
+          ext.model.result = searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
+        } else if (ext.opts.searchStrategy === 'fuzzy') {
+          ext.model.result.push(...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode)))
+        } else if (ext.opts.searchStrategy === 'precise') {
+          ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
+        } else {
+          console.error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
+          // Fall back to use precise search instead of crashing entirely
+          ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
+        }
       }
 
       if (ext.opts.enableDirectUrl && urlRegex.test(searchTerm)) {
@@ -396,34 +406,31 @@ export async function addDefaultEntries() {
         ...el,
       }
     })
+  } else if (ext.opts.showRecentTabsOnOpen && ext.model.tabs) {
+    // Show recently visited tabs when option is enabled and no search term
+    results = ext.model.tabs
+      .map((el) => ({
+        searchScore: 1,
+        ...el,
+      }))
+      .sort((a, b) => {
+        // Sort by lastAccessed time (most recent first)
+        // Handle cases where lastAccessed might be undefined
+        const aTime = a.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
+        const bTime = b.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
+        return aTime - bTime
+      })
+      .slice(0, ext.opts.maxRecentTabsToShow) // Limit number of tabs shown
   } else {
     // Default: Find bookmarks that match current page URL
     let currentUrl = window.location.href
     const [tab] = await getBrowserTabs({ active: true, currentWindow: true })
-    if (tab) {
-      // Remove trailing slash or hash from URL, so the comparison works better
-      currentUrl = tab.url.replace(/[/#]$/, '')
-      results.push(...ext.model.bookmarks.filter((el) => el.originalUrl === currentUrl))
+    if (!tab) {
+      return []
     }
-
-    if (ext.model.tabs && ext.opts.maxRecentTabsToShow > 0) {
-      // Add recently visited tabs when option is enabled and no search term
-      results.push(
-        ...ext.model.tabs
-          .map((el) => ({
-            searchScore: 1,
-            ...el,
-          }))
-          .sort((a, b) => {
-            // Sort by last accessed time (most recent first)
-            // Handle cases where last accessed might be undefined
-            const aTime = a.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
-            const bTime = b.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
-            return aTime - bTime
-          })
-          .slice(1, ext.opts.maxRecentTabsToShow + 1), // Limit number of tabs shown
-      )
-    }
+    // Remove trailing slash or hash from URL, so the comparison works better
+    currentUrl = tab.url.replace(/[/#]$/, '')
+    results.push(...ext.model.bookmarks.filter((el) => el.originalUrl === currentUrl))
   }
 
   ext.model.result = results
