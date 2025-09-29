@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+## [v1.14.0]
+
 - **ADDED**: Default result on startup will include most recent tabs.
   - Added a new option `maxRecentTabsToShow`, which can be set to 0 to disable this feature
   - Contributed by [@robertjmason](https://github.com/robertjmason) via [#183](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/183). Thanks!
