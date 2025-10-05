@@ -26,7 +26,7 @@ npm install
 
 4. **Testing:**
 
-- Run end-to-end tests: `npm run test` (Cypress tests in `cypress/e2e/`).
+- Run end-to-end tests: `npm run test` (Playwright tests in `playwright/tests/`).
 
 5. **Code Style & Patterns:**
 
