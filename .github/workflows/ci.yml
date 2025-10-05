@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build & Lint
+    name: Build, Lint & Unit Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -46,29 +46,14 @@ jobs:
         run: npm run build
       - name: Lint
         run: npm run lint
+      - name: Unit Tests
+        run: npm run test:unit
       - name: Save build folder
         uses: actions/upload-artifact@v4
         with:
           name: popup
           path: popup
           if-no-files-found: error
-
-  unit-test:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: 'npm'
-      - name: Install Dependencies
-        run: npm set cache ~/.npm && npm ci
-      - name: Run Unit Tests
-        run: npm run test:unit
 
   cypress-run-chrome:
     runs-on: ubuntu-24.04
@@ -81,9 +66,17 @@ jobs:
         with:
           name: popup
           path: popup
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm ci
       - uses: cypress-io/github-action@v6
         with:
           browser: chrome
+          install: false
           start: npm start
           wait-on: http://localhost:8080
       - name: Upload screenshots
@@ -105,10 +98,18 @@ jobs:
         with:
           name: popup
           path: popup
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm ci
       - name: Cypress run
         uses: cypress-io/github-action@v6
         with:
           browser: firefox
+          install: false
           start: npm start
           wait-on: http://localhost:8080
       - name: Upload screenshots
@@ -130,11 +131,19 @@ jobs:
         with:
           name: popup
           path: popup
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm ci
       - name: Cypress run
         uses: cypress-io/github-action@v6
         with:
           browser: edge
           # build: npm run build
+          install: false
           start: npm start
           wait-on: http://localhost:8080
       - name: Upload screenshots
@@ -156,11 +165,19 @@ jobs:
         with:
           name: popup
           path: popup
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm ci
       - name: Cypress run
         uses: cypress-io/github-action@v6
         with:
           browser: edge
           # build: npm run build
+          install: false
           start: npm start
           wait-on: http://localhost:8080
       - name: Upload screenshots
