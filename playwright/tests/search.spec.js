@@ -98,15 +98,11 @@ test.describe('Search View', () => {
       await expect(page.locator('#search-approach-toggle')).toHaveText('FUZZY')
     })
 
-    test.skip(({ browserName }) => browserName === 'firefox', 'Fuzzy search not reliable on Firefox headless')
-
     test('can switch to fuzzy search', async ({ page }) => {
       await page.locator('#search-input').fill('JSON')
       await expect(page.locator('#result-list li.bookmark')).not.toHaveCount(0)
       await expectNoClientErrors(page)
     })
-
-    test.skip(({ browserName }) => browserName === 'firefox', 'Fuzzy search not reliable on Firefox headless')
 
     test('returns all result types in fuzzy mode', async ({ page }) => {
       await page.locator('#search-input').fill('JSON')
@@ -118,8 +114,6 @@ test.describe('Search View', () => {
 
       await expectNoClientErrors(page)
     })
-
-    test.skip(({ browserName }) => browserName === 'firefox', 'Fuzzy search not reliable on Firefox headless')
 
     test('handles non-ASCII search queries in fuzzy mode', async ({ page }) => {
       await page.locator('#search-input').fill('äe指事字₽')

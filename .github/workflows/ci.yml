@@ -52,7 +52,7 @@ jobs:
         if: always()
         with:
           name: unit-test-report
-          path: test-results/
+          path: reports/
           retention-days: 30
       - name: Save build folder
         uses: actions/upload-artifact@v4
@@ -96,5 +96,5 @@ jobs:
         if: always()
         with:
           name: playwright-report
-          path: playwright/test-results/
+          path: reports/playwright/
           retention-days: 30
