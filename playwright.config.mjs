@@ -22,7 +22,7 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'npm run start:test',
+    command: 'npm run start',
     url: baseURL,
     timeout: 30_000,
     reuseExistingServer: !process.env.CI,
