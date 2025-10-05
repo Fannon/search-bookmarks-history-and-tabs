@@ -12,13 +12,13 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",
-    "@playwright/test": "^1.49.0",
-    "eslint": "^9.36.0",
+    "@playwright/test": "^1.55.1",
+    "eslint": "^9.37.0",
     "fs-extra": "^11.3.2",
     "globals": "^16.4.0",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
-    "live-server": "^1.2.2"
+    "serve": "^14.2.5"
   },
   "scripts": {
     "clean": "node bin/clean.js",
@@ -33,8 +33,7 @@
     "test:e2e:edge": "playwright test --project=edge",
     "lint": "npm run eslint",
     "eslint": "eslint ./popup/js/",
-    "start": "live-server --port=8080 ./popup/",
-    "start:test": "live-server --no-browser --port=8080 ./popup/",
+    "start": "serve -p 8080 ./popup/",
     "size": "du -hc ./dist/chrome/",
     "test:unit": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js"
   },
