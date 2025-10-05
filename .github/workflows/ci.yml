@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build, Lint & Unit Tests
+    name: Build, Lint & Unit Test
     runs-on: ubuntu-latest
     strategy:
       matrix:
