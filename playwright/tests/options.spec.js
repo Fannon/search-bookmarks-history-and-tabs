@@ -11,7 +11,7 @@ test.describe('Options View', () => {
     })
 
     test('loads the default user config', async ({ page }) => {
-      await expect(page.locator('#user-config')).toContainText('searchStrategy')
+      await expect(page.locator('#user-config')).toHaveValue(/searchStrategy/)
       await expectNoClientErrors(page)
     })
 
@@ -32,7 +32,7 @@ test.describe('Options View', () => {
       await page.locator('#edit-options-save').click()
 
       await page.goto('/options.html')
-      await expect(page.locator('#user-config')).toContainText('displayVisitCounter')
+      await expect(page.locator('#user-config')).toHaveValue(/displayVisitCounter/)
       await expectNoClientErrors(page)
     })
 
@@ -47,7 +47,7 @@ test.describe('Options View', () => {
       await page.locator('#edit-options-save').click()
 
       await page.goto('/options.html')
-      await expect(page.locator('#user-config')).toContainText('displayVisitCounter')
+      await expect(page.locator('#user-config')).toHaveValue(/displayVisitCounter/)
       await expectNoClientErrors(page)
     })
   })
