@@ -91,6 +91,7 @@ export function updateBookmark(bookmarkId) {
   bookmark.url = cleanUpUrl(urlInput)
   bookmark.tags = tagsInput
   bookmark.searchString = createSearchString(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
+  bookmark.searchStringLower = bookmark.searchString.toLowerCase()
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
 

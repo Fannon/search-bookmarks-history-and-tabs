@@ -73,16 +73,15 @@ export async function getSearchData() {
       }
 
       // Build maps with URL as key, so we have fast hashmap access
-      const historyMap = result.history.reduce(
-        (obj, item, index) => ((obj[item.originalUrl] = { ...item, index }), obj),
-        {},
-      )
+      const historyMap = new Map(result.history.map((item) => [item.originalUrl, item]))
+
       // merge history into bookmarks
       result.bookmarks = result.bookmarks.map((el) => {
-        if (historyMap[el.originalUrl]) {
-          delete result.history[historyMap[el.originalUrl].index]
+        const historyEntry = historyMap.get(el.originalUrl)
+        if (historyEntry) {
+          historyMap.delete(el.originalUrl)
           return {
-            ...historyMap[el.originalUrl],
+            ...historyEntry,
             ...el,
           }
         } else {
@@ -92,10 +91,11 @@ export async function getSearchData() {
 
       // merge history into open tabs
       result.tabs = result.tabs.map((el) => {
-        if (historyMap[el.originalUrl]) {
-          delete result.history[historyMap[el.originalUrl].index]
+        const historyEntry = historyMap.get(el.originalUrl)
+        if (historyEntry) {
+          historyMap.delete(el.originalUrl)
           return {
-            ...historyMap[el.originalUrl],
+            ...historyEntry,
             ...el,
           }
         } else {
@@ -103,7 +103,7 @@ export async function getSearchData() {
         }
       })
 
-      result.history = result.history.filter((el) => el)
+      result.history = Array.from(historyMap.values())
     }
   }
   if (ext.opts.debug) {

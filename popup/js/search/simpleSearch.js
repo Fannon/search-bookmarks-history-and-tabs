@@ -59,19 +59,23 @@ function simpleSearchWithScoring(searchTerm, searchMode) {
     return [] // early return -> no data left to search
   }
 
-  let searchTermArray = searchTerm.split(' ')
+  const searchTermArray = searchTerm.split(' ')
 
   for (const term of searchTermArray) {
     const localResults = []
     for (const entry of s.cachedData) {
-      if (entry.searchString.toLowerCase().includes(term)) {
+      const normalizedSearchString = entry.searchStringLower || entry.searchString.toLowerCase()
+      if (normalizedSearchString.includes(term)) {
         localResults.push({
           ...entry,
           searchScore: 1,
           searchApproach: 'precise',
         })
       }
-      s.cachedData = localResults // reduce cachedData set -> improves performance
+    }
+    s.cachedData = localResults // reduce cachedData set -> improves performance
+    if (!s.cachedData.length) {
+      break
     }
   }
 

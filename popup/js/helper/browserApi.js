@@ -19,6 +19,7 @@ export async function getBrowserTabs(queryOptions = {}) {
 export function convertBrowserTabs(chromeTabs) {
   return chromeTabs.map((el) => {
     const cleanUrl = cleanUpUrl(el.url)
+    const searchString = createSearchString(el.title, cleanUrl)
     return {
       type: 'tab',
       title: getTitle(el.title, cleanUrl),
@@ -27,7 +28,8 @@ export function convertBrowserTabs(chromeTabs) {
       originalId: el.id,
       active: el.active,
       windowId: el.windowId,
-      searchString: createSearchString(el.title, cleanUrl),
+      searchString,
+      searchStringLower: searchString.toLowerCase(),
       lastVisitSecondsAgo: el.lastAccessed ? (Date.now() - el.lastAccessed) / 1000 : undefined,
     }
   })
@@ -133,6 +135,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
         mappedEntry.tags,
         mappedEntry.folder,
       )
+      mappedEntry.searchStringLower = mappedEntry.searchString.toLowerCase()
 
       result.push(mappedEntry)
     }
@@ -185,6 +188,7 @@ export function convertBrowserHistory(history) {
   const now = Date.now()
   return history.map((el) => {
     const cleanUrl = cleanUpUrl(el.url)
+    const searchString = createSearchString(el.title, cleanUrl)
     return {
       type: 'history',
       title: getTitle(el.title, cleanUrl),
@@ -193,7 +197,8 @@ export function convertBrowserHistory(history) {
       visitCount: el.visitCount,
       lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
       originalId: el.id,
-      searchString: createSearchString(el.title, cleanUrl),
+      searchString,
+      searchStringLower: searchString.toLowerCase(),
     }
   })
 }
@@ -205,6 +210,9 @@ export function createSearchString(title, url, tags, folder) {
     console.error('createSearchString: No URL given', { title, url, tags, folder })
     return searchString
   }
+  // Keep the original casing intact. Fuzzy search relies on searchString
+  // to generate highlighted snippets for the UI, so we compute
+  // searchStringLower separately when building the data model.
   if (title && !title.toLowerCase().includes(url.toLowerCase())) {
     searchString += title + separator + url
   } else {
