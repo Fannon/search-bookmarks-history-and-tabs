@@ -31,6 +31,7 @@
 - Write imperative, descriptive commits (e.g. `Add Jest unit testing setup and initial tests`).
 - Reference related issues, include context, and attach screenshots or GIFs for visual changes.
 - Run lint, Jest, and Cypress locally before opening or updating a PR.
+- Always run `npm run lint` and `npm run test:unit` before committing code.
 
 ## Security & Configuration Tips
 
