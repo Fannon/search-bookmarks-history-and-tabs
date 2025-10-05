@@ -47,7 +47,13 @@ jobs:
       - name: Lint
         run: npm run lint
       - name: Run Unit Tests
-        run: npm run test:unit
+        run: npm run test:unit -- --coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-report
+          path: test-results/
+          retention-days: 30
       - name: Save build folder
         uses: actions/upload-artifact@v4
         with:
@@ -74,6 +80,14 @@ jobs:
           cache: 'npm'
       - name: Install Dependencies
         run: npm set cache ~/.npm && npm ci
+      - name: Cache Playwright Browsers
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run Playwright tests
