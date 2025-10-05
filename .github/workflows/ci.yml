@@ -181,7 +181,6 @@ jobs:
         with:
           browser: edge
           # build: npm run build
-          install: false
           start: npm start
           wait-on: http://localhost:8080
       - name: Upload screenshots
