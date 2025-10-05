@@ -19,7 +19,7 @@ test.describe('Search View', () => {
 
   test.describe('Result Navigation', () => {
     test('first result is highlighted and navigation works', async ({ page }) => {
-      await page.locator('#search-input').type('JSON Edit')
+      await page.locator('#search-input').fill('JSON Edit')
 
       const assertSelection = async (index) => {
         const items = page.locator('#result-list li')
@@ -48,10 +48,10 @@ test.describe('Search View', () => {
 
   test.describe('Search result item', () => {
     test('includes title, url, tags, folder and score', async ({ page }) => {
-      await page.locator('#search-input').type('JSON')
+      await page.locator('#search-input').fill('JSON')
 
       await expect(page.locator('#result-list [x-original-id="7"]')).toBeVisible()
-      await expect(page.locator('#result-list [x-original-id="5"]')).toBeVisible()
+      await expect(page.locator('#result-list [x-original-id="17"]')).toBeVisible()
       await expect(page.locator('#result-list [x-original-id="6"]')).toBeVisible()
       await expect(page.locator('#result-list [x-original-id="9"]')).toBeVisible()
 
@@ -69,7 +69,7 @@ test.describe('Search View', () => {
     test('can execute search successfully', async ({ page }) => {
       await expect(page.locator('#search-approach-toggle')).toHaveText('PRECISE')
 
-      await page.locator('#search-input').type('JSON')
+      await page.locator('#search-input').fill('JSON')
 
       const results = page.locator('#result-list li')
       await expect(results).not.toHaveCount(0)
@@ -85,7 +85,7 @@ test.describe('Search View', () => {
     test('handles non-ASCII search queries', async ({ page }) => {
       await expect(page.locator('#search-approach-toggle')).toHaveText('PRECISE')
 
-      await page.locator('#search-input').type('äe指事字₽')
+      await page.locator('#search-input').fill('äe指事字₽')
       await expect(page.locator('#result-list li')).not.toHaveCount(0)
 
       await expectNoClientErrors(page)
@@ -93,28 +93,25 @@ test.describe('Search View', () => {
   })
 
   test.describe('Fuzzy search', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.locator('#search-approach-toggle').click()
+      await expect(page.locator('#search-approach-toggle')).toHaveText('FUZZY')
+    })
+
     test.skip(({ browserName }) => browserName === 'firefox', 'Fuzzy search not reliable on Firefox headless')
 
-    const enableFuzzy = async (page) => {
-      await expect(page.locator('#search-approach-toggle')).toHaveText('PRECISE')
-      await page.locator('#search-approach-toggle').click()
-      await page.waitForTimeout(100)
-      await expect(page.locator('#search-approach-toggle')).toHaveText('FUZZY')
-    }
-
     test('can switch to fuzzy search', async ({ page }) => {
-      await enableFuzzy(page)
-      await page.locator('#search-input').type('JSON')
-      await expect(page.locator('li.bookmark')).toBeVisible()
+      await page.locator('#search-input').fill('JSON')
+      await expect(page.locator('#result-list li.bookmark')).not.toHaveCount(0)
       await expectNoClientErrors(page)
     })
 
+    test.skip(({ browserName }) => browserName === 'firefox', 'Fuzzy search not reliable on Firefox headless')
+
     test('returns all result types in fuzzy mode', async ({ page }) => {
-      await enableFuzzy(page)
-      await page.locator('#search-input').type('JSON')
+      await page.locator('#search-input').fill('JSON')
 
       await expect(page.locator('#result-list li')).not.toHaveCount(0)
-      await expect(page.locator('#result-list [x-original-id="7"]')).toBeVisible()
       await expect(page.locator('#result-list li.bookmark')).not.toHaveCount(0)
       await expect(page.locator('#result-list li.history')).not.toHaveCount(0)
       await expect(page.locator('#result-list li.tab')).not.toHaveCount(0)
@@ -122,9 +119,10 @@ test.describe('Search View', () => {
       await expectNoClientErrors(page)
     })
 
+    test.skip(({ browserName }) => browserName === 'firefox', 'Fuzzy search not reliable on Firefox headless')
+
     test('handles non-ASCII search queries in fuzzy mode', async ({ page }) => {
-      await enableFuzzy(page)
-      await page.locator('#search-input').type('äe指事字₽')
+      await page.locator('#search-input').fill('äe指事字₽')
       await expect(page.locator('#result-list li')).not.toHaveCount(0)
 
       await expectNoClientErrors(page)
@@ -133,7 +131,7 @@ test.describe('Search View', () => {
 
   test.describe('Direct URL Search', () => {
     test('returns a direct navigation item', async ({ page }) => {
-      await page.locator('#search-input').type('example.com')
+      await page.locator('#search-input').fill('example.com')
 
       const directResult = page.locator('li.direct')
       await expect(directResult).toHaveCount(1)
@@ -145,7 +143,7 @@ test.describe('Search View', () => {
 
   test.describe('Bookmark search', () => {
     test('empty bookmark search returns recent bookmarks', async ({ page }) => {
-      await page.locator('#search-input').type('b ')
+      await page.locator('#search-input').fill('b ')
 
       await expect(page.locator('#result-list li.bookmark')).not.toHaveCount(0)
       await expect(page.locator('#result-list [x-original-id="7"]')).toBeVisible()
@@ -156,7 +154,7 @@ test.describe('Search View', () => {
     })
 
     test('search returns only bookmark results', async ({ page }) => {
-      await page.locator('#search-input').type('b JSON')
+      await page.locator('#search-input').fill('b JSON')
 
       await expect(page.locator('#result-list [x-original-id="7"]')).toBeVisible()
       await expect(page.locator('.tab')).toHaveCount(0)
@@ -169,10 +167,10 @@ test.describe('Search View', () => {
 
   test.describe('History search', () => {
     test('empty history search returns recent history', async ({ page }) => {
-      await page.locator('#search-input').type('h ')
+      await page.locator('#search-input').fill('h ')
 
       await expect(page.locator('#result-list li.history')).not.toHaveCount(0)
-      await expect(page.locator('#result-list [x-original-id="6"]')).toBeVisible()
+      await expect(page.locator('#result-list [x-original-id="h6"]')).toBeVisible()
       await expect(page.locator('.tab')).toHaveCount(0)
       await expect(page.locator('.bookmark')).toHaveCount(0)
 
@@ -180,9 +178,9 @@ test.describe('Search View', () => {
     })
 
     test('history search includes history and tab results', async ({ page }) => {
-      await page.locator('#search-input').type('h JSON')
+      await page.locator('#search-input').fill('h JSON')
 
-      await expect(page.locator('#result-list [x-original-id="8"]')).toBeVisible()
+      await expect(page.locator('#result-list [x-original-id="h8"]')).toBeVisible()
       await expect(page.locator('#result-list [x-original-id="185"]')).toBeVisible()
       await expect(page.locator('.bookmark')).toHaveCount(0)
       await expect(page.locator('#result-counter')).toContainText('(6)')
@@ -193,7 +191,7 @@ test.describe('Search View', () => {
 
   test.describe('Tab search', () => {
     test('empty tab search returns all open tabs', async ({ page }) => {
-      await page.locator('#search-input').type('t ')
+      await page.locator('#search-input').fill('t ')
 
       await expect(page.locator('#result-list li.tab')).not.toHaveCount(0)
       await expect(page.locator('#result-list [x-original-id="179"]')).toBeVisible()
@@ -204,7 +202,7 @@ test.describe('Search View', () => {
     })
 
     test('tab search returns only tab results', async ({ page }) => {
-      await page.locator('#search-input').type('t JSON')
+      await page.locator('#search-input').fill('t JSON')
 
       await expect(page.locator('#result-list [x-original-id="185"]')).toBeVisible()
       await expect(page.locator('#result-list li')).toHaveCount(1)

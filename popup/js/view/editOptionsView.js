@@ -2,16 +2,12 @@
 // EDIT OPTIONS VIEW                    //
 //////////////////////////////////////////
 
-import { getUserOptions, setUserOptions } from '../model/options.js'
+import { getEffectiveOptions, setUserOptions } from '../model/options.js'
 
 export async function initOptions() {
-  const userOptions = await getUserOptions()
-  const userOptionsYaml = jsyaml.dump(userOptions)
-  if (userOptionsYaml.trim() === '{}') {
-    document.getElementById('user-config').value = ''
-  } else {
-    document.getElementById('user-config').value = userOptionsYaml
-  }
+  const effectiveOptions = await getEffectiveOptions()
+  const yaml = window.jsyaml.dump(effectiveOptions)
+  document.getElementById('user-config').value = yaml || 'searchStrategy: precise\n'
   document.getElementById('edit-options-reset').addEventListener('click', resetOptions)
   document.getElementById('edit-options-save').addEventListener('click', saveOptions)
 }
@@ -19,8 +15,8 @@ export async function initOptions() {
 async function saveOptions() {
   const userOptionsString = document.getElementById('user-config').value
   try {
-    const userOptions = jsyaml.load(userOptionsString)
-    document.getElementById('user-config').value = jsyaml.dump(userOptions)
+    const userOptions = window.jsyaml.load(userOptionsString)
+    document.getElementById('user-config').value = window.jsyaml.dump(userOptions)
     await setUserOptions(userOptions)
     window.location.href = './index.html#search/'
   } catch (e) {
