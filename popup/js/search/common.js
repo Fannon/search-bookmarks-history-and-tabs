@@ -224,9 +224,19 @@ export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode
  * @param sortMode: "score" | "lastVisited"
  */
 export function calculateFinalScore(results, searchTerm) {
+  const now = Date.now()
+  const hasSearchTerm = Boolean(ext.model.searchTerm)
+  const searchTermParts = hasSearchTerm ? searchTerm.split(' ') : []
+  const hyphenatedSearchTerm = hasSearchTerm ? searchTermParts.join('-') : ''
+  const tagTerms = hasSearchTerm ? searchTerm.split('#').join('').split(' ') : []
+  const folderTerms = hasSearchTerm ? searchTerm.split('~').join('').split(' ') : []
+  const canCheckIncludes =
+    hasSearchTerm &&
+    ext.opts.scoreExactIncludesBonus &&
+    searchTerm.length >= ext.opts.scoreExactIncludesBonusMinChars
+
   for (let i = 0; i < results.length; i++) {
     const el = results[i]
-    const now = Date.now()
     let score
 
     // Decide which base Score to chose
@@ -255,61 +265,64 @@ export function calculateFinalScore(results, searchTerm) {
       score += el.customBonusScore
     }
 
-    if (ext.model.searchTerm) {
+    if (hasSearchTerm) {
+      const lowerTitle = el.title ? el.title.toLowerCase() : null
+      const lowerTags = canCheckIncludes && el.tags ? el.tags.toLowerCase() : null
+      const lowerFolderName = canCheckIncludes && el.folderName ? el.folderName.toLowerCase() : null
+
       // Increase score if we have exact "startsWith" match in title or url
       if (ext.opts.scoreExactStartsWithBonus) {
-        if (el.title && el.title.toLowerCase().startsWith(searchTerm)) {
+        if (lowerTitle && lowerTitle.startsWith(searchTerm)) {
           score += ext.opts.scoreExactStartsWithBonus * ext.opts.scoreTitleWeight
-        } else if (el.url.startsWith(searchTerm.split(' ').join('-'))) {
+        } else if (el.url.startsWith(hyphenatedSearchTerm)) {
           score += ext.opts.scoreExactStartsWithBonus * ext.opts.scoreUrlWeight
         }
       }
 
       // Increase score if we have an exact equal match in the title
-      if (ext.opts.scoreExactEqualsBonus && el.title && el.title.toLowerCase() === searchTerm) {
+      if (ext.opts.scoreExactEqualsBonus && lowerTitle && lowerTitle === searchTerm) {
         score += ext.opts.scoreExactEqualsBonus * ext.opts.scoreTitleWeight
       }
 
       // Increase score if we have an exact tag match
-      if (ext.opts.scoreExactTagMatchBonus && el.tags) {
-        let searchTermTags = searchTerm.split('#').join('').split(' ')
-        searchTermTags.forEach((tag) => {
-          el.tagsArray.map((el) => {
-            if (tag === el.toLowerCase()) {
+      if (ext.opts.scoreExactTagMatchBonus && el.tags && tagTerms.length) {
+        const lowerTagValues = el.tagsArray.map((tagValue) => tagValue.toLowerCase())
+        for (const tag of tagTerms) {
+          for (const tagValue of lowerTagValues) {
+            if (tag === tagValue) {
               score += ext.opts.scoreExactTagMatchBonus
             }
-          })
-        })
+          }
+        }
       }
 
       // Increase score if we have an exact folder name match
-      if (ext.opts.scoreExactFolderMatchBonus && el.folder) {
-        let searchTermFolders = searchTerm.split('~').join('').split(' ')
-        searchTermFolders.forEach((folderName) => {
-          el.folderArray.map((el) => {
-            if (folderName === el.toLowerCase()) {
+      if (ext.opts.scoreExactFolderMatchBonus && el.folder && folderTerms.length) {
+        const lowerFolderValues = el.folderArray.map((folderValue) => folderValue.toLowerCase())
+        for (const folderName of folderTerms) {
+          for (const folderValue of lowerFolderValues) {
+            if (folderName === folderValue) {
               score += ext.opts.scoreExactFolderMatchBonus
             }
-          })
-        })
+          }
+        }
       }
 
       // Increase score if we have an exact "includes" match
-      if (ext.opts.scoreExactIncludesBonus && searchTerm.length >= ext.opts.scoreExactIncludesBonusMinChars) {
-        // Treat each search term separated by a space individually
-        searchTerm.split(' ').forEach((term) => {
+      if (canCheckIncludes) {
+        for (const term of searchTermParts) {
           if (term && term.length >= ext.opts.scoreExactIncludesBonusMinChars) {
-            if (el.title && el.title.toLowerCase().includes(term)) {
+            if (lowerTitle && lowerTitle.includes(term)) {
               score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTitleWeight
-            } else if (el.url && el.url.includes(searchTerm.split(' ').join('-'))) {
+            } else if (el.url && el.url.includes(hyphenatedSearchTerm)) {
               score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreUrlWeight
-            } else if (el.tags && el.tags.toLowerCase().includes(searchTerm)) {
+            } else if (lowerTags && lowerTags.includes(searchTerm)) {
               score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTagWeight
-            } else if (el.folderName && el.folderName.toLowerCase().includes(searchTerm)) {
+            } else if (lowerFolderName && lowerFolderName.includes(searchTerm)) {
               score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreFolderWeight
             }
           }
-        })
+        }
       }
     }
 
@@ -338,6 +351,7 @@ export function calculateFinalScore(results, searchTerm) {
 
   return results
 }
+
 
 /**
  * Sorts the results according to some modes

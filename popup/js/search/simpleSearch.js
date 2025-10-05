@@ -16,6 +16,15 @@ export function resetSimpleSearchState(searchMode) {
   }
 }
 
+function prepareSearchData(data) {
+  return data.map((entry) => {
+    if (!entry.searchStringLower) {
+      entry.searchStringLower = entry.searchString.toLowerCase()
+    }
+    return entry
+  })
+}
+
 export function simpleSearch(searchMode, searchTerm) {
   if (searchMode === 'history') {
     return [...simpleSearchWithScoring(searchTerm, 'tabs'), ...simpleSearchWithScoring(searchTerm, 'history')]
@@ -45,14 +54,14 @@ function simpleSearchWithScoring(searchTerm, searchMode) {
 
   if (!state[searchMode]) {
     state[searchMode] = {
-      cachedData: [...data],
+      cachedData: prepareSearchData(data),
     }
   }
   const s = state[searchMode]
 
   // Invalidate s.cachedData if the new search term is not just an extension of the last one
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
-    s.cachedData = [...data]
+    s.cachedData = prepareSearchData(data)
   }
 
   if (!s.cachedData.length) {
