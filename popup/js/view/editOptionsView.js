@@ -6,7 +6,7 @@ import { getUserOptions, setUserOptions } from '../model/options.js'
 
 export async function initOptions() {
   const userOptions = await getUserOptions()
-  const userOptionsYaml = jsyaml.dump(userOptions)
+  const userOptionsYaml = window.jsyaml.dump(userOptions)
   if (userOptionsYaml.trim() === '{}') {
     document.getElementById('user-config').value = ''
   } else {
@@ -19,8 +19,8 @@ export async function initOptions() {
 async function saveOptions() {
   const userOptionsString = document.getElementById('user-config').value
   try {
-    const userOptions = jsyaml.load(userOptionsString)
-    document.getElementById('user-config').value = jsyaml.dump(userOptions)
+    const userOptions = window.jsyaml.load(userOptionsString)
+    document.getElementById('user-config').value = window.jsyaml.dump(userOptions)
     await setUserOptions(userOptions)
     window.location.href = './index.html#search/'
   } catch (e) {

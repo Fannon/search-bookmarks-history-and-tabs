@@ -1,20 +1,11 @@
 import js from '@eslint/js'
-import pluginCypress from 'eslint-plugin-cypress'
 import globals from 'globals'
 
 export default [
   {
-    ignores: ['popup/lib/**.*', '/reports/*'],
+    ignores: ['popup/lib/**.*', '/reports/*', 'playwright/**/*'],
   },
   js.configs.recommended,
-  {
-    plugins: {
-      cypress: pluginCypress,
-    },
-    rules: {
-      'cypress/unsafe-to-chain-command': 'error',
-    },
-  },
   {
     files: ['popup/js/**/*.js'],
   },
@@ -25,13 +16,12 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.es2021,
-        'cypress/globals': true,
-        'module': 'writable',
-        'ext': 'writable',
-        'Tagify': 'readonly',
-        'Mark': 'readonly',
-        'jsyaml': 'readonly',
-        'uFuzzy': 'readonly',
+        module: 'writable',
+        ext: 'writable',
+        Tagify: 'readonly',
+        Mark: 'readonly',
+        jsyaml: 'readonly',
+        uFuzzy: 'readonly',
       },
     },
     rules: {
