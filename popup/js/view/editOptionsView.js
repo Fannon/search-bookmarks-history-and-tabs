@@ -2,12 +2,16 @@
 // EDIT OPTIONS VIEW                    //
 //////////////////////////////////////////
 
-import { getEffectiveOptions, setUserOptions } from '../model/options.js'
+import { getUserOptions, setUserOptions } from '../model/options.js'
 
 export async function initOptions() {
-  const effectiveOptions = await getEffectiveOptions()
-  const yaml = window.jsyaml.dump(effectiveOptions)
-  document.getElementById('user-config').value = yaml || 'searchStrategy: precise\n'
+  const userOptions = await getUserOptions()
+  const userOptionsYaml = window.jsyaml.dump(userOptions)
+  if (userOptionsYaml.trim() === '{}') {
+    document.getElementById('user-config').value = ''
+  } else {
+    document.getElementById('user-config').value = userOptionsYaml
+  }
   document.getElementById('edit-options-reset').addEventListener('click', resetOptions)
   document.getElementById('edit-options-save').addEventListener('click', saveOptions)
 }
