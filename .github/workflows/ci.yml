@@ -62,7 +62,7 @@ jobs:
           if-no-files-found: error
 
   playwright-test:
-    name: E2E Testing (Playwright)
+    name: E2E Test
     runs-on: ubuntu-latest
     needs: build
     steps:
