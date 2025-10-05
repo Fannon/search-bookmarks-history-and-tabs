@@ -210,6 +210,7 @@ The built extensions can be found in [dist/chrome/](dist/chrome/).
   - `npm run build` for a complete build
   - `npm run start` to start the extension locally in a browser (with mock data)
   - `npm run test` to run end to end tests
+  - `npm run test:unit` to run Jest unit tests
   - for more, see `npm run`
 - See also: [.github/copilot-instructions.md](./.github\copilot-instructions.md)
 
@@ -228,3 +229,4 @@ This extension makes use of the following helpful open-source projects (thanks!)
 
 > Please create a [GitHub issue](https://github.com/Fannon/search-tabs-bookmarks-and-history/issues) to give your feedback.
 > All ideas, suggestions or bug reports are welcome.
+
