@@ -16,11 +16,11 @@ const baseExtOptions = {
 }
 
 beforeEach(() => {
-  global.ext = { opts: { ...baseExtOptions } }
+  globalThis.ext = { opts: { ...baseExtOptions } }
 })
 
 afterEach(() => {
-  delete global.ext
+  delete globalThis.ext
   jest.restoreAllMocks()
 })
 
