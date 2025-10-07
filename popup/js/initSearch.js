@@ -64,7 +64,7 @@ export async function initExtension() {
 
   if (ext.opts.debug) {
     performance.mark('init-start')
-    console.debug('Initialized with options', ext.opts)
+    console.debug('Initialized with options:', ext.opts)
   }
 
   // HTML Element selectors

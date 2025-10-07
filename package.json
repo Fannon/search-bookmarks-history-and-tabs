@@ -13,6 +13,7 @@
   "devDependencies": {
     "@jest/globals": "^30.2.0",
     "@playwright/test": "^1.55.1",
+    "esbuild": "^0.25.10",
     "eslint": "^9.37.0",
     "fs-extra": "^11.3.2",
     "globals": "^16.4.0",
@@ -22,7 +23,8 @@
   },
   "scripts": {
     "clean": "node bin/clean.js",
-    "build": "npm run clean && npm run update-libs && npm run update-manifests && npm run create-dist && npm run size",
+    "build": "npm run clean && npm run update-libs && npm run build:bundle && npm run update-manifests && npm run create-dist && npm run size",
+    "build:bundle": "node bin/bundleInitSearch.js",
     "update-libs": "bash bin/updateLibs.sh",
     "create-dist": "bash bin/createDist.sh",
     "update-manifests": "node bin/updateManifests.js",
