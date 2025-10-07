@@ -124,7 +124,11 @@ export async function search(event) {
         ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
       }
 
-      if (ext.opts.enableDirectUrl && urlRegex.test(searchTerm)) {
+      if (
+        ext.opts.enableDirectUrl &&
+        urlRegex.test(searchTerm) &&
+        ext.model.result.length < ext.opts.searchMaxResults
+      ) {
         const url = protocolRegex.test(searchTerm) ? searchTerm : `https://${searchTerm.replace(/^\/+/, '')}`
         ext.model.result.push({
           type: 'direct',
@@ -231,9 +235,7 @@ export function calculateFinalScore(results, searchTerm) {
   const tagTerms = hasSearchTerm ? searchTerm.split('#').join('').split(' ') : []
   const folderTerms = hasSearchTerm ? searchTerm.split('~').join('').split(' ') : []
   const canCheckIncludes =
-    hasSearchTerm &&
-    ext.opts.scoreExactIncludesBonus &&
-    searchTerm.length >= ext.opts.scoreExactIncludesBonusMinChars
+    hasSearchTerm && ext.opts.scoreExactIncludesBonus && searchTerm.length >= ext.opts.scoreExactIncludesBonusMinChars
 
   for (let i = 0; i < results.length; i++) {
     const el = results[i]
@@ -351,7 +353,6 @@ export function calculateFinalScore(results, searchTerm) {
 
   return results
 }
-
 
 /**
  * Sorts the results according to some modes

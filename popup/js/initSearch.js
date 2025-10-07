@@ -86,7 +86,13 @@ export async function initExtension() {
   document.addEventListener('keydown', navigationKeyListener)
   window.addEventListener('hashchange', hashRouter, false)
   ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
-  ext.dom.searchInput.addEventListener('input', search)
+  // Add debounced search to prevent excessive calls on rapid typing
+  let searchTimeout = null
+  const debouncedSearch = (event) => {
+    clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => search(event), ext.opts.searchDebounceMs || 100)
+  }
+  ext.dom.searchInput.addEventListener('input', debouncedSearch)
 
   // Display default entries
   await addDefaultEntries()

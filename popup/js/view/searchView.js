@@ -154,14 +154,15 @@ export async function renderSearchResults(result) {
       e.preventDefault() // Disable right mouse context menu
     })
 
+    // Post-render highlighting using mark.js for entries that don't have pre-computed highlighting
     if (ext.opts.displaySearchMatchHighlight && ext.model.searchTerm) {
-      // Use mark.js to highlight search results, if we don't have already done before in fuzzy search
       if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
         if (!markLoaded) {
           await loadScript('./lib/mark.es6.min.js')
           markLoaded = true
           console.debug('Loaded mark.js for highlighting search results')
         }
+        // eslint-disable-next-line no-undef
         const mark = new Mark(resultListItem)
         mark.mark(ext.model.searchTerm)
       }
