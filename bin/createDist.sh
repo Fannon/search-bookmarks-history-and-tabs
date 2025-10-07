@@ -21,6 +21,10 @@ cp -r popup/ dist/chrome/popup/
 # Remove mock data
 rm -rf dist/chrome/popup/mockData
 
+# Remove unit test artifacts from the distribution
+find dist/chrome/popup -type d -name '__tests__' -exec rm -rf {} +
+find dist/chrome/popup -type f -name '*.test.js' -delete
+
 # Zip dist files for upload to browser stores
 
 if hash 7z 2>/dev/null; then
