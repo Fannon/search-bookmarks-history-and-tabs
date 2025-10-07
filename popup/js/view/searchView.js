@@ -2,14 +2,15 @@
 // SEARCH VIEW                          //
 //////////////////////////////////////////
 
-import { timeSince } from '../helper/utils.js'
+import { loadScript, timeSince } from '../helper/utils.js'
 import { getUserOptions, setUserOptions } from '../model/options.js'
 import { search } from '../search/common.js'
+let markLoaded = false
 
 /**
  * Render the search results in UI as result items
  */
-export function renderSearchResults(result) {
+export async function renderSearchResults(result) {
   result = result || ext.model.result
 
   ext.model.mouseHoverEnabled = false
@@ -155,11 +156,14 @@ export function renderSearchResults(result) {
 
     if (ext.opts.displaySearchMatchHighlight && ext.model.searchTerm) {
       // Use mark.js to highlight search results, if we don't have already done before in fuzzy search
-      // Load mark.js only when needed
-
       if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
-        const markInstance = new Mark(resultListItem)
-        markInstance.mark(ext.model.searchTerm)
+        if (!markLoaded) {
+          await loadScript('./lib/mark.es6.min.js')
+          markLoaded = true
+          console.debug('Loaded mark.js for highlighting search results')
+        }
+        const mark = new Mark(resultListItem)
+        mark.mark(ext.model.searchTerm)
       }
     }
     resultListItems.push(resultListItem)

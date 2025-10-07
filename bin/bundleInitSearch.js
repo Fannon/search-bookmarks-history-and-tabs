@@ -23,6 +23,7 @@ async function bundleInitSearch() {
     format: 'iife',
     globalName: 'searchPopup',
     outfile: outputFile,
+    external: ['../lib/mark.es6.min.js', './lib/mark.es6.min.js'],
     logLevel: 'info',
   })
 
