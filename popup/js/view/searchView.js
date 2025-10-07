@@ -155,6 +155,8 @@ export function renderSearchResults(result) {
 
     if (ext.opts.displaySearchMatchHighlight && ext.model.searchTerm) {
       // Use mark.js to highlight search results, if we don't have already done before in fuzzy search
+      // Load mark.js only when needed
+
       if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
         const markInstance = new Mark(resultListItem)
         markInstance.mark(ext.model.searchTerm)

@@ -37,7 +37,8 @@
     "eslint": "eslint ./popup/js/",
     "start": "serve -p 8080 ./popup/",
     "size": "du -hc ./dist/chrome/",
-    "test:unit": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js"
+    "test:unit": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "test:entrypoints": "node bin/testEntrypoints.js"
   },
   "repository": {
     "type": "git",
