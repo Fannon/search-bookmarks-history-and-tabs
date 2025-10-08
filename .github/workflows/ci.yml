@@ -101,6 +101,8 @@ jobs:
         run: npm run test:e2e:chromium
       - name: Test Firefox
         run: npm run test:e2e:firefox
+      - name: Test Edge
+        run: npm run test:e2e:edge
       - uses: actions/upload-artifact@v4
         if: always()
         with:
