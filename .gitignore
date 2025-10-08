@@ -44,4 +44,5 @@ jspm_packages/
 
 # Temporary files
 temp/
-popup/js/initSearch.bundle.min.js
+.wireit/
+popup/js/*.bundle.min.js

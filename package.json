@@ -13,32 +13,113 @@
   "devDependencies": {
     "@jest/globals": "^30.2.0",
     "@playwright/test": "^1.55.1",
+    "archiver": "^7.0.1",
     "esbuild": "^0.25.10",
     "eslint": "^9.37.0",
     "fs-extra": "^11.3.2",
     "globals": "^16.4.0",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
-    "serve": "^14.2.5"
+    "serve": "^14.2.5",
+    "wireit": "^0.14.12"
   },
   "scripts": {
-    "clean": "node bin/clean.js",
-    "build": "npm run clean && npm run update-libs && npm run build:bundle && npm run update-manifests && npm run create-dist && npm run size",
-    "build:bundle": "node bin/bundleInitSearch.js",
-    "update-libs": "bash bin/updateLibs.sh",
-    "create-dist": "bash bin/createDist.sh",
-    "update-manifests": "node bin/updateManifests.js",
-    "test": "npm run test:unit",
-    "test:e2e": "playwright test",
-    "test:e2e:chrome": "playwright test --project=chromium",
-    "test:e2e:firefox": "playwright test --project=firefox",
-    "test:e2e:edge": "playwright test --project=edge",
-    "lint": "npm run eslint",
-    "eslint": "eslint ./popup/js/",
+    "clean": "wireit",
+    "build": "wireit",
+    "build:bundle": "wireit",
+    "update-libs": "wireit",
+    "create-dist": "wireit",
+    "update-manifests": "wireit",
+    "test": "wireit",
+    "test:e2e": "wireit",
+    "test:e2e:chrome": "wireit",
+    "test:e2e:firefox": "wireit",
+    "test:e2e:edge": "wireit",
+    "lint": "wireit",
+    "eslint": "wireit",
     "start": "serve -p 8080 ./popup/",
-    "size": "du -hc ./dist/chrome/",
-    "test:unit": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
-    "test:entrypoints": "node bin/testEntrypoints.js"
+    "size": "wireit",
+    "test:unit": "wireit",
+    "test:entrypoints": "wireit"
+  },
+  "wireit": {
+    "clean": {
+      "command": "node bin/clean.js"
+    },
+    "update-libs": {
+      "command": "node bin/updateLibs.js",
+      "dependencies": [
+        "clean"
+      ]
+    },
+    "update-manifests": {
+      "command": "node bin/updateManifests.js",
+      "dependencies": [
+        "clean"
+      ]
+    },
+    "build:bundle": {
+      "command": "node bin/bundle.js",
+      "dependencies": [
+        "update-libs"
+      ]
+    },
+    "create-dist": {
+      "command": "node bin/createDist.js",
+      "dependencies": [
+        "update-libs",
+        "build:bundle",
+        "update-manifests"
+      ]
+    },
+    "size": {
+      "command": "du -hc ./dist/chrome/",
+      "dependencies": [
+        "create-dist"
+      ]
+    },
+    "build": {
+      "dependencies": [
+        "clean",
+        "size"
+      ]
+    },
+    "eslint": {
+      "command": "eslint ./popup/js/"
+    },
+    "lint": {
+      "dependencies": [
+        "eslint"
+      ]
+    },
+    "test:unit": {
+      "command": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js"
+    },
+    "test:e2e:chrome": {
+      "command": "playwright test --project=chromium"
+    },
+    "test:e2e:firefox": {
+      "command": "playwright test --project=firefox"
+    },
+    "test:e2e:edge": {
+      "command": "playwright test --project=edge"
+    },
+    "test:e2e": {
+      "dependencies": [
+        "test:e2e:chrome",
+        "test:e2e:firefox",
+        "test:e2e:edge"
+      ]
+    },
+    "test": {
+      "dependencies": [
+        "test:unit",
+        "test:e2e"
+      ]
+    },
+    "test:entrypoints": {
+      "command": "node bin/testEntrypoints.js"
+    }
   },
   "repository": {
     "type": "git",
