@@ -45,4 +45,5 @@ jspm_packages/
 # Temporary files
 temp/
 .wireit/
-popup/js/*.bundle.min.js
+
+popup/js/*.bundle.min.*
