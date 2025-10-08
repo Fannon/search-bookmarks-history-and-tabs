@@ -39,8 +39,7 @@
     "eslint": "wireit",
     "start": "serve -p 8080 ./popup/",
     "size": "wireit",
-    "test:unit": "wireit",
-    "test:entrypoints": "wireit"
+    "test:unit": "wireit"
   },
   "wireit": {
     "clean": {
@@ -116,9 +115,6 @@
         "test:unit",
         "test:e2e"
       ]
-    },
-    "test:entrypoints": {
-      "command": "node bin/testEntrypoints.js"
     }
   },
   "repository": {
