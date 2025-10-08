@@ -1,4 +1,4 @@
-import { printError } from './helper/utils.js'
+import { loadScript, printError } from './helper/utils.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { search } from './search/common.js'
@@ -118,6 +118,10 @@ export async function initExtension() {
   }
 
   search()
+
+  // Lazy load mark.js for highlighting search results after init phase
+  await loadScript('./lib/mark.es6.min.js')
+  console.debug('Loaded mark.js for highlighting search results')
 }
 
 //////////////////////////////////////////
