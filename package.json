@@ -27,9 +27,9 @@
     "clean": "wireit",
     "build": "wireit",
     "build:bundle": "wireit",
-    "update-libs": "wireit",
-    "create-dist": "wireit",
-    "update-manifests": "wireit",
+    "build:update-libs": "wireit",
+    "build:create-dist": "wireit",
+    "build:update-manifests": "wireit",
     "test": "wireit",
     "test:e2e": "wireit",
     "test:e2e:chrome": "wireit",
@@ -46,13 +46,13 @@
     "clean": {
       "command": "node bin/clean.js"
     },
-    "update-libs": {
+    "build:update-libs": {
       "command": "node bin/updateLibs.js",
       "dependencies": [
         "clean"
       ]
     },
-    "update-manifests": {
+    "build:update-manifests": {
       "command": "node bin/updateManifests.js",
       "dependencies": [
         "clean"
@@ -61,21 +61,21 @@
     "build:bundle": {
       "command": "node bin/bundle.js",
       "dependencies": [
-        "update-libs"
+        "build:update-libs"
       ]
     },
-    "create-dist": {
+    "build:create-dist": {
       "command": "node bin/createDist.js",
       "dependencies": [
-        "update-libs",
+        "build:update-libs",
         "build:bundle",
-        "update-manifests"
+        "build:update-manifests"
       ]
     },
     "size": {
       "command": "du -hc ./dist/chrome/",
       "dependencies": [
-        "create-dist"
+        "build:create-dist"
       ]
     },
     "build": {

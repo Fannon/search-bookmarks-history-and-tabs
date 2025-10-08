@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
-import * as fs from 'fs-extra'
+import fs from 'fs-extra'
 import { createWriteStream } from 'fs'
 import { join } from 'path'
 import archiver from 'archiver'
 
+/**
+ * Build the Chrome distribution directory and accompanying archive.
+ */
 async function createDist() {
   // Remove and create directories
   await fs.remove('dist')
@@ -21,33 +24,17 @@ async function createDist() {
   // Copy popup directory
   await fs.copy('popup/', 'dist/chrome/popup/', { recursive: true })
 
+  await modifyHtmlFile('dist/chrome/popup/options.html')
+  await modifyHtmlFile('dist/chrome/popup/index.html')
+
   // Remove mock data and test artifacts
   await fs.remove('dist/chrome/popup/mockData')
 
-  // Remove test directories and files
-  async function removeTestArtifacts(dir) {
-    try {
-      const entries = await fs.readdir(dir, { withFileTypes: true })
-      for (const entry of entries) {
-        const fullPath = join(dir, entry.name)
-        if (entry.isDirectory()) {
-          if (entry.name === '__tests__') {
-            await fs.remove(fullPath)
-          } else {
-            await removeTestArtifacts(fullPath)
-          }
-        } else if (entry.isFile() && entry.name.endsWith('.test.js')) {
-          await fs.remove(fullPath)
-        }
-      }
-      // eslint-disable-next-line no-unused-vars
-    } catch (ignore) {
-      // Ignore errors if dir doesn't exist
-    }
-  }
+  await removeBundledJs('dist/chrome/popup/js')
 
   const popupDir = 'dist/chrome/popup'
   await removeTestArtifacts(popupDir)
+  console.info(`Created dist/chrome/`)
 
   // Create zip archive
   const archive = archiver('zip', { zlib: { level: 9 } })
@@ -73,3 +60,76 @@ createDist().catch((error) => {
   // eslint-disable-next-line no-undef
   process.exit(1)
 })
+
+/**
+ * Recursively delete non-bundled JavaScript files beneath a directory.
+ * @param {string} dir Path to inspect for removable files.
+ * @returns {Promise<void>}
+ */
+async function removeBundledJs(dir) {
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true })
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        await removeBundledJs(fullPath)
+        const remaining = await fs.readdir(fullPath)
+        if (!remaining.length) {
+          await fs.remove(fullPath)
+        }
+      } else if (entry.isFile() && entry.name.endsWith('.js') && !entry.name.endsWith('.bundle.min.js')) {
+        await fs.remove(fullPath)
+      }
+    }
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error
+    }
+  }
+}
+
+/**
+ * Remove test artifacts such as __tests__ directories and *.test.js files.
+ * @param {string} dir Directory to traverse while pruning test files.
+ * @returns {Promise<void>}
+ */
+async function removeTestArtifacts(dir) {
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true })
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        if (entry.name === '__tests__') {
+          await fs.remove(fullPath)
+        } else {
+          await removeTestArtifacts(fullPath)
+        }
+      } else if (entry.isFile() && entry.name.endsWith('.test.js')) {
+        await fs.remove(fullPath)
+      }
+    }
+    // eslint-disable-next-line no-unused-vars
+  } catch (ignore) {
+    // Ignore errors if dir doesn't exist
+  }
+}
+
+/**
+ * Swap development script tags with production bundles in an HTML file.
+ * @param {string} filePath HTML file to update.
+ * @returns {Promise<void>}
+ */
+async function modifyHtmlFile(filePath) {
+  const content = await fs.readFile(filePath, 'utf8')
+  let modified = content
+    .replace(
+      '<script defer type="module" src="./js/initOptions.js"></script>',
+      '<script defer src="./js/initOptions.bundle.min.js"></script>',
+    )
+    .replace(
+      '<script defer type="module" src="./js/initSearch.js"></script>',
+      '<script defer src="./js/initSearch.bundle.min.js"></script>',
+    )
+
+  await fs.writeFile(filePath, modified, 'utf8')
+}
