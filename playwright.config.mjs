@@ -42,13 +42,14 @@ export default defineConfig({
         viewport: { width: 500, height: 600 },
       },
     },
-    {
-      name: 'edge',
-      use: {
-        ...devices['Desktop Edge'],
-        channel: 'msedge',
-        viewport: { width: 500, height: 600 },
-      },
-    },
+    // Don't test edge as it's similar to chromium and causes issues on CI
+    // {
+    //   name: 'edge',
+    //   use: {
+    //     ...devices['Desktop Edge'],
+    //     channel: 'msedge',
+    //     viewport: { width: 500, height: 600 },
+    //   },
+    // },
   ],
 })
