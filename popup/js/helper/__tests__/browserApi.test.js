@@ -50,6 +50,7 @@ describe('convertBrowserTabs', () => {
       active: true,
       windowId: 3,
       searchString: 'Example¦example.com/path',
+      searchStringLower: 'example¦example.com/path',
     })
     expect(tab.lastVisitSecondsAgo).toBe(1)
   })
@@ -133,6 +134,7 @@ describe('convertBrowserBookmarks', () => {
       folder: '~Root ~Parent folder ~Work',
       folderArray: ['Root', 'Parent folder', 'Work'],
       searchString: 'Example¦example.com¦#tag1 #tag2¦~Root ~Parent folder ~Work',
+      searchStringLower: 'example¦example.com¦#tag1 #tag2¦~root ~parent folder ~work',
     })
   })
 
@@ -192,6 +194,7 @@ describe('convertBrowserHistory', () => {
       visitCount: 3,
       lastVisitSecondsAgo: 1,
       searchString: 'Keep¦keep.example.com/page',
+      searchStringLower: 'keep¦keep.example.com/page',
     })
   })
 })

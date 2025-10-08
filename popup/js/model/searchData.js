@@ -9,6 +9,41 @@ import {
 } from '../helper/browserApi.js'
 
 /**
+ * Efficiently merges history data into bookmarks or tabs using lazy evaluation
+ * Only creates new objects when there are actual history matches to merge
+ * @param {Array} items - Array of bookmarks or tabs
+ * @param {Map} historyMap - Map of URL to history item
+ * @returns {Array} - Merged array with history data
+ */
+function mergeHistoryLazily(items, historyMap) {
+  if (!items.length) return items
+
+  let hasMerged = false
+  const result = new Array(items.length)
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]
+    const historyEntry = historyMap.get(item.originalUrl)
+
+    if (historyEntry) {
+      // Only merge and mark as changed when we find a history match
+      historyMap.delete(item.originalUrl)
+      result[i] = {
+        ...historyEntry,
+        ...item,
+      }
+      hasMerged = true
+    } else {
+      // Keep original item unchanged
+      result[i] = item
+    }
+  }
+
+  // Only return new array if we actually merged something, otherwise return original
+  return hasMerged ? result : items
+}
+
+/**
  * Gets the actual data that we search through
  *
  * Merges and removes some items (e.g. duplicates) before they are indexed
@@ -73,37 +108,12 @@ export async function getSearchData() {
       }
 
       // Build maps with URL as key, so we have fast hashmap access
-      const historyMap = result.history.reduce(
-        (obj, item, index) => ((obj[item.originalUrl] = { ...item, index }), obj),
-        {},
-      )
-      // merge history into bookmarks
-      result.bookmarks = result.bookmarks.map((el) => {
-        if (historyMap[el.originalUrl]) {
-          delete result.history[historyMap[el.originalUrl].index]
-          return {
-            ...historyMap[el.originalUrl],
-            ...el,
-          }
-        } else {
-          return el
-        }
-      })
+      const historyMap = new Map(result.history.map((item) => [item.originalUrl, item]))
 
-      // merge history into open tabs
-      result.tabs = result.tabs.map((el) => {
-        if (historyMap[el.originalUrl]) {
-          delete result.history[historyMap[el.originalUrl].index]
-          return {
-            ...historyMap[el.originalUrl],
-            ...el,
-          }
-        } else {
-          return el
-        }
-      })
+      result.bookmarks = mergeHistoryLazily(result.bookmarks, historyMap)
+      result.tabs = mergeHistoryLazily(result.tabs, historyMap)
 
-      result.history = result.history.filter((el) => el)
+      result.history = Array.from(historyMap.values())
     }
   }
   if (ext.opts.debug) {

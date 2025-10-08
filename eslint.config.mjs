@@ -3,7 +3,7 @@ import globals from 'globals'
 
 export default [
   {
-    ignores: ['popup/lib/**.*', '/reports/*', 'playwright/**/*'],
+    ignores: ['popup/lib/**.*', '/reports/*', 'playwright/**/*', 'popup/js/*.bundle.min.js'],
   },
   js.configs.recommended,
   {
@@ -19,7 +19,6 @@ export default [
         module: 'writable',
         ext: 'writable',
         Tagify: 'readonly',
-        Mark: 'readonly',
         jsyaml: 'readonly',
         uFuzzy: 'readonly',
       },

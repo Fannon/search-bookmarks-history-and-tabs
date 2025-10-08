@@ -4,6 +4,8 @@
 
 import { loadScript, printError } from '../helper/utils.js'
 
+const nonASCIIRegex = /[\u0080-\uFFFF]/
+
 /** Memoize some state, to avoid re-creating haystack and fuzzy search instances */
 let state = {}
 
@@ -138,10 +140,5 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
 }
 
 function containsNonASCII(str) {
-  for (let i = 0; i < str.length; i++) {
-    if (str.charCodeAt(i) > 127) {
-      return true
-    }
-  }
-  return false
+  return nonASCIIRegex.test(str)
 }

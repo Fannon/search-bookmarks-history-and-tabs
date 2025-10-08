@@ -52,6 +52,11 @@ export const defaultOptions = {
    * For precise this is always 0 (no fuzzyness)
    */
   searchFuzzyness: 0.6,
+  /**
+   * Debounce delay in milliseconds for search input to prevent excessive calls
+   * Lower values provide more responsive search, higher values improve performance
+   */
+  searchDebounceMs: 100,
 
   //////////////////////////////////////////
   // COLORS AND STYLE                     //

@@ -16,6 +16,15 @@ export function resetSimpleSearchState(searchMode) {
   }
 }
 
+function prepareSearchData(data) {
+  return data.map((entry) => {
+    if (!entry.searchStringLower) {
+      entry.searchStringLower = entry.searchString.toLowerCase()
+    }
+    return entry
+  })
+}
+
 export function simpleSearch(searchMode, searchTerm) {
   if (searchMode === 'history') {
     return [...simpleSearchWithScoring(searchTerm, 'tabs'), ...simpleSearchWithScoring(searchTerm, 'history')]
@@ -45,33 +54,37 @@ function simpleSearchWithScoring(searchTerm, searchMode) {
 
   if (!state[searchMode]) {
     state[searchMode] = {
-      cachedData: [...data],
+      cachedData: prepareSearchData(data),
     }
   }
   const s = state[searchMode]
 
   // Invalidate s.cachedData if the new search term is not just an extension of the last one
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
-    s.cachedData = [...data]
+    s.cachedData = prepareSearchData(data)
   }
 
   if (!s.cachedData.length) {
     return [] // early return -> no data left to search
   }
 
-  let searchTermArray = searchTerm.split(' ')
+  const searchTermArray = searchTerm.split(' ')
 
   for (const term of searchTermArray) {
     const localResults = []
     for (const entry of s.cachedData) {
-      if (entry.searchString.toLowerCase().includes(term)) {
+      const normalizedSearchString = entry.searchStringLower || entry.searchString.toLowerCase()
+      if (normalizedSearchString.includes(term)) {
         localResults.push({
           ...entry,
           searchScore: 1,
           searchApproach: 'precise',
         })
       }
-      s.cachedData = localResults // reduce cachedData set -> improves performance
+    }
+    s.cachedData = localResults // reduce cachedData set -> improves performance
+    if (!s.cachedData.length) {
+      break
     }
   }
 

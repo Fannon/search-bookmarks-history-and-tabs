@@ -2,6 +2,9 @@
 
 ## [unreleased]
 
+- **IMPROVED**: Various performance improvements, incl. lazy-loading the library for search highlighting
+- **IMPROVED**: Creating a single minified production bundle
+
 ## [v1.14.0]
 
 - **ADDED**: Default result on startup will include most recent tabs.
