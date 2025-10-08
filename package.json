@@ -32,7 +32,7 @@
     "build:update-manifests": "wireit",
     "test": "wireit",
     "test:e2e": "wireit",
-    "test:e2e:chrome": "wireit",
+    "test:e2e:chromium": "wireit",
     "test:e2e:firefox": "wireit",
     "test:e2e:edge": "wireit",
     "lint": "wireit",
@@ -133,7 +133,7 @@
         "popup/js/**/*"
       ]
     },
-    "test:e2e:chrome": {
+    "test:e2e:chromium": {
       "command": "playwright test --project=chromium",
       "files": [
         "playwright.config.mjs",
