@@ -79,8 +79,7 @@
       "files": [
         "package.json",
         "manifest.json"
-      ],
-      "output": []
+      ]
     },
     "build:bundle": {
       "command": "node bin/bundle.js",
@@ -119,23 +118,20 @@
       ],
       "files": [
         "dist/**/*"
-      ],
-      "output": []
+      ]
     },
     "lint": {
       "command": "eslint ./popup/js/",
       "files": [
         "popup/js/**/*"
-      ],
-      "output": []
+      ]
     },
     "test:unit": {
       "command": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
       "files": [
         "jest.config.js",
         "popup/js/**/*"
-      ],
-      "output": []
+      ]
     },
     "test:e2e:chrome": {
       "command": "playwright test --project=chromium",
@@ -144,8 +140,7 @@
         "playwright/**/*",
         "manifest.json",
         "popup/**/*"
-      ],
-      "output": []
+      ]
     },
     "test:e2e:firefox": {
       "command": "playwright test --project=firefox",
@@ -154,8 +149,7 @@
         "playwright/**/*",
         "manifest.json",
         "popup/**/*"
-      ],
-      "output": []
+      ]
     },
     "test:e2e:edge": {
       "command": "playwright test --project=edge",
@@ -164,8 +158,7 @@
         "playwright/**/*",
         "manifest.json",
         "popup/**/*"
-      ],
-      "output": []
+      ]
     },
     "test:e2e": {
       "dependencies": [
