@@ -94,7 +94,7 @@ jobs:
       - name: Run your tests
         run: npx playwright test
 
-  # playwright-test:
+  playwright-test:
     name: E2E Test
     runs-on: ubuntu-latest
     needs: build
