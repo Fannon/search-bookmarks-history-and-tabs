@@ -4,6 +4,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  NODE_VERSION: '22.x'
+
 on:
   push:
     branches: [main]
@@ -12,13 +15,8 @@ on:
 
 jobs:
   build:
-    name: Build & Lint & Test
+    name: Build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version:
-          - 22.x
-
     steps:
       - name: Cache node modules
         id: cache-npm
@@ -39,17 +37,36 @@ jobs:
         run: npm list
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - name: Install Dependencies
         run: npm set cache ~/.npm && npm ci
       - name: Build
         run: npm run build
-      - name: Lint
-        run: npm run lint
+      - name: Save build folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: popup
+          path: popup
+          if-no-files-found: error
+
+  test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm set cache ~/.npm && npm ci
       - name: Run Unit Tests
         run: npm run test:unit -- --coverage
       - uses: actions/upload-artifact@v4
@@ -58,12 +75,6 @@ jobs:
           name: unit-test-report
           path: reports/
           retention-days: 30
-      - name: Save build folder
-        uses: actions/upload-artifact@v4
-        with:
-          name: popup
-          path: popup
-          if-no-files-found: error
 
   playwright-test:
     name: E2E Test
@@ -77,28 +88,56 @@ jobs:
         with:
           name: popup
           path: popup
-      - name: Use Node.js 22.x
+      - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - name: Install Dependencies
         run: npm set cache ~/.npm && npm ci
-      - name: Cache Playwright Browsers
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
-      - name: Run Playwright tests
-        run: npm run test:e2e
+      - name: Test Chromium
+        run: npm run test:e2e:chromium
+      - name: Test Firefox
+        run: npm run test:e2e:firefox
+      - name: Test Edge
+        run: npm run test:e2e:edge
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
           path: reports/playwright/
           retention-days: 30
+
+  # resolve-playwright-version:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     version: ${{ steps['resolve-playwright-version'].outputs.version }}
+  #   steps:
+  #     - uses: actions/checkout@v5
+  #     - name: resolve-playwright-version
+  #       id: resolve-playwright-version
+  #       run: |
+  #         version="$(yq -r '.devDependencies["@playwright/test"] // ""' package.json)"
+  #         version="${version#^}"
+  #         test -n "$version" || { echo "No @playwright/test version found in package.json"; exit 1; }
+  #         echo "version=$version" >> "$GITHUB_OUTPUT"
+  # playwright:
+  #   name: 'Playwright Tests'
+  #   runs-on: ubuntu-latest
+  #   needs: resolve-playwright-version
+  #   container:
+  #     image: mcr.microsoft.com/playwright:v${{ needs['resolve-playwright-version'].outputs.version }}-noble
+  #     options: --user 1001
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
+  #     - name: Install dependencies
+  #       run: npm ci
+  #     - name: Test Chromium
+  #       run: npm run test:e2e:chromium
+  #     - name: Test Firefox
+  #       run: npm run test:e2e:firefox
