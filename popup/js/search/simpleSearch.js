@@ -48,7 +48,7 @@ export function simpleSearch(searchMode, searchTerm) {
  */
 function simpleSearchWithScoring(searchTerm, searchMode) {
   const data = ext.model[searchMode]
-  if (!data || !data.length) {
+  if (!data.length) {
     return [] // early return -> no data to search
   }
 
@@ -64,29 +64,17 @@ function simpleSearchWithScoring(searchTerm, searchMode) {
     s.cachedData = prepareSearchData(data)
   }
 
-  if (!s.cachedData || !s.cachedData.length) {
+  if (!s.cachedData.length) {
     return [] // early return -> no data left to search
   }
 
   const searchTermArray = searchTerm.split(' ')
-  let results = s.cachedData
-
-  // Early termination if no search terms
-  if (!searchTermArray.length || !searchTermArray[0]) {
-    return results
-  }
 
   for (const term of searchTermArray) {
-    if (!term) continue // Skip empty terms
-
     const localResults = []
-
-    // Optimize string operations by avoiding repeated toLowerCase calls
-    for (const entry of results) {
+    for (const entry of s.cachedData) {
       const normalizedSearchString = entry.searchStringLower || entry.searchString.toLowerCase()
-
-      // Use indexOf for better performance than includes for single terms
-      if (normalizedSearchString.indexOf(term) !== -1) {
+      if (normalizedSearchString.includes(term)) {
         localResults.push({
           ...entry,
           searchScore: 1,
@@ -94,13 +82,12 @@ function simpleSearchWithScoring(searchTerm, searchMode) {
         })
       }
     }
-
-    results = localResults
-    if (!results.length) {
-      break // Early termination if no matches found
+    s.cachedData = localResults // reduce cachedData set -> improves performance
+    if (!s.cachedData.length) {
+      break
     }
   }
 
   s.searchTerm = searchTerm
-  return results
+  return s.cachedData
 }

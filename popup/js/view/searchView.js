@@ -7,157 +7,133 @@ import { getUserOptions, setUserOptions } from '../model/options.js'
 import { search } from '../search/common.js'
 
 /**
- * Render the search results in UI as result items with performance optimizations
+ * Render the search results in UI as result items
  */
 export async function renderSearchResults(result) {
   result = result || ext.model.result
 
-  if (!result || result.length === 0) {
-    ext.dom.resultList.replaceChildren()
-    selectListItem(-1)
-    return
-  }
-
   ext.model.mouseHoverEnabled = false
-
-  // Limit rendering to improve performance for large result sets
-  const maxRender = Math.min(result.length, ext.opts.searchMaxResults || 100)
-  const resultsToRender = result.slice(0, maxRender)
-
-  // Batch DOM operations using DocumentFragment for better performance
-  const fragment = document.createDocumentFragment()
   const resultListItems = []
 
-  for (let i = 0; i < resultsToRender.length; i++) {
-    const resultEntry = resultsToRender[i]
+  for (let i = 0; i < result.length; i++) {
+    const resultEntry = result[i]
 
-    if (!resultEntry) continue
-
-    // Reuse existing DOM elements when possible (virtual scrolling concept)
-    let resultListItem = ext.dom.resultList.children[i]
-
-    if (!resultListItem) {
-      // Create new element only if needed
-      resultListItem = document.createElement('li')
-      fragment.appendChild(resultListItem)
-    } else {
-      // Clear existing content for reuse
-      resultListItem.innerHTML = ''
+    if (!resultEntry) {
+      continue
     }
 
-    // Batch attribute setting
-    resultListItem.className = resultEntry.type
+    // Create result list item (li)
+    const resultListItem = document.createElement('li')
+    resultListItem.classList.add(resultEntry.type)
     resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
     resultListItem.setAttribute('x-index', i)
     resultListItem.setAttribute('x-original-id', resultEntry.originalId)
-    resultListItem.style.cssText = `border-left: ${ext.opts.colorStripeWidth}px solid ${
-      ext.opts[resultEntry.type + 'Color']
-    }`
+    resultListItem.setAttribute(
+      'style',
+      `border-left: ${ext.opts.colorStripeWidth}px solid ${ext.opts[resultEntry.type + 'Color']}`,
+    )
 
-    // Create edit button / image (only for bookmarks)
+    // Create edit button / image
     if (resultEntry.type === 'bookmark') {
       const editImg = document.createElement('img')
-      editImg.className = 'edit-button'
+      editImg.classList.add('edit-button')
       editImg.setAttribute('x-link', '#edit-bookmark/' + resultEntry.originalId)
       editImg.title = 'Edit Bookmark'
       editImg.src = '../images/edit.svg'
       resultListItem.appendChild(editImg)
     }
 
-    // Create close button for tabs
+    // Create edit button / image
     if (resultEntry.type === 'tab') {
       const closeImg = document.createElement('img')
-      closeImg.className = 'close-button'
+      closeImg.classList.add('close-button')
       closeImg.title = 'Close Tab'
       closeImg.src = '../images/x.svg'
       resultListItem.appendChild(closeImg)
     }
 
-    // Create title div with optimized content creation
+    // Create title div
     const titleDiv = document.createElement('div')
-    titleDiv.className = 'title'
+    titleDiv.classList.add('title')
 
-    // Create title text with optimized content handling
+    // Create title text
     const titleText = document.createElement('span')
-    titleText.className = 'title-text'
+    titleText.classList.add('title-text')
 
     if (ext.opts.displaySearchMatchHighlight) {
       const content = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
-      titleText.innerHTML = content.includes('<mark>') ? content + ' ' : content + ' '
+      if (content.includes('<mark>')) {
+        titleText.innerHTML = content + ' '
+      } else {
+        titleText.innerText = content + ' '
+      }
     } else {
-      titleText.textContent = (resultEntry.title || resultEntry.url) + ' '
+      titleText.innerText = resultEntry.title | (resultEntry.url + ' ')
     }
     titleDiv.appendChild(titleText)
-
-    // Batch badge creation for better performance
-    const badges = []
 
     if (ext.opts.displayTags && resultEntry.tagsArray) {
       for (const tag of resultEntry.tagsArray) {
         const el = document.createElement('span')
         el.title = 'Bookmark Tags'
-        el.className = 'badge tags'
+        el.classList.add('badge', 'tags')
         el.setAttribute('x-link', `#search/#${tag}`)
-        el.textContent = '#' + tag
-        badges.push(el)
+        if (ext.opts.displaySearchMatchHighlight) {
+          el.innerText = '#' + tag
+        }
+        titleDiv.appendChild(el)
       }
     }
-
     if (ext.opts.displayFolderName && resultEntry.folderArray) {
       const trail = []
       for (const f of resultEntry.folderArray) {
         trail.push(f)
         const el = document.createElement('span')
         el.title = 'Bookmark Folder'
-        el.className = 'badge folder'
+        el.classList.add('badge', 'folder')
         el.setAttribute('x-link', `#search/~${trail.join(' ~')}`)
         if (ext.opts.bookmarkColor) {
-          el.style.backgroundColor = ext.opts.bookmarkColor
+          el.style = `background-color: ${ext.opts.bookmarkColor}`
         }
-        el.textContent = '~' + f
-        badges.push(el)
+        if (ext.opts.displaySearchMatchHighlight) {
+          el.innerText = '~' + f
+        }
+        titleDiv.appendChild(el)
       }
     }
-
     if (ext.opts.displayLastVisit && resultEntry.lastVisitSecondsAgo) {
       const lastVisit = timeSince(new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000))
       const lastVisited = document.createElement('span')
       lastVisited.title = 'Last Visited'
-      lastVisited.className = 'badge last-visited'
-      lastVisited.textContent = '-' + lastVisit
-      badges.push(lastVisited)
+      lastVisited.classList.add('badge', 'last-visited')
+      lastVisited.innerText = '-' + lastVisit
+      titleDiv.appendChild(lastVisited)
     }
-
     if (ext.opts.displayVisitCounter && resultEntry.visitCount !== undefined) {
       const visitCounter = document.createElement('span')
       visitCounter.title = 'Visited Counter'
-      visitCounter.className = 'badge visit-counter'
-      visitCounter.textContent = resultEntry.visitCount
-      badges.push(visitCounter)
+      visitCounter.classList.add('badge', 'visit-counter')
+      visitCounter.innerText = resultEntry.visitCount
+      titleDiv.appendChild(visitCounter)
     }
-
     if (ext.opts.displayDateAdded && resultEntry.dateAdded) {
       const dateAdded = document.createElement('span')
       dateAdded.title = 'Date Added'
-      dateAdded.className = 'badge date-added'
-      dateAdded.textContent = new Date(resultEntry.dateAdded).toISOString().split('T')[0]
-      badges.push(dateAdded)
+      dateAdded.classList.add('badge', 'date-added')
+      dateAdded.innerText = new Date(resultEntry.dateAdded).toISOString().split('T')[0]
+      titleDiv.appendChild(dateAdded)
     }
-
     if (ext.opts.displayScore && resultEntry.score) {
       const score = document.createElement('span')
       score.title = 'Score'
-      score.className = 'badge score'
-      score.textContent = Math.round(resultEntry.score)
-      badges.push(score)
+      score.classList.add('badge', 'score')
+      score.innerText = Math.round(resultEntry.score)
+      titleDiv.appendChild(score)
     }
 
-    // Append all badges at once
-    titleDiv.append(...badges)
-
-    // Create URL div with optimized content
+    // Create URL div
     const urlDiv = document.createElement('div')
-    urlDiv.className = 'url'
+    urlDiv.classList.add('url')
     urlDiv.title = resultEntry.url
     if (
       ext.opts.displaySearchMatchHighlight &&
@@ -166,41 +142,32 @@ export async function renderSearchResults(result) {
     ) {
       urlDiv.innerHTML = resultEntry.urlHighlighted
     } else {
-      urlDiv.textContent = resultEntry.url
+      urlDiv.innerText = resultEntry.url
     }
 
-    resultListItem.append(titleDiv, urlDiv)
+    resultListItem.appendChild(titleDiv)
+    resultListItem.appendChild(urlDiv)
+    resultListItem.addEventListener('mouseenter', hoverResultItem)
+    resultListItem.addEventListener('mouseup', openResultItem)
+    document.addEventListener('contextmenu', (e) => {
+      e.preventDefault() // Disable right mouse context menu
+    })
 
-    // Add event listeners only once for new elements
-    if (!resultListItem.hasAttribute('data-events-attached')) {
-      resultListItem.addEventListener('mouseenter', hoverResultItem)
-      resultListItem.addEventListener('mouseup', openResultItem)
-      resultListItem.setAttribute('data-events-attached', 'true')
+    // Post-render highlighting using mark.js for entries that don't have pre-computed highlighting
+    if (ext.opts.displaySearchMatchHighlight && ext.model.searchTerm && window.Mark) {
+      if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
+        const mark = new window.Mark(resultListItem)
+        mark.mark(ext.model.searchTerm)
+      }
     }
-
     resultListItems.push(resultListItem)
   }
 
-  // Batch update the DOM
-  requestAnimationFrame(() => {
-    ext.dom.resultList.replaceChildren(fragment)
-    selectListItem(0)
-  })
+  // Replace current results with new results
+  ext.dom.resultList.replaceChildren(...resultListItems)
 
-  // Post-render highlighting with throttling
-  if (ext.opts.displaySearchMatchHighlight && ext.model.searchTerm && window.Mark) {
-    requestAnimationFrame(() => {
-      resultsToRender.forEach((resultEntry, index) => {
-        if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
-          const element = ext.dom.resultList.children[index]
-          if (element) {
-            const mark = new window.Mark(element)
-            mark.mark(ext.model.searchTerm)
-          }
-        }
-      })
-    })
-  }
+  // mark first result item as selected
+  selectListItem(0)
 }
 
 //////////////////////////////////////////
