@@ -29,4 +29,20 @@ export default [
       'comma-dangle': ['warn', 'only-multiline'],
     },
   },
+  {
+    files: ['popup/js/**/__tests__/*.test.js', 'popup/js/__tests__/*.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        ...globals.jest,
+        ...globals.node,
+        jest: 'readonly',
+        global: 'readonly',
+      },
+    },
+    rules: {
+      'no-console': 'off',
+    },
+  },
 ]

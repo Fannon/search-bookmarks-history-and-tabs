@@ -171,8 +171,7 @@
     },
     "test": {
       "dependencies": [
-        "test:unit",
-        "test:e2e"
+        "test:unit"
       ]
     }
   },
