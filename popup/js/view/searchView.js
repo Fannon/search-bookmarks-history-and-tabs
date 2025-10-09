@@ -1,3 +1,15 @@
+/**
+ * SEARCH VIEW MODULE
+ *
+ * Handles the user interface and interaction for the search results display.
+ * This module is responsible for:
+ * - Rendering search results (bookmarks and open tabs) in a structured list format
+ * - Managing visual selection and keyboard/mouse navigation between results
+ * - Handling various click behaviors (open in tab, close tab, copy URL, etc.)
+ * - Displaying result metadata (tags, folders, visit counts, dates, scores)
+ * - Supporting search term highlighting and search strategy switching
+ */
+
 import { timeSince } from '../helper/utils.js'
 import { getUserOptions, setUserOptions } from '../model/options.js'
 import { search } from '../search/common.js'
