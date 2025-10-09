@@ -44,6 +44,7 @@ export async function search(event) {
     if (searchTerm.trim() && ext.searchCache) {
       const cacheKey = `${searchTerm}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
       if (ext.searchCache.has(cacheKey)) {
+        console.debug(`Using cached results for key "${cacheKey}"`)
         ext.model.result = ext.searchCache.get(cacheKey)
         renderSearchResults(ext.model.result)
         return
