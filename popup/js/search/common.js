@@ -40,6 +40,20 @@ export async function search(event) {
     searchTerm = searchTerm.trimStart().toLowerCase()
     searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
 
+    // Check cache first for better performance
+    const cacheKey = `${searchTerm}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
+    if (ext.searchCache && ext.searchCache.has(cacheKey)) {
+      const cachedResult = ext.searchCache.get(cacheKey)
+      if (Date.now() - cachedResult.timestamp < 5000) {
+        // Cache for 5 seconds
+        ext.model.result = cachedResult.data
+        renderSearchResults(ext.model.result)
+        return
+      } else {
+        ext.searchCache.delete(cacheKey)
+      }
+    }
+
     if (!searchTerm.trim()) {
       ext.model.result = await addDefaultEntries()
       renderSearchResults(ext.model.result)
@@ -170,6 +184,19 @@ export async function search(event) {
     }
 
     ext.dom.resultCounter.innerText = `(${ext.model.result.length})`
+
+    // Cache the results for better performance
+    if (ext.searchCache) {
+      if (ext.searchCache.size >= ext.cacheMaxSize) {
+        // Remove oldest entry when cache is full
+        const firstKey = ext.searchCache.keys().next().value
+        ext.searchCache.delete(firstKey)
+      }
+      ext.searchCache.set(cacheKey, {
+        data: ext.model.result,
+        timestamp: Date.now(),
+      })
+    }
 
     renderSearchResults(ext.model.result)
   } catch (err) {

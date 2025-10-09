@@ -39,11 +39,25 @@ export function cleanUpUrl(url) {
     .toLowerCase()
 }
 
+// Cache for loaded scripts to avoid duplicate loading
+const loadedScripts = new Set()
+
 export async function loadScript(url) {
-  return new Promise(function (resolve) {
+  // Return immediately if already loaded
+  if (loadedScripts.has(url)) {
+    return Promise.resolve()
+  }
+
+  return new Promise(function (resolve, reject) {
     const s = document.createElement('script')
     s.type = 'text/javascript'
-    s.onload = resolve
+    s.onload = () => {
+      loadedScripts.add(url)
+      resolve()
+    }
+    s.onerror = () => {
+      reject(new Error(`Failed to load script: ${url}`))
+    }
     s.src = url
     document.getElementsByTagName('head')[0].appendChild(s)
   })

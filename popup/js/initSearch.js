@@ -94,6 +94,10 @@ export async function initExtension() {
   }
   ext.dom.searchInput.addEventListener('input', debouncedSearch)
 
+  // Add search result cache for better performance
+  ext.searchCache = new Map()
+  ext.cacheMaxSize = 50
+
   // Display default entries
   await addDefaultEntries()
   renderSearchResults(ext.model.result)
