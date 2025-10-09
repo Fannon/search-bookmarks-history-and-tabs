@@ -125,7 +125,6 @@ export async function initExtension() {
 
   // Lazy load mark.js for highlighting search results after init phase
   await loadScript('./lib/mark.es6.min.js')
-  console.debug('Loaded mark.js for highlighting search results')
 }
 
 //////////////////////////////////////////
