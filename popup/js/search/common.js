@@ -18,8 +18,6 @@ const protocolRegex = /^[a-zA-Z]+:\/\//
  * It will decide which approaches and indexes to use.
  */
 export async function search(event) {
-  console.debug('Search triggered', event)
-
   try {
     if (event) {
       // Don't execute search on navigation keys
