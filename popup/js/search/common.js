@@ -40,6 +40,17 @@ export async function search(event) {
     searchTerm = searchTerm.trimStart().toLowerCase()
     searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
 
+    // Check cache first for better performance (only for actual searches, not default results)
+    if (searchTerm.trim() && ext.searchCache) {
+      const cacheKey = `${searchTerm}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
+      if (ext.searchCache.has(cacheKey)) {
+        console.debug(`Using cached results for key "${cacheKey}"`)
+        ext.model.result = ext.searchCache.get(cacheKey)
+        renderSearchResults(ext.model.result)
+        return
+      }
+    }
+
     if (!searchTerm.trim()) {
       ext.model.result = await addDefaultEntries()
       renderSearchResults(ext.model.result)
@@ -170,6 +181,12 @@ export async function search(event) {
     }
 
     ext.dom.resultCounter.innerText = `(${ext.model.result.length})`
+
+    // Cache the results for better performance (only for actual searches)
+    if (searchTerm.trim() && ext.searchCache) {
+      const cacheKey = `${searchTerm}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
+      ext.searchCache.set(cacheKey, ext.model.result)
+    }
 
     renderSearchResults(ext.model.result)
   } catch (err) {
@@ -413,31 +430,54 @@ export async function addDefaultEntries() {
     })
   } else {
     // Default: Find bookmarks that match current page URL
-    let currentUrl = window.location.href
-    const [tab] = await getBrowserTabs({ active: true, currentWindow: true })
-    if (tab) {
-      // Remove trailing slash or hash from URL, so the comparison works better
-      currentUrl = tab.url.replace(/[/#]$/, '')
-      results.push(...ext.model.bookmarks.filter((el) => el.originalUrl === currentUrl))
+    try {
+      const [tab] = await getBrowserTabs({ active: true, currentWindow: true })
+      if (tab && tab.url) {
+        // Use the current tab's URL instead of window.location.href for accuracy
+        let currentUrl = tab.url.replace(/[/#]$/, '')
+
+        // Find bookmarks that match current page URL (with some flexibility)
+        const matchingBookmarks = ext.model.bookmarks.filter((el) => {
+          if (!el.originalUrl) return false
+          const bookmarkUrl = el.originalUrl.replace(/[/#]$/, '')
+          return (
+            bookmarkUrl === currentUrl ||
+            bookmarkUrl === currentUrl.replace(/^https?:\/\//, '') ||
+            currentUrl === bookmarkUrl.replace(/^https?:\/\//, '')
+          )
+        })
+
+        if (matchingBookmarks.length > 0) {
+          results.push(
+            ...matchingBookmarks.map((el) => ({
+              searchScore: 1,
+              ...el,
+            })),
+          )
+        }
+      }
+    } catch (err) {
+      console.warn('Could not get current tab for default entries:', err)
     }
 
+    // Always add recently visited tabs when option is enabled and no search term
     if (ext.model.tabs && ext.opts.maxRecentTabsToShow > 0) {
-      // Add recently visited tabs when option is enabled and no search term
-      results.push(
-        ...ext.model.tabs
-          .map((el) => ({
-            searchScore: 1,
-            ...el,
-          }))
-          .sort((a, b) => {
-            // Sort by last accessed time (most recent first)
-            // Handle cases where last accessed might be undefined
-            const aTime = a.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
-            const bTime = b.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
-            return aTime - bTime
-          })
-          .slice(1, ext.opts.maxRecentTabsToShow + 1), // Limit number of tabs shown
-      )
+      const recentTabs = ext.model.tabs
+        .filter((tab) => tab && tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('about:'))
+        .map((el) => ({
+          searchScore: 1,
+          ...el,
+        }))
+        .sort((a, b) => {
+          // Sort by last accessed time (most recent first)
+          // Handle cases where last accessed might be undefined
+          const aTime = a.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
+          const bTime = b.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
+          return aTime - bTime
+        })
+        .slice(0, ext.opts.maxRecentTabsToShow) // Show most recent tabs
+
+      results.push(...recentTabs)
     }
   }
 

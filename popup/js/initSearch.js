@@ -94,6 +94,9 @@ export async function initExtension() {
   }
   ext.dom.searchInput.addEventListener('input', debouncedSearch)
 
+  // Add search result cache for better performance (simple, no expiration needed)
+  ext.searchCache = new Map()
+
   // Display default entries
   await addDefaultEntries()
   renderSearchResults(ext.model.result)
@@ -117,11 +120,14 @@ export async function initExtension() {
     performance.clearMeasures()
   }
 
-  search()
+  // Only trigger final search if user has entered a search term
+  // This prevents overriding the default entries with a duplicate call
+  if (ext.dom.searchInput.value && ext.dom.searchInput.value.trim()) {
+    search()
+  }
 
   // Lazy load mark.js for highlighting search results after init phase
   await loadScript('./lib/mark.es6.min.js')
-  console.debug('Loaded mark.js for highlighting search results')
 }
 
 //////////////////////////////////////////

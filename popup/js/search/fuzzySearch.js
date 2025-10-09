@@ -99,6 +99,8 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
   let searchTermArray = searchTerm.split(' ')
 
   for (const term of searchTermArray) {
+    if (!term) continue // Skip empty terms
+
     const localResults = []
 
     try {
@@ -125,14 +127,18 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
           searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
           searchApproach: 'fuzzy',
         })
-        s.idxs = idxs // Save idxs cache to state
       }
+
+      s.idxs = idxs // Save idxs cache to state
     } catch (err) {
       err.message = 'Fuzzy search could not handle search term. Please try precise search instead.'
       printError(err)
     }
 
     results = localResults // keep and return the last iteration of local results
+    if (!results.length) {
+      break // Early termination if no matches found
+    }
   }
 
   s.searchTerm = searchTerm // Remember last search term, to know when to invalidate idxx cache
