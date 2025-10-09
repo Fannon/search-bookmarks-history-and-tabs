@@ -112,7 +112,7 @@
       ]
     },
     "size": {
-      "command": "du -hc ./dist/chrome/",
+      "command": "node bin/size.js",
       "dependencies": [
         "build:create-dist"
       ],
@@ -161,10 +161,12 @@
       ]
     },
     "test:e2e": {
-      "dependencies": [
-        "test:e2e:chrome",
-        "test:e2e:firefox",
-        "test:e2e:edge"
+      "command": "playwright test",
+      "files": [
+        "playwright.config.mjs",
+        "playwright/**/*",
+        "manifest.json",
+        "popup/**/*"
       ]
     },
     "test": {
