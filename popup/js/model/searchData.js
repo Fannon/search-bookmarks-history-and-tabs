@@ -13,9 +13,10 @@ import {
  * Only creates new objects when there are actual history matches to merge
  * @param {Array} items - Array of bookmarks or tabs
  * @param {Map} historyMap - Map of URL to history item
+ * @param {Set<string>} [mergedUrls] - Tracks which history URLs were merged
  * @returns {Array} - Merged array with history data
  */
-function mergeHistoryLazily(items, historyMap) {
+function mergeHistoryLazily(items, historyMap, mergedUrls) {
   if (!items.length) return items
 
   let hasMerged = false
@@ -26,11 +27,14 @@ function mergeHistoryLazily(items, historyMap) {
     const historyEntry = historyMap.get(item.originalUrl)
 
     if (historyEntry) {
-      // Only merge and mark as changed when we find a history match
-      historyMap.delete(item.originalUrl)
+      if (mergedUrls) {
+        mergedUrls.add(item.originalUrl)
+      }
       result[i] = {
-        ...historyEntry,
         ...item,
+        lastVisitSecondsAgo:
+          historyEntry.lastVisitSecondsAgo ?? item.lastVisitSecondsAgo,
+        visitCount: historyEntry.visitCount ?? item.visitCount,
       }
       hasMerged = true
     } else {
@@ -110,10 +114,12 @@ export async function getSearchData() {
       // Build maps with URL as key, so we have fast hashmap access
       const historyMap = new Map(result.history.map((item) => [item.originalUrl, item]))
 
-      result.bookmarks = mergeHistoryLazily(result.bookmarks, historyMap)
-      result.tabs = mergeHistoryLazily(result.tabs, historyMap)
+      const mergedHistoryUrls = new Set()
 
-      result.history = Array.from(historyMap.values())
+      result.bookmarks = mergeHistoryLazily(result.bookmarks, historyMap, mergedHistoryUrls)
+      result.tabs = mergeHistoryLazily(result.tabs, historyMap, mergedHistoryUrls)
+
+      result.history = result.history.filter((item) => !mergedHistoryUrls.has(item.originalUrl))
     }
   }
   if (ext.opts.debug) {
