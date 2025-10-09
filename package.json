@@ -20,160 +20,25 @@
     "globals": "^16.4.0",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
-    "serve": "^14.2.5",
-    "wireit": "^0.14.12"
+    "serve": "^14.2.5"
   },
   "scripts": {
-    "clean": "wireit",
-    "build": "wireit",
-    "build:bundle": "wireit",
-    "build:update-libs": "wireit",
-    "build:create-dist": "wireit",
-    "build:update-manifests": "wireit",
-    "test": "wireit",
-    "test:e2e": "wireit",
-    "test:e2e:chromium": "wireit",
-    "test:e2e:firefox": "wireit",
-    "test:e2e:edge": "wireit",
-    "lint": "wireit",
+    "clean": "node bin/clean.js",
+    "build": "npm run clean && npm run build:update-libs && npm run build:bundle && npm run build:update-manifests && npm run build:create-dist && npm run size",
+    "build:bundle": "node bin/bundle.js",
+    "build:update-libs": "node bin/updateLibs.js",
+    "build:create-dist": "node bin/createDist.js",
+    "build:update-manifests": "node bin/updateManifests.js",
+    "test": "npm run test:unit",
+    "test:e2e": "playwright test",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "test:e2e:firefox": "playwright test --project=firefox",
+    "test:e2e:edge": "playwright test --project=edge",
+    "test:unit": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "lint": "eslint ./popup/js/",
     "start": "serve -p 8080 ./popup/",
     "start:dist": "serve -p 8080 ./dist/chrome/popup/",
-    "size": "wireit",
-    "test:unit": "wireit"
-  },
-  "wireit": {
-    "clean": {
-      "command": "node bin/clean.js",
-      "files": [],
-      "output": [
-        "./dist/"
-      ]
-    },
-    "build": {
-      "dependencies": [
-        "clean",
-        "size"
-      ]
-    },
-    "build:update-libs": {
-      "command": "node bin/updateLibs.js",
-      "dependencies": [
-        "clean"
-      ],
-      "files": [
-        "node_modules/@leeoniya/ufuzzy/dist/uFuzzy.iife.min.js",
-        "node_modules/mark.js/dist/mark.es6.min.js",
-        "node_modules/js-yaml/dist/js-yaml.min.js",
-        "node_modules/@yaireo/tagify/dist/tagify.js",
-        "node_modules/@yaireo/tagify/dist/tagify.css"
-      ],
-      "output": [
-        "popup/lib/"
-      ]
-    },
-    "build:update-manifests": {
-      "command": "node bin/updateManifests.js",
-      "dependencies": [
-        "clean"
-      ],
-      "files": [
-        "package.json",
-        "manifest.json"
-      ]
-    },
-    "build:bundle": {
-      "command": "node bin/bundle.js",
-      "dependencies": [
-        "build:update-libs"
-      ],
-      "files": [
-        "popup/js/**/*",
-        "popup/lib/mark.es6.min.js"
-      ],
-      "output": [
-        "popup/js/initSearch.bundle.min.js",
-        "popup/js/initSearch.bundle.min.js.map",
-        "popup/js/initOptions.bundle.min.js",
-        "popup/js/initOptions.bundle.min.js.map"
-      ]
-    },
-    "build:create-dist": {
-      "command": "node bin/createDist.js",
-      "dependencies": [
-        "build:update-libs",
-        "build:bundle",
-        "build:update-manifests"
-      ],
-      "files": [
-        "popup/**/*"
-      ],
-      "output": [
-        "dist/**/*"
-      ]
-    },
-    "size": {
-      "command": "node bin/size.js",
-      "dependencies": [
-        "build:create-dist"
-      ],
-      "files": [
-        "dist/**/*"
-      ]
-    },
-    "lint": {
-      "command": "eslint ./popup/js/",
-      "files": [
-        "popup/js/**/*"
-      ]
-    },
-    "test:unit": {
-      "command": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
-      "files": [
-        "jest.config.js",
-        "popup/js/**/*"
-      ]
-    },
-    "test:e2e:chromium": {
-      "command": "playwright test --project=chromium",
-      "files": [
-        "playwright.config.mjs",
-        "playwright/**/*",
-        "manifest.json",
-        "popup/**/*"
-      ]
-    },
-    "test:e2e:firefox": {
-      "command": "playwright test --project=firefox",
-      "files": [
-        "playwright.config.mjs",
-        "playwright/**/*",
-        "manifest.json",
-        "popup/**/*"
-      ]
-    },
-    "test:e2e:edge": {
-      "command": "playwright test --project=edge",
-      "files": [
-        "playwright.config.mjs",
-        "playwright/**/*",
-        "manifest.json",
-        "popup/**/*"
-      ]
-    },
-    "test:e2e": {
-      "command": "playwright test",
-      "files": [
-        "playwright.config.mjs",
-        "playwright/**/*",
-        "manifest.json",
-        "popup/**/*"
-      ]
-    },
-    "test": {
-      "dependencies": [
-        "test:unit"
-      ]
-    }
+    "size": "node bin/size.js"
   },
   "repository": {
     "type": "git",
