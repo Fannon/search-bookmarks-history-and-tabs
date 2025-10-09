@@ -112,7 +112,7 @@
       ]
     },
     "size": {
-      "command": "du -hc ./dist/chrome/",
+      "command": "node bin/size.js",
       "dependencies": [
         "build:create-dist"
       ],
