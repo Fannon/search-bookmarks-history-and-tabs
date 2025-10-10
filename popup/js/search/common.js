@@ -351,9 +351,15 @@ export function calculateFinalScore(results, searchTerm) {
     }
 
     // Increase score if result has been opened recently
-    if (ext.opts.scoreRecentBonusScoreMaximum && el.lastVisitSecondsAgo) {
+    if (ext.opts.scoreRecentBonusScoreMaximum && el.lastVisitSecondsAgo != null) {
       const maxSeconds = ext.opts.historyDaysAgo * 24 * 60 * 60
-      score += Math.max(0, (1 - el.lastVisitSecondsAgo / maxSeconds) * ext.opts.scoreRecentBonusScoreMaximum)
+      // Handle edge case where maxSeconds might be 0 or item was visited "right now"
+      if (maxSeconds > 0 && el.lastVisitSecondsAgo >= 0) {
+        score += Math.max(0, (1 - el.lastVisitSecondsAgo / maxSeconds) * ext.opts.scoreRecentBonusScoreMaximum)
+      } else if (el.lastVisitSecondsAgo === 0) {
+        // Item was visited "right now" - give maximum recent bonus
+        score += ext.opts.scoreRecentBonusScoreMaximum
+      }
     }
 
     // Increase score if bookmark has been added more recently
