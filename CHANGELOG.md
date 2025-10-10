@@ -6,8 +6,8 @@
   - Creating a single minified production bundle, should speed up initial loading time a lot when IO is slow
   - lazy-loading the library for search highlighting, further init load speedup
   - Various smaller improvements that increase search and render performance
-- **FIXED**: Bug in scoring that lastVisited: 0 was not treated as most recent (max score)
-- **FIXED**: Bug in scoring
+- **FIXED**: Bug in scoring that `lastVisited`: 0 was not treated as most recent (max score)
+- **FIXED**: Bug in scoring where `visitCount` was not correctly merged in from history
 - **IMPROVED**: Improved unit-test coverage and switched for E2E testing to Playwright, leading to faster and less brittle tests.
 
 ## [v1.14.0]
