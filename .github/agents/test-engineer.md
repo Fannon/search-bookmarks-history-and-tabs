@@ -27,6 +27,7 @@ Your task is to **analyze a given JavaScript file**, **critically assess its imp
   - Async success/failure
 - Avoid trivial or redundant tests.
 - Use **JSDOM / Jest mocks** if required.
+- Reuse or create test helpers in `popup/js/__tests__/testUtils.js`
 - Prefer **behavioral assertions** over internal details.
 
 ## 🐞 When a Bug Is Found
