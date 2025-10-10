@@ -1,5 +1,5 @@
-import { jest, describe, test, expect, beforeAll, beforeEach } from '@jest/globals'
-import { createTestExt } from '../../__tests__/testUtils.js'
+import { jest, describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals'
+import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
 
 const mockGetBrowserTabs = jest.fn(() => Promise.resolve([]))
 const mockCleanUpUrl = (url) => url.replace(/\/+$/, '')
@@ -92,6 +92,10 @@ describe('common search helpers', () => {
         history: [],
       },
     })
+  })
+
+  afterEach(() => {
+    clearTestExt()
   })
 
   test('searchWithAlgorithm returns empty array below min length', async () => {

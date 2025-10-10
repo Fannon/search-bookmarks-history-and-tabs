@@ -36,3 +36,10 @@ export function createTestExt(overrides = {}) {
   }
   return ext
 }
+
+export function clearTestExt() {
+  delete globalThis.ext
+  if (typeof window !== 'undefined') {
+    delete window.ext
+  }
+}

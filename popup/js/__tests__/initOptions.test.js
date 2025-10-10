@@ -1,16 +1,16 @@
 import { jest, describe, test, expect, beforeEach, afterEach } from '@jest/globals'
-import { flushPromises } from './testUtils.js'
+import { flushPromises, clearTestExt } from './testUtils.js'
 
 describe('initOptions entry point', () => {
   beforeEach(() => {
     jest.resetModules()
     jest.clearAllMocks()
     document.body.innerHTML = '<div id="error-list"></div>'
-    delete window.ext
+    clearTestExt()
   })
 
   afterEach(() => {
-    delete window.ext
+    clearTestExt()
   })
 
   test('exports ext namespace and initializes options view', async () => {
