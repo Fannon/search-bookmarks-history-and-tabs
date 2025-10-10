@@ -22,11 +22,17 @@ async function saveOptions() {
     const userOptions = window.jsyaml.load(userOptionsString)
     document.getElementById('user-config').value = window.jsyaml.dump(userOptions)
     await setUserOptions(userOptions)
-    window.location.href = './index.html#search/'
   } catch (e) {
     console.error(e)
     document.getElementById('error-message').style = ''
     document.getElementById('error-message').innerText = 'Invalid ' + e.message
+    return
+  }
+
+  try {
+    window.location.href = './index.html#search/'
+  } catch (navigationError) {
+    console.warn('Navigation to search view not supported in this environment.', navigationError)
   }
 }
 

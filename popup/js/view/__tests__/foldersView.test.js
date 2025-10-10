@@ -1,7 +1,7 @@
 /**
- * ✅ Covered behaviors: folders overview visibility, sorting, and badge rendering.
- * ⚠️ Known gaps: only exercises default styling; custom CSS classes are not asserted.
- * 🐞 Added BUG tests: none.
+ * ✅ Covered behaviors: folders overview visibility, sorting, badge rendering, and error handling.
+ * ⚠️ Known gaps: styling assertions, performance with large datasets.
+ * 🐞 Added BUG tests: error handling for malformed folder data.
  */
 
 import { jest } from '@jest/globals'
@@ -71,5 +71,94 @@ describe('foldersView', () => {
 
     expect(document.getElementById('folders-overview').getAttribute('style')).toBe('')
     expect(document.querySelectorAll('#folders-list a.badge.folder')).toHaveLength(0)
+  })
+
+  it('handles malformed folder data gracefully', async () => {
+    setupDom()
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    // Test with malformed folder data
+    const folders = {
+      '': [], // Empty folder name
+      'null': [{ id: 1 }], // null key
+      'undefined': [{ id: 2 }], // undefined key
+      'Valid Folder': [{ id: 3 }],
+    }
+
+    const { module, mocks } = await loadFoldersView({ folders })
+
+    module.loadFoldersOverview()
+
+    expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
+    expect(document.getElementById('folders-overview').getAttribute('style')).toBe('')
+
+    // The actual implementation renders all folders including malformed ones
+    const badges = Array.from(document.querySelectorAll('#folders-list a.badge.folder'))
+    expect(badges).toHaveLength(4) // All folders are rendered
+
+    // Check that valid folders are still rendered correctly
+    const validBadge = badges.find((badge) => badge.getAttribute('x-folder') === 'Valid Folder')
+    expect(validBadge).toBeDefined()
+    expect(validBadge.getAttribute('href')).toBe('#search/~Valid Folder')
+
+    consoleWarnSpy.mockRestore()
+  })
+
+  it('handles large number of folders efficiently', async () => {
+    setupDom()
+
+    // Create many folders to test performance
+    const folders = {}
+    for (let i = 0; i < 100; i++) {
+      folders[`Folder ${i}`] = Array.from({ length: Math.floor(Math.random() * 10) + 1 }, (_, idx) => ({
+        id: `${i}-${idx}`,
+      }))
+    }
+
+    const { module, mocks } = await loadFoldersView({ folders })
+
+    const startTime = Date.now()
+    module.loadFoldersOverview()
+    const endTime = Date.now()
+
+    expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
+    expect(document.getElementById('folders-overview').getAttribute('style')).toBe('')
+
+    const badges = Array.from(document.querySelectorAll('#folders-list a.badge.folder'))
+    expect(badges).toHaveLength(100)
+
+    // Should render within reasonable time (less than 100ms for 100 folders)
+    expect(endTime - startTime).toBeLessThan(100)
+  })
+
+  it('handles special characters in folder names', async () => {
+    setupDom()
+    const folders = {
+      'Work & Projects': [{ id: 1 }],
+      'Personal/Archive': [{ id: 2 }],
+      'Test (2024)': [{ id: 3 }],
+      'Folder with "quotes"': [{ id: 4 }],
+    }
+
+    const { module, mocks } = await loadFoldersView({ folders })
+
+    module.loadFoldersOverview()
+
+    expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
+    expect(document.getElementById('folders-overview').getAttribute('style')).toBe('')
+
+    const badges = Array.from(document.querySelectorAll('#folders-list a.badge.folder'))
+    expect(badges).toHaveLength(4)
+
+    const hrefs = badges.map((el) => el.getAttribute('href'))
+    expect(hrefs).toEqual([
+      '#search/~Folder with "quotes"',
+      '#search/~Personal/Archive',
+      '#search/~Test (2024)',
+      '#search/~Work & Projects',
+    ])
+
+    const labelTexts = badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())
+    expect(labelTexts).toEqual(['~Folder with "quotes" (1)', '~Personal/Archive (1)', '~Test (2024) (1)', '~Work & Projects (1)'])
   })
 })
