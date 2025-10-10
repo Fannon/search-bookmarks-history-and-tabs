@@ -1,5 +1,6 @@
 import { jest, describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals'
 import { createTestExt } from '../../__tests__/testUtils.js'
+import { convertBrowserTabs, convertBrowserBookmarks, convertBrowserHistory } from '../../helper/browserApi.js'
 
 const originalFetch = global.fetch
 
@@ -13,36 +14,6 @@ let lastConvertedTabs
 let lastConvertedBookmarks
 let lastConvertedHistory
 let browserApiModule
-
-const convertTab = (tab) => ({
-  type: 'tab',
-  title: tab.title || 'Tab',
-  url: tab.url,
-  originalUrl: tab.url,
-  originalId: tab.id ?? tab.url,
-  lastVisitSecondsAgo: tab.lastVisitSecondsAgo ?? 0,
-  visitCount: tab.visitCount ?? 0,
-})
-
-const convertBookmark = (bookmark) => ({
-  type: 'bookmark',
-  title: bookmark.title || 'Bookmark',
-  url: bookmark.url,
-  originalUrl: bookmark.url,
-  originalId: bookmark.id ?? bookmark.url,
-  lastVisitSecondsAgo: bookmark.lastVisitSecondsAgo ?? 0,
-  visitCount: bookmark.visitCount ?? 0,
-})
-
-const convertHistory = (history) => ({
-  type: 'history',
-  title: history.title || 'History',
-  url: history.url,
-  originalUrl: history.url,
-  originalId: history.id ?? history.url,
-  lastVisitSecondsAgo: history.lastVisitSecondsAgo ?? 0,
-  visitCount: history.visitCount ?? 0,
-})
 
 beforeAll(async () => {
   await jest.unstable_mockModule('../../helper/browserApi.js', () => {
@@ -61,18 +32,18 @@ beforeAll(async () => {
       return Promise.resolve(mockState.history)
     })
 
-    const convertBrowserTabs = jest.fn((tabs) => {
-      lastConvertedTabs = tabs.map((tab) => convertTab(tab))
+    const mockConvertBrowserTabs = jest.fn((tabs) => {
+      lastConvertedTabs = convertBrowserTabs(tabs)
       return lastConvertedTabs
     })
 
-    const convertBrowserBookmarks = jest.fn((bookmarks) => {
-      lastConvertedBookmarks = bookmarks.map((bookmark) => convertBookmark(bookmark))
+    const mockConvertBrowserBookmarks = jest.fn((bookmarks) => {
+      lastConvertedBookmarks = convertBrowserBookmarks(bookmarks)
       return lastConvertedBookmarks
     })
 
-    const convertBrowserHistory = jest.fn((history) => {
-      lastConvertedHistory = history.map((entry) => convertHistory(entry))
+    const mockConvertBrowserHistory = jest.fn((history) => {
+      lastConvertedHistory = convertBrowserHistory(history)
       return lastConvertedHistory
     })
 
@@ -89,9 +60,9 @@ beforeAll(async () => {
       getBrowserTabs.mockClear()
       getBrowserBookmarks.mockClear()
       getBrowserHistory.mockClear()
-      convertBrowserTabs.mockClear()
-      convertBrowserBookmarks.mockClear()
-      convertBrowserHistory.mockClear()
+      mockConvertBrowserTabs.mockClear()
+      mockConvertBrowserBookmarks.mockClear()
+      mockConvertBrowserHistory.mockClear()
     }
 
     const setMockData = ({ tabs, bookmarks, history, hasTabs = true, hasBookmarks = true, hasHistory = true }) => {
@@ -109,9 +80,9 @@ beforeAll(async () => {
       getBrowserTabs,
       getBrowserBookmarks,
       getBrowserHistory,
-      convertBrowserTabs,
-      convertBrowserBookmarks,
-      convertBrowserHistory,
+      convertBrowserTabs: mockConvertBrowserTabs,
+      convertBrowserBookmarks: mockConvertBrowserBookmarks,
+      convertBrowserHistory: mockConvertBrowserHistory,
       __resetMockBrowserApi: reset,
       __setMockBrowserData: setMockData,
       __mockInternals: {
