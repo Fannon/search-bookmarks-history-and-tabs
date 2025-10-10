@@ -69,29 +69,16 @@ The extension is very customizable (see [user options](#user-configuration)) and
 
 ## User Configuration
 
-The extension is highly customizable.
-Finding and setting options is a bit technical, though.
+The extension is highly customizable. Open the **Options** view from the popup to edit every setting in a guided form powered by a
+[JSON Schema](https://json-schema.org/) definition. Each field explains what it does, shows the default value for reference, and
+validates input before it can be saved. Use **Reset** to revert the entire form to defaults (remember to save afterwards) or the
+links in the help panel to jump to the full documentation if you need more context.
 
-The user options are written in [YAML](https://en.wikipedia.org/wiki/YAML) or [JSON](https://en.wikipedia.org/wiki/JSON) notation.
+Under the hood options are still stored as structured JSON and merged with the defaults found in
+[popup/js/model/options.js](popup/js/model/options.js). Only the values that differ from the defaults are persisted, so you can
+focus on the tweaks you care about.
 
-For now, there is no nice options overview, so you have to find them in the [popup/js/model/options.js](popup/js/model/options.js) file in the `defaultOptions` object.
-From there you can see the available options, their names, default values and descriptions.
-
-When defining your custom config, you only need to define the options that you want to overwrite from the defaults.
-
-> ⚠ The options are not validated properly. Please make sure to use them correctly.<br/>
-> If something breaks, consider resetting your options.
-
-An exemplary user config can look like the following example:
-
-```yaml
-searchStrategy: fuzzy
-displayVisitCounter: true
-historyMaxItems: 2048 # Increase max number of browser history items to load
-maxRecentTabsToShow: 32 # Limit number of recent tabs shown (default: 32)
-```
-
-If you have **troubles with performance**, here are a few options that might help. Feel free to pick & choose and tune the values to your situation. In particular `historyMaxItems` and how many bookmarks you have will impact init and search performance.
+If you have **troubles with performance**, here are a few options that might help. The examples use YAML notation to highlight the option names—you can apply the same values through the options form. Feel free to pick & choose and tune the values to your situation. In particular `historyMaxItems` and how many bookmarks you have will impact init and search performance.
 
 Here is a suggestion for low-performance machines:
 
@@ -221,7 +208,6 @@ This extension makes use of the following helpful open-source projects (thanks!)
 - https://github.com/leeoniya/uFuzzy for the fuzzy search algorithm
 - https://github.com/yairEO/tagify for the tag autocomplete widget
 - https://markjs.io/ for highlighting search matches
-- https://www.npmjs.com/package/js-yaml for the user options parsing
 - https://github.com/tabler/tabler-icons for icons
 - https://www.joshwcomeau.com/css/custom-css-reset/
 

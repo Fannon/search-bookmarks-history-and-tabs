@@ -1,42 +1,319 @@
-/** EDIT Options */
+#container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
 #options {
-  width: 500px;
-  height: 580px;
-  position: fixed;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  padding: 6px 8px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
 }
-#options textarea {
-  height: 426px;
-  font-size: 18px;
-  font-family: Consolas, monospace;
-  resize: none;
-}
-#options .help {
-  padding: 2px 6px;
+
+.options-header {
   background: #fff;
-  border-left: 4px solid #4494c9;
-  font-size: 0.9em;
+  border-left: 3px solid #4494c9;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-#edit-options-help {
-  background: #4494c9 !important;
-  color: #fff !important;
-  float: left;
-}
-#edit-options-cancel {
-  background: #929292;
+
+#options .badge {
+  background: #5fc944;
   color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75em;
 }
-#edit-options-reset {
+
+#options .badge.error {
   background: #ee4343;
-  color: #fff;
 }
-#edit-options-save {
+
+.options-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.options-title h1 {
+  font-size: 1.05em;
+  color: #4494c9;
+  margin: 0;
+}
+
+.options-intro {
+  font-size: 0.8em;
+  color: #666;
+  line-height: 1.3;
+  margin: 0;
+}
+
+#options-form {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 6px 0 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-section {
+  background: #fff;
+  border-radius: 4px;
+  padding: 8px 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-header h2 {
+  font-size: 0.95em;
+  color: #444;
+  margin: 0;
+}
+
+.section-description {
+  margin: 2px 0 0;
+  color: #777;
+  font-size: 0.78em;
+  line-height: 1.3;
+}
+
+.option-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.option-field label {
+  font-weight: 600;
+  color: #555;
+  font-size: 0.82em;
+}
+
+.field-description {
+  font-size: 0.75em;
+  color: #777;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.field-default {
+  font-size: 0.7em;
+  color: #999;
+}
+
+.input-wrapper input,
+.input-wrapper textarea,
+.input-wrapper select {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fafafa;
+  color: inherit;
+  font-size: 0.82em;
+}
+
+.input-wrapper textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.field-error {
+  color: #b00020;
+  font-size: 0.72em;
+  display: none;
+}
+
+.object-array {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.object-array-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.object-array-item {
+  border: 1px solid #d7d7d7;
+  border-radius: 4px;
+  padding: 8px;
+  background: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.object-array-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.object-array-item-header h3 {
+  font-size: 0.85em;
+  margin: 0;
+  color: #555;
+}
+
+.button.secondary {
+  background: transparent;
+  border: 1px dashed #4494c9;
+  color: #4494c9;
+  padding: 4px 10px;
+  font-size: 0.78em;
+}
+
+.button.link {
+  background: none;
+  border: none;
+  color: #c94e44;
+  padding: 0;
+  font-size: 0.78em;
+}
+
+.button.primary {
   background: #5fc944;
   color: #fff;
 }
 
-/** DARK MODE **/
+.help {
+  padding: 8px 12px;
+  background: #fff;
+  border-left: 3px solid #4494c9;
+  font-size: 0.78em;
+  line-height: 1.3;
+}
+
+.help-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+#options .controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding-bottom: 6px;
+  position: static;
+}
+
+#options .controls .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  border-radius: 3px;
+  border: none;
+  font-size: 0.82em;
+  cursor: pointer;
+}
+
+#options .controls a.button {
+  text-decoration: none;
+  color: inherit;
+}
+
+#edit-options-reset {
+  background: #ee4343;
+  color: #fff;
+}
+
+#edit-options-cancel {
+  background: #929292;
+  color: #fff;
+}
+
+#links {
+  position: static;
+  width: 100%;
+  height: auto;
+  top: auto;
+  left: auto;
+  padding: 4px 8px;
+  font-size: 0.8em;
+  line-height: 1.3;
+  background: #fff;
+  border-top: 1px solid #d7d7d7;
+}
+
+#error-list {
+  display: none;
+  position: static;
+  width: 100%;
+  height: auto;
+  max-height: 120px;
+  margin: 0;
+  padding: 0 8px 6px;
+  overflow-y: auto;
+}
+
 @media screen and (prefers-color-scheme: dark) {
-  #options .help {
-    background: #000;
+  #options {
+    color: #ddd;
+  }
+
+  .options-header,
+  .option-section,
+  .help {
+    background: #1a1a1a;
+    border-left-color: #6cb8e6;
+    box-shadow: none;
+  }
+
+  .section-header h2,
+  .options-title h1 {
+    color: #d5ecff;
+  }
+
+  .field-description,
+  .section-description,
+  .options-intro,
+  .field-default {
+    color: #aaa;
+  }
+
+  .input-wrapper input,
+  .input-wrapper textarea,
+  .input-wrapper select {
+    background: #111;
+    border-color: #333;
+    color: inherit;
+  }
+
+  .object-array-item {
+    background: #111;
+    border-color: #333;
+  }
+
+  .button.secondary {
+    border-color: #6cb8e6;
+    color: #6cb8e6;
+  }
+
+  .button.link {
+    color: #ff7f70;
+  }
+
+  #options .badge {
+    background: #4ea33b;
+  }
+
+  #options .badge.error {
+    background: #d04b44;
   }
 }
