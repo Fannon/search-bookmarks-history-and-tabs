@@ -171,6 +171,67 @@ describe('initSearch entry point', () => {
     expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
   })
 
+  test('hashRouter reports unexpected errors', async () => {
+    const routeError = new Error('Route failure')
+    const mocks = await mockDependencies({
+      loadTagsOverview: jest.fn(() => {
+        throw routeError
+      }),
+      printError: jest.fn(),
+    })
+
+    const module = await import('../initSearch.js')
+    moduleUnderTest = module
+    await flushPromises()
+
+    window.removeEventListener('hashchange', module.hashRouter)
+    window.location.hash = '#tags/'
+    await module.hashRouter()
+
+    expect(mocks.printError).toHaveBeenCalledWith(routeError)
+  })
+
+  test('debounced search input triggers search once after delay', async () => {
+    jest.useFakeTimers()
+    const mocks = await mockDependencies({
+      search: jest.fn(),
+      getEffectiveOptions: jest.fn(() =>
+        Promise.resolve({
+          searchStrategy: 'precise',
+          searchDebounceMs: 50,
+          debug: false,
+          enableTabs: true,
+          enableBookmarks: true,
+          enableHistory: true,
+          maxRecentTabsToShow: 5,
+        }),
+      ),
+    })
+
+    try {
+      const module = await import('../initSearch.js')
+      moduleUnderTest = module
+
+      const initPromises = flushPromises()
+      jest.runOnlyPendingTimers()
+      await initPromises
+
+      const firstInput = new Event('input')
+      const secondInput = new Event('input')
+
+      module.ext.dom.searchInput.value = 'test'
+      module.ext.dom.searchInput.dispatchEvent(firstInput)
+      module.ext.dom.searchInput.value = 'test updated'
+      module.ext.dom.searchInput.dispatchEvent(secondInput)
+
+      expect(mocks.search).not.toHaveBeenCalled()
+      jest.runOnlyPendingTimers()
+      expect(mocks.search).toHaveBeenCalledTimes(1)
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
   test('closeModals hides overlay containers', async () => {
     await mockDependencies()
     const module = await import('../initSearch.js')
