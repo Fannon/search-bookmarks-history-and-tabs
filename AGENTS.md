@@ -26,7 +26,7 @@
 
 - Use Jest for deterministic unit coverage; stub DOM APIs with jsdom helpers when needed.
 - Use Playwright for integration coverage of popup interactions; keep specs independent and idempotent.
-- Name unit tests `<module>.test.js` under `__tests__` directories and describe behaviour in plain language (`describe('timeSince')`).
+- Name unit tests `<module>.test.js` under `__tests__` directories and describe behavior in plain language (`describe('timeSince')`).
 - Tests must be deterministic, isolated, and clear.
 - Execute a single test using:
   ```bash
@@ -34,6 +34,7 @@
   // When coverage is needed:
   npm run test:unit:coverage <filename>.test.js
   ```
+- Use the [test-engineer](.github\agents\test-engineer.md) agent role.
 
 ## Commit & Pull Request Guidelines
 

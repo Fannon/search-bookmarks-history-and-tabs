@@ -39,7 +39,8 @@
     "lint": "eslint ./popup/js/",
     "start": "serve -p 8080 ./popup/",
     "start:dist": "serve -p 8080 ./dist/chrome/popup/",
-    "size": "node bin/size.js"
+    "size": "node bin/size.js",
+    "analyze": "node bin/analyze-code.js"
   },
   "repository": {
     "type": "git",

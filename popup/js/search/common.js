@@ -14,6 +14,13 @@ const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 const protocolRegex = /^[a-zA-Z]+:\/\//
 
 /**
+ * Generates a random unique ID for on-demand search results
+ */
+function generateRandomId() {
+  return Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36)
+}
+
+/**
  * This is the main search entry point.
  * It will decide which approaches and indexes to use.
  */
@@ -134,7 +141,6 @@ export async function search(event) {
         // Fall back to use precise search instead of crashing entirely
         ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
       }
-
       if (
         ext.opts.enableDirectUrl &&
         urlRegex.test(searchTerm) &&
@@ -148,6 +154,7 @@ export async function search(event) {
           url: cleanUpUrl(url),
           urlHighlighted: cleanUpUrl(url),
           originalUrl: url,
+          originalId: generateRandomId(),
           searchScore: 1,
         })
       }
@@ -528,6 +535,7 @@ function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlank, cust
     url: cleanUpUrl(url),
     urlHighlighted: cleanUpUrl(url),
     originalUrl: url,
+    originalId: generateRandomId(),
     searchScore: 1,
   }
 }

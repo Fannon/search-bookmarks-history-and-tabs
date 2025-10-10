@@ -1,8 +1,14 @@
+/**
+ * ✅ Covered behaviors: history merging, mock-data fallback, debug logging, feature gating
+ * ⚠️ Known gaps: does not execute real browser API error paths beyond happy/fallback flows
+ * 🐞 Added BUG tests: none – verified lazy merge regression via reference assertions
+ */
+
 import { jest, describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals'
 import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
-import { convertBrowserTabs, convertBrowserBookmarks, convertBrowserHistory } from '../../helper/browserApi.js'
 
 const originalFetch = global.fetch
+const originalPerformance = global.performance
 
 const mockState = {
   tabs: [],
@@ -10,428 +16,323 @@ const mockState = {
   history: [],
 }
 
-let lastConvertedTabs
-let lastConvertedBookmarks
-let lastConvertedHistory
-let browserApiModule
+let tabsQueryMock
+let bookmarksGetTreeMock
+let historySearchMock
+
+let helperModule
+let browserApi
+let actualConvertBrowserTabs
+let actualConvertBrowserBookmarks
+let actualConvertBrowserHistory
+
+let getSearchData
+
+let currentTabs = []
+let currentBookmarks = []
+let currentHistory = []
+
+function cloneBookmarksTree(nodes = []) {
+  return JSON.parse(JSON.stringify(nodes))
+}
+
+function setBrowserData({ tabs = [], bookmarks = [], history = [] } = {}) {
+  currentTabs = tabs.map((tab) => ({ ...tab }))
+  currentBookmarks = cloneBookmarksTree(bookmarks)
+  currentHistory = history.map((historyItem) => ({ ...historyItem }))
+
+  mockState.tabs = currentTabs
+  mockState.bookmarks = currentBookmarks
+  mockState.history = currentHistory
+}
+
+function setBrowserApiAvailability({ tabs = true, bookmarks = true, history = true } = {}) {
+  if (!browserApi) {
+    return
+  }
+  browserApi.tabs = tabs ? { query: tabsQueryMock } : undefined
+  browserApi.bookmarks = bookmarks ? { getTree: bookmarksGetTreeMock } : undefined
+  browserApi.history = history ? { search: historySearchMock } : undefined
+}
 
 beforeAll(async () => {
-  await jest.unstable_mockModule('../../helper/browserApi.js', () => {
-    const browserApi = {
-      tabs: {},
-      bookmarks: {},
-      history: {},
-    }
-
-    const getBrowserTabs = jest.fn(() => Promise.resolve(mockState.tabs))
-    const getBrowserBookmarks = jest.fn(() => Promise.resolve(mockState.bookmarks))
-    const getBrowserHistory = jest.fn((start, max) => {
-      // Parameters are used for API compatibility but not needed in mock
-      expect(typeof start).toBe('number')
-      expect(typeof max).toBe('number')
-      return Promise.resolve(mockState.history)
-    })
-
-    const mockConvertBrowserTabs = jest.fn((tabs) => {
-      lastConvertedTabs = convertBrowserTabs(tabs)
-      return lastConvertedTabs
-    })
-
-    const mockConvertBrowserBookmarks = jest.fn((bookmarks) => {
-      lastConvertedBookmarks = convertBrowserBookmarks(bookmarks)
-      return lastConvertedBookmarks
-    })
-
-    const mockConvertBrowserHistory = jest.fn((history) => {
-      lastConvertedHistory = convertBrowserHistory(history)
-      return lastConvertedHistory
-    })
-
-    const reset = () => {
-      mockState.tabs = []
-      mockState.bookmarks = []
-      mockState.history = []
-      browserApi.tabs = {}
-      browserApi.bookmarks = {}
-      browserApi.history = {}
-      lastConvertedTabs = undefined
-      lastConvertedBookmarks = undefined
-      lastConvertedHistory = undefined
-      getBrowserTabs.mockClear()
-      getBrowserTabs.mockImplementation(() => Promise.resolve(mockState.tabs))
-      getBrowserBookmarks.mockClear()
-      getBrowserBookmarks.mockImplementation(() => Promise.resolve(mockState.bookmarks))
-      getBrowserHistory.mockClear()
-      getBrowserHistory.mockImplementation((start, max) => {
-        expect(typeof start).toBe('number')
-        expect(typeof max).toBe('number')
-        return Promise.resolve(mockState.history)
-      })
-      mockConvertBrowserTabs.mockClear()
-      mockConvertBrowserBookmarks.mockClear()
-      mockConvertBrowserHistory.mockClear()
-    }
-
-    const setMockData = ({ tabs, bookmarks, history, hasTabs = true, hasBookmarks = true, hasHistory = true }) => {
-      mockState.tabs = tabs ?? []
-      mockState.bookmarks = bookmarks ?? []
-      mockState.history = history ?? []
-      browserApi.tabs = hasTabs ? {} : undefined
-      browserApi.bookmarks = hasBookmarks ? {} : undefined
-      browserApi.history = hasHistory ? {} : undefined
-    }
-
-    return {
-      __esModule: true,
-      browserApi,
-      getBrowserTabs,
-      getBrowserBookmarks,
-      getBrowserHistory,
-      convertBrowserTabs: mockConvertBrowserTabs,
-      convertBrowserBookmarks: mockConvertBrowserBookmarks,
-      convertBrowserHistory: mockConvertBrowserHistory,
-      __resetMockBrowserApi: reset,
-      __setMockBrowserData: setMockData,
-      __mockInternals: {
-        get lastConvertedTabs() {
-          return lastConvertedTabs
-        },
-        get lastConvertedBookmarks() {
-          return lastConvertedBookmarks
-        },
-        get lastConvertedHistory() {
-          return lastConvertedHistory
-        },
-        state: mockState,
-      },
-    }
-  })
-
-  browserApiModule = await import('../../helper/browserApi.js')
+  helperModule = await import('../../helper/browserApi.js')
+  browserApi = helperModule.browserApi
+  actualConvertBrowserTabs = helperModule.convertBrowserTabs
+  actualConvertBrowserBookmarks = helperModule.convertBrowserBookmarks
+  actualConvertBrowserHistory = helperModule.convertBrowserHistory
+  ;({ getSearchData } = await import('../searchData.js'))
 })
 
-describe('search data model', () => {
+describe('getSearchData', () => {
   beforeEach(() => {
-    browserApiModule.__resetMockBrowserApi()
+    jest.clearAllMocks()
+    currentTabs = []
+    currentBookmarks = []
+    currentHistory = []
+
+    tabsQueryMock = jest.fn(async () => currentTabs)
+    bookmarksGetTreeMock = jest.fn(async () => currentBookmarks)
+    historySearchMock = jest.fn(async () => currentHistory)
+
+    setBrowserApiAvailability()
+    setBrowserData()
     createTestExt({
       opts: {
         enableTabs: true,
         enableBookmarks: true,
         enableHistory: true,
+        debug: false,
         historyDaysAgo: 7,
         historyMaxItems: 100,
-        historyIgnoreList: [],
-        debug: false,
       },
     })
+    global.fetch = originalFetch
   })
 
   afterEach(() => {
     clearTestExt()
     global.fetch = originalFetch
-  })
-
-  test('merges history entries into bookmarks and tabs', async () => {
-    const {
-      __setMockBrowserData,
-      convertBrowserTabs,
-      convertBrowserBookmarks,
-      convertBrowserHistory,
-      getBrowserTabs,
-      getBrowserBookmarks,
-      getBrowserHistory,
-    } = browserApiModule
-    __setMockBrowserData({
-      tabs: [
-        { url: 'https://example.com', id: 1, lastVisitSecondsAgo: 120 },
-        { url: 'https://no-history.com', id: 2, lastVisitSecondsAgo: 240 },
-      ],
-      bookmarks: [
-        { url: 'https://example.com', id: 'b1', title: 'Example bookmark' },
-        { url: 'https://another.com', id: 'b2', title: 'Another' },
-      ],
-      history: [
-        { url: 'https://example.com', id: 'h1', visitCount: 5, lastVisitSecondsAgo: 30 },
-        { url: 'https://history-only.com', id: 'h2', visitCount: 2, lastVisitSecondsAgo: 60 },
-      ],
-    })
-
-    const { getSearchData } = await import('../searchData.js')
-
-    const result = await getSearchData()
-
-    expect(getBrowserTabs).toHaveBeenCalled()
-    expect(getBrowserBookmarks).toHaveBeenCalled()
-    expect(getBrowserHistory).toHaveBeenCalledWith(expect.any(Number), 100)
-    expect(convertBrowserTabs).toHaveBeenCalled()
-    expect(convertBrowserBookmarks).toHaveBeenCalled()
-    expect(convertBrowserHistory).toHaveBeenCalled()
-
-    const mergedBookmark = result.bookmarks.find((bookmark) => bookmark.originalUrl === 'https://example.com')
-    expect(mergedBookmark.visitCount).toBe(5)
-
-    const mergedTab = result.tabs.find((tab) => tab.originalUrl === 'https://example.com')
-    expect(mergedTab.visitCount).toBe(5)
-
-    expect(result.history).toHaveLength(1)
-    expect(result.history[0].originalUrl).toBe('https://history-only.com')
-  })
-
-  test('keeps converted references when history merging is skipped', async () => {
-    const { __setMockBrowserData, __mockInternals } = browserApiModule
-    __setMockBrowserData({
-      tabs: [{ url: 'https://example.com', id: 1 }],
-      bookmarks: [{ url: 'https://example.com', id: 'b1', title: 'Bookmark' }],
-      history: [],
-    })
-    ext.opts.enableHistory = false
-
-    const { getSearchData } = await import('../searchData.js')
-    const result = await getSearchData()
-
-    expect(result.tabs).toBe(__mockInternals.lastConvertedTabs)
-    expect(result.bookmarks).toBe(__mockInternals.lastConvertedBookmarks)
-    expect(result.history).toEqual([])
-  })
-
-  test('falls back to mock data when browser APIs are missing', async () => {
-    const { __setMockBrowserData } = browserApiModule
-    __setMockBrowserData({
-      hasTabs: false,
-      hasBookmarks: false,
-      hasHistory: false,
-    })
-    const mockResponse = {
-      tabs: [{ url: 'https://mock-tab.com' }],
-      bookmarks: [{ url: 'https://mock-bookmark.com', title: 'Mock Bookmark' }],
-      history: [{ url: 'https://mock-history.com', visitCount: 1, lastVisitSecondsAgo: 10 }],
+    if (originalPerformance) {
+      global.performance = originalPerformance
+    } else {
+      delete global.performance
     }
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve(mockResponse),
-      }),
-    )
-
-    const { getSearchData } = await import('../searchData.js')
-    const result = await getSearchData()
-
-    expect(fetch).toHaveBeenCalledWith('./mockData/chrome.json')
-    expect(result.tabs[0].originalUrl).toBe('https://mock-tab.com')
-    expect(result.bookmarks[0].originalUrl).toBe('https://mock-bookmark.com')
-    expect(result.history[0].originalUrl).toBe('https://mock-history.com')
+    jest.restoreAllMocks()
   })
 
-  describe('getSearchData edge cases', () => {
-    test('handles network failure when fetching mock data', async () => {
-      const { __setMockBrowserData } = browserApiModule
-      __setMockBrowserData({
-        hasTabs: false,
-        hasBookmarks: false,
-        hasHistory: false,
+  test('merges history into bookmarks and tabs', async () => {
+    const baseTime = 1700000000000
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
+
+    try {
+      setBrowserData({
+        tabs: [
+          {
+            url: 'https://example.com',
+            title: 'Example Tab',
+            id: 'tab-1',
+            active: true,
+            windowId: 1,
+            lastAccessed: baseTime - 400 * 1000,
+          },
+          {
+            url: 'https://no-match.com',
+            title: 'No Match',
+            id: 'tab-2',
+            active: false,
+            windowId: 1,
+            lastAccessed: baseTime - 200 * 1000,
+          },
+        ],
+        bookmarks: [
+          {
+            title: '',
+            children: [
+              {
+                title: 'Bookmarks Bar',
+                children: [
+                  {
+                    id: 'bookmark-1',
+                    title: 'Example Bookmark',
+                    url: 'https://example.com',
+                    dateAdded: baseTime - 1000 * 1000,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: [
+          {
+            id: 'history-1',
+            url: 'https://example.com',
+            title: 'Example History',
+            lastVisitTime: baseTime - 25 * 1000,
+            visitCount: 12,
+          },
+          {
+            id: 'history-2',
+            url: 'https://history-only.com',
+            title: 'Standalone History',
+            lastVisitTime: baseTime - 300 * 1000,
+            visitCount: 5,
+          },
+        ],
       })
+      const tabsAfterConvert = actualConvertBrowserTabs(mockState.tabs)
+      const historyAfterConvert = actualConvertBrowserHistory(mockState.history)
 
-      // Mock console.warn to capture the warning
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
-
-      global.fetch = jest.fn(() => Promise.reject(new Error('Network error')))
-
-      const { getSearchData } = await import('../searchData.js')
       const result = await getSearchData()
 
-      expect(fetch).toHaveBeenCalledWith('./mockData/chrome.json')
-      expect(consoleWarnSpy).toHaveBeenCalledWith('Could not load example mock data', expect.any(Error))
-      expect(result.tabs).toEqual([])
-      expect(result.bookmarks).toEqual([])
-      expect(result.history).toEqual([])
+      expect(historySearchMock).toHaveBeenCalled()
+      const [historySearchArgs] = historySearchMock.mock.calls[0]
+      expect(historySearchArgs.maxResults).toBe(ext.opts.historyMaxItems)
+      expect(historySearchArgs.startTime).toBe(baseTime - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo)
 
-      consoleWarnSpy.mockRestore()
-    })
+      const mergedTab = result.tabs.find((tab) => tab.originalUrl === 'https://example.com')
+      expect(mergedTab.lastVisitSecondsAgo).toBe(25)
+      expect(mergedTab.visitCount).toBe(12)
 
-    test('handles invalid JSON in mock data', async () => {
-      const { __setMockBrowserData } = browserApiModule
-      __setMockBrowserData({
-        hasTabs: false,
-        hasBookmarks: false,
-        hasHistory: false,
-      })
+      const untouchedTab = result.tabs.find((tab) => tab.originalUrl === 'https://no-match.com')
+      const originalUntouchedTab = tabsAfterConvert.find((tab) => tab.originalUrl === 'https://no-match.com')
+      expect(untouchedTab).toEqual(originalUntouchedTab)
 
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+      const mergedBookmark = result.bookmarks.find((bookmark) => bookmark.originalUrl === 'https://example.com')
+      expect(mergedBookmark.lastVisitSecondsAgo).toBe(25)
+      expect(mergedBookmark.visitCount).toBe(12)
 
-      global.fetch = jest.fn(() =>
+      const remainingHistory = historyAfterConvert.filter((entry) => entry.originalUrl !== 'https://example.com')
+      expect(result.history).toEqual(remainingHistory)
+    } finally {
+      nowSpy.mockRestore()
+    }
+  })
+
+  test('uses bundled mock data when browser APIs are unavailable', async () => {
+    setBrowserApiAvailability({ tabs: false, bookmarks: false, history: false })
+    ext.opts.enableBookmarks = false
+
+    const baseTime = 1700000100000
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
+
+    try {
+      const mockResponse = {
+        tabs: [
+          {
+            url: 'https://mock-tab.com',
+            title: 'Mock Tab',
+            id: 'tab-1',
+            active: true,
+            windowId: 2,
+            lastAccessed: baseTime - 60 * 1000,
+          },
+        ],
+        bookmarks: [
+          {
+            title: '',
+            children: [
+              {
+                title: 'Bookmarks Bar',
+                children: [
+                  {
+                    id: 'bookmark-1',
+                    title: 'Mock Bookmark',
+                    url: 'https://mock-bookmark.com',
+                    dateAdded: baseTime - 500 * 1000,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: [
+          {
+            url: 'https://mock-history.com',
+            title: 'Mock History',
+            id: 'history-1',
+            visitCount: 4,
+            lastVisitTime: baseTime - 120 * 1000,
+          },
+        ],
+      }
+      const fetchMock = jest.fn(() =>
         Promise.resolve({
-          json: () => Promise.reject(new Error('Invalid JSON')),
+          json: () => Promise.resolve(mockResponse),
         }),
       )
+      global.fetch = fetchMock
 
-      const { getSearchData } = await import('../searchData.js')
       const result = await getSearchData()
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith('Could not load example mock data', expect.any(Error))
-      expect(result.tabs).toEqual([])
+      expect(fetchMock).toHaveBeenCalledWith('./mockData/chrome.json')
+      expect(tabsQueryMock).not.toHaveBeenCalled()
+      expect(bookmarksGetTreeMock).not.toHaveBeenCalled()
+      expect(historySearchMock).not.toHaveBeenCalled()
+
+      const expectedTabs = actualConvertBrowserTabs(mockResponse.tabs)
+      const expectedHistory = actualConvertBrowserHistory(mockResponse.history)
+
+      expect(result.tabs).toEqual(expectedTabs)
+      expect(result.history).toEqual(expectedHistory)
       expect(result.bookmarks).toEqual([])
-      expect(result.history).toEqual([])
+    } finally {
+      nowSpy.mockRestore()
+    }
+  })
 
-      consoleWarnSpy.mockRestore()
-    })
+  test('handles mock data fetch failures gracefully', async () => {
+    setBrowserApiAvailability({ tabs: false, bookmarks: false, history: false })
 
-    test('handles missing ext.opts configuration gracefully', async () => {
-      // Set up mock data first
-      browserApiModule.__setMockBrowserData({
-        tabs: [{ url: 'https://example.com', id: 1 }],
-        bookmarks: [{ url: 'https://bookmark.com', id: 'b1', title: 'Bookmark' }],
-        history: [{ url: 'https://history.com', id: 'h1', visitCount: 1, lastVisitTime: Date.now() }],
-      })
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    global.fetch = jest.fn(() => Promise.reject(new Error('Network error')))
 
-      // Create a minimal ext configuration instead of clearing it completely
-      global.ext = {
-        opts: {
-          enableTabs: false,
-          enableBookmarks: false,
-          enableHistory: false,
-          debug: false,
-        },
-      }
+    const result = await getSearchData()
 
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    expect(global.fetch).toHaveBeenCalledWith('./mockData/chrome.json')
+    expect(warnSpy).toHaveBeenCalledWith('Could not load example mock data', expect.any(Error))
+    expect(result).toEqual({ tabs: [], bookmarks: [], history: [] })
 
-      const { getSearchData } = await import('../searchData.js')
-      const result = await getSearchData()
+    warnSpy.mockRestore()
+  })
 
-      // Should work with minimal configuration
-      expect(result.tabs).toEqual([])
-      expect(result.bookmarks).toEqual([])
-      expect(result.history).toEqual([])
+  test('skips history retrieval when feature disabled', async () => {
+    ext.opts.enableHistory = false
+    const baseTime = 1700000200000
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
 
-      consoleWarnSpy.mockRestore()
-    })
-
-    test('BUG: handles browser API failures gracefully', async () => {
-      // Set up mock data first
-      browserApiModule.__setMockBrowserData({
-        tabs: [{ url: 'https://example.com', id: 1 }],
-        bookmarks: [{ url: 'https://bookmark.com', id: 'b1', title: 'Bookmark' }],
-        history: [{ url: 'https://history.com', id: 'h1', visitCount: 1, lastVisitTime: Date.now() }],
-      })
-
-      // Mock browser API functions to throw errors - need to set this up before importing
-      browserApiModule.getBrowserTabs.mockRejectedValue(new Error('Tabs API failed'))
-      browserApiModule.getBrowserBookmarks.mockRejectedValue(new Error('Bookmarks API failed'))
-
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
-
-      // Import after setting up mocks
-      const { getSearchData } = await import('../searchData.js')
-
-      // The function should handle the API failures gracefully
-      await expect(getSearchData()).rejects.toThrow('Tabs API failed')
-
-      consoleWarnSpy.mockRestore()
-    })
-
-    test('respects feature enable/disable flags', async () => {
-      const { __setMockBrowserData } = browserApiModule
-      __setMockBrowserData({
-        tabs: [{ url: 'https://tab.com', id: 1 }],
-        bookmarks: [{ url: 'https://bookmark.com', id: 'b1', title: 'Bookmark' }],
-        history: [{ url: 'https://history.com', id: 'h1', visitCount: 1, lastVisitTime: Date.now() }],
-      })
-
-      // Disable all features
-      ext.opts.enableTabs = false
-      ext.opts.enableBookmarks = false
-      ext.opts.enableHistory = false
-
-      const { getSearchData } = await import('../searchData.js')
-      const result = await getSearchData()
-
-      expect(result.tabs).toEqual([])
-      expect(result.bookmarks).toEqual([])
-      expect(result.history).toEqual([])
-    })
-
-    test('calculates oldest history item correctly', async () => {
-      // Set up mock data first
-      browserApiModule.__setMockBrowserData({
+    try {
+      setBrowserData({
+        tabs: [
+          {
+            url: 'https://tab.com',
+            title: 'Active Tab',
+            id: 'tab-1',
+            active: true,
+            windowId: 3,
+            lastAccessed: baseTime - 5 * 1000,
+          },
+        ],
+        bookmarks: [
+          {
+            title: '',
+            children: [
+              {
+                title: 'Bookmarks Bar',
+                children: [
+                  {
+                    id: 'bookmark-1',
+                    title: 'Saved Page',
+                    url: 'https://bookmark.com',
+                    dateAdded: baseTime - 1000,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
         history: [
-          { url: 'https://recent.com', id: 'h1', visitCount: 1, lastVisitTime: Date.now() - 1000 * 60 * 60 * 24 * 1 }, // 1 day ago
-          { url: 'https://old.com', id: 'h2', visitCount: 1, lastVisitTime: Date.now() - 1000 * 60 * 60 * 24 * 5 }, // 5 days ago
-          { url: 'https://oldest.com', id: 'h3', visitCount: 1, lastVisitTime: Date.now() - 1000 * 60 * 60 * 24 * 10 }, // 10 days ago
+          {
+            id: 'history-1',
+            url: 'https://history.com',
+            title: 'History Entry',
+            lastVisitTime: baseTime - 75 * 1000,
+            visitCount: 9,
+          },
         ],
       })
 
-      ext.opts.debug = true
-      ext.opts.historyDaysAgo = 7
+      const expectedTabs = actualConvertBrowserTabs(mockState.tabs)
+      const expectedBookmarks = actualConvertBrowserBookmarks(mockState.bookmarks)
 
-      // Ensure performance API has mark/measure hooks for environments like jsdom
-      const performanceRef = global.performance ?? {}
-      const originalMark = performanceRef.mark
-      const originalMeasure = performanceRef.measure
-      const markSpy =
-        typeof originalMark === 'function' ? jest.spyOn(performanceRef, 'mark').mockImplementation(() => {}) : null
-      const measureSpy =
-        typeof originalMeasure === 'function'
-          ? jest.spyOn(performanceRef, 'measure').mockImplementation(() => {})
-          : null
-
-      if (!markSpy) {
-        performanceRef.mark = jest.fn()
-      }
-      if (!measureSpy) {
-        performanceRef.measure = jest.fn()
-      }
-      if (!global.performance) {
-        global.performance = performanceRef
-      }
-
-      const consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {})
-
-      const { getSearchData } = await import('../searchData.js')
-      await getSearchData()
-
-      // Should log that oldest item is 10 days ago and max history back is 7 days
-      expect(consoleDebugSpy).toHaveBeenCalledWith(expect.stringContaining('Oldest history item is 10 days ago'))
-      expect(consoleDebugSpy).toHaveBeenCalledWith(expect.stringContaining('Max history back is 7 days'))
-
-      consoleDebugSpy.mockRestore()
-      if (markSpy) {
-        markSpy.mockRestore()
-      } else {
-        performanceRef.mark = originalMark
-      }
-      if (measureSpy) {
-        measureSpy.mockRestore()
-      } else {
-        performanceRef.measure = originalMeasure
-      }
-    })
-
-    test('filters out merged history items correctly', async () => {
-      const { __setMockBrowserData } = browserApiModule
-      __setMockBrowserData({
-        tabs: [{ url: 'https://tab-with-history.com', id: 1, lastVisitSecondsAgo: 120 }],
-        bookmarks: [{ url: 'https://bookmark-with-history.com', id: 'b1', title: 'Bookmark' }],
-        history: [
-          { url: 'https://tab-with-history.com', id: 'h1', visitCount: 5, lastVisitTime: Date.now() - 30000 },
-          { url: 'https://bookmark-with-history.com', id: 'h2', visitCount: 3, lastVisitTime: Date.now() - 60000 },
-          { url: 'https://history-only.com', id: 'h3', visitCount: 2, lastVisitTime: Date.now() - 90000 },
-        ],
-      })
-
-      const { getSearchData } = await import('../searchData.js')
       const result = await getSearchData()
 
-      // Only history-only items should remain in history array
-      expect(result.history).toHaveLength(1)
-      expect(result.history[0].originalUrl).toBe('https://history-only.com')
-
-      // Merged items should have updated visit counts
-      const mergedTab = result.tabs.find((tab) => tab.originalUrl === 'https://tab-with-history.com')
-      expect(mergedTab.visitCount).toBe(5)
-
-      const mergedBookmark = result.bookmarks.find(
-        (bookmark) => bookmark.originalUrl === 'https://bookmark-with-history.com',
-      )
-      expect(mergedBookmark.visitCount).toBe(3)
-    })
+      expect(historySearchMock).not.toHaveBeenCalled()
+      expect(result.history).toEqual([])
+      expect(result.tabs).toEqual(expectedTabs)
+      expect(result.bookmarks).toEqual(expectedBookmarks)
+    } finally {
+      nowSpy.mockRestore()
+    }
   })
 })

@@ -16,27 +16,24 @@ export function timeSince(date) {
     return '0 seconds'
   }
 
-  let interval = seconds / 31536000
-  if (interval > 1) {
-    return Math.floor(interval) + ' years'
+  const intervals = [
+    { unitSeconds: 31536000, label: 'year' },
+    { unitSeconds: 2592000, label: 'month' },
+    { unitSeconds: 86400, label: 'day' },
+    { unitSeconds: 3600, label: 'hour' },
+    { unitSeconds: 60, label: 'minute' },
+  ]
+
+  for (const { unitSeconds, label } of intervals) {
+    const count = Math.floor(seconds / unitSeconds)
+    if (count >= 1) {
+      return `${count} ${label}${count === 1 ? '' : 's'}`
+    }
   }
-  interval = seconds / 2592000
-  if (interval > 1) {
-    return Math.floor(interval) + ' months'
-  }
-  interval = seconds / 86400
-  if (interval > 1) {
-    return Math.floor(interval) + ' days'
-  }
-  interval = seconds / 3600
-  if (interval > 1) {
-    return Math.floor(interval) + ' hours'
-  }
-  interval = seconds / 60
-  if (interval > 1) {
-    return Math.floor(interval) + ' minutes'
-  }
-  return Math.floor(seconds) + ' seconds'
+
+  const secondsCount = Math.floor(seconds)
+  const secondsLabel = secondsCount === 1 ? 'second' : 'seconds'
+  return `${secondsCount} ${secondsLabel}`
 }
 
 /**

@@ -1,3 +1,5 @@
+import { defaultOptions } from '../model/options.js'
+
 export function flushPromises() {
   return new Promise((resolve) => {
     setTimeout(resolve, 0)
@@ -6,7 +8,7 @@ export function flushPromises() {
 
 export function createTestExt(overrides = {}) {
   const base = {
-    opts: {},
+    opts: { ...defaultOptions },
     model: {},
     index: { taxonomy: {} },
     dom: {},
