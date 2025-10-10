@@ -61,6 +61,9 @@ describe('timeSince', () => {
   it('returns seconds for very recent times', () => {
     const thirtySecondsAgo = new Date('2024-01-01T11:59:30Z')
     expect(timeSince(thirtySecondsAgo)).toBe('30 seconds')
+
+    const oneSecondAgo = new Date('2024-01-01T11:59:59Z')
+    expect(timeSince(oneSecondAgo)).toBe('1 second')
   })
 
   it('returns minutes for times less than an hour', () => {
@@ -89,17 +92,17 @@ describe('timeSince', () => {
   })
 
   it('handles boundary conditions correctly', () => {
-    // Test minute boundary: 59 seconds = "59 seconds", 61 seconds = "1 minutes"
+    // Test minute boundary: 59 seconds = "59 seconds", 61 seconds = "1 minute"
     expect(timeSince(new Date('2024-01-01T11:59:01Z'))).toBe('59 seconds')
-    expect(timeSince(new Date('2024-01-01T11:58:59Z'))).toBe('1 minutes')
+    expect(timeSince(new Date('2024-01-01T11:58:59Z'))).toBe('1 minute')
 
-    // Test hour boundary: 59 minutes = "59 minutes", 61 minutes = "1 hours"
+    // Test hour boundary: 59 minutes = "59 minutes", 61 minutes = "1 hour"
     expect(timeSince(new Date('2024-01-01T11:01:00Z'))).toBe('59 minutes')
-    expect(timeSince(new Date('2024-01-01T10:59:00Z'))).toBe('1 hours')
+    expect(timeSince(new Date('2024-01-01T10:59:00Z'))).toBe('1 hour')
 
-    // Test day boundary: 23 hours = "0 seconds", 25 hours = "1 days"
+    // Test day boundary: 23 hours = "0 seconds", 25 hours = "1 day"
     expect(timeSince(new Date('2024-01-01T13:00:00Z'))).toBe('0 seconds')
-    expect(timeSince(new Date('2023-12-31T11:00:00Z'))).toBe('1 days')
+    expect(timeSince(new Date('2023-12-31T11:00:00Z'))).toBe('1 day')
   })
 
   it('handles edge cases', () => {

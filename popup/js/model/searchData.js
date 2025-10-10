@@ -70,7 +70,7 @@ export async function getSearchData() {
       if (ext.opts.enableBookmarks) {
         result.bookmarks = convertBrowserBookmarks(chromeMockData.bookmarks)
       }
-      if (ext.opts.enableBookmarks) {
+      if (ext.opts.enableHistory) {
         result.history = convertBrowserHistory(chromeMockData.history)
       }
     } catch (err) {

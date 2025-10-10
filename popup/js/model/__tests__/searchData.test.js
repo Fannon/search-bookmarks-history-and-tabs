@@ -221,6 +221,37 @@ describe('search data model', () => {
     expect(result.history[0].originalUrl).toBe('https://mock-history.com')
   })
 
+  test('loads mock history when bookmarks are disabled but history is enabled', async () => {
+    const { __setMockBrowserData } = browserApiModule
+    __setMockBrowserData({
+      hasTabs: false,
+      hasBookmarks: false,
+      hasHistory: false,
+    })
+
+    ext.opts.enableBookmarks = false
+    ext.opts.enableHistory = true
+
+    const mockResponse = {
+      tabs: [{ url: 'https://mock-tab.com' }],
+      bookmarks: [{ url: 'https://mock-bookmark.com', title: 'Mock Bookmark' }],
+      history: [{ url: 'https://mock-history.com', visitCount: 1, lastVisitSecondsAgo: 10 }],
+    }
+
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve(mockResponse),
+      }),
+    )
+
+    const { getSearchData } = await import('../searchData.js')
+    const result = await getSearchData()
+
+    expect(result.bookmarks).toEqual([])
+    expect(result.history).toHaveLength(1)
+    expect(result.history[0].originalUrl).toBe('https://mock-history.com')
+  })
+
   describe('getSearchData edge cases', () => {
     test('handles network failure when fetching mock data', async () => {
       const { __setMockBrowserData } = browserApiModule
