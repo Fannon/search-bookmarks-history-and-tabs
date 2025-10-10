@@ -48,26 +48,6 @@ describe('cleanUpUrl', () => {
   })
 })
 
-describe('Integration Tests', () => {
-  it('timeSince and cleanUpUrl work together for realistic scenarios', () => {
-    // Test realistic scenario: URL cleanup and time formatting
-    const testUrl = 'HTTPS://WWW.EXAMPLE.COM/TEST?QUERY=VALUE'
-    const cleanedUrl = cleanUpUrl(testUrl)
-
-    // Simulate a timestamp from the past
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date('2024-01-01T12:00:00Z'))
-
-    const pastDate = new Date('2024-01-01T11:30:00Z') // 30 minutes ago
-    const timeStr = timeSince(pastDate)
-
-    expect(cleanedUrl).toBe('example.com/test?query=value')
-    expect(timeStr).toBe('30 minutes')
-
-    jest.useRealTimers()
-  })
-})
-
 describe('timeSince', () => {
   beforeEach(() => {
     jest.useFakeTimers()
@@ -192,6 +172,24 @@ describe('loadScript', () => {
     // Should not create or append script on second call (cached)
     expect(document.createElement).not.toHaveBeenCalled()
     expect(mockHead.appendChild).not.toHaveBeenCalled()
+  })
+
+  it('rejects when script fails to load and retries create element on next call', async () => {
+    const url = 'https://example.com/fail.js'
+
+    const loadPromise = loadScript(url)
+    mockScript.onerror()
+
+    await expect(loadPromise).rejects.toThrow(`Failed to load script: ${url}`)
+
+    jest.clearAllMocks()
+
+    const retryPromise = loadScript(url)
+    mockScript.onload()
+    await expect(retryPromise).resolves.toBeUndefined()
+
+    expect(document.createElement).toHaveBeenCalledWith('script')
+    expect(mockHead.appendChild).toHaveBeenCalledWith(mockScript)
   })
 
   it('handles multiple different script URLs correctly', async () => {

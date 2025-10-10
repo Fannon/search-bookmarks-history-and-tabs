@@ -1,5 +1,5 @@
 import { jest, describe, test, expect, beforeEach, afterEach } from '@jest/globals'
-import { flushPromises } from './testUtils.js'
+import { flushPromises, clearTestExt } from './testUtils.js'
 
 const setupDom = () => {
   document.body.innerHTML = `
@@ -106,7 +106,7 @@ describe('initSearch entry point', () => {
   beforeEach(() => {
     jest.resetModules()
     jest.clearAllMocks()
-    delete window.ext
+    clearTestExt()
     setupDom()
     moduleUnderTest = null
   })
@@ -115,10 +115,7 @@ describe('initSearch entry point', () => {
     if (moduleUnderTest) {
       window.removeEventListener('hashchange', moduleUnderTest.hashRouter)
     }
-    delete global.ext
-    if (typeof window !== 'undefined') {
-      delete window.ext
-    }
+    clearTestExt()
     moduleUnderTest = null
   })
 

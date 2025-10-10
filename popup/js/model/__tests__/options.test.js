@@ -19,7 +19,7 @@
  */
 
 import { jest } from '@jest/globals'
-import { createTestExt } from '../../__tests__/testUtils.js'
+import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
 
 // Mock the utils module
 const mockPrintError = jest.fn()
@@ -40,10 +40,7 @@ describe('options model', () => {
   })
 
   afterEach(() => {
-    delete global.ext
-    if (typeof window !== 'undefined') {
-      delete window.ext
-    }
+    clearTestExt()
   })
 
   describe('validateUserOptions', () => {

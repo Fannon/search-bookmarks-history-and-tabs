@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals'
+import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
 import { simpleSearch, resetSimpleSearchState } from '../simpleSearch.js'
 
 const resetModes = () => {
@@ -25,25 +26,19 @@ const resetModes = () => {
  */
 describe('simpleSearch', () => {
   beforeEach(() => {
-    globalThis.ext = {
+    createTestExt({
       model: {
         bookmarks: [],
         tabs: [],
         history: [],
       },
-    }
-    if (typeof window !== 'undefined') {
-      window.ext = globalThis.ext
-    }
+    })
     resetModes()
   })
 
   afterEach(() => {
     resetModes()
-    delete globalThis.ext
-    if (typeof window !== 'undefined') {
-      delete window.ext
-    }
+    clearTestExt()
   })
 
   describe('search modes', () => {

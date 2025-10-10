@@ -1,5 +1,5 @@
 import { jest, describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals'
-import { createTestExt } from '../../__tests__/testUtils.js'
+import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
 import { convertBrowserTabs, convertBrowserBookmarks, convertBrowserHistory } from '../../helper/browserApi.js'
 
 const originalFetch = global.fetch
@@ -110,13 +110,6 @@ beforeAll(async () => {
   browserApiModule = await import('../../helper/browserApi.js')
 })
 
-const clearExt = () => {
-  delete global.ext
-  if (typeof window !== 'undefined') {
-    delete window.ext
-  }
-}
-
 describe('search data model', () => {
   beforeEach(() => {
     browserApiModule.__resetMockBrowserApi()
@@ -134,7 +127,7 @@ describe('search data model', () => {
   })
 
   afterEach(() => {
-    clearExt()
+    clearTestExt()
     global.fetch = originalFetch
   })
 

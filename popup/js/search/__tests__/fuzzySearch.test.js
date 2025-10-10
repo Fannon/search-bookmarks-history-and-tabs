@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals'
+import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
 import { fuzzySearch, resetFuzzySearchState } from '../fuzzySearch.js'
 
 const delimiter = '\u00A6'
@@ -134,7 +135,7 @@ describe('fuzzySearch', () => {
 
     TrackedUFuzzy.reset()
 
-    globalThis.ext = {
+    createTestExt({
       model: {
         bookmarks: [],
         tabs: [],
@@ -144,7 +145,7 @@ describe('fuzzySearch', () => {
         searchFuzzyness: 0.3,
         uFuzzyOptions: null,
       },
-    }
+    })
     window.uFuzzy = TrackedUFuzzy
     globalThis.uFuzzy = TrackedUFuzzy
     resetModes()
@@ -155,7 +156,7 @@ describe('fuzzySearch', () => {
     TrackedUFuzzy.reset()
     window.uFuzzy = originalUFuzzy
     globalThis.uFuzzy = originalUFuzzy
-    delete globalThis.ext
+    clearTestExt()
   })
 
   it('returns fuzzy results for bookmarks mode and populates highlight and score', async () => {
