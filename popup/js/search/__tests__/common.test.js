@@ -11,9 +11,7 @@ const mockCleanUpUrl = jest.fn((url) => url.replace(/\/+$/, ''))
 const mockPrintError = jest.fn()
 const mockCloseModals = jest.fn()
 const mockRenderSearchResults = jest.fn()
-const mockFuzzySearch = jest.fn(() => Promise.resolve([]))
-const mockSimpleSearch = jest.fn(() => [])
-const mockSearchTaxonomy = jest.fn(() => [])
+const mockLoadScript = jest.fn(() => Promise.resolve())
 
 let commonModule
 let search
@@ -31,6 +29,7 @@ beforeAll(async () => {
     __esModule: true,
     cleanUpUrl: mockCleanUpUrl,
     printError: mockPrintError,
+    loadScript: mockLoadScript,
   }))
   await jest.unstable_mockModule('../../initSearch.js', () => ({
     __esModule: true,
@@ -39,18 +38,6 @@ beforeAll(async () => {
   await jest.unstable_mockModule('../../view/searchView.js', () => ({
     __esModule: true,
     renderSearchResults: mockRenderSearchResults,
-  }))
-  await jest.unstable_mockModule('../fuzzySearch.js', () => ({
-    __esModule: true,
-    fuzzySearch: mockFuzzySearch,
-  }))
-  await jest.unstable_mockModule('../simpleSearch.js', () => ({
-    __esModule: true,
-    simpleSearch: mockSimpleSearch,
-  }))
-  await jest.unstable_mockModule('../taxonomySearch.js', () => ({
-    __esModule: true,
-    searchTaxonomy: mockSearchTaxonomy,
   }))
 
   commonModule = await import('../common.js')
@@ -64,12 +51,12 @@ beforeAll(async () => {
 beforeEach(() => {
   jest.clearAllMocks()
   mockGetBrowserTabs.mockResolvedValue([])
-  mockFuzzySearch.mockResolvedValue([])
-  mockSimpleSearch.mockReturnValue([])
+  mockLoadScript.mockResolvedValue(undefined)
   setupExt()
 })
 
 afterEach(() => {
+  jest.restoreAllMocks()
   clearTestExt()
 })
 
@@ -145,26 +132,35 @@ describe('searchWithAlgorithm', () => {
     const results = await searchWithAlgorithm('precise', 'abc')
 
     expect(results).toEqual([])
-    expect(mockSimpleSearch).not.toHaveBeenCalled()
-    expect(mockFuzzySearch).not.toHaveBeenCalled()
   })
 
   test('delegates to precise search', async () => {
-    mockSimpleSearch.mockReturnValue([{ type: 'bookmark' }])
+    ext.model.bookmarks = [
+      {
+        type: 'bookmark',
+        title: 'Daily News Digest',
+        url: 'https://news.test',
+        searchString: 'daily news digest',
+      },
+    ]
 
     const results = await searchWithAlgorithm('precise', 'news', 'bookmarks')
 
-    expect(mockSimpleSearch).toHaveBeenCalledWith('bookmarks', 'news')
-    expect(results).toEqual([{ type: 'bookmark' }])
+    expect(results).toEqual([
+      expect.objectContaining({
+        title: 'Daily News Digest',
+        searchApproach: 'precise',
+        type: 'bookmark',
+      }),
+    ])
   })
 
   test('delegates to fuzzy search', async () => {
-    mockFuzzySearch.mockResolvedValue([{ type: 'tab' }])
-
+    mockLoadScript.mockClear()
     const results = await searchWithAlgorithm('fuzzy', 'tabs', 'tabs')
 
-    expect(mockFuzzySearch).toHaveBeenCalledWith('tabs', 'tabs')
-    expect(results).toEqual([{ type: 'tab' }])
+    expect(results).toEqual([])
+    expect(mockLoadScript).toHaveBeenCalledWith('./lib/uFuzzy.iife.min.js')
   })
 
   test('throws when search approach unsupported', async () => {
@@ -346,8 +342,8 @@ describe('search', () => {
 
     await search({ key: 't' })
 
+    expect(ext.model.result).toBe(cached)
     expect(mockRenderSearchResults).toHaveBeenCalledWith(cached)
-    expect(mockSimpleSearch).not.toHaveBeenCalled()
   })
 
   test('loads default entries when search term empty', async () => {
@@ -369,14 +365,26 @@ describe('search', () => {
 
   test('performs taxonomy search when tag prefix detected', async () => {
     ext.dom.searchInput.value = '#TagSearch'
-    ext.model.bookmarks = [{ id: 1 }]
-    mockSearchTaxonomy.mockReturnValue([
-      { type: 'bookmark', score: 120, title: 'Tagged result', url: 'https://tag.test', searchScore: 1 },
-    ])
+    ext.model.bookmarks = [
+      {
+        id: 1,
+        type: 'bookmark',
+        title: 'Tagged result',
+        url: 'https://tag.test',
+        searchString: 'Tagged result https://tag.test',
+        tags: '#tagsearch#other',
+        tagsArray: ['TagSearch', 'Other'],
+      },
+    ]
 
     await search({ key: 't' })
 
-    expect(mockSearchTaxonomy).toHaveBeenCalledWith('tagsearch', 'tags', ext.model.bookmarks)
+    expect(ext.model.result).toEqual([
+      expect.objectContaining({
+        title: 'Tagged result',
+        searchApproach: 'taxonomy',
+      }),
+    ])
     expect(mockRenderSearchResults).toHaveBeenCalled()
   })
 
@@ -391,9 +399,14 @@ describe('search', () => {
 
   test('adds direct url result when term looks like URL', async () => {
     ext.dom.searchInput.value = 'example.com'
-    mockSimpleSearch.mockReturnValue([
-      { type: 'bookmark', title: 'Example', url: 'https://example.com', searchScore: 1, score: 150 },
-    ])
+    ext.model.bookmarks = [
+      {
+        type: 'bookmark',
+        title: 'Example',
+        url: 'https://example.com',
+        searchString: 'example.com example bookmark',
+      },
+    ]
     ext.opts.scoreMinScore = 0
 
     await search({ key: 'e' })
@@ -409,16 +422,41 @@ describe('search', () => {
 
   test('filters low scoring results and limits total size', async () => {
     ext.dom.searchInput.value = 'filter'
-    mockSimpleSearch.mockReturnValue([
-      { type: 'bookmark', title: 'High', url: 'https://high.test', searchScore: 1, score: 120 },
-      { type: 'bookmark', title: 'Mid', url: 'https://mid.test', searchScore: 1, score: 80 },
-      { type: 'bookmark', title: 'Low', url: 'https://low.test', searchScore: 1, score: 20 },
-      { type: 'bookmark', title: 'Second Mid', url: 'https://mid2.test', searchScore: 1, score: 75 },
-    ])
+    ext.model.bookmarks = [
+      {
+        type: 'bookmark',
+        title: 'High',
+        url: 'https://high.test',
+        searchString: 'filter high result',
+        customBonusScore: 50,
+      },
+      {
+        type: 'bookmark',
+        title: 'Mid',
+        url: 'https://mid.test',
+        searchString: 'filter mid result',
+        customBonusScore: 20,
+      },
+      {
+        type: 'bookmark',
+        title: 'Low',
+        url: 'https://low.test',
+        searchString: 'filter low result',
+        customBonusScore: 0,
+      },
+      {
+        type: 'bookmark',
+        title: 'Second Mid',
+        url: 'https://mid2.test',
+        searchString: 'filter second mid result',
+        customBonusScore: 15,
+      },
+    ]
     ext.opts.scoreMinScore = 70
     ext.opts.searchMaxResults = 2
     ext.opts.enableSearchEngines = false
     ext.opts.customSearchEngines = []
+    ext.opts.scoreBookmarkBaseScore = 60
 
     await search({ key: 'f' })
 
@@ -430,21 +468,35 @@ describe('search', () => {
   test('falls back to precise search when configured strategy is unsupported', async () => {
     ext.dom.searchInput.value = 'fallback'
     ext.opts.searchStrategy = 'unsupported'
-    mockSimpleSearch.mockReturnValue([{ type: 'bookmark', title: 'Fallback', url: 'https://fallback.test', score: 90 }])
+    ext.model.bookmarks = [
+      {
+        type: 'bookmark',
+        title: 'Fallback',
+        url: 'https://fallback.test',
+        searchString: 'fallback bookmark entry',
+      },
+    ]
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
     await search({ key: 'f' })
 
-    expect(mockSimpleSearch).toHaveBeenCalledWith('all', 'fallback')
+    const fallbackResult = ext.model.result.find((item) => item.title === 'Fallback')
+    expect(fallbackResult).toBeDefined()
+    expect(fallbackResult?.searchApproach).toBe('precise')
     expect(consoleSpy).toHaveBeenCalledWith('Unsupported option "search.approach" value: "unsupported"')
     consoleSpy.mockRestore()
   })
 
   test('stores new results in cache after search', async () => {
     ext.dom.searchInput.value = 'remember'
-    mockSimpleSearch.mockReturnValue([
-      { type: 'bookmark', title: 'Remember', url: 'https://remember.test', searchScore: 1, score: 120 },
-    ])
+    ext.model.bookmarks = [
+      {
+        type: 'bookmark',
+        title: 'Remember',
+        url: 'https://remember.test',
+        searchString: 'remember bookmark entry',
+      },
+    ]
     const cache = {
       has: jest.fn(() => false),
       set: jest.fn(),
