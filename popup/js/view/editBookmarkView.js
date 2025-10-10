@@ -61,10 +61,13 @@ export async function editBookmark(bookmarkId) {
 
     document.getElementById('edit-bookmark-save').href = '#update-bookmark/' + bookmarkId
 
-    document.getElementById('edit-bookmark-delete').addEventListener('click', (event) => {
+    const deleteButton = document.getElementById('edit-bookmark-delete')
+    deleteButton.onclick = (event) => {
       deleteBookmark(bookmarkId)
-      event.stopPropagation()
-    })
+      if (event && event.stopPropagation) {
+        event.stopPropagation()
+      }
+    }
   } else {
     console.warn(`Tried to edit bookmark id="${bookmarkId}", but could not find it in searchData.`)
   }
