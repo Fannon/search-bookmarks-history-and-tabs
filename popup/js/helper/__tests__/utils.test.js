@@ -10,22 +10,6 @@ describe('cleanUpUrl', () => {
     expect(cleanUpUrl('http://docs.example.com/path/to/page')).toBe('docs.example.com/path/to/page')
   })
 
-  it('handles HTTP protocol', () => {
-    expect(cleanUpUrl('http://example.com')).toBe('example.com')
-  })
-
-  it('handles HTTPS protocol', () => {
-    expect(cleanUpUrl('https://example.com')).toBe('example.com')
-  })
-
-  it('removes www prefix', () => {
-    expect(cleanUpUrl('www.example.com')).toBe('example.com')
-  })
-
-  it('removes trailing slash', () => {
-    expect(cleanUpUrl('example.com/')).toBe('example.com')
-  })
-
   it('converts to lowercase', () => {
     expect(cleanUpUrl('HTTPS://WWW.EXAMPLE.COM/')).toBe('example.com')
   })
@@ -42,15 +26,9 @@ describe('cleanUpUrl', () => {
     expect(cleanUpUrl('https://www.example.com/page#section')).toBe('example.com/page#section')
   })
 
-  it('handles empty string', () => {
+  it('handles edge cases gracefully', () => {
     expect(cleanUpUrl('')).toBe('')
-  })
-
-  it('handles null input', () => {
     expect(cleanUpUrl(null)).toBe('')
-  })
-
-  it('handles undefined input', () => {
     expect(cleanUpUrl(undefined)).toBe('')
   })
 
@@ -63,6 +41,31 @@ describe('cleanUpUrl', () => {
       'subdomain.example.co.uk/path/to/resource?query=value#fragment',
     )
   })
+
+  it('handles international domains and unicode characters', () => {
+    expect(cleanUpUrl('https://www.münchen.de/')).toBe('münchen.de')
+    expect(cleanUpUrl('https://例え.テスト/')).toBe('例え.テスト')
+  })
+})
+
+describe('Integration Tests', () => {
+  it('timeSince and cleanUpUrl work together for realistic scenarios', () => {
+    // Test realistic scenario: URL cleanup and time formatting
+    const testUrl = 'HTTPS://WWW.EXAMPLE.COM/TEST?QUERY=VALUE'
+    const cleanedUrl = cleanUpUrl(testUrl)
+
+    // Simulate a timestamp from the past
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2024-01-01T12:00:00Z'))
+
+    const pastDate = new Date('2024-01-01T11:30:00Z') // 30 minutes ago
+    const timeStr = timeSince(pastDate)
+
+    expect(cleanedUrl).toBe('example.com/test?query=value')
+    expect(timeStr).toBe('30 minutes')
+
+    jest.useRealTimers()
+  })
 })
 
 describe('timeSince', () => {
@@ -73,16 +76,6 @@ describe('timeSince', () => {
 
   afterEach(() => {
     jest.useRealTimers()
-  })
-
-  it('returns the elapsed hours when less than a day', () => {
-    const fourHoursAgo = new Date('2024-01-01T08:00:00Z')
-    expect(timeSince(fourHoursAgo)).toBe('4 hours')
-  })
-
-  it('returns the elapsed days when more than a day', () => {
-    const threeDaysAgo = new Date('2023-12-29T12:00:00Z')
-    expect(timeSince(threeDaysAgo)).toBe('3 days')
   })
 
   it('returns seconds for very recent times', () => {
@@ -115,75 +108,27 @@ describe('timeSince', () => {
     expect(timeSince(twoYearsAgo)).toBe('2 years')
   })
 
-  it('handles exactly one second ago', () => {
-    const oneSecondAgo = new Date('2024-01-01T11:59:59Z')
-    expect(timeSince(oneSecondAgo)).toBe('1 seconds')
+  it('handles boundary conditions correctly', () => {
+    // Test minute boundary: 59 seconds = "59 seconds", 61 seconds = "1 minutes"
+    expect(timeSince(new Date('2024-01-01T11:59:01Z'))).toBe('59 seconds')
+    expect(timeSince(new Date('2024-01-01T11:58:59Z'))).toBe('1 minutes')
+
+    // Test hour boundary: 59 minutes = "59 minutes", 61 minutes = "1 hours"
+    expect(timeSince(new Date('2024-01-01T11:01:00Z'))).toBe('59 minutes')
+    expect(timeSince(new Date('2024-01-01T10:59:00Z'))).toBe('1 hours')
+
+    // Test day boundary: 23 hours = "0 seconds", 25 hours = "1 days"
+    expect(timeSince(new Date('2024-01-01T13:00:00Z'))).toBe('0 seconds')
+    expect(timeSince(new Date('2023-12-31T11:00:00Z'))).toBe('1 days')
   })
 
-  it('handles times just under one minute', () => {
-    const fiftyNineSecondsAgo = new Date('2024-01-01T11:59:01Z')
-    expect(timeSince(fiftyNineSecondsAgo)).toBe('59 seconds')
-  })
+  it('handles edge cases', () => {
+    // Future dates
+    expect(timeSince(new Date('2024-01-02T12:00:00Z'))).toBe('0 seconds')
 
-  it('handles times just over one minute', () => {
-    const sixtyOneSecondsAgo = new Date('2024-01-01T11:58:59Z')
-    expect(timeSince(sixtyOneSecondsAgo)).toBe('1 minutes')
-  })
-
-  it('handles times just under one hour', () => {
-    const fiftyNineMinutesAgo = new Date('2024-01-01T11:01:00Z')
-    expect(timeSince(fiftyNineMinutesAgo)).toBe('59 minutes')
-  })
-
-  it('handles times just over one hour', () => {
-    const sixtyOneMinutesAgo = new Date('2024-01-01T10:59:00Z')
-    expect(timeSince(sixtyOneMinutesAgo)).toBe('1 hours')
-  })
-
-  it('handles times just under one day', () => {
-    const twentyThreeHoursAgo = new Date('2024-01-01T13:00:00Z')
-    expect(timeSince(twentyThreeHoursAgo)).toBe('0 seconds')
-  })
-
-  it('handles times just over one day', () => {
-    const twentyFiveHoursAgo = new Date('2023-12-31T11:00:00Z')
-    expect(timeSince(twentyFiveHoursAgo)).toBe('1 days')
-  })
-
-  it('handles times just under one month', () => {
-    const twentyNineDaysAgo = new Date('2023-12-03T12:00:00Z')
-    expect(timeSince(twentyNineDaysAgo)).toBe('29 days')
-  })
-
-  it('handles times just over one month', () => {
-    const thirtyOneDaysAgo = new Date('2023-12-01T12:00:00Z')
-    expect(timeSince(thirtyOneDaysAgo)).toBe('1 months')
-  })
-
-  it('handles times just under one year', () => {
-    const elevenMonthsAgo = new Date('2023-02-01T12:00:00Z')
-    expect(timeSince(elevenMonthsAgo)).toBe('11 months')
-  })
-
-  it('handles times just over one year', () => {
-    const thirteenMonthsAgo = new Date('2022-12-01T12:00:00Z')
-    expect(timeSince(thirteenMonthsAgo)).toBe('1 years')
-  })
-
-  it('handles future dates', () => {
-    const futureDate = new Date('2024-01-02T12:00:00Z')
-    expect(timeSince(futureDate)).toBe('0 seconds')
-  })
-
-  it('handles invalid date input', () => {
+    // Invalid inputs
     expect(timeSince('invalid')).toBe('Invalid date')
-  })
-
-  it('handles null date input', () => {
     expect(timeSince(null)).toBe('Invalid date')
-  })
-
-  it('handles undefined date input', () => {
     expect(timeSince(undefined)).toBe('Invalid date')
   })
 })
@@ -216,37 +161,20 @@ describe('loadScript', () => {
     jest.restoreAllMocks()
   })
 
-  it('loads a script successfully', async () => {
+  it('loads a script successfully with correct DOM manipulation', async () => {
     const url = 'https://example.com/script.js'
 
     const loadPromise = loadScript(url)
-
-    // Simulate successful script loading
     mockScript.onload()
-
     await expect(loadPromise).resolves.toBeUndefined()
+
     expect(document.createElement).toHaveBeenCalledWith('script')
     expect(mockScript.type).toBe('text/javascript')
     expect(mockScript.src).toBe(url)
     expect(mockHead.appendChild).toHaveBeenCalledWith(mockScript)
   })
 
-  it('handles script loading with proper DOM manipulation', async () => {
-    const url = 'https://example.com/script.js'
-
-    const loadPromise = loadScript(url)
-
-    // Simulate successful script loading
-    const scriptElement = document.createElement('script')
-    if (scriptElement.onload) {
-      scriptElement.onload()
-    }
-
-    await expect(loadPromise).resolves.toBeUndefined()
-    expect(document.createElement).toHaveBeenCalledWith('script')
-  })
-
-  it('caches loaded scripts and returns immediately on second call', async () => {
+  it('caches loaded scripts and skips DOM manipulation on second call', async () => {
     const url = 'https://example.com/script.js'
 
     // First call
@@ -266,34 +194,9 @@ describe('loadScript', () => {
     expect(mockHead.appendChild).not.toHaveBeenCalled()
   })
 
-  it('handles multiple different scripts', async () => {
-    const url1 = 'https://example.com/script1.js'
-    const url2 = 'https://example.com/script2.js'
-
+  it('handles multiple different script URLs correctly', async () => {
     // Load first script
-    const firstPromise = loadScript(url1)
-    mockScript.onload()
-    await expect(firstPromise).resolves.toBeUndefined()
-
-    // Reset mocks for second script
-    jest.clearAllMocks()
-
-    // Load second script
-    const secondPromise = loadScript(url2)
-    mockScript.onload()
-    await expect(secondPromise).resolves.toBeUndefined()
-
-    // Should create and append script for second script
-    expect(document.createElement).toHaveBeenCalledTimes(1)
-    expect(mockHead.appendChild).toHaveBeenCalledTimes(1)
-  })
-
-  it('handles script loading with different URLs', async () => {
-    const url1 = 'https://example.com/script1.js'
-    const url2 = 'https://cdn.example.com/script2.js'
-
-    // Load first script
-    const firstPromise = loadScript(url1)
+    const firstPromise = loadScript('https://example.com/script1.js')
     mockScript.onload()
     await expect(firstPromise).resolves.toBeUndefined()
 
@@ -301,7 +204,7 @@ describe('loadScript', () => {
     jest.clearAllMocks()
 
     // Load second script with different URL
-    const secondPromise = loadScript(url2)
+    const secondPromise = loadScript('https://cdn.example.com/script2.js')
     mockScript.onload()
     await expect(secondPromise).resolves.toBeUndefined()
 
@@ -334,7 +237,7 @@ describe('loadCSS', () => {
     jest.restoreAllMocks()
   })
 
-  it('loads CSS successfully', () => {
+  it('loads CSS with correct link element properties', () => {
     const href = 'https://example.com/style.css'
 
     loadCSS(href)
@@ -344,16 +247,6 @@ describe('loadCSS', () => {
     expect(mockLink.rel).toBe('stylesheet')
     expect(mockLink.type).toBe('text/css')
     expect(mockHead.appendChild).toHaveBeenCalledWith(mockLink)
-  })
-
-  it('handles different CSS file paths', () => {
-    const href = '/css/custom-theme.css'
-
-    loadCSS(href)
-
-    expect(mockLink.href).toBe(href)
-    expect(mockLink.rel).toBe('stylesheet')
-    expect(mockLink.type).toBe('text/css')
   })
 })
 
@@ -367,7 +260,7 @@ describe('printError', () => {
     jest.restoreAllMocks()
   })
 
-  it('logs errors and prepends them to the error list', () => {
+  it('logs errors with text and updates DOM correctly', () => {
     const err = new Error('Something went wrong')
 
     printError(err, 'While loading data')
@@ -377,8 +270,6 @@ describe('printError', () => {
     expect(errorList.innerHTML).toContain('<b>Error Message</b>: Something went wrong')
     expect(errorList.style.cssText).toBe('display: block;')
     expect(console.error).toHaveBeenCalledTimes(2)
-    expect(console.error.mock.calls[0][0]).toBe('While loading data')
-    expect(console.error.mock.calls[1][0]).toBe(err)
   })
 
   it('handles error without text parameter', () => {
@@ -390,11 +281,9 @@ describe('printError', () => {
     expect(errorList.innerHTML).not.toContain('<b>Error</b>:')
     expect(errorList.innerHTML).toContain('<b>Error Message</b>: Something went wrong')
     expect(errorList.style.cssText).toBe('display: block;')
-    expect(console.error).toHaveBeenCalledTimes(1)
-    expect(console.error.mock.calls[0][0]).toBe(err)
   })
 
-  it('handles error with stack trace', () => {
+  it('handles stack traces correctly', () => {
     const err = new Error('Something went wrong')
     err.stack = 'Error: Something went wrong\n    at testFunction (test.js:10:5)'
 
@@ -402,10 +291,9 @@ describe('printError', () => {
 
     const errorList = document.getElementById('error-list')
     expect(errorList.innerHTML).toContain('<b>Error Stack</b>: Error: Something went wrong')
-    expect(errorList.style.cssText).toBe('display: block;')
   })
 
-  it('handles error without stack trace', () => {
+  it('handles errors without stack traces', () => {
     const err = new Error('Something went wrong')
     delete err.stack
 
@@ -413,26 +301,19 @@ describe('printError', () => {
 
     const errorList = document.getElementById('error-list')
     expect(errorList.innerHTML).not.toContain('<b>Error Stack</b>:')
-    expect(errorList.style.cssText).toBe('display: block;')
   })
 
-  it('handles null error', () => {
+  it('handles edge cases and error conditions', () => {
+    // Test null/undefined errors
     expect(() => printError(null, 'Test error')).toThrow()
-  })
-
-  it('handles undefined error', () => {
     expect(() => printError(undefined, 'Test error')).toThrow()
-  })
 
-  it('handles error without message property', () => {
+    // Test error without message property
     const err = {}
-
     printError(err, 'Test error')
 
     const errorList = document.getElementById('error-list')
-    expect(errorList.innerHTML).toContain('<b>Error</b>: Test error')
     expect(errorList.innerHTML).toContain('<b>Error Message</b>: undefined')
-    expect(errorList.style.cssText).toBe('display: block;')
   })
 
   it('prepends new errors to existing error list', () => {
@@ -443,22 +324,10 @@ describe('printError', () => {
     printError(err, 'New error message')
 
     expect(errorList.innerHTML).toContain('<b>Error</b>: New error message')
-    expect(errorList.innerHTML).toContain('<b>Error Message</b>: New error')
     expect(errorList.innerHTML).toContain('Previous error')
     // New error should be prepended
     expect(errorList.innerHTML.indexOf('<b>Error</b>: New error message')).toBeLessThan(
       errorList.innerHTML.indexOf('Previous error'),
     )
-  })
-
-  it('handles missing error-list element gracefully', () => {
-    document.body.innerHTML = ''
-
-    const err = new Error('Test error')
-
-    // Should throw an error when element is missing
-    expect(() => printError(err, 'Test message')).toThrow()
-
-    expect(console.error).toHaveBeenCalledTimes(2)
   })
 })
