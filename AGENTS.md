@@ -28,7 +28,7 @@
 - Use Playwright for integration coverage of popup interactions; keep specs independent and idempotent.
 - Name unit tests `<module>.test.js` under `__tests__` directories and describe behaviour in plain language (`describe('timeSince')`).
 - Tests must be deterministic, isolated, and clear.
-- Validate using:
+- Execute a single test using:
   ```bash
   npm run test:unit <filename>.test.js
   // When coverage is needed:
