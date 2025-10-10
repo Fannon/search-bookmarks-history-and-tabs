@@ -10,8 +10,10 @@
 
 - `npm run build` cleans, refreshes manifests, and assembles distributable browser bundles.
 - `npm run start` serves the popup locally via `live-server` for quick UI checks.
-- `npm run test` executes the Playwright flow tests headlessly. The Playwright runner boots its own static server automatically.
-- `npm run test:unit` runs Jest unit tests targeting helpers and models.
+- `npm run test` executes jest unit tests. It's an alias to `test:unit`
+- `npm run test:e2e` executes the Playwright flow tests headlessly. The Playwright runner boots its own static server automatically.
+- `npm run test:unit` runs Jest unit tests. Run it like `npm run test:unit <filename>.test.js` for individual test file execution.
+- `npm run test:unit:coverage` runs Jest unit tests with code coverage report. Run it like `npm run test:unit:coverage <filename>.test.js` for individual test file execution.
 - `npm run lint` enforces the shared ESLint rules across popup JavaScript.
 
 ## Coding Style & Naming Conventions
@@ -25,6 +27,13 @@
 - Use Jest for deterministic unit coverage; stub DOM APIs with jsdom helpers when needed.
 - Use Playwright for integration coverage of popup interactions; keep specs independent and idempotent.
 - Name unit tests `<module>.test.js` under `__tests__` directories and describe behaviour in plain language (`describe('timeSince')`).
+- Tests must be deterministic, isolated, and clear.
+- Validate using:
+  ```bash
+  npm run test:unit <filename>.test.js
+  // When coverage is needed:
+  npm run test:unit:coverage <filename>.test.js
+  ```
 
 ## Commit & Pull Request Guidelines
 
