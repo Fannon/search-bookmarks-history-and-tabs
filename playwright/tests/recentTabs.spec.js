@@ -5,12 +5,23 @@ const waitForInitialization = async (page) => {
 }
 
 const updateUserConfig = async (page, config) => {
-  const newConfig = JSON.stringify(config, null, 2)
   await page.goto('/options.html')
-  const userConfig = page.locator('#user-config')
-  await userConfig.fill('')
-  await userConfig.fill(newConfig)
+  for (const [key, value] of Object.entries(config)) {
+    const field = page.locator(`#opt-${key}`)
+    const tagName = await field.evaluate((el) => el.tagName.toLowerCase())
+    if (tagName === 'input') {
+      const type = (await field.getAttribute('type')) ?? ''
+      if (type === 'checkbox') {
+        await field.setChecked(Boolean(value))
+      } else {
+        await field.fill(String(value))
+      }
+    } else if (tagName === 'select') {
+      await field.selectOption(String(value))
+    }
+  }
   await page.locator('#edit-options-save').click()
+  await expect(page.locator('#error-message')).toHaveText(/Options saved successfully/)
 }
 
 test.describe('Recent Tabs on Open Functionality', () => {

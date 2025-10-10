@@ -1,54 +1,61 @@
 import { test, expect, expectNoClientErrors } from './fixtures.js'
 
+const locate = (page, selector) => page.locator(selector)
+
+const saveOptions = async (page) => {
+  await page.locator('#edit-options-save').click()
+  await expect(page.locator('#error-message')).toHaveText(/Options saved successfully/)
+}
+
 test.describe('Options View', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/options.html')
   })
 
-  test.describe('Initializing Phase', () => {
-    test('successfully loads', async ({ page }) => {
-      await expect(page.locator('#options #user-config')).toBeVisible()
-    })
+  test('successfully loads the options form', async ({ page }) => {
+    await expect(locate(page, '#options-form')).toBeVisible()
+    await expect(locate(page, '#opt-searchStrategy')).toHaveValue('precise')
+    await expect(locate(page, '#opt-displayVisitCounter')).not.toBeChecked()
+    await expectNoClientErrors(page)
+  })
 
-    test('loads the default user config', async ({ page }) => {
-      await expect(page.locator('#user-config')).toHaveValue(/searchStrategy/)
-      await expectNoClientErrors(page)
-    })
+  test('saves a modified boolean option', async ({ page }) => {
+    const visitCounter = locate(page, '#opt-displayVisitCounter')
+    await visitCounter.check()
+    await saveOptions(page)
 
-    test('saves a new user config in JSON format', async ({ page }) => {
-      const newConfig = JSON.stringify(
-        {
-          displayVisitCounter: true,
-        },
-        null,
-        2,
-      )
+    await page.reload()
+    await expect(locate(page, '#opt-displayVisitCounter')).toBeChecked()
+    await expectNoClientErrors(page)
 
-      const userConfig = page.locator('#user-config')
-      await userConfig.fill('')
-      await expect(userConfig).toHaveValue('')
-      await userConfig.fill(newConfig)
+    // Reset to defaults for subsequent tests
+    await locate(page, '#edit-options-reset').click()
+    await expect(page.locator('#error-message')).toHaveText(/reset to defaults/i)
+    await saveOptions(page)
+  })
 
-      await page.locator('#edit-options-save').click()
+  test('allows managing custom search engines via the form', async ({ page }) => {
+    const customSection = page.locator('#section-search-engines')
+    const addCustom = customSection.getByRole('button', { name: 'Add custom search engine' })
 
-      await page.goto('/options.html')
-      await expect(page.locator('#user-config')).toHaveValue(/displayVisitCounter/)
-      await expectNoClientErrors(page)
-    })
+    await addCustom.click()
+    const lastCustom = customSection.locator('.object-array-item').last()
+    await lastCustom.getByLabel('Aliases').fill('s, stack')
+    await lastCustom.getByLabel('Name').fill('Stack Overflow')
+    await lastCustom.getByLabel('Search URL prefix').fill('https://stackoverflow.com/search?q=$s')
+    await lastCustom.getByLabel('Optional default URL').fill('https://stackoverflow.com')
 
-    test('saves a new user config in YAML format', async ({ page }) => {
-      const newConfig = 'displayVisitCounter: true\n'
+    await saveOptions(page)
+    await page.reload()
 
-      const userConfig = page.locator('#user-config')
-      await userConfig.fill('')
-      await expect(userConfig).toHaveValue('')
-      await userConfig.fill(newConfig)
+    const persisted = customSection.locator('.object-array-item').last()
+    await expect(persisted.getByLabel('Aliases')).toHaveValue('s, stack')
+    await expect(persisted.getByLabel('Name')).toHaveValue('Stack Overflow')
 
-      await page.locator('#edit-options-save').click()
-
-      await page.goto('/options.html')
-      await expect(page.locator('#user-config')).toHaveValue(/displayVisitCounter/)
-      await expectNoClientErrors(page)
-    })
+    // Clean up to avoid impacting other tests
+    await persisted.getByRole('button', { name: 'Remove' }).click()
+    await saveOptions(page)
+    await expect(customSection.locator('.object-array-item').last().getByLabel('Name')).not.toHaveValue('Stack Overflow')
+    await expectNoClientErrors(page)
   })
 })

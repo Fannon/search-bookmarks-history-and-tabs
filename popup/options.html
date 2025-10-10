@@ -13,44 +13,34 @@
     <div id="container">
       <!-- Edit User Config -->
       <div id="options">
-        <div class="inputs">
-          <div class="input-description">
-            USER OPTIONS
-            <span class="badge error-message" id="error-message" style="display: none"></span>
+        <header class="options-header">
+          <div class="options-title">
+            <h1>User options</h1>
+            <span class="badge" id="error-message" hidden></span>
           </div>
-          <textarea
-            id="user-config"
-            title="User Config"
-            class="input"
-            type="text"
-            spellcheck="false"
-            autofocus
-          ></textarea>
-        </div>
+          <p class="options-intro">
+            Adjust how search behaves, what data gets indexed, and how results are displayed. Every field lists the default value
+            for reference. Resetting reverts the form to the defaults—remember to save afterwards.
+          </p>
+        </header>
+
+        <form id="options-form" novalidate></form>
+
         <div class="help">
-          The options are written in
-          <a href="https://en.wikipedia.org/wiki/YAML" target="_newtab">YAML</a> notation.<br />
-          Please have a look at the
+          Need more context? Explore the
           <a
             class="button help-button"
             href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration"
             target="_newtab"
-            >user configuration help</a
+            >user configuration guide</a
           >
-          what options are available and what they do.
+          to learn what each option does or how to fine-tune advanced features.
         </div>
 
         <div class="controls">
           <a id="edit-options-cancel" class="button" href="./index.html#search/">CANCEL</a>
-          <a
-            id="edit-options-help"
-            class="button"
-            href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration"
-            target="_newtab"
-            >HELP</a
-          >
           <a id="edit-options-reset" class="button" href="#reset">RESET</a>
-          <a id="edit-options-save" class="button" href="#save">SAVE</a>
+          <button id="edit-options-save" class="button primary" type="button">SAVE</button>
         </div>
       </div>
 
@@ -68,7 +58,6 @@
       </footer>
       <ul id="error-list"></ul>
     </div>
-    <script src="./lib/js-yaml.min.js"></script>
     <script defer type="module" src="./js/initOptions.js"></script>
   </body>
 </html>
