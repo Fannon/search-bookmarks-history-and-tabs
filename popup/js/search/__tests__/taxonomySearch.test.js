@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from '@jest/globals'
-import { createTestExt } from '../../__tests__/testUtils.js'
+import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
 
 describe('taxonomy search', () => {
   let taxonomyModule
@@ -17,10 +17,7 @@ describe('taxonomy search', () => {
   })
 
   afterEach(() => {
-    delete global.ext
-    if (typeof window !== 'undefined') {
-      delete window.ext
-    }
+    clearTestExt()
   })
 
   test('searchTaxonomy finds entries containing all tag terms', () => {
