@@ -34,5 +34,5 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "eslint.experimental.useFlatConfig": true
+  "jest.nodeEnv": { "NODE_OPTIONS": "--experimental-vm-modules" }
 }
