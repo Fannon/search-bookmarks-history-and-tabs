@@ -14,6 +14,13 @@ const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 const protocolRegex = /^[a-zA-Z]+:\/\//
 
 /**
+ * Generates a random unique ID for on-demand search results
+ */
+function generateRandomId() {
+  return 'od_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36)
+}
+
+/**
  * This is the main search entry point.
  * It will decide which approaches and indexes to use.
  */
@@ -121,6 +128,7 @@ export async function search(event) {
     ext.model.searchMode = searchMode
 
     if (searchTerm) {
+      console.log('After algorithm results', JSON.stringify(ext.model.result))
       if (searchMode === 'tags') {
         ext.model.result = searchTaxonomy(searchTerm, 'tags', ext.model.bookmarks)
       } else if (searchMode === 'folders') {
@@ -135,6 +143,13 @@ export async function search(event) {
         ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
       }
 
+      console.log('Direct URL check', {
+        enableDirectUrl: ext.opts.enableDirectUrl,
+        regex: urlRegex.test(searchTerm),
+        length: ext.model.result.length,
+        max: ext.opts.searchMaxResults,
+        searchTerm,
+      })
       if (
         ext.opts.enableDirectUrl &&
         urlRegex.test(searchTerm) &&
@@ -148,16 +163,21 @@ export async function search(event) {
           url: cleanUpUrl(url),
           urlHighlighted: cleanUpUrl(url),
           originalUrl: url,
+          originalId: generateRandomId(),
           searchScore: 1,
         })
       }
 
+      console.log('After direct/search addition', JSON.stringify(ext.model.result))
       // Add search engine result items
       if (searchMode === 'all' || searchMode === 'search') {
         ext.model.result.push(...addSearchEngines(searchTerm))
       }
+      console.log('After adding search engines', JSON.stringify(ext.model.result))
       ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
+      console.log('After scoring', JSON.stringify(ext.model.result))
       ext.model.result = sortResults(ext.model.result, 'score')
+      console.log('After sorting', JSON.stringify(ext.model.result))
     } else {
       ext.model.result = await addDefaultEntries()
       ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
@@ -528,6 +548,7 @@ function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlank, cust
     url: cleanUpUrl(url),
     urlHighlighted: cleanUpUrl(url),
     originalUrl: url,
+    originalId: generateRandomId(),
     searchScore: 1,
   }
 }
