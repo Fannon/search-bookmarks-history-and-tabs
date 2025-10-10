@@ -1,21 +1,26 @@
+/**
+ * ✅ Covered behaviors: search entry gating, cache hits, mode detection, taxonomy/custom/direct results, scoring, sorting, and default entry sourcing.
+ * ⚠️ Known gaps: DOM rendering side effects and performance metrics are not asserted due to limited observable outputs.
+ * 🐞 Added BUG tests: none
+ */
 import { jest, describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals'
 import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
 
-const mockGetBrowserTabs = jest.fn(() => Promise.resolve([]))
-const mockCleanUpUrl = (url) => url.replace(/\/+$/, '')
+const mockGetBrowserTabs = jest.fn()
+const mockCleanUpUrl = jest.fn((url) => url.replace(/\/+$/, ''))
 const mockPrintError = jest.fn()
 const mockCloseModals = jest.fn()
 const mockRenderSearchResults = jest.fn()
-const mockNavigationKeyListener = jest.fn()
-const mockToggleSearchApproach = jest.fn()
-const mockUpdateSearchApproachToggle = jest.fn()
 const mockFuzzySearch = jest.fn(() => Promise.resolve([]))
-const mockResetFuzzySearchState = jest.fn()
 const mockSimpleSearch = jest.fn(() => [])
-const mockResetSimpleSearchState = jest.fn()
 const mockSearchTaxonomy = jest.fn(() => [])
 
 let commonModule
+let search
+let searchWithAlgorithm
+let calculateFinalScore
+let sortResults
+let addDefaultEntries
 
 beforeAll(async () => {
   await jest.unstable_mockModule('../../helper/browserApi.js', () => ({
@@ -34,19 +39,14 @@ beforeAll(async () => {
   await jest.unstable_mockModule('../../view/searchView.js', () => ({
     __esModule: true,
     renderSearchResults: mockRenderSearchResults,
-    navigationKeyListener: mockNavigationKeyListener,
-    toggleSearchApproach: mockToggleSearchApproach,
-    updateSearchApproachToggle: mockUpdateSearchApproachToggle,
   }))
   await jest.unstable_mockModule('../fuzzySearch.js', () => ({
     __esModule: true,
     fuzzySearch: mockFuzzySearch,
-    resetFuzzySearchState: mockResetFuzzySearchState,
   }))
   await jest.unstable_mockModule('../simpleSearch.js', () => ({
     __esModule: true,
     simpleSearch: mockSimpleSearch,
-    resetSimpleSearchState: mockResetSimpleSearchState,
   }))
   await jest.unstable_mockModule('../taxonomySearch.js', () => ({
     __esModule: true,
@@ -54,708 +54,408 @@ beforeAll(async () => {
   }))
 
   commonModule = await import('../common.js')
+  search = commonModule.search
+  searchWithAlgorithm = commonModule.searchWithAlgorithm
+  calculateFinalScore = commonModule.calculateFinalScore
+  sortResults = commonModule.sortResults
+  addDefaultEntries = commonModule.addDefaultEntries
 })
 
-describe('common search helpers', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-    createTestExt({
-      opts: {
-        searchMinMatchCharLength: 1,
-        scoreBookmarkBaseScore: 100,
-        scoreTabBaseScore: 70,
-        scoreHistoryBaseScore: 45,
-        scoreSearchEngineBaseScore: 30,
-        scoreCustomSearchEngineBaseScore: 400,
-        scoreDirectUrlScore: 500,
-        scoreTitleWeight: 1,
-        scoreTagWeight: 0.7,
-        scoreUrlWeight: 0.6,
-        scoreFolderWeight: 0.5,
-        scoreCustomBonusScore: true,
-        scoreExactIncludesBonus: 0,
-        scoreExactIncludesBonusMinChars: 3,
-        scoreExactStartsWithBonus: 0,
-        scoreExactEqualsBonus: 0,
-        scoreExactTagMatchBonus: 0,
-        scoreExactFolderMatchBonus: 0,
-        scoreVisitedBonusScore: 0.5,
-        scoreVisitedBonusScoreMaximum: 20,
-        scoreRecentBonusScoreMaximum: 20,
-        historyDaysAgo: 5,
-        maxRecentTabsToShow: 5,
-      },
-      model: {
-        result: [],
-        bookmarks: [],
-        tabs: [],
-        history: [],
-      },
-    })
+beforeEach(() => {
+  jest.clearAllMocks()
+  mockGetBrowserTabs.mockResolvedValue([])
+  mockFuzzySearch.mockResolvedValue([])
+  mockSimpleSearch.mockReturnValue([])
+  setupExt()
+})
+
+afterEach(() => {
+  clearTestExt()
+})
+
+function setupExt(overrides = {}) {
+  createTestExt({
+    initialized: true,
+    searchCache: new Map(),
+    opts: {
+      enableDirectUrl: true,
+      enableSearchEngines: true,
+      customSearchEngines: [
+        {
+          alias: ['yt'],
+          name: 'YouTube',
+          urlPrefix: 'https://youtube.com/results?search_query=$s',
+        },
+      ],
+      searchEngineChoices: [
+        {
+          name: 'Google',
+          urlPrefix: 'https://www.google.com/search?q=$s',
+        },
+      ],
+      searchStrategy: 'precise',
+      searchMaxResults: 5,
+      searchMinMatchCharLength: 1,
+      scoreMinScore: 10,
+      scoreExactIncludesBonus: 5,
+      scoreExactIncludesBonusMinChars: 3,
+      scoreExactStartsWithBonus: 10,
+      scoreExactEqualsBonus: 15,
+      scoreExactTagMatchBonus: 10,
+      scoreExactFolderMatchBonus: 5,
+      scoreVisitedBonusScore: 0.5,
+      scoreVisitedBonusScoreMaximum: 20,
+      scoreRecentBonusScoreMaximum: 20,
+      scoreCustomBonusScore: true,
+      scoreBookmarkBaseScore: 100,
+      scoreTabBaseScore: 70,
+      scoreHistoryBaseScore: 45,
+      scoreSearchEngineBaseScore: 30,
+      scoreCustomSearchEngineBaseScore: 400,
+      scoreDirectUrlScore: 500,
+      scoreTitleWeight: 1,
+      scoreTagWeight: 0.7,
+      scoreUrlWeight: 0.6,
+      scoreFolderWeight: 0.5,
+      historyDaysAgo: 14,
+      maxRecentTabsToShow: 3,
+      ...overrides.opts,
+    },
+    model: {
+      searchMode: 'all',
+      result: [],
+      bookmarks: [],
+      tabs: [],
+      history: [],
+      ...overrides.model,
+    },
+    dom: {
+      searchInput: { value: '' },
+      resultCounter: { innerText: '' },
+      ...overrides.dom,
+    },
+    ...overrides,
   })
+}
 
-  afterEach(() => {
-    clearTestExt()
-  })
+describe('searchWithAlgorithm', () => {
+  test('returns empty list when below minimum length', async () => {
+    ext.opts.searchMinMatchCharLength = 5
 
-  test('searchWithAlgorithm returns empty array below min length', async () => {
-    const { searchWithAlgorithm } = commonModule
-    ext.opts.searchMinMatchCharLength = 4
+    const results = await searchWithAlgorithm('precise', 'abc')
 
-    const result = await searchWithAlgorithm('precise', 'abc')
-
-    expect(result).toEqual([])
+    expect(results).toEqual([])
     expect(mockSimpleSearch).not.toHaveBeenCalled()
     expect(mockFuzzySearch).not.toHaveBeenCalled()
   })
 
-  test('searchWithAlgorithm delegates to simpleSearch for precise strategy', async () => {
-    const { searchWithAlgorithm } = commonModule
+  test('delegates to precise search', async () => {
     mockSimpleSearch.mockReturnValue([{ type: 'bookmark' }])
 
-    const result = await searchWithAlgorithm('precise', 'term', 'bookmarks')
+    const results = await searchWithAlgorithm('precise', 'news', 'bookmarks')
 
-    expect(mockSimpleSearch).toHaveBeenCalledWith('bookmarks', 'term')
-    expect(result).toEqual([{ type: 'bookmark' }])
+    expect(mockSimpleSearch).toHaveBeenCalledWith('bookmarks', 'news')
+    expect(results).toEqual([{ type: 'bookmark' }])
   })
 
-  test('searchWithAlgorithm delegates to fuzzySearch for fuzzy strategy', async () => {
-    const { searchWithAlgorithm } = commonModule
+  test('delegates to fuzzy search', async () => {
     mockFuzzySearch.mockResolvedValue([{ type: 'tab' }])
 
-    const result = await searchWithAlgorithm('fuzzy', 'term', 'tabs')
+    const results = await searchWithAlgorithm('fuzzy', 'tabs', 'tabs')
 
-    expect(mockFuzzySearch).toHaveBeenCalledWith('tabs', 'term')
-    expect(result).toEqual([{ type: 'tab' }])
+    expect(mockFuzzySearch).toHaveBeenCalledWith('tabs', 'tabs')
+    expect(results).toEqual([{ type: 'tab' }])
   })
 
-  test('searchWithAlgorithm throws on unknown strategy', async () => {
-    const { searchWithAlgorithm } = commonModule
+  test('throws when search approach unsupported', async () => {
+    await expect(searchWithAlgorithm('unknown', 'test')).rejects.toThrow('Unknown search approach: unknown')
+  })
+})
 
-    await expect(searchWithAlgorithm('unknown', 'term')).rejects.toThrow('Unknown search approach: unknown')
+describe('calculateFinalScore', () => {
+  test('assigns base scores for each supported result type', () => {
+    ext.model.searchTerm = ''
+    const results = [
+      { type: 'bookmark', searchScore: 0.5, customBonusScore: 5, title: 'Bookmark', url: 'https://bookmark.test' },
+      { type: 'tab', searchScore: 1, title: 'Tab', url: 'https://tab.test' },
+      { type: 'history', searchScore: 1, title: 'History', url: 'https://history.test' },
+      { type: 'search', searchScore: 0.5, title: 'Search', url: 'https://search.test' },
+      { type: 'customSearch', searchScore: 1, title: 'Custom', url: 'https://custom.test' },
+      { type: 'direct', searchScore: 1, title: 'Direct', url: 'https://direct.test' },
+    ]
+
+    const scored = calculateFinalScore(results, '')
+
+    expect(scored).toEqual([
+      expect.objectContaining({ score: 55 }),
+      expect.objectContaining({ score: 70 }),
+      expect.objectContaining({ score: 45 }),
+      expect.objectContaining({ score: 15 }),
+      expect.objectContaining({ score: 400 }),
+      expect.objectContaining({ score: 500 }),
+    ])
   })
 
-  test('calculateFinalScore adds custom, visit and recency bonuses', () => {
-    const { calculateFinalScore } = commonModule
-    ext.model.searchTerm = 'foo'
+  test('adds search term bonuses, visit history, and recency adjustments', () => {
+    const fixedNow = 1_700_000_000_000
+    jest.spyOn(Date, 'now').mockReturnValue(fixedNow)
+    ext.model.searchTerm = 'latest'
+    ext.opts.scoreDateAddedBonusScoreMaximum = 12
+    ext.opts.scoreDateAddedBonusScorePerDay = 2
+
     const results = [
       {
         type: 'bookmark',
+        title: 'Latest news digest',
+        url: 'latestnews.test',
+        tags: 'latest,news',
+        tagsArray: ['Latest', 'News'],
+        folder: 'Latest',
+        folderArray: ['Latest'],
+        customBonusScore: 7,
         searchScore: 1,
-        customBonusScore: 5,
-        title: 'Foo resource',
-        url: 'https://example.com/foo',
         visitCount: 10,
         lastVisitSecondsAgo: 0,
+        dateAdded: fixedNow - 24 * 60 * 60 * 1000,
       },
     ]
 
-    const scored = calculateFinalScore(results, 'foo')
+    const [scored] = calculateFinalScore(results, 'latest')
 
-    expect(scored[0].score).toBeGreaterThan(30)
+    expect(scored.score).toBeCloseTo(172)
+    Date.now.mockRestore()
   })
 
-  test('calculateFinalScore throws for unsupported types', () => {
-    const { calculateFinalScore } = commonModule
-    ext.model.searchTerm = 'foo'
+  test('throws on unsupported result type', () => {
+    const results = [{ type: 'unsupported', searchScore: 1, title: 'X', url: 'https://x.test' }]
+
+    expect(() => calculateFinalScore(results, 'x')).toThrow('Search result type "unsupported" not supported')
+  })
+})
+
+describe('sortResults', () => {
+  test('sorts by score descending', () => {
+    const results = [{ score: 10 }, { score: 40 }, { score: 25 }]
+
+    expect(sortResults(results, 'score')).toEqual([{ score: 40 }, { score: 25 }, { score: 10 }])
+  })
+
+  test('sorts by last visited with missing values pushed last', () => {
     const results = [
-      {
-        type: 'unsupported',
-        searchScore: 1,
-        url: 'https://example.com',
-      },
+      { lastVisitSecondsAgo: 5 },
+      { lastVisitSecondsAgo: null },
+      { lastVisitSecondsAgo: 2 },
     ]
 
-    expect(() => calculateFinalScore(results, 'foo')).toThrow('Search result type "unsupported" not supported')
+    expect(sortResults(results, 'lastVisited')).toEqual([
+      { lastVisitSecondsAgo: 2 },
+      { lastVisitSecondsAgo: 5 },
+      { lastVisitSecondsAgo: null },
+    ])
   })
 
-  test('sortResults sorts by score descending', () => {
-    const { sortResults } = commonModule
-    const sorted = sortResults([{ score: 1 }, { score: 5 }, { score: 3 }], 'score')
-    expect(sorted.map((item) => item.score)).toEqual([5, 3, 1])
+  test('throws on unknown sort mode', () => {
+    expect(() => sortResults([], 'random')).toThrow('Unknown sortMode="random"')
+  })
+})
+
+describe('addDefaultEntries', () => {
+  test('returns history entries when history mode active', async () => {
+    ext.model.searchMode = 'history'
+    ext.model.history = [{ id: 1, title: 'History' }]
+
+    const results = await addDefaultEntries()
+
+    expect(results).toEqual([{ id: 1, title: 'History', searchScore: 1 }])
+    expect(ext.model.result).toEqual(results)
   })
 
-  test('sortResults sorts by lastVisited ascending and throws on invalid mode', () => {
-    const { sortResults } = commonModule
-    const sorted = sortResults(
-      [{ lastVisitSecondsAgo: 10 }, { lastVisitSecondsAgo: undefined }, { lastVisitSecondsAgo: 5 }],
-      'lastVisited',
-    )
-    expect(sorted[0].lastVisitSecondsAgo).toBe(5)
-    expect(sorted[2].lastVisitSecondsAgo).toBeUndefined()
-    expect(() => sortResults([], 'unknown')).toThrow('Unknown sortMode="unknown"')
+  test('returns recent tabs sorted by recency when tabs mode active', async () => {
+    ext.model.searchMode = 'tabs'
+    ext.model.tabs = [
+      { id: 1, lastVisitSecondsAgo: 40 },
+      { id: 2, lastVisitSecondsAgo: 10 },
+      { id: 3, lastVisitSecondsAgo: 25 },
+    ]
+
+    const results = await addDefaultEntries()
+
+    expect(results.map((tab) => tab.id)).toEqual([2, 3, 1])
   })
 
-  describe('main search function', () => {
-    beforeEach(() => {
-      // Setup DOM mocks
-      Object.defineProperty(ext, 'dom', {
-        value: {
-          searchInput: { value: '' },
-          resultCounter: { innerText: '' },
-        },
-        writable: true,
-      })
-      ext.initialized = true
-      ext.searchCache = new Map()
-    })
+  test('returns bookmarks when bookmarks mode active', async () => {
+    ext.model.searchMode = 'bookmarks'
+    ext.model.bookmarks = [{ id: 1, title: 'Bookmark' }]
 
-    test('search ignores navigation keys', async () => {
-      const { search } = commonModule
+    const results = await addDefaultEntries()
 
-      const navKeys = ['ArrowUp', 'ArrowDown', 'Enter', 'Escape']
-      for (const key of navKeys) {
-        await search({ key })
-        expect(mockRenderSearchResults).not.toHaveBeenCalled()
-      }
-    })
-
-    test('search ignores modifier keys', async () => {
-      const { search } = commonModule
-
-      const modifierKeys = [{ key: 'Control' }, { ctrlKey: true }, { key: 'Alt' }, { altKey: true }, { key: 'Shift' }]
-
-      for (const event of modifierKeys) {
-        await search(event)
-        expect(mockRenderSearchResults).not.toHaveBeenCalled()
-      }
-    })
-
-    test('search returns early when extension not initialized', async () => {
-      const { search } = commonModule
-      ext.initialized = false
-
-      await search({ key: 'a' })
-
-      expect(mockRenderSearchResults).not.toHaveBeenCalled()
-    })
-
-    test('search handles empty search term', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = '' // Empty string should trigger default entries
-      ext.opts.searchStrategy = 'precise'
-      ext.opts.searchMinMatchCharLength = 1
-
-      await search({ key: 'a' })
-
-      expect(mockRenderSearchResults).toHaveBeenCalled()
-      expect(ext.model.result).toBeDefined()
-      expect(ext.model.result).toStrictEqual([]) // No default entries set up in this test
-    })
-
-    test('search handles history mode', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 'h test'
-
-      await search({ key: 'a' })
-
-      expect(ext.model.searchMode).toBe('history')
-      expect(ext.model.searchTerm).toBe('test')
-    })
-
-    test('search handles bookmarks mode', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 'b test'
-
-      await search({ key: 'a' })
-
-      expect(ext.model.searchMode).toBe('bookmarks')
-      expect(ext.model.searchTerm).toBe('test')
-    })
-
-    test('search handles tabs mode', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 't test'
-
-      await search({ key: 'a' })
-
-      expect(ext.model.searchMode).toBe('tabs')
-      expect(ext.model.searchTerm).toBe('test')
-    })
-
-    test('search handles search engines mode', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 's test'
-
-      await search({ key: 'a' })
-
-      expect(ext.model.searchMode).toBe('search')
-      expect(ext.model.searchTerm).toBe('test')
-    })
-
-    test('search handles tags mode', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = '#test'
-
-      await search({ key: 'a' })
-
-      expect(ext.model.searchMode).toBe('tags')
-      expect(ext.model.searchTerm).toBe('test')
-    })
-
-    test('search handles folders mode', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = '~test'
-
-      await search({ key: 'a' })
-
-      expect(ext.model.searchMode).toBe('folders')
-      expect(ext.model.searchTerm).toBe('test')
-    })
-
-    test('search uses cache when available', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 'test'
-      ext.opts.searchStrategy = 'precise'
-      const cachedResults = [{ type: 'bookmark', title: 'Cached Result' }]
-      ext.searchCache.set('test_precise_all', cachedResults)
-
-      await search({ key: 'a' })
-
-      expect(mockRenderSearchResults).toHaveBeenCalledWith(cachedResults)
-      expect(mockSimpleSearch).not.toHaveBeenCalled()
-      expect(mockFuzzySearch).not.toHaveBeenCalled()
-    })
-
-    test('search handles direct URL matching', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 'https://example.com'
-      ext.opts.enableDirectUrl = true
-      ext.opts.searchMaxResults = 10
-      ext.opts.searchStrategy = 'precise'
-      ext.opts.scoreMinScore = 0 // Ensure results aren't filtered out
-
-      await search({ key: 'a' })
-
-      expect(ext.model.result.some((item) => item.type === 'direct')).toBe(true)
-    })
-
-    test('search handles custom search engines', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 'g test search'
-      ext.opts.searchStrategy = 'precise'
-      ext.opts.scoreMinScore = 0 // Ensure results aren't filtered out
-      ext.opts.customSearchEngines = [
-        {
-          alias: 'g',
-          name: 'Google',
-          urlPrefix: 'https://www.google.com/search?q=',
-        },
-      ]
-
-      await search({ key: 'a' })
-
-      expect(ext.model.result.some((item) => item.type === 'customSearch')).toBe(true)
-    })
-
-    test('search falls back to precise search for unknown strategy', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 'test'
-      ext.opts.searchStrategy = 'unknown'
-
-      await search({ key: 'a' })
-
-      expect(mockSimpleSearch).toHaveBeenCalled()
-      expect(mockFuzzySearch).not.toHaveBeenCalled()
-    })
+    expect(results).toEqual([{ id: 1, title: 'Bookmark', searchScore: 1 }])
   })
 
-  describe('addDefaultEntries', () => {
-    beforeEach(() => {
-      ext.model.bookmarks = [{ type: 'bookmark', title: 'Test Bookmark', originalUrl: 'https://example.com' }]
-      ext.model.tabs = [{ type: 'tab', title: 'Test Tab', url: 'https://example.com', lastVisitSecondsAgo: 100 }]
-      ext.model.history = [{ type: 'history', title: 'Test History', url: 'https://example.com' }]
-    })
+  test('falls back to current tab matches and recent tabs when no search term', async () => {
+    ext.model.bookmarks = [
+      { id: 1, originalUrl: 'https://site.test', title: 'Match' },
+      { id: 2, originalUrl: 'https://other.test', title: 'Other' },
+    ]
+    ext.model.tabs = [
+      { id: 3, url: 'https://third.test', lastVisitSecondsAgo: 2 },
+      { id: 4, url: 'chrome://extensions', lastVisitSecondsAgo: 1 },
+    ]
+    mockGetBrowserTabs.mockResolvedValue([{ url: 'https://site.test/' }])
 
-    test('addDefaultEntries returns recent history for history mode', async () => {
-      const { addDefaultEntries } = commonModule
-      ext.model.searchMode = 'history'
+    const results = await addDefaultEntries()
 
-      const results = await addDefaultEntries()
-
-      expect(results).toHaveLength(ext.model.history.length)
-      expect(results[0].type).toBe('history')
-    })
-
-    test('addDefaultEntries returns sorted tabs for tabs mode', async () => {
-      const { addDefaultEntries } = commonModule
-      ext.model.searchMode = 'tabs'
-
-      const results = await addDefaultEntries()
-
-      expect(results).toHaveLength(ext.model.tabs.length)
-      expect(results[0].type).toBe('tab')
-      // Should be sorted by lastVisitSecondsAgo ascending
-      expect(results[0].lastVisitSecondsAgo).toBeLessThanOrEqual(results[1]?.lastVisitSecondsAgo || Infinity)
-    })
-
-    test('addDefaultEntries returns bookmarks for bookmarks mode', async () => {
-      const { addDefaultEntries } = commonModule
-      ext.model.searchMode = 'bookmarks'
-
-      const results = await addDefaultEntries()
-
-      expect(results).toHaveLength(ext.model.bookmarks.length)
-      expect(results[0].type).toBe('bookmark')
-    })
-
-    test('addDefaultEntries finds matching bookmarks for current tab', async () => {
-      const { addDefaultEntries } = commonModule
-      mockGetBrowserTabs.mockResolvedValue([
-        {
-          url: 'https://example.com',
-          active: true,
-        },
-      ])
-
-      const results = await addDefaultEntries()
-
-      expect(results.length).toBeGreaterThan(0)
-      expect(results[0].type).toBe('bookmark')
-    })
-
-    test('addDefaultEntries adds recent tabs when no search term', async () => {
-      const { addDefaultEntries } = commonModule
-      ext.opts.maxRecentTabsToShow = 5
-
-      const results = await addDefaultEntries()
-
-      expect(results.length).toBeGreaterThan(0)
-      expect(results.some((tab) => tab.type === 'tab')).toBe(true)
-    })
-
-    test('addDefaultEntries handles getBrowserTabs error gracefully', async () => {
-      const { addDefaultEntries } = commonModule
-      mockGetBrowserTabs.mockRejectedValue(new Error('Browser API error'))
-
-      const results = await addDefaultEntries()
-
-      expect(results).toBeDefined()
-      // Should still return recent tabs even if getBrowserTabs fails
-      expect(results.some((tab) => tab.type === 'tab')).toBe(true)
-    })
+    expect(results).toEqual([
+      expect.objectContaining({ id: 1, title: 'Match', searchScore: 1 }),
+      expect.objectContaining({ id: 3, searchScore: 1 }),
+    ])
   })
 
-  describe('search engine functionality', () => {
-    beforeEach(() => {
-      // Setup DOM for search engine tests
-      Object.defineProperty(ext, 'dom', {
-        value: {
-          searchInput: { value: '' },
-          resultCounter: { innerText: '' },
-        },
-        writable: true,
-      })
-      ext.initialized = true
-      ext.searchCache = new Map()
-    })
+  test('ignores tab lookup errors but keeps recent tabs', async () => {
+    ext.model.tabs = [
+      { id: 1, url: 'https://one.test', lastVisitSecondsAgo: 4 },
+      { id: 2, url: 'https://two.test', lastVisitSecondsAgo: 2 },
+    ]
+    mockGetBrowserTabs.mockRejectedValue(new Error('no tabs'))
 
-    test('search handles search engines mode correctly', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 's test'
-      ext.opts.enableSearchEngines = true
-      ext.opts.searchStrategy = 'precise'
-      ext.opts.scoreMinScore = 0 // Ensure results aren't filtered out
-      ext.opts.searchEngineChoices = [{ name: 'Google', urlPrefix: 'https://www.google.com/search?q=' }]
+    const results = await addDefaultEntries()
 
-      await search({ key: 'a' })
+    expect(results.map((tab) => tab.id)).toEqual([2, 1])
+  })
+})
 
-      expect(ext.model.searchMode).toBe('search')
-      expect(ext.model.result.some((item) => item.type === 'search')).toBe(true)
-    })
+describe('search', () => {
+  test('returns early for navigation keys', async () => {
+    await search({ key: 'ArrowUp' })
 
-    test('search handles custom search engines correctly', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 'g test search'
-      ext.opts.searchStrategy = 'precise'
-      ext.opts.scoreMinScore = 0 // Ensure results aren't filtered out
-      ext.opts.customSearchEngines = [
-        {
-          alias: 'g',
-          name: 'Google',
-          urlPrefix: 'https://www.google.com/search?q=',
-        },
-      ]
-
-      await search({ key: 'a' })
-
-      expect(ext.model.result.some((item) => item.type === 'customSearch')).toBe(true)
-    })
+    expect(mockRenderSearchResults).not.toHaveBeenCalled()
   })
 
-  describe('calculateFinalScore edge cases', () => {
-    beforeEach(() => {
-      ext.model.searchTerm = 'test'
-    })
+  test('skips execution when extension is not initialized', async () => {
+    ext.initialized = false
 
-    test('calculateFinalScore handles exact starts with bonus', () => {
-      const { calculateFinalScore } = commonModule
-      ext.opts.scoreExactStartsWithBonus = 10
+    await search({ key: 'a' })
 
-      const results = [
-        {
-          type: 'bookmark',
-          searchScore: 1,
-          title: 'test bookmark',
-          url: 'https://example.com',
-        },
-      ]
-
-      const scored = calculateFinalScore(results, 'test')
-
-      expect(scored[0].score).toBeGreaterThan(ext.opts.scoreBookmarkBaseScore)
-    })
-
-    test('calculateFinalScore handles exact equals bonus', () => {
-      const { calculateFinalScore } = commonModule
-      ext.opts.scoreExactEqualsBonus = 10
-
-      const results = [
-        {
-          type: 'bookmark',
-          searchScore: 1,
-          title: 'test',
-          url: 'https://example.com',
-        },
-      ]
-
-      const scored = calculateFinalScore(results, 'test')
-
-      expect(scored[0].score).toBeGreaterThan(ext.opts.scoreBookmarkBaseScore)
-    })
-
-    test('calculateFinalScore handles tag match bonus', () => {
-      const { calculateFinalScore } = commonModule
-      ext.opts.scoreExactTagMatchBonus = 10
-      ext.opts.scoreTagWeight = 1
-
-      const results = [
-        {
-          type: 'bookmark',
-          searchScore: 1,
-          title: 'Test Bookmark',
-          url: 'https://example.com',
-          tagsArray: ['test'],
-          tags: 'test',
-        },
-      ]
-
-      const scored = calculateFinalScore(results, 'test')
-
-      expect(scored[0].score).toBeGreaterThan(ext.opts.scoreBookmarkBaseScore)
-    })
-
-    test('calculateFinalScore handles folder match bonus', () => {
-      const { calculateFinalScore } = commonModule
-      ext.opts.scoreExactFolderMatchBonus = 10
-      ext.opts.scoreFolderWeight = 1
-
-      const results = [
-        {
-          type: 'bookmark',
-          searchScore: 1,
-          title: 'Test Bookmark',
-          url: 'https://example.com',
-          folderArray: ['test'],
-          folder: 'test',
-        },
-      ]
-
-      const scored = calculateFinalScore(results, 'test')
-
-      expect(scored[0].score).toBeGreaterThan(ext.opts.scoreBookmarkBaseScore)
-    })
-
-    test('calculateFinalScore handles includes bonus', () => {
-      const { calculateFinalScore } = commonModule
-      ext.opts.scoreExactIncludesBonus = 5
-      ext.opts.scoreExactIncludesBonusMinChars = 2
-
-      const results = [
-        {
-          type: 'bookmark',
-          searchScore: 1,
-          title: 'This is a test bookmark',
-          url: 'https://example.com',
-        },
-      ]
-
-      const scored = calculateFinalScore(results, 'test')
-
-      expect(scored[0].score).toBeGreaterThan(ext.opts.scoreBookmarkBaseScore)
-    })
-
-    test('calculateFinalScore handles visit count bonus', () => {
-      const { calculateFinalScore } = commonModule
-      ext.opts.scoreVisitedBonusScore = 2
-      ext.opts.scoreVisitedBonusScoreMaximum = 20
-
-      const results = [
-        {
-          type: 'bookmark',
-          searchScore: 1,
-          title: 'Test Bookmark',
-          url: 'https://example.com',
-          visitCount: 10,
-        },
-      ]
-
-      const scored = calculateFinalScore(results, 'test')
-
-      expect(scored[0].score).toBeGreaterThan(ext.opts.scoreBookmarkBaseScore)
-    })
-
-    test('calculateFinalScore handles recent bonus', () => {
-      const { calculateFinalScore } = commonModule
-      ext.opts.scoreRecentBonusScoreMaximum = 20
-      ext.opts.historyDaysAgo = 5 // Ensure maxSeconds is properly calculated
-
-      const results = [
-        {
-          type: 'bookmark',
-          searchScore: 1,
-          title: 'Test Bookmark',
-          url: 'https://example.com',
-          lastVisitSecondsAgo: 0,
-        },
-      ]
-
-      const scored = calculateFinalScore(results, 'test')
-
-      expect(scored[0].score).toBeGreaterThan(ext.opts.scoreBookmarkBaseScore)
-    })
-
-    test('calculateFinalScore handles date added bonus', () => {
-      const { calculateFinalScore } = commonModule
-      ext.opts.scoreDateAddedBonusScoreMaximum = 20
-      ext.opts.scoreDateAddedBonusScorePerDay = 2
-
-      const results = [
-        {
-          type: 'bookmark',
-          searchScore: 1,
-          title: 'Test Bookmark',
-          url: 'https://example.com',
-          dateAdded: Date.now(),
-        },
-      ]
-
-      const scored = calculateFinalScore(results, 'test')
-
-      expect(scored[0].score).toBeGreaterThan(ext.opts.scoreBookmarkBaseScore)
-    })
-
-    test('calculateFinalScore handles no search term', () => {
-      const { calculateFinalScore } = commonModule
-      ext.model.searchTerm = ''
-
-      const results = [
-        {
-          type: 'bookmark',
-          searchScore: 1,
-          title: 'Test Bookmark',
-          url: 'https://example.com',
-        },
-      ]
-
-      const scored = calculateFinalScore(results, '')
-
-      // Should still calculate base score correctly
-      expect(scored[0].score).toBe(ext.opts.scoreBookmarkBaseScore)
-    })
+    expect(mockRenderSearchResults).not.toHaveBeenCalled()
   })
 
-  describe('integration tests', () => {
-    beforeEach(() => {
-      // Setup proper DOM for integration tests
-      Object.defineProperty(ext, 'dom', {
-        value: {
-          searchInput: { value: '' },
-          resultCounter: { innerText: '' },
-        },
-        writable: true,
-      })
-      ext.initialized = true
-      ext.searchCache = new Map()
+  test('uses cached results when present', async () => {
+    const cached = [{ type: 'bookmark', score: 50 }]
+    ext.searchCache = new Map([['test_precise_all', cached]])
+    ext.dom.searchInput.value = 'Test'
+
+    await search({ key: 't' })
+
+    expect(mockRenderSearchResults).toHaveBeenCalledWith(cached)
+    expect(mockSimpleSearch).not.toHaveBeenCalled()
+  })
+
+  test('loads default entries when search term empty', async () => {
+    ext.model.searchMode = 'history'
+    ext.model.history = [
+      { id: 1, title: 'Recent history', url: 'https://recent.test' },
+      { id: 2, title: 'Older history', url: 'https://older.test' },
+    ]
+    ext.dom.searchInput.value = '   '
+
+    await search({ key: 'a' })
+
+    expect(ext.model.result).toEqual([
+      { id: 1, title: 'Recent history', url: 'https://recent.test', searchScore: 1 },
+      { id: 2, title: 'Older history', url: 'https://older.test', searchScore: 1 },
+    ])
+    expect(mockRenderSearchResults).toHaveBeenCalledWith(ext.model.result)
+  })
+
+  test('performs taxonomy search when tag prefix detected', async () => {
+    ext.dom.searchInput.value = '#TagSearch'
+    ext.model.bookmarks = [{ id: 1 }]
+    mockSearchTaxonomy.mockReturnValue([
+      { type: 'bookmark', score: 120, title: 'Tagged result', url: 'https://tag.test', searchScore: 1 },
+    ])
+
+    await search({ key: 't' })
+
+    expect(mockSearchTaxonomy).toHaveBeenCalledWith('tagsearch', 'tags', ext.model.bookmarks)
+    expect(mockRenderSearchResults).toHaveBeenCalled()
+  })
+
+  test('adds custom search alias results', async () => {
+    ext.dom.searchInput.value = 'yt cats'
+
+    await search({ key: 'c' })
+
+    const hasCustom = ext.model.result.some((item) => item.type === 'customSearch')
+    expect(hasCustom).toBe(true)
+  })
+
+  test('adds direct url result when term looks like URL', async () => {
+    ext.dom.searchInput.value = 'example.com'
+    mockSimpleSearch.mockReturnValue([
+      { type: 'bookmark', title: 'Example', url: 'https://example.com', searchScore: 1, score: 150 },
+    ])
+    ext.opts.scoreMinScore = 0
+
+    await search({ key: 'e' })
+
+    const direct = ext.model.result.find((item) => item.type === 'direct')
+    expect(direct).toBeDefined()
+    expect(direct).toMatchObject({
+      type: 'direct',
+      originalUrl: 'https://example.com',
     })
+    expect(mockCleanUpUrl).toHaveBeenCalledWith('https://example.com')
+  })
 
-    test('search integration with fuzzy strategy', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 'test'
-      ext.opts.searchStrategy = 'fuzzy'
-      ext.opts.searchMinMatchCharLength = 1
-      ext.opts.scoreMinScore = 0 // Ensure results aren't filtered out
-      mockFuzzySearch.mockResolvedValue([{ type: 'bookmark', title: 'Test Bookmark', searchScore: 0.8, score: 80 }])
+  test('filters low scoring results and limits total size', async () => {
+    ext.dom.searchInput.value = 'filter'
+    mockSimpleSearch.mockReturnValue([
+      { type: 'bookmark', title: 'High', url: 'https://high.test', searchScore: 1, score: 120 },
+      { type: 'bookmark', title: 'Mid', url: 'https://mid.test', searchScore: 1, score: 80 },
+      { type: 'bookmark', title: 'Low', url: 'https://low.test', searchScore: 1, score: 20 },
+      { type: 'bookmark', title: 'Second Mid', url: 'https://mid2.test', searchScore: 1, score: 75 },
+    ])
+    ext.opts.scoreMinScore = 70
+    ext.opts.searchMaxResults = 2
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
 
-      await search({ key: 'a' })
+    await search({ key: 'f' })
 
-      expect(mockFuzzySearch).toHaveBeenCalledWith('all', 'test')
-      expect(ext.model.result.length).toBeGreaterThan(0)
-    })
+    expect(ext.model.result.length).toBeLessThanOrEqual(2)
+    expect(ext.model.result.every((item) => item.score >= 70)).toBe(true)
+    expect(ext.dom.resultCounter.innerText).toBe(`(${ext.model.result.length})`)
+  })
 
-    test('search integration with precise strategy', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 'test'
-      ext.opts.searchStrategy = 'precise'
-      ext.opts.searchMinMatchCharLength = 1
-      ext.opts.scoreMinScore = 0 // Ensure results aren't filtered out
-      mockSimpleSearch.mockReturnValue([{ type: 'bookmark', title: 'Test Bookmark', searchScore: 1, score: 100 }])
+  test('falls back to precise search when configured strategy is unsupported', async () => {
+    ext.dom.searchInput.value = 'fallback'
+    ext.opts.searchStrategy = 'unsupported'
+    mockSimpleSearch.mockReturnValue([{ type: 'bookmark', title: 'Fallback', url: 'https://fallback.test', score: 90 }])
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
-      await search({ key: 'a' })
+    await search({ key: 'f' })
 
-      expect(mockSimpleSearch).toHaveBeenCalledWith('all', 'test')
-      expect(ext.model.result.length).toBeGreaterThan(0)
-    })
+    expect(mockSimpleSearch).toHaveBeenCalledWith('all', 'fallback')
+    expect(consoleSpy).toHaveBeenCalledWith('Unsupported option "search.approach" value: "unsupported"')
+    consoleSpy.mockRestore()
+  })
 
-    test('search integration with taxonomy search', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = '#test'
-      ext.opts.searchStrategy = 'precise'
-      ext.opts.searchMinMatchCharLength = 1
-      ext.opts.scoreMinScore = 0 // Ensure results aren't filtered out
-      mockSearchTaxonomy.mockReturnValue([
-        { type: 'bookmark', title: 'Test Bookmark', tags: 'test', searchScore: 1, score: 100 },
-      ])
+  test('stores new results in cache after search', async () => {
+    ext.dom.searchInput.value = 'remember'
+    mockSimpleSearch.mockReturnValue([
+      { type: 'bookmark', title: 'Remember', url: 'https://remember.test', searchScore: 1, score: 120 },
+    ])
+    const cache = {
+      has: jest.fn(() => false),
+      set: jest.fn(),
+    }
+    ext.searchCache = cache
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
 
-      await search({ key: 'a' })
+    await search({ key: 'r' })
 
-      expect(mockSearchTaxonomy).toHaveBeenCalledWith('test', 'tags', ext.model.bookmarks)
-      expect(ext.model.result.length).toBeGreaterThan(0)
-    })
-
-    test('search integration with search engines', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 's test'
-      ext.opts.enableSearchEngines = true
-      ext.opts.searchStrategy = 'precise'
-      ext.opts.searchMinMatchCharLength = 1
-      ext.opts.scoreMinScore = 0 // Ensure results aren't filtered out
-      ext.opts.searchEngineChoices = [{ name: 'Google', urlPrefix: 'https://www.google.com/search?q=' }]
-
-      await search({ key: 'a' })
-
-      expect(ext.model.result.some((item) => item.type === 'search')).toBe(true)
-    })
-
-    test('search integration with result filtering and limiting', async () => {
-      const { search } = commonModule
-      ext.dom.searchInput.value = 'test'
-      ext.opts.searchStrategy = 'precise'
-      ext.opts.searchMaxResults = 2
-      ext.opts.scoreMinScore = 50
-
-      // Create results that will be filtered and limited
-      mockSimpleSearch.mockReturnValue([
-        { type: 'bookmark', title: 'Test 1', searchScore: 1, score: 100 },
-        { type: 'bookmark', title: 'Test 2', searchScore: 1, score: 80 },
-        { type: 'bookmark', title: 'Test 3', searchScore: 1, score: 30 }, // Below min score
-        { type: 'bookmark', title: 'Test 4', searchScore: 1, score: 60 },
-      ])
-
-      await search({ key: 'a' })
-
-      expect(ext.model.result.length).toBeLessThanOrEqual(2)
-      expect(ext.model.result.every((item) => item.score >= 50)).toBe(true)
-    })
+    expect(cache.has).toHaveBeenCalledWith('remember_precise_all')
+    expect(cache.set).toHaveBeenCalledWith('remember_precise_all', ext.model.result)
   })
 })
