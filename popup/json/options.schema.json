@@ -13,7 +13,7 @@
       "type": "boolean",
       "default": false,
       "description": "Log additional diagnostic information from the extension runtime to help investigate indexing or performance issues.",
-      "x-ui-section": "general"
+      "x-section": "general"
     },
     "searchStrategy": {
       "type": "string",
@@ -23,21 +23,21 @@
       ],
       "default": "precise",
       "description": "Search approach to use for matching. Use `precise` for exact string matching with the best startup and query performance. Use `fuzzy` to allow approximate matches powered by uFuzzy at the cost of higher initialization and query time.",
-      "x-ui-section": "search"
+      "x-section": "search"
     },
     "searchMaxResults": {
       "type": "integer",
       "minimum": 1,
       "default": 32,
       "description": "Maximum number of results returned by a query outside of folder or tag views. Lower the value to improve rendering performance on slower machines.",
-      "x-ui-section": "search"
+      "x-section": "search"
     },
     "searchMinMatchCharLength": {
       "type": "integer",
       "minimum": 1,
       "default": 1,
       "description": "Minimum number of characters that the search term must contain before it is considered a valid match.",
-      "x-ui-section": "search"
+      "x-section": "search"
     },
     "searchFuzzyness": {
       "type": "number",
@@ -45,14 +45,14 @@
       "maximum": 1,
       "default": 0.6,
       "description": "Fuzzy search threshold between 0 (behave like precise search) and 1 (allow the most lenient fuzzy matches). Only applies when `searchStrategy` is set to `fuzzy`.",
-      "x-ui-section": "search"
+      "x-section": "search"
     },
     "searchDebounceMs": {
       "type": "integer",
       "minimum": 0,
       "default": 100,
       "description": "Debounce delay for the search input measured in milliseconds. Smaller values react faster while larger values reduce repeated work during fast typing.",
-      "x-ui-section": "search"
+      "x-section": "search"
     },
     "colorStripeWidth": {
       "type": "integer",
@@ -60,127 +60,127 @@
       "maximum": 16,
       "default": 5,
       "description": "Width in pixels of the colored stripe shown next to each search result.",
-      "x-ui-section": "style"
+      "x-section": "style"
     },
     "bookmarkColor": {
       "type": "string",
       "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
       "default": "#3c8d8d",
       "description": "CSS color applied to bookmark results. Accepts 3 or 6 digit hex colors.",
-      "x-ui-section": "style"
+      "x-section": "style"
     },
     "tabColor": {
       "type": "string",
       "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
       "default": "#b89aff",
       "description": "CSS color applied to open tab results. Accepts 3 or 6 digit hex colors.",
-      "x-ui-section": "style"
+      "x-section": "style"
     },
     "historyColor": {
       "type": "string",
       "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
       "default": "#9ece2f",
       "description": "CSS color applied to browsing history results. Accepts 3 or 6 digit hex colors.",
-      "x-ui-section": "style"
+      "x-section": "style"
     },
     "searchColor": {
       "type": "string",
       "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
       "default": "#e1a535",
       "description": "CSS color applied to built-in search engine entries. Accepts 3 or 6 digit hex colors.",
-      "x-ui-section": "style"
+      "x-section": "style"
     },
     "customSearchColor": {
       "type": "string",
       "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
       "default": "#ce5c2f",
       "description": "CSS color applied to custom search engine entries. Accepts 3 or 6 digit hex colors.",
-      "x-ui-section": "style"
+      "x-section": "style"
     },
     "directColor": {
       "type": "string",
       "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
       "default": "#7799CE",
       "description": "CSS color applied to direct URL matches. Accepts 3 or 6 digit hex colors.",
-      "x-ui-section": "style"
+      "x-section": "style"
     },
     "enableTabs": {
       "type": "boolean",
       "default": true,
       "description": "Whether to index and search the set of currently open browser tabs.",
-      "x-ui-section": "sources"
+      "x-section": "sources"
     },
     "enableBookmarks": {
       "type": "boolean",
       "default": true,
       "description": "Whether to index and search the browser bookmark tree.",
-      "x-ui-section": "sources"
+      "x-section": "sources"
     },
     "enableHistory": {
       "type": "boolean",
       "default": true,
       "description": "Whether to index and search browsing history entries. Fetching large history ranges can increase startup time.",
-      "x-ui-section": "sources"
+      "x-section": "sources"
     },
     "enableSearchEngines": {
       "type": "boolean",
       "default": true,
       "description": "Whether to display built-in search engine links that forward the current term to web search.",
-      "x-ui-section": "sources"
+      "x-section": "sources"
     },
     "enableHelp": {
       "type": "boolean",
       "default": true,
       "description": "Show the built-in help and tips overlay when the popup starts.",
-      "x-ui-section": "sources"
+      "x-section": "sources"
     },
     "enableDirectUrl": {
       "type": "boolean",
       "default": true,
       "description": "Whether to treat entered URLs as direct navigation targets instead of search terms.",
-      "x-ui-section": "sources"
+      "x-section": "sources"
     },
     "displayTags": {
       "type": "boolean",
       "default": true,
       "description": "Extract tags embedded in bookmark titles (e.g. `#tag`) and display them as badges. Disabling also turns off the tag sidebar and tag search mode.",
-      "x-ui-section": "display"
+      "x-section": "display"
     },
     "displayFolderName": {
       "type": "boolean",
       "default": true,
       "description": "Display the parent bookmark folder name and enable folder-based searching.",
-      "x-ui-section": "display"
+      "x-section": "display"
     },
     "displaySearchMatchHighlight": {
       "type": "boolean",
       "default": true,
       "description": "Highlight matching characters within each result. Slightly increases rendering work.",
-      "x-ui-section": "display"
+      "x-section": "display"
     },
     "displayLastVisit": {
       "type": "boolean",
       "default": true,
       "description": "Show how long ago a result was last visited, when the data is available.",
-      "x-ui-section": "display"
+      "x-section": "display"
     },
     "displayVisitCounter": {
       "type": "boolean",
       "default": false,
       "description": "Show how many times an item was visited according to browsing history.",
-      "x-ui-section": "display"
+      "x-section": "display"
     },
     "displayDateAdded": {
       "type": "boolean",
       "default": false,
       "description": "Show the original creation date for bookmark results.",
-      "x-ui-section": "display"
+      "x-section": "display"
     },
     "displayScore": {
       "type": "boolean",
       "default": true,
       "description": "Display the calculated score next to each result entry.",
-      "x-ui-section": "display"
+      "x-section": "display"
     },
     "bookmarksIgnoreFolderList": {
       "type": "array",
@@ -190,20 +190,20 @@
       },
       "default": [],
       "description": "Array of bookmark folder paths whose contents should never be indexed. All subfolders of the listed folders are skipped as well.",
-      "x-ui-section": "bookmarks"
+      "x-section": "bookmarks"
     },
     "tabsOnlyCurrentWindow": {
       "type": "boolean",
       "default": false,
       "description": "Limit tab indexing to the active browser window. Helps multi-window users keep the result set focused.",
-      "x-ui-section": "tabs"
+      "x-section": "tabs"
     },
     "maxRecentTabsToShow": {
       "type": "integer",
       "minimum": 0,
       "default": 16,
       "description": "Number of most recently used tabs to show when the popup opens without a search term. Set to 0 to disable the MRU list entirely.",
-      "x-ui-section": "tabs",
+      "x-section": "tabs",
       "x-allowZeroOrMin": 3
     },
     "historyDaysAgo": {
@@ -211,14 +211,14 @@
       "minimum": 1,
       "default": 14,
       "description": "How many days back in time the extension should request items from the browsing history.",
-      "x-ui-section": "history"
+      "x-section": "history"
     },
     "historyMaxItems": {
       "type": "integer",
       "minimum": 0,
       "default": 1024,
       "description": "Upper bound on the number of history items retrieved. Larger values increase initialization time and memory usage.",
-      "x-ui-section": "history"
+      "x-section": "history"
     },
     "historyIgnoreList": {
       "type": "array",
@@ -230,7 +230,7 @@
         "extension://"
       ],
       "description": "List of string fragments. History entries whose URL contains any of these fragments will be excluded from indexing.",
-      "x-ui-section": "history"
+      "x-section": "history"
     },
     "searchEngineChoices": {
       "type": "array",
@@ -253,7 +253,7 @@
         }
       ],
       "description": "Ordered list of built-in search engines that appear as fallback actions. `$s` within the `urlPrefix` is replaced with the search term; otherwise the term is appended.",
-      "x-ui-section": "searchEngines"
+      "x-section": "searchEngines"
     },
     "customSearchEngines": {
       "type": "array",
@@ -281,14 +281,14 @@
         }
       ],
       "description": "Custom search engine definitions that can be triggered with aliases (e.g. `g query`). `$s` inside `urlPrefix` is replaced with the search term. `blank` is optional and used when the alias is entered without a query.",
-      "x-ui-section": "searchEngines"
+      "x-section": "searchEngines"
     },
     "scoreMinScore": {
       "type": "integer",
       "minimum": 0,
       "default": 30,
       "description": "Filter out search results whose final score falls below this threshold.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreMinSearchTermMatchRatio": {
       "type": "number",
@@ -296,145 +296,145 @@
       "maximum": 1,
       "default": 0.6,
       "description": "Minimum ratio of search terms that must match for a result to be kept when using precise search. 1 means all terms must match; 0 means any term is enough.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreBookmarkBaseScore": {
       "type": "integer",
       "default": 100,
       "description": "Base score applied to bookmark results before any multipliers or bonuses are added.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreTabBaseScore": {
       "type": "integer",
       "default": 70,
       "description": "Base score applied to open tab results before additional weighting.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreHistoryBaseScore": {
       "type": "integer",
       "default": 45,
       "description": "Base score applied to history results before additional weighting.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreSearchEngineBaseScore": {
       "type": "integer",
       "default": 30,
       "description": "Base score applied to built-in search engine choices to keep them sorted after organic results.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreCustomSearchEngineBaseScore": {
       "type": "integer",
       "default": 400,
       "description": "Base score applied to custom search engine choices so they float to the top when their alias matches.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreDirectUrlScore": {
       "type": "integer",
       "default": 500,
       "description": "Base score awarded when the user types a direct URL, ensuring it always ranks first.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreTitleWeight": {
       "type": "number",
       "default": 1,
       "description": "Weight multiplier applied when a search term matches the title of an item.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreTagWeight": {
       "type": "number",
       "default": 0.7,
       "description": "Weight multiplier applied when a search term matches one of the parsed tags.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreUrlWeight": {
       "type": "number",
       "default": 0.6,
       "description": "Weight multiplier applied when a search term matches the URL of an item.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreFolderWeight": {
       "type": "number",
       "default": 0.5,
       "description": "Weight multiplier applied when a search term matches the folder name of a bookmark.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreCustomBonusScore": {
       "type": "boolean",
       "default": true,
       "description": "Allow bookmark titles to include manual bonus scores in the form ` +<score>` which are added to the calculated result score.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreExactIncludesBonus": {
       "type": "integer",
       "default": 5,
       "description": "Bonus score awarded for each search term that appears as an exact substring within the title or URL.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreExactIncludesBonusMinChars": {
       "type": "integer",
       "minimum": 1,
       "default": 3,
       "description": "Minimum length a search term must have before the exact include bonus is considered.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreExactStartsWithBonus": {
       "type": "integer",
       "default": 10,
       "description": "Bonus score awarded when the title or URL starts with the full search term.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreExactEqualsBonus": {
       "type": "integer",
       "default": 15,
       "description": "Bonus score awarded when the title exactly equals the search term.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreExactTagMatchBonus": {
       "type": "integer",
       "default": 10,
       "description": "Bonus score awarded when a tag matches the search term exactly.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreExactFolderMatchBonus": {
       "type": "integer",
       "default": 5,
       "description": "Bonus score awarded when a folder name matches the search term exactly.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreVisitedBonusScore": {
       "type": "number",
       "minimum": 0,
       "default": 0.5,
       "description": "Multiplier applied per visit count when calculating the history-based bonus score.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreVisitedBonusScoreMaximum": {
       "type": "integer",
       "minimum": 0,
       "default": 20,
       "description": "Upper limit applied to the visit-based bonus so frequently visited items cannot exceed this value.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "scoreRecentBonusScoreMaximum": {
       "type": "integer",
       "minimum": 0,
       "default": 20,
       "description": "Maximum bonus that can be awarded based on how recently an item was visited. Fresh visits score higher than those near the `historyDaysAgo` cutoff.",
-      "x-ui-section": "scores"
+      "x-section": "scores"
     },
     "titleLengthRestrictionForUrls": {
       "type": "integer",
       "minimum": 0,
       "default": 80,
       "description": "When the title is identical to the URL, truncate the displayed title once it exceeds this character length.",
-      "x-ui-section": "powerUsers"
+      "x-section": "powerUsers"
     },
     "uFuzzyOptions": {
       "type": "object",
       "default": {},
       "description": "Advanced configuration passed straight to the uFuzzy search library. Leave empty to rely on the built-in tuning.",
       "additionalProperties": true,
-      "x-ui-section": "powerUsers"
+      "x-section": "powerUsers"
     }
   },
   "definitions": {
