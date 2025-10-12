@@ -89,4 +89,23 @@ describe('taxonomy search', () => {
     const second = getUniqueFolders()
     expect(second).toBe(first)
   })
+
+  test('resetUniqueFoldersCache invalidates cached folder data', () => {
+    const { getUniqueFolders, resetUniqueFoldersCache } = taxonomyModule
+    ext.model.bookmarks = [
+      { originalId: '1', folder: '~Work ~Projects' },
+      { originalId: '2', folder: '~Work' },
+    ]
+
+    const first = getUniqueFolders()
+    expect(first.Work.sort()).toEqual(['1', '2'])
+
+    // Simulate a bookmark removal that affects the folder map
+    ext.model.bookmarks = [{ originalId: '2', folder: '~Work' }]
+    resetUniqueFoldersCache()
+
+    const second = getUniqueFolders()
+    expect(second.Work).toEqual(['2'])
+    expect(second).not.toBe(first)
+  })
 })

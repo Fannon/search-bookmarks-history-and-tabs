@@ -8,9 +8,11 @@ import archiver from 'archiver'
 /**
  * Build the Chrome distribution directory and accompanying archive.
  */
-async function createDist() {
+export async function createDist(clean = true) {
   // Remove and create directories
-  await fs.remove('dist')
+  if (clean) {
+    await fs.remove('dist')
+  }
   await fs.ensureDir('dist/chrome')
   await fs.ensureDir('dist/chrome/images')
 

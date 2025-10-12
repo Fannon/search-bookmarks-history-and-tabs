@@ -339,10 +339,12 @@ describe('search', () => {
     const cached = [{ type: 'bookmark', score: 50 }]
     ext.searchCache = new Map([['test_precise_all', cached]])
     ext.dom.searchInput.value = 'Test'
+    ext.model.searchTerm = 'previous search'
 
     await search({ key: 't' })
 
     expect(ext.model.result).toBe(cached)
+    expect(ext.model.searchTerm).toBe('test')
     expect(mockRenderSearchResults).toHaveBeenCalledWith(cached)
   })
 

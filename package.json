@@ -14,6 +14,7 @@
     "@jest/globals": "^30.2.0",
     "@playwright/test": "^1.56.0",
     "archiver": "^7.0.1",
+    "chokidar": "^4.0.3",
     "esbuild": "^0.25.10",
     "eslint": "^9.37.0",
     "fs-extra": "^11.3.2",
@@ -40,7 +41,8 @@
     "start": "serve -p 8080 ./popup/",
     "start:dist": "serve -p 8080 ./dist/chrome/popup/",
     "size": "node bin/size.js",
-    "analyze": "node bin/analyze-code.js"
+    "analyze": "node bin/analyze-code.js",
+    "watch": "node bin/watch.js"
   },
   "repository": {
     "type": "git",

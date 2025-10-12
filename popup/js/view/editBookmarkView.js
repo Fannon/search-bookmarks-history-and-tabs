@@ -5,7 +5,7 @@
 import { browserApi, createSearchString } from '../helper/browserApi.js'
 import { cleanUpUrl, loadCSS, loadScript } from '../helper/utils.js'
 import { resetFuzzySearchState } from '../search/fuzzySearch.js'
-import { getUniqueTags } from '../search/taxonomySearch.js'
+import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
 import { search } from '../search/common.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
 
@@ -97,6 +97,7 @@ export function updateBookmark(bookmarkId) {
   bookmark.searchStringLower = bookmark.searchString.toLowerCase()
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
+  resetUniqueFoldersCache()
 
   if (ext.opts.debug) {
     console.debug(`Update bookmark with ID ${bookmarkId}: "${titleInput} ${tagsInput}"`)
@@ -128,6 +129,7 @@ export async function deleteBookmark(bookmarkId) {
   })
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
+  resetUniqueFoldersCache()
 
   // Re-execute search
   await search()

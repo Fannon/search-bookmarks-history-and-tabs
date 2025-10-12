@@ -2,7 +2,7 @@
 
 🔎 Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.
 
-## Installation via Store
+## Installation
 
 - [Chrome Extension](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0)
 - [Microsoft Edge Addon](https://microsoftedge.microsoft.com/addons/detail/search-tabs-bookmarks-an/ldmbegkendnchhjppahaadhhakgfbfpo)
@@ -206,13 +206,13 @@ The built extensions can be found in [dist/chrome/](dist/chrome/).
 
 ### Developer Workflow
 
-- Typical developer actions
-  - `npm run build` for a complete build
-  - `npm run start` to start the extension locally in a browser (with mock data)
-  - `npm run test` to run end to end tests
-  - `npm run test:unit` to run Jest unit tests
-  - for more, see `npm run`
-- See also: [.github/copilot-instructions.md](./.github\copilot-instructions.md)
+- Typical developer actions:
+  - `npm run build` - Complete build pipeline
+  - `npm run start` - Serve popup locally with mock data
+  - `npm run test:e2e` - Run Playwright end-to-end tests
+  - `npm run test:unit` - Run Jest unit tests
+  - `npm run lint` - Check code style
+- See also: [Repository Guidelines](./AGENTS.md) and [LLM Agent Docs](./.github/copilot-instructions.md)
 
 ## Credits
 
@@ -229,4 +229,3 @@ This extension makes use of the following helpful open-source projects (thanks!)
 
 > Please create a [GitHub issue](https://github.com/Fannon/search-tabs-bookmarks-and-history/issues) to give your feedback.
 > All ideas, suggestions or bug reports are welcome.
-
