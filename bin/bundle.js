@@ -36,7 +36,7 @@ const sharedBuildOptions = {
   logLevel: 'info',
 }
 
-async function bundleAll() {
+export async function bundleAll() {
   for (const { name, entry, outfile, globalName } of bundles) {
     await build({
       ...sharedBuildOptions,

@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 import chokidar from 'chokidar'
-import { spawn } from 'node:child_process'
 import process from 'node:process'
+import { performance } from 'node:perf_hooks'
+import { bundleAll } from './bundle.js'
+import { createDist } from './createDist.js'
 
 const isIgnoredPath = (filePath) => {
   if (!filePath) return false
@@ -14,7 +16,11 @@ const isIgnoredPath = (filePath) => {
   }
 
   const fileName = normalized.substring(normalized.lastIndexOf('/') + 1)
-  return /\.bundle\.min\.js(\.map)?$/.test(fileName)
+  if (/\.min\.js(\.map)?$/i.test(fileName)) {
+    return true
+  }
+
+  return /\.bundle\.min\.js(\.map)?$/i.test(fileName)
 }
 
 const watcher = chokidar.watch('popup', {
@@ -28,36 +34,38 @@ const watcher = chokidar.watch('popup', {
 })
 
 let pendingTimer = null
-let buildProcess = null
-let rerunRequested = false
+let isBuilding = false
+let hasQueuedBuild = false
 
-const runBuild = () => {
-  if (buildProcess) {
-    rerunRequested = true
+async function buildOnce() {
+  console.info('Starting build...')
+  const startedAt = performance.now()
+  await bundleAll()
+  await createDist(false)
+  const finishedAt = performance.now()
+  const durationMs = Math.round(finishedAt - startedAt)
+  console.info(`Build complete in ${durationMs}ms`)
+}
+
+async function runBuild() {
+  if (isBuilding) {
+    hasQueuedBuild = true
     return
   }
 
-  console.info('Starting build...')
-  buildProcess = spawn('npm', ['run', 'build'], {
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-  })
+  isBuilding = true
+  try {
+    await buildOnce()
+  } catch (error) {
+    console.error('Build failed', error)
+  } finally {
+    isBuilding = false
 
-  buildProcess.on('exit', (code) => {
-    const succeeded = code === 0
-    buildProcess = null
-
-    if (succeeded) {
-      console.info('Build finished')
-    } else {
-      console.error(`Build exited with code ${code}`)
+    if (hasQueuedBuild) {
+      hasQueuedBuild = false
+      await runBuild()
     }
-
-    if (rerunRequested) {
-      rerunRequested = false
-      runBuild()
-    }
-  })
+  }
 }
 
 const scheduleBuild = () => {
@@ -91,10 +99,6 @@ const cleanup = () => {
   }
 
   watcher.close().catch(() => {})
-
-  if (buildProcess) {
-    buildProcess.kill('SIGTERM')
-  }
 }
 
 process.on('SIGINT', () => {
