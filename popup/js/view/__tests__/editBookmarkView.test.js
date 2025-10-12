@@ -51,6 +51,7 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
     },
   }
   const getUniqueTags = jest.fn(() => uniqueTagsMockValue)
+  const resetUniqueFoldersCache = jest.fn()
 
   class BaseTagify {
     constructor(element, options) {
@@ -88,6 +89,7 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   }))
   jest.unstable_mockModule('../../search/taxonomySearch.js', () => ({
     getUniqueTags,
+    resetUniqueFoldersCache,
   }))
   jest.unstable_mockModule('../../search/common.js', () => ({
     search: searchMock,
@@ -110,6 +112,7 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
       createSearchString,
       browserApi,
       getUniqueTags,
+      resetUniqueFoldersCache,
     },
     helpers: {
       tagifyInstances,
@@ -269,6 +272,7 @@ describe('editBookmarkView', () => {
     expect(mocks.createSearchString).toHaveBeenCalledWith('Updated Title', 'clean:http://updated.com', '#alpha #beta', '~Work')
     expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
+    expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
     expect(mocks.browserApi.bookmarks.update).toHaveBeenCalledWith(BOOKMARK_ID, {
       title: 'Updated Title #alpha #beta',
       url: 'http://updated.com',
@@ -302,6 +306,7 @@ describe('editBookmarkView', () => {
     expect(bookmark.tags).toBe('')
     expect(mocks.browserApi.bookmarks?.update).toBeUndefined()
     expect(warnSpy).toHaveBeenCalledWith('No browser bookmarks API found. Bookmark update will not persist.')
+    expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
 
     warnSpy.mockRestore()
   })
@@ -322,6 +327,7 @@ describe('editBookmarkView', () => {
     expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.searchMock).toHaveBeenCalledTimes(1)
+    expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
   })
 
   it('logs a warning when attempting to delete without bookmark API', async () => {
@@ -335,6 +341,7 @@ describe('editBookmarkView', () => {
 
     expect(warnSpy).toHaveBeenCalledWith('No browser bookmarks API found. Bookmark remove will not persist.')
     expect(global.ext.model.bookmarks).toHaveLength(0)
+    expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
     warnSpy.mockRestore()
   })
 

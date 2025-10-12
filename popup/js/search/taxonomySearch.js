@@ -82,3 +82,13 @@ export function getUniqueFolders() {
   }
   return ext.index.taxonomy.folders
 }
+
+/**
+ * Clears the memoized folders dictionary so it can be rebuilt on demand.
+ * Call this after mutating ext.model.bookmarks to keep folder views in sync.
+ */
+export function resetUniqueFoldersCache() {
+  if (ext && ext.index && ext.index.taxonomy) {
+    ext.index.taxonomy.folders = undefined
+  }
+}
