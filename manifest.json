@@ -20,6 +20,7 @@
       "128": "/images/logo-128.png"
     }
   },
+  "options_page": "/popup/options.html",
   "commands": {
     "_execute_action": {
       "suggested_key": {

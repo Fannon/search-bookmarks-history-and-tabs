@@ -475,3 +475,5 @@ export function validateUserOptions(userOptions) {
     }
   }
 }
+
+export { diffUserOptions } from './optionsDiff.js'

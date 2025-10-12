@@ -18,8 +18,8 @@ const bundles = [
   },
   {
     name: 'initOptions',
-    entry: resolve(repoRoot, 'popup/js/initOptions.js'),
-    outfile: resolve(repoRoot, 'popup/js/initOptions.bundle.min.js'),
+    entry: resolve(repoRoot, 'popup/js/options/initFormOptions.js'),
+    outfile: resolve(repoRoot, 'popup/js/options/initFormOptions.bundle.min.js'),
     globalName: 'optionsPopup',
   },
 ]

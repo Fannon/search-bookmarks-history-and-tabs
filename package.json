@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "dependencies": {
+    "@exodus/schemasafe": "^1.3.0",
     "@leeoniya/ufuzzy": "^1.0.19",
     "@yaireo/tagify": "^4.35.4",
     "js-yaml": "^4.1.0",

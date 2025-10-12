@@ -3,7 +3,14 @@ import globals from 'globals'
 
 export default [
   {
-    ignores: ['popup/lib/**.*', '/reports/*', 'playwright/**/*', 'popup/js/*.bundle.min.js'],
+    ignores: [
+      'popup/lib/**.*',
+      '/reports/*',
+      'playwright/**/*',
+      'popup/js/*.bundle.min.js',
+      'popup/js/**/*.bundle.min.js',
+      'popup/js/options/vendor/*.js',
+    ],
   },
   js.configs.recommended,
   {

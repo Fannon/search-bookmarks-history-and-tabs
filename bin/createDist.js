@@ -79,7 +79,12 @@ async function removeBundledJs(dir) {
         if (!remaining.length) {
           await fs.remove(fullPath)
         }
-      } else if (entry.isFile() && entry.name.endsWith('.js') && !entry.name.endsWith('.bundle.min.js')) {
+      } else if (
+        entry.isFile() &&
+        entry.name.endsWith('.js') &&
+        !entry.name.endsWith('.bundle.min.js') &&
+        !fullPath.includes('/options/vendor/')
+      ) {
         await fs.remove(fullPath)
       }
     }
@@ -125,8 +130,8 @@ async function modifyHtmlFile(filePath) {
   const content = await fs.readFile(filePath, 'utf8')
   let modified = content
     .replace(
-      '<script defer type="module" src="./js/initOptions.js"></script>',
-      '<script defer src="./js/initOptions.bundle.min.js"></script>',
+      '<script defer type="module" src="./js/options/initFormOptions.js"></script>',
+      '<script defer src="./js/options/initFormOptions.bundle.min.js"></script>',
     )
     .replace(
       '<script defer type="module" src="./js/initSearch.js"></script>',
