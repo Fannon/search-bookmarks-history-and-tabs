@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "dependencies": {
+    "@exodus/schemasafe": "^1.3.0",
     "@leeoniya/ufuzzy": "^1.0.19",
     "@yaireo/tagify": "^4.35.4",
     "js-yaml": "^4.1.0",
@@ -35,8 +36,8 @@
     "test:e2e:chromium": "playwright test --project=chromium",
     "test:e2e:firefox": "playwright test --project=firefox",
     "test:e2e:edge": "playwright test --project=edge",
-    "test:unit": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
-    "test:unit:coverage": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage",
+    "test:unit": "node --experimental-vm-modules --experimental-json-modules ./node_modules/jest/bin/jest.js",
+    "test:unit:coverage": "node --experimental-vm-modules --experimental-json-modules ./node_modules/jest/bin/jest.js --coverage",
     "lint": "eslint ./popup/js/",
     "start": "serve -p 8080 ./popup/",
     "start:dist": "serve -p 8080 ./dist/chrome/popup/",

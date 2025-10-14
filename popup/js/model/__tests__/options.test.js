@@ -45,10 +45,11 @@ describe('options model', () => {
 
   describe('validateUserOptions', () => {
     test('accepts valid objects', () => {
-      expect(() => optionsModule.validateUserOptions({ searchStrategy: 'fuzzy' })).not.toThrow()
-      expect(() => optionsModule.validateUserOptions({})).not.toThrow()
-      expect(() => optionsModule.validateUserOptions(null)).not.toThrow()
-      expect(() => optionsModule.validateUserOptions(undefined)).not.toThrow()
+      const validObject = { searchStrategy: 'fuzzy' }
+      expect(optionsModule.validateUserOptions(validObject)).toBe(validObject)
+      expect(optionsModule.validateUserOptions({})).toEqual({})
+      expect(optionsModule.validateUserOptions(null)).toEqual({})
+      expect(optionsModule.validateUserOptions(undefined)).toEqual({})
     })
 
     test('rejects invalid structures', () => {
@@ -104,6 +105,17 @@ describe('options model', () => {
       })
 
       await expect(optionsModule.setUserOptions({ searchStrategy: 'fuzzy' })).rejects.toThrow(runtimeError)
+    })
+
+    test('rejects options that do not match the schema', async () => {
+      createTestExt({
+        browserApi: {},
+      })
+
+      await expect(optionsModule.setUserOptions({ searchMaxResults: 0 })).rejects.toMatchObject({
+        message: 'User options do not match the required schema.',
+        validationErrors: expect.arrayContaining(['searchMaxResults must be >= 1']),
+      })
     })
   })
 

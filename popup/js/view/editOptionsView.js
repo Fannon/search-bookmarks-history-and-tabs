@@ -18,14 +18,21 @@ export async function initOptions() {
 
 async function saveOptions() {
   const userOptionsString = document.getElementById('user-config').value
+  const errorMessageEl = document.getElementById('error-message')
   try {
     const userOptions = window.jsyaml.load(userOptionsString)
     document.getElementById('user-config').value = window.jsyaml.dump(userOptions)
     await setUserOptions(userOptions)
+    errorMessageEl.style = 'display:none'
+    errorMessageEl.innerText = ''
   } catch (e) {
     console.error(e)
-    document.getElementById('error-message').style = ''
-    document.getElementById('error-message').innerText = 'Invalid ' + e.message
+    const validationMessage =
+      e && Array.isArray(e.validationErrors) && e.validationErrors.length > 0
+        ? e.validationErrors.join('\n')
+        : e && e.message
+    errorMessageEl.style = ''
+    errorMessageEl.innerText = 'Invalid ' + validationMessage
     return
   }
 
