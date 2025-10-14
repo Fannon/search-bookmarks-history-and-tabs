@@ -103,16 +103,24 @@ export const emptyOptions = {
  * @see https://developer.chrome.com/docs/extensions/reference/storage/
  */
 export async function setUserOptions(userOptions = {}) {
-  return new Promise((resolve, reject) => {
-    try {
-      validateUserOptions(userOptions)
-    } catch (err) {
-      printError(err, 'Could not save user options.')
-      return reject(err)
+  let normalizedOptions
+  try {
+    normalizedOptions = validateUserOptions(userOptions)
+    const { validateOptions } = await import('./validateOptions.js')
+    const validation = await validateOptions(normalizedOptions)
+    if (!validation.valid) {
+      const schemaError = new Error('User options do not match the required schema.')
+      schemaError.validationErrors = validation.errors
+      throw schemaError
     }
+  } catch (err) {
+    printError(err, 'Could not save user options.')
+    throw err
+  }
 
+  return new Promise((resolve, reject) => {
     if (ext.browserApi.storage && ext.browserApi.storage.sync) {
-      ext.browserApi.storage.sync.set({ userOptions: userOptions }, () => {
+      ext.browserApi.storage.sync.set({ userOptions: normalizedOptions }, () => {
         if (ext.browserApi.runtime.lastError) {
           return reject(ext.browserApi.runtime.lastError)
         }
@@ -120,7 +128,7 @@ export async function setUserOptions(userOptions = {}) {
       })
     } else {
       console.warn('No storage API found. Falling back to local Web Storage')
-      window.localStorage.setItem('userOptions', JSON.stringify(userOptions))
+      window.localStorage.setItem('userOptions', JSON.stringify(normalizedOptions))
       return resolve()
     }
   })
@@ -159,10 +167,10 @@ export async function getUserOptions() {
 export async function getEffectiveOptions() {
   try {
     const userOptions = await getUserOptions()
-    validateUserOptions(userOptions)
+    const normalizedOptions = validateUserOptions(userOptions)
     return {
       ...defaultOptions,
-      ...userOptions,
+      ...normalizedOptions,
     }
   } catch (err) {
     printError(err, 'Could not get valid user options, falling back to defaults.')
@@ -171,14 +179,19 @@ export async function getEffectiveOptions() {
 }
 
 export function validateUserOptions(userOptions) {
-  if (userOptions) {
-    if (typeof userOptions !== 'object') {
-      throw new Error('User options must be a valid YAML / JSON object')
-    }
-    try {
-      JSON.stringify(userOptions)
-    } catch (err) {
-      throw new Error('User options cannot be parsed into JSON: ' + err.message)
-    }
+  if (userOptions === undefined || userOptions === null) {
+    return {}
   }
+
+  if (typeof userOptions !== 'object' || Array.isArray(userOptions)) {
+    throw new Error('User options must be a valid YAML / JSON object')
+  }
+
+  try {
+    JSON.stringify(userOptions)
+  } catch (err) {
+    throw new Error('User options cannot be parsed into JSON: ' + err.message)
+  }
+
+  return userOptions
 }

@@ -15,11 +15,15 @@ function setupDom() {
   `
 }
 
-async function loadEditOptionsView({ userOptions = {}, dumpImpl, loadImpl } = {}) {
+async function loadEditOptionsView({ userOptions = {}, dumpImpl, loadImpl, setUserOptionsImpl } = {}) {
   jest.resetModules()
 
   const getUserOptions = jest.fn(() => Promise.resolve(userOptions))
-  const setUserOptions = jest.fn(() => Promise.resolve())
+  const setUserOptions =
+    setUserOptionsImpl ||
+    jest.fn(() => {
+      return Promise.resolve()
+    })
 
   const dumpMock =
     dumpImpl ||
@@ -147,6 +151,35 @@ describe('editOptionsView', () => {
     expect(errorMessageEl.getAttribute('style')).toBe('')
     expect(errorMessageEl.innerText).toBe('Invalid bad input')
     expect(errorSpy).toHaveBeenCalledWith(error)
+
+    errorSpy.mockRestore()
+  })
+
+  it('saveOptions displays schema validation errors returned from setUserOptions', async () => {
+    setupDom()
+    const validationError = Object.assign(new Error('User options do not match the required schema.'), {
+      validationErrors: ['searchMaxResults must be >= 1', 'displayScore must be boolean'],
+    })
+    const { module, mocks } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: jest.fn(() => '{}'),
+      setUserOptionsImpl: jest.fn(() => Promise.reject(validationError)),
+    })
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    await module.initOptions()
+    document.getElementById('user-config').value = 'searchMaxResults: 0'
+
+    document.getElementById('edit-options-save').dispatchEvent(new MouseEvent('click'))
+    await Promise.resolve()
+
+    const errorMessageEl = document.getElementById('error-message')
+    expect(mocks.setUserOptions).toHaveBeenCalled()
+    expect(errorMessageEl.getAttribute('style')).toBe('')
+    expect(errorMessageEl.innerText).toBe(
+      'Invalid searchMaxResults must be >= 1\ndisplayScore must be boolean',
+    )
+    expect(errorSpy).toHaveBeenCalledWith(validationError)
 
     errorSpy.mockRestore()
   })
