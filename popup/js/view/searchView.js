@@ -453,11 +453,6 @@ export async function toggleSearchApproach() {
  * Changes both the displayed text and CSS class based on current strategy
  */
 export function updateSearchApproachToggle() {
-  if (ext.opts.searchStrategy === 'fuzzy') {
-    ext.dom.searchApproachToggle.innerText = 'FUZZY'
-    ext.dom.searchApproachToggle.classList = 'fuzzy'
-  } else if (ext.opts.searchStrategy === 'precise') {
-    ext.dom.searchApproachToggle.innerText = 'PRECISE'
-    ext.dom.searchApproachToggle.classList = 'precise'
-  }
+  ext.dom.searchApproachToggle.innerText = ext.opts.searchStrategy.toUpperCase()
+  ext.dom.searchApproachToggle.classList = ext.opts.searchStrategy
 }

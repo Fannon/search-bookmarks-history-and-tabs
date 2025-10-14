@@ -32,8 +32,7 @@ function mergeHistoryLazily(items, historyMap, mergedUrls) {
       }
       result[i] = {
         ...item,
-        lastVisitSecondsAgo:
-          historyEntry.lastVisitSecondsAgo ?? item.lastVisitSecondsAgo,
+        lastVisitSecondsAgo: historyEntry.lastVisitSecondsAgo ?? item.lastVisitSecondsAgo,
         visitCount: historyEntry.visitCount ?? item.visitCount,
       }
       hasMerged = true
@@ -78,38 +77,17 @@ export async function getSearchData() {
     }
   } else {
     if (browserApi.tabs && ext.opts.enableTabs) {
-      if (ext.opts.debug) {
-        performance.mark('get-data-tabs-start')
-      }
       const browserTabs = await getBrowserTabs()
       result.tabs = convertBrowserTabs(browserTabs)
-      if (ext.opts.debug) {
-        performance.mark('get-data-tabs-end')
-        performance.measure('get-data-tabs', 'get-data-tabs-start', 'get-data-tabs-end')
-      }
     }
     if (browserApi.bookmarks && ext.opts.enableBookmarks) {
-      if (ext.opts.debug) {
-        performance.mark('get-data-bookmarks-start')
-      }
       const browserBookmarks = await getBrowserBookmarks()
       result.bookmarks = convertBrowserBookmarks(browserBookmarks)
-      if (ext.opts.debug) {
-        performance.mark('get-data-bookmarks-end')
-        performance.measure('get-data-bookmarks', 'get-data-bookmarks-start', 'get-data-bookmarks-end')
-      }
     }
     if (browserApi.history && ext.opts.enableHistory) {
-      if (ext.opts.debug) {
-        performance.mark('get-data-history-start')
-      }
       let startTime = Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
       const browserHistory = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
       result.history = convertBrowserHistory(browserHistory)
-      if (ext.opts.debug) {
-        performance.mark('get-data-history-end')
-        performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end')
-      }
 
       // Build maps with URL as key, so we have fast hashmap access
       const historyMap = new Map(result.history.map((item) => [item.originalUrl, item]))
@@ -122,23 +100,21 @@ export async function getSearchData() {
       result.history = result.history.filter((item) => !mergedHistoryUrls.has(item.originalUrl))
     }
   }
-  if (ext.opts.debug) {
-    console.debug(
-      `Loaded ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${
-        result.history.length
-      } history items in ${Date.now() - startTime}ms.`,
-    )
-    let oldestHistoryItem = 0
-    for (const item of result.history) {
-      if (item.lastVisitSecondsAgo > oldestHistoryItem) {
-        oldestHistoryItem = item.lastVisitSecondsAgo
-      }
+  console.debug(
+    `Loaded ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${
+      result.history.length
+    } history items in ${Date.now() - startTime}ms.`,
+  )
+  let oldestHistoryItem = 0
+  for (const item of result.history) {
+    if (item.lastVisitSecondsAgo > oldestHistoryItem) {
+      oldestHistoryItem = item.lastVisitSecondsAgo
     }
-    console.debug(
-      `Oldest history item is ${Math.round(oldestHistoryItem / 60 / 60 / 24)} days ago. Max history back is ${
-        ext.opts.historyDaysAgo
-      } days (Option: historyDaysAgo).`,
-    )
   }
+  console.debug(
+    `Oldest history item is ${Math.round(oldestHistoryItem / 60 / 60 / 24)} days ago. Max history back is ${
+      ext.opts.historyDaysAgo
+    } days (Option: historyDaysAgo).`,
+  )
   return result
 }

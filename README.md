@@ -115,7 +115,7 @@ historyIgnoreList:
   - http://localhost
   - http://127.0.0.1
 colorStripeWidth: 4 # Customize width of search result color stripe
-scoreTabBaseScore: 70 # customize base score for open tabs
+scoreTabBase: 70 # customize base score for open tabs
 searchEngineChoices:
   - name: Google
     urlPrefix: https://google.com/search?q=
@@ -150,7 +150,7 @@ uFuzzyOptions:
 
 The scoring systems works roughly the following:
 
-- Depending on the type of result (bookmark, tab, history) a different base score is taken (e.g. `scoreBookmarkBaseScore`).
+- Depending on the type of result (bookmark, tab, history) a different base score is taken (e.g. `scoreBookmarkBase`).
 - Depending on in which result field (title, url, tag, folder) the match was found, the search match gets weighted by multiplication. (e.g. `scoreTitleWeight`).
 - This base score is now merged / multiplied with the search library score. A less good match will usually reduce the score and a perfect / highest ranked match will keep it at .
 - Depending on certain conditions some bonus score points are added on top. For example, `exactStartsWithBonus` will add score if either the title or the url start exactly with the search term, including spaces.

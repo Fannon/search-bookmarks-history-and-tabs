@@ -59,13 +59,10 @@ initExtension().catch((err) => {
  * This includes indexing the current bookmarks and history
  */
 export async function initExtension() {
+  const startTime = Date.now()
+
   // Load effective options, including user customizations
   ext.opts = await getEffectiveOptions()
-
-  if (ext.opts.debug) {
-    performance.mark('init-start')
-    console.debug('Initialized with options:', ext.opts)
-  }
 
   // HTML Element selectors
   ext.dom.searchInput = document.getElementById('search-input')
@@ -86,6 +83,7 @@ export async function initExtension() {
   document.addEventListener('keydown', navigationKeyListener)
   window.addEventListener('hashchange', hashRouter, false)
   ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
+
   // Add debounced search to prevent excessive calls on rapid typing
   let searchTimeout = null
   const debouncedSearch = (event) => {
@@ -100,24 +98,13 @@ export async function initExtension() {
   // Display default entries
   await addDefaultEntries()
   renderSearchResults(ext.model.result)
-  if (!window.location.hash || window.location.hash === '/') {
-    // Placeholder. We could add help-text here.
-  } else {
+
+  if (window.location.hash && window.location.hash !== '/') {
     hashRouter()
   }
 
   if (document.getElementById('results-loading')) {
     document.getElementById('results-loading').remove()
-  }
-
-  if (ext.opts.debug) {
-    // Do some performance measurements and log it to debug
-    performance.mark('init-end')
-    performance.measure('init-end-to-end', 'init-start', 'init-end')
-    const initPerformance = performance.getEntriesByType('measure')
-    const totalInitPerformance = performance.getEntriesByName('init-end-to-end')
-    console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)
-    performance.clearMeasures()
   }
 
   // Only trigger final search if user has entered a search term
@@ -128,6 +115,8 @@ export async function initExtension() {
 
   // Lazy load mark.js for highlighting search results after init phase
   await loadScript('./lib/mark.es6.min.js')
+
+  console.debug('Extension initialized in ' + (Date.now() - startTime) + 'ms')
 }
 
 //////////////////////////////////////////
@@ -174,8 +163,9 @@ export async function hashRouter() {
  * Close all modal overlays
  */
 export function closeModals() {
-  document.getElementById('edit-bookmark').style = 'display: none;'
-  document.getElementById('tags-overview').style = 'display: none;'
-  document.getElementById('folders-overview').style = 'display: none;'
-  document.getElementById('error-list').style = 'display: none;'
+  const modals = ['edit-bookmark', 'tags-overview', 'folders-overview', 'error-list']
+  modals.forEach((id) => {
+    const element = document.getElementById(id)
+    if (element) element.style = 'display: none;'
+  })
 }

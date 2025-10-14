@@ -94,11 +94,11 @@ function setupExt(overrides = {}) {
       scoreVisitedBonusScoreMaximum: 20,
       scoreRecentBonusScoreMaximum: 20,
       scoreCustomBonusScore: true,
-      scoreBookmarkBaseScore: 100,
-      scoreTabBaseScore: 70,
-      scoreHistoryBaseScore: 45,
-      scoreSearchEngineBaseScore: 30,
-      scoreCustomSearchEngineBaseScore: 400,
+      scoreBookmarkBase: 100,
+      scoreTabBase: 70,
+      scoreHistoryBase: 45,
+      scoreSearchEngineBase: 30,
+      scoreCustomSearchEngineBase: 400,
       scoreDirectUrlScore: 500,
       scoreTitleWeight: 1,
       scoreTagWeight: 0.7,
@@ -237,11 +237,7 @@ describe('sortResults', () => {
   })
 
   test('sorts by last visited with missing values pushed last', () => {
-    const results = [
-      { lastVisitSecondsAgo: 5 },
-      { lastVisitSecondsAgo: null },
-      { lastVisitSecondsAgo: 2 },
-    ]
+    const results = [{ lastVisitSecondsAgo: 5 }, { lastVisitSecondsAgo: null }, { lastVisitSecondsAgo: 2 }]
 
     expect(sortResults(results, 'lastVisited')).toEqual([
       { lastVisitSecondsAgo: 2 },
@@ -458,7 +454,7 @@ describe('search', () => {
     ext.opts.searchMaxResults = 2
     ext.opts.enableSearchEngines = false
     ext.opts.customSearchEngines = []
-    ext.opts.scoreBookmarkBaseScore = 60
+    ext.opts.scoreBookmarkBase = 60
 
     await search({ key: 'f' })
 

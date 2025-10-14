@@ -2,6 +2,8 @@
 // SIMPLE SEARCH SUPPORT                //
 //////////////////////////////////////////
 
+import { resolveSearchTargets } from './searchTargets.js'
+
 /**
  * Memoize some state, to avoid re-creating haystack and fuzzy search instances
  */
@@ -26,19 +28,20 @@ function prepareSearchData(data) {
 }
 
 export function simpleSearch(searchMode, searchTerm) {
-  if (searchMode === 'history') {
-    return [...simpleSearchWithScoring(searchTerm, 'tabs'), ...simpleSearchWithScoring(searchTerm, 'history')]
-  } else if (searchMode === 'bookmarks' || searchMode === 'tabs') {
-    return simpleSearchWithScoring(searchTerm, searchMode)
-  } else if (searchMode === 'search') {
+  const targets = resolveSearchTargets(searchMode)
+  if (!targets.length) {
     return [] // nothing, because search will be added later
-  } else {
-    return [
-      ...simpleSearchWithScoring(searchTerm, 'bookmarks'),
-      ...simpleSearchWithScoring(searchTerm, 'tabs'),
-      ...simpleSearchWithScoring(searchTerm, 'history'),
-    ]
   }
+
+  if (targets.length === 1) {
+    return simpleSearchWithScoring(searchTerm, targets[0])
+  }
+
+  const results = []
+  for (const target of targets) {
+    results.push(...simpleSearchWithScoring(searchTerm, target))
+  }
+  return results
 }
 
 /**

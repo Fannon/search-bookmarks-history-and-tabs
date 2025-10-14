@@ -3,6 +3,7 @@
 //////////////////////////////////////////
 
 import { loadScript, printError } from '../helper/utils.js'
+import { resolveSearchTargets } from './searchTargets.js'
 
 const nonASCIIRegex = /[\u0080-\uFFFF]/
 
@@ -29,19 +30,16 @@ export async function fuzzySearch(searchMode, searchTerm) {
     }
   }
 
-  if (searchMode === 'history') {
-    return [...fuzzySearchWithScoring(searchTerm, 'tabs'), ...fuzzySearchWithScoring(searchTerm, 'history')]
-  } else if (searchMode === 'bookmarks' || searchMode === 'tabs') {
-    return fuzzySearchWithScoring(searchTerm, searchMode)
-  } else if (searchMode === 'search') {
+  const targets = resolveSearchTargets(searchMode)
+  if (!targets.length) {
     return []
-  } else {
-    return [
-      ...fuzzySearchWithScoring(searchTerm, 'bookmarks'),
-      ...fuzzySearchWithScoring(searchTerm, 'tabs'),
-      ...fuzzySearchWithScoring(searchTerm, 'history'),
-    ]
   }
+
+  const results = []
+  for (const target of targets) {
+    results.push(...fuzzySearchWithScoring(searchTerm, target))
+  }
+  return results
 }
 
 /**
