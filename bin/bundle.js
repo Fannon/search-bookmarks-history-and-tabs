@@ -27,7 +27,7 @@ const bundles = [
 const sharedBuildOptions = {
   bundle: true,
   minify: true,
-  keepNames: true,
+  keepNames: false,
   sourcemap: true,
   legalComments: 'none',
   target: ['chrome109', 'firefox115'],
