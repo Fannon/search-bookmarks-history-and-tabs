@@ -8,16 +8,6 @@ import { printError } from '../helper/utils.js'
  */
 export const defaultOptions = {
   //////////////////////////////////////////
-  // GENERAL OPTIONS                      //
-  //////////////////////////////////////////
-
-  /**
-   * When enabled, the extension will log some additional information like what it indexed
-   * and performance measurements
-   */
-  debug: false,
-
-  //////////////////////////////////////////
   // SEARCH OPTIONS                       //
   //////////////////////////////////////////
 
@@ -66,7 +56,6 @@ export const defaultOptions = {
    * Width of the left color marker in search results in pixels
    */
   colorStripeWidth: 5,
-
   /**
    * Color for bookmark results, expressed as CSS color
    */

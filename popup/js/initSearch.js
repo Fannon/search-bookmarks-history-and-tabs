@@ -116,10 +116,7 @@ export async function initExtension() {
   // Lazy load mark.js for highlighting search results after init phase
   await loadScript('./lib/mark.es6.min.js')
 
-  // Simple timing for debugging (only if debug is enabled)
-  if (ext.opts.debug) {
-    console.debug('Extension initialized in ' + (Date.now() - startTime) + 'ms')
-  }
+  console.debug('Extension initialized in ' + (Date.now() - startTime) + 'ms')
 }
 
 //////////////////////////////////////////

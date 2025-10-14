@@ -176,9 +176,7 @@ export async function search(event) {
     renderSearchResults(ext.model.result)
 
     // Simple timing for debugging (only if debug is enabled)
-    if (ext.opts.debug) {
-      console.debug('Search completed in ' + (Date.now() - startTime) + 'ms')
-    }
+    console.debug('Search completed in ' + (Date.now() - startTime) + 'ms')
   } catch (err) {
     printError(err)
   }
@@ -364,11 +362,9 @@ export async function addDefaultEntries() {
     results = ext.model.history.map(withDefaultScore)
   } else if (ext.model.searchMode === 'tabs' && ext.model.tabs) {
     // Display last opened tabs by default
-    results = ext.model.tabs
-      .map(withDefaultScore)
-      .sort((a, b) => {
-        return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo
-      })
+    results = ext.model.tabs.map(withDefaultScore).sort((a, b) => {
+      return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo
+    })
   } else if (ext.model.searchMode === 'bookmarks' && ext.model.bookmarks) {
     // Display all bookmarks by default
     results = ext.model.bookmarks.map(withDefaultScore)
@@ -491,9 +487,7 @@ function collectCustomSearchAliasResults(searchTerm) {
 
   const results = []
   for (const customSearchEngine of ext.opts.customSearchEngines) {
-    const aliases = Array.isArray(customSearchEngine.alias)
-      ? customSearchEngine.alias
-      : [customSearchEngine.alias]
+    const aliases = Array.isArray(customSearchEngine.alias) ? customSearchEngine.alias : [customSearchEngine.alias]
 
     for (const alias of aliases) {
       const lowerAlias = alias.toLowerCase()
