@@ -23,11 +23,11 @@ const SEARCH_MODE_MARKERS = {
   '~': 'folders',
 }
 const BASE_SCORE_KEYS = {
-  bookmark: 'scoreBookmarkBaseScore',
-  tab: 'scoreTabBaseScore',
-  history: 'scoreHistoryBaseScore',
-  search: 'scoreSearchEngineBaseScore',
-  customSearch: 'scoreCustomSearchEngineBaseScore',
+  bookmark: 'scoreBookmarkBase',
+  tab: 'scoreTabBase',
+  history: 'scoreHistoryBase',
+  search: 'scoreSearchEngineBase',
+  customSearch: 'scoreCustomSearchEngineBase',
   direct: 'scoreDirectUrlScore',
 }
 const withDefaultScore = (entry) => ({
@@ -220,11 +220,11 @@ export function calculateFinalScore(results, searchTerm) {
 
   for (let i = 0; i < results.length; i++) {
     const el = results[i]
-    const baseScoreKey = BASE_SCORE_KEYS[el.type]
-    if (!baseScoreKey) {
+    const BaseKey = BASE_SCORE_KEYS[el.type]
+    if (!BaseKey) {
       throw new Error(`Search result type "${el.type}" not supported`)
     }
-    let score = ext.opts[baseScoreKey]
+    let score = ext.opts[BaseKey]
 
     // Multiply by search library score.
     // This will reduce the score if the search is not a good match

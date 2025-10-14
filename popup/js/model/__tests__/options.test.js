@@ -218,8 +218,8 @@ describe('options model', () => {
         'displayFolderName',
         'displaySearchMatchHighlight',
         'scoreMinScore',
-        'scoreBookmarkBaseScore',
-        'scoreTabBaseScore',
+        'scoreBookmarkBase',
+        'scoreTabBase',
       ]
 
       requiredCategories.forEach((category) => {

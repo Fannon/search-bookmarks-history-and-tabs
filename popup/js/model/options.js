@@ -209,14 +209,6 @@ export const defaultOptions = {
       name: 'Google',
       urlPrefix: 'https://www.google.com/search?q=$s',
     },
-    {
-      name: 'Bing',
-      urlPrefix: 'https://www.bing.com/search?q=$s',
-    },
-    {
-      name: 'dict.cc',
-      urlPrefix: 'https://www.dict.cc/?s=$s',
-    },
   ],
 
   /**
@@ -268,24 +260,24 @@ export const defaultOptions = {
   /**
    * Base score for bookmark results
    */
-  scoreBookmarkBaseScore: 100,
+  scoreBookmarkBase: 100,
   /**
    * Base score for tab results
    */
-  scoreTabBaseScore: 70,
+  scoreTabBase: 70,
   /**
    * Base score for history results
    */
-  scoreHistoryBaseScore: 45,
+  scoreHistoryBase: 45,
   /**
    * Base score for search engine choices
    */
-  scoreSearchEngineBaseScore: 30,
+  scoreSearchEngineBase: 30,
   /**
    * Base score for custom search engine choices
    * This is set very high to ensure that it's the topmost entry
    */
-  scoreCustomSearchEngineBaseScore: 400,
+  scoreCustomSearchEngineBase: 400,
   /**
    * Base score for a direct URL being typed in
    */

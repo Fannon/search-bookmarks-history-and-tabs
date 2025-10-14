@@ -9,6 +9,8 @@
 - **FIXED**: Bug in scoring that `lastVisited`: 0 was not treated as most recent (max score)
 - **FIXED**: Bug in scoring where `visitCount` was not correctly merged in from history
 - **IMPROVED**: Improved unit-test coverage and switched for E2E testing to Playwright, leading to faster and less brittle tests.
+- **CHANGED**: Renamed some options, e.g. `scoreBookmarkBaseScore` to `scoreBookmarkBase`
+- **REMOVED**: Removed `debug` option, as debug logging will now always take place if console is loaded - and the performance.\* logging has been removed to clean up the code.
 
 ## [v1.14.0]
 
