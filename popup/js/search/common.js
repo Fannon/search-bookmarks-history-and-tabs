@@ -12,6 +12,28 @@ import { searchTaxonomy } from './taxonomySearch.js'
 
 const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 const protocolRegex = /^[a-zA-Z]+:\/\//
+const SEARCH_MODE_PREFIXES = [
+  ['h ', 'history'],
+  ['b ', 'bookmarks'],
+  ['t ', 'tabs'],
+  ['s ', 'search'],
+]
+const SEARCH_MODE_MARKERS = {
+  '#': 'tags',
+  '~': 'folders',
+}
+const BASE_SCORE_KEYS = {
+  bookmark: 'scoreBookmarkBaseScore',
+  tab: 'scoreTabBaseScore',
+  history: 'scoreHistoryBaseScore',
+  search: 'scoreSearchEngineBaseScore',
+  customSearch: 'scoreCustomSearchEngineBaseScore',
+  direct: 'scoreDirectUrlScore',
+}
+const withDefaultScore = (entry) => ({
+  searchScore: 1,
+  ...entry,
+})
 
 /**
  * Generates a random unique ID for on-demand search results
@@ -70,55 +92,12 @@ export async function search(event) {
     closeModals()
 
     ext.model.result = []
-    let searchMode = 'all'
+    const { mode: detectedMode, term: trimmedTerm } = resolveSearchMode(searchTerm)
+    let searchMode = detectedMode
+    searchTerm = trimmedTerm
 
-    // Support for various search modes
-    // This is detected by looking at the first chars of the search
-    if (searchTerm.startsWith('h ')) {
-      // Only history and tabs
-      searchMode = 'history'
-      searchTerm = searchTerm.substring(2)
-    } else if (searchTerm.startsWith('b ')) {
-      // Only bookmarks
-      searchMode = 'bookmarks'
-      searchTerm = searchTerm.substring(2)
-    } else if (searchTerm.startsWith('t ')) {
-      // Only Tabs
-      searchMode = 'tabs'
-      searchTerm = searchTerm.substring(2)
-    } else if (searchTerm.startsWith('s ')) {
-      // Only search engines
-      searchMode = 'search'
-      searchTerm = searchTerm.substring(2)
-    } else if (searchTerm.startsWith('#')) {
-      // Tag search
-      searchMode = 'tags'
-      searchTerm = searchTerm.substring(1)
-    } else if (searchTerm.startsWith('~')) {
-      // Tag search
-      searchMode = 'folders'
-      searchTerm = searchTerm.substring(1)
-    } else if (ext.opts.customSearchEngines) {
-      // Use custom search mode aliases
-      for (const customSearchEngine of ext.opts.customSearchEngines) {
-        let aliases = customSearchEngine.alias
-        if (!Array.isArray(aliases)) {
-          aliases = [aliases]
-        }
-        for (const alias of aliases) {
-          if (searchTerm.startsWith(alias.toLowerCase() + ' ')) {
-            ext.model.result.push(
-              getCustomSearchEngineResult(
-                searchTerm.replace(alias.toLowerCase() + ' ', ''.trim()),
-                customSearchEngine.name,
-                customSearchEngine.urlPrefix,
-                customSearchEngine.blank,
-                true,
-              ),
-            )
-          }
-        }
-      }
+    if (searchMode === 'all') {
+      ext.model.result.push(...collectCustomSearchAliasResults(searchTerm))
     }
 
     searchTerm = searchTerm.trim()
@@ -243,24 +222,11 @@ export function calculateFinalScore(results, searchTerm) {
 
   for (let i = 0; i < results.length; i++) {
     const el = results[i]
-    let score
-
-    // Decide which base Score to chose
-    if (el.type === 'bookmark') {
-      score = ext.opts.scoreBookmarkBaseScore
-    } else if (el.type === 'tab') {
-      score = ext.opts.scoreTabBaseScore
-    } else if (el.type === 'history') {
-      score = ext.opts.scoreHistoryBaseScore
-    } else if (el.type === 'search') {
-      score = ext.opts.scoreSearchEngineBaseScore
-    } else if (el.type === 'customSearch') {
-      score = ext.opts.scoreCustomSearchEngineBaseScore
-    } else if (el.type === 'direct') {
-      score = ext.opts.scoreDirectUrlScore
-    } else {
+    const baseScoreKey = BASE_SCORE_KEYS[el.type]
+    if (!baseScoreKey) {
       throw new Error(`Search result type "${el.type}" not supported`)
     }
+    let score = ext.opts[baseScoreKey]
 
     // Multiply by search library score.
     // This will reduce the score if the search is not a good match
@@ -395,32 +361,17 @@ export async function addDefaultEntries() {
 
   if (ext.model.searchMode === 'history' && ext.model.history) {
     // Display recent history by default
-    results = ext.model.history.map((el) => {
-      return {
-        searchScore: 1,
-        ...el,
-      }
-    })
+    results = ext.model.history.map(withDefaultScore)
   } else if (ext.model.searchMode === 'tabs' && ext.model.tabs) {
     // Display last opened tabs by default
     results = ext.model.tabs
-      .map((el) => {
-        return {
-          searchScore: 1,
-          ...el,
-        }
-      })
+      .map(withDefaultScore)
       .sort((a, b) => {
         return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo
       })
   } else if (ext.model.searchMode === 'bookmarks' && ext.model.bookmarks) {
     // Display all bookmarks by default
-    results = ext.model.bookmarks.map((el) => {
-      return {
-        searchScore: 1,
-        ...el,
-      }
-    })
+    results = ext.model.bookmarks.map(withDefaultScore)
   } else {
     // Default: Find bookmarks that match current page URL
     try {
@@ -441,12 +392,7 @@ export async function addDefaultEntries() {
         })
 
         if (matchingBookmarks.length > 0) {
-          results.push(
-            ...matchingBookmarks.map((el) => ({
-              searchScore: 1,
-              ...el,
-            })),
-          )
+          results.push(...matchingBookmarks.map(withDefaultScore))
         }
       }
     } catch (err) {
@@ -457,10 +403,7 @@ export async function addDefaultEntries() {
     if (ext.model.tabs && ext.opts.maxRecentTabsToShow > 0) {
       const recentTabs = ext.model.tabs
         .filter((tab) => tab && tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('about:'))
-        .map((el) => ({
-          searchScore: 1,
-          ...el,
-        }))
+        .map(withDefaultScore)
         .sort((a, b) => {
           // Sort by last accessed time (most recent first)
           // Handle cases where last accessed might be undefined
@@ -518,4 +461,57 @@ function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlank, cust
     originalId: generateRandomId(),
     searchScore: 1,
   }
+}
+
+function resolveSearchMode(searchTerm) {
+  let mode = 'all'
+  let term = searchTerm
+
+  for (const [prefix, candidate] of SEARCH_MODE_PREFIXES) {
+    if (term.startsWith(prefix)) {
+      mode = candidate
+      term = term.slice(prefix.length)
+      return { mode, term }
+    }
+  }
+
+  const marker = SEARCH_MODE_MARKERS[term[0]]
+  if (marker) {
+    mode = marker
+    term = term.slice(1)
+  }
+
+  return { mode, term }
+}
+
+function collectCustomSearchAliasResults(searchTerm) {
+  if (!ext.opts.customSearchEngines) {
+    return []
+  }
+
+  const results = []
+  for (const customSearchEngine of ext.opts.customSearchEngines) {
+    const aliases = Array.isArray(customSearchEngine.alias)
+      ? customSearchEngine.alias
+      : [customSearchEngine.alias]
+
+    for (const alias of aliases) {
+      const lowerAlias = alias.toLowerCase()
+      const aliasPrefix = `${lowerAlias} `
+      if (searchTerm.startsWith(aliasPrefix)) {
+        const aliasTerm = searchTerm.slice(aliasPrefix.length)
+        results.push(
+          getCustomSearchEngineResult(
+            aliasTerm,
+            customSearchEngine.name,
+            customSearchEngine.urlPrefix,
+            customSearchEngine.blank,
+            true,
+          ),
+        )
+      }
+    }
+  }
+
+  return results
 }
