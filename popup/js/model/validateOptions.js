@@ -5,7 +5,9 @@ let validatorPromise
 
 const sanitizedOptionsSchema = sanitizeSchema(optionsSchema)
 
-export async function validateOptions(options = {}) {
+export async function validateOptions(options = {
+  allErrors: true,
+}) {
   const validate = await getValidator()
   const isValid = validate(options)
 
