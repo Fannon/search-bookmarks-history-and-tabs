@@ -42,6 +42,8 @@ export async function search(event) {
       return
     }
 
+    const startTime = Date.now()
+
     // Get and clean up original search query
     let searchTerm = ext.dom.searchInput.value || ''
     searchTerm = searchTerm.trimStart().toLowerCase()
@@ -63,10 +65,6 @@ export async function search(event) {
       ext.model.result = await addDefaultEntries()
       renderSearchResults(ext.model.result)
       return // Early return if no search term
-    }
-
-    if (ext.opts.debug) {
-      performance.mark('search-start')
     }
 
     closeModals()
@@ -197,6 +195,11 @@ export async function search(event) {
     }
 
     renderSearchResults(ext.model.result)
+
+    // Simple timing for debugging (only if debug is enabled)
+    if (ext.opts.debug) {
+      console.debug('Search completed in ' + (Date.now() - startTime) + 'ms')
+    }
   } catch (err) {
     printError(err)
   }
@@ -212,36 +215,12 @@ export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode
     return results
   }
 
-  if (ext.opts.debug) {
-    performance.mark('search-start')
-    console.debug(
-      `🔍 Searching with approach="${searchApproach}" and mode="${searchMode}" for searchTerm="${searchTerm}"`,
-    )
-  }
-
   if (searchApproach === 'precise') {
     results = simpleSearch(searchMode, searchTerm)
   } else if (searchApproach === 'fuzzy') {
     results = await fuzzySearch(searchMode, searchTerm)
   } else {
     throw new Error('Unknown search approach: ' + searchApproach)
-  }
-
-  if (ext.opts.debug) {
-    performance.mark('search-end')
-    performance.measure('search: ' + searchTerm, 'search-start', 'search-end')
-    const searchPerformance = performance.getEntriesByType('measure')
-    console.debug(
-      'Found ' +
-        results.length +
-        ' results with approach="' +
-        searchApproach +
-        '" in ' +
-        searchPerformance[0].duration +
-        'ms',
-      searchPerformance,
-    )
-    performance.clearMeasures()
   }
 
   return results
