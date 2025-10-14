@@ -57,10 +57,14 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
   }
 
   if (!state[searchMode]) {
+    // Cache option values to avoid repeated property access
+    const opts = ext.opts
+    const searchFuzzyness = opts.searchFuzzyness
+
     const options = {
       // How many characters "in between" are allowed -> increased fuzzyness
-      intraIns: Math.round(ext.opts.searchFuzzyness * 4.2),
-      ...(ext.opts.uFuzzyOptions || {}),
+      intraIns: Math.round(searchFuzzyness * 4.2),
+      ...(opts.uFuzzyOptions || {}),
     }
 
     if (containsNonASCII(searchTerm)) {
@@ -70,7 +74,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
     // When searchFuzzyness is set to 0.8 or higher:
     // allows for a single error in each term of the search phrase
     // @see https://github.com/leeoniya/uFuzzy#how-it-works
-    if (ext.opts.searchFuzzyness >= 0.8) {
+    if (searchFuzzyness >= 0.8) {
       options.intraMode = 1
       options.intraSub = 1 // substitution (replacement)
       options.intraTrn = 1 // transposition (swap), insertion (addition)

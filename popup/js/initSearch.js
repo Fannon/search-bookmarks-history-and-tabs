@@ -86,9 +86,10 @@ export async function initExtension() {
 
   // Add debounced search to prevent excessive calls on rapid typing
   let searchTimeout = null
+  const debounceMs = ext.opts.searchDebounceMs || 100
   const debouncedSearch = (event) => {
     clearTimeout(searchTimeout)
-    searchTimeout = setTimeout(() => search(event), ext.opts.searchDebounceMs || 100)
+    searchTimeout = setTimeout(() => search(event), debounceMs)
   }
   ext.dom.searchInput.addEventListener('input', debouncedSearch)
 

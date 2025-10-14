@@ -218,20 +218,42 @@ export function calculateFinalScore(results, searchTerm) {
   const canCheckIncludes =
     hasSearchTerm && ext.opts.scoreExactIncludesBonus && searchTerm.length >= ext.opts.scoreExactIncludesBonusMinChars
 
+  // Cache option values to avoid repeated property access
+  const opts = ext.opts
+  const {
+    scoreExactStartsWithBonus,
+    scoreExactEqualsBonus,
+    scoreExactTagMatchBonus,
+    scoreExactFolderMatchBonus,
+    scoreExactIncludesBonus,
+    scoreExactIncludesBonusMinChars,
+    scoreVisitedBonusScore,
+    scoreVisitedBonusScoreMaximum,
+    scoreRecentBonusScoreMaximum,
+    historyDaysAgo,
+    scoreDateAddedBonusScoreMaximum,
+    scoreDateAddedBonusScorePerDay,
+    scoreCustomBonusScore,
+    scoreTitleWeight,
+    scoreUrlWeight,
+    scoreTagWeight,
+    scoreFolderWeight,
+  } = opts
+
   for (let i = 0; i < results.length; i++) {
     const el = results[i]
     const BaseKey = BASE_SCORE_KEYS[el.type]
     if (!BaseKey) {
       throw new Error(`Search result type "${el.type}" not supported`)
     }
-    let score = ext.opts[BaseKey]
+    let score = opts[BaseKey]
 
     // Multiply by search library score.
     // This will reduce the score if the search is not a good match
-    score = score * (el.searchScore || ext.opts.scoreTitleWeight)
+    score = score * (el.searchScore || scoreTitleWeight)
 
     // Add custom bonus score to bookmarks
-    if (ext.opts.scoreCustomBonusScore && el.customBonusScore) {
+    if (scoreCustomBonusScore && el.customBonusScore) {
       score += el.customBonusScore
     }
 
@@ -241,38 +263,38 @@ export function calculateFinalScore(results, searchTerm) {
       const lowerFolderName = canCheckIncludes && el.folderName ? el.folderName.toLowerCase() : null
 
       // Increase score if we have exact "startsWith" match in title or url
-      if (ext.opts.scoreExactStartsWithBonus) {
+      if (scoreExactStartsWithBonus) {
         if (lowerTitle && lowerTitle.startsWith(searchTerm)) {
-          score += ext.opts.scoreExactStartsWithBonus * ext.opts.scoreTitleWeight
+          score += scoreExactStartsWithBonus * scoreTitleWeight
         } else if (el.url.startsWith(hyphenatedSearchTerm)) {
-          score += ext.opts.scoreExactStartsWithBonus * ext.opts.scoreUrlWeight
+          score += scoreExactStartsWithBonus * scoreUrlWeight
         }
       }
 
       // Increase score if we have an exact equal match in the title
-      if (ext.opts.scoreExactEqualsBonus && lowerTitle && lowerTitle === searchTerm) {
-        score += ext.opts.scoreExactEqualsBonus * ext.opts.scoreTitleWeight
+      if (scoreExactEqualsBonus && lowerTitle && lowerTitle === searchTerm) {
+        score += scoreExactEqualsBonus * scoreTitleWeight
       }
 
       // Increase score if we have an exact tag match
-      if (ext.opts.scoreExactTagMatchBonus && el.tags && tagTerms.length) {
+      if (scoreExactTagMatchBonus && el.tags && tagTerms.length) {
         const lowerTagValues = el.tagsArray.map((tagValue) => tagValue.toLowerCase())
         for (const tag of tagTerms) {
           for (const tagValue of lowerTagValues) {
             if (tag === tagValue) {
-              score += ext.opts.scoreExactTagMatchBonus
+              score += scoreExactTagMatchBonus
             }
           }
         }
       }
 
       // Increase score if we have an exact folder name match
-      if (ext.opts.scoreExactFolderMatchBonus && el.folder && folderTerms.length) {
+      if (scoreExactFolderMatchBonus && el.folder && folderTerms.length) {
         const lowerFolderValues = el.folderArray.map((folderValue) => folderValue.toLowerCase())
         for (const folderName of folderTerms) {
           for (const folderValue of lowerFolderValues) {
             if (folderName === folderValue) {
-              score += ext.opts.scoreExactFolderMatchBonus
+              score += scoreExactFolderMatchBonus
             }
           }
         }
@@ -281,15 +303,15 @@ export function calculateFinalScore(results, searchTerm) {
       // Increase score if we have an exact "includes" match
       if (canCheckIncludes) {
         for (const term of searchTermParts) {
-          if (term && term.length >= ext.opts.scoreExactIncludesBonusMinChars) {
+          if (term && term.length >= scoreExactIncludesBonusMinChars) {
             if (lowerTitle && lowerTitle.includes(term)) {
-              score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTitleWeight
+              score += scoreExactIncludesBonus * scoreTitleWeight
             } else if (el.url && el.url.includes(hyphenatedSearchTerm)) {
-              score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreUrlWeight
+              score += scoreExactIncludesBonus * scoreUrlWeight
             } else if (lowerTags && lowerTags.includes(searchTerm)) {
-              score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreTagWeight
+              score += scoreExactIncludesBonus * scoreTagWeight
             } else if (lowerFolderName && lowerFolderName.includes(searchTerm)) {
-              score += ext.opts.scoreExactIncludesBonus * ext.opts.scoreFolderWeight
+              score += scoreExactIncludesBonus * scoreFolderWeight
             }
           }
         }
@@ -297,28 +319,27 @@ export function calculateFinalScore(results, searchTerm) {
     }
 
     // Increase score if result has been open frequently
-    if (ext.opts.scoreVisitedBonusScore && el.visitCount) {
-      score += Math.min(ext.opts.scoreVisitedBonusScoreMaximum, el.visitCount * ext.opts.scoreVisitedBonusScore)
+    if (scoreVisitedBonusScore && el.visitCount) {
+      score += Math.min(scoreVisitedBonusScoreMaximum, el.visitCount * scoreVisitedBonusScore)
     }
 
     // Increase score if result has been opened recently
-    if (ext.opts.scoreRecentBonusScoreMaximum && el.lastVisitSecondsAgo != null) {
-      const maxSeconds = ext.opts.historyDaysAgo * 24 * 60 * 60
+    if (scoreRecentBonusScoreMaximum && el.lastVisitSecondsAgo != null) {
+      const maxSeconds = historyDaysAgo * 24 * 60 * 60
       // Handle edge case where maxSeconds might be 0 or item was visited "right now"
       if (maxSeconds > 0 && el.lastVisitSecondsAgo >= 0) {
-        score += Math.max(0, (1 - el.lastVisitSecondsAgo / maxSeconds) * ext.opts.scoreRecentBonusScoreMaximum)
+        score += Math.max(0, (1 - el.lastVisitSecondsAgo / maxSeconds) * scoreRecentBonusScoreMaximum)
       } else if (el.lastVisitSecondsAgo === 0) {
         // Item was visited "right now" - give maximum recent bonus
-        score += ext.opts.scoreRecentBonusScoreMaximum
+        score += scoreRecentBonusScoreMaximum
       }
     }
 
     // Increase score if bookmark has been added more recently
-    if (ext.opts.scoreDateAddedBonusScoreMaximum && ext.opts.scoreDateAddedBonusScorePerDay && el.dateAdded != null) {
+    if (scoreDateAddedBonusScoreMaximum && scoreDateAddedBonusScorePerDay && el.dateAdded != null) {
       score += Math.max(
         0,
-        ext.opts.scoreDateAddedBonusScoreMaximum -
-          ((now - el.dateAdded) / 1000 / 60 / 60 / 24) * ext.opts.scoreDateAddedBonusScorePerDay,
+        scoreDateAddedBonusScoreMaximum - ((now - el.dateAdded) / 1000 / 60 / 60 / 24) * scoreDateAddedBonusScorePerDay,
       )
     }
 

@@ -104,6 +104,9 @@ export async function renderSearchResults(result) {
     }
     titleDiv.appendChild(titleText)
 
+    // Batch badge creation for better performance
+    const badgeContainer = document.createDocumentFragment()
+
     // Add clickable tag badges for bookmark entries
     if (opts.displayTags && resultEntry.tagsArray) {
       for (const tag of resultEntry.tagsArray) {
@@ -111,10 +114,8 @@ export async function renderSearchResults(result) {
         el.title = 'Bookmark Tags'
         el.className = 'badge tags'
         el.setAttribute('x-link', `#search/#${tag}`)
-        if (shouldHighlight) {
-          el.innerText = '#' + tag
-        }
-        titleDiv.appendChild(el)
+        el.innerText = shouldHighlight ? '#' + tag : '#' + tag
+        badgeContainer.appendChild(el)
       }
     }
 
@@ -130,10 +131,8 @@ export async function renderSearchResults(result) {
         if (opts.bookmarkColor) {
           el.style.cssText = `background-color: ${opts.bookmarkColor}`
         }
-        if (shouldHighlight) {
-          el.innerText = '~' + f
-        }
-        titleDiv.appendChild(el)
+        el.innerText = shouldHighlight ? '~' + f : '~' + f
+        badgeContainer.appendChild(el)
       }
     }
 
@@ -144,7 +143,7 @@ export async function renderSearchResults(result) {
       lastVisited.title = 'Last Visited'
       lastVisited.className = 'badge last-visited'
       lastVisited.innerText = '-' + lastVisit
-      titleDiv.appendChild(lastVisited)
+      badgeContainer.appendChild(lastVisited)
     }
 
     // Add visit count badge showing how many times the page was visited
@@ -153,7 +152,7 @@ export async function renderSearchResults(result) {
       visitCounter.title = 'Visited Counter'
       visitCounter.className = 'badge visit-counter'
       visitCounter.innerText = resultEntry.visitCount
-      titleDiv.appendChild(visitCounter)
+      badgeContainer.appendChild(visitCounter)
     }
 
     // Add date when bookmark was added
@@ -162,7 +161,7 @@ export async function renderSearchResults(result) {
       dateAdded.title = 'Date Added'
       dateAdded.className = 'badge date-added'
       dateAdded.innerText = new Date(resultEntry.dateAdded).toISOString().split('T')[0]
-      titleDiv.appendChild(dateAdded)
+      badgeContainer.appendChild(dateAdded)
     }
 
     // Add relevance score badge for search result ranking
@@ -171,8 +170,11 @@ export async function renderSearchResults(result) {
       score.title = 'Score'
       score.className = 'badge score'
       score.innerText = Math.round(resultEntry.score)
-      titleDiv.appendChild(score)
+      badgeContainer.appendChild(score)
     }
+
+    // Append all badges at once
+    titleDiv.appendChild(badgeContainer)
 
     // Create and populate URL display section
     const urlDiv = document.createElement('div')
