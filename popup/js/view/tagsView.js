@@ -8,9 +8,14 @@ export function loadTagsOverview() {
   const tags = getUniqueTags()
   document.getElementById('tags-overview').style = ''
   const sortedTags = Object.keys(tags).sort()
-  document.getElementById('tags-list').innerHTML = sortedTags
-    .map((el) => {
-      return `<a class="badge tags" href="#search/#${el}" x-tag="${el}">#${el} <small>(${tags[el].length})<small></a>`
-    })
+
+  // Use template-based rendering for better performance
+  const badgesHTML = sortedTags
+    .map(
+      (tag) =>
+        `<a class="badge tags" href="#search/#${tag}" x-tag="${tag}">#${tag} <small>(${tags[tag].length})</small></a>`,
+    )
     .join('')
+
+  document.getElementById('tags-list').innerHTML = badgesHTML
 }
