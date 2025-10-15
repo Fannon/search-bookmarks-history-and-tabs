@@ -2,9 +2,12 @@
 
 ## [unreleased]
 
+## [v1.15.0]
+
 - **IMPROVED**: Various performance improvements:
   - Creating a single minified production bundle, should speed up initial loading time a lot when IO is slow
-  - lazy-loading the library for search highlighting, further init load speedup
+  - lazy-loading the search highlight library, speeds up initial load further
+  - More general caching of search results, now also for fuzzy search
   - Various smaller improvements that increase search and render performance
 - **FIXED**: Bug in scoring that `lastVisited`: 0 was not treated as most recent (max score)
 - **FIXED**: Bug in scoring where `visitCount` was not correctly merged in from history
