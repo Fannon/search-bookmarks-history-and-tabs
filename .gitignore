@@ -28,9 +28,6 @@ coverage
 cypress/videos
 cypress/screenshots
 
-# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
-.grunt
-
 # Dependency directories
 node_modules/
 jspm_packages/
@@ -45,5 +42,6 @@ jspm_packages/
 # Temporary files
 temp/
 .wireit/
+.serena/
 
 popup/js/*.bundle.min.*
