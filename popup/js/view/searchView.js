@@ -98,11 +98,15 @@ export async function renderSearchResults(result) {
     }
 
     // Determine content for title and URL with proper escaping
-    const titleContent = shouldHighlight
-      ? resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
-      : resultEntry.title || resultEntry.url || ''
+    const titleContent =
+      shouldHighlight && searchTerm && searchTerm.trim()
+        ? resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
+        : resultEntry.title || resultEntry.url || ''
 
-    const urlContent = shouldHighlight && resultEntry.urlHighlighted ? resultEntry.urlHighlighted : resultEntry.url
+    const urlContent =
+      shouldHighlight && searchTerm && searchTerm.trim() && resultEntry.urlHighlighted
+        ? resultEntry.urlHighlighted
+        : resultEntry.url
 
     // Generate complete HTML for this result item using template
     const itemHTML = `

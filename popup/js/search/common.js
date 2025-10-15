@@ -30,10 +30,14 @@ const BASE_SCORE_KEYS = {
   customSearch: 'scoreCustomSearchEngineBase',
   direct: 'scoreDirectUrlScore',
 }
-const withDefaultScore = (entry) => ({
-  searchScore: 1,
-  ...entry,
-})
+const withDefaultScore = (entry) => {
+  // eslint-disable-next-line no-unused-vars
+  const { titleHighlighted, urlHighlighted, ...cleanEntry } = entry
+  return {
+    searchScore: 1,
+    ...cleanEntry,
+  }
+}
 
 /**
  * Generates a random unique ID for on-demand search results
@@ -84,6 +88,7 @@ export async function search(event) {
     }
 
     if (!searchTerm.trim()) {
+      ext.model.searchTerm = '' // Clear search term for default results
       ext.model.result = await addDefaultEntries()
       renderSearchResults(ext.model.result)
       return // Early return if no search term
