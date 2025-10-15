@@ -104,9 +104,8 @@ class TrackedUFuzzy {
 TrackedUFuzzy.reset()
 
 const resetModes = () => {
-  for (const mode of ['bookmarks', 'tabs', 'history']) {
-    resetFuzzySearchState(mode)
-  }
+  // Reset all fuzzy search state at once
+  resetFuzzySearchState()
 }
 
 describe('fuzzySearch', () => {
@@ -133,6 +132,8 @@ describe('fuzzySearch', () => {
       console.warn('Could not load real uFuzzy library, using fallback:', error.message)
     }
 
+    // Ensure complete reset of all state
+    resetModes()
     TrackedUFuzzy.reset()
 
     createTestExt({
@@ -146,9 +147,9 @@ describe('fuzzySearch', () => {
         uFuzzyOptions: null,
       },
     })
+
     window.uFuzzy = TrackedUFuzzy
     globalThis.uFuzzy = TrackedUFuzzy
-    resetModes()
   })
 
   afterEach(() => {
@@ -160,6 +161,11 @@ describe('fuzzySearch', () => {
   })
 
   it('returns fuzzy results for bookmarks mode and populates highlight and score', async () => {
+    // Reset all model data to ensure clean state
+    ext.model.bookmarks = []
+    ext.model.tabs = []
+    ext.model.history = []
+
     ext.model.bookmarks = [
       {
         id: 'bookmark-1',
@@ -188,6 +194,15 @@ describe('fuzzySearch', () => {
   })
 
   it('aggregates tab and history entries when searching in history mode', async () => {
+    // Complete reset of all state before this test
+    resetModes()
+    TrackedUFuzzy.reset()
+
+    // Reset all model data to ensure clean state
+    ext.model.bookmarks = []
+    ext.model.tabs = []
+    ext.model.history = []
+
     ext.model.tabs = [
       {
         id: 'tab-1',

@@ -84,6 +84,7 @@ export async function search(event) {
     }
 
     if (!searchTerm.trim()) {
+      ext.model.searchTerm = '' // Clear search term for default results
       ext.model.result = await addDefaultEntries()
       renderSearchResults(ext.model.result)
       return // Early return if no search term
