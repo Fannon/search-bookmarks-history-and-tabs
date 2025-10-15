@@ -13,10 +13,13 @@ let state = {}
 /**
  * Resets state for fuzzy search. Necessary when search data changes or search string is reset.
  * If searchMode is given, will only reset that particular state.
+ * If no searchMode is given, resets all state.
  */
 export function resetFuzzySearchState(searchMode) {
   if (searchMode) {
     state[searchMode] = undefined
+  } else {
+    state = {}
   }
 }
 

@@ -201,7 +201,9 @@ describe('searchView renderSearchResults', () => {
     expect(mocks.timeSince).toHaveBeenCalledTimes(1)
     expect(window.Mark).toHaveBeenCalledTimes(2)
     const firstMarkInstance = window.Mark.mock.results[0].value
-    expect(firstMarkInstance.mark).toHaveBeenCalledWith('query')
+    expect(firstMarkInstance.mark).toHaveBeenCalledWith('query', {
+      exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
+    })
   })
 })
 

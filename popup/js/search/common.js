@@ -30,14 +30,10 @@ const BASE_SCORE_KEYS = {
   customSearch: 'scoreCustomSearchEngineBase',
   direct: 'scoreDirectUrlScore',
 }
-const withDefaultScore = (entry) => {
-  // eslint-disable-next-line no-unused-vars
-  const { titleHighlighted, urlHighlighted, ...cleanEntry } = entry
-  return {
-    searchScore: 1,
-    ...cleanEntry,
-  }
-}
+const withDefaultScore = (entry) => ({
+  searchScore: 1,
+  ...entry,
+})
 
 /**
  * Generates a random unique ID for on-demand search results

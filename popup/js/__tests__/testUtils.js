@@ -14,6 +14,7 @@ export function createTestExt(overrides = {}) {
     dom: {},
     browserApi: {},
     initialized: false,
+    searchCache: new Map(),
   }
   const ext = {
     ...base,
@@ -40,8 +41,23 @@ export function createTestExt(overrides = {}) {
 }
 
 export function clearTestExt() {
+  // Clear any existing searchCache if it's a Map
+  if (globalThis.ext && globalThis.ext.searchCache && typeof globalThis.ext.searchCache.clear === 'function') {
+    globalThis.ext.searchCache.clear()
+  }
+  if (
+    typeof window !== 'undefined' &&
+    window.ext &&
+    window.ext.searchCache &&
+    typeof window.ext.searchCache.clear === 'function'
+  ) {
+    window.ext.searchCache.clear()
+  }
+
   delete globalThis.ext
   if (typeof window !== 'undefined') {
     delete window.ext
   }
+
+  // Note: fuzzy search state should be reset in individual test cleanup
 }
