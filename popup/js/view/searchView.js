@@ -134,7 +134,9 @@ export async function renderSearchResults(result) {
     if (shouldHighlight && searchTerm && searchTerm.trim() && window.Mark) {
       if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
         const mark = new window.Mark(resultListItem)
-        mark.mark(searchTerm)
+        mark.mark(searchTerm, {
+          exclude: ['.badge'],
+        })
       }
     }
 
