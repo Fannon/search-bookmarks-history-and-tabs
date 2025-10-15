@@ -61,7 +61,7 @@ function percentage(value, total) {
   return `${((value / total) * 100).toFixed(1)}%`
 }
 
-function summarise(files) {
+async function summarise(files) {
   const totalSize = files.reduce((sum, file) => sum + file.size, 0)
 
   const topLevel = new Map()
@@ -84,6 +84,15 @@ function summarise(files) {
     if (file.path.endsWith('.min.js') && file.path.startsWith('popup/js/')) {
       minified.push(file)
     }
+  }
+
+  // Add chrome.zip to minified files (created as part of build process)
+  const chromeZipPath = path.resolve('dist/chrome.zip')
+  try {
+    const zipStats = await fs.stat(chromeZipPath)
+    minified.push({ path: 'dist/chrome.zip', size: zipStats.size })
+  } catch {
+    // Zip file not found, likely build hasn't been run with zip creation
   }
 
   const sortedTopLevel = [...topLevel.entries()].sort((a, b) => b[1] - a[1])
@@ -150,7 +159,7 @@ function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMini
   }
 
   console.log('')
-  console.log('Minified popup/js bundles:')
+  console.log('Optimized files (minified JS and archives):')
   const minRows = sortedMinified.map((file) => [file.path, formatBytes(file.size), percentage(file.size, totalSize)])
   printTable(['File', 'Size', 'Share'], minRows, '  ')
 }
@@ -161,7 +170,7 @@ async function main() {
   }
 
   const files = await walkFiles(DIST_ROOT, DIST_ROOT)
-  const summary = summarise(files)
+  const summary = await summarise(files)
   printSummary(summary, files.length)
 }
 
