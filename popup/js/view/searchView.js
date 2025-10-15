@@ -130,10 +130,6 @@ export async function renderSearchResults(result) {
     tempDiv.innerHTML = itemHTML
     const resultListItem = tempDiv.firstElementChild
 
-    // Enable interaction with the result item
-    resultListItem.addEventListener('mouseenter', hoverResultItem)
-    resultListItem.addEventListener('mouseup', openResultItem)
-
     // Apply client-side text highlighting for search terms if needed
     if (shouldHighlight && searchTerm && window.Mark) {
       if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
@@ -150,6 +146,9 @@ export async function renderSearchResults(result) {
 
   // Highlight the first result as the current selection
   selectListItem(0)
+
+  // Set up event delegation for better performance (one-time setup)
+  setupResultItemsEvents()
 }
 
 //////////////////////////////////////////
@@ -193,12 +192,7 @@ export function navigationKeyListener(event) {
  * Removes previous selection and applies new selection with optional scrolling
  */
 export function selectListItem(index, scroll = false) {
-  // Clear existing selection
-  const currentSelection = document.getElementById('selected-result')
-  if (currentSelection) {
-    currentSelection.id = ''
-    delete currentSelection.id
-  }
+  clearSelection()
 
   // Apply new selection if the item exists
   if (ext.dom.resultList.children[index]) {
@@ -215,6 +209,17 @@ export function selectListItem(index, scroll = false) {
 
   // Update the application state to reflect the new selection
   ext.model.currentItem = index
+}
+
+/**
+ * Clear the currently selected result item
+ */
+export function clearSelection() {
+  const currentSelection = document.getElementById('selected-result')
+  if (currentSelection) {
+    currentSelection.id = ''
+    currentSelection.removeAttribute('id')
+  }
 }
 
 /**
@@ -293,7 +298,6 @@ export function openResultItem(event) {
   // Handle right-click to copy URL to clipboard
   if (event.button === 2) {
     navigator.clipboard.writeText(url)
-    event.preventDefault()
     return
   }
 
@@ -397,4 +401,55 @@ export async function toggleSearchApproach() {
 export function updateSearchApproachToggle() {
   ext.dom.searchApproachToggle.innerText = ext.opts.searchStrategy.toUpperCase()
   ext.dom.searchApproachToggle.classList = ext.opts.searchStrategy
+}
+
+/**
+ * Set up events for search result items
+ * Uses a single event listener on the parent container for better memory efficiency (event delegation)
+ */
+export function setupResultItemsEvents() {
+  // Set up delegated event listeners only once
+  if (ext.dom.resultList.hasEventDelegation) {
+    return
+  }
+
+  // Handle mouse enter events for hover effects
+  ext.dom.resultList.addEventListener(
+    'mouseenter',
+    (event) => {
+      const listItem = event.target.closest('li[x-index]')
+      if (listItem) {
+        hoverResultItem({
+          target: listItem,
+          srcElement: listItem,
+        })
+      }
+    },
+    true,
+  )
+
+  // Handle mouse up events for clicks and interactions
+  ext.dom.resultList.addEventListener(
+    'mouseup',
+    (event) => {
+      const listItem = event.target.closest('li[x-index]')
+      if (listItem) {
+        // Update selection for this item
+        clearSelection()
+        listItem.id = 'selected-result'
+        openResultItem({
+          target: event.target,
+          srcElement: event.target,
+          button: event.button,
+          shiftKey: event.shiftKey,
+          altKey: event.altKey,
+          ctrlKey: event.ctrlKey,
+          stopPropagation: () => event.stopPropagation(),
+        })
+      }
+    },
+    true,
+  )
+
+  ext.dom.resultList.hasEventDelegation = true
 }
