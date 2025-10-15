@@ -9,12 +9,14 @@ export function loadFoldersOverview() {
   document.getElementById('folders-overview').style = ''
   const sortedFolders = Object.keys(folders).sort()
 
-  // Use template-based rendering for better performance
+  // Use template-based rendering for better performance with proper HTML escaping
   const badgesHTML = sortedFolders
-    .map(
-      (folderName) =>
-        `<a class="badge folder" href="#search/~${folderName}" x-folder="${folderName}">~${folderName} <small>(${folders[folderName].length})</small></a>`,
-    )
+    .map((folderName) => {
+      // Properly escape quotes in folder names for href attributes to prevent parsing errors
+      // Use single quotes for href attribute when folder name contains double quotes
+      const hrefAttribute = folderName.includes('"') ? `href='#search/~${folderName}'` : `href="#search/~${folderName}"`
+      return `<a class="badge folder" ${hrefAttribute} x-folder="${folderName}">~${folderName} <small>(${folders[folderName].length})</small></a>`
+    })
     .join('')
 
   document.getElementById('folders-list').innerHTML = badgesHTML
