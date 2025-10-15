@@ -16,7 +16,7 @@
 It supports two different search approaches:
 
 - **Exact search** (case-insensitive, but exact matching): Faster, but only exact matching results.
-- **Fuzzy search** (approximate matching): Slower, but includes also inexact (fuzzy) matches.
+- **Fuzzy search** (approximate matching): Slower, but also includes inexact (fuzzy) matches.
 
 With this extension you can also **tag your bookmarks** including auto completions.
 The tags are considered when searching and can be used for navigation.
@@ -37,9 +37,9 @@ The extension is very customizable (see [user options](#user-configuration)) and
 - **Keyboard Shortcut**: Trigger the extension via keyboard.
   - The default is `CTRL` + `Shift` + `.`, but you can customize this (I personally use `Ctrl+J`).
 - **Open selected results**: By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
-  - Hold `Shift` or `Alt` to open the result in the current tab
+  - Hold `Shift` or `Alt` to open the result in the current tab.
   - Hold `Ctrl` to open the result without closing the popup.
-  - Right-click to copy URL to clipboard
+  - Right-click to copy URL to clipboard.
 - **Search Modes**: In case you want to be more selective -> use a search mode:
   - Start your query with `#`: only **bookmarks with the tag** will be returned (exact "starts with" search)
     - Supports AND search, e.g. search for `#github #pr` to only get results which have both tags
@@ -135,7 +135,6 @@ customSearchEngines:
     name: NPM
     urlPrefix: https://www.npmjs.com/search?q=$s
     blank: https://www.npmjs.com
-debug: true # Print information about loading time / statistics in dev console
 ```
 
 In case of making multilingual searching (CJK) correctly, you may need to tweak [uFuzzy](https://github.com/leeoniya/uFuzzy) options via option `ufuzzyOptions`, for example:
@@ -148,11 +147,11 @@ uFuzzyOptions:
 
 ## Scoring System
 
-The scoring systems works roughly the following:
+The scoring system works roughly as follows:
 
 - Depending on the type of result (bookmark, tab, history) a different base score is taken (e.g. `scoreBookmarkBase`).
 - Depending on in which result field (title, url, tag, folder) the match was found, the search match gets weighted by multiplication. (e.g. `scoreTitleWeight`).
-- This base score is now merged / multiplied with the search library score. A less good match will usually reduce the score and a perfect / highest ranked match will keep it at .
+- This base score is multiplied by the search library score. A less good match will usually reduce the multiplier, while a perfect / highest ranked match will keep it at 1.
 - Depending on certain conditions some bonus score points are added on top. For example, `exactStartsWithBonus` will add score if either the title or the url start exactly with the search term, including spaces.
 
 For a description of the scoring options and what they do, please see [popup/js/model/options.js](popup/js/model/options.js).
@@ -203,6 +202,7 @@ The built extensions can be found in [dist/chrome/](dist/chrome/).
 - **For Firefox**:
   - First [install and build](#install-and-build) this project.
   - Load the built extension in `dist/firefox` as a temporary addon in `about:debugging`.
+  - Temporary add-ons need to be reloaded after each browser restart.
 
 ### Developer Workflow
 

@@ -51,71 +51,13 @@ export async function renderSearchResults(result) {
       continue
     }
 
-    // Create the main list item element with appropriate attributes
-    const resultListItem = document.createElement('li')
-    resultListItem.className = resultEntry.type
-    resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
-    resultListItem.setAttribute('x-index', i)
-    resultListItem.setAttribute('x-original-id', resultEntry.originalId)
-
-    // Apply colored left border based on result type (bookmark, tab, etc.)
-    const colorKey = resultEntry.type + 'Color'
-    resultListItem.style.cssText = `border-left: ${opts.colorStripeWidth}px solid ${opts[colorKey]}`
-
-    // Add edit button for bookmark entries
-    if (resultEntry.type === 'bookmark') {
-      const editImg = document.createElement('img')
-      editImg.className = 'edit-button'
-      editImg.setAttribute('x-link', '#edit-bookmark/' + resultEntry.originalId)
-      editImg.title = 'Edit Bookmark'
-      editImg.src = '../images/edit.svg'
-      resultListItem.appendChild(editImg)
-    }
-
-    // Add close button for tab entries
-    if (resultEntry.type === 'tab') {
-      const closeImg = document.createElement('img')
-      closeImg.className = 'close-button'
-      closeImg.title = 'Close Tab'
-      closeImg.src = '../images/x.svg'
-      resultListItem.appendChild(closeImg)
-    }
-
-    // Create container for title and metadata
-    const titleDiv = document.createElement('div')
-    titleDiv.className = 'title'
-
-    // Create the title text element with highlighting support
-    const titleText = document.createElement('span')
-    titleText.className = 'title-text'
-
-    if (shouldHighlight) {
-      // Use pre-highlighted content if available, otherwise fall back to plain text
-      const content = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
-      if (content && content.includes('<mark>')) {
-        titleText.innerHTML = content + ' '
-      } else {
-        titleText.innerText = content + ' '
-      }
-    } else {
-      // Display title or URL as fallback
-      const titleContent = resultEntry.title || resultEntry.url + ' '
-      titleText.innerText = titleContent
-    }
-    titleDiv.appendChild(titleText)
-
-    // Batch badge creation for better performance
-    const badgeContainer = document.createDocumentFragment()
+    // Build badges HTML efficiently
+    let badgesHTML = ''
 
     // Add clickable tag badges for bookmark entries
     if (opts.displayTags && resultEntry.tagsArray) {
       for (const tag of resultEntry.tagsArray) {
-        const el = document.createElement('span')
-        el.title = 'Bookmark Tags'
-        el.className = 'badge tags'
-        el.setAttribute('x-link', `#search/#${tag}`)
-        el.innerText = shouldHighlight ? '#' + tag : '#' + tag
-        badgeContainer.appendChild(el)
+        badgesHTML += `<span class="badge tags" x-link="#search/#${tag}" title="Bookmark Tags">#${tag}</span>`
       }
     }
 
@@ -124,75 +66,69 @@ export async function renderSearchResults(result) {
       const trail = []
       for (const f of resultEntry.folderArray) {
         trail.push(f)
-        const el = document.createElement('span')
-        el.title = 'Bookmark Folder'
-        el.className = 'badge folder'
-        el.setAttribute('x-link', `#search/~${trail.join(' ~')}`)
-        if (opts.bookmarkColor) {
-          el.style.cssText = `background-color: ${opts.bookmarkColor}`
-        }
-        el.innerText = shouldHighlight ? '~' + f : '~' + f
-        badgeContainer.appendChild(el)
+        badgesHTML += `<span class="badge folder" x-link="#search/~${trail.join(
+          ' ~',
+        )}" title="Bookmark Folder" style="background-color: ${opts.bookmarkColor || 'none'}">${
+          shouldHighlight ? '~' + f : '~' + f
+        }</span>`
       }
     }
 
     // Add relative visit time badge (e.g., "2 hours ago")
     if (opts.displayLastVisit && resultEntry.lastVisitSecondsAgo) {
       const lastVisit = timeSince(new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000))
-      const lastVisited = document.createElement('span')
-      lastVisited.title = 'Last Visited'
-      lastVisited.className = 'badge last-visited'
-      lastVisited.innerText = '-' + lastVisit
-      badgeContainer.appendChild(lastVisited)
+      badgesHTML += `<span class="badge last-visited" title="Last Visited">-${lastVisit}</span>`
     }
 
     // Add visit count badge showing how many times the page was visited
     if (opts.displayVisitCounter && resultEntry.visitCount !== undefined) {
-      const visitCounter = document.createElement('span')
-      visitCounter.title = 'Visited Counter'
-      visitCounter.className = 'badge visit-counter'
-      visitCounter.innerText = resultEntry.visitCount
-      badgeContainer.appendChild(visitCounter)
+      badgesHTML += `<span class="badge visit-counter" title="Visited Counter">${resultEntry.visitCount}</span>`
     }
 
     // Add date when bookmark was added
     if (opts.displayDateAdded && resultEntry.dateAdded) {
-      const dateAdded = document.createElement('span')
-      dateAdded.title = 'Date Added'
-      dateAdded.className = 'badge date-added'
-      dateAdded.innerText = new Date(resultEntry.dateAdded).toISOString().split('T')[0]
-      badgeContainer.appendChild(dateAdded)
+      badgesHTML += `<span class="badge date-added" title="Date Added">${
+        new Date(resultEntry.dateAdded).toISOString().split('T')[0]
+      }</span>`
     }
 
     // Add relevance score badge for search result ranking
     if (opts.displayScore && resultEntry.score) {
-      const score = document.createElement('span')
-      score.title = 'Score'
-      score.className = 'badge score'
-      score.innerText = Math.round(resultEntry.score)
-      badgeContainer.appendChild(score)
+      badgesHTML += `<span class="badge score" title="Score">${Math.round(resultEntry.score)}</span>`
     }
 
-    // Append all badges at once
-    titleDiv.appendChild(badgeContainer)
+    // Determine content for title and URL with proper escaping
+    const titleContent = shouldHighlight
+      ? resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
+      : resultEntry.title || resultEntry.url || ''
 
-    // Create and populate URL display section
-    const urlDiv = document.createElement('div')
-    urlDiv.className = 'url'
-    urlDiv.title = resultEntry.url
-    if (shouldHighlight && resultEntry.urlHighlighted && resultEntry.urlHighlighted.includes('<mark>')) {
-      urlDiv.innerHTML = resultEntry.urlHighlighted
-    } else {
-      urlDiv.innerText = resultEntry.url
-    }
+    const urlContent = shouldHighlight && resultEntry.urlHighlighted ? resultEntry.urlHighlighted : resultEntry.url
 
-    // Assemble the complete result item
-    resultListItem.appendChild(titleDiv)
-    resultListItem.appendChild(urlDiv)
+    // Generate complete HTML for this result item using template
+    const itemHTML = `
+      <li class="${resultEntry.type}"
+          x-open-url="${resultEntry.originalUrl}"
+          x-index="${i}"
+          x-original-id="${resultEntry.originalId}"
+          style="border-left: ${opts.colorStripeWidth}px solid ${opts[resultEntry.type + 'Color']}">
+        ${
+          resultEntry.type === 'bookmark'
+            ? `<img class="edit-button" x-link="#edit-bookmark/${resultEntry.originalId}" title="Edit Bookmark" src="../images/edit.svg">`
+            : ''
+        }
+        ${resultEntry.type === 'tab' ? '<img class="close-button" title="Close Tab" src="../images/x.svg">' : ''}
+        <div class="title">
+          <span class="title-text">${titleContent} </span>
+          ${badgesHTML}
+        </div>
+        <div class="url" title="${resultEntry.url}">${urlContent}</div>
+      </li>
+    `
 
-    // Enable interaction with the result item
-    resultListItem.addEventListener('mouseenter', hoverResultItem)
-    resultListItem.addEventListener('mouseup', openResultItem)
+    // Create element from HTML string for better performance
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = itemHTML
+    const resultListItem = tempDiv.firstElementChild
 
     // Apply client-side text highlighting for search terms if needed
     if (shouldHighlight && searchTerm && window.Mark) {
@@ -210,6 +146,9 @@ export async function renderSearchResults(result) {
 
   // Highlight the first result as the current selection
   selectListItem(0)
+
+  // Set up event delegation for better performance (one-time setup)
+  setupResultItemsEvents()
 }
 
 //////////////////////////////////////////
@@ -253,12 +192,7 @@ export function navigationKeyListener(event) {
  * Removes previous selection and applies new selection with optional scrolling
  */
 export function selectListItem(index, scroll = false) {
-  // Clear existing selection
-  const currentSelection = document.getElementById('selected-result')
-  if (currentSelection) {
-    currentSelection.id = ''
-    delete currentSelection.id
-  }
+  clearSelection()
 
   // Apply new selection if the item exists
   if (ext.dom.resultList.children[index]) {
@@ -275,6 +209,17 @@ export function selectListItem(index, scroll = false) {
 
   // Update the application state to reflect the new selection
   ext.model.currentItem = index
+}
+
+/**
+ * Clear the currently selected result item
+ */
+export function clearSelection() {
+  const currentSelection = document.getElementById('selected-result')
+  if (currentSelection) {
+    currentSelection.id = ''
+    currentSelection.removeAttribute('id')
+  }
 }
 
 /**
@@ -353,7 +298,6 @@ export function openResultItem(event) {
   // Handle right-click to copy URL to clipboard
   if (event.button === 2) {
     navigator.clipboard.writeText(url)
-    event.preventDefault()
     return
   }
 
@@ -457,4 +401,55 @@ export async function toggleSearchApproach() {
 export function updateSearchApproachToggle() {
   ext.dom.searchApproachToggle.innerText = ext.opts.searchStrategy.toUpperCase()
   ext.dom.searchApproachToggle.classList = ext.opts.searchStrategy
+}
+
+/**
+ * Set up events for search result items
+ * Uses a single event listener on the parent container for better memory efficiency (event delegation)
+ */
+export function setupResultItemsEvents() {
+  // Set up delegated event listeners only once
+  if (ext.dom.resultList.hasEventDelegation) {
+    return
+  }
+
+  // Handle mouse enter events for hover effects
+  ext.dom.resultList.addEventListener(
+    'mouseenter',
+    (event) => {
+      const listItem = event.target.closest('li[x-index]')
+      if (listItem) {
+        hoverResultItem({
+          target: listItem,
+          srcElement: listItem,
+        })
+      }
+    },
+    true,
+  )
+
+  // Handle mouse up events for clicks and interactions
+  ext.dom.resultList.addEventListener(
+    'mouseup',
+    (event) => {
+      const listItem = event.target.closest('li[x-index]')
+      if (listItem) {
+        // Update selection for this item
+        clearSelection()
+        listItem.id = 'selected-result'
+        openResultItem({
+          target: event.target,
+          srcElement: event.target,
+          button: event.button,
+          shiftKey: event.shiftKey,
+          altKey: event.altKey,
+          ctrlKey: event.ctrlKey,
+          stopPropagation: () => event.stopPropagation(),
+        })
+      }
+    },
+    true,
+  )
+
+  ext.dom.resultList.hasEventDelegation = true
 }

@@ -8,23 +8,16 @@ export function loadFoldersOverview() {
   const folders = getUniqueFolders()
   document.getElementById('folders-overview').style = ''
   const sortedFolders = Object.keys(folders).sort()
-  const listEl = document.getElementById('folders-list')
-  listEl.replaceChildren()
 
-  const fragment = document.createDocumentFragment()
-  for (const folderName of sortedFolders) {
-    const badge = document.createElement('a')
-    badge.className = 'badge folder'
-    badge.setAttribute('href', `#search/~${folderName}`)
-    badge.setAttribute('x-folder', folderName)
-    badge.append(`~${folderName} `)
+  // Use template-based rendering for better performance with proper HTML escaping
+  const badgesHTML = sortedFolders
+    .map((folderName) => {
+      // Properly escape quotes in folder names for href attributes to prevent parsing errors
+      // Use single quotes for href attribute when folder name contains double quotes
+      const hrefAttribute = folderName.includes('"') ? `href='#search/~${folderName}'` : `href="#search/~${folderName}"`
+      return `<a class="badge folder" ${hrefAttribute} x-folder="${folderName}">~${folderName} <small>(${folders[folderName].length})</small></a>`
+    })
+    .join('')
 
-    const count = document.createElement('small')
-    count.textContent = `(${folders[folderName].length})`
-    badge.appendChild(count)
-
-    fragment.appendChild(badge)
-  }
-
-  listEl.appendChild(fragment)
+  document.getElementById('folders-list').innerHTML = badgesHTML
 }

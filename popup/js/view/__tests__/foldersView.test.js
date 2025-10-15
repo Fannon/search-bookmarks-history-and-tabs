@@ -159,6 +159,11 @@ describe('foldersView', () => {
     ])
 
     const labelTexts = badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())
-    expect(labelTexts).toEqual(['~Folder with "quotes" (1)', '~Personal/Archive (1)', '~Test (2024) (1)', '~Work & Projects (1)'])
+    expect(labelTexts).toEqual([
+      '~Folder with "quotes" (1)',
+      '~Personal/Archive (1)',
+      '~Test (2024) (1)',
+      '~Work & Projects (1)',
+    ])
   })
 })
