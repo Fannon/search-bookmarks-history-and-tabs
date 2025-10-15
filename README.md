@@ -135,7 +135,6 @@ customSearchEngines:
     name: NPM
     urlPrefix: https://www.npmjs.com/search?q=$s
     blank: https://www.npmjs.com
-debug: true # Print information about loading time / statistics in dev console
 ```
 
 In case of making multilingual searching (CJK) correctly, you may need to tweak [uFuzzy](https://github.com/leeoniya/uFuzzy) options via option `ufuzzyOptions`, for example:
