@@ -51,7 +51,7 @@ export async function createDist(clean = true) {
     archive.on('error', reject)
 
     archive.pipe(output)
-    archive.directory('dist/chrome/', '.')
+    archive.directory('dist/chrome/', false)
     archive.finalize()
   })
 }
