@@ -131,7 +131,7 @@ export async function renderSearchResults(result) {
     const resultListItem = tempDiv.firstElementChild
 
     // Apply client-side text highlighting for search terms if needed
-    if (shouldHighlight && searchTerm && window.Mark) {
+    if (shouldHighlight && searchTerm && searchTerm.trim() && window.Mark) {
       if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
         const mark = new window.Mark(resultListItem)
         mark.mark(searchTerm)
