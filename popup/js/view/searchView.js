@@ -135,7 +135,7 @@ export async function renderSearchResults(result) {
       if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
         const mark = new window.Mark(resultListItem)
         mark.mark(searchTerm, {
-          exclude: ['.badge'],
+          exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
         })
       }
     }
