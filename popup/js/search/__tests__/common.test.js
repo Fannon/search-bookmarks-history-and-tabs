@@ -9,7 +9,7 @@ import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
 const mockGetBrowserTabs = jest.fn()
 const mockCleanUpUrl = jest.fn((url) => url.replace(/\/+$/, ''))
 const mockPrintError = jest.fn()
-const mockCloseModals = jest.fn()
+const mockCloseErrors = jest.fn()
 const mockRenderSearchResults = jest.fn()
 const mockLoadScript = jest.fn(() => Promise.resolve())
 
@@ -33,7 +33,7 @@ beforeAll(async () => {
   }))
   await jest.unstable_mockModule('../../initSearch.js', () => ({
     __esModule: true,
-    closeModals: mockCloseModals,
+    closeErrors: mockCloseErrors,
   }))
   await jest.unstable_mockModule('../../view/searchView.js', () => ({
     __esModule: true,

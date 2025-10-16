@@ -192,7 +192,7 @@ describe('initSearch entry point', () => {
     }
   })
 
-  test('closeModals hides overlay containers', async () => {
+  test('closeErrors hides overlay containers', async () => {
     await mockDependencies()
     const module = await import('../initSearch.js')
     moduleUnderTest = module
@@ -202,7 +202,7 @@ describe('initSearch entry point', () => {
     document.getElementById('tags-overview').style = ''
     document.getElementById('folders-overview').style = ''
 
-    module.closeModals()
+    module.closeErrors()
 
     expect(document.getElementById('error-list').style.cssText).toBe('display: none;')
     expect(document.getElementById('tags-overview').style.cssText).toBe('')
