@@ -2,7 +2,7 @@ import { printError } from './helper/utils.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { loadFoldersOverview } from './view/foldersView.js'
-import { createExtensionContext } from './extensionContext.js'
+import { createExtensionContext } from './helper/extensionContext.js'
 
 export const ext = createExtensionContext()
 

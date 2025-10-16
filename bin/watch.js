@@ -16,11 +16,7 @@ const isIgnoredPath = (filePath) => {
   }
 
   const fileName = normalized.substring(normalized.lastIndexOf('/') + 1)
-  if (/\.min\.js(\.map)?$/i.test(fileName)) {
-    return true
-  }
-
-  return /\.bundle\.min\.js(\.map)?$/i.test(fileName)
+  return /\.min\.(js|css)(\.map)?$/i.test(fileName)
 }
 
 const watcher = chokidar.watch('popup', {

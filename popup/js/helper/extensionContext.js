@@ -1,4 +1,4 @@
-import { browserApi } from './helper/browserApi.js'
+import { browserApi } from './browserApi.js'
 
 /**
  * Creates the base extension context shared across popup entry points.

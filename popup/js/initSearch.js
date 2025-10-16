@@ -10,8 +10,7 @@ import {
   toggleSearchApproach,
   updateSearchApproachToggle,
 } from './view/searchView.js'
-import { createExtensionContext } from './extensionContext.js'
-import { redirectTo } from './navigation.js'
+import { createExtensionContext } from './helper/extensionContext.js'
 
 //////////////////////////////////////////
 // EXTENSION NAMESPACE                  //
@@ -121,9 +120,9 @@ export async function hashRouter() {
       ext.dom.searchInput.focus()
       search()
     } else if (hash.startsWith('#tags/')) {
-      redirectTo(`./tags.html${hash}`)
+      window.location.replace(`./tags.html${hash}`)
     } else if (hash.startsWith('#folders/')) {
-      redirectTo(`./folders.html${hash}`)
+      window.location.replace(`./folders.html${hash}`)
     } else if (hash.startsWith('#edit-bookmark/')) {
       // Edit bookmark route
       const bookmarkId = hash.replace('#edit-bookmark/', '')

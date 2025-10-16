@@ -5,6 +5,9 @@ import { createWriteStream } from 'fs'
 import { join } from 'path'
 import archiver from 'archiver'
 
+const CSS_BUNDLED_FILENAMES = new Set(['style.css', 'options.css', 'taxonomy.css'])
+const CSS_ORIGINALS_TO_KEEP = new Set(['tagify.css'])
+
 /**
  * Build the Chrome distribution directory and accompanying archive.
  */
@@ -35,6 +38,7 @@ export async function createDist(clean = true) {
   await fs.remove('dist/chrome/popup/mockData')
 
   await removeBundledJs('dist/chrome/popup/js')
+  await removeBundledCss('dist/chrome/popup/css')
 
   const popupDir = 'dist/chrome/popup'
   await removeTestArtifacts(popupDir)
@@ -143,5 +147,83 @@ async function modifyHtmlFile(filePath) {
       '<script defer src="./js/initFolders.bundle.min.js"></script>',
     )
 
+  modified = replaceStylesheetReferences(modified)
+
   await fs.writeFile(filePath, modified, 'utf8')
+}
+
+/**
+ * Swap unbundled stylesheet references with minified bundle versions.
+ * @param {string} htmlContent HTML content to update.
+ * @returns {string}
+ */
+function replaceStylesheetReferences(htmlContent) {
+  const replacements = [
+    {
+      source: '<link rel="stylesheet" href="./css/style.css" type="text/css" />',
+      target: '<link rel="stylesheet" href="./css/style.bundle.min.css" type="text/css" />',
+    },
+    {
+      source: '<link rel="stylesheet" href="./css/style.css" />',
+      target: '<link rel="stylesheet" href="./css/style.bundle.min.css" />',
+    },
+    {
+      source: '<link rel="stylesheet" href="./css/options.css" />',
+      target: '<link rel="stylesheet" href="./css/options.bundle.min.css" />',
+    },
+    {
+      source: '<link rel="stylesheet" href="./css/taxonomy.css" type="text/css" />',
+      target: '<link rel="stylesheet" href="./css/taxonomy.bundle.min.css" type="text/css" />',
+    },
+  ]
+
+  return replacements.reduce((result, { source, target }) => result.replace(source, target), htmlContent)
+}
+
+/**
+ * Recursively delete non-bundled CSS files beneath a directory.
+ * @param {string} dir Path to inspect for removable files.
+ * @returns {Promise<void>}
+ */
+async function removeBundledCss(dir) {
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true })
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        await removeBundledCss(fullPath)
+        const remaining = await fs.readdir(fullPath)
+        if (!remaining.length) {
+          await fs.remove(fullPath)
+        }
+      } else if (entry.isFile() && shouldRemoveOriginalCss(entry.name)) {
+        await fs.remove(fullPath)
+      }
+    }
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error
+    }
+  }
+}
+
+/**
+ * Determine whether an original CSS file should be pruned from dist output.
+ * @param {string} fileName File name to evaluate.
+ * @returns {boolean}
+ */
+function shouldRemoveOriginalCss(fileName) {
+  if (!fileName.endsWith('.css')) {
+    return false
+  }
+
+  if (fileName.endsWith('.bundle.min.css')) {
+    return false
+  }
+
+  if (CSS_ORIGINALS_TO_KEEP.has(fileName)) {
+    return false
+  }
+
+  return CSS_BUNDLED_FILENAMES.has(fileName)
 }
