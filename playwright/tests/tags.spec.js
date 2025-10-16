@@ -2,7 +2,7 @@ import { test, expect, expectNoClientErrors } from './fixtures.js'
 
 test.describe('Tag View', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/#tags/')
+    await page.goto('/tags.html#tags/')
   })
 
   test.describe('Initializing Phase', () => {
@@ -16,7 +16,9 @@ test.describe('Tag View', () => {
     })
 
     test('allows navigation via tags', async ({ page }) => {
+      const navigation = page.waitForURL('**/index.html#search/#json')
       await page.locator('#tags-overview #tags-list [x-tag="json"]').click()
+      await navigation
 
       await expect(page.locator('#search-input')).toHaveValue('#json')
       await expect(page.locator('#result-list')).not.toHaveCount(0)

@@ -28,6 +28,8 @@ export async function createDist(clean = true) {
 
   await modifyHtmlFile('dist/chrome/popup/options.html')
   await modifyHtmlFile('dist/chrome/popup/index.html')
+  await modifyHtmlFile('dist/chrome/popup/tags.html')
+  await modifyHtmlFile('dist/chrome/popup/folders.html')
 
   // Remove mock data and test artifacts
   await fs.remove('dist/chrome/popup/mockData')
@@ -131,6 +133,14 @@ async function modifyHtmlFile(filePath) {
     .replace(
       '<script defer type="module" src="./js/initSearch.js"></script>',
       '<script defer src="./js/initSearch.bundle.min.js"></script>',
+    )
+    .replace(
+      '<script defer type="module" src="./js/initTags.js"></script>',
+      '<script defer src="./js/initTags.bundle.min.js"></script>',
+    )
+    .replace(
+      '<script defer type="module" src="./js/initFolders.js"></script>',
+      '<script defer src="./js/initFolders.bundle.min.js"></script>',
     )
 
   await fs.writeFile(filePath, modified, 'utf8')

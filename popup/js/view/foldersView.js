@@ -14,7 +14,8 @@ export function loadFoldersOverview() {
     .map((folderName) => {
       // Properly escape quotes in folder names for href attributes to prevent parsing errors
       // Use single quotes for href attribute when folder name contains double quotes
-      const hrefAttribute = folderName.includes('"') ? `href='#search/~${folderName}'` : `href="#search/~${folderName}"`
+      const targetHref = `./index.html#search/~${folderName}`
+      const hrefAttribute = folderName.includes('"') ? `href='${targetHref}'` : `href="${targetHref}"`
       return `<a class="badge folder" ${hrefAttribute} x-folder="${folderName}">~${folderName} <small>(${folders[folderName].length})</small></a>`
     })
     .join('')

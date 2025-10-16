@@ -4,43 +4,21 @@ import { getSearchData } from './model/searchData.js'
 import { search } from './search/common.js'
 import { addDefaultEntries } from './search/common.js'
 import { editBookmark, updateBookmark } from './view/editBookmarkView.js'
-import { loadFoldersOverview } from './view/foldersView.js'
-import { browserApi } from './helper/browserApi.js'
 import {
   navigationKeyListener,
   renderSearchResults,
   toggleSearchApproach,
   updateSearchApproachToggle,
 } from './view/searchView.js'
-import { loadTagsOverview } from './view/tagsView.js'
+import { createExtensionContext } from './extensionContext.js'
+import { redirectTo } from './navigation.js'
 
 //////////////////////////////////////////
 // EXTENSION NAMESPACE                  //
 //////////////////////////////////////////
 
 /** Browser extension namespace */
-export const ext = {
-  /** Options */
-  opts: {},
-  /** Model / data */
-  model: {
-    /** Currently selected result item */
-    currentItem: 0,
-    /** Current search results */
-    result: [],
-  },
-  /** Search indexes */
-  index: {
-    taxonomy: {},
-  },
-  /** Commonly used DOM Elements */
-  dom: {},
-  /** The browser / extension API */
-  browserApi: browserApi,
-
-  /** Whether extension is already initialized -> ready for search */
-  initialized: false,
-}
+export const ext = createExtensionContext()
 
 window.ext = ext
 
@@ -143,9 +121,9 @@ export async function hashRouter() {
       ext.dom.searchInput.focus()
       search()
     } else if (hash.startsWith('#tags/')) {
-      loadTagsOverview()
+      redirectTo(`./tags.html${hash}`)
     } else if (hash.startsWith('#folders/')) {
-      loadFoldersOverview()
+      redirectTo(`./folders.html${hash}`)
     } else if (hash.startsWith('#edit-bookmark/')) {
       // Edit bookmark route
       const bookmarkId = hash.replace('#edit-bookmark/', '')

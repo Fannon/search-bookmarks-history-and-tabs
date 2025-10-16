@@ -13,7 +13,7 @@ export function loadTagsOverview() {
   const badgesHTML = sortedTags
     .map(
       (tag) =>
-        `<a class="badge tags" href="#search/#${tag}" x-tag="${tag}">#${tag} <small>(${tags[tag].length})</small></a>`,
+        `<a class="badge tags" href="./index.html#search/#${tag}" x-tag="${tag}">#${tag} <small>(${tags[tag].length})</small></a>`,
     )
     .join('')
 
