@@ -113,17 +113,19 @@ async function summarise(files) {
   return { totalSize, sortedTopLevel, sortedSecondLevel, sortedMinified }
 }
 
-function printTable(headers, rows, indent = '') {
+function printTable(headers, rows, indent = '', columnWidths) {
   if (rows.length === 0) {
     return
   }
 
-  const columnWidths = headers.map((header, index) => {
-    return Math.max(header.length, ...rows.map((row) => row[index].length))
-  })
+  const widths =
+    columnWidths ??
+    headers.map((header, index) => {
+      return Math.max(header.length, ...rows.map((row) => row[index].length))
+    })
 
-  const formatRow = (row) => indent + row.map((value, index) => value.padEnd(columnWidths[index])).join('  ')
-  const divider = indent + columnWidths.map((width) => ''.padEnd(width, '-')).join('  ')
+  const formatRow = (row) => indent + row.map((value, index) => value.padEnd(widths[index])).join('  ')
+  const divider = indent + widths.map((width) => ''.padEnd(width, '-')).join('  ')
 
   console.log(formatRow(headers))
   console.log(divider)
@@ -189,14 +191,27 @@ function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMini
     }
   }
 
+  const stripPrefix = (filePath) => filePath.replace(/^dist\//, '').replace(/^popup\//, '')
+  const allRows = sortedMinified.map((file) => [
+    stripPrefix(file.path),
+    formatBytes(file.size),
+    percentage(file.size, totalSize),
+  ])
+  let tableHeaders = ['File', 'Size', 'Share']
+  const columnWidths = tableHeaders.map((header, index) => {
+    return Math.max(header.length, ...allRows.map((row) => row[index].length))
+  })
+
   for (const [label, files] of categorized) {
+    tableHeaders = [label, 'Size', 'Share']
     if (files.length === 0) {
       continue
     }
     const rows = files
+      .slice()
       .sort((a, b) => b.size - a.size)
-      .map((file) => [file.path, formatBytes(file.size), percentage(file.size, totalSize)])
-    printTable([label, 'Size', 'Share'], rows, '')
+      .map((file) => [stripPrefix(file.path), formatBytes(file.size), percentage(file.size, totalSize)])
+    printTable(tableHeaders, rows, '', columnWidths)
     console.log('')
   }
 }
