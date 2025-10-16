@@ -63,17 +63,17 @@ export async function bundleAll() {
     {
       name: 'style',
       entry: resolve(repoRoot, 'popup/css/style.css'),
-      outfile: resolve(repoRoot, 'popup/css/style.bundle.min.css'),
+      outfile: resolve(repoRoot, 'popup/css/style.min.css'),
     },
     {
       name: 'options',
       entry: resolve(repoRoot, 'popup/css/options.css'),
-      outfile: resolve(repoRoot, 'popup/css/options.bundle.min.css'),
+      outfile: resolve(repoRoot, 'popup/css/options.min.css'),
     },
     {
       name: 'taxonomy',
       entry: resolve(repoRoot, 'popup/css/taxonomy.css'),
-      outfile: resolve(repoRoot, 'popup/css/taxonomy.bundle.min.css'),
+      outfile: resolve(repoRoot, 'popup/css/taxonomy.min.css'),
     },
   ]
 

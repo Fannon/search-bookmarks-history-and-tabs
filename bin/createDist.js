@@ -161,19 +161,19 @@ function replaceStylesheetReferences(htmlContent) {
   const replacements = [
     {
       source: '<link rel="stylesheet" href="./css/style.css" type="text/css" />',
-      target: '<link rel="stylesheet" href="./css/style.bundle.min.css" type="text/css" />',
+      target: '<link rel="stylesheet" href="./css/style.min.css" type="text/css" />',
     },
     {
       source: '<link rel="stylesheet" href="./css/style.css" />',
-      target: '<link rel="stylesheet" href="./css/style.bundle.min.css" />',
+      target: '<link rel="stylesheet" href="./css/style.min.css" />',
     },
     {
       source: '<link rel="stylesheet" href="./css/options.css" />',
-      target: '<link rel="stylesheet" href="./css/options.bundle.min.css" />',
+      target: '<link rel="stylesheet" href="./css/options.min.css" />',
     },
     {
       source: '<link rel="stylesheet" href="./css/taxonomy.css" type="text/css" />',
-      target: '<link rel="stylesheet" href="./css/taxonomy.bundle.min.css" type="text/css" />',
+      target: '<link rel="stylesheet" href="./css/taxonomy.min.css" type="text/css" />',
     },
   ]
 
