@@ -9,7 +9,7 @@ const thisFile = fileURLToPath(import.meta.url)
 const thisDir = dirname(thisFile)
 const repoRoot = resolve(thisDir, '..')
 
-const bundles = [
+const jsBundles = [
   {
     name: 'initSearch',
     entry: resolve(repoRoot, 'popup/js/initSearch.js'),
@@ -21,6 +21,18 @@ const bundles = [
     entry: resolve(repoRoot, 'popup/js/initOptions.js'),
     outfile: resolve(repoRoot, 'popup/js/initOptions.bundle.min.js'),
     globalName: 'optionsPopup',
+  },
+  {
+    name: 'initTags',
+    entry: resolve(repoRoot, 'popup/js/initTags.js'),
+    outfile: resolve(repoRoot, 'popup/js/initTags.bundle.min.js'),
+    globalName: 'tagsPopup',
+  },
+  {
+    name: 'initFolders',
+    entry: resolve(repoRoot, 'popup/js/initFolders.js'),
+    outfile: resolve(repoRoot, 'popup/js/initFolders.bundle.min.js'),
+    globalName: 'foldersPopup',
   },
 ]
 
@@ -37,7 +49,7 @@ const sharedBuildOptions = {
 }
 
 export async function bundleAll() {
-  for (const { name, entry, outfile, globalName } of bundles) {
+  for (const { name, entry, outfile, globalName } of jsBundles) {
     await build({
       ...sharedBuildOptions,
       entryPoints: [entry],
@@ -45,6 +57,36 @@ export async function bundleAll() {
       globalName,
     })
     console.log(`Bundled ${name} to ${outfile}`)
+  }
+
+  const cssBundles = [
+    {
+      name: 'style',
+      entry: resolve(repoRoot, 'popup/css/style.css'),
+      outfile: resolve(repoRoot, 'popup/css/style.min.css'),
+    },
+    {
+      name: 'options',
+      entry: resolve(repoRoot, 'popup/css/options.css'),
+      outfile: resolve(repoRoot, 'popup/css/options.min.css'),
+    },
+    {
+      name: 'taxonomy',
+      entry: resolve(repoRoot, 'popup/css/taxonomy.css'),
+      outfile: resolve(repoRoot, 'popup/css/taxonomy.min.css'),
+    },
+  ]
+
+  for (const { name, entry, outfile } of cssBundles) {
+    await build({
+      entryPoints: [entry],
+      outfile,
+      minify: true,
+      bundle: false,
+      logLevel: 'info',
+      loader: { '.css': 'css' },
+    })
+    console.log(`Bundled CSS ${name} to ${outfile}`)
   }
 }
 

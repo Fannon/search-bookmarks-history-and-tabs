@@ -8,7 +8,7 @@ import { jest } from '@jest/globals'
 
 function setupDom() {
   document.body.innerHTML = `
-    <section id="tags-overview" style="display:none"></section>
+    <section id="tags-overview"></section>
     <div id="tags-list"></div>
   `
 }
@@ -48,10 +48,14 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges.map((el) => el.getAttribute('x-tag'))).toEqual(['alpha', 'beta', 'release'])
-    expect(badges.map((el) => el.getAttribute('href'))).toEqual(['#search/#alpha', '#search/#beta', '#search/#release'])
+    expect(badges.map((el) => el.getAttribute('href'))).toEqual([
+      './index.html#search/#alpha',
+      './index.html#search/#beta',
+      './index.html#search/#release',
+    ])
     expect(badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())).toEqual([
       '#alpha (2)',
       '#beta (1)',
@@ -65,7 +69,7 @@ describe('tagsView', () => {
 
     module.loadTagsOverview()
 
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
     expect(document.querySelectorAll('#tags-list a.badge.tags')).toHaveLength(0)
   })
 
@@ -86,7 +90,7 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     // The actual implementation renders all tags including malformed ones
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
@@ -95,7 +99,7 @@ describe('tagsView', () => {
     // Check that valid tags are still rendered correctly
     const validBadge = badges.find((badge) => badge.getAttribute('x-tag') === 'valid-tag')
     expect(validBadge).toBeDefined()
-    expect(validBadge.getAttribute('href')).toBe('#search/#valid-tag')
+    expect(validBadge.getAttribute('href')).toBe('./index.html#search/#valid-tag')
 
     consoleWarnSpy.mockRestore()
   })
@@ -116,7 +120,7 @@ describe('tagsView', () => {
     const endTime = Date.now()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges).toHaveLength(100)
@@ -140,7 +144,7 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges).toHaveLength(5)
@@ -173,13 +177,19 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges).toHaveLength(5)
 
     // Check that unicode characters are properly handled in hrefs
     const hrefs = badges.map((el) => el.getAttribute('href'))
-    expect(hrefs).toEqual(['#search/#café', '#search/#naïve', '#search/#résumé', '#search/#日本語', '#search/#🚀'])
+    expect(hrefs).toEqual([
+      './index.html#search/#café',
+      './index.html#search/#naïve',
+      './index.html#search/#résumé',
+      './index.html#search/#日本語',
+      './index.html#search/#🚀',
+    ])
   })
 })

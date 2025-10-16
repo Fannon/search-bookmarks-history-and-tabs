@@ -99,9 +99,6 @@ textarea {
   width: 474px;
   min-width: 474px;
 }
-.input-description {
-  margin: 2px 4px;
-}
 #search-approach-toggle {
   float: right;
   height: 55px;
@@ -302,32 +299,11 @@ li.error {
 #result-counter {
   float: right;
 }
-#tags-overview,
-#folders-overview {
-  position: fixed;
-  top: 55px;
-  left: 0;
-  width: 500px;
-  height: 524px;
-  background: #eee;
-  padding: 4px 8px;
-  overflow-x: hidden;
-  overflow-y: scroll;
+.section-heading {
+  margin: 0 0 4px 0;
 }
-.input-description {
-  margin: 4px 0px;
-}
-#tags-list,
-#folders-list {
-  width: 100%;
-}
-#tags-list a,
-#folders-list a,
-#tags-list a:hover,
-#folders-list a:hover {
-  color: #fff;
-  font-size: 15px;
-  margin: 4px 4px 0 0;
+#options .section-heading {
+  margin: 4px 8px 4px 8px;
 }
 #edit-bookmark {
   padding: 0;
@@ -376,9 +352,7 @@ li.error {
 @media screen and (prefers-color-scheme: dark) {
   html,
   body,
-  #edit-bookmark,
-  #tags-overview,
-  #folders-overview {
+  #edit-bookmark {
     background: #222;
   }
   html a,
@@ -387,16 +361,12 @@ li.error {
   body a:visited,
   html a:hover,
   body a:hover,
-  #edit-bookmark a:hover,
-  #tags-overview a:hover,
-  #folders-overview a:hover {
+  #edit-bookmark a:hover {
     color: #f1f1f1;
   }
   html mark,
   body mark,
-  #edit-bookmark mark,
-  #tags-overview mark,
-  #folders-overview mark {
+  #edit-bookmark mark {
     color: #6b92c0;
   }
   strong {
@@ -444,7 +414,7 @@ li.error {
   ::-webkit-scrollbar-thumb {
     background-color: #5f5f5f;
   }
-  .input-description {
+  .section-heading {
     color: #777;
   }
 }

@@ -44,4 +44,5 @@ temp/
 .wireit/
 .serena/
 
-popup/js/*.bundle.min.*
+popup/js/*.min.js*
+popup/css/*.min.css*

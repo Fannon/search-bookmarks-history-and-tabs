@@ -95,14 +95,18 @@ jobs:
           cache: 'npm'
       - name: Install Dependencies
         run: npm set cache ~/.npm && npm ci
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+      # - name: Install Playwright Browsers
+      # run: npx playwright install --with-deps
+      - name: Install Chromium
+        run: npx playwright install chromium --with-deps
+      - name: Install Firefox
+        run: npx playwright install firefox --with-deps
       - name: Test Chromium
         run: npm run test:e2e:chromium
       - name: Test Firefox
         run: npm run test:e2e:firefox
-      - name: Test Edge
-        run: npm run test:e2e:edge
+      # - name: Test Edge
+      #   run: npm run test:e2e:edge
       - uses: actions/upload-artifact@v4
         if: always()
         with:

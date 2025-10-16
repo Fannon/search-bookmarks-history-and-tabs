@@ -49,8 +49,7 @@ const mockDependencies = async (overrides = {}) => {
     search: jest.fn(() => Promise.resolve()),
     editBookmark: jest.fn(() => Promise.resolve()),
     updateBookmark: jest.fn(),
-    loadFoldersOverview: jest.fn(),
-    loadTagsOverview: jest.fn(),
+    redirectTo: jest.fn(),
   }
   const config = { ...defaults, ...overrides }
 
@@ -77,10 +76,6 @@ const mockDependencies = async (overrides = {}) => {
     editBookmark: config.editBookmark,
     updateBookmark: config.updateBookmark,
   }))
-  await jest.unstable_mockModule('../view/foldersView.js', () => ({
-    __esModule: true,
-    loadFoldersOverview: config.loadFoldersOverview,
-  }))
   await jest.unstable_mockModule('../helper/browserApi.js', () => ({
     __esModule: true,
     browserApi: {},
@@ -91,10 +86,6 @@ const mockDependencies = async (overrides = {}) => {
     navigationKeyListener: jest.fn(),
     toggleSearchApproach: jest.fn(),
     updateSearchApproachToggle: jest.fn(),
-  }))
-  await jest.unstable_mockModule('../view/tagsView.js', () => ({
-    __esModule: true,
-    loadTagsOverview: config.loadTagsOverview,
   }))
 
   return config
@@ -135,13 +126,14 @@ describe('initSearch entry point', () => {
     expect(document.getElementById('results-loading')).toBeNull()
   })
 
-  test('hashRouter handles search, tags, folders and bookmark routes', async () => {
+  test('hashRouter handles search, bookmark routes, and ignores tags/folders routes', async () => {
     const mocks = await mockDependencies()
     const module = await import('../initSearch.js')
     moduleUnderTest = module
     await flushPromises()
 
     window.removeEventListener('hashchange', module.hashRouter)
+    const redirectSpy = mocks.redirectTo
 
     window.location.hash = '#search/test%20query'
     await module.hashRouter()
@@ -150,14 +142,15 @@ describe('initSearch entry point', () => {
 
     const searchCallsAfterSearchRoute = mocks.search.mock.calls.length
 
+    // Tags and folders routes are no longer handled by hash router
     window.location.hash = '#tags/'
     await module.hashRouter()
-    expect(mocks.loadTagsOverview).toHaveBeenCalled()
+    expect(redirectSpy).not.toHaveBeenCalledWith('./tags.html#tags/')
     expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
 
     window.location.hash = '#folders/'
     await module.hashRouter()
-    expect(mocks.loadFoldersOverview).toHaveBeenCalled()
+    expect(redirectSpy).not.toHaveBeenCalledWith('./folders.html#folders/')
     expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
 
     window.location.hash = '#edit-bookmark/123'
@@ -174,10 +167,10 @@ describe('initSearch entry point', () => {
   test('hashRouter reports unexpected errors', async () => {
     const routeError = new Error('Route failure')
     const mocks = await mockDependencies({
-      loadTagsOverview: jest.fn(() => {
+      printError: jest.fn(),
+      editBookmark: jest.fn(() => {
         throw routeError
       }),
-      printError: jest.fn(),
     })
 
     const module = await import('../initSearch.js')
@@ -185,7 +178,7 @@ describe('initSearch entry point', () => {
     await flushPromises()
 
     window.removeEventListener('hashchange', module.hashRouter)
-    window.location.hash = '#tags/'
+    window.location.hash = '#edit-bookmark/123'
     await module.hashRouter()
 
     expect(mocks.printError).toHaveBeenCalledWith(routeError)
@@ -239,15 +232,15 @@ describe('initSearch entry point', () => {
     await flushPromises()
 
     document.getElementById('edit-bookmark').style = ''
+    document.getElementById('error-list').style = ''
     document.getElementById('tags-overview').style = ''
     document.getElementById('folders-overview').style = ''
-    document.getElementById('error-list').style = ''
 
     module.closeModals()
 
     expect(document.getElementById('edit-bookmark').style.cssText).toBe('display: none;')
-    expect(document.getElementById('tags-overview').style.cssText).toBe('display: none;')
-    expect(document.getElementById('folders-overview').style.cssText).toBe('display: none;')
     expect(document.getElementById('error-list').style.cssText).toBe('display: none;')
+    expect(document.getElementById('tags-overview').style.cssText).toBe('')
+    expect(document.getElementById('folders-overview').style.cssText).toBe('')
   })
 })
