@@ -182,7 +182,7 @@ describe('searchView renderSearchResults', () => {
     expect(bookmarkItem.getAttribute('x-open-url')).toBe('https://bookmark.test')
     expect(bookmarkItem.style.borderLeft).toBe('4px solid rgb(17, 17, 17)')
     expect(bookmarkItem.querySelector('.edit-button').getAttribute('x-link')).toBe(
-      './editBookmark.html#bookmark/bm-1?return=%23search%2Fquery',
+      './editBookmark.html#bookmark/bm-1/search/query',
     )
 
     const tagBadges = Array.from(bookmarkItem.querySelectorAll('.badge.tags'))

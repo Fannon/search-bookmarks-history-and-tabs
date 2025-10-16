@@ -18,11 +18,11 @@ function setupDom() {
 describe('initEditBookmark entry point', () => {
   beforeEach(() => {
     jest.resetModules()
-   jest.clearAllMocks()
-   clearTestExt()
-   setupDom()
+    jest.clearAllMocks()
+    clearTestExt()
+    setupDom()
     window.history.replaceState(null, '', 'http://localhost/editBookmark.html')
-    window.location.hash = '#bookmark/bookmark-1?return=%23search%2Ffoo'
+    window.location.hash = '#bookmark/bookmark-1/search/foo'
   })
 
   afterEach(() => {
@@ -82,6 +82,49 @@ describe('initEditBookmark entry point', () => {
     document.getElementById('edit-bookmark-delete').dispatchEvent(new MouseEvent('click', { bubbles: true }))
     await flushPromises()
     expect(deleteBookmark).toHaveBeenCalledWith('bookmark-1')
+  })
+
+  test('supports legacy #id hash format for backwards compatibility', async () => {
+    window.location.hash = '#id/legacy-bookmark&searchTerm=foo'
+    const editBookmark = jest.fn((bookmarkId) => {
+      window.ext.currentBookmarkId = bookmarkId
+      return Promise.resolve()
+    })
+    const updateBookmark = jest.fn()
+    const deleteBookmark = jest.fn(() => Promise.resolve())
+    const getEffectiveOptions = jest.fn(() => Promise.resolve({}))
+    const getSearchData = jest.fn(() => Promise.resolve({ bookmarks: [{ originalId: 'legacy-bookmark' }] }))
+    const printError = jest.fn()
+
+    await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
+      __esModule: true,
+      editBookmark,
+      updateBookmark,
+      deleteBookmark,
+    }))
+    await jest.unstable_mockModule('../model/options.js', () => ({
+      __esModule: true,
+      getEffectiveOptions,
+    }))
+    await jest.unstable_mockModule('../model/searchData.js', () => ({
+      __esModule: true,
+      getSearchData,
+    }))
+    await jest.unstable_mockModule('../helper/utils.js', () => ({
+      __esModule: true,
+      printError,
+    }))
+    await jest.unstable_mockModule('../helper/browserApi.js', () => ({
+      __esModule: true,
+      browserApi: {},
+    }))
+
+    const module = await import('../initEditBookmark.js')
+    await flushPromises()
+
+    expect(editBookmark).toHaveBeenCalledWith('legacy-bookmark')
+    expect(module.ext.returnHash).toBe('#search/foo')
+    expect(printError).not.toHaveBeenCalled()
   })
 
   test('logs an error when bookmark identifier is missing', async () => {
@@ -153,7 +196,7 @@ describe('initEditBookmark entry point', () => {
     await flushPromises()
 
     editBookmark.mockClear()
-    window.location.hash = '#bookmark/bookmark-2?return=%23search%2Fbar'
+    window.location.hash = '#bookmark/bookmark-2/search/bar'
     window.dispatchEvent(new HashChangeEvent('hashchange'))
     await flushPromises()
 

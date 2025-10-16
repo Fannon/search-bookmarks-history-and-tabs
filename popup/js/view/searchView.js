@@ -45,13 +45,20 @@ export async function renderSearchResults(result) {
   const fragment = document.createDocumentFragment()
 
   const currentSearchHash =
-    window.location.hash && window.location.hash.startsWith('#search')
-      ? window.location.hash
-      : '#search/'
-  const searchTermSegment = currentSearchHash.startsWith('#search/')
+    window.location.hash && window.location.hash.startsWith('#search') ? window.location.hash : '#search/'
+  const rawSearchTermSegment = currentSearchHash.startsWith('#search/')
     ? currentSearchHash.slice('#search/'.length)
     : ''
-  const searchTermSuffix = searchTermSegment ? `&searchTerm=${encodeURIComponent(searchTermSegment)}` : ''
+  let normalizedSearchTerm = ''
+  if (rawSearchTermSegment) {
+    try {
+      normalizedSearchTerm = decodeURIComponent(rawSearchTermSegment)
+    } catch {
+      normalizedSearchTerm = rawSearchTermSegment
+    }
+  }
+  const encodedSearchTerm = normalizedSearchTerm ? encodeURIComponent(normalizedSearchTerm) : ''
+  const searchTermSuffix = encodedSearchTerm ? `/search/${encodedSearchTerm}` : ''
 
   for (let i = 0; i < result.length; i++) {
     const resultEntry = result[i]
@@ -126,7 +133,7 @@ export async function renderSearchResults(result) {
           style="border-left: ${opts.colorStripeWidth}px solid ${opts[resultEntry.type + 'Color']}">
         ${
           resultEntry.type === 'bookmark'
-            ? `<img class="edit-button" x-link="./editBookmark.html#id/${encodeURIComponent(
+            ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(
                 resultEntry.originalId,
               )}${searchTermSuffix}" title="Edit Bookmark" src="../images/edit.svg">`
             : ''
