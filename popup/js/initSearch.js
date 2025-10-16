@@ -24,8 +24,6 @@ window.ext = ext
 // INITIALIZE EXTENSION                 //
 //////////////////////////////////////////
 
-// Trigger initialization
-ext.initialized = false
 initExtension().catch((err) => {
   printError(err, 'Could not initialize Extension')
 })
@@ -53,8 +51,6 @@ export async function initExtension() {
   ext.model.bookmarks = bookmarks
   ext.model.history = history
 
-  ext.initialized = true
-
   // Register Events
   document.addEventListener('keydown', navigationKeyListener)
   window.addEventListener('hashchange', hashRouter, false)
@@ -72,22 +68,12 @@ export async function initExtension() {
   // Add search result cache for better performance (simple, no expiration needed)
   ext.searchCache = new Map()
 
-  if (window.location.hash && window.location.hash !== '/') {
-    hashRouter()
-  } else {
-    // Display default entries
-    await addDefaultEntries()
-    renderSearchResults(ext.model.result)
-  }
+  ext.initialized = true
+
+  hashRouter()
 
   if (document.getElementById('results-loading')) {
     document.getElementById('results-loading').remove()
-  }
-
-  // Only trigger final search if user has entered a search term
-  // This prevents overriding the default entries with a duplicate call
-  if (ext.dom.searchInput.value && ext.dom.searchInput.value.trim()) {
-    search()
   }
 
   console.debug('Extension initialized in ' + (Date.now() - startTime) + 'ms')
@@ -104,33 +90,33 @@ export async function initExtension() {
  * URL Hash Router
  */
 export async function hashRouter() {
-  try {
-    const hash = window.location.hash
-    closeModals()
-    if (!hash || hash === '#') {
-      // Index route -> redirect to last known search or empty search
-      window.location.hash = '#search/'
-    } else if (hash.startsWith('#search/')) {
-      // Search specific term
-      const searchTerm = hash.replace('#search/', '')
-      if (searchTerm) {
-        ext.dom.searchInput.value = decodeURIComponent(searchTerm)
-      }
+  let hash = window.location.hash
+  if (!hash || hash === '#' || hash === '#/') {
+    hash = '#search/' + ext.dom.searchInput.value
+  }
+  closeErrors()
+  if (hash.startsWith('#search/')) {
+    // Search specific term
+    const searchTerm = decodeURIComponent(hash.replace('#search/', ''))
+    if (searchTerm) {
+      ext.dom.searchInput.value = searchTerm
       ext.dom.searchInput.focus()
       search()
+    } else {
+      // Empty search term, show default entries
+      ext.dom.searchInput.value = ''
+      ext.dom.searchInput.focus()
+      // Display default entries
+      await addDefaultEntries()
+      renderSearchResults(ext.model.result)
     }
-  } catch (err) {
-    printError(err)
   }
 }
 
 /**
  * Close all modal overlays
  */
-export function closeModals() {
-  const modals = ['error-list']
-  modals.forEach((id) => {
-    const element = document.getElementById(id)
-    if (element) element.style = 'display: none;'
-  })
+export function closeErrors() {
+  const element = document.getElementById('error-list')
+  if (element) element.style = 'display: none;'
 }
