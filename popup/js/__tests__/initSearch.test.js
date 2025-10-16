@@ -232,15 +232,15 @@ describe('initSearch entry point', () => {
     await flushPromises()
 
     document.getElementById('edit-bookmark').style = ''
+    document.getElementById('error-list').style = ''
     document.getElementById('tags-overview').style = ''
     document.getElementById('folders-overview').style = ''
-    document.getElementById('error-list').style = ''
 
     module.closeModals()
 
     expect(document.getElementById('edit-bookmark').style.cssText).toBe('display: none;')
-    expect(document.getElementById('tags-overview').style.cssText).toBe('display: none;')
-    expect(document.getElementById('folders-overview').style.cssText).toBe('display: none;')
     expect(document.getElementById('error-list').style.cssText).toBe('display: none;')
+    expect(document.getElementById('tags-overview').style.cssText).toBe('')
+    expect(document.getElementById('folders-overview').style.cssText).toBe('')
   })
 })

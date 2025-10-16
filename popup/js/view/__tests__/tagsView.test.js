@@ -8,7 +8,7 @@ import { jest } from '@jest/globals'
 
 function setupDom() {
   document.body.innerHTML = `
-    <section id="tags-overview" style="display:none"></section>
+    <section id="tags-overview"></section>
     <div id="tags-list"></div>
   `
 }
@@ -48,7 +48,7 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges.map((el) => el.getAttribute('x-tag'))).toEqual(['alpha', 'beta', 'release'])
     expect(badges.map((el) => el.getAttribute('href'))).toEqual([
@@ -69,7 +69,7 @@ describe('tagsView', () => {
 
     module.loadTagsOverview()
 
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
     expect(document.querySelectorAll('#tags-list a.badge.tags')).toHaveLength(0)
   })
 
@@ -90,7 +90,7 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     // The actual implementation renders all tags including malformed ones
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
@@ -120,7 +120,7 @@ describe('tagsView', () => {
     const endTime = Date.now()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges).toHaveLength(100)
@@ -144,7 +144,7 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges).toHaveLength(5)
@@ -177,7 +177,7 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges).toHaveLength(5)

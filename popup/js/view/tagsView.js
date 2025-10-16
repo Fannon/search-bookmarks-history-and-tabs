@@ -6,7 +6,6 @@ import { getUniqueTags } from '../search/taxonomySearch.js'
 
 export function loadTagsOverview() {
   const tags = getUniqueTags()
-  document.getElementById('tags-overview').style = ''
   const sortedTags = Object.keys(tags).sort()
 
   // Use template-based rendering for better performance

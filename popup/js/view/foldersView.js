@@ -6,7 +6,6 @@ import { getUniqueFolders } from '../search/taxonomySearch.js'
 
 export function loadFoldersOverview() {
   const folders = getUniqueFolders()
-  document.getElementById('folders-overview').style = ''
   const sortedFolders = Object.keys(folders).sort()
 
   // Use template-based rendering for better performance with proper HTML escaping

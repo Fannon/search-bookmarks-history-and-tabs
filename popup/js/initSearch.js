@@ -138,7 +138,7 @@ export async function hashRouter() {
  * Close all modal overlays
  */
 export function closeModals() {
-  const modals = ['edit-bookmark', 'tags-overview', 'folders-overview', 'error-list']
+  const modals = ['edit-bookmark', 'error-list']
   modals.forEach((id) => {
     const element = document.getElementById(id)
     if (element) element.style = 'display: none;'
