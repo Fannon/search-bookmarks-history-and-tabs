@@ -81,7 +81,10 @@ async function summarise(files) {
       bucket.set(secondaryKey, (bucket.get(secondaryKey) ?? 0) + file.size)
     }
 
-    if (file.path.endsWith('.min.js') && file.path.startsWith('popup/js/')) {
+    const isPopupMinifiedJs = file.path.endsWith('.min.js') && file.path.startsWith('popup/js/')
+    const isStyleMinCss = path.basename(file.path) === 'style.min.css'
+
+    if (isPopupMinifiedJs || isStyleMinCss) {
       minified.push(file)
     }
   }
@@ -129,39 +132,73 @@ function printTable(headers, rows, indent = '') {
   }
 }
 
-function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMinified }, fileCount) {
-  const displayRoot = path.relative(process.cwd(), DIST_ROOT).split(path.sep).join('/') || '.'
-  console.log(`Build size summary for ${displayRoot}`)
-  console.log(`Total size: ${formatBytes(totalSize)} across ${fileCount} files`)
-  console.log('')
+function printTree(entries, totalSize, indent = '  ') {
+  if (!entries || entries.length === 0) {
+    return
+  }
 
+  const traverse = (nodes, prefix) => {
+    nodes.forEach((node, index) => {
+      const isLast = index === nodes.length - 1
+      const branch = isLast ? '└─ ' : '├─ '
+      console.log(`${prefix}${branch}${node.name} (${formatBytes(node.size)}, ${percentage(node.size, totalSize)})`)
+      if (node.children && node.children.length > 0) {
+        const nextPrefix = `${prefix}${isLast ? '   ' : '│  '}`
+        traverse(node.children, nextPrefix)
+      }
+    })
+  }
+
+  traverse(entries, indent)
+}
+
+function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMinified }, fileCount) {
   if (fileCount === 0) {
     console.log('No files found.')
     return
   }
 
-  console.log('Top-level contributions:')
-  const topRows = sortedTopLevel.map(([name, size]) => [name, formatBytes(size), percentage(size, totalSize)])
-  printTable(['Section', 'Size', 'Share'], topRows, '  ')
-
-  for (const [name] of sortedTopLevel) {
-    if (name === 'images') {
-      continue
-    }
+  console.log(`<root> (${formatBytes(totalSize)}, ${fileCount} files)`)
+  const topEntries = sortedTopLevel.map(([name, size]) => {
     const segments = sortedSecondLevel.get(name)
-    if (!segments || segments.length === 0) {
-      continue
-    }
-    console.log('')
-    console.log(`${name} breakdown:`)
-    const rows = segments.map(([segmentName, size]) => [segmentName, formatBytes(size), percentage(size, totalSize)])
-    printTable(['Folder', 'Size', 'Share'], rows, '  ')
-  }
+    const shouldAttachChildren = segments && segments.length > 0 && name !== 'images'
+    const children = shouldAttachChildren
+      ? segments.map(([segmentName, segmentSize]) => ({ name: segmentName, size: segmentSize }))
+      : undefined
+    return { name, size, children }
+  })
+  printTree(topEntries, totalSize)
 
   console.log('')
-  console.log('Optimized files (minified JS and archives):')
-  const minRows = sortedMinified.map((file) => [file.path, formatBytes(file.size), percentage(file.size, totalSize)])
-  printTable(['File', 'Size', 'Share'], minRows, '  ')
+  const categorized = new Map([
+    ['ZIP File', []],
+    ['Minified JS', []],
+    ['Minified CSS', []],
+    ['Other', []],
+  ])
+
+  for (const file of sortedMinified) {
+    if (file.path.endsWith('.zip')) {
+      categorized.get('ZIP File').push(file)
+    } else if (file.path.endsWith('.js')) {
+      categorized.get('Minified JS').push(file)
+    } else if (file.path.endsWith('.css')) {
+      categorized.get('Minified CSS').push(file)
+    } else {
+      categorized.get('Other').push(file)
+    }
+  }
+
+  for (const [label, files] of categorized) {
+    if (files.length === 0) {
+      continue
+    }
+    const rows = files
+      .sort((a, b) => b.size - a.size)
+      .map((file) => [file.path, formatBytes(file.size), percentage(file.size, totalSize)])
+    printTable([label, 'Size', 'Share'], rows, '')
+    console.log('')
+  }
 }
 
 async function main() {
