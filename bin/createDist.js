@@ -22,7 +22,7 @@ export async function createDist(clean = true) {
   await fs.copy('manifest.json', 'dist/chrome/manifest.json')
 
   // Copy images
-  const images = ['edit.svg', 'x.svg', 'logo-16.png', 'logo-32.png', 'logo-48.png', 'logo-128.png']
+  const images = ['logo-16.png', 'logo-32.png', 'logo-48.png', 'logo-128.png']
   await Promise.all(images.map((img) => fs.copy(`images/${img}`, `dist/chrome/images/${img}`)))
 
   // Copy popup directory

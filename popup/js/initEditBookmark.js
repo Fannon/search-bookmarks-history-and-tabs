@@ -9,6 +9,7 @@ export const ext = createExtensionContext()
 window.ext = ext
 
 const BOOKMARK_HASH_PREFIX = '#bookmark/'
+const LEGACY_BOOKMARK_HASH_PREFIX = '#id/'
 
 export async function initEditBookmark() {
   const loadingIndicator = document.getElementById('edit-bookmark-loading')
@@ -55,6 +56,12 @@ function parseBookmarkHash(hash) {
 
   if (hash.startsWith(BOOKMARK_HASH_PREFIX)) {
     const hashBody = hash.slice(BOOKMARK_HASH_PREFIX.length)
+    const { bookmarkId, returnHash } = parseBookmarkComponents(hashBody)
+    return { bookmarkId, returnHash }
+  }
+
+  if (hash.startsWith(LEGACY_BOOKMARK_HASH_PREFIX)) {
+    const hashBody = hash.slice(LEGACY_BOOKMARK_HASH_PREFIX.length)
     const { bookmarkId, returnHash } = parseBookmarkComponents(hashBody)
     return { bookmarkId, returnHash }
   }

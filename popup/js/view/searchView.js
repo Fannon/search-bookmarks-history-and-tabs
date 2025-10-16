@@ -43,22 +43,7 @@ export async function renderSearchResults(result) {
 
   // Use DocumentFragment to batch DOM updates for smoother rendering
   const fragment = document.createDocumentFragment()
-
-  const currentSearchHash =
-    window.location.hash && window.location.hash.startsWith('#search') ? window.location.hash : '#search/'
-  const rawSearchTermSegment = currentSearchHash.startsWith('#search/')
-    ? currentSearchHash.slice('#search/'.length)
-    : ''
-  let normalizedSearchTerm = ''
-  if (rawSearchTermSegment) {
-    try {
-      normalizedSearchTerm = decodeURIComponent(rawSearchTermSegment)
-    } catch {
-      normalizedSearchTerm = rawSearchTermSegment
-    }
-  }
-  const encodedSearchTerm = normalizedSearchTerm ? encodeURIComponent(normalizedSearchTerm) : ''
-  const searchTermSuffix = encodedSearchTerm ? `/search/${encodedSearchTerm}` : ''
+  const searchTermSuffix = `/search/${encodeURIComponent(searchTerm || '')}`
 
   for (let i = 0; i < result.length; i++) {
     const resultEntry = result[i]
@@ -135,10 +120,10 @@ export async function renderSearchResults(result) {
           resultEntry.type === 'bookmark'
             ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(
                 resultEntry.originalId,
-              )}${searchTermSuffix}" title="Edit Bookmark" src="../images/edit.svg">`
+              )}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">`
             : ''
         }
-        ${resultEntry.type === 'tab' ? '<img class="close-button" title="Close Tab" src="../images/x.svg">' : ''}
+        ${resultEntry.type === 'tab' ? '<img class="close-button" title="Close Tab" src="./img/x.svg">' : ''}
         <div class="title">
           <span class="title-text">${titleContent} </span>
           ${badgesHTML}
