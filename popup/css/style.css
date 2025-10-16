@@ -136,34 +136,6 @@ code {
   position: relative;
   top: -2px;
 }
-.tags {
-  background: #557292;
-}
-.tags .divider:before {
-  content: ' ';
-}
-.tags mark {
-  color: #7cb3f6;
-}
-.tags small {
-  color: #a2bbd6;
-}
-.folder {
-  background: #3c8d8d;
-}
-.folder .divider:before {
-  content: ' \276F \0020';
-}
-.folder mark {
-  color: #8fefef;
-}
-.folder small {
-  color: #a3d0d0;
-}
-.folder:hover,
-.tags:hover {
-  filter: brightness(125%);
-}
 .window {
   background: #8061ca;
   color: #efe8ff;
