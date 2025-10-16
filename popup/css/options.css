@@ -4,6 +4,9 @@
   height: 580px;
   position: fixed;
 }
+#options .section-heading {
+  margin: 4px 8px 4px 8px;
+}
 #options textarea {
   height: 426px;
   font-size: 18px;

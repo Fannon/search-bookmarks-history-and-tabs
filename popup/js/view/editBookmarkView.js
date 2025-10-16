@@ -3,34 +3,30 @@
 //////////////////////////////////////////
 
 import { browserApi, createSearchString } from '../helper/browserApi.js'
-import { cleanUpUrl, loadCSS, loadScript } from '../helper/utils.js'
+import { cleanUpUrl } from '../helper/utils.js'
 import { resetFuzzySearchState } from '../search/fuzzySearch.js'
 import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
-import { search } from '../search/common.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
 
-let tagifyLoaded = false
-
 export async function editBookmark(bookmarkId) {
-  // Lazy load tagify if it has not been loaded already
-  if (!tagifyLoaded) {
-    loadCSS('./lib/tagify.min.css')
-    loadCSS('./css/tagify.css')
-    await loadScript('./lib/tagify.min.js')
-    tagifyLoaded = true
-  }
-
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
   const tags = Object.keys(getUniqueTags()).sort()
+  const editContainer = document.getElementById('edit-bookmark')
+  const titleInput = document.getElementById('bookmark-title')
+  const urlInput = document.getElementById('bookmark-url')
+  const tagsInput = document.getElementById('bookmark-tags')
+  const saveButton = document.getElementById('edit-bookmark-save')
+  const deleteButton = document.getElementById('edit-bookmark-delete')
+
   if (bookmark) {
-    document.getElementById('edit-bookmark').style = ''
-    document.getElementById('bookmark-title').value = bookmark.title
-    document.getElementById('bookmark-url').value = bookmark.originalUrl
+    editContainer.style = ''
+    titleInput.value = bookmark.title
+    urlInput.value = bookmark.originalUrl
     if (!ext.tagify) {
-      ext.tagify = new Tagify(document.getElementById('bookmark-tags'), {
+      ext.tagify = new Tagify(tagsInput, {
         whitelist: tags,
         trim: true,
-        transformTag: transformTag,
+        transformTag,
         skipInvalid: false,
         editTags: {
           clicks: 1,
@@ -56,15 +52,9 @@ export async function editBookmark(bookmarkId) {
       .filter((el) => el)
     ext.tagify.addTags(currentTags)
 
-    document.getElementById('edit-bookmark-save').href = '#update-bookmark/' + bookmarkId
-
-    const deleteButton = document.getElementById('edit-bookmark-delete')
-    deleteButton.onclick = (event) => {
-      deleteBookmark(bookmarkId)
-      if (event && event.stopPropagation) {
-        event.stopPropagation()
-      }
-    }
+    saveButton.dataset.bookmarkId = bookmarkId
+    deleteButton.dataset.bookmarkId = bookmarkId
+    ext.currentBookmarkId = bookmarkId
   } else {
     console.warn(`Tried to edit bookmark id="${bookmarkId}", but could not find it in searchData.`)
   }
@@ -106,7 +96,7 @@ export function updateBookmark(bookmarkId) {
   }
 
   // Start search again to update the search index and the UI with new bookmark model
-  window.location.href = '#'
+  navigateToSearchView()
 }
 
 export async function deleteBookmark(bookmarkId) {
@@ -124,7 +114,33 @@ export async function deleteBookmark(bookmarkId) {
   resetSimpleSearchState('bookmarks')
   resetUniqueFoldersCache()
 
-  // Re-execute search
-  await search()
-  window.location.href = '#search/'
+  navigateToSearchView()
+}
+
+function navigateToSearchView() {
+  const redirectHash =
+    ext && typeof ext.returnHash === 'string' && ext.returnHash.startsWith('#search') ? ext.returnHash : '#search/'
+  const redirectTarget = `./index.html${redirectHash}`
+  let resolvedTarget = redirectTarget
+  try {
+    resolvedTarget = new URL(redirectTarget, window.location.href).toString()
+  } catch {
+    resolvedTarget = redirectTarget
+  }
+  try {
+    if (typeof window.location.assign === 'function') {
+      window.location.assign(resolvedTarget)
+    } else {
+      window.location.href = resolvedTarget
+    }
+  } catch (navigationError) {
+    console.warn('Navigation to search view not supported in this environment.', navigationError)
+    if (window.history && window.history.replaceState) {
+      try {
+        window.history.replaceState(null, '', resolvedTarget)
+      } catch (historyError) {
+        console.warn('Failed to update history state for search view navigation.', historyError)
+      }
+    }
+  }
 }

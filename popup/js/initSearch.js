@@ -3,7 +3,6 @@ import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { search } from './search/common.js'
 import { addDefaultEntries } from './search/common.js'
-import { editBookmark, updateBookmark } from './view/editBookmarkView.js'
 import {
   navigationKeyListener,
   renderSearchResults,
@@ -119,15 +118,6 @@ export async function hashRouter() {
       }
       ext.dom.searchInput.focus()
       search()
-      // Removed hash routing for #tags/ and #folders/ - now using direct navigation
-    } else if (hash.startsWith('#edit-bookmark/')) {
-      // Edit bookmark route
-      const bookmarkId = hash.replace('#edit-bookmark/', '')
-      void editBookmark(bookmarkId)
-    } else if (hash.startsWith('#update-bookmark/')) {
-      // Update bookmark route
-      const bookmarkId = hash.replace('#update-bookmark/', '')
-      updateBookmark(bookmarkId)
     }
   } catch (err) {
     printError(err)
@@ -138,7 +128,7 @@ export async function hashRouter() {
  * Close all modal overlays
  */
 export function closeModals() {
-  const modals = ['edit-bookmark', 'error-list']
+  const modals = ['error-list']
   modals.forEach((id) => {
     const element = document.getElementById(id)
     if (element) element.style = 'display: none;'

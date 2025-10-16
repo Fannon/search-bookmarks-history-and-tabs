@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <title>Search Bookmarks, History and Tabs: Edit Bookmark</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="./css/style.css" type="text/css" />
+    <link rel="stylesheet" href="./css/editBookmark.css" type="text/css" />
+    <link rel="stylesheet" href="./lib/tagify.min.css" type="text/css" />
+    <link rel="icon" type="image/png" href="../images/logo-32.png" />
+  </head>
+
+  <body>
+    <div id="container">
+      <div id="edit-bookmark" style="display: none">
+        <div class="inputs">
+          <div class="section-heading">EDIT BOOKMARK</div>
+          <textarea id="bookmark-title" title="Bookmark Title" class="input" spellcheck="false" rows="5"></textarea>
+          <textarea id="bookmark-url" title="Bookmark URL" class="input" spellcheck="false" rows="3"></textarea>
+          <textarea id="bookmark-tags" title="Bookmark Tags" class="input" spellcheck="false" rows="4"></textarea>
+        </div>
+
+        <div class="controls">
+          <a id="edit-bookmark-delete" class="button" href="#">DELETE</a>
+          <a id="edit-bookmark-cancel" class="button" href="./index.html#search/">CANCEL</a>
+          <a id="edit-bookmark-save" class="button" href="#">SAVE</a>
+        </div>
+      </div>
+
+      <div id="edit-bookmark-loading">Loading...</div>
+
+      <footer id="links">
+        <a href="./index.html#search/">Search</a> | <a href="./tags.html#tags/">Tags</a> |
+        <a href="./folders.html#folders/">Folders</a> | <a href="./options.html">Options</a> |
+        <a href="https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/Tips.md" target="_newtab"
+          >Tips</a
+        >
+        |
+        <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab"
+          >Documentation & Help</a
+        >
+      </footer>
+      <ul id="error-list"></ul>
+    </div>
+
+    <script src="./lib/tagify.min.js"></script>
+    <script defer type="module" src="./js/initEditBookmark.js"></script>
+  </body>
+</html>

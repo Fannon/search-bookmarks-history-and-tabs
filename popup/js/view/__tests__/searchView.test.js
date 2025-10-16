@@ -42,6 +42,7 @@ function createResults() {
 async function setupSearchView({ results = createResults(), opts = {} } = {}) {
   jest.resetModules()
   delete document.hasContextMenuListener
+  window.location.hash = '#search/query'
 
   const timeSince = jest.fn(() => '1 hour ago')
   const getUserOptions = jest.fn(async () => ({ searchStrategy: 'precise' }))
@@ -154,6 +155,7 @@ afterEach(() => {
   window.close = originalWindowClose
   window.open = originalWindowOpen
   document.body.innerHTML = ''
+  window.location.hash = ''
 })
 
 describe('searchView renderSearchResults', () => {
@@ -179,7 +181,9 @@ describe('searchView renderSearchResults', () => {
     expect(bookmarkItem.className).toBe('bookmark')
     expect(bookmarkItem.getAttribute('x-open-url')).toBe('https://bookmark.test')
     expect(bookmarkItem.style.borderLeft).toBe('4px solid rgb(17, 17, 17)')
-    expect(bookmarkItem.querySelector('.edit-button').getAttribute('x-link')).toBe('#edit-bookmark/bm-1')
+    expect(bookmarkItem.querySelector('.edit-button').getAttribute('x-link')).toBe(
+      './editBookmark.html#bookmark/bm-1?return=%23search%2Fquery',
+    )
 
     const tagBadges = Array.from(bookmarkItem.querySelectorAll('.badge.tags'))
     expect(tagBadges.map((el) => el.getAttribute('x-link'))).toEqual(['#search/#alpha', '#search/#beta'])

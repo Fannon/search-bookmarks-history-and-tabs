@@ -44,6 +44,12 @@ export async function renderSearchResults(result) {
   // Use DocumentFragment to batch DOM updates for smoother rendering
   const fragment = document.createDocumentFragment()
 
+  const currentSearchHash =
+    window.location.hash && window.location.hash.startsWith('#search')
+      ? window.location.hash
+      : '#search/'
+  const encodedReturnHash = encodeURIComponent(currentSearchHash)
+
   for (let i = 0; i < result.length; i++) {
     const resultEntry = result[i]
 
@@ -117,7 +123,9 @@ export async function renderSearchResults(result) {
           style="border-left: ${opts.colorStripeWidth}px solid ${opts[resultEntry.type + 'Color']}">
         ${
           resultEntry.type === 'bookmark'
-            ? `<img class="edit-button" x-link="#edit-bookmark/${resultEntry.originalId}" title="Edit Bookmark" src="../images/edit.svg">`
+            ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(
+                resultEntry.originalId,
+              )}?return=${encodedReturnHash}" title="Edit Bookmark" src="../images/edit.svg">`
             : ''
         }
         ${resultEntry.type === 'tab' ? '<img class="close-button" title="Close Tab" src="../images/x.svg">' : ''}
