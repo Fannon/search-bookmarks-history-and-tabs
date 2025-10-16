@@ -95,12 +95,12 @@ jobs:
           cache: 'npm'
       - name: Install Dependencies
         run: npm set cache ~/.npm && npm ci
-      - name: Install Playwright Browsers
-        # run: npx playwright install --with-deps
+      # - name: Install Playwright Browsers
+      # run: npx playwright install --with-deps
       - name: Install Chromium
-        npx playwright install chromium --with-deps
+        run: npx playwright install chromium --with-deps
       - name: Install Firefox
-        npx playwright install firefox --with-deps
+        run: npx playwright install firefox --with-deps
       - name: Test Chromium
         run: npm run test:e2e:chromium
       - name: Test Firefox
