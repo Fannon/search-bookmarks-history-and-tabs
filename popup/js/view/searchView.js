@@ -48,7 +48,10 @@ export async function renderSearchResults(result) {
     window.location.hash && window.location.hash.startsWith('#search')
       ? window.location.hash
       : '#search/'
-  const encodedReturnHash = encodeURIComponent(currentSearchHash)
+  const searchTermSegment = currentSearchHash.startsWith('#search/')
+    ? currentSearchHash.slice('#search/'.length)
+    : ''
+  const searchTermSuffix = searchTermSegment ? `&searchTerm=${encodeURIComponent(searchTermSegment)}` : ''
 
   for (let i = 0; i < result.length; i++) {
     const resultEntry = result[i]
@@ -123,9 +126,9 @@ export async function renderSearchResults(result) {
           style="border-left: ${opts.colorStripeWidth}px solid ${opts[resultEntry.type + 'Color']}">
         ${
           resultEntry.type === 'bookmark'
-            ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(
+            ? `<img class="edit-button" x-link="./editBookmark.html#id/${encodeURIComponent(
                 resultEntry.originalId,
-              )}?return=${encodedReturnHash}" title="Edit Bookmark" src="../images/edit.svg">`
+              )}${searchTermSuffix}" title="Edit Bookmark" src="../images/edit.svg">`
             : ''
         }
         ${resultEntry.type === 'tab' ? '<img class="close-button" title="Close Tab" src="../images/x.svg">' : ''}
