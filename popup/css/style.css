@@ -300,9 +300,10 @@ li.error {
   float: right;
 }
 .section-heading {
-  margin: 6px 4px;
-  font-size: 14px;
-  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+#options .section-heading {
+  margin: 4px 8px 4px 8px;
 }
 #edit-bookmark {
   padding: 0;

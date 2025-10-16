@@ -119,10 +119,7 @@ export async function hashRouter() {
       }
       ext.dom.searchInput.focus()
       search()
-    } else if (hash.startsWith('#tags/')) {
-      window.location.replace(`./tags.html${hash}`)
-    } else if (hash.startsWith('#folders/')) {
-      window.location.replace(`./folders.html${hash}`)
+      // Removed hash routing for #tags/ and #folders/ - now using direct navigation
     } else if (hash.startsWith('#edit-bookmark/')) {
       // Edit bookmark route
       const bookmarkId = hash.replace('#edit-bookmark/', '')
