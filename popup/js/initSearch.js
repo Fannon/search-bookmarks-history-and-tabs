@@ -72,12 +72,12 @@ export async function initExtension() {
   // Add search result cache for better performance (simple, no expiration needed)
   ext.searchCache = new Map()
 
-  // Display default entries
-  await addDefaultEntries()
-  renderSearchResults(ext.model.result)
-
   if (window.location.hash && window.location.hash !== '/') {
     hashRouter()
+  } else {
+    // Display default entries
+    await addDefaultEntries()
+    renderSearchResults(ext.model.result)
   }
 
   if (document.getElementById('results-loading')) {
@@ -90,10 +90,10 @@ export async function initExtension() {
     search()
   }
 
+  console.debug('Extension initialized in ' + (Date.now() - startTime) + 'ms')
+
   // Lazy load mark.js for highlighting search results after init phase
   await loadScript('./lib/mark.es6.min.js')
-
-  console.debug('Extension initialized in ' + (Date.now() - startTime) + 'ms')
 }
 
 //////////////////////////////////////////
