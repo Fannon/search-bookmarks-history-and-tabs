@@ -175,44 +175,7 @@ This extension is built to respect your privacy:
 
 ## Local Development
 
-### Install and Build
-
-Prerequisite: [Node.js](https://nodejs.org/en/) and use of bash shell.
-
-```sh
-# install dependencies
-npm install
-
-# build extension
-npm run build
-```
-
-The source code for the extension can be found in [popup/](popup/) (HTML, CSS, JS and libs).
-
-The built extensions can be found in [dist/chrome/](dist/chrome/).
-
-### Developer Installation
-
-- Check out this extension via git
-- Run `npm install` and `npm run build` (via bash / git bash)
-- **For Chrome / Edge**:
-  - Navigate to extensions page (`chrome://extensions/` on Chrome and `edge://extensions/` on Edge).
-  - Enable "Developer mode"
-  - Choose "Load unpacked" and open the root folder of this repository
-- **For Firefox**:
-  - First [install and build](#install-and-build) this project.
-  - Load the built extension in `dist/firefox` as a temporary addon in `about:debugging`.
-  - Temporary add-ons need to be reloaded after each browser restart.
-
-### Developer Workflow
-
-- Typical developer actions:
-  - `npm run build` - Complete build pipeline
-  - `npm run start` - Serve popup locally with mock data
-  - `npm run test:e2e` - Run Playwright end-to-end tests
-  - `npm run test:unit` - Run Jest unit tests
-  - `npm run lint` - Check code style
-- See also: [Repository Guidelines](./AGENTS.md) and [LLM Agent Docs](./.github/copilot-instructions.md)
+Local development setup, project structure, and workflows are documented in [CONTRIBUTING.md#local-development](./CONTRIBUTING.md#local-development).
 
 ## Credits
 

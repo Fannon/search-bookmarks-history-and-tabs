@@ -4,11 +4,12 @@
 
 - Core popup code lives under `popup/`; logic is split into `popup/js/helper/`, `popup/js/model/`, `popup/js/search/`, and `popup/js/view/` to keep utilities, data, search logic, and UI concerns isolated.
 - Playwright end-to-end specs are in `playwright/tests/`; Jest unit tests belong beside their sources under `__tests__` folders (e.g. `popup/js/helper/__tests__/`).
-- Static assets such as images and third-party libraries reside in `images/` and downloaded packages; built browser artifacts land in `dist/`.
+- Static assets live in `images/`; bundled third-party scripts and styles are in `popup/lib/`; built browser artifacts land in `dist/`.
 
 ## Build, Test, and Development Commands
 
-- `npm run build` cleans, refreshes manifests, and assembles distributable browser bundles.
+- `npm run build` cleans, refreshes manifests, and assembles distributable browser bundles in `dist/` for sideloading.
+- `npm run watch` rebuilds bundles on file changes so `dist/` stays fresh during extension development.
 - `npm run start` serves the popup locally via `live-server` for quick UI checks.
 - `npm run test` executes jest unit tests. It's an alias to `test:unit`
 - `npm run test:e2e` executes the Playwright flow tests headlessly. The Playwright runner boots its own static server automatically.

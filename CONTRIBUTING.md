@@ -7,7 +7,7 @@ Please review the guidelines below before submitting changes.
 ## Getting Started
 
 - **Read the [README.md](./README.md)** for project overview, setup instructions, and usage details.
-- **Review [Copilot Instructions](.github/copilot-instructions.md)** for architecture, data flow, and coding conventions.
+- **Review [AGENTS.md](./AGENTS.md)** for architecture, data flow, and coding conventions.
 
 ## How to Contribute
 
@@ -21,12 +21,13 @@ npm install
 3. **Build and run locally:**
 
 - Build: `npm run build`
-- Start (mock data): `npm run start`
-- Manual browser install: Load unpacked extension from repo root (Chrome/Edge) or `dist/firefox` (Firefox).
+- Start (with mock data): `npm run start`
+- Manual browser install: see [Developer Installation](#developer-installation).
 
 4. **Testing:**
 
-- Run end-to-end tests: `npm run test` (Playwright tests in `playwright/tests/`).
+- Run unit tests: `npm run test` (alias to Jest) or target a file with `npm run test:unit <module>.test.js`.
+- Run end-to-end tests: `npm run test:e2e` (Playwright specs live in `playwright/tests/`).
 
 5. **Code Style & Patterns:**
 
@@ -44,6 +45,51 @@ npm install
 - Ensure your code is tested and documented.
 - Reference related issues in your PR description.
 - Keep PRs focused and concise.
+
+## Local Development
+
+### Install and Build
+
+- Prerequisite: [Node.js](https://nodejs.org/en/) and a bash-compatible shell.
+- Install dependencies with `npm install`.
+- Build bundles with `npm run build`. This generates the minified output in `dist/`, which is required for sideloading.
+- For iterative changes, run `npm run watch` to rebuild bundles automatically on source edits.
+
+### Project Structure
+
+- `popup/` contains popup HTML, CSS, entry scripts, and bundled libraries.
+  - `popup/js/helper/` holds shared utilities.
+  - `popup/js/model/` defines data models and configuration defaults (see `options.js`).
+  - `popup/js/search/` coordinates search orchestration and parsing.
+  - `popup/js/view/` renders the UI and wires helpers to DOM updates.
+  - `popup/js/**/__tests__/` groups Jest unit tests alongside their modules.
+- `playwright/tests/` stores end-to-end scenarios.
+- `images/` includes static assets referenced by the popup.
+- `dist/` contains build outputs per browser (e.g., `dist/chrome/`).
+
+### Developer Installation
+
+- **Chrome / Edge**
+  - Open `chrome://extensions/` (Chrome) or `edge://extensions/` (Edge).
+  - Enable "Developer mode".
+  - Choose "Load unpacked" and select `dist/chrome/`.
+- **Firefox**
+  - After running `npm run build`, open `about:debugging`.
+  - Click "This Firefox" → "Load Temporary Add-on…" and pick the `manifest.json` inside `dist/firefox/`.
+  - Temporary add-ons must be reloaded after every browser restart.
+- **Iterating on changes**
+  - Re-run `npm run build` before reloading the extension, or keep `npm run watch` running so the `dist/` output stays in sync with source edits.
+
+### Developer Workflow
+
+- `npm run build` - Complete build pipeline.
+- `npm run start` - Serve popup locally with mock data.
+- `npm run watch` - Rebuild bundles on file changes (keeps `dist/` up to date for sideloading).
+- `npm run test` or `npm run test:unit` - Run Jest unit tests.
+- `npm run test:e2e` - Run Playwright end-to-end tests.
+- `npm run lint` - Enforce shared ESLint rules.
+
+See also: [Repository Guidelines](./AGENTS.md) and [LLM Agent Docs](./.github/copilot-instructions.md).
 
 ## Reporting Issues
 
