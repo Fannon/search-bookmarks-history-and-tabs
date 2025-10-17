@@ -53,7 +53,6 @@ export async function initExtension() {
 
   // Register Events
   document.addEventListener('keydown', navigationKeyListener)
-  window.addEventListener('hashchange', hashRouter, false)
   ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
 
   // Add debounced search to prevent excessive calls on rapid typing
