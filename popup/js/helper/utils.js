@@ -1,3 +1,19 @@
+const HTML_ESCAPE_REGEX = /[&<>"']/g
+const HTML_ESCAPE_MAP = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+}
+
+export function escapeHtml(value) {
+  if (value === null || value === undefined) {
+    return ''
+  }
+  return String(value).replace(HTML_ESCAPE_REGEX, (match) => HTML_ESCAPE_MAP[match])
+}
+
 /**
  * Get text how long a date is ago
  *
@@ -93,37 +109,19 @@ export function printError(err, text) {
 
   const fragment = document.createDocumentFragment()
 
+  let html = ''
+
   if (text) {
-    fragment.appendChild(createErrorItem('Error', text))
+    html += `<li class="error"><b>Error</b>: ${escapeHtml(text)}</li>`
   }
 
   const message = err && typeof err.message === 'string' ? err.message : String(err)
-  fragment.appendChild(createErrorItem('Error Message', message))
+  html += `<li class="error"><b>Error Message</b>: ${escapeHtml(message)}</li>`
 
   if (err && err.stack) {
-    fragment.appendChild(createErrorItem('Error Stack', err.stack, true))
+    html += `<li class="error"><b>Error Stack</b>: <pre>${escapeHtml(err.stack)}</pre></li>`
   }
 
-  errorList.insertBefore(fragment, errorList.firstChild)
-  errorList.style.display = 'block'
-}
-
-function createErrorItem(label, value, usePreformatted = false) {
-  const item = document.createElement('li')
-  item.className = 'error'
-
-  const bold = document.createElement('b')
-  bold.textContent = label
-  item.appendChild(bold)
-  item.appendChild(document.createTextNode(': '))
-
-  if (usePreformatted) {
-    const pre = document.createElement('pre')
-    pre.textContent = value
-    item.appendChild(pre)
-  } else {
-    item.appendChild(document.createTextNode(value))
-  }
-
-  return item
+  errorList.innerHTML = html + errorList.innerHTML
+  errorList.style = 'display: block;'
 }
