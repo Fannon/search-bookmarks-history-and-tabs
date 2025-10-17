@@ -12,6 +12,8 @@ export default {
   moduleFileExtensions: ['js', 'json'],
   transform: {},
 
+  reporters: [['default', { summaryThreshold: 0 }]],
+
   // Parallelization and performance optimizations
   maxWorkers: '80%', // Use 80% of available cores for better resource management
   cache: true, // Enable test result caching
