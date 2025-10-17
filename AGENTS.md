@@ -5,23 +5,30 @@
 - Core popup code lives under `popup/`; logic is split into `popup/js/helper/`, `popup/js/model/`, `popup/js/search/`, and `popup/js/view/` to keep utilities, data, search logic, and UI concerns isolated.
 - Playwright end-to-end specs are in `playwright/tests/`; Jest unit tests belong beside their sources under `__tests__` folders (e.g. `popup/js/helper/__tests__/`).
 - Static assets live in `images/`; bundled third-party scripts and styles are in `popup/lib/`; built browser artifacts land in `dist/`.
+- Automation scripts live in `bin/`; they are small Node.js programs wired up through `package.json` scripts.
 
 ## Build, Test, and Development Commands
 
-- `npm run build` cleans, refreshes manifests, and assembles distributable browser bundles in `dist/` for sideloading.
+- `npm run clean` wipes previous build output.
+- `npm run build` cleans, refreshes manifests, and assembles the minified production build in `dist/`.
 - `npm run watch` rebuilds bundles on file changes so `dist/` stays fresh during extension development.
-- `npm run start` serves the popup locally via `live-server` for quick UI checks.
+- `npm run start` serves the popup source (`./popup/`) via `serve` for quick UI checks with mock data.
+- `npm run start:dist` previews the built Chrome bundle from `dist/chrome/popup/`.
 - `npm run test` executes jest unit tests. It's an alias to `test:unit`
 - `npm run test:e2e` executes the Playwright flow tests headlessly. The Playwright runner boots its own static server automatically.
+- `npm run test:e2e:chromium|firefox|edge` target individual browsers.
 - `npm run test:unit` runs Jest unit tests. Run it like `npm run test:unit <filename>.test.js` for individual test file execution.
 - `npm run test:unit:coverage` runs Jest unit tests with code coverage report. Run it like `npm run test:unit:coverage <filename>.test.js` for individual test file execution.
 - `npm run lint` enforces the shared ESLint rules across popup JavaScript.
+- `npm run analyze` runs `bin/analyze-code.js` for bundle diagnostics.
+- `npm run size` reports post-build bundle sizes.
 
 ## Coding Style & Naming Conventions
 
 - Source is modern ESM JavaScript; keep modules side-effect-light and prefer explicit exports.
 - Follow `eslint.config.mjs`: two-space indentation, single quotes, and no trailing semicolons.
 - Name files by feature (e.g. `searchResultsView.js`, `browserApi.js`) and mirror that style for co-located tests (`*.test.js`).
+- Do not excessively create dependencies, prefer a lightweight "vanilla JS" style
 
 ## Testing Guidelines
 
@@ -35,7 +42,7 @@
   // When coverage is needed:
   npm run test:unit:coverage <filename>.test.js
   ```
-- Use the [test-engineer](.github\agents\test-engineer.md) agent role.
+- Use the [test-engineer](.github/agents/test-engineer.md) agent role.
 
 ## Commit & Pull Request Guidelines
 
@@ -46,5 +53,6 @@
 
 ## Security & Configuration Tips
 
+- Use Node.js 18 LTS or newer; the build system depends on modern ESM support.
 - Review `bin/` scripts before running them; many assume a Unix-like shell environment.
-- Keep manifests up to date via `npm run update-manifests` to avoid browser permission drift.
+- Keep manifests up to date via `npm run build:update-manifests` to avoid browser permission drift.

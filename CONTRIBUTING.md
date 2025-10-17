@@ -8,6 +8,7 @@ Please review the guidelines below before submitting changes.
 
 - **Read the [README.md](./README.md)** for project overview, setup instructions, and usage details.
 - **Review [AGENTS.md](./AGENTS.md)** for architecture, data flow, and coding conventions.
+- **Use Node.js 18 LTS or newer.** The build scripts rely on ESM and modern language features.
 
 ## How to Contribute
 
@@ -20,18 +21,22 @@ npm install
 
 3. **Build and run locally:**
 
-- Build: `npm run build`
-- Start (with mock data): `npm run start`
-- Manual browser install: see [Developer Installation](#developer-installation).
+- Build once with `npm run build`. This cleans the workspace, refreshes manifests, bundles scripts, and copies artifacts to `dist/`.
+- Use `npm run watch` while iterating. It rebuilds bundles automatically when files change so `dist/` mirrors your edits.
+- Preview the popup UI from source with `npm run start` (serves `./popup/` at http://localhost:8080).
+- Preview the built extension with `npm run start:dist` (serves `./dist/chrome/popup/`).
+- For manual browser install / side-loading steps see [Developer Installation](#developer-installation).
 
 4. **Testing:**
 
-- Run unit tests: `npm run test` (alias to Jest) or target a file with `npm run test:unit <module>.test.js`.
-- Run end-to-end tests: `npm run test:e2e` (Playwright specs live in `playwright/tests/`).
+- Lint source code: `npm run lint` (ESLint over `popup/js/`).
+- Run Jest unit tests: `npm run test` or `npm run test:unit`. Scope to a file with `npm run test:unit <module>.test.js`.
+- Collect coverage when needed: `npm run test:unit:coverage <module>.test.js`.
+- Run Playwright end-to-end specs: `npm run test:e2e`. Browser-specific runners exist (`test:e2e:chromium`, `test:e2e:firefox`, `test:e2e:edge`).
 
 5. **Code Style & Patterns:**
 
-- Follow architecture and file conventions in [Copilot Instructions](.github/copilot-instructions.md).
+- Follow the module layout and naming rules in [AGENTS.md](./AGENTS.md).
 - Place search logic in `popup/js/search/`, views in `popup/js/view/`, models in `popup/js/model/`, and helpers in `popup/js/helper/`.
 - Use bundled libraries from `popup/lib/` (see README for details).
 
@@ -42,7 +47,8 @@ npm install
 
 7. **Pull Requests:**
 
-- Ensure your code is tested and documented.
+- Ensure your code is tested, linted, and documented.
+- Run `npm run lint`, `npm run test:unit`, and (when applicable) `npm run test:e2e` before opening a PR.
 - Reference related issues in your PR description.
 - Keep PRs focused and concise.
 
@@ -52,8 +58,11 @@ npm install
 
 - Prerequisite: [Node.js](https://nodejs.org/en/) and a bash-compatible shell.
 - Install dependencies with `npm install`.
-- Build bundles with `npm run build`. This generates the minified output in `dist/`, which is required for sideloading.
+- Build bundles with `npm run build`. This generates the minified output in `dist/`
+- The locally built extension can be installed / side-loaded into browsers either on the root level (for local development state) or on the `/dist/chrome` level (for minified production build)
 - For iterative changes, run `npm run watch` to rebuild bundles automatically on source edits.
+- Serve the popup source directly via `npm run start` or preview the dist build with `npm run start:dist`.
+- Use `npm run clean` to reset build artifacts if you encounter inconsistent bundles.
 
 ### Project Structure
 
@@ -65,7 +74,7 @@ npm install
   - `popup/js/**/__tests__/` groups Jest unit tests alongside their modules.
 - `playwright/tests/` stores end-to-end scenarios.
 - `images/` includes static assets referenced by the popup.
-- `dist/` contains build outputs per browser (e.g., `dist/chrome/`).
+- `dist/` contains minified product build outputs per browser (currently only `dist/chrome/`).
 
 ### Developer Installation
 
@@ -82,12 +91,14 @@ npm install
 
 ### Developer Workflow
 
-- `npm run build` - Complete build pipeline.
-- `npm run start` - Serve popup locally with mock data.
+- `npm run build` - Complete build pipeline (clean → bundle → manifest updates → dist packaging → size report).
 - `npm run watch` - Rebuild bundles on file changes (keeps `dist/` up to date for sideloading).
-- `npm run test` or `npm run test:unit` - Run Jest unit tests.
-- `npm run test:e2e` - Run Playwright end-to-end tests.
+- `npm run start` / `npm run start:dist` - Serve the popup source or built output locally.
+- `npm run test` or `npm run test:unit` - Run Jest unit tests; use `npm run test:unit:coverage` for coverage.
+- `npm run test:e2e` - Run Playwright end-to-end tests (browser-specific variants available).
 - `npm run lint` - Enforce shared ESLint rules.
+- `npm run analyze` - Run code analysis helper (`bin/analyze-code.js`).
+- `npm run size` - Report bundle sizes after a build.
 
 See also: [Repository Guidelines](./AGENTS.md) and [LLM Agent Docs](./.github/copilot-instructions.md).
 
