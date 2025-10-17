@@ -215,30 +215,6 @@ describe('loadScript', () => {
   })
 })
 
-describe('loadCSS', () => {
-  let mockLink
-  let mockHead
-
-  beforeEach(() => {
-    mockLink = {
-      href: '',
-      rel: '',
-      type: '',
-    }
-
-    mockHead = {
-      appendChild: jest.fn(),
-    }
-
-    document.createElement = jest.fn().mockReturnValue(mockLink)
-    document.getElementsByTagName = jest.fn().mockReturnValue([mockHead])
-  })
-
-  afterEach(() => {
-    jest.restoreAllMocks()
-  })
-})
-
 describe('printError', () => {
   beforeEach(() => {
     document.body.innerHTML = '<ul id="error-list"></ul>'
