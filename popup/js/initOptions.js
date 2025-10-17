@@ -1,15 +1,8 @@
 import { printError } from './helper/utils.js'
 import { initOptions } from './view/editOptionsView.js'
-import { browserApi } from './helper/browserApi.js'
+import { createExtensionContext } from './helper/extensionContext.js'
 
-export const ext = {
-  opts: {},
-  dom: {},
-  browserApi: browserApi,
-  initialized: false,
-}
-
-window.ext = ext
+export const ext = (window.ext = createExtensionContext())
 
 // Trigger initialization
 initOptions().catch((err) => {

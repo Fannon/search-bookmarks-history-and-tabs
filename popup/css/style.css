@@ -136,6 +136,7 @@ code {
   position: relative;
   top: -2px;
 }
+/* Tag styles */
 .tags {
   background: #557292;
 }
@@ -148,6 +149,8 @@ code {
 .tags small {
   color: #a2bbd6;
 }
+
+/* Folder styles */
 .folder {
   background: #3c8d8d;
 }
@@ -203,19 +206,6 @@ code {
   height: 28px;
   border-radius: 3px;
 }
-#edit-bookmark-delete {
-  background: #ee4343;
-  color: #fff;
-  float: left;
-}
-#edit-bookmark-cancel {
-  background: #929292;
-  color: #fff;
-}
-#edit-bookmark-save {
-  background: #5fc944;
-  color: #fff;
-}
 .controls a,
 .controls a:hover {
   background: #777;
@@ -231,6 +221,11 @@ code {
   height: 523px;
   overflow-x: hidden;
   overflow-y: scroll;
+  z-index: 9999;
+}
+#error-list {
+  width: 500px;
+  top: 0;
 }
 #result-list a,
 #error-list a {
@@ -244,6 +239,12 @@ code {
   border-radius: 3px;
   overflow: hidden;
   cursor: pointer;
+}
+#error-list li {
+  border-left: 5px solid #cc5858;
+  word-break: break-all;
+  margin: 0 -4px;
+  border-radius: 0;
 }
 #result-list ul li {
   border-radius: 0;
@@ -302,37 +303,6 @@ li.error {
 .section-heading {
   margin: 0 0 4px 0;
 }
-#options .section-heading {
-  margin: 4px 8px 4px 8px;
-}
-#edit-bookmark {
-  padding: 0;
-  overflow: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 500px;
-  height: 578px;
-  background: #eee;
-}
-#bookmark-title {
-  height: 112px;
-  resize: none;
-  font-size: 1.2em;
-}
-#bookmark-url {
-  height: 62px;
-  resize: none;
-  font-size: 0.85em;
-}
-#bookmark-tags,
-#edit-bookmark .tagify {
-  height: 85px;
-  font-size: 18px;
-  border: none;
-  padding: 4px 2px;
-  overflow-x: hidden;
-}
 
 /** SCROLLBAR */
 ::-webkit-scrollbar {
@@ -351,8 +321,7 @@ li.error {
 /** DARK MODE **/
 @media screen and (prefers-color-scheme: dark) {
   html,
-  body,
-  #edit-bookmark {
+  body {
     background: #222;
   }
   html a,
@@ -360,13 +329,11 @@ li.error {
   html a:visited,
   body a:visited,
   html a:hover,
-  body a:hover,
-  #edit-bookmark a:hover {
+  body a:hover {
     color: #f1f1f1;
   }
   html mark,
-  body mark,
-  #edit-bookmark mark {
+  body mark {
     color: #6b92c0;
   }
   strong {

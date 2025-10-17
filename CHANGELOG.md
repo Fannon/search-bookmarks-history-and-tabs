@@ -2,6 +2,9 @@
 
 ## [unreleased]
 
+- **IMPROVED**: Even further reduced initial load bundle size
+- **FIXED**: When editing a bookmark and saving, the search state was sometimes not properly updated. Now the search is completely reset, but remembers the search term
+
 ## [v1.15.0]
 
 - **IMPROVED**: Various performance improvements:

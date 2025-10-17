@@ -4,7 +4,7 @@
 
 import { getBrowserTabs } from '../helper/browserApi.js'
 import { cleanUpUrl, printError } from '../helper/utils.js'
-import { closeModals } from '../initSearch.js'
+import { closeErrors } from '../initSearch.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { fuzzySearch } from './fuzzySearch.js'
 import { simpleSearch } from './simpleSearch.js'
@@ -47,6 +47,7 @@ function generateRandomId() {
  * It will decide which approaches and indexes to use.
  */
 export async function search(event) {
+  console.debug('Search triggered by event:', event?.type || 'none')
   try {
     if (event) {
       // Don't execute search on navigation keys
@@ -68,6 +69,7 @@ export async function search(event) {
 
     // Get and clean up original search query
     let searchTerm = ext.dom.searchInput.value || ''
+    console.debug('Search called with term:', searchTerm, 'event:', event?.type)
     searchTerm = searchTerm.trimStart().toLowerCase()
     searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
 
@@ -90,7 +92,7 @@ export async function search(event) {
       return // Early return if no search term
     }
 
-    closeModals()
+    closeErrors()
 
     ext.model.result = []
     const { mode: detectedMode, term: trimmedTerm } = resolveSearchMode(searchTerm)

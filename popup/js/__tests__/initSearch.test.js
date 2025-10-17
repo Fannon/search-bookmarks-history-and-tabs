@@ -8,7 +8,6 @@ const setupDom = () => {
     <span id="result-counter"></span>
     <button id="search-approach-toggle"></button>
     <div id="results-loading"></div>
-    <div id="edit-bookmark"></div>
     <div id="tags-overview"></div>
     <div id="folders-overview"></div>
     <div id="error-list"></div>
@@ -47,9 +46,6 @@ const mockDependencies = async (overrides = {}) => {
     }),
     renderSearchResults: jest.fn(),
     search: jest.fn(() => Promise.resolve()),
-    editBookmark: jest.fn(() => Promise.resolve()),
-    updateBookmark: jest.fn(),
-    redirectTo: jest.fn(),
   }
   const config = { ...defaults, ...overrides }
 
@@ -70,11 +66,6 @@ const mockDependencies = async (overrides = {}) => {
     __esModule: true,
     search: config.search,
     addDefaultEntries: config.addDefaultEntries,
-  }))
-  await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
-    __esModule: true,
-    editBookmark: config.editBookmark,
-    updateBookmark: config.updateBookmark,
   }))
   await jest.unstable_mockModule('../helper/browserApi.js', () => ({
     __esModule: true,
@@ -133,55 +124,31 @@ describe('initSearch entry point', () => {
     await flushPromises()
 
     window.removeEventListener('hashchange', module.hashRouter)
-    const redirectSpy = mocks.redirectTo
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 
-    window.location.hash = '#search/test%20query'
-    await module.hashRouter()
-    expect(module.ext.dom.searchInput.value).toBe('test query')
-    expect(mocks.search).toHaveBeenCalled()
+    try {
+      window.location.hash = '#search/test%20query'
+      await module.hashRouter()
+      expect(module.ext.dom.searchInput.value).toBe('test query')
+      expect(mocks.search).toHaveBeenCalled()
 
-    const searchCallsAfterSearchRoute = mocks.search.mock.calls.length
+      const searchCallsAfterSearchRoute = mocks.search.mock.calls.length
 
-    // Tags and folders routes are no longer handled by hash router
-    window.location.hash = '#tags/'
-    await module.hashRouter()
-    expect(redirectSpy).not.toHaveBeenCalledWith('./tags.html#tags/')
-    expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
+      window.history.replaceState(null, '', 'http://localhost/')
+      window.location.hash = '#bookmark/123'
+      await module.hashRouter()
+      expect(window.location.href).toBe('http://localhost/#bookmark/123')
+      expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
 
-    window.location.hash = '#folders/'
-    await module.hashRouter()
-    expect(redirectSpy).not.toHaveBeenCalledWith('./folders.html#folders/')
-    expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
-
-    window.location.hash = '#edit-bookmark/123'
-    await module.hashRouter()
-    expect(mocks.editBookmark).toHaveBeenCalledWith('123')
-    expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
-
-    window.location.hash = '#update-bookmark/999'
-    await module.hashRouter()
-    expect(mocks.updateBookmark).toHaveBeenCalledWith('999')
-    expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
-  })
-
-  test('hashRouter reports unexpected errors', async () => {
-    const routeError = new Error('Route failure')
-    const mocks = await mockDependencies({
-      printError: jest.fn(),
-      editBookmark: jest.fn(() => {
-        throw routeError
-      }),
-    })
-
-    const module = await import('../initSearch.js')
-    moduleUnderTest = module
-    await flushPromises()
-
-    window.removeEventListener('hashchange', module.hashRouter)
-    window.location.hash = '#edit-bookmark/123'
-    await module.hashRouter()
-
-    expect(mocks.printError).toHaveBeenCalledWith(routeError)
+      window.history.replaceState(null, '', 'http://localhost/')
+      window.location.hash = '#bookmark/999'
+      await module.hashRouter()
+      expect(window.location.href).toBe('http://localhost/#bookmark/999')
+      expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
+    } finally {
+      window.history.replaceState(null, '', 'http://localhost/')
+      warnSpy.mockRestore()
+    }
   })
 
   test('debounced search input triggers search once after delay', async () => {
@@ -225,20 +192,18 @@ describe('initSearch entry point', () => {
     }
   })
 
-  test('closeModals hides overlay containers', async () => {
+  test('closeErrors hides overlay containers', async () => {
     await mockDependencies()
     const module = await import('../initSearch.js')
     moduleUnderTest = module
     await flushPromises()
 
-    document.getElementById('edit-bookmark').style = ''
     document.getElementById('error-list').style = ''
     document.getElementById('tags-overview').style = ''
     document.getElementById('folders-overview').style = ''
 
-    module.closeModals()
+    module.closeErrors()
 
-    expect(document.getElementById('edit-bookmark').style.cssText).toBe('display: none;')
     expect(document.getElementById('error-list').style.cssText).toBe('display: none;')
     expect(document.getElementById('tags-overview').style.cssText).toBe('')
     expect(document.getElementById('folders-overview').style.cssText).toBe('')

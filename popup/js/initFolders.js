@@ -4,9 +4,7 @@ import { getSearchData } from './model/searchData.js'
 import { loadFoldersOverview } from './view/foldersView.js'
 import { createExtensionContext } from './helper/extensionContext.js'
 
-export const ext = createExtensionContext()
-
-window.ext = ext
+export const ext = (window.ext = createExtensionContext())
 
 export async function initFoldersPage() {
   const loadingIndicator = document.getElementById('folders-loading')
@@ -16,6 +14,9 @@ export async function initFoldersPage() {
     ext.dom.foldersList = document.getElementById('folders-list')
 
     ext.opts = await getEffectiveOptions()
+    // Disable features not needed on the page
+    ext.opts.enableTabs = false
+    ext.opts.enableHistory = false
     const { bookmarks } = await getSearchData()
     ext.model.bookmarks = bookmarks
 

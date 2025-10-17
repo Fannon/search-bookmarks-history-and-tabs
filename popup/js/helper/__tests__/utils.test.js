@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals'
-import { cleanUpUrl, timeSince, printError, loadScript, loadCSS } from '../utils.js'
+import { cleanUpUrl, timeSince, printError, loadScript } from '../utils.js'
 
 describe('cleanUpUrl', () => {
   it('normalizes protocol, www and trailing slash', () => {
@@ -212,42 +212,6 @@ describe('loadScript', () => {
     // Should create and append script for second script
     expect(document.createElement).toHaveBeenCalledTimes(1)
     expect(mockHead.appendChild).toHaveBeenCalledTimes(1)
-  })
-})
-
-describe('loadCSS', () => {
-  let mockLink
-  let mockHead
-
-  beforeEach(() => {
-    mockLink = {
-      href: '',
-      rel: '',
-      type: '',
-    }
-
-    mockHead = {
-      appendChild: jest.fn(),
-    }
-
-    document.createElement = jest.fn().mockReturnValue(mockLink)
-    document.getElementsByTagName = jest.fn().mockReturnValue([mockHead])
-  })
-
-  afterEach(() => {
-    jest.restoreAllMocks()
-  })
-
-  it('loads CSS with correct link element properties', () => {
-    const href = 'https://example.com/style.css'
-
-    loadCSS(href)
-
-    expect(document.createElement).toHaveBeenCalledWith('link')
-    expect(mockLink.href).toBe(href)
-    expect(mockLink.rel).toBe('stylesheet')
-    expect(mockLink.type).toBe('text/css')
-    expect(mockHead.appendChild).toHaveBeenCalledWith(mockLink)
   })
 })
 

@@ -34,6 +34,12 @@ const jsBundles = [
     outfile: resolve(repoRoot, 'popup/js/initFolders.bundle.min.js'),
     globalName: 'foldersPopup',
   },
+  {
+    name: 'initEditBookmark',
+    entry: resolve(repoRoot, 'popup/js/initEditBookmark.js'),
+    outfile: resolve(repoRoot, 'popup/js/initEditBookmark.bundle.min.js'),
+    globalName: 'editBookmarkPopup',
+  },
 ]
 
 const sharedBuildOptions = {
@@ -74,6 +80,11 @@ export async function bundleAll() {
       name: 'taxonomy',
       entry: resolve(repoRoot, 'popup/css/taxonomy.css'),
       outfile: resolve(repoRoot, 'popup/css/taxonomy.min.css'),
+    },
+    {
+      name: 'editBookmark',
+      entry: resolve(repoRoot, 'popup/css/editBookmark.css'),
+      outfile: resolve(repoRoot, 'popup/css/editBookmark.min.css'),
     },
   ]
 

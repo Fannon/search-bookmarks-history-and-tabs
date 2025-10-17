@@ -1,9 +1,7 @@
 # Tips & Tricks
 
-**Customization**: This extension can be customized via options in many ways. Please refer to the [User Documentation](https://github.com/Fannon/search-bookmarks-history-and-tabs/tree/main?tab=readme-ov-file#user-documentation).
-
 **Keyboard Shortcut**: Trigger the extension via keyboard.
-The default is `CTRL` + `Shift` + `.`
+The default is `CTRL` + `Shift` + `.`, I personally use `CTRL` + `J`.
 
 This can be customized in the browsers [extensions settings](chrome://extensions/) > "Keyboard Shortcuts".
 
@@ -25,7 +23,17 @@ Start your search query with a search mode prefix:
 - `b `: Only **bookmarks** will be searched.
 - `h `: Only **history** and **tabs** will be searched.
 - `s `: Only **search engines** will be proposed.
-</ul>
+
+<hr/>
+
+**Customization**: This extension can be customized via options in many ways. Please refer to the [User Documentation](https://github.com/Fannon/search-bookmarks-history-and-tabs/tree/main?tab=readme-ov-file#user-documentation).
+
+<hr/>
+
+**Keyboard Navigation**: You can navigate result entries also in Emacs / Vim style:
+
+- `Ctrl+N` and `Ctrl+J` to navigate search results up.
+- `Ctrl+P`and`Ctrl+K` to navigate search results down.
 
 <hr/>
 
@@ -72,7 +80,7 @@ Consider increasing or decreasing this, depending on your performance situation 
 
 <hr/>
 
-**Clean Up History**: There is an option to ignore URLs from history if they include a string.
+**Cleaner History**: There is an option to ignore URLs from history if they include a string.
 Use this to remove unwanted entries from your history from your search index.
 
 ```yaml
@@ -81,10 +89,3 @@ historyIgnoreList:
   - http://localhost
   - http://127.0.0.1
 ```
-
-<hr/>
-
-**Keyboard Navigation**: You can navigate result entries also in Emacs / Vim style:
-
-- `Ctrl+N` and `Ctrl+J` to navigate search results up.
-- `Ctrl+P`and`Ctrl+K` to navigate search results down.

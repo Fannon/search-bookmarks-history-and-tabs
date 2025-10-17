@@ -5,8 +5,7 @@ import { createWriteStream } from 'fs'
 import { join } from 'path'
 import archiver from 'archiver'
 
-const CSS_BUNDLED_FILENAMES = new Set(['style.css', 'options.css', 'taxonomy.css'])
-const CSS_ORIGINALS_TO_KEEP = new Set(['tagify.css'])
+const CSS_BUNDLED_FILENAMES = new Set(['style.css', 'options.css', 'taxonomy.css', 'editBookmark.css'])
 
 /**
  * Build the Chrome distribution directory and accompanying archive.
@@ -23,7 +22,7 @@ export async function createDist(clean = true) {
   await fs.copy('manifest.json', 'dist/chrome/manifest.json')
 
   // Copy images
-  const images = ['edit.svg', 'x.svg', 'logo-16.png', 'logo-32.png', 'logo-48.png', 'logo-128.png']
+  const images = ['logo-16.png', 'logo-32.png', 'logo-48.png', 'logo-128.png']
   await Promise.all(images.map((img) => fs.copy(`images/${img}`, `dist/chrome/images/${img}`)))
 
   // Copy popup directory
@@ -33,6 +32,7 @@ export async function createDist(clean = true) {
   await modifyHtmlFile('dist/chrome/popup/index.html')
   await modifyHtmlFile('dist/chrome/popup/tags.html')
   await modifyHtmlFile('dist/chrome/popup/folders.html')
+  await modifyHtmlFile('dist/chrome/popup/editBookmark.html')
 
   // Remove mock data and test artifacts
   await fs.remove('dist/chrome/popup/mockData')
@@ -146,6 +146,10 @@ async function modifyHtmlFile(filePath) {
       '<script defer type="module" src="./js/initFolders.js"></script>',
       '<script defer src="./js/initFolders.bundle.min.js"></script>',
     )
+    .replace(
+      '<script defer type="module" src="./js/initEditBookmark.js"></script>',
+      '<script defer src="./js/initEditBookmark.bundle.min.js"></script>',
+    )
 
   modified = replaceStylesheetReferences(modified)
 
@@ -174,6 +178,14 @@ function replaceStylesheetReferences(htmlContent) {
     {
       source: '<link rel="stylesheet" href="./css/taxonomy.css" type="text/css" />',
       target: '<link rel="stylesheet" href="./css/taxonomy.min.css" type="text/css" />',
+    },
+    {
+      source: '<link rel="stylesheet" href="./css/editBookmark.css" type="text/css" />',
+      target: '<link rel="stylesheet" href="./css/editBookmark.min.css" type="text/css" />',
+    },
+    {
+      source: '<link rel="stylesheet" href="./css/editBookmark.css" />',
+      target: '<link rel="stylesheet" href="./css/editBookmark.min.css" />',
     },
   ]
 
@@ -218,10 +230,6 @@ function shouldRemoveOriginalCss(fileName) {
   }
 
   if (fileName.endsWith('.bundle.min.css')) {
-    return false
-  }
-
-  if (CSS_ORIGINALS_TO_KEEP.has(fileName)) {
     return false
   }
 
