@@ -263,7 +263,7 @@ export function calculateFinalScore(results, searchTerm) {
     if (hasSearchTerm) {
       const lowerTitle = el.title ? el.title.toLowerCase() : null
       const lowerTags = canCheckIncludes && el.tags ? el.tags.toLowerCase() : null
-      const lowerFolderName = canCheckIncludes && el.folderName ? el.folderName.toLowerCase() : null
+      const lowerFolder = canCheckIncludes && el.folder ? el.folder.toLowerCase() : null
 
       // Increase score if we have exact "startsWith" match in title or url
       if (scoreExactStartsWithBonus) {
@@ -305,17 +305,20 @@ export function calculateFinalScore(results, searchTerm) {
 
       // Increase score if we have an exact "includes" match
       if (canCheckIncludes) {
-        for (const term of searchTermParts) {
-          if (term && term.length >= scoreExactIncludesBonusMinChars) {
-            if (lowerTitle && lowerTitle.includes(term)) {
-              score += scoreExactIncludesBonus * scoreTitleWeight
-            } else if (el.url && el.url.includes(hyphenatedSearchTerm)) {
-              score += scoreExactIncludesBonus * scoreUrlWeight
-            } else if (lowerTags && lowerTags.includes(searchTerm)) {
-              score += scoreExactIncludesBonus * scoreTagWeight
-            } else if (lowerFolderName && lowerFolderName.includes(searchTerm)) {
-              score += scoreExactIncludesBonus * scoreFolderWeight
-            }
+        for (const rawTerm of searchTermParts) {
+          const term = rawTerm.trim()
+          if (!term || term.length < scoreExactIncludesBonusMinChars) {
+            continue
+          }
+          const normalizedUrlTerm = term.replace(/\s+/g, '-')
+          if (lowerTitle && lowerTitle.includes(term)) {
+            score += scoreExactIncludesBonus * scoreTitleWeight
+          } else if (el.url && el.url.includes(normalizedUrlTerm)) {
+            score += scoreExactIncludesBonus * scoreUrlWeight
+          } else if (lowerTags && lowerTags.includes(term)) {
+            score += scoreExactIncludesBonus * scoreTagWeight
+          } else if (lowerFolder && lowerFolder.includes(term)) {
+            score += scoreExactIncludesBonus * scoreFolderWeight
           }
         }
       }
