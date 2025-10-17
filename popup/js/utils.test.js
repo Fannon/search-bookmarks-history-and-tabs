@@ -215,7 +215,7 @@ describe('loadScript', () => {
   })
 })
 
-describe('loadCSS', () => {
+describe('', () => {
   let mockLink
   let mockHead
 

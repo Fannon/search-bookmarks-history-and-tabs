@@ -78,13 +78,6 @@ export async function loadScript(url) {
     document.getElementsByTagName('head')[0].appendChild(s)
   })
 }
-export async function loadCSS(href) {
-  var l = document.createElement('link')
-  l.href = href
-  l.rel = 'stylesheet'
-  l.type = 'text/css'
-  document.getElementsByTagName('head')[0].appendChild(l)
-}
 
 export function printError(err, text) {
   let html = ''
