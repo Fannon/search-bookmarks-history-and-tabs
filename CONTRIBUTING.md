@@ -10,48 +10,6 @@ Please review the guidelines below before submitting changes.
 - **Review [AGENTS.md](./AGENTS.md)** for architecture, data flow, and coding conventions.
 - **Use Node.js 18 LTS or newer.** The build scripts rely on ESM and modern language features.
 
-## How to Contribute
-
-1. **Fork the repository** and create your branch from `main`.
-2. **Install dependencies:**
-
-```bash
-npm install
-```
-
-3. **Build and run locally:**
-
-- Build once with `npm run build`. This cleans the workspace, refreshes manifests, bundles scripts, and copies artifacts to `dist/`.
-- Use `npm run watch` while iterating. It rebuilds bundles automatically when files change so `dist/` mirrors your edits.
-- Preview the popup UI from source with `npm run start` (serves `./popup/` at http://localhost:8080).
-- Preview the built extension with `npm run start:dist` (serves `./dist/chrome/popup/`).
-- For manual browser install / side-loading steps see [Developer Installation](#developer-installation).
-
-4. **Testing:**
-
-- Lint source code: `npm run lint` (ESLint over `popup/js/`).
-- Run Jest unit tests: `npm run test` or `npm run test:unit`. Scope to a file with `npm run test:unit <module>.test.js`.
-- Collect coverage when needed: `npm run test:unit:coverage <module>.test.js`.
-- Run Playwright end-to-end specs: `npm run test:e2e`. Browser-specific runners exist (`test:e2e:chromium`, `test:e2e:firefox`, `test:e2e:edge`).
-
-5. **Code Style & Patterns:**
-
-- Follow the module layout and naming rules in [AGENTS.md](./AGENTS.md).
-- Place search logic in `popup/js/search/`, views in `popup/js/view/`, models in `popup/js/model/`, and helpers in `popup/js/helper/`.
-- Use bundled libraries from `popup/lib/` (see README for details).
-
-6. **Adding Features:**
-
-- For new search modes, update query parsing in `popup/js/search/common.js` and relevant search files.
-- Document changes in `README.md` and `popup/js/model/options.js` if user-configurable.
-
-7. **Pull Requests:**
-
-- Ensure your code is tested, linted, and documented.
-- Run `npm run lint`, `npm run test:unit`, and (when applicable) `npm run test:e2e` before opening a PR.
-- Reference related issues in your PR description.
-- Keep PRs focused and concise.
-
 ## Local Development
 
 ### Install and Build
@@ -101,6 +59,48 @@ npm install
 - `npm run size` - Report bundle sizes after a build.
 
 See also: [Repository Guidelines](./AGENTS.md) and [LLM Agent Docs](./.github/copilot-instructions.md).
+
+## How to Contribute
+
+1. **Fork the repository** and create your branch from `main`.
+2. **Install dependencies:**
+
+```bash
+npm install
+```
+
+3. **Build and run locally:**
+
+- Build once with `npm run build`. This cleans the workspace, refreshes manifests, bundles scripts, and copies artifacts to `dist/`.
+- Use `npm run watch` while iterating. It rebuilds bundles automatically when files change so `dist/` mirrors your edits.
+- Preview the popup UI from source with `npm run start` (serves `./popup/` at http://localhost:8080).
+- Preview the built extension with `npm run start:dist` (serves `./dist/chrome/popup/`).
+- For manual browser install / side-loading steps see [Developer Installation](#developer-installation).
+
+4. **Testing:**
+
+- Lint source code: `npm run lint` (ESLint over `popup/js/`).
+- Run Jest unit tests: `npm run test` or `npm run test:unit`. Scope to a file with `npm run test:unit <module>.test.js`.
+- Collect coverage when needed: `npm run test:unit:coverage <module>.test.js`.
+- Run Playwright end-to-end specs: `npm run test:e2e`. Browser-specific runners exist (`test:e2e:chromium`, `test:e2e:firefox`, `test:e2e:edge`).
+
+5. **Code Style & Patterns:**
+
+- Follow the module layout and naming rules in [AGENTS.md](./AGENTS.md).
+- Place search logic in `popup/js/search/`, views in `popup/js/view/`, models in `popup/js/model/`, and helpers in `popup/js/helper/`.
+- Use bundled libraries from `popup/lib/` (see README for details).
+
+6. **Adding Features:**
+
+- For new search modes, update query parsing in `popup/js/search/common.js` and relevant search files.
+- Document changes in `README.md` and `popup/js/model/options.js` if user-configurable.
+
+7. **Pull Requests:**
+
+- Ensure your code is tested, linted, and documented.
+- Run `npm run lint`, `npm run test:unit`, and (when applicable) `npm run test:e2e` before opening a PR.
+- Reference related issues in your PR description.
+- Keep PRs focused and concise.
 
 ## Reporting Issues
 
