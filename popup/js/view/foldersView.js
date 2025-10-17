@@ -8,16 +8,26 @@ export function loadFoldersOverview() {
   const folders = getUniqueFolders()
   const sortedFolders = Object.keys(folders).sort()
 
-  // Use template-based rendering for better performance with proper HTML escaping
-  const badgesHTML = sortedFolders
-    .map((folderName) => {
-      // Properly escape quotes in folder names for href attributes to prevent parsing errors
-      // Use single quotes for href attribute when folder name contains double quotes
-      const targetHref = `./index.html#search/~${folderName}`
-      const hrefAttribute = folderName.includes('"') ? `href='${targetHref}'` : `href="${targetHref}"`
-      return `<a class="badge folder" ${hrefAttribute} x-folder="${folderName}">~${folderName} <small>(${folders[folderName].length})</small></a>`
-    })
-    .join('')
+  const listElement = document.getElementById('folders-list')
+  if (!listElement) {
+    return
+  }
 
-  document.getElementById('folders-list').innerHTML = badgesHTML
+  const fragment = document.createDocumentFragment()
+
+  for (const folderName of sortedFolders) {
+    const anchor = document.createElement('a')
+    anchor.className = 'badge folder'
+    anchor.setAttribute('href', `./index.html#search/~${folderName}`)
+    anchor.setAttribute('x-folder', folderName)
+    anchor.appendChild(document.createTextNode(`~${folderName} `))
+
+    const count = document.createElement('small')
+    count.textContent = `(${folders[folderName].length})`
+    anchor.appendChild(count)
+
+    fragment.appendChild(anchor)
+  }
+
+  listElement.replaceChildren(fragment)
 }

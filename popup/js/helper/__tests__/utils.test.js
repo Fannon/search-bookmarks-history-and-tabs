@@ -119,6 +119,8 @@ describe('timeSince', () => {
 describe('loadScript', () => {
   let mockScript
   let mockHead
+  const originalCreateElement = document.createElement
+  const originalGetElementsByTagName = document.getElementsByTagName
 
   beforeEach(() => {
     // Mock DOM elements
@@ -142,6 +144,8 @@ describe('loadScript', () => {
 
   afterEach(() => {
     jest.restoreAllMocks()
+    document.createElement = originalCreateElement
+    document.getElementsByTagName = originalGetElementsByTagName
   })
 
   it('loads a script successfully with correct DOM manipulation', async () => {
@@ -216,83 +220,47 @@ describe('loadScript', () => {
 })
 
 describe('printError', () => {
+  let consoleErrorSpy
+
   beforeEach(() => {
-    document.body.innerHTML = '<ul id="error-list"></ul>'
-    jest.spyOn(console, 'error').mockImplementation(() => {})
+    document.body.innerHTML = ''
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   afterEach(() => {
-    jest.restoreAllMocks()
+    consoleErrorSpy.mockRestore()
+    document.body.innerHTML = ''
   })
 
-  it('logs errors with text and updates DOM correctly', () => {
-    const err = new Error('Something went wrong')
-
-    printError(err, 'While loading data')
-
+  it('sanitizes content, records logs, and prepends new entries', () => {
+    document.body.innerHTML = '<ul id="error-list"><li>existing</li></ul>'
     const errorList = document.getElementById('error-list')
-    expect(errorList.innerHTML).toContain('<b>Error</b>: While loading data')
-    expect(errorList.innerHTML).toContain('<b>Error Message</b>: Something went wrong')
-    expect(errorList.style.cssText).toBe('display: block;')
-    expect(console.error).toHaveBeenCalledTimes(2)
+
+    const err = new Error('<script>alert(1)</script>')
+    err.stack = 'Error: stack trace\n at test.js:1'
+
+    printError(err, '<b>bad markup</b>')
+
+    const items = Array.from(errorList.querySelectorAll('li'))
+    expect(items).toHaveLength(4)
+
+    expect(items[0].querySelector('b').textContent).toBe('Error')
+    expect(items[0].innerHTML).toContain('&lt;b&gt;bad markup&lt;/b&gt;')
+
+    expect(items[1].querySelector('b').textContent).toBe('Error Message')
+    expect(items[1].innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
+
+    const stackItem = items[2]
+    expect(stackItem.querySelector('b').textContent).toBe('Error Stack')
+    expect(stackItem.querySelector('pre').textContent).toContain('Error: stack trace')
+
+    expect(items[3].textContent).toBe('existing')
+    expect(errorList.style.display).toBe('block')
+    expect(consoleErrorSpy).toHaveBeenCalled()
   })
 
-  it('handles error without text parameter', () => {
-    const err = new Error('Something went wrong')
-
-    printError(err)
-
-    const errorList = document.getElementById('error-list')
-    expect(errorList.innerHTML).not.toContain('<b>Error</b>:')
-    expect(errorList.innerHTML).toContain('<b>Error Message</b>: Something went wrong')
-    expect(errorList.style.cssText).toBe('display: block;')
-  })
-
-  it('handles stack traces correctly', () => {
-    const err = new Error('Something went wrong')
-    err.stack = 'Error: Something went wrong\n    at testFunction (test.js:10:5)'
-
-    printError(err, 'Test error')
-
-    const errorList = document.getElementById('error-list')
-    expect(errorList.innerHTML).toContain('<b>Error Stack</b>: Error: Something went wrong')
-  })
-
-  it('handles errors without stack traces', () => {
-    const err = new Error('Something went wrong')
-    delete err.stack
-
-    printError(err, 'Test error')
-
-    const errorList = document.getElementById('error-list')
-    expect(errorList.innerHTML).not.toContain('<b>Error Stack</b>:')
-  })
-
-  it('handles edge cases and error conditions', () => {
-    // Test null/undefined errors
-    expect(() => printError(null, 'Test error')).toThrow()
-    expect(() => printError(undefined, 'Test error')).toThrow()
-
-    // Test error without message property
-    const err = {}
-    printError(err, 'Test error')
-
-    const errorList = document.getElementById('error-list')
-    expect(errorList.innerHTML).toContain('<b>Error Message</b>: undefined')
-  })
-
-  it('prepends new errors to existing error list', () => {
-    const errorList = document.getElementById('error-list')
-    errorList.innerHTML = '<li class="error">Previous error</li>'
-
-    const err = new Error('New error')
-    printError(err, 'New error message')
-
-    expect(errorList.innerHTML).toContain('<b>Error</b>: New error message')
-    expect(errorList.innerHTML).toContain('Previous error')
-    // New error should be prepended
-    expect(errorList.innerHTML.indexOf('<b>Error</b>: New error message')).toBeLessThan(
-      errorList.innerHTML.indexOf('Previous error'),
-    )
+  it('handles missing error list gracefully', () => {
+    expect(() => printError(new Error('boom'))).not.toThrow()
+    expect(consoleErrorSpy).toHaveBeenCalled()
   })
 })

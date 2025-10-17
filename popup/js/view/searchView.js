@@ -52,102 +52,140 @@ export async function renderSearchResults(result) {
       continue
     }
 
-    // Build badges HTML efficiently
-    let badgesHTML = ''
+    const listItem = document.createElement('li')
+    listItem.className = resultEntry.type
+    if (resultEntry.originalUrl) {
+      listItem.setAttribute('x-open-url', resultEntry.originalUrl)
+    }
+    listItem.setAttribute('x-index', String(i))
+    if (resultEntry.originalId !== undefined) {
+      listItem.setAttribute('x-original-id', String(resultEntry.originalId))
+    }
+    listItem.style.borderLeft = `${opts.colorStripeWidth}px solid ${opts[resultEntry.type + 'Color']}`
 
-    // Add clickable tag badges for bookmark entries
-    if (opts.displayTags && resultEntry.tagsArray) {
+    if (resultEntry.type === 'bookmark') {
+      const editButton = document.createElement('img')
+      editButton.className = 'edit-button'
+      editButton.setAttribute(
+        'x-link',
+        `./editBookmark.html#bookmark/${encodeURIComponent(resultEntry.originalId)}${searchTermSuffix}`,
+      )
+      editButton.title = 'Edit Bookmark'
+      editButton.src = './img/edit.svg'
+      listItem.appendChild(editButton)
+    } else if (resultEntry.type === 'tab') {
+      const closeButton = document.createElement('img')
+      closeButton.className = 'close-button'
+      closeButton.title = 'Close Tab'
+      closeButton.src = './img/x.svg'
+      listItem.appendChild(closeButton)
+    }
+
+    const titleContainer = document.createElement('div')
+    titleContainer.className = 'title'
+
+    const titleSpan = document.createElement('span')
+    titleSpan.className = 'title-text'
+    const shouldApplyHighlight = Boolean(shouldHighlight && searchTerm && searchTerm.trim())
+    const titleHighlightCandidate = shouldApplyHighlight
+      ? resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
+      : null
+    const titleFallback = resultEntry.title || resultEntry.url || ''
+    setHighlightedText(titleSpan, titleHighlightCandidate, titleFallback)
+    titleContainer.appendChild(titleSpan)
+
+    const badges = []
+
+    if (opts.displayTags && Array.isArray(resultEntry.tagsArray)) {
       for (const tag of resultEntry.tagsArray) {
-        badgesHTML += `<span class="badge tags" x-link="#search/#${tag}" title="Bookmark Tags">#${tag}</span>`
+        const tagBadge = document.createElement('span')
+        tagBadge.className = 'badge tags'
+        tagBadge.setAttribute('x-link', `#search/#${tag}`)
+        tagBadge.title = 'Bookmark Tags'
+        tagBadge.textContent = `#${tag}`
+        badges.push(tagBadge)
       }
     }
 
-    // Add clickable folder path badges for bookmark entries
-    if (opts.displayFolderName && resultEntry.folderArray) {
+    if (opts.displayFolderName && Array.isArray(resultEntry.folderArray)) {
       const trail = []
-      for (const f of resultEntry.folderArray) {
-        trail.push(f)
-        badgesHTML += `<span class="badge folder" x-link="#search/~${trail.join(
-          ' ~',
-        )}" title="Bookmark Folder" style="background-color: ${opts.bookmarkColor || 'none'}">${
-          shouldHighlight ? '~' + f : '~' + f
-        }</span>`
+      for (const folderName of resultEntry.folderArray) {
+        trail.push(folderName)
+        const folderBadge = document.createElement('span')
+        folderBadge.className = 'badge folder'
+        folderBadge.setAttribute('x-link', `#search/~${trail.join(' ~')}`)
+        folderBadge.title = 'Bookmark Folder'
+        if (opts.bookmarkColor) {
+          folderBadge.style.backgroundColor = opts.bookmarkColor
+        }
+        setHighlightedText(folderBadge, shouldApplyHighlight ? `~${folderName}` : null, `~${folderName}`)
+        badges.push(folderBadge)
       }
     }
 
-    // Add relative visit time badge (e.g., "2 hours ago")
     if (opts.displayLastVisit && resultEntry.lastVisitSecondsAgo) {
+      const lastVisitBadge = document.createElement('span')
+      lastVisitBadge.className = 'badge last-visited'
+      lastVisitBadge.title = 'Last Visited'
       const lastVisit = timeSince(new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000))
-      badgesHTML += `<span class="badge last-visited" title="Last Visited">-${lastVisit}</span>`
+      lastVisitBadge.textContent = `-${lastVisit}`
+      badges.push(lastVisitBadge)
     }
 
-    // Add visit count badge showing how many times the page was visited
     if (opts.displayVisitCounter && resultEntry.visitCount !== undefined) {
-      badgesHTML += `<span class="badge visit-counter" title="Visited Counter">${resultEntry.visitCount}</span>`
+      const visitBadge = document.createElement('span')
+      visitBadge.className = 'badge visit-counter'
+      visitBadge.title = 'Visited Counter'
+      visitBadge.textContent = String(resultEntry.visitCount)
+      badges.push(visitBadge)
     }
 
-    // Add date when bookmark was added
     if (opts.displayDateAdded && resultEntry.dateAdded) {
-      badgesHTML += `<span class="badge date-added" title="Date Added">${
-        new Date(resultEntry.dateAdded).toISOString().split('T')[0]
-      }</span>`
+      const dateBadge = document.createElement('span')
+      dateBadge.className = 'badge date-added'
+      dateBadge.title = 'Date Added'
+      dateBadge.textContent = new Date(resultEntry.dateAdded).toISOString().split('T')[0]
+      badges.push(dateBadge)
     }
 
-    // Add relevance score badge for search result ranking
     if (opts.displayScore && resultEntry.score) {
-      badgesHTML += `<span class="badge score" title="Score">${Math.round(resultEntry.score)}</span>`
+      const scoreBadge = document.createElement('span')
+      scoreBadge.className = 'badge score'
+      scoreBadge.title = 'Score'
+      scoreBadge.textContent = String(Math.round(resultEntry.score))
+      badges.push(scoreBadge)
     }
 
-    // Determine content for title and URL with proper escaping
-    const titleContent =
-      shouldHighlight && searchTerm && searchTerm.trim()
-        ? resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
-        : resultEntry.title || resultEntry.url || ''
+    if (badges.length && titleSpan.childNodes.length) {
+      titleSpan.appendChild(document.createTextNode(' '))
+    }
+    for (const badge of badges) {
+      titleContainer.appendChild(badge)
+    }
 
-    const urlContent =
-      shouldHighlight && searchTerm && searchTerm.trim() && resultEntry.urlHighlighted
-        ? resultEntry.urlHighlighted
-        : resultEntry.url
+    listItem.appendChild(titleContainer)
 
-    // Generate complete HTML for this result item using template
-    const itemHTML = `
-      <li class="${resultEntry.type}"
-          x-open-url="${resultEntry.originalUrl}"
-          x-index="${i}"
-          x-original-id="${resultEntry.originalId}"
-          style="border-left: ${opts.colorStripeWidth}px solid ${opts[resultEntry.type + 'Color']}">
-        ${
-          resultEntry.type === 'bookmark'
-            ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(
-                resultEntry.originalId,
-              )}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">`
-            : ''
-        }
-        ${resultEntry.type === 'tab' ? '<img class="close-button" title="Close Tab" src="./img/x.svg">' : ''}
-        <div class="title">
-          <span class="title-text">${titleContent} </span>
-          ${badgesHTML}
-        </div>
-        <div class="url" title="${resultEntry.url}">${urlContent}</div>
-      </li>
-    `
-
-    // Create element from HTML string for better performance
-    const tempDiv = document.createElement('div')
-    tempDiv.innerHTML = itemHTML
-    const resultListItem = tempDiv.firstElementChild
+    const urlDiv = document.createElement('div')
+    urlDiv.className = 'url'
+    if (resultEntry.url) {
+      urlDiv.setAttribute('title', resultEntry.url)
+    }
+    const urlHighlightCandidate =
+      shouldApplyHighlight && resultEntry.urlHighlighted ? resultEntry.urlHighlighted : null
+    setHighlightedText(urlDiv, urlHighlightCandidate, resultEntry.url || '')
+    listItem.appendChild(urlDiv)
 
     // Apply client-side text highlighting for search terms if needed
-    if (shouldHighlight && searchTerm && searchTerm.trim() && window.Mark) {
+    if (shouldApplyHighlight && window.Mark) {
       if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
-        const mark = new window.Mark(resultListItem)
+        const mark = new window.Mark(listItem)
         mark.mark(searchTerm, {
           exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
         })
       }
     }
 
-    fragment.appendChild(resultListItem)
+    fragment.appendChild(listItem)
   }
 
   // Update the DOM with all new result items at once
@@ -461,4 +499,35 @@ export function setupResultItemsEvents() {
   )
 
   ext.dom.resultList.hasEventDelegation = true
+}
+
+function setHighlightedText(element, highlightValue, fallbackValue) {
+  element.textContent = ''
+  const value = highlightValue ?? fallbackValue ?? ''
+  if (highlightValue && highlightValue.includes('<mark>')) {
+    appendSanitizedHighlight(element, highlightValue)
+  } else if (value) {
+    element.textContent = value
+  }
+}
+
+function appendSanitizedHighlight(element, highlightString) {
+  if (!highlightString) {
+    return
+  }
+
+  const template = document.createElement('template')
+  template.innerHTML = highlightString
+
+  for (const node of template.content.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      element.appendChild(document.createTextNode(node.textContent))
+    } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'MARK') {
+      const mark = document.createElement('mark')
+      mark.textContent = node.textContent
+      element.appendChild(mark)
+    } else if (node.textContent) {
+      element.appendChild(document.createTextNode(node.textContent))
+    }
+  }
 }

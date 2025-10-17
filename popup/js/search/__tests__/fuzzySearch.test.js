@@ -341,6 +341,8 @@ describe('fuzzySearch', () => {
       value: jest.fn(() => ({
         innerHTML: '',
         style: { display: '' },
+        firstChild: null,
+        insertBefore: jest.fn(),
       })),
       writable: true,
     })

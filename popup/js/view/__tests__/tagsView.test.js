@@ -192,4 +192,20 @@ describe('tagsView', () => {
       './index.html#search/#🚀',
     ])
   })
+
+  it('escapes HTML content in tag names', async () => {
+    setupDom()
+    const tags = {
+      'alpha<script>alert(1)</script>': [{ id: 1 }],
+    }
+
+    const { module } = await loadTagsView({ tags })
+
+    module.loadTagsOverview()
+
+    const badge = document.querySelector('#tags-list a.badge.tags')
+    expect(badge).not.toBeNull()
+    expect(badge.textContent).toBe('#alpha<script>alert(1)</script> (1)')
+    expect(badge.innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
+  })
 })

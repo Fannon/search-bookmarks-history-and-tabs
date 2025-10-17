@@ -80,17 +80,50 @@ export async function loadScript(url) {
 }
 
 export function printError(err, text) {
-  let html = ''
+  const errorList = document.getElementById('error-list')
+
   if (text) {
-    html += `<li class="error"><b>Error</b>: ${text}</span>`
     console.error(text)
   }
   console.error(err)
-  html += `<li class="error"><b>Error Message</b>: ${err.message}</span>`
-  if (err.stack) {
-    html += `<li class="error"><b>Error Stack</b>: ${err.stack}</li>`
+
+  if (!errorList) {
+    return
   }
-  const errorList = document.getElementById('error-list')
-  errorList.innerHTML = html + errorList.innerHTML
-  errorList.style = 'display: block;'
+
+  const fragment = document.createDocumentFragment()
+
+  if (text) {
+    fragment.appendChild(createErrorItem('Error', text))
+  }
+
+  const message = err && typeof err.message === 'string' ? err.message : String(err)
+  fragment.appendChild(createErrorItem('Error Message', message))
+
+  if (err && err.stack) {
+    fragment.appendChild(createErrorItem('Error Stack', err.stack, true))
+  }
+
+  errorList.insertBefore(fragment, errorList.firstChild)
+  errorList.style.display = 'block'
+}
+
+function createErrorItem(label, value, usePreformatted = false) {
+  const item = document.createElement('li')
+  item.className = 'error'
+
+  const bold = document.createElement('b')
+  bold.textContent = label
+  item.appendChild(bold)
+  item.appendChild(document.createTextNode(': '))
+
+  if (usePreformatted) {
+    const pre = document.createElement('pre')
+    pre.textContent = value
+    item.appendChild(pre)
+  } else {
+    item.appendChild(document.createTextNode(value))
+  }
+
+  return item
 }
