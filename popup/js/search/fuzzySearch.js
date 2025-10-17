@@ -119,15 +119,22 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
         const highlight = uFuzzy.highlight(result.searchString, info.ranges[i])
         // Split highlighted string back into its original multiple properties
         const highlightArray = highlight.split('¦')
+        const highlightedResult = {
+          ...result,
+        }
         if (highlightArray[0] && highlightArray[0].includes('<mark>')) {
-          result.titleHighlighted = highlightArray[0]
+          highlightedResult.titleHighlighted = highlightArray[0]
+        } else {
+          delete highlightedResult.titleHighlighted
         }
         if (highlightArray[1] && highlightArray[1].includes('<mark>')) {
-          result.urlHighlighted = highlightArray[1]
+          highlightedResult.urlHighlighted = highlightArray[1]
+        } else {
+          delete highlightedResult.urlHighlighted
         }
 
         localResults.push({
-          ...result,
+          ...highlightedResult,
           // 0 intra chars are perfect score, 5 and more are 0 score.
           searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
           searchApproach: 'fuzzy',
