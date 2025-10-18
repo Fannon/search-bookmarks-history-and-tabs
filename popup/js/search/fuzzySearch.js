@@ -1,9 +1,32 @@
 //////////////////////////////////////////
-// FUZZY SEARCH SUPPORT                 //
+// APPROXIMATE-MATCH FUZZY SEARCH       //
 //////////////////////////////////////////
 
+/**
+ * Implements fuzzy/approximate-match search using uFuzzy library
+ *
+ * Strategy:
+ * - Uses uFuzzy library for advanced matching (typo tolerance, word boundaries)
+ * - Finds approximate matches even with typos or partial words
+ * - Returns scoring from uFuzzy (0-1 range)
+ * - Supports match highlighting in results
+ *
+ * Scoring:
+ * - searchScore from uFuzzy library (proportional to match quality)
+ * - Better matches get higher scores (closer to 1)
+ * - Final score determined by scoring.js algorithm (multiplies base score by searchScore)
+ *
+ * Performance:
+ * - Slower than simpleSearch but finds more matches
+ * - uFuzzy library lazy-loaded on first use
+ *
+ * Memoization:
+ * - Caches haystack (preprocessed search data) per search mode
+ * - Resets when search data changes or search strategy changes
+ */
+
 import { loadScript, printError } from '../helper/utils.js'
-import { resolveSearchTargets } from './searchTargets.js'
+import { resolveSearchTargets } from './common.js'
 
 const nonASCIIRegex = /[\u0080-\uFFFF]/
 

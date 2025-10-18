@@ -1,3 +1,26 @@
+//////////////////////////////////////////
+// MAIN SEARCH PAGE ENTRY POINT         //
+//////////////////////////////////////////
+
+/**
+ * Entry point for the main search interface (popup/index.html)
+ *
+ * Responsibilities:
+ * - Initialize extension context and global state (ext object)
+ * - Load options, bookmarks, tabs, and history from browser/mock data
+ * - Set up event listeners for search input, navigation, and strategy toggle
+ * - Implement search debouncing to prevent excessive search calls
+ * - Set up hash-based routing for search terms and navigation
+ * - Lazy-load mark.js library for search term highlighting
+ * - Manage search result caching for improved performance
+ *
+ * Key Features:
+ * - Debounced search input (prevents rapid repeated searches)
+ * - Hash-based routing (#search/<term>) for shareable search URLs
+ * - Loading overlay removed after initialization completes
+ * - Search results cached by term, strategy, and mode for reuse
+ */
+
 import { loadScript, printError } from './helper/utils.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
@@ -56,7 +79,9 @@ export async function initExtension() {
   window.addEventListener('hashchange', hashRouter, false)
   ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
 
-  // Add debounced search to prevent excessive calls on rapid typing
+  // Debounced search: Clear pending search and schedule new one
+  // This prevents executing search algorithm on every keystroke, improving performance
+  // during rapid typing. Delay is configurable via searchDebounceMs option.
   let searchTimeout = null
   const debounceMs = ext.opts.searchDebounceMs || 100
   const debouncedSearch = (event) => {
@@ -65,7 +90,9 @@ export async function initExtension() {
   }
   ext.dom.searchInput.addEventListener('input', debouncedSearch)
 
-  // Add search result cache for better performance (simple, no expiration needed)
+  // Cache search results by (term, strategy, mode) to avoid re-running algorithms
+  // when user navigates or repeats searches. Cache is simple with no expiration
+  // since extension data is immutable during a popup session.
   ext.searchCache = new Map()
 
   ext.initialized = true

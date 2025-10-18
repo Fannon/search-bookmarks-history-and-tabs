@@ -2,7 +2,9 @@
 
 ## [unreleased]
 
-- **IMPROVED**: Even further reduced initial load bundle size
+- **IMPROVED**: Improved scoring logic through a few minor bugfixes, better defaults and better documentation.
+  - See **[popup/js/search/scoring.js](popup/js/search/scoring.js)** for comprehensive documentation
+- **IMPROVED**: Init load Performance: further reduced initial load bundle size
 - **FIXED**: When editing a bookmark and saving, the search state was sometimes not properly updated. Now the search is completely reset, but remembers the search term
 
 ## [v1.15.0]

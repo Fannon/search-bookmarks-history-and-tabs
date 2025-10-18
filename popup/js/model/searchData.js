@@ -1,3 +1,29 @@
+//////////////////////////////////////////
+// SEARCH DATA AGGREGATION              //
+//////////////////////////////////////////
+
+/**
+ * Fetches and aggregates search data from browser APIs
+ *
+ * Responsibilities:
+ * - Fetch bookmarks, tabs, and history from browser APIs
+ * - Convert raw browser data to normalized searchItem format
+ * - Efficiently merge history data into bookmarks/tabs (lazy evaluation)
+ * - Handle configurable data limits and filters
+ *
+ * Data Flow:
+ * - getBrowserBookmarks/Tabs/History → Convert format → Build search data
+ * - History merging deferred until matches found (performance optimization)
+ * - Respects user options: historyMaxItems, historyDaysAgo, bookmarksIgnoreFolderList, etc.
+ *
+ * Performance Optimizations:
+ * - Lazy history merging: Only merge history data if there are bookmarks/tabs to merge
+ * - Configurable history limits: historyMaxItems, historyDaysAgo reduce API call overhead
+ * - Search strings precomputed for fast fuzzy/simple search
+ *
+ * See also: browserApi.js for data conversion details
+ */
+
 import {
   browserApi,
   convertBrowserBookmarks,

@@ -1,6 +1,21 @@
 //////////////////////////////////////////
-// FOLDERS OVERVIEW                     //
+// FOLDERS OVERVIEW PAGE VIEW           //
 //////////////////////////////////////////
+
+/**
+ * Renders folders overview page (popup/folders.html)
+ *
+ * Displays:
+ * - All unique bookmark folders from hierarchy
+ * - Count of bookmarks in each folder
+ * - Clickable folder badges that link to filtered search results
+ *
+ * Features:
+ * - Template-based rendering for performance
+ * - HTML escaping for folder names containing special characters
+ * - Smart quote handling for href attributes (uses single quotes when needed)
+ * - Each folder is a clickable link that opens search with ~folder filter
+ */
 
 import { getUniqueFolders } from '../search/taxonomySearch.js'
 

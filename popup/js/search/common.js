@@ -1,6 +1,31 @@
 //////////////////////////////////////////
-// SEARCH                               //
+// SEARCH ORCHESTRATION AND ROUTING     //
 //////////////////////////////////////////
+
+/**
+ * Main search entry point and query orchestration
+ *
+ * Responsibilities:
+ * - Parse search queries and detect search mode (history/bookmarks/tabs/search)
+ * - Detect taxonomy markers (# for tags, ~ for folders)
+ * - Route to appropriate search strategy (simple/fuzzy/taxonomy)
+ * - Handle custom search engine aliases (e.g., "g keyword" for Google)
+ * - Detect and handle direct URL navigation
+ * - Manage search result caching for performance
+ * - Support default results display when no search term provided
+ *
+ * URL Detection:
+ * - Direct URLs are added as "direct" type results (not searched)
+ * - Supports http/https/ftp protocols
+ *
+ * Search Flow:
+ * 1. Parse and clean search term
+ * 2. Check cache
+ * 3. Resolve search mode (mode prefix or @alias or #tag or ~folder)
+ * 4. Execute appropriate search algorithm (simpleSearch, fuzzySearch, or taxonomySearch)
+ * 5. Apply relevance scoring (calculateFinalScore)
+ * 6. Render results (renderSearchResults)
+ */
 
 import { getBrowserTabs } from '../helper/browserApi.js'
 import { cleanUpUrl, printError } from '../helper/utils.js'
@@ -26,6 +51,23 @@ const SEARCH_MODE_MARKERS = {
   '#': 'tags',
   '~': 'folders',
 }
+
+/**
+ * Maps search mode prefixes to their data sources
+ * Used to determine which data sources (bookmarks, tabs, history) to query
+ */
+const MODE_TARGETS = {
+  history: ['tabs', 'history'],
+  bookmarks: ['bookmarks'],
+  tabs: ['tabs'],
+  search: [],
+  all: ['bookmarks', 'tabs', 'history'],
+}
+
+export function resolveSearchTargets(searchMode) {
+  return MODE_TARGETS[searchMode] || MODE_TARGETS.all
+}
+
 const withDefaultScore = (entry) => ({
   searchScore: 1,
   ...entry,

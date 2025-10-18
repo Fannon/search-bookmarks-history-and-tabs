@@ -19,7 +19,7 @@ class TrackedUFuzzy {
     uFuzzyInstances.push(this)
 
     // Use real uFuzzy if available, otherwise create a minimal fallback
-    if (typeof window !== 'undefined' && window.uFuzzy) {
+    if (typeof window !== 'undefined' && window.uFuzzy && window.uFuzzy !== TrackedUFuzzy) {
       this.uf = new window.uFuzzy(options)
     } else {
       // Fallback for when uFuzzy is not loaded yet
@@ -113,6 +113,31 @@ const resetModes = () => {
 
 describe('fuzzySearch', () => {
   beforeEach(async () => {
+    // Set up DOM environment for tests
+    if (typeof document === 'undefined') {
+      // Mock DOM for Node.js environment
+      global.document = {
+        getElementById: (id) => {
+          if (id === 'error-list') {
+            return {
+              innerHTML: '',
+              style: { display: '' },
+            }
+          }
+          return null
+        },
+        createElement: () => ({
+          id: '',
+          style: {},
+          appendChild: () => {},
+        }),
+        getElementsByTagName: () => [{ appendChild: () => {} }],
+        body: {
+          appendChild: () => {},
+        },
+      }
+    }
+
     // Load the real uFuzzy library
     try {
       // Load uFuzzy script in Node.js test environment
