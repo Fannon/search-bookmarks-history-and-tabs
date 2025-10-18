@@ -2,10 +2,19 @@
  * @file Centralises extension configuration and user overrides.
  *
  * Responsibilities:
- * - Define sensible defaults covering search behaviour, taxonomy, shortcuts, and UI tweaks.
- * - Load user-provided YAML/JSON settings from browser storage (sync with local fallback) and merge with defaults.
- * - Validate and normalise option payloads before exposing them to entry points or search modules.
- * - Persist updates from the options page while surfacing descriptive errors via shared logging helpers.
+* - Define default options for all extension features
+ * - Merge user options with defaults to get effective configuration
+ * - Load/save user options to browser storage (with sync/local fallback)
+ * - Validate user options to prevent invalid configurations
+ *
+ * Configuration Sources (in priority order):
+ * 1. User options from browser storage (sync storage or localStorage)
+ * 2. Default options (built-in sensible defaults)
+ *
+ * User options can be customized via YAML/JSON in the settings page.
+ * All options are optional - unspecified options fall back to defaults.
+ *
+ * @see https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration
  */
 
 import { printError } from '../helper/utils.js'
