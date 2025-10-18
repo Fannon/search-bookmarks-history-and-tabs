@@ -1,13 +1,18 @@
 /**
- * SEARCH VIEW MODULE
+ * Search view module
  *
- * Handles the user interface and interaction for the search results display.
- * This module is responsible for:
- * - Rendering search results (bookmarks and open tabs) in a structured list format
- * - Managing visual selection and keyboard/mouse navigation between results
- * - Handling various click behaviors (open in tab, close tab, copy URL, etc.)
- * - Displaying result metadata (tags, folders, visit counts, dates, scores)
- * - Supporting search term highlighting and search strategy switching
+ * Renders and manages the interactive search results panel inside the popup.
+ * Responsibilities include:
+ * - Rendering bookmarks, history results, and open tabs with metadata badges
+ * - Managing selection, keyboard navigation, and hover/mouse interactions
+ * - Handling open/close actions, modifier keys, and contextual navigation links
+ * - Applying highlight markup for search terms while keeping output sanitized
+ * - Toggling between search strategies and persisting the chosen option
+ *
+ * Implementation notes:
+ * - Relies on the global `ext` object for shared state, DOM references, and browser APIs
+ * - Uses event delegation to keep per-item listeners lightweight
+ * - Carefully escapes all user-controlled strings before injecting into the DOM
  */
 
 import { escapeHtml, timeSince } from '../helper/utils.js'
@@ -43,6 +48,7 @@ export async function renderSearchResults(result) {
 
   // Use DocumentFragment to batch DOM updates for smoother rendering
   const fragment = document.createDocumentFragment()
+  // Provide a suffix so links inside results keep the current search term context
   const searchTermSuffix = `/search/${encodeURIComponent(searchTerm || '')}`
 
   for (let i = 0; i < result.length; i++) {
@@ -64,6 +70,7 @@ export async function renderSearchResults(result) {
     if (opts.displayFolderName && resultEntry.folderArray) {
       const trail = []
       for (const folderName of resultEntry.folderArray) {
+        // Build up the breadcrumb path one segment at a time so each badge links to that depth
         trail.push(folderName)
         const folderLink = `#search/~${trail.join(' ~')}`
         const safeLink = escapeHtml(folderLink)
@@ -97,6 +104,7 @@ export async function renderSearchResults(result) {
       )}</span>`
     }
 
+    // Prefer server-provided highlight snippets, fall back to raw title/URL if absent
     const highlightCandidate =
       resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
     const titleContent =
@@ -137,11 +145,13 @@ export async function renderSearchResults(result) {
     `
 
     const tempDiv = document.createElement('div')
+    // Parse the HTML string once to avoid manual DOM construction for each child node
     tempDiv.innerHTML = itemHTML
     const resultListItem = tempDiv.firstElementChild
 
     if (shouldHighlight && searchTerm && searchTerm.trim() && window.Mark) {
       if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
+        // Only invoke Mark.js when the backend did not provide pre-highlighted HTML
         const mark = new window.Mark(resultListItem)
         mark.mark(searchTerm, {
           exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
@@ -259,6 +269,7 @@ export function hoverResultItem(event) {
  * Provides multiple ways to interact with search results (open, close tabs, navigate to tags/folders, etc.)
  */
 export function openResultItem(event) {
+  // Rely on the current selection rather than calculating indices from the event again
   const resultEntry = document.getElementById('selected-result')
   const originalId = resultEntry.getAttribute('x-original-id')
   const url = resultEntry.getAttribute('x-open-url')
@@ -308,6 +319,7 @@ export function openResultItem(event) {
 
   // Handle right-click to copy URL to clipboard
   if (event.button === 2) {
+    // Give users a quick way to copy without changing tab focus or closing the popup
     navigator.clipboard.writeText(url)
     return
   }
@@ -322,6 +334,7 @@ export function openResultItem(event) {
           currentWindow: true,
         })
         .then(([currentTab]) => {
+          // Update the active tab instead of creating a new one to keep browsing context
           ext.browserApi.tabs.update(currentTab.id, {
             url: url,
           })
