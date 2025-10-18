@@ -1,6 +1,15 @@
 //////////////////////////////////////////
-// TAGS OVERVIEW                        //
+// TAGS OVERVIEW PAGE VIEW              //
 //////////////////////////////////////////
+
+/**
+ * Renders tags overview page (popup/tags.html)
+ *
+ * Displays:
+ * - All unique tags extracted from bookmarks
+ * - Count of bookmarks for each tag
+ * - Clickable tag badges that link to filtered search results
+ */
 
 import { escapeHtml } from '../helper/utils.js'
 import { getUniqueTags } from '../search/taxonomySearch.js'

@@ -1,3 +1,27 @@
+//////////////////////////////////////////
+// BOOKMARK EDITOR PAGE ENTRY POINT     //
+//////////////////////////////////////////
+
+/**
+ * Entry point for the bookmark editor page (popup/editBookmark.html)
+ *
+ * Responsibilities:
+ * - Initialize the shared extension context (ext object)
+ * - Parse bookmark ID from URL hash (supports new and legacy formats)
+ * - Parse return hash to support navigation back to search results
+ * - Load bookmark data from browser storage
+ * - Set up the bookmark editor UI with save/delete/cancel handlers
+ * - Support hash-based navigation to load different bookmarks
+ *
+ * URL Hash Formats:
+ * - #bookmark/{bookmarkId}/search/{encodedSearchTerm}
+ * - #bookmark/{bookmarkId}?searchTerm={term}
+ * - #id/{bookmarkId} (legacy format, still supported)
+ *
+ * The editor allows users to modify bookmark title, URL, and tags,
+ * with inline validation and error handling.
+ */
+
 import { printError } from './helper/utils.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'

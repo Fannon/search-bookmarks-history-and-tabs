@@ -1,8 +1,26 @@
 //////////////////////////////////////////
-// SIMPLE SEARCH SUPPORT                //
+// PRECISE (EXACT-MATCH) SEARCH         //
 //////////////////////////////////////////
 
-import { resolveSearchTargets } from './searchTargets.js'
+/**
+ * Implements precise/exact-match search algorithm for fast performance
+ *
+ * Strategy:
+ * - Simple substring matching (includes) across searchString field
+ * - AND condition: all search terms must match
+ * - No fuzzy matching or scoring adjustments
+ * - Fast performance for exact phrase matches
+ *
+ * Scoring:
+ * - All matches use searchScore of 1 (base score)
+ * - Final score determined by scoring.js algorithm
+ *
+ * Memoization:
+ * - Caches search data per mode to avoid unnecessary preprocessing
+ * - Resets when search data changes or search strategy changes
+ */
+
+import { resolveSearchTargets } from './common.js'
 
 /**
  * Memoize some state, to avoid re-creating haystack and fuzzy search instances

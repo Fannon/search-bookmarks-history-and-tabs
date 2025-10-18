@@ -1,6 +1,15 @@
 //////////////////////////////////////////
-// FOLDERS OVERVIEW                     //
+// FOLDERS OVERVIEW PAGE VIEW           //
 //////////////////////////////////////////
+
+/**
+ * Renders folders overview page (popup/folders.html)
+ *
+ * Displays:
+ * - All unique bookmark folders from hierarchy
+ * - Count of bookmarks in each folder
+ * - Clickable folder badges that link to filtered search results
+ */
 
 import { escapeHtml } from '../helper/utils.js'
 import { getUniqueFolders } from '../search/taxonomySearch.js'

@@ -1,14 +1,43 @@
 //////////////////////////////////////////
-// SEARCH                               //
+// SEARCH ORCHESTRATION AND ROUTING     //
 //////////////////////////////////////////
+
+/**
+ * Main search entry point and query orchestration
+ *
+ * Responsibilities:
+ * - Parse search queries and detect search mode (history/bookmarks/tabs/search)
+ * - Detect taxonomy markers (# for tags, ~ for folders)
+ * - Route to appropriate search strategy (simple/fuzzy/taxonomy)
+ * - Handle custom search engine aliases (e.g., "g keyword" for Google)
+ * - Detect and handle direct URL navigation
+ * - Manage search result caching for performance
+ * - Support default results display when no search term provided
+ *
+ * URL Detection:
+ * - Direct URLs are added as "direct" type results (not searched)
+ * - Supports http/https/ftp protocols
+ *
+ * Search Flow:
+ * 1. Parse and clean search term
+ * 2. Check cache
+ * 3. Resolve search mode (mode prefix or @alias or #tag or ~folder)
+ * 4. Execute appropriate search algorithm (simpleSearch, fuzzySearch, or taxonomySearch)
+ * 5. Apply relevance scoring (calculateFinalScore)
+ * 6. Render results (renderSearchResults)
+ */
 
 import { getBrowserTabs } from '../helper/browserApi.js'
 import { cleanUpUrl, printError } from '../helper/utils.js'
 import { closeErrors } from '../initSearch.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { fuzzySearch } from './fuzzySearch.js'
+import { calculateFinalScore } from './scoring.js'
 import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
+
+// Re-export scoring function for backward compatibility
+export { calculateFinalScore }
 
 const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 const protocolRegex = /^[a-zA-Z]+:\/\//
@@ -22,14 +51,23 @@ const SEARCH_MODE_MARKERS = {
   '#': 'tags',
   '~': 'folders',
 }
-const BASE_SCORE_KEYS = {
-  bookmark: 'scoreBookmarkBase',
-  tab: 'scoreTabBase',
-  history: 'scoreHistoryBase',
-  search: 'scoreSearchEngineBase',
-  customSearch: 'scoreCustomSearchEngineBase',
-  direct: 'scoreDirectUrlScore',
+
+/**
+ * Maps search mode prefixes to their data sources
+ * Used to determine which data sources (bookmarks, tabs, history) to query
+ */
+const MODE_TARGETS = {
+  history: ['tabs', 'history'],
+  bookmarks: ['bookmarks'],
+  tabs: ['tabs'],
+  search: [],
+  all: ['bookmarks', 'tabs', 'history'],
 }
+
+export function resolveSearchTargets(searchMode) {
+  return MODE_TARGETS[searchMode] || MODE_TARGETS.all
+}
+
 const withDefaultScore = (entry) => ({
   searchScore: 1,
   ...entry,
@@ -47,7 +85,6 @@ function generateRandomId() {
  * It will decide which approaches and indexes to use.
  */
 export async function search(event) {
-  console.debug('Search triggered by event:', event?.type || 'none')
   try {
     if (event) {
       // Don't execute search on navigation keys
@@ -69,7 +106,6 @@ export async function search(event) {
 
     // Get and clean up original search query
     let searchTerm = ext.dom.searchInput.value || ''
-    console.debug('Search called with term:', searchTerm, 'event:', event?.type)
     searchTerm = searchTerm.trimStart().toLowerCase()
     searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
 
@@ -207,155 +243,11 @@ export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode
 }
 
 /**
- * Calculates the final search item score on basis of the search score and some own rules
- *
- * @param sortMode: "score" | "lastVisited"
- */
-export function calculateFinalScore(results, searchTerm) {
-  const now = Date.now()
-  const hasSearchTerm = Boolean(ext.model.searchTerm)
-  const searchTermParts = hasSearchTerm ? searchTerm.split(' ') : []
-  const hyphenatedSearchTerm = hasSearchTerm ? searchTermParts.join('-') : ''
-  const tagTerms = hasSearchTerm ? searchTerm.split('#').join('').split(' ') : []
-  const folderTerms = hasSearchTerm ? searchTerm.split('~').join('').split(' ') : []
-  const canCheckIncludes =
-    hasSearchTerm && ext.opts.scoreExactIncludesBonus && searchTerm.length >= ext.opts.scoreExactIncludesBonusMinChars
-
-  // Cache option values to avoid repeated property access
-  const opts = ext.opts
-  const {
-    scoreExactStartsWithBonus,
-    scoreExactEqualsBonus,
-    scoreExactTagMatchBonus,
-    scoreExactFolderMatchBonus,
-    scoreExactIncludesBonus,
-    scoreExactIncludesBonusMinChars,
-    scoreVisitedBonusScore,
-    scoreVisitedBonusScoreMaximum,
-    scoreRecentBonusScoreMaximum,
-    historyDaysAgo,
-    scoreDateAddedBonusScoreMaximum,
-    scoreDateAddedBonusScorePerDay,
-    scoreCustomBonusScore,
-    scoreTitleWeight,
-    scoreUrlWeight,
-    scoreTagWeight,
-    scoreFolderWeight,
-  } = opts
-
-  for (let i = 0; i < results.length; i++) {
-    const el = results[i]
-    const BaseKey = BASE_SCORE_KEYS[el.type]
-    if (!BaseKey) {
-      throw new Error(`Search result type "${el.type}" not supported`)
-    }
-    let score = opts[BaseKey]
-
-    // Multiply by search library score.
-    // This will reduce the score if the search is not a good match
-    score = score * (el.searchScore || scoreTitleWeight)
-
-    // Add custom bonus score to bookmarks
-    if (scoreCustomBonusScore && el.customBonusScore) {
-      score += el.customBonusScore
-    }
-
-    if (hasSearchTerm) {
-      const lowerTitle = el.title ? el.title.toLowerCase() : null
-      const lowerTags = canCheckIncludes && el.tags ? el.tags.toLowerCase() : null
-      const lowerFolderName = canCheckIncludes && el.folderName ? el.folderName.toLowerCase() : null
-
-      // Increase score if we have exact "startsWith" match in title or url
-      if (scoreExactStartsWithBonus) {
-        if (lowerTitle && lowerTitle.startsWith(searchTerm)) {
-          score += scoreExactStartsWithBonus * scoreTitleWeight
-        } else if (el.url.startsWith(hyphenatedSearchTerm)) {
-          score += scoreExactStartsWithBonus * scoreUrlWeight
-        }
-      }
-
-      // Increase score if we have an exact equal match in the title
-      if (scoreExactEqualsBonus && lowerTitle && lowerTitle === searchTerm) {
-        score += scoreExactEqualsBonus * scoreTitleWeight
-      }
-
-      // Increase score if we have an exact tag match
-      if (scoreExactTagMatchBonus && el.tags && tagTerms.length) {
-        const lowerTagValues = el.tagsArray.map((tagValue) => tagValue.toLowerCase())
-        for (const tag of tagTerms) {
-          for (const tagValue of lowerTagValues) {
-            if (tag === tagValue) {
-              score += scoreExactTagMatchBonus
-            }
-          }
-        }
-      }
-
-      // Increase score if we have an exact folder name match
-      if (scoreExactFolderMatchBonus && el.folder && folderTerms.length) {
-        const lowerFolderValues = el.folderArray.map((folderValue) => folderValue.toLowerCase())
-        for (const folderName of folderTerms) {
-          for (const folderValue of lowerFolderValues) {
-            if (folderName === folderValue) {
-              score += scoreExactFolderMatchBonus
-            }
-          }
-        }
-      }
-
-      // Increase score if we have an exact "includes" match
-      if (canCheckIncludes) {
-        for (const term of searchTermParts) {
-          if (term && term.length >= scoreExactIncludesBonusMinChars) {
-            if (lowerTitle && lowerTitle.includes(term)) {
-              score += scoreExactIncludesBonus * scoreTitleWeight
-            } else if (el.url && el.url.includes(hyphenatedSearchTerm)) {
-              score += scoreExactIncludesBonus * scoreUrlWeight
-            } else if (lowerTags && lowerTags.includes(searchTerm)) {
-              score += scoreExactIncludesBonus * scoreTagWeight
-            } else if (lowerFolderName && lowerFolderName.includes(searchTerm)) {
-              score += scoreExactIncludesBonus * scoreFolderWeight
-            }
-          }
-        }
-      }
-    }
-
-    // Increase score if result has been open frequently
-    if (scoreVisitedBonusScore && el.visitCount) {
-      score += Math.min(scoreVisitedBonusScoreMaximum, el.visitCount * scoreVisitedBonusScore)
-    }
-
-    // Increase score if result has been opened recently
-    if (scoreRecentBonusScoreMaximum && el.lastVisitSecondsAgo != null) {
-      const maxSeconds = historyDaysAgo * 24 * 60 * 60
-      // Handle edge case where maxSeconds might be 0 or item was visited "right now"
-      if (maxSeconds > 0 && el.lastVisitSecondsAgo >= 0) {
-        score += Math.max(0, (1 - el.lastVisitSecondsAgo / maxSeconds) * scoreRecentBonusScoreMaximum)
-      } else if (el.lastVisitSecondsAgo === 0) {
-        // Item was visited "right now" - give maximum recent bonus
-        score += scoreRecentBonusScoreMaximum
-      }
-    }
-
-    // Increase score if bookmark has been added more recently
-    if (scoreDateAddedBonusScoreMaximum && scoreDateAddedBonusScorePerDay && el.dateAdded != null) {
-      score += Math.max(
-        0,
-        scoreDateAddedBonusScoreMaximum - ((now - el.dateAdded) / 1000 / 60 / 60 / 24) * scoreDateAddedBonusScorePerDay,
-      )
-    }
-
-    el.score = score
-  }
-
-  return results
-}
-
-/**
  * Sorts the results according to some modes
  *
- * @param sortMode: "score" | "lastVisited"
+ * @param {Array} results - Search results to sort
+ * @param {string} sortMode - "score" | "lastVisited"
+ * @returns {Array} Sorted results
  */
 export function sortResults(results, sortMode) {
   if (sortMode === 'score') {

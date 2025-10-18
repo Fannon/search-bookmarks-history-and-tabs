@@ -1,3 +1,21 @@
+//////////////////////////////////////////
+// FOLDERS OVERVIEW PAGE ENTRY POINT    //
+//////////////////////////////////////////
+
+/**
+ * Entry point for the folders overview page (popup/folders.html)
+ *
+ * Responsibilities:
+ * - Initialize the shared extension context (ext object)
+ * - Load bookmark data from browser storage
+ * - Extract and aggregate unique bookmark folders from the tree
+ * - Render clickable folder badges with item counts
+ *
+ * The folders overview provides a browsable index of the bookmark folder
+ * hierarchy, allowing users to click a folder to search for bookmarks in that folder.
+ * Only bookmarks are loaded (tabs and history disabled for this page).
+ */
+
 import { printError } from './helper/utils.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'

@@ -1,3 +1,21 @@
+//////////////////////////////////////////
+// TAGS OVERVIEW PAGE ENTRY POINT       //
+//////////////////////////////////////////
+
+/**
+ * Entry point for the tags overview page (popup/tags.html)
+ *
+ * Responsibilities:
+ * - Initialize the shared extension context (ext object)
+ * - Load bookmark data from browser storage
+ * - Extract and aggregate unique tags from all bookmarks
+ * - Render clickable tag badges with item counts
+ *
+ * The tags overview provides a browsable index of all tags in use,
+ * allowing users to click a tag to search for bookmarks with that tag.
+ * Only bookmarks are loaded (tabs and history disabled for this page).
+ */
+
 import { printError } from './helper/utils.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'

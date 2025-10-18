@@ -1,8 +1,26 @@
 //////////////////////////////////////////
-// TAXONOMY SEARCH SUPPORT              //
+// TAXONOMY SEARCH (TAGS & FOLDERS)     //
 //////////////////////////////////////////
 
-// This helps finding bookmarks that include tags or are part of a folder
+/**
+ * Specialized search for bookmark tags (#) and folders (~)
+ *
+ * Strategy:
+ * - Dedicated tag and folder filtering with AND logic
+ * - Supports searches like "#react #node" to find bookmarks with both tags
+ * - Supports searches like "~Projects ~React" to find bookmarks in both folders
+ * - Extracts and aggregates unique tags/folders from bookmarks
+ *
+ * Search Flow:
+ * - searchTaxonomy: Filters bookmarks by tag/folder AND conditions
+ * - getUniqueTags: Aggregates all tags and counts from bookmarks
+ * - getUniqueFolders: Aggregates all folders and counts from bookmarks
+ * - Used by tags.html and folders.html pages for browsable overviews
+ *
+ * Scoring:
+ * - All matches use searchScore of 1
+ * - Final score determined by scoring.js algorithm
+ */
 
 /**
  * Simple, precise search for bookmark tags and folder names

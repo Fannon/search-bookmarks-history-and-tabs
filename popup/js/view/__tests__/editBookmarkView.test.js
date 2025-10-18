@@ -154,7 +154,7 @@ describe('editBookmarkView', () => {
         folder: '~Work',
       },
     ])
-    const { module, mocks, helpers } = await loadEditBookmarkView({
+    const { module, helpers } = await loadEditBookmarkView({
       uniqueTags: {
         beta: [{ id: 2 }],
         alpha: [{ id: 1 }],
@@ -191,7 +191,7 @@ describe('editBookmarkView', () => {
       folder: '~Work',
     }
     setupExt([bookmark], { returnHash: '#search/foo' })
-    const { module, mocks, helpers, setUniqueTags } = await loadEditBookmarkView({
+    const { module, helpers, setUniqueTags } = await loadEditBookmarkView({
       uniqueTags: {
         alpha: [{ id: 1 }],
         beta: [{ id: 2 }],

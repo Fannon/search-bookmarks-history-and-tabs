@@ -9,6 +9,7 @@ const cjkTerm = '\u6f22\u5b57'
 let uFuzzyInstances = []
 let uFuzzyCallHistory = []
 let originalUFuzzy = null
+let lastSearchTerm = ''
 
 // Enhanced uFuzzy wrapper that tracks calls while using real implementation
 class TrackedUFuzzy {
@@ -18,7 +19,7 @@ class TrackedUFuzzy {
     uFuzzyInstances.push(this)
 
     // Use real uFuzzy if available, otherwise create a minimal fallback
-    if (typeof window !== 'undefined' && window.uFuzzy) {
+    if (typeof window !== 'undefined' && window.uFuzzy && window.uFuzzy !== TrackedUFuzzy) {
       this.uf = new window.uFuzzy(options)
     } else {
       // Fallback for when uFuzzy is not loaded yet
@@ -27,6 +28,7 @@ class TrackedUFuzzy {
   }
 
   filter(haystack, term) {
+    lastSearchTerm = term
     uFuzzyCallHistory.push({
       method: 'filter',
       instanceId: this.instanceId,
@@ -48,6 +50,7 @@ class TrackedUFuzzy {
   }
 
   info(indices, haystack, term) {
+    lastSearchTerm = term
     uFuzzyCallHistory.push({
       method: 'info',
       instanceId: this.instanceId,
@@ -78,18 +81,18 @@ class TrackedUFuzzy {
     }
 
     // Fallback highlighting implementation
-    const parts = searchString.split(delimiter)
-    const highlightedParts = parts.map((part) => {
-      // Simple highlighting for fallback
-      return part // Return as-is for now, real uFuzzy will handle this
-    })
+    if (lastSearchTerm) {
+      const termRegex = new RegExp(lastSearchTerm, 'gi')
+      return searchString.replace(termRegex, (match) => `<mark>${match}</mark>`)
+    }
 
-    return highlightedParts.join(delimiter)
+    return searchString
   }
 
   static reset() {
     uFuzzyInstances = []
     uFuzzyCallHistory = []
+    lastSearchTerm = ''
   }
 
   static getInstances() {
@@ -110,6 +113,31 @@ const resetModes = () => {
 
 describe('fuzzySearch', () => {
   beforeEach(async () => {
+    // Set up DOM environment for tests
+    if (typeof document === 'undefined') {
+      // Mock DOM for Node.js environment
+      global.document = {
+        getElementById: (id) => {
+          if (id === 'error-list') {
+            return {
+              innerHTML: '',
+              style: { display: '' },
+            }
+          }
+          return null
+        },
+        createElement: () => ({
+          id: '',
+          style: {},
+          appendChild: () => {},
+        }),
+        getElementsByTagName: () => [{ appendChild: () => {} }],
+        body: {
+          appendChild: () => {},
+        },
+      }
+    }
+
     // Load the real uFuzzy library
     try {
       // Load uFuzzy script in Node.js test environment
@@ -457,5 +485,31 @@ describe('fuzzySearch', () => {
     expect(bookmarkResults[0].id).toBe('bookmark-1')
     expect(tabResults).toHaveLength(1)
     expect(tabResults[0].id).toBe('tab-1')
+  })
+
+  it('does not mutate cached entries when adding highlight strings', async () => {
+    ext.model.bookmarks = [
+      {
+        id: 'bookmark-highlight',
+        title: 'Highlight persistence test',
+        url: 'https://example.com/highlight',
+        searchString: `highlight persistence test${delimiter}https://example.com/highlight`,
+      },
+    ]
+
+    const firstResults = await fuzzySearch('bookmarks', 'highlight')
+
+    expect(firstResults).toHaveLength(1)
+    const firstResult = firstResults[0]
+    expect(firstResult).not.toBe(ext.model.bookmarks[0])
+    expect(firstResult.titleHighlighted || '').toContain('<mark>')
+    expect(ext.model.bookmarks[0].titleHighlighted).toBeUndefined()
+    expect(ext.model.bookmarks[0].urlHighlighted).toBeUndefined()
+
+    const secondResults = await fuzzySearch('bookmarks', 'highlight')
+
+    expect(secondResults[0]).not.toBe(ext.model.bookmarks[0])
+    expect(ext.model.bookmarks[0].titleHighlighted).toBeUndefined()
+    expect(ext.model.bookmarks[0].urlHighlighted).toBeUndefined()
   })
 })
