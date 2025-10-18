@@ -92,18 +92,23 @@ export async function renderSearchResults(result) {
     }
 
     if (opts.displayScore && resultEntry.score) {
-      badgesHTML += `<span class="badge score" title="Score">${escapeHtml(String(Math.round(resultEntry.score)))}</span>`
+      badgesHTML += `<span class="badge score" title="Score">${escapeHtml(
+        String(Math.round(resultEntry.score)),
+      )}</span>`
     }
 
     const highlightCandidate =
       resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
-    const titleContent = shouldHighlight && searchTerm && searchTerm.trim()
-      ? escapeHtml(highlightCandidate).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
-      : escapeHtml(resultEntry.title || resultEntry.url || '')
+    const titleContent =
+      shouldHighlight && searchTerm && searchTerm.trim()
+        ? // escape everything first, then allow only the `<mark>` tags that the highlighter inserts
+          escapeHtml(highlightCandidate).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
+        : escapeHtml(resultEntry.title || resultEntry.url || '')
 
     const urlContent =
       shouldHighlight && searchTerm && searchTerm.trim() && resultEntry.urlHighlighted
-        ? escapeHtml(resultEntry.urlHighlighted).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
+        ? // same approach for the URL snippet – keep highlight markup, escape everything else
+          escapeHtml(resultEntry.urlHighlighted).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
         : escapeHtml(resultEntry.url || '')
 
     const typeClass = escapeHtml(resultEntry.type || '')
