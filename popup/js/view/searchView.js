@@ -98,12 +98,12 @@ export async function renderSearchResults(result) {
     const highlightCandidate =
       resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
     const titleContent = shouldHighlight && searchTerm && searchTerm.trim()
-      ? allowMarkTags(highlightCandidate)
+      ? escapeHtml(highlightCandidate).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
       : escapeHtml(resultEntry.title || resultEntry.url || '')
 
     const urlContent =
       shouldHighlight && searchTerm && searchTerm.trim() && resultEntry.urlHighlighted
-        ? allowMarkTags(resultEntry.urlHighlighted)
+        ? escapeHtml(resultEntry.urlHighlighted).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
         : escapeHtml(resultEntry.url || '')
 
     const typeClass = escapeHtml(resultEntry.type || '')
@@ -458,12 +458,4 @@ export function setupResultItemsEvents() {
   )
 
   ext.dom.resultList.hasEventDelegation = true
-}
-function allowMarkTags(value) {
-  if (!value) {
-    return ''
-  }
-
-  const escaped = escapeHtml(value)
-  return escaped.replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
 }
