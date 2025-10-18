@@ -65,7 +65,7 @@ function scoreFor({ searchTerm = 'query', opts = {}, result = {} }) {
   return score
 }
 
-describe('calculateFinalScore', () => {
+describe('scoring', () => {
   afterEach(() => {
     clearTestExt()
     jest.restoreAllMocks()
