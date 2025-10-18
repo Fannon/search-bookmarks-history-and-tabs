@@ -1,3 +1,28 @@
+//////////////////////////////////////////
+// BROWSER API ABSTRACTION LAYER        //
+//////////////////////////////////////////
+
+/**
+ * Browser API abstraction and data conversion layer
+ *
+ * Provides normalized access to browser APIs (bookmarks, tabs, history)
+ * while abstracting away Chrome/Firefox differences. Handles:
+ *
+ * - Fetching data from browser APIs with fallback error handling
+ * - Converting raw browser data into normalized search item format
+ * - Parsing bookmark tags (#tag syntax) and folder hierarchies
+ * - Extracting custom bonus scores from bookmark titles (+N syntax)
+ * - Cleaning and normalizing URLs and titles
+ *
+ * Data Normalization:
+ * - All items (bookmarks, tabs, history) converted to searchItem format
+ * - Tags extracted from titles: "My Bookmark #react #node" → tags: "#react #node"
+ * - Custom scores: "Important Bookmark +50 #tag" → customBonusScore: 50
+ * - Folders tracked as breadcrumb trail: folder: "~Projects ~React"
+ * - URLs normalized (remove protocol, www, trailing slash, lowercase)
+ * - Search strings created for fuzzy/precise matching across title+url+tags+folder
+ */
+
 import { cleanUpUrl } from './utils.js'
 
 export const browserApi = window.chrome || window.browser || {}

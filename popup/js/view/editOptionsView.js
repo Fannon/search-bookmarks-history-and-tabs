@@ -1,6 +1,26 @@
 //////////////////////////////////////////
-// EDIT OPTIONS VIEW                    //
+// SETTINGS/OPTIONS PAGE VIEW           //
 //////////////////////////////////////////
+
+/**
+ * Settings page UI for user configuration
+ *
+ * Responsibilities:
+ * - Load and display user configuration as YAML
+ * - Provide save/reset functionality for options
+ * - Parse and validate YAML/JSON input
+ * - Handle errors in configuration parsing
+ * - Redirect to search page after successful save
+ *
+ * Configuration Format:
+ * - Users can override default options using YAML or JSON
+ * - Examples: searchStrategy, searchFuzzyness, enableTabs, historyMaxItems, etc.
+ * - Configuration stored in browser storage and merged with defaults
+ *
+ * Error Handling:
+ * - Displays error messages for invalid YAML/JSON syntax
+ * - Prevents saving malformed configuration
+ */
 
 import { getUserOptions, setUserOptions } from '../model/options.js'
 

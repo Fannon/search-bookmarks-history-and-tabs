@@ -1,3 +1,17 @@
+//////////////////////////////////////////
+// UTILITY FUNCTIONS                    //
+//////////////////////////////////////////
+
+/**
+ * Utility functions for DOM manipulation, time formatting, and browser integration
+ *
+ * Provides:
+ * - Time formatting (timeSince) for displaying relative dates
+ * - URL normalization (cleanUpUrl) for consistent URL comparison
+ * - Dynamic script loading (loadScript) with deduplication
+ * - Error display/logging (printError) for UI error handling
+ */
+
 /**
  * Get text how long a date is ago
  *
