@@ -1,6 +1,11 @@
 /**
  * @file Maintains the popup search results view and interactions.
- * Renders search outcomes, handles navigation, and syncs strategy toggles.
+ *
+ * Responsibilities:
+ * - Render bookmark/tab/history results with metadata badges, highlights, and contextual actions (open, close, copy, edit).
+ * - Manage keyboard and mouse navigation, including hover enablement, selection, and quick-access shortcuts.
+ * - Coordinate search strategy toggles, approach indicators, and persisted user preferences across sessions.
+ * - Surface visit counts, taxonomy labels, and scoring hints to keep the UI aligned with search models.
  */
 
 import { escapeHtml, timeSince } from '../helper/utils.js'
@@ -8,9 +13,7 @@ import { getUserOptions, setUserOptions } from '../model/options.js'
 import { search } from '../search/common.js'
 
 /**
- * Render the search results list with metadata badges and highlights.
- * @param {Array} [result]
- * @returns {Promise<void>}
+ * Render the search results in UI as result items
  */
 export async function renderSearchResults(result) {
   result = result || ext.model.result
@@ -162,8 +165,8 @@ export async function renderSearchResults(result) {
 //////////////////////////////////////////
 
 /**
- * Handle keyboard navigation for search results, including vim-style shortcuts.
- * @param {KeyboardEvent} event
+ * Handle keyboard navigation for search results
+ * Supports arrow keys and vim-style keybindings (Ctrl+P/Ctrl+N, Ctrl+K/Ctrl+J)
  */
 export function navigationKeyListener(event) {
   // Define navigation directions with multiple keybinding options
@@ -194,9 +197,8 @@ export function navigationKeyListener(event) {
 }
 
 /**
- * Update the selected result list item.
- * @param {number} index
- * @param {boolean} [scroll=false]
+ * Update the visual selection state of result items
+ * Removes previous selection and applies new selection with optional scrolling
  */
 export function selectListItem(index, scroll = false) {
   clearSelection()
@@ -218,7 +220,9 @@ export function selectListItem(index, scroll = false) {
   ext.model.currentItem = index
 }
 
-/** Clear the currently selected result item. */
+/**
+ * Clear the currently selected result item
+ */
 export function clearSelection() {
   const currentSelection = document.getElementById('selected-result')
   if (currentSelection) {
@@ -228,8 +232,8 @@ export function clearSelection() {
 }
 
 /**
- * Handle hover events on result items while ignoring initial render noise.
- * @param {MouseEvent} event
+ * Handle mouse hover events on result items to update selection
+ * Includes protection against spurious hover events during rendering
  */
 export function hoverResultItem(event) {
   const target = event.target ? event.target : event.srcElement
@@ -249,8 +253,8 @@ export function hoverResultItem(event) {
 }
 
 /**
- * Activate the selected result, honoring modifier keys and context clicks.
- * @param {MouseEvent} event
+ * Handle click/mouse events on search results with different behaviors based on modifiers and target elements
+ * Provides multiple ways to interact with search results (open, close tabs, navigate to tags/folders, etc.)
  */
 export function openResultItem(event) {
   const resultEntry = document.getElementById('selected-result')
@@ -374,8 +378,8 @@ export function openResultItem(event) {
 }
 
 /**
- * Toggle between fuzzy and precise search strategies and persist the choice.
- * @returns {Promise<void>}
+ * Switch between fuzzy and precise search strategies
+ * Updates user preferences and refreshes search results with the new strategy
  */
 export async function toggleSearchApproach() {
   // Load current user preferences
@@ -399,14 +403,18 @@ export async function toggleSearchApproach() {
   search()
 }
 
-/** Update the search strategy toggle button to match the current mode. */
+/**
+ * Update the search strategy toggle button appearance
+ * Changes both the displayed text and CSS class based on current strategy
+ */
 export function updateSearchApproachToggle() {
   ext.dom.searchApproachToggle.innerText = ext.opts.searchStrategy.toUpperCase()
   ext.dom.searchApproachToggle.classList = ext.opts.searchStrategy
 }
 
 /**
- * Set up delegated events for search result items.
+ * Set up events for search result items
+ * Uses a single event listener on the parent container for better memory efficiency (event delegation)
  */
 export function setupResultItemsEvents() {
   // Set up delegated event listeners only once

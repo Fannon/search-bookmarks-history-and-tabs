@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 /**
  * @file Collects repository-wide file statistics for maintenance.
- * Summarizes code, comment, and empty-line counts for source, tests, and other assets.
+ *
+ * Invoked via `npm run analyze` to summarize how many lines of code, comments,
+ * and empty lines exist across source, test, and auxiliary files. The report
+ * helps track documentation coverage and spot unexpected growth in bundles
+ * without building the extension.
  */
 
 import fs from 'fs'
@@ -81,8 +85,9 @@ class CodeAnalyzer {
 
   /**
    * Determine whether a path should be included in the analysis run.
-   * @param {string} filePath
-   * @returns {boolean}
+   *
+   * @param {string} filePath - Path to evaluate.
+   * @returns {boolean} True when the file matches include patterns.
    */
   shouldIncludeFile(filePath) {
     // Exclude build artifacts and vendor directories before considering matches
@@ -103,9 +108,10 @@ class CodeAnalyzer {
   }
 
   /**
-   * Check if a file should be categorized as a test artifact.
-   * @param {string} filePath
-   * @returns {boolean}
+   * Check if a file should be categorised as a test artefact.
+   *
+   * @param {string} filePath - Path to evaluate.
+   * @returns {boolean} True when the file matches test patterns.
    */
   isTestFile(filePath) {
     for (const pattern of TEST_PATTERNS) {
@@ -118,7 +124,8 @@ class CodeAnalyzer {
 
   /**
    * Collect statistics for a single file and aggregate them into totals.
-   * @param {string} filePath
+   *
+   * @param {string} filePath - File to scan.
    */
   analyzeFile(filePath) {
     if (!this.shouldIncludeFile(filePath)) {
@@ -182,8 +189,9 @@ class CodeAnalyzer {
 
   /**
    * Determine whether a file should count as source code.
-   * @param {string} filePath
-   * @returns {boolean}
+   *
+   * @param {string} filePath - Path to evaluate.
+   * @returns {boolean} True when the file is source (non-test) code.
    */
   isSourceFile(filePath) {
     // Consider .js, .mjs, .ts files as source (but not test files)
@@ -192,9 +200,10 @@ class CodeAnalyzer {
 
   /**
    * Detect if a trimmed line represents a comment for supported file types.
-   * @param {string} line
-   * @param {string} filePath
-   * @returns {boolean}
+   *
+   * @param {string} line - Trimmed line text.
+   * @param {string} filePath - Path of the file being analysed.
+   * @returns {boolean} True when line is a comment.
    */
   isCommentLine(line, filePath) {
     if (filePath.endsWith('.js') || filePath.endsWith('.mjs') || filePath.endsWith('.ts')) {
@@ -221,7 +230,8 @@ class CodeAnalyzer {
 
   /**
    * Walk directories recursively and feed every file into the analyzer.
-   * @param {string} dir
+   *
+   * @param {string} dir - Directory to traverse.
    */
   walkDirectory(dir) {
     const files = fs.readdirSync(dir)
@@ -238,7 +248,9 @@ class CodeAnalyzer {
     }
   }
 
-  /** Print the aggregated statistics to stderr in a readable format. */
+  /**
+   * Print the aggregated statistics to stderr in a readable format.
+   */
   generateReport() {
     console.error('📊 CODEBASE ANALYSIS REPORT')
     console.error('=====================================\n')

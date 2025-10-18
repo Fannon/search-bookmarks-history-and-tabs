@@ -1,6 +1,10 @@
 /**
  * @file Prepares the folders overview popup (`popup/folders.html`).
- * Initializes shared context, loads folder aggregates, and renders navigation chips.
+ *
+ * Responsibilities:
+ * - Initialise the shared extension context with tabs/history disabled so only bookmark folders participate.
+ * - Transform bookmark metadata into folder aggregates with counts for quick browsing.
+ * - Render folder navigation chips that link back into the main search view using hash routing.
  */
 
 import { printError } from './helper/utils.js'
@@ -13,6 +17,7 @@ export const ext = (window.ext = createExtensionContext())
 
 /**
  * Load bookmark data and render the folders overview page.
+ *
  * @returns {Promise<void>}
  */
 export async function initFoldersPage() {

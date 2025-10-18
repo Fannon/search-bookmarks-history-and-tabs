@@ -1,16 +1,31 @@
 /**
- * @file Implements the popup's precise search strategy with precomputed haystacks.
- * Uses AND-style substring matching and lightweight scoring for responsiveness.
+ * @file Implements the popup's precise/exact-match search strategy.
+ *
+ * Strategy:
+ * - Perform case-insensitive substring matching across the precomputed `searchString` field.
+ * - Require all tokens to match (AND semantics) to keep results tightly focused.
+ * - Skip fuzzy tolerances or extra scoring logic so exact phrases stay lightning fast.
+ *
+ * Scoring pipeline:
+ * - Every match carries a `searchScore` of 1 before flowing into `scoring.js` for final ranking.
+ * - Prepares highlight metadata for the view without additional processing overhead.
+ *
+ * Memoisation:
+ * - Cache pre-lowered haystacks per mode (bookmarks, tabs, history) for reuse across repeated queries.
+ * - Reset caches when the search dataset or active mode changes to avoid stale results.
  */
 
 import { resolveSearchTargets } from './common.js'
 
-/** Memoized simple-search state keyed by dataset. */
+/**
+ * Memoize some state, to avoid re-creating haystack and fuzzy search instances.
+ */
 let state = {}
 
 /**
- * Reset cached simple-search state when datasets or mode change.
- * @param {string} [searchMode]
+ * Reset cached simple search state when datasets or mode change.
+ *
+ * @param {string} [searchMode] - Optional mode to reset; resets all when omitted.
  */
 export function resetSimpleSearchState(searchMode) {
   if (searchMode) {
@@ -20,8 +35,9 @@ export function resetSimpleSearchState(searchMode) {
 
 /**
  * Ensure each search entry caches a lower-cased search string.
- * @param {Array<Object>} data
- * @returns {Array<Object>}
+ *
+ * @param {Array<Object>} data - Items to prepare.
+ * @returns {Array<Object>} Normalised entries.
  */
 function prepareSearchData(data) {
   return data.map((entry) => {
@@ -34,9 +50,10 @@ function prepareSearchData(data) {
 
 /**
  * Execute a precise search across the datasets associated with a mode.
- * @param {string} searchMode
- * @param {string} searchTerm
- * @returns {Array<Object>}
+ *
+ * @param {string} searchMode - Active search mode.
+ * @param {string} searchTerm - Query string.
+ * @returns {Array<Object>} Matching entries with `searchScore`.
  */
 export function simpleSearch(searchMode, searchTerm) {
   const targets = resolveSearchTargets(searchMode)
@@ -57,9 +74,10 @@ export function simpleSearch(searchMode, searchTerm) {
 
 /**
  * Run an AND-based substring search within a single dataset and assign scores.
- * @param {string} searchTerm
- * @param {string} searchMode
- * @returns {Array<Object>}
+ *
+ * @param {string} searchTerm - Query string.
+ * @param {string} searchMode - Dataset key inside `ext.model`.
+ * @returns {Array<Object>} Filtered entries with `searchScore: 1`.
  */
 function simpleSearchWithScoring(searchTerm, searchMode) {
   const data = ext.model[searchMode]

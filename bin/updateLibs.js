@@ -2,12 +2,15 @@
 /* eslint-disable no-console */
 /**
  * @file Refreshes third-party libraries in popup/lib.
- * Copies browser-ready assets from node_modules so the popup can load them without a bundler.
+ *
+ * Copies the minified browser-ready assets from node_modules into the extension
+ * so the popup can load dependencies without a bundler at runtime.
  */
 import * as fs from 'fs-extra'
 
 /**
  * Copy third-party popup dependencies from node_modules into the workspace.
+ *
  * @returns {Promise<void>}
  */
 async function updateLibs() {

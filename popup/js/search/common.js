@@ -1,6 +1,18 @@
 /**
- * @file Coordinates popup search across bookmarks, tabs, history, and aliases.
- * Handles query parsing, caching, strategy selection, and result rendering.
+ * @file Coordinates popup search orchestration and routing.
+ *
+ * Responsibilities:
+ * - Parse search queries to detect mode prefixes (`h `, `b `, `t `, `s `) and taxonomy markers (`#tag`, `~folder`).
+ * - Route to the appropriate strategy (simple, fuzzy, taxonomy) or external alias based on the parsed intent.
+ * - Handle direct URL detection, default results, and search cache lookups before executing expensive work.
+ * - Normalize results so scoring, rendering, and navigation consume a consistent shape across all entry points.
+ *
+ * Search flow:
+ * 1. Clean the search term and decide which data sources to query.
+ * 2. Look up cached results keyed by term, strategy, and mode.
+ * 3. Execute `simpleSearch`, `fuzzySearch`, or `searchTaxonomy` depending on the user input.
+ * 4. Apply `calculateFinalScore` to rank bookmarks, tabs, history items, and taxonomy nodes.
+ * 5. Render results via `renderSearchResults`, including direct navigation targets when applicable.
  */
 
 import { getBrowserTabs } from '../helper/browserApi.js'
@@ -28,7 +40,10 @@ const SEARCH_MODE_MARKERS = {
   '~': 'folders',
 }
 
-/** Maps search modes to the datasets queried from `ext.model`. */
+/**
+ * Maps search mode prefixes to their data sources.
+ * Used to determine which datasets (bookmarks, tabs, history) to query.
+ */
 const MODE_TARGETS = {
   history: ['tabs', 'history'],
   bookmarks: ['bookmarks'],
@@ -38,9 +53,10 @@ const MODE_TARGETS = {
 }
 
 /**
- * Resolve dataset keys for the given search mode.
- * @param {string} searchMode
- * @returns {string[]}
+ * Resolve the set of data collections associated with a search mode.
+ *
+ * @param {string} searchMode - Active search mode (e.g. `bookmarks`, `tabs`).
+ * @returns {Array<string>} Collection keys to inspect within `ext.model`.
  */
 export function resolveSearchTargets(searchMode) {
   return MODE_TARGETS[searchMode] || MODE_TARGETS.all
@@ -53,16 +69,18 @@ const withDefaultScore = (entry) => ({
 })
 
 /**
- * Create a unique id for synthetic result entries.
- * @returns {string}
+ * Generate a unique identifier for synthetic search result entries.
+ *
+ * @returns {string} Identifier combining random and timestamp components.
  */
 function generateRandomId() {
   return Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36)
 }
 
 /**
- * Execute the full search pipeline, optionally reacting to input events.
- * @param {KeyboardEvent|InputEvent} [event]
+ * Execute a search against the cached datasets based on the current UI state.
+ *
+ * @param {KeyboardEvent|InputEvent} [event] - Optional input event from the search field.
  * @returns {Promise<void>}
  */
 export async function search(event) {
@@ -203,11 +221,12 @@ export async function search(event) {
 }
 
 /**
- * Run a search strategy and return normalized results.
- * @param {'precise'|'fuzzy'} searchApproach
- * @param {string} searchTerm
- * @param {string} [searchMode='all']
- * @returns {Promise<Array>}
+ * Run the configured search algorithm and normalize the results.
+ *
+ * @param {'precise'|'fuzzy'} searchApproach - Algorithm to execute.
+ * @param {string} searchTerm - Query string.
+ * @param {string} [searchMode='all'] - Active search mode.
+ * @returns {Promise<Array>} Matching entries across requested datasets.
  */
 export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode = 'all') {
   let results = []
@@ -228,10 +247,11 @@ export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode
 }
 
 /**
- * Sort results by score or last-visited timestamp.
- * @param {Array} results
- * @param {string} sortMode
- * @returns {Array}
+ * Sorts the results according to some modes
+ *
+ * @param {Array} results - Search results to sort
+ * @param {string} sortMode - "score" | "lastVisited"
+ * @returns {Array} Sorted results
  */
 export function sortResults(results, sortMode) {
   if (sortMode === 'score') {
@@ -251,7 +271,13 @@ export function sortResults(results, sortMode) {
 
 /**
  * Build default result sets when no explicit search term is provided.
- * @returns {Promise<Array>}
+ *
+ * - Tabs mode: show most recent tabs.
+ * - History mode: show recent history entries.
+ * - Bookmarks mode: surface all bookmarks.
+ * - Default: prefer bookmarks that match the current tab plus recent tabs.
+ *
+ * @returns {Promise<Array>} Result entries enriched with default scores.
  */
 export async function addDefaultEntries() {
   let results = []
@@ -317,9 +343,10 @@ export async function addDefaultEntries() {
 }
 
 /**
- * Create external search engine entries for the query.
- * @param {string} searchTerm
- * @returns {Array}
+ * Create external search engine entries for the current query.
+ *
+ * @param {string} searchTerm - Query string from the input box.
+ * @returns {Array} Search engine result objects.
  */
 function addSearchEngines(searchTerm) {
   const results = []
@@ -332,13 +359,14 @@ function addSearchEngines(searchTerm) {
 }
 
 /**
- * Build a single result entry for a custom search engine.
- * @param {string} searchTerm
- * @param {string} name
- * @param {string} urlPrefix
- * @param {string} [urlBlank]
- * @param {boolean} [custom=false]
- * @returns {Object}
+ * Build a single search result entry that targets a custom search engine.
+ *
+ * @param {string} searchTerm - Query string to substitute.
+ * @param {string} name - Display label for the search engine.
+ * @param {string} urlPrefix - Base URL (optionally containing `$s` placeholder).
+ * @param {string} [urlBlank] - Optional blank-state URL when no term is provided.
+ * @param {boolean} [custom=false] - Flag to mark user-defined engines.
+ * @returns {Object} Search result object compatible with scoring.
  */
 function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlank, custom) {
   let url
@@ -366,9 +394,10 @@ function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlank, cust
 }
 
 /**
- * Determine search mode from prefixes or taxonomy markers.
- * @param {string} searchTerm
- * @returns {{mode: string, term: string}}
+ * Derive search mode prefixes or taxonomy markers from the raw query.
+ *
+ * @param {string} searchTerm - Raw query string.
+ * @returns {{mode: string, term: string}} Normalized mode and trimmed term.
  */
 function resolveSearchMode(searchTerm) {
   let mode = 'all'
@@ -392,9 +421,10 @@ function resolveSearchMode(searchTerm) {
 }
 
 /**
- * Resolve custom search engine aliases at the start of a query.
- * @param {string} searchTerm
- * @returns {Array}
+ * Resolve alias-triggered custom search engine results when the query starts with an alias.
+ *
+ * @param {string} searchTerm - Raw search query.
+ * @returns {Array} Matching custom search engine entries.
  */
 function collectCustomSearchAliasResults(searchTerm) {
   if (!ext.opts.customSearchEngines) {

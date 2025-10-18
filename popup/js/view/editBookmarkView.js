@@ -1,6 +1,11 @@
 /**
- * @file Drives bookmark editor interactions and syncs updates back to the model.
- * Loads tag suggestions, persists edits, and refreshes search caches.
+ * @file Drives the bookmark editor interactions and form logic.
+ *
+ * Responsibilities:
+ * - Load bookmark data for editing and initialize Tagify-powered tag autocompletion.
+ * - Validate user input, persist updates through the browser API, and surface inline errors.
+ * - Handle delete/cancel flows plus bonus-score parsing while keeping the UI responsive.
+ * - Invalidate search caches and taxonomy indexes so edits reflect immediately in the popup search view.
  */
 
 import { browserApi, createSearchString } from '../helper/browserApi.js'
@@ -11,7 +16,8 @@ import { resetSimpleSearchState } from '../search/simpleSearch.js'
 
 /**
  * Populate the bookmark editor form for the given bookmark id.
- * @param {string} bookmarkId
+ *
+ * @param {string} bookmarkId - Identifier of the bookmark to edit.
  * @returns {Promise<void>}
  */
 export async function editBookmark(bookmarkId) {
@@ -74,7 +80,8 @@ export async function editBookmark(bookmarkId) {
 
 /**
  * Apply form changes to the data model and browser bookmarks API.
- * @param {string} bookmarkId
+ *
+ * @param {string} bookmarkId - Identifier of the bookmark being updated.
  */
 export function updateBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
@@ -111,7 +118,8 @@ export function updateBookmark(bookmarkId) {
 
 /**
  * Remove a bookmark via the browser API and refresh search caches.
- * @param {string} bookmarkId
+ *
+ * @param {string} bookmarkId - Identifier of the bookmark to delete.
  * @returns {Promise<void>}
  */
 export async function deleteBookmark(bookmarkId) {
@@ -132,7 +140,9 @@ export async function deleteBookmark(bookmarkId) {
   navigateToSearchView()
 }
 
-/** Navigate back to the search view, preserving return hashes when possible. */
+/**
+ * Navigate back to the search view, preserving return hashes when possible.
+ */
 function navigateToSearchView() {
   const redirectHash =
     ext && typeof ext.returnHash === 'string' && ext.returnHash.startsWith('#search') ? ext.returnHash : '#search/'

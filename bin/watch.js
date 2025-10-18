@@ -2,7 +2,10 @@
 /* eslint-disable no-console */
 /**
  * @file Watches popup sources and triggers incremental rebuilds.
- * Keeps the side-loaded extension in sync during `npm run watch`.
+ *
+ * Listens for changes under `popup/`, reruns the esbuild bundler, and refreshes
+ * the Chrome distribution directory. Designed for `npm run watch` to keep the
+ * side-loaded extension in sync without manual rebuilds.
  */
 import chokidar from 'chokidar'
 import process from 'node:process'
@@ -12,8 +15,9 @@ import { createDist } from './createDist.js'
 
 /**
  * Determine whether a changed file should be ignored by the watcher.
- * @param {string} filePath
- * @returns {boolean}
+ *
+ * @param {string} filePath - Path reported by chokidar.
+ * @returns {boolean} True when the path should be skipped.
  */
 const isIgnoredPath = (filePath) => {
   if (!filePath) return false
@@ -43,7 +47,8 @@ let isBuilding = false
 let hasQueuedBuild = false
 
 /**
- * Run a single bundle plus dist build and report timing.
+ * Run a single bundle + dist build and report timing.
+ *
  * @returns {Promise<void>}
  */
 async function buildOnce() {
@@ -57,7 +62,8 @@ async function buildOnce() {
 }
 
 /**
- * Serialize build executions, queueing the next run if one is in progress.
+ * Serialise build executions, queueing the next run if one is in progress.
+ *
  * @returns {Promise<void>}
  */
 async function runBuild() {

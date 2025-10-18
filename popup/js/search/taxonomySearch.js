@@ -1,14 +1,24 @@
 /**
- * @file Implements tag (`#`) and folder (`~`) taxonomy searches with AND semantics.
- * Maintains cached indexes so the popup can resolve taxonomy views quickly.
+ * @file Implements dedicated tag (`#`) and folder (`~`) taxonomy searches.
+ *
+ * Strategy:
+ * - Provide AND-based filtering so queries like `#react #node` or `~Projects ~React` match bookmarks with every term.
+ * - Power the tags and folders overview pages with aggregated counts derived from bookmark metadata.
+ * - Maintain cached taxonomy indexes for quick lookups when switching between popup navigation modes.
+ *
+ * Scoring:
+ * - Matches always report a `searchScore` of 1 before entering the shared scoring pipeline.
+ * - Taxonomy results are marked with `searchApproach: 'taxonomy'` to keep rendering and analytics aware of the source.
  */
 
 /**
- * Perform an AND-based taxonomy search across tags or folders.
+ * Simple, precise search for bookmark tags and folder names
+ * Executes AND search with the terms in searchTerm, separated by spaces
+ *
  * @param {string} searchTerm
  * @param {'tags' | 'folder'} taxonomyType
- * @param {Array<Object>} data
- * @returns {Array<Object>}
+ * @param {Array<Object>} data - Bookmark-derived taxonomy entries.
+ * @returns {Array<Object>} Taxonomy results with score metadata.
  */
 export function searchTaxonomy(searchTerm, taxonomyType, data) {
   /** Search results */
@@ -42,7 +52,8 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
 
 /**
  * Build a tag-to-bookmark index from the current bookmark model.
- * @returns {Object<string, Array<string>>}
+ *
+ * @returns {Object<string, Array<string>>} Map of tag name to bookmark ids.
  */
 export function getUniqueTags() {
   ext.index.taxonomy.tags = {}
@@ -65,7 +76,8 @@ export function getUniqueTags() {
 
 /**
  * Build (or reuse) a memoized folder-to-bookmark index.
- * @returns {Object<string, Array<string>>}
+ *
+ * @returns {Object<string, Array<string>>} Map of folder name to bookmark ids.
  */
 export function getUniqueFolders() {
   // This function is memoized, as the folders don't change while the extension is open
@@ -91,7 +103,8 @@ export function getUniqueFolders() {
 }
 
 /**
- * Clear the memoized folders dictionary so it can be rebuilt on demand.
+ * Clears the memoized folders dictionary so it can be rebuilt on demand.
+ * Call this after mutating ext.model.bookmarks to keep folder views in sync.
  */
 export function resetUniqueFoldersCache() {
   if (ext && ext.index && ext.index.taxonomy) {

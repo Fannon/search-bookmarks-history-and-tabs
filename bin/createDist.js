@@ -2,7 +2,10 @@
 /* eslint-disable no-console */
 /**
  * @file Builds the Chrome-ready distribution directory and archive.
- * Copies assets into `dist/chrome`, swaps bundles, prunes tests, and zips the result.
+ *
+ * Copies source assets into `dist/chrome`, swaps development scripts for
+ * bundled equivalents, removes test fixtures, and packages the result as a zip
+ * file. This mirrors the artifact uploaded to browser extension stores.
  */
 import fs from 'fs-extra'
 import { createWriteStream } from 'fs'
@@ -14,7 +17,6 @@ const CSS_BUNDLED_FILENAMES = new Set(['style.css', 'options.css', 'taxonomy.css
 
 /**
  * Build the Chrome distribution directory and accompanying archive.
- * @param {boolean} [clean=true]
  */
 export async function createDist(clean = true) {
   // Remove and create directories
@@ -77,7 +79,7 @@ createDist().catch((error) => {
 
 /**
  * Recursively delete non-bundled JavaScript files beneath a directory.
- * @param {string} dir
+ * @param {string} dir Path to inspect for removable files.
  * @returns {Promise<void>}
  */
 async function removeBundledJs(dir) {
@@ -104,7 +106,7 @@ async function removeBundledJs(dir) {
 
 /**
  * Remove test artifacts such as __tests__ directories and *.test.js files.
- * @param {string} dir
+ * @param {string} dir Directory to traverse while pruning test files.
  * @returns {Promise<void>}
  */
 async function removeTestArtifacts(dir) {
@@ -130,7 +132,7 @@ async function removeTestArtifacts(dir) {
 
 /**
  * Swap development script tags with production bundles in an HTML file.
- * @param {string} filePath
+ * @param {string} filePath HTML file to update.
  * @returns {Promise<void>}
  */
 async function modifyHtmlFile(filePath) {
@@ -164,7 +166,7 @@ async function modifyHtmlFile(filePath) {
 
 /**
  * Swap unbundled stylesheet references with minified bundle versions.
- * @param {string} htmlContent
+ * @param {string} htmlContent HTML content to update.
  * @returns {string}
  */
 function replaceStylesheetReferences(htmlContent) {

@@ -1,6 +1,11 @@
 /**
  * @file Loads and normalizes the datasets searched by the popup.
- * Fetches browser data, applies option filters, and prepares derived indexes.
+ *
+ * Responsibilities:
+ * - Fetch bookmarks, tabs, and history from the browser API layer and convert them into the shared `searchItem` format.
+ * - Apply option-driven limits (history window, item caps, ignored folders) to balance freshness with performance.
+ * - Merge history metadata lazily into bookmarks/tabs only when URLs overlap, avoiding unnecessary allocations.
+ * - Prepare derived indexes (search strings, taxonomy aggregates) for downstream search strategies and views.
  */
 
 import {
@@ -14,11 +19,12 @@ import {
 } from '../helper/browserApi.js'
 
 /**
- * Merge history data into items lazily so new objects are created only when needed.
- * @param {Array} items
- * @param {Map} historyMap
- * @param {Set<string>} [mergedUrls]
- * @returns {Array}
+ * Efficiently merges history data into bookmarks or tabs using lazy evaluation
+ * Only creates new objects when there are actual history matches to merge
+ * @param {Array} items - Array of bookmarks or tabs
+ * @param {Map} historyMap - Map of URL to history item
+ * @param {Set<string>} [mergedUrls] - Tracks which history URLs were merged
+ * @returns {Array} - Merged array with history data
  */
 function mergeHistoryLazily(items, historyMap, mergedUrls) {
   if (!items.length) return items
@@ -52,7 +58,8 @@ function mergeHistoryLazily(items, historyMap, mergedUrls) {
 
 /**
  * Fetch and normalize the datasets used by the popup search experience.
- * @returns {Promise<{tabs: Array, bookmarks: Array, history: Array}>}
+ *
+ * @returns {Promise<{tabs: Array, bookmarks: Array, history: Array}>} Prepared search data.
  */
 export async function getSearchData() {
   const startTime = Date.now()

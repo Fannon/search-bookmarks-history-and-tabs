@@ -2,7 +2,10 @@
 /* eslint-disable no-console */
 /**
  * @file Bundles popup entry points and styles with esbuild.
- * Produces minified IIFE bundles and companion CSS for extension releases.
+ *
+ * Produces minified IIFE bundles for each popup entry module and companion CSS
+ * files. This script mirrors the production build that ships to extension
+ * stores and is invoked by `npm run build:bundle` and the watch pipeline.
  */
 
 import { build } from 'esbuild'
