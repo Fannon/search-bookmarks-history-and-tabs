@@ -48,11 +48,6 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
   const setUserOptions = jest.fn(async () => {})
   const searchMock = jest.fn(() => Promise.resolve())
 
-  const utilsModule = await import('../../helper/utils.js')
-  jest.unstable_mockModule('../../helper/utils.js', () => ({
-    __esModule: true,
-    ...utilsModule,
-  }))
   jest.unstable_mockModule('../../model/options.js', () => ({
     getUserOptions,
     setUserOptions,
