@@ -11,6 +11,21 @@ const originalWindowClose = window.close
 const originalWindowOpen = window.open
 const originalClipboard = navigator.clipboard
 
+const escapeHtmlMap = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+}
+
+function mockEscapeHtml(value) {
+  if (value === null || value === undefined) {
+    return ''
+  }
+  return String(value).replace(/[&<>"']/g, (match) => escapeHtmlMap[match])
+}
+
 function createResults() {
   return [
     {
@@ -51,6 +66,7 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
 
   jest.unstable_mockModule('../../helper/utils.js', () => ({
     timeSince,
+    escapeHtml: mockEscapeHtml,
   }))
   jest.unstable_mockModule('../../model/options.js', () => ({
     getUserOptions,

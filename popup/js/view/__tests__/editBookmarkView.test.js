@@ -82,7 +82,22 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
     }
   }
 
+  const escapeHtmlMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }
+  const mockEscapeHtml = (value) => {
+    if (value === null || value === undefined) {
+      return ''
+    }
+    return String(value).replace(/[&<>"']/g, (match) => escapeHtmlMap[match])
+  }
+
   jest.unstable_mockModule('../../helper/utils.js', () => ({
+    escapeHtml: mockEscapeHtml,
     cleanUpUrl,
   }))
   jest.unstable_mockModule('../../helper/browserApi.js', () => ({

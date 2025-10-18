@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals'
-import { cleanUpUrl, timeSince, printError, loadScript } from '../utils.js'
+import { cleanUpUrl, timeSince, printError, loadScript, escapeHtml } from '../utils.js'
 
 describe('cleanUpUrl', () => {
   it('normalizes protocol, www and trailing slash', () => {
@@ -262,5 +262,20 @@ describe('printError', () => {
   it('handles missing error list gracefully', () => {
     expect(() => printError(new Error('boom'))).not.toThrow()
     expect(consoleErrorSpy).toHaveBeenCalled()
+  })
+})
+
+describe('escapeHtml', () => {
+  it('escapes all special characters', () => {
+    expect(escapeHtml('<script>"test"&\'')).toBe('&lt;script&gt;&quot;test&quot;&amp;&#39;')
+  })
+
+  it('handles nullish values gracefully', () => {
+    expect(escapeHtml(null)).toBe('')
+    expect(escapeHtml(undefined)).toBe('')
+  })
+
+  it('leaves plain text untouched', () => {
+    expect(escapeHtml('plain text')).toBe('plain text')
   })
 })
