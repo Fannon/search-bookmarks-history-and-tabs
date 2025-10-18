@@ -13,21 +13,28 @@ function setupDom() {
   `
 }
 
-async function loadTagsView({ tags = {} } = {}) {
-  jest.resetModules()
+function setupExtWithBookmarks(bookmarks = []) {
+  global.ext = {
+    model: {
+      bookmarks,
+    },
+    index: {
+      taxonomy: {
+        tags: {},
+        folders: {},
+      },
+    },
+  }
+}
 
-  const getUniqueTags = jest.fn(() => tags)
-  jest.unstable_mockModule('../../search/taxonomySearch.js', () => ({
-    getUniqueTags,
-  }))
+async function loadTagsView({ bookmarks = [] } = {}) {
+  jest.resetModules()
+  setupExtWithBookmarks(bookmarks)
 
   const module = await import('../tagsView.js')
 
   return {
     module,
-    mocks: {
-      getUniqueTags,
-    },
   }
 }
 
@@ -36,18 +43,21 @@ describe('tagsView', () => {
     document.body.innerHTML = ''
   })
 
+  afterEach(() => {
+    delete global.ext
+  })
+
   it('renders sorted tag badges with counts and shows the overview', async () => {
     setupDom()
-    const tags = {
-      beta: [{ id: 2 }],
-      alpha: [{ id: 1 }, { id: 3 }],
-      release: [{ id: 4 }, { id: 5 }, { id: 6 }],
-    }
-    const { module, mocks } = await loadTagsView({ tags })
+    const bookmarks = [
+      { originalId: '1', tags: '#beta #alpha' },
+      { originalId: '2', tags: '#alpha #release' },
+      { originalId: '3', tags: '#release' },
+    ]
+    const { module } = await loadTagsView({ bookmarks })
 
     module.loadTagsOverview()
 
-    expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
     expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges.map((el) => el.getAttribute('x-tag'))).toEqual(['alpha', 'beta', 'release'])
@@ -59,13 +69,15 @@ describe('tagsView', () => {
     expect(badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())).toEqual([
       '#alpha (2)',
       '#beta (1)',
-      '#release (3)',
+      '#release (2)',
     ])
   })
 
   it('renders nothing when no tags are returned', async () => {
     setupDom()
-    const { module } = await loadTagsView({ tags: {} })
+    const { module } = await loadTagsView({
+      bookmarks: [{ originalId: '1', tags: '' }],
+    })
 
     module.loadTagsOverview()
 
@@ -77,29 +89,20 @@ describe('tagsView', () => {
     setupDom()
     const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 
-    // Test with malformed tag data - the actual implementation renders all tags
-    const tags = {
-      '': [], // Empty tag name
-      'null': [{ id: 1 }], // null key
-      'undefined': [{ id: 2 }], // undefined key
-      'valid-tag': [{ id: 3 }],
-    }
-
-    const { module, mocks } = await loadTagsView({ tags })
+    const bookmarks = [
+      { originalId: '1', tags: '#  #valid-tag' },
+      { originalId: '2', tags: '#valid-tag' },
+    ]
+    const { module } = await loadTagsView({ bookmarks })
 
     module.loadTagsOverview()
 
-    expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
     expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
-    // The actual implementation renders all tags including malformed ones
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
-    expect(badges).toHaveLength(4) // All tags are rendered
-
-    // Check that valid tags are still rendered correctly
-    const validBadge = badges.find((badge) => badge.getAttribute('x-tag') === 'valid-tag')
-    expect(validBadge).toBeDefined()
-    expect(validBadge.getAttribute('href')).toBe('./index.html#search/#valid-tag')
+    expect(badges).toHaveLength(1)
+    expect(badges[0].getAttribute('x-tag')).toBe('valid-tag')
+    expect(badges[0].textContent.replace(/\s+/g, ' ').trim()).toBe('#valid-tag (2)')
 
     consoleWarnSpy.mockRestore()
   })
@@ -107,82 +110,72 @@ describe('tagsView', () => {
   it('handles large number of tags efficiently', async () => {
     setupDom()
 
-    // Create many tags to test performance
-    const tags = {}
-    for (let i = 0; i < 100; i++) {
-      tags[`tag${i}`] = Array.from({ length: Math.floor(Math.random() * 10) + 1 }, (_, idx) => ({ id: `${i}-${idx}` }))
-    }
+    const bookmarks = Array.from({ length: 100 }, (_, idx) => ({
+      originalId: `bookmark-${idx}`,
+      tags: `#tag${idx}`,
+    }))
 
-    const { module, mocks } = await loadTagsView({ tags })
+    const { module } = await loadTagsView({ bookmarks })
 
     const startTime = Date.now()
     module.loadTagsOverview()
     const endTime = Date.now()
 
-    expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
     expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges).toHaveLength(100)
 
-    // Should render within reasonable time (less than 100ms for 100 tags)
     expect(endTime - startTime).toBeLessThan(100)
   })
 
   it('handles special characters in tag names', async () => {
     setupDom()
-    const tags = {
-      'tag with spaces': [{ id: 1 }],
-      'tag-with-dashes': [{ id: 2 }],
-      'tag_with_underscores': [{ id: 3 }],
-      'tag.with.dots': [{ id: 4 }],
-      'tag(with)parentheses': [{ id: 5 }],
-    }
-
-    const { module, mocks } = await loadTagsView({ tags })
+    const tags = [
+      'tag with spaces',
+      'tag-with-dashes',
+      'tag_with_underscores',
+      'tag.with.dots',
+      'tag(with)parentheses',
+    ]
+    const bookmarks = tags.map((tagName, index) => ({
+      originalId: `bookmark-${index}`,
+      tags: `#${tagName}`,
+    }))
+    const { module } = await loadTagsView({ bookmarks })
 
     module.loadTagsOverview()
 
-    expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
     expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
-    expect(badges).toHaveLength(5)
+    expect(badges).toHaveLength(tags.length)
 
-    // Check that special characters are handled in hrefs (no encoding in actual implementation)
     const hrefs = badges.map((el) => el.getAttribute('href'))
-    expect(hrefs).toHaveLength(5)
+    expect(hrefs).toHaveLength(tags.length)
 
-    // Check that all expected tag names are present in the hrefs
     const hrefStrings = hrefs.join(' ')
-    expect(hrefStrings).toContain('tag with spaces')
-    expect(hrefStrings).toContain('tag-with-dashes')
-    expect(hrefStrings).toContain('tag.with.dots')
-    expect(hrefStrings).toContain('tag_with_underscores')
-    expect(hrefStrings).toContain('tag(with)parentheses')
+    for (const tag of tags) {
+      expect(hrefStrings).toContain(tag)
+    }
   })
 
   it('handles tags with unicode characters', async () => {
     setupDom()
-    const tags = {
-      'café': [{ id: 1 }],
-      'naïve': [{ id: 2 }],
-      'résumé': [{ id: 3 }],
-      '日本語': [{ id: 4 }],
-      '🚀': [{ id: 5 }],
-    }
-
-    const { module, mocks } = await loadTagsView({ tags })
+    const tags = ['café', 'naïve', 'résumé', '日本語', '🚀']
+    const bookmarks = tags.map((tagName, index) => ({
+      originalId: `bookmark-${index}`,
+      tags: `#${tagName}`,
+    }))
+    const { module } = await loadTagsView({ bookmarks })
 
     module.loadTagsOverview()
 
-    expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
     expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
-    expect(badges).toHaveLength(5)
+    expect(badges).toHaveLength(tags.length)
 
-    // Check that unicode characters are properly handled in hrefs
     const hrefs = badges.map((el) => el.getAttribute('href'))
     expect(hrefs).toEqual([
       './index.html#search/#café',
@@ -195,11 +188,9 @@ describe('tagsView', () => {
 
   it('escapes HTML content in tag names', async () => {
     setupDom()
-    const tags = {
-      'alpha<script>alert(1)</script>': [{ id: 1 }],
-    }
-
-    const { module } = await loadTagsView({ tags })
+    const dangerousTag = 'alpha<script>alert(1)</script>'
+    const bookmarks = [{ originalId: 'bookmark-1', tags: `#${dangerousTag}` }]
+    const { module } = await loadTagsView({ bookmarks })
 
     module.loadTagsOverview()
 
