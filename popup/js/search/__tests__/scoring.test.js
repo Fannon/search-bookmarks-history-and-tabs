@@ -1,15 +1,7 @@
 import { jest } from '@jest/globals'
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
-await jest.unstable_mockModule('../../initSearch.js', () => ({
-  closeErrors: jest.fn(),
-}))
-
-await jest.unstable_mockModule('../../view/searchView.js', () => ({
-  renderSearchResults: jest.fn(),
-}))
-
-const { calculateFinalScore } = await import('../common.js')
+const { calculateFinalScore } = await import('../scoring.js')
 const { defaultOptions } = await import('../../model/options.js')
 
 // Baseline options for isolated unit tests (all bonuses off, weights = 1.0 for simplicity)
@@ -69,6 +61,51 @@ describe('scoring', () => {
   afterEach(() => {
     clearTestExt()
     jest.restoreAllMocks()
+  })
+
+  it('applies base scores for each result type', () => {
+    createTestExt({
+      model: { searchTerm: '' },
+      opts: baseOpts,
+    })
+
+    const results = [
+      { type: 'bookmark', title: 'Bookmark', url: 'bookmark.test', searchScore: 0.55 },
+      { type: 'tab', title: 'Tab', url: 'tab.test', searchScore: 1 },
+      { type: 'history', title: 'History', url: 'history.test', searchScore: 1 },
+      { type: 'search', title: 'Search', url: 'search.test', searchScore: 0.5 },
+      { type: 'customSearch', title: 'Custom search', url: 'custom.test', searchScore: 1 },
+      { type: 'direct', title: 'Direct', url: 'direct.test', searchScore: 1 },
+    ]
+
+    const scored = calculateFinalScore(results, '')
+    const scoreByType = Object.fromEntries(scored.map((item) => [item.type, item.score]))
+
+    expect(scoreByType).toMatchObject({
+      bookmark: expect.any(Number),
+      tab: expect.any(Number),
+      history: expect.any(Number),
+      search: expect.any(Number),
+      customSearch: expect.any(Number),
+      direct: expect.any(Number),
+    })
+    expect(scoreByType.bookmark).toBeCloseTo(55)
+    expect(scoreByType.tab).toBeCloseTo(70)
+    expect(scoreByType.history).toBeCloseTo(45)
+    expect(scoreByType.search).toBeCloseTo(15)
+    expect(scoreByType.customSearch).toBeCloseTo(400)
+    expect(scoreByType.direct).toBeCloseTo(500)
+  })
+
+  it('throws on unsupported result type', () => {
+    createTestExt({
+      model: { searchTerm: 'test' },
+      opts: baseOpts,
+    })
+
+    expect(() =>
+      calculateFinalScore([{ type: 'unsupported', title: 'X', url: 'https://x.test', searchScore: 1 }], 'test'),
+    ).toThrow('Search result type "unsupported" not supported')
   })
 
   it('scales the base score by the searchScore multiplier', () => {

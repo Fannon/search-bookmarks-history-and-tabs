@@ -7,8 +7,6 @@ import { jest, describe, test, expect, beforeAll, beforeEach, afterEach } from '
 import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
 
 const mockGetBrowserTabs = jest.fn()
-const mockCleanUpUrl = jest.fn((url) => url.replace(/\/+$/, ''))
-const mockPrintError = jest.fn()
 const mockCloseErrors = jest.fn()
 const mockRenderSearchResults = jest.fn()
 const mockLoadScript = jest.fn(() => Promise.resolve())
@@ -28,11 +26,8 @@ beforeAll(async () => {
   const utilsModule = await import('../../helper/utils.js')
   await jest.unstable_mockModule('../../helper/utils.js', () => ({
     __esModule: true,
-    cleanUpUrl: mockCleanUpUrl,
-    printError: mockPrintError,
+    ...utilsModule,
     loadScript: mockLoadScript,
-    escapeHtml: utilsModule.escapeHtml,
-    timeSince: utilsModule.timeSince,
   }))
   await jest.unstable_mockModule('../../initSearch.js', () => ({
     __esModule: true,
@@ -172,63 +167,9 @@ describe('searchWithAlgorithm', () => {
 })
 
 describe('calculateFinalScore', () => {
-  test('assigns base scores for each supported result type', () => {
-    ext.model.searchTerm = ''
-    const results = [
-      { type: 'bookmark', searchScore: 0.5, customBonusScore: 5, title: 'Bookmark', url: 'https://bookmark.test' },
-      { type: 'tab', searchScore: 1, title: 'Tab', url: 'https://tab.test' },
-      { type: 'history', searchScore: 1, title: 'History', url: 'https://history.test' },
-      { type: 'search', searchScore: 0.5, title: 'Search', url: 'https://search.test' },
-      { type: 'customSearch', searchScore: 1, title: 'Custom', url: 'https://custom.test' },
-      { type: 'direct', searchScore: 1, title: 'Direct', url: 'https://direct.test' },
-    ]
-
-    const scored = calculateFinalScore(results, '')
-
-    expect(scored).toEqual([
-      expect.objectContaining({ score: 55 }),
-      expect.objectContaining({ score: 70 }),
-      expect.objectContaining({ score: 45 }),
-      expect.objectContaining({ score: 15 }),
-      expect.objectContaining({ score: 400 }),
-      expect.objectContaining({ score: 500 }),
-    ])
-  })
-
-  test('adds search term bonuses, visit history, and recency adjustments', () => {
-    const fixedNow = 1_700_000_000_000
-    jest.spyOn(Date, 'now').mockReturnValue(fixedNow)
-    ext.model.searchTerm = 'latest'
-    ext.opts.scoreDateAddedBonusScoreMaximum = 12
-    ext.opts.scoreDateAddedBonusScorePerDay = 2
-
-    const results = [
-      {
-        type: 'bookmark',
-        title: 'Latest news digest',
-        url: 'latestnews.test',
-        tags: 'latest,news',
-        tagsArray: ['Latest', 'News'],
-        folder: 'Latest',
-        folderArray: ['Latest'],
-        customBonusScore: 7,
-        searchScore: 1,
-        visitCount: 10,
-        lastVisitSecondsAgo: 0,
-        dateAdded: fixedNow - 24 * 60 * 60 * 1000,
-      },
-    ]
-
-    const [scored] = calculateFinalScore(results, 'latest')
-
-    expect(scored.score).toBeCloseTo(172)
-    Date.now.mockRestore()
-  })
-
-  test('throws on unsupported result type', () => {
-    const results = [{ type: 'unsupported', searchScore: 1, title: 'X', url: 'https://x.test' }]
-
-    expect(() => calculateFinalScore(results, 'x')).toThrow('Search result type "unsupported" not supported')
+  test('re-exports scoring implementation', async () => {
+    const scoringModule = await import('../scoring.js')
+    expect(calculateFinalScore).toBe(scoringModule.calculateFinalScore)
   })
 })
 
@@ -418,7 +359,8 @@ describe('search', () => {
       type: 'direct',
       originalUrl: 'https://example.com',
     })
-    expect(mockCleanUpUrl).toHaveBeenCalledWith('https://example.com')
+    expect(direct.url).toBe('example.com')
+    expect(direct.title).toBe('Direct: "example.com"')
   })
 
   test('filters low scoring results and limits total size', async () => {
