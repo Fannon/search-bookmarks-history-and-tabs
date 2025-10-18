@@ -147,14 +147,23 @@ uFuzzyOptions:
 
 ## Scoring System
 
-The scoring system works roughly as follows:
+The scoring system calculates a relevance score for each search result using a 5-step process:
 
-- Depending on the type of result (bookmark, tab, history) a different base score is taken (e.g. `scoreBookmarkBase`).
-- Depending on in which result field (title, url, tag, folder) the match was found, the search match gets weighted by multiplication. (e.g. `scoreTitleWeight`).
-- This base score is multiplied by the search library score. A less good match will usually reduce the multiplier, while a perfect / highest ranked match will keep it at 1.
-- Depending on certain conditions some bonus score points are added on top. For example, `exactStartsWithBonus` will add score if either the title or the url start exactly with the search term, including spaces.
+1. **Base Score** - Each result type (bookmark, tab, history, search engine) starts with a different base score (e.g. `scoreBookmarkBase: 100`, `scoreTabBase: 70`)
+2. **Search Quality Multiplier** - The base score is multiplied by the search library score (0-1), which reflects how good the match is. Fuzzy/precise search algorithms return this quality score.
+3. **Field-Specific Bonuses** - Additional points are awarded based on:
+   - Exact matches: `scoreExactStartsWithBonus`, `scoreExactEqualsBonus` if title/URL starts with or equals the search term
+   - Exact tag/folder matches: `scoreExactTagMatchBonus`, `scoreExactFolderMatchBonus` for direct tag/folder matches
+   - Substring matches: `scoreExactIncludesBonus` weighted by field importance (title=1.0, tag=0.7, url=0.6, folder=0.5)
+4. **Behavioral Bonuses** - Additional points based on usage patterns:
+   - `scoreVisitedBonusScore` - Points per visit (up to `scoreVisitedBonusScoreMaximum`)
+   - `scoreRecentBonusScoreMaximum` - Bonus for recently visited items
+   - `scoreDateAddedBonusScoreMaximum` - Bonus for recently added bookmarks
+5. **Custom Bonus** - User-defined bonus via `+<number>` notation in bookmark titles (if `scoreCustomBonusScore` is enabled)
 
-For a description of the scoring options and what they do, please see [popup/js/model/options.js](popup/js/model/options.js).
+For detailed implementation and all scoring configuration options, see:
+- **[popup/js/search/scoring.js](popup/js/search/scoring.js)** - Core scoring algorithm with comprehensive documentation
+- **[popup/js/model/options.js](popup/js/model/options.js)** - Complete list of scoring configuration options
 
 ## Privacy / Data Protection
 
