@@ -1,23 +1,18 @@
-//////////////////////////////////////////
-// PRECISE (EXACT-MATCH) SEARCH         //
-//////////////////////////////////////////
-
 /**
- * Implements precise/exact-match search algorithm for fast performance
+ * @file Implements the popup's precise/exact-match search strategy.
  *
  * Strategy:
- * - Simple substring matching (includes) across searchString field
- * - AND condition: all search terms must match
- * - No fuzzy matching or scoring adjustments
- * - Fast performance for exact phrase matches
+ * - Perform case-insensitive substring matching across the precomputed `searchString` field.
+ * - Require all tokens to match (AND semantics) to keep results tightly focused.
+ * - Skip fuzzy tolerances or extra scoring logic so exact phrases stay lightning fast.
  *
- * Scoring:
- * - All matches use searchScore of 1 (base score)
- * - Final score determined by scoring.js algorithm
+ * Scoring pipeline:
+ * - Every match carries a `searchScore` of 1 before flowing into `scoring.js` for final ranking.
+ * - Prepares highlight metadata for the view without additional processing overhead.
  *
- * Memoization:
- * - Caches search data per mode to avoid unnecessary preprocessing
- * - Resets when search data changes or search strategy changes
+ * Memoisation:
+ * - Cache pre-lowered haystacks per mode (bookmarks, tabs, history) for reuse across repeated queries.
+ * - Reset caches when the search dataset or active mode changes to avoid stale results.
  */
 
 import { resolveSearchTargets } from './common.js'

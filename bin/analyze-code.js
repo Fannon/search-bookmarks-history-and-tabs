@@ -1,4 +1,12 @@
 #!/usr/bin/env node
+/**
+ * @fileoverview Collects repository-wide file statistics for maintenance.
+ *
+ * Invoked via `npm run analyze` to summarize how many lines of code, comments,
+ * and empty lines exist across source, test, and auxiliary files. The report
+ * helps track documentation coverage and spot unexpected growth in bundles
+ * without building the extension.
+ */
 
 import fs from 'fs'
 import path from 'path'
@@ -76,7 +84,7 @@ class CodeAnalyzer {
   }
 
   shouldIncludeFile(filePath) {
-    // Check exclude patterns first
+    // Exclude build artifacts and vendor directories before considering matches
     for (const pattern of EXCLUDE_PATTERNS) {
       if (new RegExp(pattern.replace(/\*\*/g, '.*')).test(filePath)) {
         return false

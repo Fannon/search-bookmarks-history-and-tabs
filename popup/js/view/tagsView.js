@@ -1,17 +1,10 @@
-//////////////////////////////////////////
-// TAGS OVERVIEW PAGE VIEW              //
-//////////////////////////////////////////
-
 /**
- * Renders tags overview page (popup/tags.html)
+ * @file Renders the tags overview in the popup.
  *
- * Displays:
- * - All unique tags extracted from bookmarks
- * - Count of bookmarks for each tag
- * - Clickable tag badges that link to filtered search results
- *
- * Template-based rendering for performance
- * Each tag is a clickable link that opens search with #tag filter
+ * Responsibilities:
+ * - Aggregate bookmark tags with frequency counts to build a browsable taxonomy.
+ * - Render lightweight badge markup that links back to the main search filtered by the chosen tag.
+ * - Keep rendering efficient by generating HTML once per load and relying on delegation for navigation.
  */
 
 import { getUniqueTags } from '../search/taxonomySearch.js'

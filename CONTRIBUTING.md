@@ -42,7 +42,7 @@ Please review the guidelines below before submitting changes.
   - Choose "Load unpacked" and select `dist/chrome/`.
 - **Firefox**
   - After running `npm run build`, open `about:debugging`.
-  - Click "This Firefox" → "Load Temporary Add-on…" and pick the `manifest.json` inside `dist/firefox/`.
+  - Click "This Firefox" → "Load Temporary Add-on…" and pick the `manifest.json` inside `dist/chrome/` (the Chrome build works for temporary installs).
   - Temporary add-ons must be reloaded after every browser restart.
 - **Iterating on changes**
   - Re-run `npm run build` before reloading the extension, or keep `npm run watch` running so the `dist/` output stays in sync with source edits.

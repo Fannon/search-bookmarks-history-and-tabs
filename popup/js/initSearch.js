@@ -1,24 +1,12 @@
-//////////////////////////////////////////
-// MAIN SEARCH PAGE ENTRY POINT         //
-//////////////////////////////////////////
-
 /**
- * Entry point for the main search interface (popup/index.html)
+ * @file Coordinates the popup search entry point (`popup/index.html`).
  *
  * Responsibilities:
- * - Initialize extension context and global state (ext object)
- * - Load options, bookmarks, tabs, and history from browser/mock data
- * - Set up event listeners for search input, navigation, and strategy toggle
- * - Implement search debouncing to prevent excessive search calls
- * - Set up hash-based routing for search terms and navigation
- * - Lazy-load mark.js library for search term highlighting
- * - Manage search result caching for improved performance
- *
- * Key Features:
- * - Debounced search input (prevents rapid repeated searches)
- * - Hash-based routing (#search/<term>) for shareable search URLs
- * - Loading overlay removed after initialization completes
- * - Search results cached by term, strategy, and mode for reuse
+ * - Initialize the shared extension context and expose it on `window.ext` for debugging.
+ * - Load options plus bookmarks, tabs, and history data before wiring up search handlers.
+ * - Bind navigation listeners, search input debouncing, and strategy toggles for simple/fuzzy/taxonomy flows.
+ * - Maintain hash-based routing (`#search/<term>`) and restore cached results to keep navigation snappy.
+ * - Lazy-load mark.js highlighting so first paint stays lightweight while results still highlight matches.
  */
 
 import { loadScript, printError } from './helper/utils.js'
@@ -34,18 +22,10 @@ import {
 } from './view/searchView.js'
 import { createExtensionContext } from './helper/extensionContext.js'
 
-//////////////////////////////////////////
-// EXTENSION NAMESPACE                  //
-//////////////////////////////////////////
-
 /** Browser extension namespace */
 export const ext = createExtensionContext()
 
 window.ext = ext
-
-//////////////////////////////////////////
-// INITIALIZE EXTENSION                 //
-//////////////////////////////////////////
 
 initExtension().catch((err) => {
   printError(err, 'Could not initialize Extension')

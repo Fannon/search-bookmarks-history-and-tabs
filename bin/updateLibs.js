@@ -1,8 +1,15 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
+/**
+ * @fileoverview Refreshes third-party libraries in popup/lib.
+ *
+ * Copies the minified browser-ready assets from node_modules into the extension
+ * so the popup can load dependencies without a bundler at runtime.
+ */
 import * as fs from 'fs-extra'
 
 async function updateLibs() {
+  // Clear stale assets so the directory mirrors current dependency versions
   await fs.emptyDir('popup/lib')
 
   await Promise.all([

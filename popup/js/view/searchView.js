@@ -1,13 +1,11 @@
 /**
- * SEARCH VIEW MODULE
+ * @file Maintains the popup search results view and interactions.
  *
- * Handles the user interface and interaction for the search results display.
- * This module is responsible for:
- * - Rendering search results (bookmarks and open tabs) in a structured list format
- * - Managing visual selection and keyboard/mouse navigation between results
- * - Handling various click behaviors (open in tab, close tab, copy URL, etc.)
- * - Displaying result metadata (tags, folders, visit counts, dates, scores)
- * - Supporting search term highlighting and search strategy switching
+ * Responsibilities:
+ * - Render bookmark/tab/history results with metadata badges, highlights, and contextual actions (open, close, copy, edit).
+ * - Manage keyboard and mouse navigation, including hover enablement, selection, and quick-access shortcuts.
+ * - Coordinate search strategy toggles, approach indicators, and persisted user preferences across sessions.
+ * - Surface visit counts, taxonomy labels, and scoring hints to keep the UI aligned with search models.
  */
 
 import { timeSince } from '../helper/utils.js'

@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
+/**
+ * @fileoverview Watches popup sources and triggers incremental rebuilds.
+ *
+ * Listens for changes under `popup/`, reruns the esbuild bundler, and refreshes
+ * the Chrome distribution directory. Designed for `npm run watch` to keep the
+ * side-loaded extension in sync without manual rebuilds.
+ */
 import chokidar from 'chokidar'
 import process from 'node:process'
 import { performance } from 'node:perf_hooks'
@@ -45,6 +52,7 @@ async function buildOnce() {
 
 async function runBuild() {
   if (isBuilding) {
+    // Defer the rebuild until the current bundle completes to avoid overlaps
     hasQueuedBuild = true
     return
   }
@@ -69,6 +77,7 @@ const scheduleBuild = () => {
     return
   }
 
+  // Coalesce rapid file change events into a single rebuild invocation
   pendingTimer = setTimeout(() => {
     pendingTimer = null
     runBuild()

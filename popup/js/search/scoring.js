@@ -1,45 +1,21 @@
-//////////////////////////////////////////
-// SEARCH RESULT SCORING                //
-//////////////////////////////////////////
-
 /**
- * Calculates the final search item score for each result
+ * @file Calculates final relevance scores for popup search results.
  *
- * SCORING FLOW (5 STEPS):
+ * Blends base weights, match-quality multipliers, field-specific bonuses, behavioural heuristics, and user-defined overrides
+ * so every strategy (simple, fuzzy, taxonomy) produces stable, comparable ordering before results render.
  *
- * 1. START WITH BASE SCORE
- *    - Uses scoreBookmarkBase (100), scoreTabBase (70), scoreHistoryBase (45), etc.
+ * Scoring flow (five stages):
+ * 1. Start with base type score — bookmarks (100), tabs (70), history (45), etc. via `BASE_SCORE_KEYS`.
+ * 2. Multiply by search quality multiplier — fuzzy/precise match score between 0-1 dampens weak matches.
+ * 3. Add field bonuses — exact/starts-with/substring boosts for title, URL, tag, and folder matches with per-field weighting.
+ * 4. Layer behavioural boosts — visit count, recency, and creation date heuristics keep frequently used items near the top.
+ * 5. Apply custom overrides — parse `Title +20 #tag` syntax to honour user-specified bonus scores.
  *
- * 2. MULTIPLY BY SEARCH QUALITY SCORE (0-1)
- *    - From fuzzy/precise search algorithms; poor matches reduce the score
- *
- * 3. ADD FIELD-SPECIFIC BONUSES
- *    STEP 3A - Exact Match Bonuses:
- *      - scoreExactStartsWithBonus: title/URL starts with search term
- *      - scoreExactEqualsBonus: title exactly equals search term
- *      - scoreExactTagMatchBonus: tag name matches a search term (15 points default)
- *      - scoreExactFolderMatchBonus: folder name matches a search term
- *    STEP 3B - Includes Bonuses (substring matching):
- *      - scoreExactIncludesBonus: weighted by field (title × 1.0, tag × 0.7, url × 0.6, folder × 0.5)
- *      - Only FIRST matching field per search term gets bonus (no double-counting)
- *
- * 4. ADD BEHAVIORAL BONUSES (USAGE PATTERNS)
- *    - scoreVisitedBonusScore: per visit (up to scoreVisitedBonusScoreMaximum)
- *    - scoreRecentBonusScoreMaximum: linear decay based on lastVisitSecondsAgo and historyDaysAgo
- *    - scoreDateAddedBonusScoreMaximum: linear decay based on dateAdded and scoreDateAddedBonusScorePerDay
- *
- * 5. ADD CUSTOM USER-DEFINED BONUS
- *    - scoreCustomBonusScore: extracted from "Title +20 #tag" notation (if enabled)
- *
- * FIELD PRIORITY (for includes bonus):
- * - Title match (weight 1.0) - highest priority
- * - URL match (weight 0.6)
- * - Tag match (weight 0.7)
- * - Folder match (weight 0.5) - lowest priority
- *
- * @param {Array} results - Search results to score
- * @param {string} searchTerm - The search query string
- * @returns {Array} Results with calculated scores
+ * Field priority for substring bonuses:
+ * - Title (weight 1.0) outranks every other field.
+ * - URL (weight 0.6) rewards address matches without dominating title results.
+ * - Tag (weight 0.7) helps taxonomy-driven workflows.
+ * - Folder (weight 0.5) keeps navigation metadata in play without overwhelming main content.
  */
 export function calculateFinalScore(results, searchTerm) {
   const now = Date.now()

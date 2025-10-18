@@ -1,28 +1,15 @@
-//////////////////////////////////////////
-// APPROXIMATE-MATCH FUZZY SEARCH       //
-//////////////////////////////////////////
-
 /**
- * Implements fuzzy/approximate-match search using uFuzzy library
+ * @file Implements the popup's fuzzy/approximate-match search via uFuzzy.
  *
  * Strategy:
- * - Uses uFuzzy library for advanced matching (typo tolerance, word boundaries)
- * - Finds approximate matches even with typos or partial words
- * - Returns scoring from uFuzzy (0-1 range)
- * - Supports match highlighting in results
+ * - Lazy-load uFuzzy on first use to keep initial bundle size low.
+ * - Build memoised haystacks per mode (bookmarks, tabs, history) for quick repeated searches.
+ * - Handle typo tolerance, loose word boundaries, and non-ASCII fallbacks better than the simple strategy.
  *
- * Scoring:
- * - searchScore from uFuzzy library (proportional to match quality)
- * - Better matches get higher scores (closer to 1)
- * - Final score determined by scoring.js algorithm (multiplies base score by searchScore)
- *
- * Performance:
- * - Slower than simpleSearch but finds more matches
- * - uFuzzy library lazy-loaded on first use
- *
- * Memoization:
- * - Caches haystack (preprocessed search data) per search mode
- * - Resets when search data changes or search strategy changes
+ * Scoring pipeline:
+ * - uFuzzy returns a searchScore between 0 and 1 representing match quality.
+ * - Higher searchScore values indicate closer matches; `scoring.js` multiplies base weights by this factor.
+ * - Highlight data is preserved for the view to underline matched substrings once results render.
  */
 
 import { loadScript, printError } from '../helper/utils.js'

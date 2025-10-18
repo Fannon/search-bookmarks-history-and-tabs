@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
+/**
+ * @fileoverview Reports bundle sizes for the packaged Chrome distribution.
+ *
+ * Traverses `dist/chrome`, summarises file sizes by directory, and surfaces the
+ * largest minified assets. The report helps monitor regressions after running
+ * `npm run build` or CI artifact generation.
+ */
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
@@ -93,6 +100,7 @@ async function summarise(files) {
   const chromeZipPath = path.resolve('dist/chrome.zip')
   try {
     const zipStats = await fs.stat(chromeZipPath)
+    // Include the shipping artifact so the table captures archive growth
     minified.push({ path: 'dist/chrome.zip', size: zipStats.size })
   } catch {
     // Zip file not found, likely build hasn't been run with zip creation

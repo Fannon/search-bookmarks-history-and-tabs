@@ -1,15 +1,11 @@
-//////////////////////////////////////////
-// UTILITY FUNCTIONS                    //
-//////////////////////////////////////////
-
 /**
- * Utility functions for DOM manipulation, time formatting, and browser integration
+ * @file Gathers shared helper utilities for popup modules.
  *
  * Provides:
- * - Time formatting (timeSince) for displaying relative dates
- * - URL normalization (cleanUpUrl) for consistent URL comparison
- * - Dynamic script loading (loadScript) with deduplication
- * - Error display/logging (printError) for UI error handling
+ * - Relative time formatting (`timeSince`) for surfacing history/recency metadata.
+ * - URL cleanup helpers to normalise and compare bookmark addresses reliably.
+ * - Lazy script loading with deduplication for libraries like mark.js and uFuzzy.
+ * - Error logging/rendering helpers to keep user feedback consistent across entry points.
  */
 
 /**

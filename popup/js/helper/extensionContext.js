@@ -1,3 +1,12 @@
+/**
+ * @file Defines the shared extension context consumed by all popup entry points.
+ *
+ * Responsibilities:
+ * - Centralise options, search models, DOM caches, taxonomy indexes, and browser API access in a single namespace.
+ * - Provide consistent state whenever a popup window opens, avoiding redundant fetches or divergent global variables.
+ * - Track lifecycle flags (initialised, returnHash) and caches (search results) to coordinate navigation across pages.
+ */
+
 import { browserApi } from './browserApi.js'
 
 /**

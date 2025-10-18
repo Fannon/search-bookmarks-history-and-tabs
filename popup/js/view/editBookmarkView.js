@@ -1,23 +1,11 @@
-//////////////////////////////////////////
-// BOOKMARK EDITOR VIEW                 //
-//////////////////////////////////////////
-
 /**
- * Bookmark editing UI and form management
+ * @file Drives the bookmark editor interactions and form logic.
  *
  * Responsibilities:
- * - Load and display bookmark data for editing
- * - Initialize Tagify library for tag autocomplete
- * - Handle bookmark save/update/delete operations
- * - Update search caches and indexes after modifications
- * - Provide form validation and error handling
- *
- * Features:
- * - Tag autocomplete with available tags from all bookmarks
- * - Custom bonus score support (extracted from title)
- * - Inline tag/folder extraction from title
- * - Integration with browser bookmark API for persistence
- * - Cache invalidation on bookmark changes
+ * - Load bookmark data for editing and initialise Tagify-powered tag autocompletion.
+ * - Validate user input, persist updates through the browser API, and surface inline errors.
+ * - Handle delete/cancel flows plus bonus-score parsing while keeping the UI responsive.
+ * - Invalidate search caches and taxonomy indexes so edits reflect immediately in the popup search view.
  */
 
 import { browserApi, createSearchString } from '../helper/browserApi.js'

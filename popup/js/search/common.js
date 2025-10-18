@@ -1,30 +1,18 @@
-//////////////////////////////////////////
-// SEARCH ORCHESTRATION AND ROUTING     //
-//////////////////////////////////////////
-
 /**
- * Main search entry point and query orchestration
+ * @file Coordinates popup search orchestration and routing.
  *
  * Responsibilities:
- * - Parse search queries and detect search mode (history/bookmarks/tabs/search)
- * - Detect taxonomy markers (# for tags, ~ for folders)
- * - Route to appropriate search strategy (simple/fuzzy/taxonomy)
- * - Handle custom search engine aliases (e.g., "g keyword" for Google)
- * - Detect and handle direct URL navigation
- * - Manage search result caching for performance
- * - Support default results display when no search term provided
+ * - Parse search queries to detect mode prefixes (`h `, `b `, `t `, `s `) and taxonomy markers (`#tag`, `~folder`).
+ * - Route to the appropriate strategy (simple, fuzzy, taxonomy) or external alias based on the parsed intent.
+ * - Handle direct URL detection, default results, and search cache lookups before executing expensive work.
+ * - Normalize results so scoring, rendering, and navigation consume a consistent shape across all entry points.
  *
- * URL Detection:
- * - Direct URLs are added as "direct" type results (not searched)
- * - Supports http/https/ftp protocols
- *
- * Search Flow:
- * 1. Parse and clean search term
- * 2. Check cache
- * 3. Resolve search mode (mode prefix or @alias or #tag or ~folder)
- * 4. Execute appropriate search algorithm (simpleSearch, fuzzySearch, or taxonomySearch)
- * 5. Apply relevance scoring (calculateFinalScore)
- * 6. Render results (renderSearchResults)
+ * Search flow:
+ * 1. Clean the search term and decide which data sources to query.
+ * 2. Look up cached results keyed by term, strategy, and mode.
+ * 3. Execute `simpleSearch`, `fuzzySearch`, or `searchTaxonomy` depending on the user input.
+ * 4. Apply `calculateFinalScore` to rank bookmarks, tabs, history items, and taxonomy nodes.
+ * 5. Render results via `renderSearchResults`, including direct navigation targets when applicable.
  */
 
 import { getBrowserTabs } from '../helper/browserApi.js'
