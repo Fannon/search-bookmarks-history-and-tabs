@@ -1,10 +1,6 @@
 /**
  * @file Prepares the tags overview popup (`popup/tags.html`).
- *
- * Responsibilities:
- * - Initialise the shared extension context while disabling tabs/history sources to focus on bookmark taxonomy.
- * - Load bookmark data, aggregate unique tags with usage counts, and render them as clickable navigation chips.
- * - Link each tag back into the main search view via hash routing so users can drill into results immediately.
+ * Initializes shared context, loads tag aggregates, and renders navigation chips.
  */
 
 import { printError } from './helper/utils.js'
@@ -17,7 +13,6 @@ export const ext = (window.ext = createExtensionContext())
 
 /**
  * Load bookmark data and render the tags overview page.
- *
  * @returns {Promise<void>}
  */
 export async function initTagsPage() {

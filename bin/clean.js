@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 /**
  * @file Removes build artifacts prior to bundling.
- *
- * `npm run clean` invokes this helper to clear the dist/ directory so subsequent
- * builds start from a predictable state.
+ * Clears `dist/` so builds start from a predictable state.
  */
 import * as fs from 'fs-extra'
 

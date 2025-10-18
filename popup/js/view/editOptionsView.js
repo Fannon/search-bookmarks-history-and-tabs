@@ -1,17 +1,12 @@
 /**
  * @file Powers the options editor view.
- *
- * Responsibilities:
- * - Load persisted configuration, present it as YAML, and keep the textarea in sync with stored overrides.
- * - Validate user edits, surface parse errors inline, and persist accepted changes via the options model.
- * - Provide reset/save controls and navigate back to the search view so tweaks can be tested immediately.
+ * Loads YAML overrides, validates edits, and routes back to search.
  */
 
 import { getUserOptions, setUserOptions } from '../model/options.js'
 
 /**
- * Initialise the options editor view by loading and displaying user overrides.
- *
+ * Initialize the options editor view by loading and displaying user overrides.
  * @returns {Promise<void>}
  */
 export async function initOptions() {
@@ -28,7 +23,6 @@ export async function initOptions() {
 
 /**
  * Persist YAML updates back to storage and return users to the search view.
- *
  * @returns {Promise<void>}
  */
 async function saveOptions() {
@@ -51,9 +45,7 @@ async function saveOptions() {
   }
 }
 
-/**
- * Clear user overrides, reverting to defaults on next load.
- */
+/** Clear user overrides so defaults apply on next load. */
 async function resetOptions() {
   document.getElementById('user-config').value = ''
 }

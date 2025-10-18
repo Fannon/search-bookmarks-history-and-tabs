@@ -2,10 +2,7 @@
 /* eslint-disable no-console */
 /**
  * @file Reports bundle sizes for the packaged Chrome distribution.
- *
- * Traverses `dist/chrome`, summarises file sizes by directory, and surfaces the
- * largest minified assets. The report helps monitor regressions after running
- * `npm run build` or CI artifact generation.
+ * Traverses `dist/chrome`, summarizes file sizes, and highlights the largest assets.
  */
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
@@ -15,9 +12,8 @@ const DIST_ROOT = path.resolve('dist/chrome')
 
 /**
  * Ensure the dist directory exists before computing sizes.
- *
- * @param {string} dir - Directory to verify.
- * @returns {Promise<boolean>} False when directory is missing.
+ * @param {string} dir
+ * @returns {Promise<boolean>}
  */
 async function ensureDistExists(dir) {
   try {
@@ -38,9 +34,8 @@ async function ensureDistExists(dir) {
 
 /**
  * Recursively collect all files beneath a directory.
- *
- * @param {string} dir - Directory to walk.
- * @param {string} base - Base path for relative conversion.
+ * @param {string} dir
+ * @param {string} base
  * @returns {Promise<Array<{path: string, size: number}>>}
  */
 async function walkFiles(dir, base) {
@@ -64,9 +59,8 @@ async function walkFiles(dir, base) {
 
 /**
  * Convert byte counts into human readable strings.
- *
- * @param {number} bytes - Raw byte size.
- * @returns {string} Human readable size.
+ * @param {number} bytes
+ * @returns {string}
  */
 function formatBytes(bytes) {
   if (bytes === 0) {
@@ -82,10 +76,9 @@ function formatBytes(bytes) {
 
 /**
  * Calculate a share percentage string for a value.
- *
- * @param {number} value - Value to compare.
- * @param {number} total - Total used as denominator.
- * @returns {string} Percentage string.
+ * @param {number} value
+ * @param {number} total
+ * @returns {string}
  */
 function percentage(value, total) {
   if (total === 0) {
@@ -95,12 +88,11 @@ function percentage(value, total) {
 }
 
 /**
- * Summarise file sizes by directory depth and minified asset type.
- *
- * @param {Array<{path: string, size: number}>} files - Files to analyse.
- * @returns {Promise<Object>} Aggregated size metadata.
+ * Summarize file sizes by directory depth and minified asset type.
+ * @param {Array<{path: string, size: number}>} files
+ * @returns {Promise<Object>}
  */
-async function summarise(files) {
+async function summarize(files) {
   const totalSize = files.reduce((sum, file) => sum + file.size, 0)
 
   const topLevel = new Map()
@@ -155,11 +147,10 @@ async function summarise(files) {
 
 /**
  * Print a fixed-width table to stdout.
- *
- * @param {Array<string>} headers - Column headers.
- * @param {Array<Array<string>>} rows - Table rows.
- * @param {string} [indent=''] - Optional prefix for each line.
- * @param {Array<number>} [columnWidths] - Precomputed column widths.
+ * @param {Array<string>} headers
+ * @param {Array<Array<string>>} rows
+ * @param {string} [indent='']
+ * @param {Array<number>} [columnWidths]
  */
 function printTable(headers, rows, indent = '', columnWidths) {
   if (rows.length === 0) {
@@ -184,10 +175,9 @@ function printTable(headers, rows, indent = '', columnWidths) {
 
 /**
  * Print a tree-style summary of directory sizes.
- *
- * @param {Array<Object>} entries - Hierarchical entries with children.
- * @param {number} totalSize - Total size for percentage calculations.
- * @param {string} [indent='  '] - Initial indentation.
+ * @param {Array<Object>} entries
+ * @param {number} totalSize
+ * @param {string} [indent='  ']
  */
 function printTree(entries, totalSize, indent = '  ') {
   if (!entries || entries.length === 0) {
@@ -211,9 +201,8 @@ function printTree(entries, totalSize, indent = '  ') {
 
 /**
  * Render the overall bundle size summary, including top-level tree and tables.
- *
- * @param {Object} summary - Aggregated size details from `summarise`.
- * @param {number} fileCount - Number of files processed.
+ * @param {Object} summary
+ * @param {number} fileCount
  */
 function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMinified }, fileCount) {
   if (fileCount === 0) {
@@ -277,16 +266,14 @@ function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMini
   }
 }
 
-/**
- * Entry point for the size reporting script.
- */
+/** Entry point for the size reporting script. */
 async function main() {
   if (!(await ensureDistExists(DIST_ROOT))) {
     return
   }
 
   const files = await walkFiles(DIST_ROOT, DIST_ROOT)
-  const summary = await summarise(files)
+  const summary = await summarize(files)
   printSummary(summary, files.length)
 }
 

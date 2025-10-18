@@ -1,19 +1,12 @@
 /**
  * @file Renders the folders overview in the popup.
- *
- * Responsibilities:
- * - Aggregate bookmark folders into sorted badge lists with usage counts.
- * - Generate navigation links that jump back into the main search view filtered by a folder hash.
- * - Mirror the tag overview experience so taxonomy exploration stays consistent.
- * - Escape folder names before rendering so unusual characters cannot break markup.
+ * Aggregates folder counts and builds search links for taxonomy browsing.
  */
 
 import { escapeHtml } from '../helper/utils.js'
 import { getUniqueFolders } from '../search/taxonomySearch.js'
 
-/**
- * Render folder badges with counts for the taxonomy overview.
- */
+/** Render folder badges with counts for the taxonomy overview. */
 export function loadFoldersOverview() {
   const folders = getUniqueFolders()
   const sortedFolders = Object.keys(folders).sort()

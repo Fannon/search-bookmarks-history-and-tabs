@@ -1,12 +1,6 @@
 /**
  * @file Coordinates the popup search entry point (`popup/index.html`).
- *
- * Responsibilities:
- * - Initialize the shared extension context and expose it on `window.ext` for debugging.
- * - Load options plus bookmarks, tabs, and history data before wiring up search handlers.
- * - Bind navigation listeners, search input debouncing, and strategy toggles for simple/fuzzy/taxonomy flows.
- * - Maintain hash-based routing (`#search/<term>`) and restore cached results to keep navigation snappy.
- * - Lazy-load mark.js highlighting so first paint stays lightweight while results still highlight matches.
+ * Sets up extension context, loads data, and wires navigation plus highlighting.
  */
 
 import { loadScript, printError } from './helper/utils.js'
@@ -33,7 +27,6 @@ initExtension().catch((err) => {
 
 /**
  * Initialize the popup search experience and preload datasets.
- *
  * @returns {Promise<void>}
  */
 export async function initExtension() {
@@ -96,7 +89,6 @@ export async function initExtension() {
 
 /**
  * Handle `window.location.hash` changes and dispatch to the correct view.
- *
  * @returns {Promise<void>}
  */
 export async function hashRouter() {
@@ -123,9 +115,7 @@ export async function hashRouter() {
   }
 }
 
-/**
- * Hide the shared error list overlay if it is currently visible.
- */
+/** Hide the shared error list overlay. */
 export function closeErrors() {
   const element = document.getElementById('error-list')
   if (element) element.style = 'display: none;'

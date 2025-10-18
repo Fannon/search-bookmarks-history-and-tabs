@@ -1,18 +1,12 @@
 /**
  * @file Renders the tags overview in the popup.
- *
- * Responsibilities:
- * - Aggregate bookmark tags with frequency counts to build a browsable taxonomy.
- * - Render lightweight badge markup that links back to the main search filtered by the chosen tag.
- * - Escape tag names before injecting into HTML to guard against malformed input.
+ * Aggregates tag counts and produces search links for each entry.
  */
 
 import { escapeHtml } from '../helper/utils.js'
 import { getUniqueTags } from '../search/taxonomySearch.js'
 
-/**
- * Render the tag chips and counts for the taxonomy overview.
- */
+/** Render tag chips and counts for the taxonomy overview. */
 export function loadTagsOverview() {
   const tags = getUniqueTags()
   const sortedTags = Object.keys(tags).sort()

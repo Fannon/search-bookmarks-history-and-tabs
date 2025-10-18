@@ -1,11 +1,6 @@
 /**
  * @file Bootstraps the standalone bookmark editor (`popup/editBookmark.html`).
- *
- * Responsibilities:
- * - Parse bookmark identifiers from hash fragments, supporting both new and legacy formats.
- * - Load options plus bookmark data so editing, deleting, and validation use the same models as the search view.
- * - Wire save/delete/cancel handlers while tracking return hashes to jump back to the originating search state.
- * - Handle hash changes mid-session to reload different bookmarks without refreshing the page.
+ * Parses bookmark hashes, loads models, and wires save/delete navigation flows.
  */
 
 import { printError } from './helper/utils.js'
@@ -23,7 +18,6 @@ const LEGACY_BOOKMARK_HASH_PREFIX = '#id/'
 
 /**
  * Bootstrap the standalone bookmark editor page and wire up event handlers.
- *
  * @returns {Promise<void>}
  */
 export async function initEditBookmark() {
@@ -66,8 +60,7 @@ export async function initEditBookmark() {
 
 /**
  * Extract bookmark id and return hash from a bookmark editor location hash.
- *
- * @param {string} hash - Raw `window.location.hash` string.
+ * @param {string} hash
  * @returns {{bookmarkId: string|null, returnHash: string|null}}
  */
 function parseBookmarkHash(hash) {
@@ -92,8 +85,7 @@ function parseBookmarkHash(hash) {
 
 /**
  * Parse bookmark id plus optional return hash parameters from a hash body.
- *
- * @param {string} hashBody - Hash contents after the prefix.
+ * @param {string} hashBody
  * @returns {{bookmarkId: string, returnHash: string|null}}
  */
 function parseBookmarkComponents(hashBody) {
@@ -129,9 +121,8 @@ function parseBookmarkComponents(hashBody) {
 
 /**
  * Decode URI components while swallowing malformed encodings.
- *
- * @param {string} value - Value to decode.
- * @returns {string} Decoded or original value.
+ * @param {string} value
+ * @returns {string}
  */
 function decodeURIComponentSafe(value) {
   if (!value) {
@@ -146,9 +137,8 @@ function decodeURIComponentSafe(value) {
 
 /**
  * Build a `#search/<term>` hash fragment for redirection.
- *
- * @param {string} searchTerm - Search term to encode.
- * @returns {string} Hash fragment.
+ * @param {string} searchTerm
+ * @returns {string}
  */
 function buildSearchHash(searchTerm) {
   if (!searchTerm) {
@@ -157,9 +147,7 @@ function buildSearchHash(searchTerm) {
   return `#search/${encodeURIComponent(searchTerm)}`
 }
 
-/**
- * Register click handlers for bookmark editor actions.
- */
+/** Register click handlers for bookmark editor actions. */
 function setupEventHandlers() {
   const saveButton = document.getElementById('edit-bookmark-save')
   const deleteButton = document.getElementById('edit-bookmark-delete')
@@ -196,7 +184,6 @@ function setupEventHandlers() {
 
 /**
  * Respond to hash changes by reloading the requested bookmark.
- *
  * @returns {Promise<void>}
  */
 async function handleHashChange() {
@@ -223,9 +210,8 @@ async function handleHashChange() {
 
 /**
  * Normalize bookmark return hashes to `#search` routes.
- *
- * @param {string} hash - Raw return hash.
- * @returns {string} Sanitized hash.
+ * @param {string} hash
+ * @returns {string}
  */
 function normalizeReturnHash(hash) {
   if (!hash) {
@@ -241,8 +227,7 @@ function normalizeReturnHash(hash) {
 
 /**
  * Resolve the URL to navigate back to the search view.
- *
- * @returns {string} Target URL.
+ * @returns {string}
  */
 function getReturnTarget() {
   const returnHash = normalizeReturnHash(ext.returnHash)

@@ -1,12 +1,6 @@
 /**
  * @file Gathers shared helper utilities for popup modules.
- *
- * Provides:
- * - Relative time formatting (`timeSince`) for surfacing history/recency metadata.
- * - URL cleanup helpers to normalise and compare bookmark addresses reliably.
- * - Lazy script loading with deduplication for libraries like mark.js and uFuzzy.
- * - Error logging/rendering helpers to keep user feedback consistent across entry points.
- * - HTML escaping helpers (`escapeHtml`) to keep rendered content safe.
+ * Provides HTML escaping, time formatting, URL cleanup, dynamic script loading, and error reporting.
  */
 
 const HTML_ESCAPE_REGEX = /[&<>"']/g
@@ -20,9 +14,8 @@ const HTML_ESCAPE_MAP = {
 
 /**
  * Escape HTML special characters to prevent markup injection.
- *
- * @param {*} value - Value to escape.
- * @returns {string} Sanitised string safe for HTML contexts.
+ * @param {*} value
+ * @returns {string}
  */
 export function escapeHtml(value) {
   if (value === null || value === undefined) {
@@ -32,14 +25,9 @@ export function escapeHtml(value) {
 }
 
 /**
- * Converts a date to a human-readable "time ago" format
- *
- * Converts Unix timestamps or Date objects to relative time strings like
- * "2 hours ago", "3 days ago", etc. Falls back to smaller units if date
- * is within the current day.
- *
- * @param {Date|number} date - Date object or Unix timestamp
- * @returns {string} Formatted relative time (e.g., "5 minutes ago")
+ * Convert a date to a human-readable "time ago" string.
+ * @param {Date|number} date
+ * @returns {string}
  *
  * @see https://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
  */
@@ -76,19 +64,9 @@ export function timeSince(date) {
 }
 
 /**
- * Normalizes URLs by removing protocol, www, and trailing slashes
- *
- * Strips http://, https://, www. prefix and converts to lowercase
- * to enable consistent URL comparison across different URL formats.
- * Used for matching bookmarks/history to current page and for display.
- *
- * Examples:
- * - "https://www.example.com/" → "example.com"
- * - "http://example.com/path" → "example.com/path"
- * - "www.example.com/" → "example.com"
- *
- * @param {string|null} url - URL to normalize
- * @returns {string} Normalized URL (lowercase, no protocol/www/trailing slash)
+ * Normalize URLs by stripping protocol, www, and trailing slashes.
+ * @param {string|null} url
+ * @returns {string}
  *
  * @see https://stackoverflow.com/a/57698415
  */
@@ -107,15 +85,10 @@ export function cleanUpUrl(url) {
 const loadedScripts = new Set()
 
 /**
- * Dynamically loads a script file and caches the result
- *
- * Prevents loading the same script multiple times by tracking loaded URLs.
- * Used for lazy-loading large libraries (uFuzzy, mark.js) that are only
- * needed when specific features are used.
- *
- * @param {string} url - Script URL to load
- * @returns {Promise<void>} Resolves when script is loaded or cached
- * @throws {Error} If script fails to load
+ * Dynamically load a script file and cache the result.
+ * @param {string} url
+ * @returns {Promise<void>}
+ * @throws {Error}
  */
 export async function loadScript(url) {
   if (loadedScripts.has(url)) {
@@ -138,14 +111,9 @@ export async function loadScript(url) {
 }
 
 /**
- * Displays an error in the UI error list and logs to console
- *
- * Prepends error messages to the error-list element with full stack trace.
- * Logs to console.error for developer debugging. Used throughout the extension
- * to provide user-facing error feedback while maintaining console visibility.
- *
- * @param {Error} err - The error object with message and stack
- * @param {string} [text] - Optional context message to display before error message
+ * Display an error in the UI list and log details to the console.
+ * @param {Error} err
+ * @param {string} [text]
  */
 export function printError(err, text) {
   const errorList = document.getElementById('error-list')

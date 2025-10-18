@@ -1,18 +1,6 @@
 /**
- * @file Centralises extension configuration and user overrides.
- *
- * Responsibilities:
-* - Define default options for all extension features
- * - Merge user options with defaults to get effective configuration
- * - Load/save user options to browser storage (with sync/local fallback)
- * - Validate user options to prevent invalid configurations
- *
- * Configuration Sources (in priority order):
- * 1. User options from browser storage (sync storage or localStorage)
- * 2. Default options (built-in sensible defaults)
- *
- * User options can be customized via YAML/JSON in the settings page.
- * All options are optional - unspecified options fall back to defaults.
+ * @file Centralizes extension configuration and user overrides.
+ * Defines defaults, merges stored preferences, and validates persistence flow.
  *
  * @see https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration
  */
@@ -20,9 +8,7 @@
 import { printError } from '../helper/utils.js'
 
 /**
- * The default options
- *
- * They can be selectively overwritten and customized via user options
+ * Default configuration values overridden by user options.
  * @see https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration
  */
 export const defaultOptions = {
@@ -391,11 +377,8 @@ export const emptyOptions = {
 }
 
 /**
- * Writes user settings to the sync storage, falls back to local storage
- *
- * @see https://developer.chrome.com/docs/extensions/reference/storage/
- *
- * @param {Object} [userOptions={}] - User overrides to persist.
+ * Persist user overrides, preferring sync storage with local fallback.
+ * @param {Object} [userOptions={}]
  * @returns {Promise<void>}
  */
 export async function setUserOptions(userOptions = {}) {
@@ -423,9 +406,8 @@ export async function setUserOptions(userOptions = {}) {
 }
 
 /**
- * Get user options, fall back to default options
- *
- * @returns {Promise<Object>} Stored user overrides (or defaults).
+ * Load stored user overrides, falling back to defaults.
+ * @returns {Promise<Object>}
  */
 export async function getUserOptions() {
   return new Promise((resolve, reject) => {
@@ -451,10 +433,8 @@ export async function getUserOptions() {
 }
 
 /**
- * Gets the actual effective options based on the default options
- * and the overrides of the user options
- *
- * @returns {Promise<Object>} Effective options object.
+ * Merge defaults with user overrides and validate the result.
+ * @returns {Promise<Object>}
  */
 export async function getEffectiveOptions() {
   try {
@@ -471,9 +451,8 @@ export async function getEffectiveOptions() {
 }
 
 /**
- * Ensure user options are valid JSON-serialisable objects.
- *
- * @param {Object} userOptions - Options object to validate.
+ * Ensure user options are valid JSON-serializable objects.
+ * @param {Object} userOptions
  */
 export function validateUserOptions(userOptions) {
   if (userOptions) {

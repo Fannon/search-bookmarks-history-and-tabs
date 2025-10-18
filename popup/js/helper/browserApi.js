@@ -1,12 +1,6 @@
 /**
- * @file Normalises browser APIs for bookmarks, tabs, and history sources.
- *
- * Responsibilities:
- * - Fetch raw entries with defensive fallbacks for browsers that omit certain APIs.
- * - Convert every record into the shared `searchItem` shape (type, title, url, tags, folder trail, search strings).
- * - Parse inline annotations like `#tag` taxonomy markers and `+20` custom bonus hints from bookmark titles.
- * - Clean URLs/titles by stripping protocol, `www`, and trailing slashes to stabilise comparisons and cache keys.
- * - Preserve breadcrumb-style folder metadata so taxonomy pages and scoring rules stay in sync across browsers.
+ * @file Normalizes browser APIs for bookmarks, tabs, and history sources.
+ * Wraps browser calls, converts records into the shared search shape, and parses inline metadata.
  */
 
 import { cleanUpUrl } from './utils.js'
@@ -15,9 +9,8 @@ export const browserApi = window.chrome || window.browser || {}
 
 /**
  * Retrieve browser tabs with optional query filters while respecting user options.
- *
- * @param {Object} [queryOptions={}] - Filters passed to the tabs API.
- * @returns {Promise<Array>} Tab objects, excluding extension URLs.
+ * @param {Object} [queryOptions={}]
+ * @returns {Promise<Array>}
  */
 export async function getBrowserTabs(queryOptions = {}) {
   if (ext.opts.tabsOnlyCurrentWindow) {
@@ -35,9 +28,8 @@ export async function getBrowserTabs(queryOptions = {}) {
 
 /**
  * Normalize browser tab objects into the shared search item shape.
- *
- * @param {Array<Object>} chromeTabs - Raw tab entries from the browser API.
- * @returns {Array<Object>} Standardised tab entries.
+ * @param {Array<Object>} chromeTabs
+ * @returns {Array<Object>}
  */
 export function convertBrowserTabs(chromeTabs) {
   return chromeTabs.map((el) => {
@@ -60,8 +52,7 @@ export function convertBrowserTabs(chromeTabs) {
 
 /**
  * Retrieve the bookmark tree from the browser API.
- *
- * @returns {Promise<Array>} Bookmark hierarchy or empty array when unsupported.
+ * @returns {Promise<Array>}
  */
 export async function getBrowserBookmarks() {
   if (browserApi.bookmarks && browserApi.bookmarks.getTree) {
@@ -73,12 +64,11 @@ export async function getBrowserBookmarks() {
 }
 
 /**
- * Recursive function to return bookmarks in our internal, flat array format
- *
- * @param {Array<Object>} bookmarks - Raw bookmark tree nodes.
- * @param {Array<string>} [folderTrail] - Accumulated folder hierarchy.
- * @param {number} [depth] - Current traversal depth.
- * @returns {Array<Object>} Flattened bookmark entries.
+ * Convert bookmark trees into the internal flat array format.
+ * @param {Array<Object>} bookmarks
+ * @param {Array<string>} [folderTrail]
+ * @param {number} [depth]
+ * @returns {Array<Object>}
  */
 export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
   depth = depth || 1
@@ -182,12 +172,10 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
 }
 
 /**
- * Gets chrome browsing history.
- * Warning: This chrome API call tends to be rather slow
- *
- * @param {number} startTime - Earliest visit timestamp to include.
- * @param {number} maxResults - Maximum number of history items.
- * @returns {Promise<Array>} History entries or empty array when unsupported.
+ * Retrieve browser history entries for the configured window.
+ * @param {number} startTime
+ * @param {number} maxResults
+ * @returns {Promise<Array>}
  */
 export async function getBrowserHistory(startTime, maxResults) {
   if (browserApi.history) {
@@ -203,10 +191,9 @@ export async function getBrowserHistory(startTime, maxResults) {
 }
 
 /**
- * Convert chrome history into our internal, flat array format
- *
- * @param {Array<Object>} history - Raw history entries.
- * @returns {Array<Object>} Normalised history items.
+ * Convert browser history entries into the internal flat array format.
+ * @param {Array<Object>} history
+ * @returns {Array<Object>}
  */
 export function convertBrowserHistory(history) {
   if (ext.opts.historyIgnoreList && ext.opts.historyIgnoreList.length) {
@@ -242,13 +229,12 @@ export function convertBrowserHistory(history) {
 }
 
 /**
- * Combine title/url/tags/folder fields into a single search string.
- *
- * @param {string} title - Bookmark title.
- * @param {string} url - Normalised URL.
- * @param {string} [tags] - Tag string.
- * @param {string} [folder] - Folder breadcrumb string.
- * @returns {string} Combined search string.
+ * Combine title, URL, tags, and folder fields into a single search string.
+ * @param {string} title
+ * @param {string} url
+ * @param {string} [tags]
+ * @param {string} [folder]
+ * @returns {string}
  */
 export function createSearchString(title, url, tags, folder) {
   const separator = '¦'
@@ -276,10 +262,9 @@ export function createSearchString(title, url, tags, folder) {
 
 /**
  * Ensure bookmarks have a human-readable title, falling back to shortened URLs.
- *
- * @param {string} title - Original title.
- * @param {string} url - Normalised URL.
- * @returns {string} Cleaned title.
+ * @param {string} title
+ * @param {string} url
+ * @returns {string}
  */
 export function getTitle(title, url) {
   let newTitle = title || ''
@@ -293,10 +278,9 @@ export function getTitle(title, url) {
 }
 
 /**
- * Shorten overly long titles or URLs for display purposes.
- *
- * @param {string} title - Title to shorten.
- * @returns {string} Possibly truncated title.
+ * Shorten overly long titles or URLs for display.
+ * @param {string} title
+ * @returns {string}
  */
 export function shortenTitle(title) {
   const urlTitleLengthRestriction = 85
