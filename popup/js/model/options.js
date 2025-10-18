@@ -321,15 +321,15 @@ export const defaultOptions = {
    * Additional score points if title matches exactly with the search text.
    * This comes on top of an include and starts with bonus.
    */
-  scoreExactEqualsBonus: 15,
+  scoreExactEqualsBonus: 20,
   /**
    * Additional points for an exact match of a search term tag
    */
-  scoreExactTagMatchBonus: 10,
+  scoreExactTagMatchBonus: 15,
   /**
    * Additional points for an exact match of a search term folder name
    */
-  scoreExactFolderMatchBonus: 5,
+  scoreExactFolderMatchBonus: 10,
   /**
    * Adds score points for every site visit according to browsing history
    * Please note that only history items within `history.daysAgo` can be considered,

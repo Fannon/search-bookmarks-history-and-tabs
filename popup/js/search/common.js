@@ -47,7 +47,6 @@ function generateRandomId() {
  * It will decide which approaches and indexes to use.
  */
 export async function search(event) {
-  console.debug('Search triggered by event:', event?.type || 'none')
   try {
     if (event) {
       // Don't execute search on navigation keys
@@ -69,7 +68,6 @@ export async function search(event) {
 
     // Get and clean up original search query
     let searchTerm = ext.dom.searchInput.value || ''
-    console.debug('Search called with term:', searchTerm, 'event:', event?.type)
     searchTerm = searchTerm.trimStart().toLowerCase()
     searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
 
@@ -207,9 +205,30 @@ export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode
 }
 
 /**
- * Calculates the final search item score on basis of the search score and some own rules
+ * Calculates the final search item score for each result
  *
- * @param sortMode: "score" | "lastVisited"
+ * SCORING FLOW:
+ * 1. Start with base score (depends on result type: bookmark=100, tab=70, history=45, etc.)
+ * 2. Multiply by search quality score (from fuzzy/precise search algorithms, 0-1 range)
+ * 3. Add field-specific bonuses:
+ *    - Exact match bonuses (startsWith, equals, exact tag/folder match)
+ *    - Includes bonuses (weighted by field: title=1.0, tag=0.7, url=0.6, folder=0.5)
+ * 4. Add behavioral bonuses:
+ *    - Visit frequency bonus (more visits = higher score, up to maximum)
+ *    - Recent visit bonus (recently visited = higher score, up to maximum)
+ *    - Date added bonus (recently added bookmarks score higher)
+ * 5. Add custom user-defined bonus (e.g., "Bookmark Title +20 #tag")
+ *
+ * FIELD PRIORITY (for includes bonus):
+ * - Title match (weight 1.0) - highest priority
+ * - URL match (weight 0.6)
+ * - Tag match (weight 0.7)
+ * - Folder match (weight 0.5) - lowest priority
+ * Only the FIRST matching field gets the bonus to avoid double-counting
+ *
+ * @param {Array} results - Search results to score
+ * @param {string} searchTerm - The search query string
+ * @returns {Array} Results with calculated scores
  */
 export function calculateFinalScore(results, searchTerm) {
   const now = Date.now()
@@ -218,10 +237,12 @@ export function calculateFinalScore(results, searchTerm) {
   const hyphenatedSearchTerm = hasSearchTerm ? searchTermParts.join('-') : ''
   const tagTerms = hasSearchTerm ? searchTerm.split('#').join('').split(' ') : []
   const folderTerms = hasSearchTerm ? searchTerm.split('~').join('').split(' ') : []
+
+  // Only check includes bonus if configured and search term is long enough
   const canCheckIncludes =
     hasSearchTerm && ext.opts.scoreExactIncludesBonus && searchTerm.length >= ext.opts.scoreExactIncludesBonusMinChars
 
-  // Cache option values to avoid repeated property access
+  // Cache scoring options to avoid repeated property lookups
   const opts = ext.opts
   const {
     scoreExactStartsWithBonus,
@@ -245,75 +266,84 @@ export function calculateFinalScore(results, searchTerm) {
 
   for (let i = 0; i < results.length; i++) {
     const el = results[i]
-    const BaseKey = BASE_SCORE_KEYS[el.type]
-    if (!BaseKey) {
+    const baseKey = BASE_SCORE_KEYS[el.type]
+    if (!baseKey) {
       throw new Error(`Search result type "${el.type}" not supported`)
     }
-    let score = opts[BaseKey]
 
-    // Multiply by search library score.
-    // This will reduce the score if the search is not a good match
-    score = score * (el.searchScore || scoreTitleWeight)
+    // STEP 1: Start with base score (bookmark=100, tab=70, history=45, etc.)
+    let score = opts[baseKey]
 
-    // Add custom bonus score to bookmarks
-    if (scoreCustomBonusScore && el.customBonusScore) {
-      score += el.customBonusScore
-    }
+    // STEP 2: Multiply by search quality score (0-1 from fuzzy/precise search)
+    // This reduces score if the match quality is poor
+    const searchScoreMultiplier = el.searchScore || scoreTitleWeight
+    score = score * searchScoreMultiplier
 
     if (hasSearchTerm) {
-      const lowerTitle = el.title ? el.title.toLowerCase() : null
-      const lowerTags = canCheckIncludes && el.tags ? el.tags.toLowerCase() : null
-      const lowerFolder = canCheckIncludes && el.folder ? el.folder.toLowerCase() : null
+      // Pre-compute normalized field values for case-insensitive matching
+      const lowerTitle = el.title ? el.title.toLowerCase().trim() : null
+      const lowerUrl = el.url ? el.url.toLowerCase() : null
+      const lowerTags = el.tags ? el.tags.toLowerCase() : null
+      const lowerFolder = el.folder ? el.folder.toLowerCase() : null
 
-      // Increase score if we have exact "startsWith" match in title or url
+      // Pre-compute normalized arrays for exact tag/folder matching
+      const lowerTagValues = el.tagsArray ? el.tagsArray.map((tag) => tag.toLowerCase()) : []
+      const lowerFolderValues = el.folderArray ? el.folderArray.map((folder) => folder.toLowerCase()) : []
+
+      // STEP 3A: Exact match bonuses
+      // Award bonus if title/URL starts with the exact search term
       if (scoreExactStartsWithBonus) {
         if (lowerTitle && lowerTitle.startsWith(searchTerm)) {
           score += scoreExactStartsWithBonus * scoreTitleWeight
-        } else if (el.url.startsWith(hyphenatedSearchTerm)) {
+        } else if (lowerUrl && lowerUrl.startsWith(hyphenatedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreUrlWeight
         }
       }
 
-      // Increase score if we have an exact equal match in the title
+      // Award bonus if title exactly equals the search term
       if (scoreExactEqualsBonus && lowerTitle && lowerTitle === searchTerm) {
         score += scoreExactEqualsBonus * scoreTitleWeight
       }
 
-      // Increase score if we have an exact tag match
+      // Award bonus for each exact tag name match
+      // Example: searching "react hooks" matches tags "#react" and "#hooks"
       if (scoreExactTagMatchBonus && el.tags && tagTerms.length) {
-        const lowerTagValues = el.tagsArray.map((tagValue) => tagValue.toLowerCase())
-        for (const tag of tagTerms) {
-          for (const tagValue of lowerTagValues) {
-            if (tag === tagValue) {
-              score += scoreExactTagMatchBonus
-            }
+        const tagSet = new Set(lowerTagValues)
+        for (const searchTag of tagTerms) {
+          if (searchTag && tagSet.has(searchTag)) {
+            score += scoreExactTagMatchBonus
           }
         }
       }
 
-      // Increase score if we have an exact folder name match
+      // Award bonus for each exact folder name match
+      // Example: searching "work projects" matches folders "~Work" and "~Projects"
       if (scoreExactFolderMatchBonus && el.folder && folderTerms.length) {
-        const lowerFolderValues = el.folderArray.map((folderValue) => folderValue.toLowerCase())
-        for (const folderName of folderTerms) {
-          for (const folderValue of lowerFolderValues) {
-            if (folderName === folderValue) {
-              score += scoreExactFolderMatchBonus
-            }
+        const folderSet = new Set(lowerFolderValues)
+        for (const searchFolder of folderTerms) {
+          if (searchFolder && folderSet.has(searchFolder)) {
+            score += scoreExactFolderMatchBonus
           }
         }
       }
 
-      // Increase score if we have an exact "includes" match
+      // STEP 3B: Includes bonuses (substring matching)
+      // Check each word in the search query for matches in title/url/tags/folder
+      // Priority order: title > url > tags > folder (only first match counts per term)
       if (canCheckIncludes) {
         for (const rawTerm of searchTermParts) {
           const term = rawTerm.trim()
           if (!term || term.length < scoreExactIncludesBonusMinChars) {
             continue
           }
+
+          // URLs use hyphens instead of spaces, so normalize for matching
           const normalizedUrlTerm = term.replace(/\s+/g, '-')
+
+          // Check fields in priority order - first match wins
           if (lowerTitle && lowerTitle.includes(term)) {
             score += scoreExactIncludesBonus * scoreTitleWeight
-          } else if (el.url && el.url.includes(normalizedUrlTerm)) {
+          } else if (lowerUrl && lowerUrl.includes(normalizedUrlTerm)) {
             score += scoreExactIncludesBonus * scoreUrlWeight
           } else if (lowerTags && lowerTags.includes(term)) {
             score += scoreExactIncludesBonus * scoreTagWeight
@@ -324,31 +354,44 @@ export function calculateFinalScore(results, searchTerm) {
       }
     }
 
-    // Increase score if result has been open frequently
+    // STEP 4: Behavioral bonuses (usage patterns)
+
+    // Award bonus based on visit frequency (more visits = higher score, up to cap)
+    // Example: visited 50 times with 0.5 points per visit = +20 (capped at scoreVisitedBonusScoreMaximum)
     if (scoreVisitedBonusScore && el.visitCount) {
       score += Math.min(scoreVisitedBonusScoreMaximum, el.visitCount * scoreVisitedBonusScore)
     }
 
-    // Increase score if result has been opened recently
+    // Award bonus based on recency of last visit (linear decay)
+    // Recently visited items get max bonus, older items get less, oldest items get 0
+    // Example: visited 1 hour ago within 7-day window = high bonus
     if (scoreRecentBonusScoreMaximum && el.lastVisitSecondsAgo != null) {
       const maxSeconds = historyDaysAgo * 24 * 60 * 60
-      // Handle edge case where maxSeconds might be 0 or item was visited "right now"
       if (maxSeconds > 0 && el.lastVisitSecondsAgo >= 0) {
+        // Calculate proportional bonus: 0 seconds ago = full bonus, maxSeconds ago = 0 bonus
         score += Math.max(0, (1 - el.lastVisitSecondsAgo / maxSeconds) * scoreRecentBonusScoreMaximum)
       } else if (el.lastVisitSecondsAgo === 0) {
-        // Item was visited "right now" - give maximum recent bonus
+        // Special case: visited in this exact moment gets maximum bonus
         score += scoreRecentBonusScoreMaximum
       }
     }
 
-    // Increase score if bookmark has been added more recently
+    // Award bonus for recently added bookmarks (linear decay over time)
+    // Newer bookmarks score higher, older bookmarks score lower
+    // Example: added today = max bonus, added 10 days ago = max - (10 * perDayPenalty)
     if (scoreDateAddedBonusScoreMaximum && scoreDateAddedBonusScorePerDay && el.dateAdded != null) {
-      score += Math.max(
-        0,
-        scoreDateAddedBonusScoreMaximum - ((now - el.dateAdded) / 1000 / 60 / 60 / 24) * scoreDateAddedBonusScorePerDay,
-      )
+      const daysAgo = (now - el.dateAdded) / 1000 / 60 / 60 / 24
+      const penalty = daysAgo * scoreDateAddedBonusScorePerDay
+      score += Math.max(0, scoreDateAddedBonusScoreMaximum - penalty)
     }
 
+    // STEP 5: Add custom user-defined bonus score (e.g., "Title +20 #tag")
+    // This allows users to manually prioritize specific bookmarks
+    if (scoreCustomBonusScore && el.customBonusScore) {
+      score += el.customBonusScore
+    }
+
+    // Set final calculated score on the result object
     el.score = score
   }
 
