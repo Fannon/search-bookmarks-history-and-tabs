@@ -141,6 +141,11 @@ export function printError(err, text) {
   }
   // Prepend errors to top of list (most recent errors appear first)
   const errorList = document.getElementById('error-list')
-  errorList.innerHTML = html + errorList.innerHTML
-  errorList.style = 'display: block;'
+  if (errorList) {
+    errorList.innerHTML = html + errorList.innerHTML
+    errorList.style.display = 'block'
+  } else {
+    // Fallback for test environments where DOM might not be available
+    console.warn('Error list element not found in DOM. Error:', err.message)
+  }
 }
