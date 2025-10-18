@@ -1,6 +1,13 @@
-//////////////////////////////////////////
-// UTILITY FUNCTIONS                    //
-//////////////////////////////////////////
+/**
+ * @file Gathers shared helper utilities for popup modules.
+ *
+ * Provides:
+ * - Relative time formatting (`timeSince`) for surfacing history/recency metadata.
+ * - URL cleanup helpers to normalize and compare bookmark addresses reliably.
+ * - Lazy script loading with deduplication for libraries like mark.js and uFuzzy.
+ * - Error logging/rendering helpers to keep user feedback consistent across entry points.
+ * - HTML escaping helpers (`escapeHtml`) to keep rendered content safe.
+ */
 
 const HTML_ESCAPE_REGEX = /[&<>"']/g
 const HTML_ESCAPE_MAP = {
@@ -11,22 +18,18 @@ const HTML_ESCAPE_MAP = {
   "'": '&#39;',
 }
 
+/**
+ * Escape HTML special characters to prevent markup injection.
+ *
+ * @param {*} value - Value to escape.
+ * @returns {string} Sanitized string safe for HTML contexts.
+ */
 export function escapeHtml(value) {
   if (value === null || value === undefined) {
     return ''
   }
   return String(value).replace(HTML_ESCAPE_REGEX, (match) => HTML_ESCAPE_MAP[match])
 }
-
-/**
- * Utility functions for DOM manipulation, time formatting, and browser integration
- *
- * Provides:
- * - Time formatting (timeSince) for displaying relative dates
- * - URL normalization (cleanUpUrl) for consistent URL comparison
- * - Dynamic script loading (loadScript) with deduplication
- * - Error display/logging (printError) for UI error handling
- */
 
 /**
  * Converts a date to a human-readable "time ago" format

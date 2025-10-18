@@ -1,27 +1,11 @@
-//////////////////////////////////////////
-// SEARCH DATA AGGREGATION              //
-//////////////////////////////////////////
-
 /**
- * Fetches and aggregates search data from browser APIs
+ * @file Loads and normalizes the datasets searched by the popup.
  *
  * Responsibilities:
- * - Fetch bookmarks, tabs, and history from browser APIs
- * - Convert raw browser data to normalized searchItem format
- * - Efficiently merge history data into bookmarks/tabs (lazy evaluation)
- * - Handle configurable data limits and filters
- *
- * Data Flow:
- * - getBrowserBookmarks/Tabs/History → Convert format → Build search data
- * - History merging deferred until matches found (performance optimization)
- * - Respects user options: historyMaxItems, historyDaysAgo, bookmarksIgnoreFolderList, etc.
- *
- * Performance Optimizations:
- * - Lazy history merging: Only merge history data if there are bookmarks/tabs to merge
- * - Configurable history limits: historyMaxItems, historyDaysAgo reduce API call overhead
- * - Search strings precomputed for fast fuzzy/simple search
- *
- * See also: browserApi.js for data conversion details
+ * - Fetch bookmarks, tabs, and history from the browser API layer and convert them into the shared `searchItem` format.
+ * - Apply option-driven limits (history window, item caps, ignored folders) to balance freshness with performance.
+ * - Merge history metadata lazily into bookmarks/tabs only when URLs overlap, avoiding unnecessary allocations.
+ * - Prepare derived indexes (search strings, taxonomy aggregates) for downstream search strategies and views.
  */
 
 import {
@@ -73,9 +57,9 @@ function mergeHistoryLazily(items, historyMap, mergedUrls) {
 }
 
 /**
- * Gets the actual data that we search through
+ * Fetch and normalize the datasets used by the popup search experience.
  *
- * Merges and removes some items (e.g. duplicates) before they are indexed
+ * @returns {Promise<{tabs: Array, bookmarks: Array, history: Array}>} Prepared search data.
  */
 export async function getSearchData() {
   const startTime = Date.now()

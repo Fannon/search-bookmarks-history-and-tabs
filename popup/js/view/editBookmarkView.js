@@ -1,23 +1,11 @@
-//////////////////////////////////////////
-// BOOKMARK EDITOR VIEW                 //
-//////////////////////////////////////////
-
 /**
- * Bookmark editing UI and form management
+ * @file Drives the bookmark editor interactions and form logic.
  *
  * Responsibilities:
- * - Load and display bookmark data for editing
- * - Initialize Tagify library for tag autocomplete
- * - Handle bookmark save/update/delete operations
- * - Update search caches and indexes after modifications
- * - Provide form validation and error handling
- *
- * Features:
- * - Tag autocomplete with available tags from all bookmarks
- * - Custom bonus score support (extracted from title)
- * - Inline tag/folder extraction from title
- * - Integration with browser bookmark API for persistence
- * - Cache invalidation on bookmark changes
+ * - Load bookmark data for editing and initialize Tagify-powered tag autocompletion.
+ * - Validate user input, persist updates through the browser API, and surface inline errors.
+ * - Handle delete/cancel flows plus bonus-score parsing while keeping the UI responsive.
+ * - Invalidate search caches and taxonomy indexes so edits reflect immediately in the popup search view.
  */
 
 import { browserApi, createSearchString } from '../helper/browserApi.js'
@@ -26,6 +14,12 @@ import { resetFuzzySearchState } from '../search/fuzzySearch.js'
 import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
 
+/**
+ * Populate the bookmark editor form for the given bookmark id.
+ *
+ * @param {string} bookmarkId - Identifier of the bookmark to edit.
+ * @returns {Promise<void>}
+ */
 export async function editBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
   const tags = Object.keys(getUniqueTags()).sort()
@@ -84,6 +78,11 @@ export async function editBookmark(bookmarkId) {
   }
 }
 
+/**
+ * Apply form changes to the data model and browser bookmarks API.
+ *
+ * @param {string} bookmarkId - Identifier of the bookmark being updated.
+ */
 export function updateBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
   const titleInput = document.getElementById('bookmark-title').value.trim()
@@ -117,6 +116,12 @@ export function updateBookmark(bookmarkId) {
   navigateToSearchView()
 }
 
+/**
+ * Remove a bookmark via the browser API and refresh search caches.
+ *
+ * @param {string} bookmarkId - Identifier of the bookmark to delete.
+ * @returns {Promise<void>}
+ */
 export async function deleteBookmark(bookmarkId) {
   if (browserApi.bookmarks) {
     browserApi.bookmarks.remove(bookmarkId)
@@ -135,6 +140,9 @@ export async function deleteBookmark(bookmarkId) {
   navigateToSearchView()
 }
 
+/**
+ * Navigate back to the search view, preserving return hashes when possible.
+ */
 function navigateToSearchView() {
   const redirectHash =
     ext && typeof ext.returnHash === 'string' && ext.returnHash.startsWith('#search') ? ext.returnHash : '#search/'

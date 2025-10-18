@@ -1,19 +1,19 @@
-//////////////////////////////////////////
-// FOLDERS OVERVIEW PAGE VIEW           //
-//////////////////////////////////////////
-
 /**
- * Renders folders overview page (popup/folders.html)
+ * @file Renders the folders overview in the popup.
  *
- * Displays:
- * - All unique bookmark folders from hierarchy
- * - Count of bookmarks in each folder
- * - Clickable folder badges that link to filtered search results
+ * Responsibilities:
+ * - Aggregate bookmark folders into sorted badge lists with usage counts.
+ * - Generate navigation links that jump back into the main search view filtered by a folder hash.
+ * - Mirror the tag overview experience so taxonomy exploration stays consistent.
+ * - Escape folder names before rendering so unusual characters cannot break markup.
  */
 
 import { escapeHtml } from '../helper/utils.js'
 import { getUniqueFolders } from '../search/taxonomySearch.js'
 
+/**
+ * Render folder badges with counts for the taxonomy overview.
+ */
 export function loadFoldersOverview() {
   const folders = getUniqueFolders()
   const sortedFolders = Object.keys(folders).sort()

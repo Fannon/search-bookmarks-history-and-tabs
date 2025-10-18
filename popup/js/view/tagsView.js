@@ -1,19 +1,18 @@
-//////////////////////////////////////////
-// TAGS OVERVIEW PAGE VIEW              //
-//////////////////////////////////////////
-
 /**
- * Renders tags overview page (popup/tags.html)
+ * @file Renders the tags overview in the popup.
  *
- * Displays:
- * - All unique tags extracted from bookmarks
- * - Count of bookmarks for each tag
- * - Clickable tag badges that link to filtered search results
+ * Responsibilities:
+ * - Aggregate bookmark tags with frequency counts to build a browsable taxonomy.
+ * - Render lightweight badge markup that links back to the main search filtered by the chosen tag.
+ * - Escape tag names before injecting into HTML to guard against malformed input.
  */
 
 import { escapeHtml } from '../helper/utils.js'
 import { getUniqueTags } from '../search/taxonomySearch.js'
 
+/**
+ * Render the tag chips and counts for the taxonomy overview.
+ */
 export function loadTagsOverview() {
   const tags = getUniqueTags()
   const sortedTags = Object.keys(tags).sort()

@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
+/**
+ * @file Bundles popup entry points and styles with esbuild.
+ *
+ * Produces minified IIFE bundles for each popup entry module and companion CSS
+ * files. This script mirrors the production build that ships to extension
+ * stores and is invoked by `npm run build:bundle` and the watch pipeline.
+ */
 
 import { build } from 'esbuild'
 import { fileURLToPath } from 'node:url'
@@ -42,6 +49,7 @@ const jsBundles = [
   },
 ]
 
+// Shared esbuild options keep bundle output consistent between entry points
 const sharedBuildOptions = {
   bundle: true,
   minify: true,
@@ -54,8 +62,14 @@ const sharedBuildOptions = {
   logLevel: 'info',
 }
 
+/**
+ * Build minified JavaScript and CSS bundles for all popup entry points.
+ *
+ * @returns {Promise<void>}
+ */
 export async function bundleAll() {
   for (const { name, entry, outfile, globalName } of jsBundles) {
+    // Execute builds sequentially so esbuild reuses its worker pool efficiently
     await build({
       ...sharedBuildOptions,
       entryPoints: [entry],

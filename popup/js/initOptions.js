@@ -1,18 +1,10 @@
-//////////////////////////////////////////
-// SETTINGS PAGE ENTRY POINT            //
-//////////////////////////////////////////
-
 /**
- * Entry point for the settings/options page (popup/options.html)
+ * @file Bootstraps the popup options editor (`popup/options.html`).
  *
  * Responsibilities:
- * - Initialize the shared extension context (ext object)
- * - Set up the options/settings page UI
- * - Load and bind user configuration from browser storage
- * - Handle save/reset actions for YAML/JSON option overrides
- *
- * This page allows users to customize extension behavior by editing
- * YAML/JSON configuration that gets merged with default options.
+ * - Create the shared extension context so option changes reuse the same global state as the popup.
+ * - Delegate UI construction and persistence logic to `editOptionsView` for clearer separation of concerns.
+ * - Surface initialization errors via the common `printError` helper to align UX with other entry points.
  */
 
 import { printError } from './helper/utils.js'

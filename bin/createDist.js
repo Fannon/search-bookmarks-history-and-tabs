@@ -1,10 +1,18 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
+/**
+ * @file Builds the Chrome-ready distribution directory and archive.
+ *
+ * Copies source assets into `dist/chrome`, swaps development scripts for
+ * bundled equivalents, removes test fixtures, and packages the result as a zip
+ * file. This mirrors the artifact uploaded to browser extension stores.
+ */
 import fs from 'fs-extra'
 import { createWriteStream } from 'fs'
 import { join } from 'path'
 import archiver from 'archiver'
 
+// Track CSS files that receive minified companions so we can prune originals
 const CSS_BUNDLED_FILENAMES = new Set(['style.css', 'options.css', 'taxonomy.css', 'editBookmark.css'])
 
 /**

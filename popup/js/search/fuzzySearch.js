@@ -1,28 +1,15 @@
-//////////////////////////////////////////
-// APPROXIMATE-MATCH FUZZY SEARCH       //
-//////////////////////////////////////////
-
 /**
- * Implements fuzzy/approximate-match search using uFuzzy library
+ * @file Implements the popup's fuzzy/approximate-match search via uFuzzy.
  *
  * Strategy:
- * - Uses uFuzzy library for advanced matching (typo tolerance, word boundaries)
- * - Finds approximate matches even with typos or partial words
- * - Returns scoring from uFuzzy (0-1 range)
- * - Supports match highlighting in results
+ * - Lazy-load uFuzzy on first use to keep initial bundle size low.
+ * - Build memoized haystacks per mode (bookmarks, tabs, history) for quick repeated searches.
+ * - Handle typo tolerance, loose word boundaries, and non-ASCII fallbacks better than the simple strategy.
  *
- * Scoring:
- * - searchScore from uFuzzy library (proportional to match quality)
- * - Better matches get higher scores (closer to 1)
- * - Final score determined by scoring.js algorithm (multiplies base score by searchScore)
- *
- * Performance:
- * - Slower than simpleSearch but finds more matches
- * - uFuzzy library lazy-loaded on first use
- *
- * Memoization:
- * - Caches haystack (preprocessed search data) per search mode
- * - Resets when search data changes or search strategy changes
+ * Scoring pipeline:
+ * - uFuzzy returns a searchScore between 0 and 1 representing match quality.
+ * - Higher searchScore values indicate closer matches; `scoring.js` multiplies base weights by this factor.
+ * - Highlight data is preserved for the view to underline matched substrings once results render.
  */
 
 import { loadScript, printError } from '../helper/utils.js'
@@ -30,13 +17,15 @@ import { resolveSearchTargets } from './common.js'
 
 const nonASCIIRegex = /[\u0080-\uFFFF]/
 
-/** Memoize some state, to avoid re-creating haystack and fuzzy search instances */
+/** Memoize some state, to avoid re-creating haystack and fuzzy search instances. */
 let state = {}
 
 /**
  * Resets state for fuzzy search. Necessary when search data changes or search string is reset.
  * If searchMode is given, will only reset that particular state.
  * If no searchMode is given, resets all state.
+ *
+ * @param {string} [searchMode] - Optional mode to reset; resets all when omitted.
  */
 export function resetFuzzySearchState(searchMode) {
   if (searchMode) {
@@ -46,6 +35,13 @@ export function resetFuzzySearchState(searchMode) {
   }
 }
 
+/**
+ * Execute fuzzy search across the datasets mapped to the active mode.
+ *
+ * @param {string} searchMode - Active search mode.
+ * @param {string} searchTerm - Query string.
+ * @returns {Promise<Array<Object>>} Matching entries with fuzzy scores.
+ */
 export async function fuzzySearch(searchMode, searchTerm) {
   // Lazy load the uFuzzy library if not there already
   if (!window['uFuzzy']) {
@@ -70,6 +66,10 @@ export async function fuzzySearch(searchMode, searchTerm) {
 
 /**
  * Execute a fuzzy search with additional scoring and highlighting of results
+ *
+ * @param {string} searchTerm - Query string.
+ * @param {string} searchMode - Dataset key inside `ext.model`.
+ * @returns {Array<Object>} Highlighted fuzzy matches.
  */
 function fuzzySearchWithScoring(searchTerm, searchMode) {
   const data = ext.model[searchMode]
@@ -180,6 +180,12 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
   return results
 }
 
+/**
+ * Detect whether a string contains non-ASCII characters that require special fuzzy handling.
+ *
+ * @param {string} str - Value to inspect.
+ * @returns {boolean} True when non-ASCII characters are present.
+ */
 function containsNonASCII(str) {
   return nonASCIIRegex.test(str)
 }

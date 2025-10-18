@@ -1,29 +1,19 @@
-//////////////////////////////////////////
-// SETTINGS/OPTIONS PAGE VIEW           //
-//////////////////////////////////////////
-
 /**
- * Settings page UI for user configuration
+ * @file Powers the options editor view.
  *
  * Responsibilities:
- * - Load and display user configuration as YAML
- * - Provide save/reset functionality for options
- * - Parse and validate YAML/JSON input
- * - Handle errors in configuration parsing
- * - Redirect to search page after successful save
- *
- * Configuration Format:
- * - Users can override default options using YAML or JSON
- * - Examples: searchStrategy, searchFuzzyness, enableTabs, historyMaxItems, etc.
- * - Configuration stored in browser storage and merged with defaults
- *
- * Error Handling:
- * - Displays error messages for invalid YAML/JSON syntax
- * - Prevents saving malformed configuration
+ * - Load persisted configuration, present it as YAML, and keep the textarea in sync with stored overrides.
+ * - Validate user edits, surface parse errors inline, and persist accepted changes via the options model.
+ * - Provide reset/save controls and navigate back to the search view so tweaks can be tested immediately.
  */
 
 import { getUserOptions, setUserOptions } from '../model/options.js'
 
+/**
+ * Initialise the options editor view by loading and displaying user overrides.
+ *
+ * @returns {Promise<void>}
+ */
 export async function initOptions() {
   const userOptions = await getUserOptions()
   const userOptionsYaml = window.jsyaml.dump(userOptions)
@@ -36,6 +26,11 @@ export async function initOptions() {
   document.getElementById('edit-options-save').addEventListener('click', saveOptions)
 }
 
+/**
+ * Persist YAML updates back to storage and return users to the search view.
+ *
+ * @returns {Promise<void>}
+ */
 async function saveOptions() {
   const userOptionsString = document.getElementById('user-config').value
   try {
@@ -56,6 +51,9 @@ async function saveOptions() {
   }
 }
 
+/**
+ * Clear user overrides, reverting to defaults on next load.
+ */
 async function resetOptions() {
   document.getElementById('user-config').value = ''
 }

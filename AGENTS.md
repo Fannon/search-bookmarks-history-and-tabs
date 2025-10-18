@@ -29,6 +29,15 @@
 - Follow `eslint.config.mjs`: two-space indentation, single quotes, and no trailing semicolons.
 - Name files by feature (e.g. `searchResultsView.js`, `browserApi.js`) and mirror that style for co-located tests (`*.test.js`).
 - Do not excessively create dependencies, prefer a lightweight "vanilla JS" style
+- Use american english consistently
+
+## Documentation & Comment Style
+
+- Start each non-test `.js` module with an `@file` block that summarizes its purpose and primary responsibilities. Give a good high-level summary, even if it becomes a bit longer.
+- Provide a brief JSDoc block for every exported function (and notable helper) covering intent, key parameters, and return shape when applicable. Don't repeat yourself across this and don't document what is already obvious from the function signature.
+- Prefer concise inline comments only where the flow is non-obvious; avoid restating self-explanatory code.
+- Keep comment tone factual and implementation-aligned—update or remove stale remarks when behavior changes.
+- Standard block style: open with `/**`, write a single-sentence summary ending with a period on its own line, leave a blank line before any longer descriptions and another blank line before `@param`/`@returns` tags, and close with `*/`. Use this multi-line format for modules and exported functions; reserve one-line `/** ... */` comments for simple constant notes only.
 
 ## Testing Guidelines
 

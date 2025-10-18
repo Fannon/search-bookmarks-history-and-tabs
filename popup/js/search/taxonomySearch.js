@@ -1,25 +1,14 @@
-//////////////////////////////////////////
-// TAXONOMY SEARCH (TAGS & FOLDERS)     //
-//////////////////////////////////////////
-
 /**
- * Specialized search for bookmark tags (#) and folders (~)
+ * @file Implements dedicated tag (`#`) and folder (`~`) taxonomy searches.
  *
  * Strategy:
- * - Dedicated tag and folder filtering with AND logic
- * - Supports searches like "#react #node" to find bookmarks with both tags
- * - Supports searches like "~Projects ~React" to find bookmarks in both folders
- * - Extracts and aggregates unique tags/folders from bookmarks
- *
- * Search Flow:
- * - searchTaxonomy: Filters bookmarks by tag/folder AND conditions
- * - getUniqueTags: Aggregates all tags and counts from bookmarks
- * - getUniqueFolders: Aggregates all folders and counts from bookmarks
- * - Used by tags.html and folders.html pages for browsable overviews
+ * - Provide AND-based filtering so queries like `#react #node` or `~Projects ~React` match bookmarks with every term.
+ * - Power the tags and folders overview pages with aggregated counts derived from bookmark metadata.
+ * - Maintain cached taxonomy indexes for quick lookups when switching between popup navigation modes.
  *
  * Scoring:
- * - All matches use searchScore of 1
- * - Final score determined by scoring.js algorithm
+ * - Matches always report a `searchScore` of 1 before entering the shared scoring pipeline.
+ * - Taxonomy results are marked with `searchApproach: 'taxonomy'` to keep rendering and analytics aware of the source.
  */
 
 /**
@@ -28,6 +17,8 @@
  *
  * @param {string} searchTerm
  * @param {'tags' | 'folder'} taxonomyType
+ * @param {Array<Object>} data - Bookmark-derived taxonomy entries.
+ * @returns {Array<Object>} Taxonomy results with score metadata.
  */
 export function searchTaxonomy(searchTerm, taxonomyType, data) {
   /** Search results */
@@ -59,6 +50,11 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
   return results
 }
 
+/**
+ * Build a tag-to-bookmark index from the current bookmark model.
+ *
+ * @returns {Object<string, Array<string>>} Map of tag name to bookmark ids.
+ */
 export function getUniqueTags() {
   ext.index.taxonomy.tags = {}
   for (const el of ext.model.bookmarks) {
@@ -78,6 +74,11 @@ export function getUniqueTags() {
   return ext.index.taxonomy.tags
 }
 
+/**
+ * Build (or reuse) a memoized folder-to-bookmark index.
+ *
+ * @returns {Object<string, Array<string>>} Map of folder name to bookmark ids.
+ */
 export function getUniqueFolders() {
   // This function is memoized, as the folders don't change while the extension is open
   if (!ext || !ext.index.taxonomy.folders) {

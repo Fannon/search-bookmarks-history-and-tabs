@@ -1,6 +1,8 @@
-//////////////////////////////////////////
-// SEARCH RESULT SCORING                //
-//////////////////////////////////////////
+/**
+ * @file Calculates final relevance scores for popup search results.
+ *
+ * For a detailed explanation of the scoring process, see the `calculateFinalScore` function documentation.
+ */
 
 /**
  * Calculates the final search item score for each result

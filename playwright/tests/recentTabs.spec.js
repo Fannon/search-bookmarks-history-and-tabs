@@ -139,7 +139,7 @@ test.describe('Recent Tabs on Open Functionality', () => {
       await expectNoClientErrors(page)
     })
 
-    test('maintains the result counter behaviour', async ({ page }) => {
+    test('maintains the result counter behavior', async ({ page }) => {
       await updateUserConfig(page, { maxRecentTabsToShow: 10 })
 
       await page.goto('/')

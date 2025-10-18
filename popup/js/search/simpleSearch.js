@@ -1,34 +1,31 @@
-//////////////////////////////////////////
-// PRECISE (EXACT-MATCH) SEARCH         //
-//////////////////////////////////////////
-
 /**
- * Implements precise/exact-match search algorithm for fast performance
+ * @file Implements the popup's precise/exact-match search strategy.
  *
  * Strategy:
- * - Simple substring matching (includes) across searchString field
- * - AND condition: all search terms must match
- * - No fuzzy matching or scoring adjustments
- * - Fast performance for exact phrase matches
+ * - Perform case-insensitive substring matching across the precomputed `searchString` field.
+ * - Require all tokens to match (AND semantics) to keep results tightly focused.
+ * - Skip fuzzy tolerances or extra scoring logic so exact phrases stay lightning fast.
  *
- * Scoring:
- * - All matches use searchScore of 1 (base score)
- * - Final score determined by scoring.js algorithm
+ * Scoring pipeline:
+ * - Every match carries a `searchScore` of 1 before flowing into `scoring.js` for final ranking.
+ * - Prepares highlight metadata for the view without additional processing overhead.
  *
- * Memoization:
- * - Caches search data per mode to avoid unnecessary preprocessing
- * - Resets when search data changes or search strategy changes
+ * Memoisation:
+ * - Cache pre-lowered haystacks per mode (bookmarks, tabs, history) for reuse across repeated queries.
+ * - Reset caches when the search dataset or active mode changes to avoid stale results.
  */
 
 import { resolveSearchTargets } from './common.js'
 
 /**
- * Memoize some state, to avoid re-creating haystack and fuzzy search instances
+ * Memoize some state, to avoid re-creating haystack and fuzzy search instances.
  */
 let state = {}
 
 /**
- * Resets state for simple search. Necessary when search data changes or search string is reset.
+ * Reset cached simple search state when datasets or mode change.
+ *
+ * @param {string} [searchMode] - Optional mode to reset; resets all when omitted.
  */
 export function resetSimpleSearchState(searchMode) {
   if (searchMode) {
@@ -36,6 +33,12 @@ export function resetSimpleSearchState(searchMode) {
   }
 }
 
+/**
+ * Ensure each search entry caches a lower-cased search string.
+ *
+ * @param {Array<Object>} data - Items to prepare.
+ * @returns {Array<Object>} Normalised entries.
+ */
 function prepareSearchData(data) {
   return data.map((entry) => {
     if (!entry.searchStringLower) {
@@ -45,6 +48,13 @@ function prepareSearchData(data) {
   })
 }
 
+/**
+ * Execute a precise search across the datasets associated with a mode.
+ *
+ * @param {string} searchMode - Active search mode.
+ * @param {string} searchTerm - Query string.
+ * @returns {Array<Object>} Matching entries with `searchScore`.
+ */
 export function simpleSearch(searchMode, searchTerm) {
   const targets = resolveSearchTargets(searchMode)
   if (!targets.length) {
@@ -63,9 +73,11 @@ export function simpleSearch(searchMode, searchTerm) {
 }
 
 /**
- * Very simple search algorithm :)
- * This does an `includes` search with an AND condition between the terms
- * There is no real scoring, everything has base score of 1
+ * Run an AND-based substring search within a single dataset and assign scores.
+ *
+ * @param {string} searchTerm - Query string.
+ * @param {string} searchMode - Dataset key inside `ext.model`.
+ * @returns {Array<Object>} Filtered entries with `searchScore: 1`.
  */
 function simpleSearchWithScoring(searchTerm, searchMode) {
   const data = ext.model[searchMode]

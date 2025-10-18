@@ -1,19 +1,10 @@
-//////////////////////////////////////////
-// FOLDERS OVERVIEW PAGE ENTRY POINT    //
-//////////////////////////////////////////
-
 /**
- * Entry point for the folders overview page (popup/folders.html)
+ * @file Prepares the folders overview popup (`popup/folders.html`).
  *
  * Responsibilities:
- * - Initialize the shared extension context (ext object)
- * - Load bookmark data from browser storage
- * - Extract and aggregate unique bookmark folders from the tree
- * - Render clickable folder badges with item counts
- *
- * The folders overview provides a browsable index of the bookmark folder
- * hierarchy, allowing users to click a folder to search for bookmarks in that folder.
- * Only bookmarks are loaded (tabs and history disabled for this page).
+ * - Initialise the shared extension context with tabs/history disabled so only bookmark folders participate.
+ * - Transform bookmark metadata into folder aggregates with counts for quick browsing.
+ * - Render folder navigation chips that link back into the main search view using hash routing.
  */
 
 import { printError } from './helper/utils.js'
@@ -24,6 +15,11 @@ import { createExtensionContext } from './helper/extensionContext.js'
 
 export const ext = (window.ext = createExtensionContext())
 
+/**
+ * Load bookmark data and render the folders overview page.
+ *
+ * @returns {Promise<void>}
+ */
 export async function initFoldersPage() {
   const loadingIndicator = document.getElementById('folders-loading')
 
