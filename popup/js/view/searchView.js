@@ -98,12 +98,12 @@ export async function renderSearchResults(result) {
     const highlightCandidate =
       resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
     const titleContent = shouldHighlight && searchTerm && searchTerm.trim()
-      ? sanitizeHighlight(highlightCandidate)
+      ? allowMarkTags(highlightCandidate)
       : escapeHtml(resultEntry.title || resultEntry.url || '')
 
     const urlContent =
       shouldHighlight && searchTerm && searchTerm.trim() && resultEntry.urlHighlighted
-        ? sanitizeHighlight(resultEntry.urlHighlighted)
+        ? allowMarkTags(resultEntry.urlHighlighted)
         : escapeHtml(resultEntry.url || '')
 
     const typeClass = escapeHtml(resultEntry.type || '')
@@ -459,35 +459,11 @@ export function setupResultItemsEvents() {
 
   ext.dom.resultList.hasEventDelegation = true
 }
-function sanitizeHighlight(value) {
+function allowMarkTags(value) {
   if (!value) {
     return ''
   }
 
-  if (typeof document === 'undefined' || typeof Node === 'undefined') {
-    return escapeHtml(value)
-  }
-
-  const template = document.createElement('template')
-  template.innerHTML = value
-  const parts = []
-
-  for (const node of template.content.childNodes) {
-    parts.push(serializeHighlightNode(node))
-  }
-
-  return parts.join('')
-}
-
-function serializeHighlightNode(node) {
-  if (node.nodeType === Node.TEXT_NODE) {
-    return escapeHtml(node.textContent || '')
-  }
-
-  if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'MARK') {
-    const inner = Array.from(node.childNodes).map(serializeHighlightNode).join('')
-    return `<mark>${inner}</mark>`
-  }
-
-  return escapeHtml(node.textContent || '')
+  const escaped = escapeHtml(value)
+  return escaped.replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
 }

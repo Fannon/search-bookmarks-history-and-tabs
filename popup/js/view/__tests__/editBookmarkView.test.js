@@ -269,7 +269,7 @@ describe('editBookmarkView', () => {
       searchStringLower: 'old',
     }
     setupExt([bookmark])
-    const { module, mocks, helpers } = await loadEditBookmarkView()
+    const { module, mocks } = await loadEditBookmarkView()
     global.ext.returnHash = '#search/foo'
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 
@@ -303,7 +303,9 @@ describe('editBookmarkView', () => {
     await module.deleteBookmark(BOOKMARK_ID)
 
     expect(mocks.browserApi.bookmarks.remove).toHaveBeenCalledWith(BOOKMARK_ID)
-    expect(global.ext.model.bookmarks).toEqual([{ originalId: 'bookmark-2', title: 'Bookmark 2', tags: '', folder: '~Play' }])
+    expect(global.ext.model.bookmarks).toEqual([
+      { originalId: 'bookmark-2', title: 'Bookmark 2', tags: '', folder: '~Play' },
+    ])
     expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.searchMock).not.toHaveBeenCalled()
