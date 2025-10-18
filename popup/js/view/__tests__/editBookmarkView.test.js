@@ -46,9 +46,7 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   jest.resetModules()
   uniqueTagsMockValue = uniqueTags
 
-  const utilities = await import('../../helper/utils.js')
-  const realCleanUpUrl = utilities.cleanUpUrl
-  const cleanUpUrl = jest.fn((url) => realCleanUpUrl(url))
+  const { cleanUpUrl: realCleanUpUrl } = await import('../../helper/utils.js')
   const resetFuzzySearchState = jest.fn()
   const resetSimpleSearchState = jest.fn()
   const searchMock = jest.fn(() => Promise.resolve())
@@ -84,10 +82,6 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
     }
   }
 
-  jest.unstable_mockModule('../../helper/utils.js', () => ({
-    __esModule: true,
-    cleanUpUrl,
-  }))
   jest.unstable_mockModule('../../helper/browserApi.js', () => ({
     __esModule: true,
     browserApi,
@@ -112,7 +106,6 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   return {
     module,
     mocks: {
-      cleanUpUrl,
       resetFuzzySearchState,
       resetSimpleSearchState,
       searchMock,
