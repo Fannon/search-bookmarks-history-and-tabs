@@ -202,7 +202,7 @@ class CodeAnalyzer {
    * Detect if a trimmed line represents a comment for supported file types.
    *
    * @param {string} line - Trimmed line text.
-   * @param {string} filePath - Path of the file being analysed.
+   * @param {string} filePath - Path of the file being analyzed.
    * @returns {boolean} True when line is a comment.
    */
   isCommentLine(line, filePath) {

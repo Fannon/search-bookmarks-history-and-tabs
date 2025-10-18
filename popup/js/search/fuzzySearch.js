@@ -3,7 +3,7 @@
  *
  * Strategy:
  * - Lazy-load uFuzzy on first use to keep initial bundle size low.
- * - Build memoised haystacks per mode (bookmarks, tabs, history) for quick repeated searches.
+ * - Build memoized haystacks per mode (bookmarks, tabs, history) for quick repeated searches.
  * - Handle typo tolerance, loose word boundaries, and non-ASCII fallbacks better than the simple strategy.
  *
  * Scoring pipeline:
