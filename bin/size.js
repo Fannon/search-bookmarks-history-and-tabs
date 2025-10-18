@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 /**
- * @fileoverview Reports bundle sizes for the packaged Chrome distribution.
+ * @file Reports bundle sizes for the packaged Chrome distribution.
  *
  * Traverses `dist/chrome`, summarises file sizes by directory, and surfaces the
  * largest minified assets. The report helps monitor regressions after running

@@ -1,6 +1,12 @@
 /**
  * @file Calculates final relevance scores for popup search results.
  *
+ * For a detailed explanation of the scoring process, see the `calculateFinalScore` function documentation.
+ */
+
+/**
+ * Calculates the final search item score for each result
+ *
  * SCORING FLOW (5 STEPS):
  *
  * 1. START WITH BASE SCORE
@@ -32,10 +38,6 @@
  * - URL match (weight 0.6)
  * - Tag match (weight 0.7)
  * - Folder match (weight 0.5) - lowest priority
- */
-
-/**
- * Calculates the final search item score for each result, as described above.
  *
  * @param {Array} results - Search results to score
  * @param {string} searchTerm - The search query string

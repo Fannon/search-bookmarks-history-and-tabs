@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @fileoverview Collects repository-wide file statistics for maintenance.
+ * @file Collects repository-wide file statistics for maintenance.
  *
  * Invoked via `npm run analyze` to summarize how many lines of code, comments,
  * and empty lines exist across source, test, and auxiliary files. The report

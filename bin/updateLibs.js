@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 /**
- * @fileoverview Refreshes third-party libraries in popup/lib.
+ * @file Refreshes third-party libraries in popup/lib.
  *
  * Copies the minified browser-ready assets from node_modules into the extension
  * so the popup can load dependencies without a bundler at runtime.

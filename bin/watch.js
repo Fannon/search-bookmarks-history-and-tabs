@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 /**
- * @fileoverview Watches popup sources and triggers incremental rebuilds.
+ * @file Watches popup sources and triggers incremental rebuilds.
  *
  * Listens for changes under `popup/`, reruns the esbuild bundler, and refreshes
  * the Chrome distribution directory. Designed for `npm run watch` to keep the

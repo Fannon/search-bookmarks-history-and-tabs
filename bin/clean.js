@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @fileoverview Removes build artifacts prior to bundling.
+ * @file Removes build artifacts prior to bundling.
  *
  * `npm run clean` invokes this helper to clear the dist/ directory so subsequent
  * builds start from a predictable state.

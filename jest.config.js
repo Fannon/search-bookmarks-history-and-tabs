@@ -1,5 +1,5 @@
 /**
- * @fileoverview Jest configuration tailored to the popup codebase.
+ * @file Jest configuration tailored to the popup codebase.
  *
  * Focuses on unit tests living beside their modules under popup/js while
  * ignoring Playwright specs and production bundles.

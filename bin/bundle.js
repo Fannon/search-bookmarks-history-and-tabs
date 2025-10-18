@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 /**
- * @fileoverview Bundles popup entry points and styles with esbuild.
+ * @file Bundles popup entry points and styles with esbuild.
  *
  * Produces minified IIFE bundles for each popup entry module and companion CSS
  * files. This script mirrors the production build that ships to extension

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 /**
- * @fileoverview Synchronizes manifest version with package.json.
+ * @file Synchronizes manifest version with package.json.
  *
  * Keeps the browser extension manifest in lockstep with the npm package version
  * so publishing workflows only require updating package.json.

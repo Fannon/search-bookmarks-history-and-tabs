@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 /**
- * @fileoverview Builds the Chrome-ready distribution directory and archive.
+ * @file Builds the Chrome-ready distribution directory and archive.
  *
  * Copies source assets into `dist/chrome`, swaps development scripts for
  * bundled equivalents, removes test fixtures, and packages the result as a zip
