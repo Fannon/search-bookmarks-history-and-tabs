@@ -9,6 +9,9 @@
 
 import { getUniqueTags } from '../search/taxonomySearch.js'
 
+/**
+ * Render the tag chips and counts for the taxonomy overview.
+ */
 export function loadTagsOverview() {
   const tags = getUniqueTags()
   const sortedTags = Object.keys(tags).sort()

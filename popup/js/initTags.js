@@ -15,6 +15,11 @@ import { createExtensionContext } from './helper/extensionContext.js'
 
 export const ext = (window.ext = createExtensionContext())
 
+/**
+ * Load bookmark data and render the tags overview page.
+ *
+ * @returns {Promise<void>}
+ */
 export async function initTagsPage() {
   const loadingIndicator = document.getElementById('tags-loading')
 

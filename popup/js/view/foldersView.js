@@ -9,6 +9,9 @@
 
 import { getUniqueFolders } from '../search/taxonomySearch.js'
 
+/**
+ * Render folder badges with counts for the taxonomy overview.
+ */
 export function loadFoldersOverview() {
   const folders = getUniqueFolders()
   const sortedFolders = Object.keys(folders).sort()

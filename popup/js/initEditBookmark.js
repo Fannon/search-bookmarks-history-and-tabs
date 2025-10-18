@@ -21,6 +21,11 @@ window.ext = ext
 const BOOKMARK_HASH_PREFIX = '#bookmark/'
 const LEGACY_BOOKMARK_HASH_PREFIX = '#id/'
 
+/**
+ * Bootstrap the standalone bookmark editor page and wire up event handlers.
+ *
+ * @returns {Promise<void>}
+ */
 export async function initEditBookmark() {
   const loadingIndicator = document.getElementById('edit-bookmark-loading')
 
@@ -59,6 +64,12 @@ export async function initEditBookmark() {
   }
 }
 
+/**
+ * Extract bookmark id and return hash from a bookmark editor location hash.
+ *
+ * @param {string} hash - Raw `window.location.hash` string.
+ * @returns {{bookmarkId: string|null, returnHash: string|null}}
+ */
 function parseBookmarkHash(hash) {
   if (!hash) {
     return { bookmarkId: null, returnHash: null }
@@ -79,6 +90,12 @@ function parseBookmarkHash(hash) {
   return { bookmarkId: null, returnHash: null }
 }
 
+/**
+ * Parse bookmark id plus optional return hash parameters from a hash body.
+ *
+ * @param {string} hashBody - Hash contents after the prefix.
+ * @returns {{bookmarkId: string, returnHash: string|null}}
+ */
 function parseBookmarkComponents(hashBody) {
   const delimiterIndex = hashBody.search(/[&?]/)
   const pathPart = delimiterIndex === -1 ? hashBody : hashBody.slice(0, delimiterIndex)
@@ -110,6 +127,12 @@ function parseBookmarkComponents(hashBody) {
   }
 }
 
+/**
+ * Decode URI components while swallowing malformed encodings.
+ *
+ * @param {string} value - Value to decode.
+ * @returns {string} Decoded or original value.
+ */
 function decodeURIComponentSafe(value) {
   if (!value) {
     return ''
@@ -121,6 +144,12 @@ function decodeURIComponentSafe(value) {
   }
 }
 
+/**
+ * Build a `#search/<term>` hash fragment for redirection.
+ *
+ * @param {string} searchTerm - Search term to encode.
+ * @returns {string} Hash fragment.
+ */
 function buildSearchHash(searchTerm) {
   if (!searchTerm) {
     return '#search/'
@@ -128,6 +157,9 @@ function buildSearchHash(searchTerm) {
   return `#search/${encodeURIComponent(searchTerm)}`
 }
 
+/**
+ * Register click handlers for bookmark editor actions.
+ */
 function setupEventHandlers() {
   const saveButton = document.getElementById('edit-bookmark-save')
   const deleteButton = document.getElementById('edit-bookmark-delete')
@@ -162,6 +194,11 @@ function setupEventHandlers() {
   }
 }
 
+/**
+ * Respond to hash changes by reloading the requested bookmark.
+ *
+ * @returns {Promise<void>}
+ */
 async function handleHashChange() {
   const { bookmarkId, returnHash } = parseBookmarkHash(window.location.hash)
   if (!bookmarkId) {
@@ -184,6 +221,12 @@ async function handleHashChange() {
   }
 }
 
+/**
+ * Normalize bookmark return hashes to `#search` routes.
+ *
+ * @param {string} hash - Raw return hash.
+ * @returns {string} Sanitized hash.
+ */
 function normalizeReturnHash(hash) {
   if (!hash) {
     return '#search/'
@@ -196,6 +239,11 @@ function normalizeReturnHash(hash) {
   return '#search/'
 }
 
+/**
+ * Resolve the URL to navigate back to the search view.
+ *
+ * @returns {string} Target URL.
+ */
 function getReturnTarget() {
   const returnHash = normalizeReturnHash(ext.returnHash)
   return `./index.html${returnHash}`

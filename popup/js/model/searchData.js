@@ -57,9 +57,9 @@ function mergeHistoryLazily(items, historyMap, mergedUrls) {
 }
 
 /**
- * Gets the actual data that we search through
+ * Fetch and normalise the datasets used by the popup search experience.
  *
- * Merges and removes some items (e.g. duplicates) before they are indexed
+ * @returns {Promise<{tabs: Array, bookmarks: Array, history: Array}>} Prepared search data.
  */
 export async function getSearchData() {
   const startTime = Date.now()

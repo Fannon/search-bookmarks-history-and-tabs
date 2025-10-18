@@ -32,8 +32,9 @@ initExtension().catch((err) => {
 })
 
 /**
- * Initialize the extension
- * This includes indexing the current bookmarks and history
+ * Initialize the popup search experience and preload datasets.
+ *
+ * @returns {Promise<void>}
  */
 export async function initExtension() {
   const startTime = Date.now()
@@ -94,7 +95,9 @@ export async function initExtension() {
 //////////////////////////////////////////
 
 /**
- * URL Hash Router
+ * Handle `window.location.hash` changes and dispatch to the correct view.
+ *
+ * @returns {Promise<void>}
  */
 export async function hashRouter() {
   let hash = window.location.hash
@@ -121,7 +124,7 @@ export async function hashRouter() {
 }
 
 /**
- * Close all modal overlays
+ * Hide the shared error list overlay if it is currently visible.
  */
 export function closeErrors() {
   const element = document.getElementById('error-list')

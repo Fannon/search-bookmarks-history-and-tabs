@@ -18,12 +18,14 @@
 import { resolveSearchTargets } from './common.js'
 
 /**
- * Memoize some state, to avoid re-creating haystack and fuzzy search instances
+ * Memoize some state, to avoid re-creating haystack and fuzzy search instances.
  */
 let state = {}
 
 /**
- * Resets state for simple search. Necessary when search data changes or search string is reset.
+ * Reset cached simple search state when datasets or mode change.
+ *
+ * @param {string} [searchMode] - Optional mode to reset; resets all when omitted.
  */
 export function resetSimpleSearchState(searchMode) {
   if (searchMode) {
@@ -31,6 +33,12 @@ export function resetSimpleSearchState(searchMode) {
   }
 }
 
+/**
+ * Ensure each search entry caches a lower-cased search string.
+ *
+ * @param {Array<Object>} data - Items to prepare.
+ * @returns {Array<Object>} Normalised entries.
+ */
 function prepareSearchData(data) {
   return data.map((entry) => {
     if (!entry.searchStringLower) {
@@ -40,6 +48,13 @@ function prepareSearchData(data) {
   })
 }
 
+/**
+ * Execute a precise search across the datasets associated with a mode.
+ *
+ * @param {string} searchMode - Active search mode.
+ * @param {string} searchTerm - Query string.
+ * @returns {Array<Object>} Matching entries with `searchScore`.
+ */
 export function simpleSearch(searchMode, searchTerm) {
   const targets = resolveSearchTargets(searchMode)
   if (!targets.length) {
@@ -58,9 +73,11 @@ export function simpleSearch(searchMode, searchTerm) {
 }
 
 /**
- * Very simple search algorithm :)
- * This does an `includes` search with an AND condition between the terms
- * There is no real scoring, everything has base score of 1
+ * Run an AND-based substring search within a single dataset and assign scores.
+ *
+ * @param {string} searchTerm - Query string.
+ * @param {string} searchMode - Dataset key inside `ext.model`.
+ * @returns {Array<Object>} Filtered entries with `searchScore: 1`.
  */
 function simpleSearchWithScoring(searchTerm, searchMode) {
   const data = ext.model[searchMode]

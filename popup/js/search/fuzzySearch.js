@@ -17,13 +17,15 @@ import { resolveSearchTargets } from './common.js'
 
 const nonASCIIRegex = /[\u0080-\uFFFF]/
 
-/** Memoize some state, to avoid re-creating haystack and fuzzy search instances */
+/** Memoize some state, to avoid re-creating haystack and fuzzy search instances. */
 let state = {}
 
 /**
  * Resets state for fuzzy search. Necessary when search data changes or search string is reset.
  * If searchMode is given, will only reset that particular state.
  * If no searchMode is given, resets all state.
+ *
+ * @param {string} [searchMode] - Optional mode to reset; resets all when omitted.
  */
 export function resetFuzzySearchState(searchMode) {
   if (searchMode) {
@@ -33,6 +35,13 @@ export function resetFuzzySearchState(searchMode) {
   }
 }
 
+/**
+ * Execute fuzzy search across the datasets mapped to the active mode.
+ *
+ * @param {string} searchMode - Active search mode.
+ * @param {string} searchTerm - Query string.
+ * @returns {Promise<Array<Object>>} Matching entries with fuzzy scores.
+ */
 export async function fuzzySearch(searchMode, searchTerm) {
   // Lazy load the uFuzzy library if not there already
   if (!window['uFuzzy']) {
@@ -57,6 +66,10 @@ export async function fuzzySearch(searchMode, searchTerm) {
 
 /**
  * Execute a fuzzy search with additional scoring and highlighting of results
+ *
+ * @param {string} searchTerm - Query string.
+ * @param {string} searchMode - Dataset key inside `ext.model`.
+ * @returns {Array<Object>} Highlighted fuzzy matches.
  */
 function fuzzySearchWithScoring(searchTerm, searchMode) {
   const data = ext.model[searchMode]
@@ -167,6 +180,12 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
   return results
 }
 
+/**
+ * Detect whether a string contains non-ASCII characters that require special fuzzy handling.
+ *
+ * @param {string} str - Value to inspect.
+ * @returns {boolean} True when non-ASCII characters are present.
+ */
 function containsNonASCII(str) {
   return nonASCIIRegex.test(str)
 }

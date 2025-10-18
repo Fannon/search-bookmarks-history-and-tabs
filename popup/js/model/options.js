@@ -394,6 +394,9 @@ export const emptyOptions = {
  * Writes user settings to the sync storage, falls back to local storage
  *
  * @see https://developer.chrome.com/docs/extensions/reference/storage/
+ *
+ * @param {Object} [userOptions={}] - User overrides to persist.
+ * @returns {Promise<void>}
  */
 export async function setUserOptions(userOptions = {}) {
   return new Promise((resolve, reject) => {
@@ -421,6 +424,8 @@ export async function setUserOptions(userOptions = {}) {
 
 /**
  * Get user options, fall back to default options
+ *
+ * @returns {Promise<Object>} Stored user overrides (or defaults).
  */
 export async function getUserOptions() {
   return new Promise((resolve, reject) => {
@@ -448,6 +453,8 @@ export async function getUserOptions() {
 /**
  * Gets the actual effective options based on the default options
  * and the overrides of the user options
+ *
+ * @returns {Promise<Object>} Effective options object.
  */
 export async function getEffectiveOptions() {
   try {
@@ -463,6 +470,11 @@ export async function getEffectiveOptions() {
   }
 }
 
+/**
+ * Ensure user options are valid JSON-serialisable objects.
+ *
+ * @param {Object} userOptions - Options object to validate.
+ */
 export function validateUserOptions(userOptions) {
   if (userOptions) {
     if (typeof userOptions !== 'object') {

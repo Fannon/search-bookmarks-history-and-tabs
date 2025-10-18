@@ -13,6 +13,12 @@ import process from 'node:process'
 
 const DIST_ROOT = path.resolve('dist/chrome')
 
+/**
+ * Ensure the dist directory exists before computing sizes.
+ *
+ * @param {string} dir - Directory to verify.
+ * @returns {Promise<boolean>} False when directory is missing.
+ */
 async function ensureDistExists(dir) {
   try {
     const stats = await fs.stat(dir)
@@ -30,6 +36,13 @@ async function ensureDistExists(dir) {
   return true
 }
 
+/**
+ * Recursively collect all files beneath a directory.
+ *
+ * @param {string} dir - Directory to walk.
+ * @param {string} base - Base path for relative conversion.
+ * @returns {Promise<Array<{path: string, size: number}>>}
+ */
 async function walkFiles(dir, base) {
   const entries = await fs.readdir(dir, { withFileTypes: true })
   const files = []
@@ -49,6 +62,12 @@ async function walkFiles(dir, base) {
   return files
 }
 
+/**
+ * Convert byte counts into human readable strings.
+ *
+ * @param {number} bytes - Raw byte size.
+ * @returns {string} Human readable size.
+ */
 function formatBytes(bytes) {
   if (bytes === 0) {
     return '0 B'
@@ -61,6 +80,13 @@ function formatBytes(bytes) {
   return `${value.toFixed(digits)} ${units[exponent]}`
 }
 
+/**
+ * Calculate a share percentage string for a value.
+ *
+ * @param {number} value - Value to compare.
+ * @param {number} total - Total used as denominator.
+ * @returns {string} Percentage string.
+ */
 function percentage(value, total) {
   if (total === 0) {
     return '0%'
@@ -68,6 +94,12 @@ function percentage(value, total) {
   return `${((value / total) * 100).toFixed(1)}%`
 }
 
+/**
+ * Summarise file sizes by directory depth and minified asset type.
+ *
+ * @param {Array<{path: string, size: number}>} files - Files to analyse.
+ * @returns {Promise<Object>} Aggregated size metadata.
+ */
 async function summarise(files) {
   const totalSize = files.reduce((sum, file) => sum + file.size, 0)
 
@@ -121,6 +153,14 @@ async function summarise(files) {
   return { totalSize, sortedTopLevel, sortedSecondLevel, sortedMinified }
 }
 
+/**
+ * Print a fixed-width table to stdout.
+ *
+ * @param {Array<string>} headers - Column headers.
+ * @param {Array<Array<string>>} rows - Table rows.
+ * @param {string} [indent=''] - Optional prefix for each line.
+ * @param {Array<number>} [columnWidths] - Precomputed column widths.
+ */
 function printTable(headers, rows, indent = '', columnWidths) {
   if (rows.length === 0) {
     return
@@ -142,6 +182,13 @@ function printTable(headers, rows, indent = '', columnWidths) {
   }
 }
 
+/**
+ * Print a tree-style summary of directory sizes.
+ *
+ * @param {Array<Object>} entries - Hierarchical entries with children.
+ * @param {number} totalSize - Total size for percentage calculations.
+ * @param {string} [indent='  '] - Initial indentation.
+ */
 function printTree(entries, totalSize, indent = '  ') {
   if (!entries || entries.length === 0) {
     return
@@ -162,6 +209,12 @@ function printTree(entries, totalSize, indent = '  ') {
   traverse(entries, indent)
 }
 
+/**
+ * Render the overall bundle size summary, including top-level tree and tables.
+ *
+ * @param {Object} summary - Aggregated size details from `summarise`.
+ * @param {number} fileCount - Number of files processed.
+ */
 function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMinified }, fileCount) {
   if (fileCount === 0) {
     console.log('No files found.')
@@ -224,6 +277,9 @@ function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMini
   }
 }
 
+/**
+ * Entry point for the size reporting script.
+ */
 async function main() {
   if (!(await ensureDistExists(DIST_ROOT))) {
     return

@@ -17,6 +17,8 @@
  *
  * @param {string} searchTerm
  * @param {'tags' | 'folder'} taxonomyType
+ * @param {Array<Object>} data - Bookmark-derived taxonomy entries.
+ * @returns {Array<Object>} Taxonomy results with score metadata.
  */
 export function searchTaxonomy(searchTerm, taxonomyType, data) {
   /** Search results */
@@ -48,6 +50,11 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
   return results
 }
 
+/**
+ * Build a tag-to-bookmark index from the current bookmark model.
+ *
+ * @returns {Object<string, Array<string>>} Map of tag name to bookmark ids.
+ */
 export function getUniqueTags() {
   ext.index.taxonomy.tags = {}
   for (const el of ext.model.bookmarks) {
@@ -67,6 +74,11 @@ export function getUniqueTags() {
   return ext.index.taxonomy.tags
 }
 
+/**
+ * Build (or reuse) a memoized folder-to-bookmark index.
+ *
+ * @returns {Object<string, Array<string>>} Map of folder name to bookmark ids.
+ */
 export function getUniqueFolders() {
   // This function is memoized, as the folders don't change while the extension is open
   if (!ext || !ext.index.taxonomy.folders) {

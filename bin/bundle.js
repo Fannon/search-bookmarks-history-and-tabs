@@ -62,6 +62,11 @@ const sharedBuildOptions = {
   logLevel: 'info',
 }
 
+/**
+ * Build minified JavaScript and CSS bundles for all popup entry points.
+ *
+ * @returns {Promise<void>}
+ */
 export async function bundleAll() {
   for (const { name, entry, outfile, globalName } of jsBundles) {
     // Execute builds sequentially so esbuild reuses its worker pool efficiently

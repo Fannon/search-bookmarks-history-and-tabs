@@ -30,6 +30,13 @@
 - Name files by feature (e.g. `searchResultsView.js`, `browserApi.js`) and mirror that style for co-located tests (`*.test.js`).
 - Do not excessively create dependencies, prefer a lightweight "vanilla JS" style
 
+## Documentation & Comment Style
+
+- Start each non-test `.js` module with an `@file` block that summarises its purpose and primary responsibilities.
+- Provide a brief JSDoc block for every exported function (and notable helper) covering intent, key parameters, and return shape when applicable.
+- Prefer concise inline comments only where the flow is non-obvious; avoid restating self-explanatory code.
+- Keep comment tone factual and implementation-aligned—update or remove stale remarks when behaviour changes.
+
 ## Testing Guidelines
 
 - Use Jest for deterministic unit coverage; stub DOM APIs with jsdom helpers when needed.

@@ -8,6 +8,11 @@
  */
 import * as fs from 'fs-extra'
 
+/**
+ * Copy third-party popup dependencies from node_modules into the workspace.
+ *
+ * @returns {Promise<void>}
+ */
 async function updateLibs() {
   // Clear stale assets so the directory mirrors current dependency versions
   await fs.emptyDir('popup/lib')

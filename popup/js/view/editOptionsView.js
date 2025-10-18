@@ -9,6 +9,11 @@
 
 import { getUserOptions, setUserOptions } from '../model/options.js'
 
+/**
+ * Initialise the options editor view by loading and displaying user overrides.
+ *
+ * @returns {Promise<void>}
+ */
 export async function initOptions() {
   const userOptions = await getUserOptions()
   const userOptionsYaml = window.jsyaml.dump(userOptions)
@@ -21,6 +26,11 @@ export async function initOptions() {
   document.getElementById('edit-options-save').addEventListener('click', saveOptions)
 }
 
+/**
+ * Persist YAML updates back to storage and return users to the search view.
+ *
+ * @returns {Promise<void>}
+ */
 async function saveOptions() {
   const userOptionsString = document.getElementById('user-config').value
   try {
@@ -41,6 +51,9 @@ async function saveOptions() {
   }
 }
 
+/**
+ * Clear user overrides, reverting to defaults on next load.
+ */
 async function resetOptions() {
   document.getElementById('user-config').value = ''
 }
