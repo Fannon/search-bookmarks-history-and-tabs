@@ -13,21 +13,6 @@ const mockCloseErrors = jest.fn()
 const mockRenderSearchResults = jest.fn()
 const mockLoadScript = jest.fn(() => Promise.resolve())
 
-const escapeHtmlMap = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-}
-
-const mockEscapeHtml = (value) => {
-  if (value === null || value === undefined) {
-    return ''
-  }
-  return String(value).replace(/[&<>"']/g, (match) => escapeHtmlMap[match])
-}
-
 let commonModule
 let search
 let searchWithAlgorithm
@@ -40,12 +25,14 @@ beforeAll(async () => {
     __esModule: true,
     getBrowserTabs: mockGetBrowserTabs,
   }))
+  const utilsModule = await import('../../helper/utils.js')
   await jest.unstable_mockModule('../../helper/utils.js', () => ({
     __esModule: true,
     cleanUpUrl: mockCleanUpUrl,
     printError: mockPrintError,
     loadScript: mockLoadScript,
-    escapeHtml: mockEscapeHtml,
+    escapeHtml: utilsModule.escapeHtml,
+    timeSince: utilsModule.timeSince,
   }))
   await jest.unstable_mockModule('../../initSearch.js', () => ({
     __esModule: true,

@@ -46,7 +46,9 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   jest.resetModules()
   uniqueTagsMockValue = uniqueTags
 
-  const cleanUpUrl = jest.fn((url) => `clean:${url}`)
+  const utilities = await import('../../helper/utils.js')
+  const realCleanUpUrl = utilities.cleanUpUrl
+  const cleanUpUrl = jest.fn((url) => realCleanUpUrl(url))
   const resetFuzzySearchState = jest.fn()
   const resetSimpleSearchState = jest.fn()
   const searchMock = jest.fn(() => Promise.resolve())
@@ -82,25 +84,12 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
     }
   }
 
-  const escapeHtmlMap = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-  }
-  const mockEscapeHtml = (value) => {
-    if (value === null || value === undefined) {
-      return ''
-    }
-    return String(value).replace(/[&<>"']/g, (match) => escapeHtmlMap[match])
-  }
-
   jest.unstable_mockModule('../../helper/utils.js', () => ({
-    escapeHtml: mockEscapeHtml,
+    __esModule: true,
     cleanUpUrl,
   }))
   jest.unstable_mockModule('../../helper/browserApi.js', () => ({
+    __esModule: true,
     browserApi,
     createSearchString,
   }))
@@ -134,6 +123,7 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
     },
     helpers: {
       tagifyInstances,
+      cleanUpUrl: realCleanUpUrl,
     },
     setUniqueTags(value) {
       uniqueTagsMockValue = value
@@ -237,7 +227,7 @@ describe('editBookmarkView', () => {
       searchStringLower: 'old',
     }
     setupExt([bookmark])
-    const { module, mocks } = await loadEditBookmarkView()
+    const { module, mocks, helpers } = await loadEditBookmarkView()
     global.ext.returnHash = '#search/foo'
 
     document.getElementById('bookmark-title').value = 'Updated Title'
@@ -248,15 +238,16 @@ describe('editBookmarkView', () => {
 
     module.updateBookmark(BOOKMARK_ID)
 
+    const expectedCleanUrl = helpers.cleanUpUrl('http://updated.com')
+    const expectedSearchString = `search:Updated Title|${expectedCleanUrl}|#alpha #beta|~Work`
+
     expect(bookmark.title).toBe('Updated Title')
     expect(bookmark.originalUrl).toBe('http://updated.com')
-    expect(bookmark.url).toBe('clean:http://updated.com')
+    expect(bookmark.url).toBe(expectedCleanUrl)
     expect(bookmark.tags).toBe('#alpha #beta')
-    expect(bookmark.searchString).toBe('search:Updated Title|clean:http://updated.com|#alpha #beta|~Work')
+    expect(bookmark.searchString).toBe(expectedSearchString)
     expect(bookmark.searchStringLower).toBe(bookmark.searchString.toLowerCase())
 
-    expect(mocks.cleanUpUrl).toHaveBeenCalledWith('http://updated.com')
-    expect(mocks.createSearchString).toHaveBeenCalledWith('Updated Title', 'clean:http://updated.com', '#alpha #beta', '~Work')
     expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
@@ -278,7 +269,7 @@ describe('editBookmarkView', () => {
       searchStringLower: 'old',
     }
     setupExt([bookmark])
-    const { module, mocks } = await loadEditBookmarkView()
+    const { module, mocks, helpers } = await loadEditBookmarkView()
     global.ext.returnHash = '#search/foo'
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 

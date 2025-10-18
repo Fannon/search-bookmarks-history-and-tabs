@@ -11,21 +11,6 @@ const originalWindowClose = window.close
 const originalWindowOpen = window.open
 const originalClipboard = navigator.clipboard
 
-const escapeHtmlMap = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-}
-
-function mockEscapeHtml(value) {
-  if (value === null || value === undefined) {
-    return ''
-  }
-  return String(value).replace(/[&<>"']/g, (match) => escapeHtmlMap[match])
-}
-
 function createResults() {
   return [
     {
@@ -59,14 +44,14 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
   delete document.hasContextMenuListener
   window.location.hash = '#search/query'
 
-  const timeSince = jest.fn(() => '1 hour ago')
   const getUserOptions = jest.fn(async () => ({ searchStrategy: 'precise' }))
   const setUserOptions = jest.fn(async () => {})
   const searchMock = jest.fn(() => Promise.resolve())
 
+  const utilsModule = await import('../../helper/utils.js')
   jest.unstable_mockModule('../../helper/utils.js', () => ({
-    timeSince,
-    escapeHtml: mockEscapeHtml,
+    __esModule: true,
+    ...utilsModule,
   }))
   jest.unstable_mockModule('../../model/options.js', () => ({
     getUserOptions,
@@ -150,7 +135,6 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
   return {
     module,
     mocks: {
-      timeSince,
       getUserOptions,
       setUserOptions,
       search: searchMock,
@@ -218,7 +202,6 @@ describe('searchView renderSearchResults', () => {
 
     expect(document.getElementById('selected-result')).toBe(bookmarkItem)
     expect(ext.model.currentItem).toBe(0)
-    expect(mocks.timeSince).toHaveBeenCalledTimes(1)
     expect(window.Mark).toHaveBeenCalledTimes(2)
     const firstMarkInstance = window.Mark.mock.results[0].value
     expect(firstMarkInstance.mark).toHaveBeenCalledWith('query', {
