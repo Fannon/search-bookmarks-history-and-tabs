@@ -13,23 +13,29 @@
  */
 
 /**
- * Get text how long a date is ago
+ * Converts a date to a human-readable "time ago" format
+ *
+ * Converts Unix timestamps or Date objects to relative time strings like
+ * "2 hours ago", "3 days ago", etc. Falls back to smaller units if date
+ * is within the current day.
+ *
+ * @param {Date|number} date - Date object or Unix timestamp
+ * @returns {string} Formatted relative time (e.g., "5 minutes ago")
  *
  * @see https://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
  */
 export function timeSince(date) {
-  // Handle invalid inputs
   if (!date || isNaN(new Date(date).getTime())) {
     return 'Invalid date'
   }
 
   const seconds = Math.floor((new Date() - new Date(date)) / 1000)
 
-  // Handle future dates
   if (seconds < 0) {
     return '0 seconds'
   }
 
+  // Use fixed intervals (30 days/month, 365 days/year) - not accounting for actual length variations
   const intervals = [
     { unitSeconds: 31536000, label: 'year' },
     { unitSeconds: 2592000, label: 'month' },
@@ -51,29 +57,48 @@ export function timeSince(date) {
 }
 
 /**
- * Remove http://, http://, www, trailing slashes from URLs
+ * Normalizes URLs by removing protocol, www, and trailing slashes
+ *
+ * Strips http://, https://, www. prefix and converts to lowercase
+ * to enable consistent URL comparison across different URL formats.
+ * Used for matching bookmarks/history to current page and for display.
+ *
+ * Examples:
+ * - "https://www.example.com/" → "example.com"
+ * - "http://example.com/path" → "example.com/path"
+ * - "www.example.com/" → "example.com"
+ *
+ * @param {string|null} url - URL to normalize
+ * @returns {string} Normalized URL (lowercase, no protocol/www/trailing slash)
+ *
  * @see https://stackoverflow.com/a/57698415
  */
 export function cleanUpUrl(url) {
-  // Handle null, undefined, or empty inputs
   if (!url) {
     return ''
   }
 
-  // Convert to string and clean up
-  const urlString = String(url)
+  return String(url)
     .replace(/^(?:https?:\/\/)?(?:www\.)?/i, '')
     .replace(/\/$/, '')
     .toLowerCase()
-
-  return urlString
 }
 
-// Cache for loaded scripts to avoid duplicate loading
+// Cache for loaded scripts to avoid duplicate loading and network requests
 const loadedScripts = new Set()
 
+/**
+ * Dynamically loads a script file and caches the result
+ *
+ * Prevents loading the same script multiple times by tracking loaded URLs.
+ * Used for lazy-loading large libraries (uFuzzy, mark.js) that are only
+ * needed when specific features are used.
+ *
+ * @param {string} url - Script URL to load
+ * @returns {Promise<void>} Resolves when script is loaded or cached
+ * @throws {Error} If script fails to load
+ */
 export async function loadScript(url) {
-  // Return immediately if already loaded
   if (loadedScripts.has(url)) {
     return Promise.resolve()
   }
@@ -93,6 +118,16 @@ export async function loadScript(url) {
   })
 }
 
+/**
+ * Displays an error in the UI error list and logs to console
+ *
+ * Prepends error messages to the error-list element with full stack trace.
+ * Logs to console.error for developer debugging. Used throughout the extension
+ * to provide user-facing error feedback while maintaining console visibility.
+ *
+ * @param {Error} err - The error object with message and stack
+ * @param {string} [text] - Optional context message to display before error message
+ */
 export function printError(err, text) {
   let html = ''
   if (text) {
@@ -104,6 +139,7 @@ export function printError(err, text) {
   if (err.stack) {
     html += `<li class="error"><b>Error Stack</b>: ${err.stack}</li>`
   }
+  // Prepend errors to top of list (most recent errors appear first)
   const errorList = document.getElementById('error-list')
   errorList.innerHTML = html + errorList.innerHTML
   errorList.style = 'display: block;'

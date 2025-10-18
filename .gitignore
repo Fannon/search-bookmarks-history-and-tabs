@@ -40,6 +40,7 @@ jspm_packages/
 .env.test
 
 # Temporary files
+tmp/
 temp/
 .wireit/
 .serena/
