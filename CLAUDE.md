@@ -9,6 +9,7 @@ This is a browser extension (Chrome, Firefox, Edge) that provides fuzzy/precise 
 ## Essential Commands
 
 ### Development Workflow
+
 ```bash
 npm install                    # Install dependencies
 npm run build                  # Full production build (clean → bundle → manifests → dist → size report)
@@ -18,6 +19,7 @@ npm run start:dist             # Serve built extension from dist/chrome/popup/
 ```
 
 ### Testing
+
 ```bash
 npm run lint                   # ESLint validation
 npm run test                   # Run all Jest unit tests (alias to test:unit)
@@ -29,6 +31,7 @@ npm run test:e2e:firefox       # Playwright for Firefox only
 ```
 
 ### Build Components
+
 ```bash
 npm run clean                  # Remove build artifacts
 npm run build:bundle           # Bundle JavaScript with esbuild
@@ -47,7 +50,12 @@ The codebase follows a strict separation of concerns:
 
 - **`popup/js/helper/`** - Pure utility functions (DOM manipulation, browser API wrappers, time formatting)
 - **`popup/js/model/`** - Data structures and configuration (search data aggregation, options management)
-- **`popup/js/search/`** - Search orchestration (query parsing, fuzzy/precise search, scoring)
+- **`popup/js/search/`** - Search orchestration and algorithms
+  - `common.js` - Query parsing, search mode detection, result rendering orchestration
+  - `simpleSearch.js` - Precise (exact-match) search algorithm
+  - `fuzzySearch.js` - Fuzzy (approximate-match) search with uFuzzy library
+  - `taxonomySearch.js` - Tag (#) and folder (~) filtering with AND logic
+  - `scoring.js` - Result relevance scoring algorithm (5-step process)
 - **`popup/js/view/`** - UI rendering and DOM updates (search results, tags, folders, bookmarks editor)
 
 ### Entry Points
@@ -67,38 +75,38 @@ Each init script is bundled into a `.bundle.min.js` file via `bin/bundle.js` usi
 The global `ext` object (created in `popup/js/helper/extensionContext.js`) serves as the application state container:
 
 ```javascript
-ext.opts           // Effective user options (merged with defaults)
-ext.model          // Search data: bookmarks, tabs, history, searchMode
-ext.dom            // Cached DOM element references
-ext.initialized    // Initialization status flag
-ext.searchCache    // Map for caching search results
+ext.opts // Effective user options (merged with defaults)
+ext.model // Search data: bookmarks, tabs, history, searchMode
+ext.dom // Cached DOM element references
+ext.initialized // Initialization status flag
+ext.searchCache // Map for caching search results
 ```
 
 ### Search Flow
 
 1. **Initialization** (`initSearch.js:initExtension`)
+
    - Load user options from browser storage (YAML/JSON)
    - Fetch bookmarks, tabs, and history via browser APIs
    - Merge history data into bookmarks/tabs (lazy evaluation)
    - Setup event listeners and debounced search
 
 2. **Query Parsing** (`search/common.js:search`)
+
    - Detect search mode prefixes: `h ` (history), `b ` (bookmarks), `t ` (tabs), `s ` (search engines)
    - Detect taxonomy markers: `#` (tags), `~` (folders)
    - Check for custom search engine aliases (e.g., `g ` for Google)
    - Detect direct URL navigation
 
 3. **Search Execution**
+
    - **Precise search** (`search/simpleSearch.js`) - Case-insensitive exact matching, faster
    - **Fuzzy search** (`search/fuzzySearch.js`) - Uses uFuzzy library for approximate matching
    - **Taxonomy search** (`search/taxonomySearch.js`) - Dedicated tag/folder filtering with AND logic
 
-4. **Scoring System** (`search/common.js`, scoring functions throughout)
-   - Base scores per result type (bookmark, tab, history, search engine)
-   - Field weight multipliers (title, URL, tags, folders)
-   - Search library score (quality of match)
-   - Bonus scores: exact match, starts-with, custom `+N` notation in bookmark titles
-   - Penalty for recent duplicates
+4. **Scoring System** (`search/scoring.js:calculateFinalScore`)
+
+   - See [popup/js/search/scoring.js](popup/js/search/scoring.js) for comprehensive algorithm documentation
 
 5. **Rendering** (`view/searchView.js:renderSearchResults`)
    - Sort by final score
@@ -130,6 +138,7 @@ User options are defined in `popup/js/model/options.js` (`defaultOptions` object
 ### Bookmark Tagging System
 
 Bookmarks can be tagged using `#tag` syntax in titles:
+
 - Tags are extracted from bookmark titles via regex (`popup/js/helper/browserApi.js`)
 - Tags cannot start with numbers (filters out issue numbers)
 - Tag autocomplete uses Tagify library (`popup/lib/tagify.min.js`)
@@ -154,6 +163,7 @@ Bookmarks can be tagged using `#tag` syntax in titles:
 ## Code Style
 
 Enforced by `eslint.config.mjs`:
+
 - 2-space indentation
 - Single quotes
 - No trailing semicolons
@@ -163,6 +173,7 @@ Enforced by `eslint.config.mjs`:
 ## Build System
 
 Build scripts in `bin/` are small Node.js programs:
+
 - **`bundle.js`** - esbuild bundler for entry points
 - **`updateManifests.js`** - Syncs version/permissions across browser manifests
 - **`createDist.js`** - Creates ZIP archives for store submission
@@ -177,6 +188,7 @@ Build scripts in `bin/` are small Node.js programs:
 - **Manifest permissions**: Update via `npm run build:update-manifests` when changing browser APIs
 - **Mock data path**: Local dev mode expects `popup/mockData/chrome.json`
 - **Tags vs folders**: Use `#` for tags (exact match), `~` for folders (path prefix match)
+- **Scoring logic changes**: When modifying score calculations in `popup/js/search/scoring.js`, ensure `calculateFinalScore` tests in `popup/js/search/__tests__/calculateFinalScore.test.js` still pass. Field normalization (case-insensitive, URL handling) is crucial for consistency.
 
 ## Performance Considerations
 
