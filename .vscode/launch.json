@@ -11,7 +11,8 @@
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "env": {
-        "NODE_OPTIONS": "--experimental-vm-modules --disable-warning=ExperimentalWarning"
+        "NODE_OPTIONS": "--experimental-vm-modules",
+        "NODE_NO_WARNINGS": "1"
       }
     }
   ]

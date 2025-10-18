@@ -34,5 +34,8 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "jest.nodeEnv": { "NODE_OPTIONS": "--experimental-vm-modules" }
+  "jest.nodeEnv": {
+    "NODE_OPTIONS": "--experimental-vm-modules",
+    "NODE_NO_WARNINGS": "1"
+  }
 }
