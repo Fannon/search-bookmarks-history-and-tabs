@@ -44,13 +44,14 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
   delete document.hasContextMenuListener
   window.location.hash = '#search/query'
 
-  const timeSince = jest.fn(() => '1 hour ago')
   const getUserOptions = jest.fn(async () => ({ searchStrategy: 'precise' }))
   const setUserOptions = jest.fn(async () => {})
   const searchMock = jest.fn(() => Promise.resolve())
 
+  const utilsModule = await import('../../helper/utils.js')
   jest.unstable_mockModule('../../helper/utils.js', () => ({
-    timeSince,
+    __esModule: true,
+    ...utilsModule,
   }))
   jest.unstable_mockModule('../../model/options.js', () => ({
     getUserOptions,
@@ -134,7 +135,6 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
   return {
     module,
     mocks: {
-      timeSince,
       getUserOptions,
       setUserOptions,
       search: searchMock,
@@ -202,12 +202,56 @@ describe('searchView renderSearchResults', () => {
 
     expect(document.getElementById('selected-result')).toBe(bookmarkItem)
     expect(ext.model.currentItem).toBe(0)
-    expect(mocks.timeSince).toHaveBeenCalledTimes(1)
     expect(window.Mark).toHaveBeenCalledTimes(2)
     const firstMarkInstance = window.Mark.mock.results[0].value
     expect(firstMarkInstance.mark).toHaveBeenCalledWith('query', {
       exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
     })
+  })
+
+  it('escapes HTML content coming from bookmarks and metadata', async () => {
+    const maliciousResults = [
+      {
+        type: 'bookmark',
+        originalId: 'bm-mal',
+        originalUrl: 'https://example.com/<script>alert(1)</script>',
+        url: 'example.com/<iframe src=javascript:alert(1)>',
+        title: 'Title <img src=x onerror=alert(1)>',
+        tagsArray: ['attack <svg onload=alert(1)>'],
+        folderArray: ['Folder"><img src=x>'],
+        lastVisitSecondsAgo: 30,
+        visitCount: 2,
+        dateAdded: new Date('2023-06-01').getTime(),
+        score: 12,
+      },
+    ]
+
+    const { module, elements } = await setupSearchView({
+      results: maliciousResults,
+      opts: { displaySearchMatchHighlight: false },
+    })
+
+    await module.renderSearchResults()
+
+    const listItem = elements.resultList.querySelector('li')
+    expect(listItem).not.toBeNull()
+    expect(listItem.querySelectorAll('script')).toHaveLength(0)
+
+    const titleText = listItem.querySelector('.title-text')
+    expect(titleText.textContent.trim()).toBe('Title <img src=x onerror=alert(1)>')
+    expect(titleText.innerHTML).toContain('&lt;img src=x onerror=alert(1)&gt;')
+
+    const tagBadge = listItem.querySelector('.badge.tags')
+    expect(tagBadge.textContent).toBe('#attack <svg onload=alert(1)>')
+    expect(tagBadge.innerHTML).toContain('&lt;svg onload=alert(1)&gt;')
+
+    const folderBadge = listItem.querySelector('.badge.folder')
+    expect(folderBadge.textContent).toBe('~Folder"><img src=x>')
+    expect(folderBadge.innerHTML).toContain('&lt;img src=x&gt;')
+
+    const urlDiv = listItem.querySelector('.url')
+    expect(urlDiv.textContent).toBe('example.com/<iframe src=javascript:alert(1)>')
+    expect(urlDiv.innerHTML).toContain('&lt;iframe src=javascript:alert(1)&gt;')
   })
 })
 

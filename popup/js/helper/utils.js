@@ -2,6 +2,22 @@
 // UTILITY FUNCTIONS                    //
 //////////////////////////////////////////
 
+const HTML_ESCAPE_REGEX = /[&<>"']/g
+const HTML_ESCAPE_MAP = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+}
+
+export function escapeHtml(value) {
+  if (value === null || value === undefined) {
+    return ''
+  }
+  return String(value).replace(HTML_ESCAPE_REGEX, (match) => HTML_ESCAPE_MAP[match])
+}
+
 /**
  * Utility functions for DOM manipulation, time formatting, and browser integration
  *
@@ -129,23 +145,31 @@ export async function loadScript(url) {
  * @param {string} [text] - Optional context message to display before error message
  */
 export function printError(err, text) {
-  let html = ''
+  const errorList = document.getElementById('error-list')
+
   if (text) {
-    html += `<li class="error"><b>Error</b>: ${text}</span>`
     console.error(text)
   }
   console.error(err)
-  html += `<li class="error"><b>Error Message</b>: ${err.message}</span>`
-  if (err.stack) {
-    html += `<li class="error"><b>Error Stack</b>: ${err.stack}</li>`
+
+  if (!errorList) {
+    console.warn('Error list element not found in DOM. Error:', err?.message || err)
+    return
   }
-  // Prepend errors to top of list (most recent errors appear first)
-  const errorList = document.getElementById('error-list')
-  if (errorList) {
-    errorList.innerHTML = html + errorList.innerHTML
-    errorList.style.display = 'block'
-  } else {
-    // Fallback for test environments where DOM might not be available
-    console.warn('Error list element not found in DOM. Error:', err.message)
+
+  let html = ''
+
+  if (text) {
+    html += `<li class="error"><b>Error</b>: ${escapeHtml(text)}</li>`
   }
+
+  const message = err && typeof err.message === 'string' ? err.message : String(err)
+  html += `<li class="error"><b>Error Message</b>: ${escapeHtml(message)}</li>`
+
+  if (err && err.stack) {
+    html += `<li class="error"><b>Error Stack</b>: <pre>${escapeHtml(err.stack)}</pre></li>`
+  }
+
+  errorList.innerHTML = html + errorList.innerHTML
+  errorList.style.display = 'block'
 }

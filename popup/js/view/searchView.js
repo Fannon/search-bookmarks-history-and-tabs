@@ -10,7 +10,7 @@
  * - Supporting search term highlighting and search strategy switching
  */
 
-import { timeSince } from '../helper/utils.js'
+import { escapeHtml, timeSince } from '../helper/utils.js'
 import { getUserOptions, setUserOptions } from '../model/options.js'
 import { search } from '../search/common.js'
 
@@ -52,70 +52,74 @@ export async function renderSearchResults(result) {
       continue
     }
 
-    // Build badges HTML efficiently
     let badgesHTML = ''
 
-    // Add clickable tag badges for bookmark entries
     if (opts.displayTags && resultEntry.tagsArray) {
       for (const tag of resultEntry.tagsArray) {
-        badgesHTML += `<span class="badge tags" x-link="#search/#${tag}" title="Bookmark Tags">#${tag}</span>`
+        const safeTag = escapeHtml(tag)
+        badgesHTML += `<span class="badge tags" x-link="#search/#${safeTag}" title="Bookmark Tags">#${safeTag}</span>`
       }
     }
 
-    // Add clickable folder path badges for bookmark entries
     if (opts.displayFolderName && resultEntry.folderArray) {
       const trail = []
-      for (const f of resultEntry.folderArray) {
-        trail.push(f)
-        badgesHTML += `<span class="badge folder" x-link="#search/~${trail.join(
-          ' ~',
-        )}" title="Bookmark Folder" style="background-color: ${opts.bookmarkColor || 'none'}">${
-          shouldHighlight ? '~' + f : '~' + f
-        }</span>`
+      for (const folderName of resultEntry.folderArray) {
+        trail.push(folderName)
+        const folderLink = `#search/~${trail.join(' ~')}`
+        const safeLink = escapeHtml(folderLink)
+        const label = `~${folderName}`
+        badgesHTML += `<span class="badge folder" x-link="${safeLink}" title="Bookmark Folder" style="background-color: ${escapeHtml(
+          String(opts.bookmarkColor || 'none'),
+        )}">${escapeHtml(label)}</span>`
       }
     }
 
-    // Add relative visit time badge (e.g., "2 hours ago")
     if (opts.displayLastVisit && resultEntry.lastVisitSecondsAgo) {
       const lastVisit = timeSince(new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000))
-      badgesHTML += `<span class="badge last-visited" title="Last Visited">-${lastVisit}</span>`
+      badgesHTML += `<span class="badge last-visited" title="Last Visited">-${escapeHtml(lastVisit)}</span>`
     }
 
-    // Add visit count badge showing how many times the page was visited
     if (opts.displayVisitCounter && resultEntry.visitCount !== undefined) {
-      badgesHTML += `<span class="badge visit-counter" title="Visited Counter">${resultEntry.visitCount}</span>`
+      badgesHTML += `<span class="badge visit-counter" title="Visited Counter">${escapeHtml(
+        String(resultEntry.visitCount),
+      )}</span>`
     }
 
-    // Add date when bookmark was added
     if (opts.displayDateAdded && resultEntry.dateAdded) {
-      badgesHTML += `<span class="badge date-added" title="Date Added">${
-        new Date(resultEntry.dateAdded).toISOString().split('T')[0]
-      }</span>`
+      badgesHTML += `<span class="badge date-added" title="Date Added">${escapeHtml(
+        new Date(resultEntry.dateAdded).toISOString().split('T')[0],
+      )}</span>`
     }
 
-    // Add relevance score badge for search result ranking
     if (opts.displayScore && resultEntry.score) {
-      badgesHTML += `<span class="badge score" title="Score">${Math.round(resultEntry.score)}</span>`
+      badgesHTML += `<span class="badge score" title="Score">${escapeHtml(
+        String(Math.round(resultEntry.score)),
+      )}</span>`
     }
 
-    // Determine content for title and URL with proper escaping
+    const highlightCandidate =
+      resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
     const titleContent =
       shouldHighlight && searchTerm && searchTerm.trim()
-        ? resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
-        : resultEntry.title || resultEntry.url || ''
+        ? // escape everything first, then allow only the `<mark>` tags that the highlighter inserts
+          escapeHtml(highlightCandidate).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
+        : escapeHtml(resultEntry.title || resultEntry.url || '')
 
     const urlContent =
       shouldHighlight && searchTerm && searchTerm.trim() && resultEntry.urlHighlighted
-        ? resultEntry.urlHighlighted
-        : resultEntry.url
+        ? // same approach for the URL snippet – keep highlight markup, escape everything else
+          escapeHtml(resultEntry.urlHighlighted).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
+        : escapeHtml(resultEntry.url || '')
 
-    // Generate complete HTML for this result item using template
+    const typeClass = escapeHtml(resultEntry.type || '')
+    const originalUrlAttr = resultEntry.originalUrl ? ` x-open-url="${escapeHtml(resultEntry.originalUrl)}"` : ''
+    const originalIdAttr =
+      resultEntry.originalId !== undefined ? ` x-original-id="${escapeHtml(String(resultEntry.originalId))}"` : ''
+    const colorValue = escapeHtml(String(opts[resultEntry.type + 'Color']))
+
     const itemHTML = `
-      <li class="${resultEntry.type}"
-          x-open-url="${resultEntry.originalUrl}"
-          x-index="${i}"
-          x-original-id="${resultEntry.originalId}"
-          style="border-left: ${opts.colorStripeWidth}px solid ${opts[resultEntry.type + 'Color']}">
+      <li class="${typeClass}"${originalUrlAttr} x-index="${i}"${originalIdAttr}
+          style="border-left: ${opts.colorStripeWidth}px solid ${colorValue}">
         ${
           resultEntry.type === 'bookmark'
             ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(
@@ -128,16 +132,14 @@ export async function renderSearchResults(result) {
           <span class="title-text">${titleContent} </span>
           ${badgesHTML}
         </div>
-        <div class="url" title="${resultEntry.url}">${urlContent}</div>
+        <div class="url" title="${escapeHtml(resultEntry.url || '')}">${urlContent}</div>
       </li>
     `
 
-    // Create element from HTML string for better performance
     const tempDiv = document.createElement('div')
     tempDiv.innerHTML = itemHTML
     const resultListItem = tempDiv.firstElementChild
 
-    // Apply client-side text highlighting for search terms if needed
     if (shouldHighlight && searchTerm && searchTerm.trim() && window.Mark) {
       if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
         const mark = new window.Mark(resultListItem)

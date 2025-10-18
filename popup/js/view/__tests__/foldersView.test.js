@@ -166,4 +166,20 @@ describe('foldersView', () => {
       '~Work & Projects (1)',
     ])
   })
+
+  it('escapes HTML content in folder names', async () => {
+    setupDom()
+    const folders = {
+      'Danger<script>alert(1)</script>': [{ id: 1 }],
+    }
+
+    const { module } = await loadFoldersView({ folders })
+
+    module.loadFoldersOverview()
+
+    const badge = document.querySelector('#folders-list a.badge.folder')
+    expect(badge).not.toBeNull()
+    expect(badge.textContent).toBe('~Danger<script>alert(1)</script> (1)')
+    expect(badge.innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
+  })
 })

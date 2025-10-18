@@ -25,11 +25,14 @@ beforeAll(async () => {
     __esModule: true,
     getBrowserTabs: mockGetBrowserTabs,
   }))
+  const utilsModule = await import('../../helper/utils.js')
   await jest.unstable_mockModule('../../helper/utils.js', () => ({
     __esModule: true,
     cleanUpUrl: mockCleanUpUrl,
     printError: mockPrintError,
     loadScript: mockLoadScript,
+    escapeHtml: utilsModule.escapeHtml,
+    timeSince: utilsModule.timeSince,
   }))
   await jest.unstable_mockModule('../../initSearch.js', () => ({
     __esModule: true,
