@@ -99,9 +99,11 @@ export function calculateFinalScore(results, searchTerm) {
       const lowerTags = el.tags ? el.tags.toLowerCase() : null
       const lowerFolder = el.folder ? el.folder.toLowerCase() : null
 
-      // Pre-compute normalized arrays for exact tag/folder matching
+      // Pre-compute normalized arrays and sets for exact tag/folder matching
       const lowerTagValues = el.tagsArray ? el.tagsArray.map((tag) => tag.toLowerCase()) : []
       const lowerFolderValues = el.folderArray ? el.folderArray.map((folder) => folder.toLowerCase()) : []
+      const tagSet = lowerTagValues.length ? new Set(lowerTagValues) : null
+      const folderSet = lowerFolderValues.length ? new Set(lowerFolderValues) : null
 
       // STEP 3A: Exact match bonuses
       // Award bonus if title/URL starts with the exact search term
@@ -120,8 +122,7 @@ export function calculateFinalScore(results, searchTerm) {
 
       // Award bonus for each exact tag name match
       // Example: searching "react hooks" matches tags "#react" and "#hooks"
-      if (scoreExactTagMatchBonus && el.tags && tagTerms.length) {
-        const tagSet = new Set(lowerTagValues)
+      if (scoreExactTagMatchBonus && tagSet && tagTerms.length) {
         for (const searchTag of tagTerms) {
           if (searchTag && tagSet.has(searchTag)) {
             score += scoreExactTagMatchBonus
@@ -131,8 +132,7 @@ export function calculateFinalScore(results, searchTerm) {
 
       // Award bonus for each exact folder name match
       // Example: searching "work projects" matches folders "~Work" and "~Projects"
-      if (scoreExactFolderMatchBonus && el.folder && folderTerms.length) {
-        const folderSet = new Set(lowerFolderValues)
+      if (scoreExactFolderMatchBonus && folderSet && folderTerms.length) {
         for (const searchFolder of folderTerms) {
           if (searchFolder && folderSet.has(searchFolder)) {
             score += scoreExactFolderMatchBonus

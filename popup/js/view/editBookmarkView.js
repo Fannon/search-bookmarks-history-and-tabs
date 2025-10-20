@@ -15,6 +15,15 @@ import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
 
 /**
+ * Reset all bookmark-related search caches after bookmark modifications.
+ */
+function resetBookmarkCaches() {
+  resetFuzzySearchState('bookmarks')
+  resetSimpleSearchState('bookmarks')
+  resetUniqueFoldersCache()
+}
+
+/**
  * Populate the bookmark editor form for the given bookmark id.
  *
  * @param {string} bookmarkId - Identifier of the bookmark to edit.
@@ -99,9 +108,7 @@ export function updateBookmark(bookmarkId) {
   bookmark.tags = tagsInput
   bookmark.searchString = createSearchString(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
   bookmark.searchStringLower = bookmark.searchString.toLowerCase()
-  resetFuzzySearchState('bookmarks')
-  resetSimpleSearchState('bookmarks')
-  resetUniqueFoldersCache()
+  resetBookmarkCaches()
 
   if (browserApi.bookmarks) {
     browserApi.bookmarks.update(bookmarkId, {
@@ -133,9 +140,7 @@ export async function deleteBookmark(bookmarkId) {
   ext.model.bookmarks = ext.model.bookmarks.filter((el) => {
     return el.originalId !== bookmarkId
   })
-  resetFuzzySearchState('bookmarks')
-  resetSimpleSearchState('bookmarks')
-  resetUniqueFoldersCache()
+  resetBookmarkCaches()
 
   navigateToSearchView()
 }
