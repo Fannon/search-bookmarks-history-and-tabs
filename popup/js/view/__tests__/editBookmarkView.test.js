@@ -1,6 +1,6 @@
 /**
- * ✅ Covered behaviors: bookmark edit UI setup, Tagify reuse, update/delete flows, and error handling branches.
- * ⚠️ Known gaps: does not exercise debug logging toggles, full Tagify integration, or assert window.location redirects (jsdom limitation).
+ * ✅ Covered behaviors: bookmark edit UI setup, CustomTagInput reuse, update/delete flows, and error handling branches.
+ * ⚠️ Known gaps: does not exercise debug logging toggles, full CustomTagInput integration, or assert window.location redirects (jsdom limitation).
  * 🐞 Added BUG tests: delete handler fires once after repeated edit invocation.
  */
 
@@ -60,11 +60,11 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   const getUniqueTags = jest.fn(() => uniqueTagsMockValue)
   const resetUniqueFoldersCache = jest.fn()
 
-  class BaseTagify {
+  class MockCustomTagInput {
     constructor(element, options) {
       this.element = element
       this.options = options
-      this.whitelist = options.whitelist
+      this._whitelist = options.whitelist || []
       this.value = []
       this.removeAllTags = jest.fn(() => {
         this.value = []
@@ -73,15 +73,26 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
         this.value = tags.map((tag) => ({ value: tag }))
       })
     }
-  }
-  const tagifyInstances = []
-  global.Tagify = class extends BaseTagify {
-    constructor(...args) {
-      super(...args)
-      tagifyInstances.push(this)
+
+    get whitelist() {
+      return this._whitelist
+    }
+
+    set whitelist(value) {
+      this._whitelist = value
     }
   }
+  const tagInputInstances = []
 
+  jest.unstable_mockModule('../../helper/customTagInput.js', () => ({
+    __esModule: true,
+    CustomTagInput: class extends MockCustomTagInput {
+      constructor(...args) {
+        super(...args)
+        tagInputInstances.push(this)
+      }
+    },
+  }))
   jest.unstable_mockModule('../../helper/browserApi.js', () => ({
     __esModule: true,
     browserApi,
@@ -115,7 +126,7 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
       resetUniqueFoldersCache,
     },
     helpers: {
-      tagifyInstances,
+      tagInputInstances,
       cleanUpUrl: realCleanUpUrl,
     },
     setUniqueTags(value) {
@@ -132,11 +143,10 @@ beforeEach(() => {
 
 afterEach(() => {
   delete global.ext
-  delete global.Tagify
 })
 
 describe('editBookmarkView', () => {
-  it('initializes Tagify and populates the edit form for an existing bookmark', async () => {
+  it('initializes CustomTagInput and populates the edit form for an existing bookmark', async () => {
     setupDom()
     setupExt([
       {
@@ -163,18 +173,18 @@ describe('editBookmarkView', () => {
     expect(document.getElementById('edit-bookmark-delete').dataset.bookmarkId).toBe(BOOKMARK_ID)
     expect(global.ext.currentBookmarkId).toBe(BOOKMARK_ID)
 
-    expect(helpers.tagifyInstances).toHaveLength(1)
-    const tagifyInstance = helpers.tagifyInstances[0]
-    expect(tagifyInstance.options.whitelist).toEqual(['alpha', 'beta'])
-    expect(tagifyInstance.addTags).toHaveBeenCalledWith(['alpha', 'beta'])
-    expect(global.ext.tagify).toBe(tagifyInstance)
+    expect(helpers.tagInputInstances).toHaveLength(1)
+    const tagInputInstance = helpers.tagInputInstances[0]
+    expect(tagInputInstance.options.whitelist).toEqual(['alpha', 'beta'])
+    expect(tagInputInstance.addTags).toHaveBeenCalledWith(['alpha', 'beta'])
+    expect(global.ext.tagInput).toBe(tagInputInstance)
 
     const tagData = { value: 'foo#bar' }
-    tagifyInstance.options.transformTag(tagData)
+    tagInputInstance.options.transformTag(tagData)
     expect(tagData.value).toBe('foobar')
   })
 
-  it('reuses Tagify instance, resets tags, and updates whitelist on subsequent edits', async () => {
+  it('reuses CustomTagInput instance, resets tags, and updates whitelist on subsequent edits', async () => {
     setupDom()
     const bookmark = {
       originalId: BOOKMARK_ID,
@@ -192,7 +202,7 @@ describe('editBookmarkView', () => {
     })
 
     await module.editBookmark(BOOKMARK_ID)
-    helpers.tagifyInstances[0].addTags.mockClear()
+    helpers.tagInputInstances[0].addTags.mockClear()
 
     bookmark.tags = '#gamma #delta'
     setUniqueTags({
@@ -202,10 +212,10 @@ describe('editBookmarkView', () => {
 
     await module.editBookmark(BOOKMARK_ID)
 
-    expect(helpers.tagifyInstances).toHaveLength(1)
-    expect(global.ext.tagify.removeAllTags).toHaveBeenCalledTimes(1)
-    expect(global.ext.tagify.whitelist).toEqual(['delta', 'gamma'])
-    expect(global.ext.tagify.addTags).toHaveBeenCalledWith(['gamma', 'delta'])
+    expect(helpers.tagInputInstances).toHaveLength(1)
+    expect(global.ext.tagInput.removeAllTags).toHaveBeenCalledTimes(1)
+    expect(global.ext.tagInput.whitelist).toEqual(['delta', 'gamma'])
+    expect(global.ext.tagInput.addTags).toHaveBeenCalledWith(['gamma', 'delta'])
   })
 
   it('updates bookmark metadata, persists via browser API, and resets search caches', async () => {
@@ -225,7 +235,7 @@ describe('editBookmarkView', () => {
 
     document.getElementById('bookmark-title').value = 'Updated Title'
     document.getElementById('bookmark-url').value = 'http://updated.com'
-    global.ext.tagify = {
+    global.ext.tagInput = {
       value: [{ value: 'alpha' }, { value: 'beta' }],
     }
 
@@ -268,7 +278,7 @@ describe('editBookmarkView', () => {
 
     document.getElementById('bookmark-title').value = 'Updated Title'
     document.getElementById('bookmark-url').value = 'http://updated.com'
-    global.ext.tagify = {
+    global.ext.tagInput = {
       value: [],
     }
     mocks.browserApi.bookmarks = undefined

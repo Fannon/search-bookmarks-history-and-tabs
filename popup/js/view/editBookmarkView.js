@@ -2,7 +2,7 @@
  * @file Drives the bookmark editor interactions and form logic.
  *
  * Responsibilities:
- * - Load bookmark data for editing and initialize Tagify-powered tag autocompletion.
+ * - Load bookmark data for editing and initialize custom tag input for autocompletion.
  * - Validate user input, persist updates through the browser API, and surface inline errors.
  * - Handle delete/cancel flows plus bonus-score parsing while keeping the UI responsive.
  * - Invalidate search caches and taxonomy indexes so edits reflect immediately in the popup search view.
@@ -13,6 +13,7 @@ import { cleanUpUrl } from '../helper/utils.js'
 import { resetFuzzySearchState } from '../search/fuzzySearch.js'
 import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
+import { CustomTagInput } from '../helper/customTagInput.js'
 
 /**
  * Populate the bookmark editor form for the given bookmark id.
@@ -35,8 +36,8 @@ export async function editBookmark(bookmarkId) {
     editContainer.style = ''
     titleInput.value = bookmark.title
     urlInput.value = bookmark.originalUrl
-    if (!ext.tagify) {
-      ext.tagify = new Tagify(tagsInput, {
+    if (!ext.tagInput) {
+      ext.tagInput = new CustomTagInput(tagsInput, {
         whitelist: tags,
         trim: true,
         transformTag,
@@ -53,17 +54,17 @@ export async function editBookmark(bookmarkId) {
         },
       })
     } else {
-      // If tagify was already initialized:
+      // If tag input was already initialized:
       // reset current and available tags to new state
-      ext.tagify.removeAllTags()
-      ext.tagify.whitelist = tags
+      ext.tagInput.removeAllTags()
+      ext.tagInput.whitelist = tags
     }
 
     const currentTags = bookmark.tags
       .split('#')
       .map((el) => el.trim())
       .filter((el) => el)
-    ext.tagify.addTags(currentTags)
+    ext.tagInput.addTags(currentTags)
 
     saveButton.dataset.bookmarkId = bookmarkId
     deleteButton.dataset.bookmarkId = bookmarkId
@@ -89,8 +90,8 @@ export function updateBookmark(bookmarkId) {
   const titleInput = document.getElementById('bookmark-title').value.trim()
   const urlInput = document.getElementById('bookmark-url').value.trim()
   let tagsInput = ''
-  if (ext.tagify.value.length) {
-    tagsInput = '#' + ext.tagify.value.map((el) => el.value.trim()).join(' #')
+  if (ext.tagInput.value.length) {
+    tagsInput = '#' + ext.tagInput.value.map((el) => el.value.trim()).join(' #')
   }
 
   // Update search data model of bookmark

@@ -183,17 +183,17 @@ const installChromeMock = (() => {
   }
 })()
 
-const waitForTagify = (page) => page.waitForFunction(() => window.ext?.tagify)
+const waitForTagInput = (page) => page.waitForFunction(() => window.ext?.tagInput)
 
 const gotoEditBookmark = async (page, hash) => {
   await page.goto(`${EDIT_PAGE_PATH}${hash}`)
-  await waitForTagify(page)
+  await waitForTagInput(page)
 }
 
 const addTag = async (page, tag) => {
-  // Use Tagify's API to add tags instead of interacting with the hidden textarea
+  // Use CustomTagInput's API to add tags instead of interacting with the hidden textarea
   await page.evaluate((tagValue) => {
-    window.ext.tagify.addTags([tagValue])
+    window.ext.tagInput.addTags([tagValue])
   }, tag)
 }
 
@@ -209,7 +209,7 @@ test.describe('Edit Bookmark View', () => {
     await expect(page.locator('#bookmark-title')).toHaveValue('Try pandoc!')
     await expect(page.locator('#bookmark-url')).toHaveValue('https://pandoc.org/try')
 
-    const tagValues = await page.evaluate(() => window.ext.tagify.value.map((tag) => tag.value))
+    const tagValues = await page.evaluate(() => window.ext.tagInput.value.map((tag) => tag.value))
     expect(tagValues).toEqual(['md'])
     await expectNoClientErrors(page)
   })
@@ -217,7 +217,7 @@ test.describe('Edit Bookmark View', () => {
   test('saves updated bookmark details and renders new tags in search results', async ({ page }) => {
     await page.locator('#bookmark-title').fill('Pandoc Playground')
     await page.locator('#bookmark-url').fill('https://pandoc.org/playground')
-    await page.evaluate(() => window.ext.tagify.removeAllTags())
+    await page.evaluate(() => window.ext.tagInput.removeAllTags())
     await addTag(page, 'markdown')
     await addTag(page, 'docs')
 
@@ -239,7 +239,7 @@ test.describe('Edit Bookmark View', () => {
   test('supports adding tags to previously untagged bookmarks', async ({ page }) => {
     await gotoEditBookmark(page, `#bookmark/${BOOKMARK_WITHOUT_TAGS_ID}/search/reference`)
 
-    const initialTags = await page.evaluate(() => window.ext.tagify.value)
+    const initialTags = await page.evaluate(() => window.ext.tagInput.value)
     expect(initialTags).toEqual([])
 
     await addTag(page, 'first-tag')
