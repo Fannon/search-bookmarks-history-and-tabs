@@ -16,6 +16,7 @@
  */
 
 import { resolveSearchTargets } from './common.js'
+import { createResultWithScore } from './scoring.js'
 
 /**
  * Memoize some state, to avoid re-creating haystack and fuzzy search instances.
@@ -109,11 +110,7 @@ function simpleSearchWithScoring(searchTerm, searchMode) {
       // Cache the normalized search string to avoid repeated toLowerCase() calls
       const normalizedSearchString = entry.searchStringLower || entry.searchString.toLowerCase()
       if (normalizedSearchString.includes(term)) {
-        localResults.push({
-          ...entry,
-          searchScore: 1,
-          searchApproach: 'precise',
-        })
+        localResults.push(createResultWithScore(entry, 1, 'precise'))
       }
     }
     s.cachedData = localResults // reduce cachedData set -> improves performance

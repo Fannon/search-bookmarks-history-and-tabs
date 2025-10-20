@@ -4,6 +4,29 @@
  * For a detailed explanation of the scoring process, see the `calculateFinalScore` function documentation.
  */
 
+import { normalizeString, normalizeTagString } from '../helper/utils.js'
+import { splitSearchTerms, extractTermsWithoutMarker } from '../helper/taxonomyParser.js'
+
+/**
+ * Create a search result with standardized score metadata.
+ *
+ * Wraps a search entry with search score and approach metadata.
+ * This standardizes result creation across different search algorithms
+ * (precise, fuzzy, taxonomy).
+ *
+ * @param {Object} entry - Search entry (bookmark, tab, history, etc.)
+ * @param {number} scoreValue - Search quality score (0-1 for fuzzy, 1 for exact)
+ * @param {string} approach - Search approach: 'precise', 'fuzzy', or 'taxonomy'
+ * @returns {Object} Entry with searchScore and searchApproach metadata
+ */
+export function createResultWithScore(entry, scoreValue = 1, approach) {
+  return {
+    ...entry,
+    searchScore: scoreValue,
+    searchApproach: approach,
+  }
+}
+
 /**
  * Calculates the final search item score for each result
  *
@@ -46,10 +69,10 @@
 export function calculateFinalScore(results, searchTerm) {
   const now = Date.now()
   const hasSearchTerm = Boolean(ext.model.searchTerm)
-  const searchTermParts = hasSearchTerm ? searchTerm.split(' ') : []
+  const searchTermParts = hasSearchTerm ? splitSearchTerms(searchTerm) : []
   const hyphenatedSearchTerm = hasSearchTerm ? searchTermParts.join('-') : ''
-  const tagTerms = hasSearchTerm ? searchTerm.split('#').join('').split(' ') : []
-  const folderTerms = hasSearchTerm ? searchTerm.split('~').join('').split(' ') : []
+  const tagTerms = hasSearchTerm ? extractTermsWithoutMarker(searchTerm, '#') : []
+  const folderTerms = hasSearchTerm ? extractTermsWithoutMarker(searchTerm, '~') : []
 
   // Only check includes bonus if configured and search term is long enough
   const canCheckIncludes =
@@ -94,14 +117,14 @@ export function calculateFinalScore(results, searchTerm) {
 
     if (hasSearchTerm) {
       // Pre-compute normalized field values for case-insensitive matching
-      const lowerTitle = el.title ? el.title.toLowerCase().trim() : null
-      const lowerUrl = el.url ? el.url.toLowerCase() : null
-      const lowerTags = el.tags ? el.tags.toLowerCase() : null
-      const lowerFolder = el.folder ? el.folder.toLowerCase() : null
+      const lowerTitle = el.title ? normalizeString(el.title) : null
+      const lowerUrl = el.url ? normalizeTagString(el.url) : null
+      const lowerTags = el.tags ? normalizeTagString(el.tags) : null
+      const lowerFolder = el.folder ? normalizeTagString(el.folder) : null
 
       // Pre-compute normalized arrays for exact tag/folder matching
-      const lowerTagValues = el.tagsArray ? el.tagsArray.map((tag) => tag.toLowerCase()) : []
-      const lowerFolderValues = el.folderArray ? el.folderArray.map((folder) => folder.toLowerCase()) : []
+      const lowerTagValues = el.tagsArray ? el.tagsArray.map((tag) => normalizeTagString(tag)) : []
+      const lowerFolderValues = el.folderArray ? el.folderArray.map((folder) => normalizeTagString(folder)) : []
 
       // STEP 3A: Exact match bonuses
       // Award bonus if title/URL starts with the exact search term

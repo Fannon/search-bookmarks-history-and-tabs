@@ -103,6 +103,38 @@ export function cleanUpUrl(url) {
     .toLowerCase()
 }
 
+/**
+ * Normalize string for case-insensitive comparison with trimming.
+ *
+ * Converts to lowercase and removes leading/trailing whitespace.
+ * Used for matching strings in scoring and search operations.
+ *
+ * @param {string|null} str - String to normalize
+ * @returns {string} Normalized string (lowercase, trimmed)
+ */
+export function normalizeString(str) {
+  if (!str) {
+    return ''
+  }
+  return String(str).toLowerCase().trim()
+}
+
+/**
+ * Normalize tag string for comparison (lowercase only, no trim).
+ *
+ * Tags don't need trimming since they're already processed,
+ * but need lowercase normalization for case-insensitive matching.
+ *
+ * @param {string|null} str - Tag string to normalize
+ * @returns {string} Normalized tag string (lowercase)
+ */
+export function normalizeTagString(str) {
+  if (!str) {
+    return ''
+  }
+  return String(str).toLowerCase()
+}
+
 // Cache for loaded scripts to avoid duplicate loading and network requests
 const loadedScripts = new Set()
 

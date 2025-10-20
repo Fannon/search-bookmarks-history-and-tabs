@@ -10,6 +10,7 @@
  */
 
 import { cleanUpUrl } from './utils.js'
+import { parseTaxonomyTerms } from './taxonomyParser.js'
 
 export const browserApi = window.chrome || window.browser || {}
 
@@ -129,23 +130,30 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
       let tagsText = ''
       let tagsArray = []
       if (title) {
-        const tagSplit = title.split(' #').map((el) => el.trim())
-        title = tagSplit.shift()
+        // Extract all tags after the first space+# marker
+        const spaceHashIndex = title.indexOf(' #')
+        if (spaceHashIndex !== -1) {
+          const tagsSection = title.substring(spaceHashIndex)
+          const extractedTags = parseTaxonomyTerms(tagsSection, '#')
 
-        tagsArray = tagSplit.filter((el) => {
-          if (el.match(/^\d/)) {
-            title += ' #' + el
-            return false
-          } else if (!el.trim()) {
-            return false
-          } else {
-            return el
+          // Filter out tags that start with digits (likely issue numbers)
+          tagsArray = extractedTags.filter((tag) => {
+            if (tag.match(/^\d/)) {
+              title += ' #' + tag
+              return false
+            }
+            return true
+          })
+
+          // Build tags text from filtered tags
+          for (const tag of tagsArray) {
+            tagsText += '#' + tag + ' '
           }
-        })
-        for (const tag of tagsArray) {
-          tagsText += '#' + tag.trim() + ' '
+          tagsText = tagsText.slice(0, -1)
+
+          // Remove tags section from title
+          title = title.substring(0, spaceHashIndex)
         }
-        tagsText = tagsText.slice(0, -1)
       }
 
       mappedEntry.title = getTitle(title, mappedEntry.url)

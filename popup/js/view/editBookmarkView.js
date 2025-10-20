@@ -10,9 +10,8 @@
 
 import { browserApi, createSearchString } from '../helper/browserApi.js'
 import { cleanUpUrl } from '../helper/utils.js'
-import { resetFuzzySearchState } from '../search/fuzzySearch.js'
-import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
-import { resetSimpleSearchState } from '../search/simpleSearch.js'
+import { invalidateBookmarkCaches } from '../helper/cacheManager.js'
+import { getUniqueTags } from '../search/taxonomySearch.js'
 
 /**
  * Populate the bookmark editor form for the given bookmark id.
@@ -99,9 +98,7 @@ export function updateBookmark(bookmarkId) {
   bookmark.tags = tagsInput
   bookmark.searchString = createSearchString(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
   bookmark.searchStringLower = bookmark.searchString.toLowerCase()
-  resetFuzzySearchState('bookmarks')
-  resetSimpleSearchState('bookmarks')
-  resetUniqueFoldersCache()
+  invalidateBookmarkCaches()
 
   if (browserApi.bookmarks) {
     browserApi.bookmarks.update(bookmarkId, {
@@ -133,9 +130,7 @@ export async function deleteBookmark(bookmarkId) {
   ext.model.bookmarks = ext.model.bookmarks.filter((el) => {
     return el.originalId !== bookmarkId
   })
-  resetFuzzySearchState('bookmarks')
-  resetSimpleSearchState('bookmarks')
-  resetUniqueFoldersCache()
+  invalidateBookmarkCaches()
 
   navigateToSearchView()
 }

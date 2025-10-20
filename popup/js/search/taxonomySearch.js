@@ -11,6 +11,8 @@
  * - Taxonomy results are marked with `searchApproach: 'taxonomy'` to keep rendering and analytics aware of the source.
  */
 
+import { createResultWithScore } from './scoring.js'
+
 /**
  * Simple, precise search for bookmark tags and folder names
  * Executes AND search with the terms in searchTerm, separated by spaces
@@ -38,11 +40,7 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
         }
       }
       if (searchTermMatches === searchTermArray.length) {
-        results.push({
-          ...entry,
-          searchScore: 1,
-          searchApproach: 'taxonomy',
-        })
+        results.push(createResultWithScore(entry, 1, 'taxonomy'))
       }
     }
   }

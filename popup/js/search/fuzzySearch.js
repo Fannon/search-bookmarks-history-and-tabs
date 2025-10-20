@@ -14,6 +14,7 @@
 
 import { loadScript, printError } from '../helper/utils.js'
 import { resolveSearchTargets } from './common.js'
+import { createResultWithScore } from './scoring.js'
 
 const nonASCIIRegex = /[\u0080-\uFFFF]/
 
@@ -156,12 +157,9 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
           delete highlightedResult.urlHighlighted
         }
 
-        localResults.push({
-          ...highlightedResult,
-          // 0 intra chars are perfect score, 5 and more are 0 score.
-          searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
-          searchApproach: 'fuzzy',
-        })
+        // 0 intra chars are perfect score, 5 and more are 0 score.
+        const fuzzyScore = Math.max(0, 1 * (1 - info.intraIns[i] / 5))
+        localResults.push(createResultWithScore(highlightedResult, fuzzyScore, 'fuzzy'))
       }
 
       s.idxs = idxs // Save idxs cache to state
