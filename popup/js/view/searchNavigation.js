@@ -1,0 +1,99 @@
+/**
+ * @file Manages keyboard and mouse navigation for search results.
+ *
+ * Responsibilities:
+ * - Handle keyboard navigation with arrow keys and vim-style keybindings (Ctrl+P/Ctrl+N, Ctrl+K/Ctrl+J).
+ * - Manage visual selection state of result items with scrolling support.
+ * - Handle mouse hover events to update selection with rendering protection.
+ * - Coordinate with search result rendering to maintain proper selection state.
+ */
+
+import { openResultItem } from './searchEvents.js'
+
+/**
+ * Handle keyboard navigation for search results
+ * Supports arrow keys and vim-style keybindings (Ctrl+P/Ctrl+N, Ctrl+K/Ctrl+J)
+ */
+export function navigationKeyListener(event) {
+  // Define navigation directions with multiple keybinding options
+  const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p') || (event.ctrlKey && event.key === 'k')
+  const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n') || (event.ctrlKey && event.key === 'j')
+
+  if (up && ext.dom.searchInput.value && ext.model.currentItem === 0) {
+    // Prevent navigation above first item when search field has content
+    event.preventDefault()
+  } else if (up && ext.model.currentItem > 0) {
+    // Navigate to previous result
+    event.preventDefault()
+    selectListItem(ext.model.currentItem - 1, true)
+  } else if (down && ext.model.currentItem < ext.model.result.length - 1) {
+    // Navigate to next result
+    event.preventDefault()
+    selectListItem(ext.model.currentItem + 1, true)
+  } else if (event.key === 'Enter' && ext.model.result.length > 0) {
+    // Activate selected result when Enter is pressed
+    if (window.location.hash.startsWith('#search/') || !window.location.hash) {
+      openResultItem(event)
+    }
+  } else if (event.key === 'Escape') {
+    // Return to search mode and focus the search input
+    window.location.hash = '#search/'
+    ext.dom.searchInput.focus()
+  }
+}
+
+/**
+ * Update the visual selection state of result items
+ * Removes previous selection and applies new selection with optional scrolling
+ */
+export function selectListItem(index, scroll = false) {
+  clearSelection()
+
+  // Apply new selection if the item exists
+  if (ext.dom.resultList.children[index]) {
+    ext.dom.resultList.children[index].id = 'selected-result'
+
+    // Smoothly scroll the selected item into view if requested
+    if (scroll) {
+      ext.dom.resultList.children[index].scrollIntoView({
+        behavior: 'auto',
+        block: 'nearest',
+      })
+    }
+  }
+
+  // Update the application state to reflect the new selection
+  ext.model.currentItem = index
+}
+
+/**
+ * Clear the currently selected result item
+ */
+export function clearSelection() {
+  const currentSelection = document.getElementById('selected-result')
+  if (currentSelection) {
+    currentSelection.id = ''
+    currentSelection.removeAttribute('id')
+  }
+}
+
+/**
+ * Handle mouse hover events on result items to update selection
+ * Includes protection against spurious hover events during rendering
+ */
+export function hoverResultItem(event) {
+  const target = event.target ? event.target : event.srcElement
+  const index = target.getAttribute('x-index')
+
+  // Prevent hover events during the initial render phase
+  if (!ext.model.mouseHoverEnabled) {
+    ext.model.mouseHoverEnabled = true
+    return
+  }
+
+  if (index) {
+    selectListItem(index)
+  } else {
+    console.warn('Could not hover result item', target, event)
+  }
+}

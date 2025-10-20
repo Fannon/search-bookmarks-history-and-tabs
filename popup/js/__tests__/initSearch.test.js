@@ -57,6 +57,8 @@ const mockDependencies = async (overrides = {}) => {
   await jest.unstable_mockModule('../model/options.js', () => ({
     __esModule: true,
     getEffectiveOptions: config.getEffectiveOptions,
+    getUserOptions: jest.fn(() => Promise.resolve({ searchStrategy: 'precise' })),
+    setUserOptions: jest.fn(() => Promise.resolve()),
   }))
   await jest.unstable_mockModule('../model/searchData.js', () => ({
     __esModule: true,
@@ -74,9 +76,20 @@ const mockDependencies = async (overrides = {}) => {
   await jest.unstable_mockModule('../view/searchView.js', () => ({
     __esModule: true,
     renderSearchResults: config.renderSearchResults,
+  }))
+  await jest.unstable_mockModule('../view/searchNavigation.js', () => ({
+    __esModule: true,
     navigationKeyListener: jest.fn(),
+    hoverResultItem: jest.fn(),
+    clearSelection: jest.fn(),
+    selectListItem: jest.fn(),
+  }))
+  await jest.unstable_mockModule('../view/searchEvents.js', () => ({
+    __esModule: true,
     toggleSearchApproach: jest.fn(),
     updateSearchApproachToggle: jest.fn(),
+    openResultItem: jest.fn(),
+    setupResultItemsEvents: jest.fn(),
   }))
 
   return config

@@ -14,12 +14,9 @@ import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { search } from './search/common.js'
 import { addDefaultEntries } from './search/common.js'
-import {
-  navigationKeyListener,
-  renderSearchResults,
-  toggleSearchApproach,
-  updateSearchApproachToggle,
-} from './view/searchView.js'
+import { renderSearchResults } from './view/searchView.js'
+import { navigationKeyListener } from './view/searchNavigation.js'
+import { toggleSearchApproach, updateSearchApproachToggle } from './view/searchEvents.js'
 import { createExtensionContext } from './helper/extensionContext.js'
 
 /** Browser extension namespace */

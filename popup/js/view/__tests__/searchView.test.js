@@ -56,7 +56,17 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
     search: searchMock,
   }))
 
-  const module = await import('../searchView.js')
+  // Import all three modules
+  const searchViewModule = await import('../searchView.js')
+  const searchNavigationModule = await import('../searchNavigation.js')
+  const searchEventsModule = await import('../searchEvents.js')
+
+  // Combine exports from all modules for backward compatibility with tests
+  const module = {
+    ...searchViewModule,
+    ...searchNavigationModule,
+    ...searchEventsModule,
+  }
 
   document.body.innerHTML = `
     <input id="search-input" />
@@ -164,7 +174,7 @@ describe('searchView renderSearchResults', () => {
   })
 
   it('renders results with metadata, badges, and highlight support', async () => {
-    const { module, elements, mocks } = await setupSearchView()
+    const { module, elements } = await setupSearchView()
 
     await module.renderSearchResults()
 
