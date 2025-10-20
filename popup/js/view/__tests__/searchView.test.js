@@ -164,7 +164,7 @@ describe('searchView renderSearchResults', () => {
   })
 
   it('renders results with metadata, badges, and highlight support', async () => {
-    const { module, elements, mocks } = await setupSearchView()
+    const { module, elements } = await setupSearchView()
 
     await module.renderSearchResults()
 
