@@ -32,7 +32,7 @@
     "build:update-manifests": "node bin/updateManifests.js",
     "test": "npm run test:unit",
     "test:e2e": "playwright test --project=chromium",
-    "test:e2e:ai": "playwright test --project=chromium --reporter dot",
+    "test:e2e:html": "playwright test --project=chromium --reporter=html",
     "test:e2e:chromium": "playwright test --project=chromium",
     "test:e2e:firefox": "playwright test --project=firefox",
     "test:e2e:edge": "playwright test --project=edge",
