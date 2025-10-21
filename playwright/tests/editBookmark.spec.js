@@ -191,9 +191,10 @@ const gotoEditBookmark = async (page, hash) => {
 }
 
 const addTag = async (page, tag) => {
-  const input = page.locator('#bookmark-tags')
-  await input.fill(tag)
-  await page.keyboard.press('Enter')
+  // Use Tagify's API to add tags instead of interacting with the hidden textarea
+  await page.evaluate((tagValue) => {
+    window.ext.tagify.addTags([tagValue])
+  }, tag)
 }
 
 test.describe('Edit Bookmark View', () => {
@@ -221,7 +222,7 @@ test.describe('Edit Bookmark View', () => {
     await addTag(page, 'docs')
 
     await Promise.all([
-      page.waitForURL(/index\.html#search\/t$/),
+      page.waitForURL(/#search\/t$/),
       page.locator('#edit-bookmark-save').click(),
     ])
 
@@ -236,7 +237,7 @@ test.describe('Edit Bookmark View', () => {
   })
 
   test('supports adding tags to previously untagged bookmarks', async ({ page }) => {
-    await gotoEditBookmark(page, `#bookmark/${BOOKMARK_WITHOUT_TAGS_ID}/search/spec`)
+    await gotoEditBookmark(page, `#bookmark/${BOOKMARK_WITHOUT_TAGS_ID}/search/reference`)
 
     const initialTags = await page.evaluate(() => window.ext.tagify.value)
     expect(initialTags).toEqual([])
@@ -245,7 +246,7 @@ test.describe('Edit Bookmark View', () => {
     await addTag(page, 'second-tag')
 
     await Promise.all([
-      page.waitForURL(/index\.html#search\/spec$/),
+      page.waitForURL(/#search\/reference$/),
       page.locator('#edit-bookmark-save').click(),
     ])
 
