@@ -21,14 +21,22 @@ npm run start:dist             # Serve built extension from dist/chrome/popup/
 ### Testing
 
 ```bash
-npm run lint                   # ESLint validation
-npm run test                   # Run all Jest unit tests (alias to test:unit)
-npm run test:unit <file>.test.js              # Run specific unit test
+npm run lint                   # ESLint validation; start every verify loop here
+npm run test                   # Jest unit tests (alias of test:unit, supports extra args: npm run test path/to/file.test.js)
+npm run test:unit <file>.test.js              # Run specific unit test (identical to npm run test with file)
 npm run test:unit:coverage <file>.test.js     # Run with coverage report
-npm run test:e2e               # Playwright end-to-end tests (all browsers)
+npm run test:e2e               # Playwright end-to-end tests (chromium only)
+npm run test:e2e -- tests/<file>.spec.ts      # Run specific e2e test file
 npm run test:e2e:chromium      # Playwright for Chromium only
 npm run test:e2e:firefox       # Playwright for Firefox only
 ```
+
+### Recommended Verify Loop
+
+1. `npm run lint`
+2. `npm run test <path/to/file.test.js>` (iterate on focused Jest specs)
+3. `npm run test:e2e`
+4. If the e2e suite fails, rerun the specific spec via `npm run test:e2e -- tests/<file>.spec.ts`
 
 ### Build Components
 
@@ -46,7 +54,23 @@ npm run analyze                # Code analysis diagnostics
 
 ### Module Organization
 
-The codebase follows a strict separation of concerns:
+The repository centers on the `popup/` source:
+
+- **`popup/css/`** - Stylesheets for popup views.
+- **`popup/img/`** - UI imagery used by the popup.
+- **`popup/mockData/`** - Fixtures that back the local `npm run start` server.
+- **`popup/js/`** - Entry points and shared logic for every popup page (details below). Each `init*.js` file is bundled into a `.bundle.min.js` artifact; never edit the generated bundles directly.
+
+Supporting directories:
+
+- **`popup/lib/`** - Vendored third-party scripts/styles updated via `bin/updateLibs.js`.
+- **`images/`** - Marketing assets (GIFs, screenshots) referenced in docs.
+- **`playwright/tests/`** - Playwright end-to-end specs.
+- **`bin/`** - Automation scripts wired to `package.json` commands.
+- **`dist/`** - Built artifacts grouped by browser target (e.g. `dist/chrome/...`).
+- **`playwright-report/`** and **`reports/`** - Local HTML/JSON test output captured by CI and manual runs.
+
+Within `popup/js/`, the codebase follows a strict separation of concerns:
 
 - **`popup/js/helper/`** - Pure utility functions (DOM manipulation, browser API wrappers, time formatting)
 - **`popup/js/model/`** - Data structures and configuration (search data aggregation, options management)
@@ -182,7 +206,7 @@ Build scripts in `bin/` are small Node.js programs:
 
 ## Common Pitfalls
 
-- **Always run tests before committing**: `npm run lint && npm run test:unit`
+- **Always run the verify loop before committing**: `npm run lint`, iterate with `npm run test <file>` for focused Jest runs, then finish with `npm run test:e2e`
 - **Watch mode for extension development**: Keep `npm run watch` running when testing sideloaded extension
 - **Cache invalidation**: Search results are cached; clear cache when changing scoring logic
 - **Manifest permissions**: Update via `npm run build:update-manifests` when changing browser APIs

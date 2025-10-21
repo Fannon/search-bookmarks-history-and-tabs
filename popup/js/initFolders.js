@@ -7,7 +7,7 @@
  * - Render folder navigation chips that link back into the main search view using hash routing.
  */
 
-import { printError } from './helper/utils.js'
+import { printError } from './view/errorView.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { loadFoldersOverview } from './view/foldersView.js'

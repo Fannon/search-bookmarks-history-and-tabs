@@ -9,10 +9,10 @@ export default defineConfig({
   fullyParallel: true,
   reporter: process.env.CI
     ? [['html', { outputFolder: './reports/playwright', open: 'never' }], ['github']]
-    : [['html', { outputFolder: './reports/playwright', open: 'never' }], ['list']],
+    : [['dot']],
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  timeout: 60_000,
+  timeout: 5_000,
   expect: {
     timeout: 5_000,
   },

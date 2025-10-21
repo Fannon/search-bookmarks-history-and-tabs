@@ -7,7 +7,7 @@
  * - Link each tag back into the main search view via hash routing so users can drill into results immediately.
  */
 
-import { printError } from './helper/utils.js'
+import { printError } from './view/errorView.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { loadTagsOverview } from './view/tagsView.js'

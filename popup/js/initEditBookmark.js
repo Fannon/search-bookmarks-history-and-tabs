@@ -8,7 +8,7 @@
  * - Handle hash changes mid-session to reload different bookmarks without refreshing the page.
  */
 
-import { printError } from './helper/utils.js'
+import { printError } from './view/errorView.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { deleteBookmark, editBookmark, updateBookmark } from './view/editBookmarkView.js'
@@ -35,6 +35,8 @@ export async function initEditBookmark() {
     ext.dom.saveButton = document.getElementById('edit-bookmark-save')
     ext.dom.deleteButton = document.getElementById('edit-bookmark-delete')
     ext.dom.cancelButton = document.getElementById('edit-bookmark-cancel')
+    ext.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
+    ext.opts = await getEffectiveOptions()
 
     const { bookmarkId, returnHash } = parseBookmarkHash(window.location.hash)
     if (!bookmarkId) {
@@ -42,7 +44,6 @@ export async function initEditBookmark() {
     }
     ext.returnHash = normalizeReturnHash(returnHash)
 
-    ext.opts = await getEffectiveOptions()
     const { bookmarks } = await getSearchData()
     ext.model.bookmarks = bookmarks
 

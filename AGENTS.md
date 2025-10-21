@@ -2,10 +2,12 @@
 
 ## Project Structure & Module Organization
 
-- Core popup code lives under `popup/`; logic is split into `popup/js/helper/`, `popup/js/model/`, `popup/js/search/`, and `popup/js/view/` to keep utilities, data, search logic, and UI concerns isolated.
-- Playwright end-to-end specs are in `playwright/tests/`; Jest unit tests belong beside their sources under `__tests__` folders (e.g. `popup/js/helper/__tests__/`).
-- Static assets live in `images/`; bundled third-party scripts and styles are in `popup/lib/`; built browser artifacts land in `dist/`.
-- Automation scripts live in `bin/`; they are small Node.js programs wired up through `package.json` scripts.
+- The popup source lives under `popup/`. Styles sit in `popup/css/`, UI imagery in `popup/img/`, reusable fixtures in `popup/mockData/`, and entry scripts plus shared logic in `popup/js/`.
+- Within `popup/js/`, helper utilities live in `helper/`, state and persistence logic in `model/`, query algorithms in `search/`, and UI presentation in `view/`. The `init*.js` files in this folder are the page-level entry points; the `.bundle.min.js` files are generated artifacts.
+- Vendored third-party scripts and styles are checked into `popup/lib/`; product marketing assets (GIFs, screenshots) stay under `images/`.
+- Playwright end-to-end specs live in `playwright/tests/`; Jest unit tests belong beside their sources under `__tests__/` folders (e.g. `popup/js/helper/__tests__/`).
+- Automation scripts are small Node.js utilities in `bin/`, each wired through `package.json` scripts.
+- Built browser artifacts land in `dist/`, arranged by target (e.g. `dist/chrome/...`). Generated reports from local runs sit in `playwright-report/` and `reports/`.
 
 ## Build, Test, and Development Commands
 
@@ -14,7 +16,7 @@
 - `npm run watch` rebuilds bundles on file changes so `dist/` stays fresh during extension development.
 - `npm run start` serves the popup source (`./popup/`) via `serve` for quick UI checks with mock data.
 - `npm run start:dist` previews the built Chrome bundle from `dist/chrome/popup/`.
-- `npm run test` executes jest unit tests. It's an alias to `test:unit`
+- `npm run test` executes Jest unit tests (alias of `test:unit`) and forwards additional arguments, so use `npm run test path/to/file.test.js` for single-file runs.
 - `npm run test:e2e` executes the Playwright flow tests headlessly. The Playwright runner boots its own static server automatically.
 - `npm run test:e2e:chromium|firefox|edge` target individual browsers.
 - `npm run test:unit` runs Jest unit tests. Run it like `npm run test:unit <filename>.test.js` for individual test file execution.
@@ -41,6 +43,7 @@
 
 ## Testing Guidelines
 
+- Follow the verify loop: run `npm run lint`, then run focused Jest specs via `npm run test <file>` for fast feedback, and finish with a full `npm run test:e2e`. When the e2e suite fails, narrow it down by rerunning a single spec file (e.g. `npm run test:e2e -- tests/popup/editBookmark.spec.ts`).
 - Use Jest for deterministic unit coverage; stub DOM APIs with jsdom helpers when needed.
 - Use Playwright for integration coverage of popup interactions; keep specs independent and idempotent.
 - Name unit tests `<module>.test.js` under `__tests__` directories and describe behavior in plain language (`describe('timeSince')`).

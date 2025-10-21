@@ -20,7 +20,7 @@ describe('initOptions entry point', () => {
       __esModule: true,
       initOptions: initOptionsMock,
     }))
-    await jest.unstable_mockModule('../helper/utils.js', () => ({
+    await jest.unstable_mockModule('../view/errorView.js', () => ({
       __esModule: true,
       printError: jest.fn(),
     }))
@@ -46,7 +46,7 @@ describe('initOptions entry point', () => {
       __esModule: true,
       initOptions: jest.fn(() => Promise.reject(error)),
     }))
-    await jest.unstable_mockModule('../helper/utils.js', () => ({
+    await jest.unstable_mockModule('../view/errorView.js', () => ({
       __esModule: true,
       printError,
     }))

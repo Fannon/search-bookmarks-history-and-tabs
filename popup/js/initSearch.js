@@ -9,7 +9,7 @@
  * - Lazy-load mark.js highlighting so first paint stays lightweight while results still highlight matches.
  */
 
-import { loadScript, printError } from './helper/utils.js'
+import { loadScript } from './helper/utils.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { search } from './search/common.js'
@@ -18,6 +18,9 @@ import { renderSearchResults } from './view/searchView.js'
 import { navigationKeyListener } from './view/searchNavigation.js'
 import { toggleSearchApproach, updateSearchApproachToggle } from './view/searchEvents.js'
 import { createExtensionContext } from './helper/extensionContext.js'
+import { closeErrors, printError } from './view/errorView.js'
+
+export { closeErrors } from './view/errorView.js'
 
 /** Browser extension namespace */
 export const ext = createExtensionContext()
@@ -118,12 +121,4 @@ export async function hashRouter() {
       renderSearchResults(ext.model.result)
     }
   }
-}
-
-/**
- * Hide the shared error list overlay if it is currently visible.
- */
-export function closeErrors() {
-  const element = document.getElementById('error-list')
-  if (element) element.style = 'display: none;'
 }

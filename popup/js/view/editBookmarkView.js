@@ -22,7 +22,8 @@ import { resetSimpleSearchState } from '../search/simpleSearch.js'
  */
 export async function editBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
-  const tags = Object.keys(getUniqueTags()).sort()
+  const uniqueTags = getUniqueTags() || {}
+  const tags = Object.keys(uniqueTags).sort()
   const editContainer = document.getElementById('edit-bookmark')
   const titleInput = document.getElementById('bookmark-title')
   const urlInput = document.getElementById('bookmark-url')
