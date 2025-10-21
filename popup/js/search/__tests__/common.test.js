@@ -1,7 +1,15 @@
 /**
- * ✅ Covered behaviors: search entry gating, cache hits, mode detection, taxonomy/custom/direct results, scoring, sorting, and default entry sourcing.
+ * Tests for common.js - search orchestration and coordination logic.
+ *
+ * ✅ Covered behaviors: search entry gating, cache hits, taxonomy/custom/direct results integration,
+ *    scoring, sorting, result filtering, and overall search flow orchestration.
  * ⚠️ Known gaps: DOM rendering side effects and performance metrics are not asserted due to limited observable outputs.
  * 🐞 Added BUG tests: none
+ *
+ * Note: Detailed tests for extracted modules are in their respective test files:
+ * - queryParser.test.js: Mode detection logic
+ * - searchEngines.test.js: Search engine result generation
+ * - defaultResults.test.js: Default entry sourcing
  */
 import { jest, describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals'
 import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
@@ -16,7 +24,6 @@ let search
 let searchWithAlgorithm
 let calculateFinalScore
 let sortResults
-let addDefaultEntries
 
 beforeAll(async () => {
   await jest.unstable_mockModule('../../helper/browserApi.js', () => ({
@@ -29,9 +36,10 @@ beforeAll(async () => {
     ...utilsModule,
     loadScript: mockLoadScript,
   }))
-  await jest.unstable_mockModule('../../initSearch.js', () => ({
+  await jest.unstable_mockModule('../../view/errorView.js', () => ({
     __esModule: true,
     closeErrors: mockCloseErrors,
+    printError: jest.fn(),
   }))
   await jest.unstable_mockModule('../../view/searchView.js', () => ({
     __esModule: true,
@@ -43,7 +51,6 @@ beforeAll(async () => {
   searchWithAlgorithm = commonModule.searchWithAlgorithm
   calculateFinalScore = commonModule.calculateFinalScore
   sortResults = commonModule.sortResults
-  addDefaultEntries = commonModule.addDefaultEntries
 })
 
 beforeEach(() => {
@@ -196,67 +203,9 @@ describe('sortResults', () => {
 })
 
 describe('addDefaultEntries', () => {
-  test('returns history entries when history mode active', async () => {
-    ext.model.searchMode = 'history'
-    ext.model.history = [{ id: 1, title: 'History' }]
-
-    const results = await addDefaultEntries()
-
-    expect(results).toEqual([{ id: 1, title: 'History', searchScore: 1 }])
-    expect(ext.model.result).toEqual(results)
-  })
-
-  test('returns recent tabs sorted by recency when tabs mode active', async () => {
-    ext.model.searchMode = 'tabs'
-    ext.model.tabs = [
-      { id: 1, lastVisitSecondsAgo: 40 },
-      { id: 2, lastVisitSecondsAgo: 10 },
-      { id: 3, lastVisitSecondsAgo: 25 },
-    ]
-
-    const results = await addDefaultEntries()
-
-    expect(results.map((tab) => tab.id)).toEqual([2, 3, 1])
-  })
-
-  test('returns bookmarks when bookmarks mode active', async () => {
-    ext.model.searchMode = 'bookmarks'
-    ext.model.bookmarks = [{ id: 1, title: 'Bookmark' }]
-
-    const results = await addDefaultEntries()
-
-    expect(results).toEqual([{ id: 1, title: 'Bookmark', searchScore: 1 }])
-  })
-
-  test('falls back to current tab matches and recent tabs when no search term', async () => {
-    ext.model.bookmarks = [
-      { id: 1, originalUrl: 'https://site.test', title: 'Match' },
-      { id: 2, originalUrl: 'https://other.test', title: 'Other' },
-    ]
-    ext.model.tabs = [
-      { id: 3, url: 'https://third.test', lastVisitSecondsAgo: 2 },
-      { id: 4, url: 'chrome://extensions', lastVisitSecondsAgo: 1 },
-    ]
-    mockGetBrowserTabs.mockResolvedValue([{ url: 'https://site.test/' }])
-
-    const results = await addDefaultEntries()
-
-    expect(results).toEqual([
-      expect.objectContaining({ id: 1, title: 'Match', searchScore: 1 }),
-      expect.objectContaining({ id: 3, searchScore: 1 }),
-    ])
-  })
-
-  test('ignores tab lookup errors but keeps recent tabs', async () => {
-    ext.model.tabs = [
-      { id: 1, url: 'https://one.test', lastVisitSecondsAgo: 4 },
-      { id: 2, url: 'https://two.test', lastVisitSecondsAgo: 2 },
-    ]
-    mockGetBrowserTabs.mockRejectedValue(new Error('no tabs'))
-
-    const results = await addDefaultEntries()
-
-    expect(results.map((tab) => tab.id)).toEqual([2, 1])
+  test('re-exports defaultResults implementation', async () => {
+    const defaultResultsModule = await import('../defaultResults.js')
+    expect(commonModule.addDefaultEntries).toBe(defaultResultsModule.addDefaultEntries)
   })
 })
 

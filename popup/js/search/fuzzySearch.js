@@ -12,7 +12,8 @@
  * - Highlight data is preserved for the view to underline matched substrings once results render.
  */
 
-import { loadScript, printError } from '../helper/utils.js'
+import { loadScript } from '../helper/utils.js'
+import { printError } from '../view/errorView.js'
 import { resolveSearchTargets } from './common.js'
 
 const nonASCIIRegex = /[\u0080-\uFFFF]/

@@ -5,7 +5,6 @@
  * - Relative time formatting (`timeSince`) for surfacing history/recency metadata.
  * - URL cleanup helpers to normalize and compare bookmark addresses reliably.
  * - Lazy script loading with deduplication for libraries like mark.js and uFuzzy.
- * - Error logging/rendering helpers to keep user feedback consistent across entry points.
  * - HTML escaping helpers (`escapeHtml`) to keep rendered content safe.
  */
 
@@ -135,44 +134,4 @@ export async function loadScript(url) {
     s.src = url
     document.getElementsByTagName('head')[0].appendChild(s)
   })
-}
-
-/**
- * Displays an error in the UI error list and logs to console
- *
- * Prepends error messages to the error-list element with full stack trace.
- * Logs to console.error for developer debugging. Used throughout the extension
- * to provide user-facing error feedback while maintaining console visibility.
- *
- * @param {Error} err - The error object with message and stack
- * @param {string} [text] - Optional context message to display before error message
- */
-export function printError(err, text) {
-  const errorList = document.getElementById('error-list')
-
-  if (text) {
-    console.error(text)
-  }
-  console.error(err)
-
-  if (!errorList) {
-    console.warn('Error list element not found in DOM. Error:', err?.message || err)
-    return
-  }
-
-  let html = ''
-
-  if (text) {
-    html += `<li class="error"><b>Error</b>: ${escapeHtml(text)}</li>`
-  }
-
-  const message = err && typeof err.message === 'string' ? err.message : String(err)
-  html += `<li class="error"><b>Error Message</b>: ${escapeHtml(message)}</li>`
-
-  if (err && err.stack) {
-    html += `<li class="error"><b>Error Stack</b>: <pre>${escapeHtml(err.stack)}</pre></li>`
-  }
-
-  errorList.innerHTML = html + errorList.innerHTML
-  errorList.style.display = 'block'
 }

@@ -23,7 +23,7 @@ import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
 
 // Mock the utils module
 const mockPrintError = jest.fn()
-jest.mock('../../helper/utils.js', () => ({
+jest.mock('../../view/errorView.js', () => ({
   __esModule: true,
   printError: mockPrintError,
 }))

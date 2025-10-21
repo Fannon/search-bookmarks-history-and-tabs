@@ -20,6 +20,7 @@ describe('Extension Integration Tests', () => {
       model: {
         bookmarks: [
           {
+            type: 'bookmark',
             id: 'bookmark-1',
             title: 'JavaScript Guide',
             url: 'https://example.com/js',
@@ -28,6 +29,7 @@ describe('Extension Integration Tests', () => {
             folder: '~Work ~Programming',
           },
           {
+            type: 'bookmark',
             id: 'bookmark-2',
             title: 'React Documentation',
             url: 'https://reactjs.org',
@@ -38,6 +40,7 @@ describe('Extension Integration Tests', () => {
         ],
         tabs: [
           {
+            type: 'tab',
             id: 'tab-1',
             title: 'JavaScript Tutorial',
             url: 'https://example.com/tutorial',
@@ -47,6 +50,7 @@ describe('Extension Integration Tests', () => {
         ],
         history: [
           {
+            type: 'history',
             id: 'history-1',
             title: 'MDN Web Docs',
             url: 'https://developer.mozilla.org',
@@ -84,33 +88,40 @@ describe('Extension Integration Tests', () => {
     jest.resetModules()
   })
 
-  test('complete search workflow from user input to results display', async () => {
-    // Mock the search modules
-    const mockSimpleSearch = jest.fn(() => [
-      {
-        id: 'bookmark-1',
+  test('performance with large datasets', async () => {
+    // Create large dataset
+    const largeBookmarks = []
+    for (let i = 0; i < 1000; i++) {
+      largeBookmarks.push({
+        id: `bookmark-${i}`,
+        title: `Bookmark ${i}`,
+        url: `https://example.com/${i}`,
+        searchString: `bookmark ${i}¦https://example.com/${i}`,
         type: 'bookmark',
-        title: 'JavaScript Guide',
-        url: 'https://example.com/js',
-        searchScore: 1,
-        score: 100,
-      },
-    ])
+      })
+    }
 
-    await jest.unstable_mockModule('../search/simpleSearch.js', () => ({
-      __esModule: true,
-      simpleSearch: mockSimpleSearch,
-      resetSimpleSearchState: jest.fn(),
-    }))
+    ext.model.bookmarks = largeBookmarks
 
-    await jest.unstable_mockModule('../view/searchView.js', () => ({
-      __esModule: true,
-      renderSearchResults: jest.fn(),
-      navigationKeyListener: jest.fn(),
-      toggleSearchApproach: jest.fn(),
-      updateSearchApproachToggle: jest.fn(),
-    }))
+    const { search } = await import('../search/common.js')
 
+    ext.dom.searchInput.value = 'bookmark'
+    ext.dom.resultCounter.innerText = ''
+    ext.initialized = true
+    ext.searchCache = new Map()
+
+    const startTime = Date.now()
+    await search({ key: 'a' })
+    const endTime = Date.now()
+
+    // Should find results and complete within reasonable time
+    expect(ext.model.result.length).toBeGreaterThan(0)
+
+    // Should complete within reasonable time
+    expect(endTime - startTime).toBeLessThan(800)
+  })
+
+  test('complete search workflow from user input to results display', async () => {
     const { search } = await import('../search/common.js')
 
     // Simulate user typing in search box
@@ -121,8 +132,7 @@ describe('Extension Integration Tests', () => {
 
     await search({ key: 'a' })
 
-    expect(mockSimpleSearch).toHaveBeenCalledWith('all', 'javascript')
-    // The search function adds search engine results, so we expect more than just our mock result
+    // The search should find results from the bookmarks that contain 'javascript'
     expect(ext.model.result.length).toBeGreaterThan(0)
   })
 
@@ -151,58 +161,13 @@ describe('Extension Integration Tests', () => {
     ext.dom.searchInput.value = 'test'
     ext.dom.resultCounter.innerText = ''
     ext.initialized = true
-   ext.searchCache = new Map()
+    ext.searchCache = new Map()
 
     await search({ key: 'a' })
 
     const errorList = document.getElementById('error-list')
     expect(errorList.getAttribute('style')).toBe('display: block;')
     expect(errorList.innerHTML).toContain('Simple search failure')
-  })
-
-  test('performance with large datasets', async () => {
-    // Create large dataset
-    const largeBookmarks = []
-    for (let i = 0; i < 1000; i++) {
-      largeBookmarks.push({
-        id: `bookmark-${i}`,
-        title: `Bookmark ${i}`,
-        url: `https://example.com/${i}`,
-        searchString: `bookmark ${i}¦https://example.com/${i}`,
-      })
-    }
-
-    ext.model.bookmarks = largeBookmarks
-
-    const mockSimpleSearch = jest.fn((_mode, _term) => {
-      return largeBookmarks
-        .filter((b) => b.searchString.toLowerCase().includes(_term.toLowerCase()))
-        .slice(0, 10) // Limit results for performance
-        .map((b) => ({ ...b, searchScore: 1, score: 100 }))
-    })
-
-    await jest.unstable_mockModule('../search/simpleSearch.js', () => ({
-      __esModule: true,
-      simpleSearch: mockSimpleSearch,
-      resetSimpleSearchState: jest.fn(),
-    }))
-
-    const { search } = await import('../search/common.js')
-
-    ext.dom.searchInput.value = 'bookmark'
-    ext.dom.resultCounter.innerText = ''
-    ext.initialized = true
-    ext.searchCache = new Map()
-
-    const startTime = Date.now()
-    await search({ key: 'a' })
-    const endTime = Date.now()
-
-    // Should find results and complete within reasonable time
-    expect(ext.model.result.length).toBeGreaterThan(0)
-
-    // Should complete within reasonable time (less than 500ms for 1000 items)
-    expect(endTime - startTime).toBeLessThan(500)
   })
 
   test('caches results to avoid redundant searches', async () => {

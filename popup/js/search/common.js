@@ -2,43 +2,36 @@
  * @file Coordinates popup search orchestration and routing.
  *
  * Responsibilities:
- * - Parse search queries to detect mode prefixes (`h `, `b `, `t `, `s `) and taxonomy markers (`#tag`, `~folder`).
- * - Route to the appropriate strategy (simple, fuzzy, taxonomy) or external alias based on the parsed intent.
- * - Handle direct URL detection, default results, and search cache lookups before executing expensive work.
- * - Normalize results so scoring, rendering, and navigation consume a consistent shape across all entry points.
+ * - Orchestrate the overall search flow from user input to rendered results.
+ * - Route to the appropriate search strategy (simple, fuzzy, taxonomy) based on parsed intent.
+ * - Handle caching, scoring, sorting, and result filtering.
+ * - Coordinate between query parsing, search execution, and rendering.
  *
  * Search flow:
- * 1. Clean the search term and decide which data sources to query.
- * 2. Look up cached results keyed by term, strategy, and mode.
- * 3. Execute `simpleSearch`, `fuzzySearch`, or `searchTaxonomy` depending on the user input.
- * 4. Apply `calculateFinalScore` to rank bookmarks, tabs, history items, and taxonomy nodes.
- * 5. Render results via `renderSearchResults`, including direct navigation targets when applicable.
+ * 1. Clean the search term and check cache.
+ * 2. Parse query to detect mode prefixes and taxonomy markers.
+ * 3. Execute appropriate search algorithm (precise, fuzzy, or taxonomy).
+ * 4. Apply scoring and sorting to rank results.
+ * 5. Filter by minimum score and max results.
+ * 6. Render results via view layer.
  */
 
-import { getBrowserTabs } from '../helper/browserApi.js'
-import { cleanUpUrl, printError } from '../helper/utils.js'
-import { closeErrors } from '../initSearch.js'
+import { cleanUpUrl } from '../helper/utils.js'
+import { closeErrors, printError } from '../view/errorView.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { fuzzySearch } from './fuzzySearch.js'
 import { calculateFinalScore } from './scoring.js'
 import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
+import { resolveSearchMode } from './queryParser.js'
+import { addSearchEngines, collectCustomSearchAliasResults } from './searchEngines.js'
+import { addDefaultEntries } from './defaultResults.js'
 
 // Re-export scoring function for backward compatibility
 export { calculateFinalScore }
 
 const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 const protocolRegex = /^[a-zA-Z]+:\/\//
-const SEARCH_MODE_PREFIXES = [
-  ['h ', 'history'],
-  ['b ', 'bookmarks'],
-  ['t ', 'tabs'],
-  ['s ', 'search'],
-]
-const SEARCH_MODE_MARKERS = {
-  '#': 'tags',
-  '~': 'folders',
-}
 
 /**
  * Maps search mode prefixes to their data sources.
@@ -62,12 +55,6 @@ export function resolveSearchTargets(searchMode) {
   return MODE_TARGETS[searchMode] || MODE_TARGETS.all
 }
 
-/** Attach a default `searchScore` of 1 to a result entry. */
-const withDefaultScore = (entry) => ({
-  searchScore: 1,
-  ...entry,
-})
-
 /**
  * Generate a unique identifier for synthetic search result entries.
  *
@@ -78,6 +65,185 @@ function generateRandomId() {
 }
 
 /**
+ * Check if the search should be skipped based on the event.
+ *
+ * @param {KeyboardEvent|InputEvent} [event] - Optional input event.
+ * @returns {boolean} True if search should be skipped.
+ */
+function shouldSkipSearch(event) {
+  if (!event) return false
+
+  // Don't execute search on navigation keys
+  if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter' || event.key === 'Escape') {
+    return true
+  }
+  // Don't execute search on modifier keys
+  if (event.key === 'Control' || event.ctrlKey || event.key === 'Alt' || event.altKey || event.key === 'Shift') {
+    return true
+  }
+
+  return false
+}
+
+/**
+ * Normalize the search term by trimming and removing duplicate spaces.
+ *
+ * @param {string} term - Raw search term.
+ * @returns {string} Normalized term.
+ */
+function normalizeSearchTerm(term) {
+  let normalized = term || ''
+  normalized = normalized.trimStart().toLowerCase()
+  normalized = normalized.replace(/ +(?= )/g, '') // Remove duplicate spaces
+  return normalized
+}
+
+/**
+ * Check if the search term is cached and render cached results if available.
+ *
+ * @param {string} searchTerm - The search term to check.
+ * @returns {boolean} True if cached results were used.
+ */
+function useCachedResultsIfAvailable(searchTerm) {
+  if (!searchTerm.trim() || !ext.searchCache) {
+    return false
+  }
+
+  const cacheKey = `${searchTerm}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
+  if (ext.searchCache.has(cacheKey)) {
+    console.debug(`Using cached results for key "${cacheKey}"`)
+    ext.model.searchTerm = searchTerm
+    ext.model.result = ext.searchCache.get(cacheKey)
+    renderSearchResults(ext.model.result)
+    return true
+  }
+
+  return false
+}
+
+/**
+ * Render default results when no search term is provided.
+ *
+ * @returns {Promise<void>}
+ */
+async function handleEmptySearch() {
+  ext.model.searchTerm = '' // Clear search term for default results
+  ext.model.result = await addDefaultEntries()
+  renderSearchResults(ext.model.result)
+}
+
+/**
+ * Execute the configured search algorithm and return results.
+ *
+ * @param {string} searchTerm - Query string.
+ * @param {string} searchMode - Active search mode.
+ * @returns {Promise<Array>} Search results.
+ */
+async function executeSearch(searchTerm, searchMode) {
+  const results = []
+
+  if (searchMode === 'tags') {
+    return searchTaxonomy(searchTerm, 'tags', ext.model.bookmarks)
+  } else if (searchMode === 'folders') {
+    return searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
+  } else if (ext.opts.searchStrategy === 'fuzzy') {
+    results.push(...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode)))
+  } else if (ext.opts.searchStrategy === 'precise') {
+    results.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
+  } else {
+    console.error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
+    // Fall back to use precise search instead of crashing entirely
+    results.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
+  }
+
+  return results
+}
+
+/**
+ * Add direct URL result if the search term looks like a URL.
+ *
+ * @param {string} searchTerm - Query string.
+ * @param {Array} results - Current result array.
+ */
+function addDirectUrlIfApplicable(searchTerm, results) {
+  if (
+    ext.opts.enableDirectUrl &&
+    urlRegex.test(searchTerm) &&
+    results.length < ext.opts.searchMaxResults
+  ) {
+    const url = protocolRegex.test(searchTerm) ? searchTerm : `https://${searchTerm.replace(/^\/+/, '')}`
+    results.push({
+      type: 'direct',
+      title: `Direct: "${cleanUpUrl(url)}"`,
+      titleHighlighted: `Direct: "<mark>${cleanUpUrl(url)}</mark>"`,
+      url: cleanUpUrl(url),
+      urlHighlighted: cleanUpUrl(url),
+      originalUrl: url,
+      originalId: generateRandomId(),
+      searchScore: 1,
+    })
+  }
+}
+
+/**
+ * Apply scoring and sorting to search results.
+ *
+ * @param {Array} results - Search results.
+ * @param {string} searchTerm - Query string.
+ * @param {string} searchMode - Active search mode.
+ * @returns {Array} Scored and sorted results.
+ */
+function applyScoring(results, searchTerm, searchMode) {
+  let scoredResults = calculateFinalScore(results, searchTerm)
+
+  if (searchTerm) {
+    scoredResults = sortResults(scoredResults, 'score')
+  } else if (searchMode === 'history' || searchMode === 'tabs') {
+    scoredResults = sortResults(scoredResults, 'lastVisited')
+  }
+
+  return scoredResults
+}
+
+/**
+ * Filter results by minimum score and maximum count.
+ *
+ * @param {Array} results - Search results.
+ * @param {string} searchMode - Active search mode.
+ * @returns {Array} Filtered results.
+ */
+function filterResults(results, searchMode) {
+  // Filter out all search results below a certain score
+  let filtered = results.filter((el) => el.score >= ext.opts.scoreMinScore)
+
+  // Only render maxResults if given (to improve render performance)
+  // Not applied on tabs, tag and folder search
+  if (
+    searchMode !== 'tags' &&
+    searchMode !== 'folders' &&
+    searchMode !== 'tabs' &&
+    filtered.length > ext.opts.searchMaxResults
+  ) {
+    filtered = filtered.slice(0, ext.opts.searchMaxResults)
+  }
+
+  return filtered
+}
+
+/**
+ * Cache search results for better performance.
+ *
+ * @param {string} searchTerm - Query string.
+ * @param {Array} results - Search results.
+ */
+function cacheResults(searchTerm, results) {
+  if (searchTerm.trim() && ext.searchCache) {
+    const cacheKey = `${searchTerm}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
+    ext.searchCache.set(cacheKey, results)
+  }
+}
+
+/**
  * Execute a search against the cached datasets based on the current UI state.
  *
  * @param {KeyboardEvent|InputEvent} [event] - Optional input event from the search field.
@@ -85,17 +251,7 @@ function generateRandomId() {
  */
 export async function search(event) {
   try {
-    if (event) {
-      // Don't execute search on navigation keys
-      if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter' || event.key === 'Escape') {
-        return
-      }
-      // Don't execute search on modifier keys
-      if (event.key === 'Control' || event.ctrlKey || event.key === 'Alt' || event.altKey || event.key === 'Shift') {
-        return
-      }
-    }
-
+    if (shouldSkipSearch(event)) return
     if (!ext.initialized) {
       console.warn('Extension not initialized (yet). Skipping search')
       return
@@ -104,114 +260,61 @@ export async function search(event) {
     const startTime = Date.now()
 
     // Get and clean up original search query
-    let searchTerm = ext.dom.searchInput.value || ''
-    searchTerm = searchTerm.trimStart().toLowerCase()
-    searchTerm = searchTerm.replace(/ +(?= )/g, '') // Remove duplicate spaces
+    let searchTerm = normalizeSearchTerm(ext.dom.searchInput.value)
 
     // Check cache first for better performance (only for actual searches, not default results)
-    if (searchTerm.trim() && ext.searchCache) {
-      const cacheKey = `${searchTerm}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
-      if (ext.searchCache.has(cacheKey)) {
-        console.debug(`Using cached results for key "${cacheKey}"`)
-        ext.model.searchTerm = searchTerm
-        ext.model.result = ext.searchCache.get(cacheKey)
-        renderSearchResults(ext.model.result)
-        return
-      }
-    }
+    if (useCachedResultsIfAvailable(searchTerm)) return
 
+    // Handle empty search - show default results
     if (!searchTerm.trim()) {
-      ext.model.searchTerm = '' // Clear search term for default results
-      ext.model.result = await addDefaultEntries()
-      renderSearchResults(ext.model.result)
-      return // Early return if no search term
+      await handleEmptySearch()
+      return
     }
 
     closeErrors()
 
-    ext.model.result = []
+    // Parse search mode and extract term
     const { mode: detectedMode, term: trimmedTerm } = resolveSearchMode(searchTerm)
     let searchMode = detectedMode
-    searchTerm = trimmedTerm
-
-    if (searchMode === 'all') {
-      ext.model.result.push(...collectCustomSearchAliasResults(searchTerm))
-    }
-
-    searchTerm = searchTerm.trim()
+    searchTerm = trimmedTerm.trim()
 
     ext.model.searchTerm = searchTerm
     ext.model.searchMode = searchMode
 
+    // Collect results
+    let results = []
+
+    // Add custom search alias results if in 'all' mode
+    if (searchMode === 'all') {
+      results.push(...collectCustomSearchAliasResults(searchTerm))
+    }
+
+    // Execute search if we have a search term
     if (searchTerm) {
-      if (searchMode === 'tags') {
-        ext.model.result = searchTaxonomy(searchTerm, 'tags', ext.model.bookmarks)
-      } else if (searchMode === 'folders') {
-        ext.model.result = searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
-      } else if (ext.opts.searchStrategy === 'fuzzy') {
-        ext.model.result.push(...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode)))
-      } else if (ext.opts.searchStrategy === 'precise') {
-        ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
-      } else {
-        console.error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
-        // Fall back to use precise search instead of crashing entirely
-        ext.model.result.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
-      }
-      if (
-        ext.opts.enableDirectUrl &&
-        urlRegex.test(searchTerm) &&
-        ext.model.result.length < ext.opts.searchMaxResults
-      ) {
-        const url = protocolRegex.test(searchTerm) ? searchTerm : `https://${searchTerm.replace(/^\/+/, '')}`
-        ext.model.result.push({
-          type: 'direct',
-          title: `Direct: "${cleanUpUrl(url)}"`,
-          titleHighlighted: `Direct: "<mark>${cleanUpUrl(url)}</mark>"`,
-          url: cleanUpUrl(url),
-          urlHighlighted: cleanUpUrl(url),
-          originalUrl: url,
-          originalId: generateRandomId(),
-          searchScore: 1,
-        })
-      }
+      results.push(...(await executeSearch(searchTerm, searchMode)))
+      addDirectUrlIfApplicable(searchTerm, results)
 
       // Add search engine result items
       if (searchMode === 'all' || searchMode === 'search') {
-        ext.model.result.push(...addSearchEngines(searchTerm))
+        results.push(...addSearchEngines(searchTerm))
       }
-      ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
-      ext.model.result = sortResults(ext.model.result, 'score')
     } else {
-      ext.model.result = await addDefaultEntries()
-      ext.model.result = calculateFinalScore(ext.model.result, searchTerm)
-      if (searchMode === 'history' || searchMode === 'tabs') {
-        ext.model.result = sortResults(ext.model.result, 'lastVisited')
-      }
+      results = await addDefaultEntries()
     }
 
-    // Filter out all search results below a certain score
-    ext.model.result = ext.model.result.filter((el) => el.score >= ext.opts.scoreMinScore)
+    // Apply scoring and sorting
+    results = applyScoring(results, searchTerm, searchMode)
 
-    // Only render maxResults if given (to improve render performance)
-    // Not applied on tabs, tag and folder search
-    if (
-      searchMode !== 'tags' &&
-      searchMode !== 'folders' &&
-      searchMode !== 'tabs' &&
-      ext.model.result.length > ext.opts.searchMaxResults
-    ) {
-      ext.model.result = ext.model.result.slice(0, ext.opts.searchMaxResults)
-    }
+    // Filter by score and max results
+    results = filterResults(results, searchMode)
 
-    ext.dom.resultCounter.innerText = `(${ext.model.result.length})`
+    ext.model.result = results
+    ext.dom.resultCounter.innerText = `(${results.length})`
 
     // Cache the results for better performance (only for actual searches)
-    if (searchTerm.trim() && ext.searchCache) {
-      const cacheKey = `${searchTerm}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
-      ext.searchCache.set(cacheKey, ext.model.result)
-    }
+    cacheResults(searchTerm, results)
 
-    renderSearchResults(ext.model.result)
+    renderSearchResults(results)
 
     // Simple timing for debugging (only if debug is enabled)
     console.debug('Search completed in ' + (Date.now() - startTime) + 'ms')
@@ -269,189 +372,5 @@ export function sortResults(results, sortMode) {
   return results
 }
 
-/**
- * Build default result sets when no explicit search term is provided.
- *
- * - Tabs mode: show most recent tabs.
- * - History mode: show recent history entries.
- * - Bookmarks mode: surface all bookmarks.
- * - Default: prefer bookmarks that match the current tab plus recent tabs.
- *
- * @returns {Promise<Array>} Result entries enriched with default scores.
- */
-export async function addDefaultEntries() {
-  let results = []
-
-  if (ext.model.searchMode === 'history' && ext.model.history) {
-    // Display recent history by default
-    results = ext.model.history.map(withDefaultScore)
-  } else if (ext.model.searchMode === 'tabs' && ext.model.tabs) {
-    // Display last opened tabs by default
-    results = ext.model.tabs.map(withDefaultScore).sort((a, b) => {
-      return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo
-    })
-  } else if (ext.model.searchMode === 'bookmarks' && ext.model.bookmarks) {
-    // Display all bookmarks by default
-    results = ext.model.bookmarks.map(withDefaultScore)
-  } else {
-    // Default: Find bookmarks that match current page URL
-    try {
-      const [tab] = await getBrowserTabs({ active: true, currentWindow: true })
-      if (tab && tab.url) {
-        // Use the current tab's URL instead of window.location.href for accuracy
-        let currentUrl = tab.url.replace(/[/#]$/, '')
-
-        // Find bookmarks that match current page URL (with some flexibility)
-        const matchingBookmarks = ext.model.bookmarks.filter((el) => {
-          if (!el.originalUrl) return false
-          const bookmarkUrl = el.originalUrl.replace(/[/#]$/, '')
-          return (
-            bookmarkUrl === currentUrl ||
-            bookmarkUrl === currentUrl.replace(/^https?:\/\//, '') ||
-            currentUrl === bookmarkUrl.replace(/^https?:\/\//, '')
-          )
-        })
-
-        if (matchingBookmarks.length > 0) {
-          results.push(...matchingBookmarks.map(withDefaultScore))
-        }
-      }
-    } catch (err) {
-      console.warn('Could not get current tab for default entries:', err)
-    }
-
-    // Always add recently visited tabs when option is enabled and no search term
-    if (ext.model.tabs && ext.opts.maxRecentTabsToShow > 0) {
-      const recentTabs = ext.model.tabs
-        .filter((tab) => tab && tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('about:'))
-        .map(withDefaultScore)
-        .sort((a, b) => {
-          // Sort by last accessed time (most recent first)
-          // Handle cases where last accessed might be undefined
-          const aTime = a.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
-          const bTime = b.lastVisitSecondsAgo || Number.MAX_SAFE_INTEGER
-          return aTime - bTime
-        })
-        .slice(0, ext.opts.maxRecentTabsToShow) // Show most recent tabs
-
-      results.push(...recentTabs)
-    }
-  }
-
-  ext.model.result = results
-  return results
-}
-
-/**
- * Create external search engine entries for the current query.
- *
- * @param {string} searchTerm - Query string from the input box.
- * @returns {Array} Search engine result objects.
- */
-function addSearchEngines(searchTerm) {
-  const results = []
-  if (ext.opts.enableSearchEngines) {
-    for (const searchEngine of ext.opts.searchEngineChoices) {
-      results.push(getCustomSearchEngineResult(searchTerm, searchEngine.name, searchEngine.urlPrefix))
-    }
-  }
-  return results
-}
-
-/**
- * Build a single search result entry that targets a custom search engine.
- *
- * @param {string} searchTerm - Query string to substitute.
- * @param {string} name - Display label for the search engine.
- * @param {string} urlPrefix - Base URL (optionally containing `$s` placeholder).
- * @param {string} [urlBlank] - Optional blank-state URL when no term is provided.
- * @param {boolean} [custom=false] - Flag to mark user-defined engines.
- * @returns {Object} Search result object compatible with scoring.
- */
-function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlank, custom) {
-  let url
-  let title = `${name}: "${searchTerm}"`
-  let titleHighlighted = `${name}: "<mark>${searchTerm}</mark>"`
-  if (urlBlank && !searchTerm.trim()) {
-    url = urlBlank
-    title = name
-    titleHighlighted = name
-  } else if (urlPrefix.includes('$s')) {
-    url = urlPrefix.replace('$s', encodeURIComponent(searchTerm))
-  } else {
-    url = urlPrefix + encodeURIComponent(searchTerm)
-  }
-  return {
-    type: custom ? 'customSearch' : 'search',
-    title: title,
-    titleHighlighted: titleHighlighted,
-    url: cleanUpUrl(url),
-    urlHighlighted: cleanUpUrl(url),
-    originalUrl: url,
-    originalId: generateRandomId(),
-    searchScore: 1,
-  }
-}
-
-/**
- * Derive search mode prefixes or taxonomy markers from the raw query.
- *
- * @param {string} searchTerm - Raw query string.
- * @returns {{mode: string, term: string}} Normalized mode and trimmed term.
- */
-function resolveSearchMode(searchTerm) {
-  let mode = 'all'
-  let term = searchTerm
-
-  for (const [prefix, candidate] of SEARCH_MODE_PREFIXES) {
-    if (term.startsWith(prefix)) {
-      mode = candidate
-      term = term.slice(prefix.length)
-      return { mode, term }
-    }
-  }
-
-  const marker = SEARCH_MODE_MARKERS[term[0]]
-  if (marker) {
-    mode = marker
-    term = term.slice(1)
-  }
-
-  return { mode, term }
-}
-
-/**
- * Resolve alias-triggered custom search engine results when the query starts with an alias.
- *
- * @param {string} searchTerm - Raw search query.
- * @returns {Array} Matching custom search engine entries.
- */
-function collectCustomSearchAliasResults(searchTerm) {
-  if (!ext.opts.customSearchEngines) {
-    return []
-  }
-
-  const results = []
-  for (const customSearchEngine of ext.opts.customSearchEngines) {
-    const aliases = Array.isArray(customSearchEngine.alias) ? customSearchEngine.alias : [customSearchEngine.alias]
-
-    for (const alias of aliases) {
-      const lowerAlias = alias.toLowerCase()
-      const aliasPrefix = `${lowerAlias} `
-      if (searchTerm.startsWith(aliasPrefix)) {
-        const aliasTerm = searchTerm.slice(aliasPrefix.length)
-        results.push(
-          getCustomSearchEngineResult(
-            aliasTerm,
-            customSearchEngine.name,
-            customSearchEngine.urlPrefix,
-            customSearchEngine.blank,
-            true,
-          ),
-        )
-      }
-    }
-  }
-
-  return results
-}
+// Re-export functions for backward compatibility
+export { addDefaultEntries } from './defaultResults.js'

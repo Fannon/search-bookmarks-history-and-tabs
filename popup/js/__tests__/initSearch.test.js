@@ -52,6 +52,15 @@ const mockDependencies = async (overrides = {}) => {
   await jest.unstable_mockModule('../helper/utils.js', () => ({
     __esModule: true,
     loadScript: config.loadScript,
+  }))
+  await jest.unstable_mockModule('../view/errorView.js', () => ({
+    __esModule: true,
+    closeErrors: () => {
+      const element = document.getElementById('error-list')
+      if (element) {
+        element.style = 'display: none;'
+      }
+    },
     printError: config.printError,
   }))
   await jest.unstable_mockModule('../model/options.js', () => ({
