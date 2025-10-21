@@ -1,15 +1,14 @@
 /**
- * ✅ Covered behaviors: rendering of search results, navigation interactions, hover handling,
- *   result opening flows (close, copy, modifiers, tab switching), and search approach toggling.
+ * ✅ Covered behaviors: rendering of search results with metadata, badges, highlights,
+ *   HTML escaping, and initial selection state.
  * ⚠️ Known gaps: does not verify browser navigation side effects beyond mocked APIs.
  * 🐞 Added BUG tests: none.
+ *
+ * Note: Navigation tests moved to searchNavigation.test.js
+ *       Event handling tests moved to searchEvents.test.js
  */
 
 import { jest } from '@jest/globals'
-
-const originalWindowClose = window.close
-const originalWindowOpen = window.open
-const originalClipboard = navigator.clipboard
 
 function createResults() {
   return [
@@ -44,19 +43,8 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
   delete document.hasContextMenuListener
   window.location.hash = '#search/query'
 
-  const getUserOptions = jest.fn(async () => ({ searchStrategy: 'precise' }))
-  const setUserOptions = jest.fn(async () => {})
-  const searchMock = jest.fn(() => Promise.resolve())
-
-  jest.unstable_mockModule('../../model/options.js', () => ({
-    getUserOptions,
-    setUserOptions,
-  }))
-  jest.unstable_mockModule('../../search/common.js', () => ({
-    search: searchMock,
-  }))
-
-  const module = await import('../searchView.js')
+  // Import modules - no need to mock since they have no side effects
+  const searchViewModule = await import('../searchView.js')
 
   document.body.innerHTML = `
     <input id="search-input" />
@@ -77,14 +65,9 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
       windowId: 101,
     }))
 
-  navigator.clipboard = {
-    writeText: jest.fn(() => Promise.resolve()),
-  }
   window.Mark = jest.fn(() => ({
     mark: jest.fn(),
   }))
-  window.close = jest.fn()
-  window.open = jest.fn()
 
   global.ext = {
     dom: {
@@ -128,12 +111,7 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
   }
 
   return {
-    module,
-    mocks: {
-      getUserOptions,
-      setUserOptions,
-      search: searchMock,
-    },
+    module: searchViewModule,
     elements: {
       resultList,
       searchInput,
@@ -146,9 +124,6 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
 afterEach(() => {
   delete global.ext
   delete window.Mark
-  navigator.clipboard = originalClipboard
-  window.close = originalWindowClose
-  window.open = originalWindowOpen
   document.body.innerHTML = ''
   window.location.hash = ''
 })
@@ -241,292 +216,72 @@ describe('searchView renderSearchResults', () => {
     expect(tagBadge.innerHTML).toContain('&lt;svg onload=alert(1)&gt;')
 
     const folderBadge = listItem.querySelector('.badge.folder')
-    expect(folderBadge.textContent).toBe('~Folder"><img src=x>')
+    expect(folderBadge.textContent).toBe('~Folder\"><img src=x>')
     expect(folderBadge.innerHTML).toContain('&lt;img src=x&gt;')
 
     const urlDiv = listItem.querySelector('.url')
     expect(urlDiv.textContent).toBe('example.com/<iframe src=javascript:alert(1)>')
     expect(urlDiv.innerHTML).toContain('&lt;iframe src=javascript:alert(1)&gt;')
   })
-})
 
-describe('searchView selection helpers', () => {
-  it('selectListItem updates selection and scrolls when requested', async () => {
-    const { module, elements } = await setupSearchView()
-    await module.renderSearchResults()
 
-    const secondItem = elements.resultList.children[1]
-    secondItem.scrollIntoView = jest.fn()
+  it('handles results without optional fields gracefully', async () => {
+    const minimalResults = [
+      {
+        type: 'bookmark',
+        originalId: 'bm-minimal',
+        originalUrl: 'https://minimal.test',
+        url: 'minimal.test',
+        title: 'Minimal Bookmark',
+      },
+    ]
 
-    module.selectListItem(1, true)
-
-    expect(ext.model.currentItem).toBe(1)
-    expect(document.getElementById('selected-result')).toBe(secondItem)
-    expect(secondItem.scrollIntoView).toHaveBeenCalledWith({
-      behavior: 'auto',
-      block: 'nearest',
-    })
-  })
-
-  it('hoverResultItem delays activation until rendering completes, then selects index', async () => {
-    const { module, elements } = await setupSearchView()
-    await module.renderSearchResults()
-    const firstItem = elements.resultList.children[0]
-    const secondItem = elements.resultList.children[1]
-
-    module.hoverResultItem({ target: firstItem })
-    expect(ext.model.mouseHoverEnabled).toBe(true)
-    expect(ext.model.currentItem).toBe(0)
-
-    module.hoverResultItem({ target: secondItem })
-    expect(ext.model.currentItem).toBe('1')
-    expect(document.getElementById('selected-result')).toBe(secondItem)
-  })
-})
-
-describe('searchView navigationKeyListener', () => {
-  it('handles arrow navigation, enter activation, and escape reset', async () => {
-    const { module, elements } = await setupSearchView()
-    await module.renderSearchResults()
-    const preventDefault = jest.fn()
-    Array.from(elements.resultList.children).forEach((child) => {
-      child.scrollIntoView = jest.fn()
-    })
-
-    elements.searchInput.value = 'typed'
-    module.navigationKeyListener({
-      key: 'ArrowUp',
-      ctrlKey: false,
-      preventDefault,
-    })
-    expect(preventDefault).toHaveBeenCalledTimes(1)
-    expect(ext.model.currentItem).toBe(0)
-
-    preventDefault.mockClear()
-    module.navigationKeyListener({
-      key: 'ArrowDown',
-      ctrlKey: false,
-      preventDefault,
-    })
-    expect(preventDefault).toHaveBeenCalledTimes(1)
-    expect(ext.model.currentItem).toBe(1)
-    expect(document.getElementById('selected-result')).toBe(elements.resultList.children[1])
-
-    const openPreventDefault = jest.fn()
-    const openStop = jest.fn()
-    window.location.hash = '#search/query'
-    module.navigationKeyListener({
-      key: 'Enter',
-      ctrlKey: true,
-      preventDefault: openPreventDefault,
-      stopPropagation: openStop,
-      button: 0,
-      target: {
-        nodeName: 'LI',
-        getAttribute: () => null,
-        className: '',
+    const { module, elements } = await setupSearchView({
+      results: minimalResults,
+      opts: {
+        displayTags: true,
+        displayFolderName: true,
+        displayLastVisit: true,
+        displayVisitCounter: true,
+        displayDateAdded: true,
+        displayScore: true,
       },
     })
-    expect(ext.browserApi.tabs.create).toHaveBeenCalledWith({
-      active: false,
-      url: 'https://tab.test',
-    })
 
-    const focusMock = jest.fn()
-    elements.searchInput.focus = focusMock
-    module.navigationKeyListener({
-      key: 'Escape',
-      preventDefault: jest.fn(),
-    })
-    expect(window.location.hash).toBe('#search/')
-    expect(focusMock).toHaveBeenCalledTimes(1)
-  })
-})
-
-describe('searchView openResultItem', () => {
-  it('copies URL to clipboard on right click', async () => {
-    const { module } = await setupSearchView()
     await module.renderSearchResults()
-    const selected = document.getElementById('selected-result')
 
-    module.openResultItem({
-      button: 2,
-      ctrlKey: false,
-      shiftKey: false,
-      altKey: false,
-      target: {
-        nodeName: 'LI',
-        getAttribute: () => null,
-        className: '',
+    const listItem = elements.resultList.querySelector('li')
+    expect(listItem).not.toBeNull()
+    expect(listItem.querySelector('.badge.tags')).toBeNull()
+    expect(listItem.querySelector('.badge.folder')).toBeNull()
+    expect(listItem.querySelector('.badge.last-visited')).toBeNull()
+    expect(listItem.querySelector('.badge.visit-counter')).toBeNull()
+    expect(listItem.querySelector('.badge.date-added')).toBeNull()
+    expect(listItem.querySelector('.badge.score')).toBeNull()
+  })
+
+  it('encodes special characters in URLs for edit links', async () => {
+    const specialResults = [
+      {
+        type: 'bookmark',
+        originalId: 'bookmark/with/slashes',
+        originalUrl: 'https://example.com',
+        url: 'example.com',
+        title: 'Special Bookmark',
       },
-      preventDefault: jest.fn(),
-      stopPropagation: jest.fn(),
+    ]
+
+    const { module, elements } = await setupSearchView({
+      results: specialResults,
     })
 
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(selected.getAttribute('x-open-url'))
-  })
-
-  it('closes tabs from the result list when the close button is pressed', async () => {
-    const { module, elements } = await setupSearchView()
-    await module.renderSearchResults()
-    module.selectListItem(1)
-    const tabItem = elements.resultList.children[1]
-    const closeButton = tabItem.querySelector('.close-button')
-
-    closeButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
-
-    expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(2)
-    expect(ext.model.tabs).toHaveLength(0)
-    expect(ext.model.result).toHaveLength(1)
-    expect(elements.resultList.children).toHaveLength(1)
-  })
-
-  it('opens URLs in the current tab when shift is held and closes the popup afterward', async () => {
-    const { module } = await setupSearchView()
     await module.renderSearchResults()
 
-    module.openResultItem({
-      button: 0,
-      shiftKey: true,
-      altKey: false,
-      ctrlKey: false,
-      target: {
-        nodeName: 'LI',
-        getAttribute: () => null,
-        className: '',
-      },
-      stopPropagation: jest.fn(),
-      preventDefault: jest.fn(),
-    })
-    await Promise.resolve()
+    const listItem = elements.resultList.querySelector('li')
+    const editButton = listItem.querySelector('.edit-button')
+    const link = editButton.getAttribute('x-link')
 
-    expect(ext.browserApi.tabs.query).toHaveBeenCalledTimes(1)
-    expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(77, { url: 'https://bookmark.test' })
-    expect(window.close).toHaveBeenCalledTimes(1)
-  })
-
-  it('opens URLs in a background tab when ctrl is held', async () => {
-    const { module } = await setupSearchView()
-    await module.renderSearchResults()
-
-    module.openResultItem({
-      button: 0,
-      ctrlKey: true,
-      shiftKey: false,
-      altKey: false,
-      target: {
-        nodeName: 'LI',
-        getAttribute: () => null,
-        className: '',
-      },
-      stopPropagation: jest.fn(),
-      preventDefault: jest.fn(),
-    })
-
-    expect(ext.browserApi.tabs.create).toHaveBeenCalledWith({
-      active: false,
-      url: 'https://bookmark.test',
-    })
-  })
-
-  it('switches to an existing tab when a matching tab is found', async () => {
-    const { module } = await setupSearchView()
-    await module.renderSearchResults()
-    module.selectListItem(1)
-
-    module.openResultItem({
-      button: 0,
-      ctrlKey: false,
-      shiftKey: false,
-      altKey: false,
-      target: {
-        nodeName: 'LI',
-        getAttribute: () => null,
-        className: '',
-      },
-      stopPropagation: jest.fn(),
-      preventDefault: jest.fn(),
-    })
-
-    expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(2, { active: true })
-    expect(ext.browserApi.windows.update).toHaveBeenCalledWith(101, { focused: true })
-    expect(window.close).toHaveBeenCalledTimes(1)
-  })
-
-  it('opens a new active tab when no matching tab exists', async () => {
-    const { module } = await setupSearchView()
-    await module.renderSearchResults()
-    ext.model.tabs = []
-
-    module.openResultItem({
-      button: 0,
-      ctrlKey: false,
-      shiftKey: false,
-      altKey: false,
-      target: {
-        nodeName: 'LI',
-        getAttribute: () => null,
-        className: '',
-      },
-      stopPropagation: jest.fn(),
-      preventDefault: jest.fn(),
-    })
-
-    expect(ext.browserApi.tabs.create).toHaveBeenCalledWith({
-      active: true,
-      url: 'https://bookmark.test',
-    })
-    expect(window.close).toHaveBeenCalledTimes(1)
-  })
-
-  it('falls back to window.open when no browser tab APIs are available', async () => {
-    const { module } = await setupSearchView()
-    await module.renderSearchResults()
-    delete ext.browserApi.tabs
-
-    module.openResultItem({
-      button: 0,
-      ctrlKey: false,
-      shiftKey: false,
-      altKey: false,
-      target: {
-        nodeName: 'LI',
-        getAttribute: () => null,
-        className: '',
-      },
-      stopPropagation: jest.fn(),
-      preventDefault: jest.fn(),
-    })
-
-    expect(window.open).toHaveBeenCalledWith('https://bookmark.test', '_newtab')
-  })
-})
-
-describe('search approach controls', () => {
-  it('toggles between precise and fuzzy search strategies', async () => {
-    const { module, mocks, elements } = await setupSearchView()
-    ext.opts.searchStrategy = 'precise'
-
-    await module.toggleSearchApproach()
-
-    expect(ext.opts.searchStrategy).toBe('fuzzy')
-    expect(mocks.getUserOptions).toHaveBeenCalledTimes(1)
-    expect(mocks.setUserOptions).toHaveBeenCalledWith({ searchStrategy: 'fuzzy' })
-    expect(elements.searchApproachToggle.innerText).toBe('FUZZY')
-    expect(elements.searchApproachToggle.className).toBe('fuzzy')
-    expect(mocks.search).toHaveBeenCalledTimes(1)
-  })
-
-  it('updateSearchApproachToggle reflects current strategy', async () => {
-    const { module, elements } = await setupSearchView()
-    ext.opts.searchStrategy = 'precise'
-    module.updateSearchApproachToggle()
-    expect(elements.searchApproachToggle.innerText).toBe('PRECISE')
-    expect(elements.searchApproachToggle.className).toBe('precise')
-
-    ext.opts.searchStrategy = 'fuzzy'
-    module.updateSearchApproachToggle()
-    expect(elements.searchApproachToggle.innerText).toBe('FUZZY')
-    expect(elements.searchApproachToggle.className).toBe('fuzzy')
+    expect(link).toContain('bookmark%2Fwith%2Fslashes')
+    expect(link).not.toContain('bookmark/with/slashes')
   })
 })
