@@ -136,7 +136,11 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
           const tagsSection = title.substring(spaceHashIndex)
           const extractedTags = parseTaxonomyTerms(tagsSection, '#')
 
+          // Remove ALL tags from title first (before re-adding numeric ones)
+          title = title.substring(0, spaceHashIndex)
+
           // Filter out tags that start with digits (likely issue numbers)
+          // and append them back to the title
           tagsArray = extractedTags.filter((tag) => {
             if (tag.match(/^\d/)) {
               title += ' #' + tag
@@ -150,9 +154,6 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
             tagsText += '#' + tag + ' '
           }
           tagsText = tagsText.slice(0, -1)
-
-          // Remove tags section from title
-          title = title.substring(0, spaceHashIndex)
         }
       }
 
