@@ -1,8 +1,21 @@
 import { test, expect, expectNoClientErrors } from './fixtures.js'
 
+const BOOKMARK_ID = '23'
+const BOOKMARK_TITLE = 'Try pandoc!'
+const BOOKMARK_URL = 'https://pandoc.org/try'
+const BOOKMARK_WITHOUT_TAGS_ID = '29'
+
+const gotoEditBookmark = async (page, hash) => {
+  await page.goto(`/editBookmark.html${hash}`)
+}
+
+const waitForTagify = async (page) => {
+  await page.waitForFunction(() => window.ext?.tagify)
+}
+
 test.describe('Edit Bookmark View', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/editBookmark#bookmark/23/search/t')
+    await gotoEditBookmark(page, `#bookmark/${BOOKMARK_ID}/search/t`)
   })
 
   test.describe('Initialization', () => {
@@ -22,18 +35,26 @@ test.describe('Edit Bookmark View', () => {
     })
 
     test('populates form with bookmark data', async ({ page }) => {
-      // Wait for the form to be populated
-      await expect(page.locator('#bookmark-title')).toHaveValue('JSON Editor Online - view, edit and format JSON')
-      await expect(page.locator('#bookmark-url')).toHaveValue('https://jsoneditoronline.org/')
+      await waitForTagify(page)
+      await expect(page.locator('#bookmark-title')).toHaveValue(BOOKMARK_TITLE)
+      await expect(page.locator('#bookmark-url')).toHaveValue(BOOKMARK_URL)
+      const tagValues = await page.evaluate(() => window.ext.tagify.value.map((tag) => tag.value))
+      expect(tagValues).toEqual(['md'])
     })
 
     test('handles missing bookmark gracefully', async ({ page }) => {
-      // Navigate to a non-existent bookmark
-      await page.goto('/editBookmark#bookmark/nonexistent/search/t')
+      const warnings = []
+      page.on('console', (message) => {
+        if (message.type() === 'warning') {
+          warnings.push(message.text())
+        }
+      })
 
-      // Should show error and focus cancel button
-      await expect(page.locator('#error-list')).toBeVisible()
-      await expect(page.locator('#edit-bookmark-cancel')).toBeFocused()
+      await gotoEditBookmark(page, '#bookmark/nonexistent/search/t')
+
+      await expect(page.locator('#edit-bookmark')).not.toBeVisible()
+      await expectNoClientErrors(page)
+      expect(warnings.some((text) => text.includes('Tried to edit bookmark id="nonexistent"'))).toBe(true)
     })
   })
 
@@ -51,6 +72,8 @@ test.describe('Edit Bookmark View', () => {
     })
 
     test('can add and remove tags', async ({ page }) => {
+      await waitForTagify(page)
+
       // Add a new tag
       await page.locator('#bookmark-tags').fill('test-tag')
       await page.keyboard.press('Enter')
@@ -81,40 +104,42 @@ test.describe('Edit Bookmark View', () => {
 
   test.describe('Tagify Integration', () => {
     test('initializes tagify with available tags', async ({ page }) => {
-      // Check that tagify is initialized
-      await expect(page.locator('#bookmark-tags')).toBeVisible()
-
-      // Should have some tags available (from the mock data)
-      // This is harder to test directly, but we can check that the input works
-      await page.locator('#bookmark-tags').click()
+      await waitForTagify(page)
+      const tagifyMetadata = await page.evaluate(() => ({
+        tagCount: window.ext.tagify.value.length,
+        whitelistCount: window.ext.tagify.settings.whitelist.length,
+      }))
+      expect(tagifyMetadata.tagCount).toBe(1)
+      expect(tagifyMetadata.whitelistCount).toBeGreaterThan(0)
     })
 
     test('handles tag input correctly', async ({ page }) => {
-      // Type in the tags input
+      await waitForTagify(page)
+
       await page.locator('#bookmark-tags').fill('new-tag')
       await page.keyboard.press('Enter')
 
-      // The tag should be added
-      await expect(page.locator('#bookmark-tags')).toHaveValue('new-tag')
+      const tagValues = await page.evaluate(() => window.ext.tagify.value.map((tag) => tag.value))
+      expect(tagValues).toContain('new-tag')
     })
   })
 
   test.describe('Error Handling', () => {
     test('handles malformed URL hash gracefully', async ({ page }) => {
       // Navigate to edit bookmark with malformed hash
-      await page.goto('/editBookmark#malformed-hash')
+      await gotoEditBookmark(page, '#malformed-hash')
 
       // Should show error
       await expect(page.locator('#error-list')).toBeVisible()
     })
 
-    test('handles empty bookmark data', async ({ page }) => {
-      // This tests the fix for the original bug
-      // Navigate to a bookmark that might have undefined tags
-      await page.goto('/editBookmark#bookmark/1/search/t')
+    test('handles bookmarks without tags gracefully', async ({ page }) => {
+      await gotoEditBookmark(page, `#bookmark/${BOOKMARK_WITHOUT_TAGS_ID}/search/t`)
 
-      // Should not crash and should handle gracefully
       await expect(page.locator('#edit-bookmark')).toBeVisible()
+      await waitForTagify(page)
+      const tagValues = await page.evaluate(() => window.ext.tagify.value.map((tag) => tag.value))
+      expect(tagValues).toEqual([])
       await expectNoClientErrors(page)
     })
   })
@@ -131,10 +156,10 @@ test.describe('Edit Bookmark View', () => {
 
     test('handles hash change during editing', async ({ page }) => {
       // Navigate to different bookmark while editing
-      await page.goto('/editBookmark#bookmark/17/search/t')
+      await gotoEditBookmark(page, '#bookmark/17/search/t')
 
       // Should load the new bookmark
-      await expect(page.locator('#bookmark-title')).toHaveValue('JSON Schema Validator')
+      await expect(page.locator('#bookmark-title')).toHaveValue('Convert JSON to YAML')
     })
   })
 })

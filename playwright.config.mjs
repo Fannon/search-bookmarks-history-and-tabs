@@ -12,7 +12,7 @@ export default defineConfig({
     : [['html', { outputFolder: './reports/playwright', open: 'never' }], ['list']],
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  timeout: 60_000,
+  timeout: 10_000,
   expect: {
     timeout: 5_000,
   },
