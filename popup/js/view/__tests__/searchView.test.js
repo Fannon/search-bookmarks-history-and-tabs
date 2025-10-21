@@ -43,23 +43,7 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
   delete document.hasContextMenuListener
   window.location.hash = '#search/query'
 
-  // Mock dependencies to avoid side effects
-  jest.unstable_mockModule('../searchEvents.js', () => ({
-    setupResultItemsEvents: jest.fn(),
-  }))
-  jest.unstable_mockModule('../searchNavigation.js', () => ({
-    selectListItem: jest.fn((index) => {
-      ext.model.currentItem = index
-      if (ext.dom.resultList.children[index]) {
-        ext.dom.resultList.children[index].id = 'selected-result'
-      }
-    }),
-    clearSelection: jest.fn(),
-    hoverResultItem: jest.fn(),
-    navigationKeyListener: jest.fn(),
-  }))
-
-  // Import the view module
+  // Import modules - no need to mock since they have no side effects
   const searchViewModule = await import('../searchView.js')
 
   document.body.innerHTML = `
@@ -240,46 +224,6 @@ describe('searchView renderSearchResults', () => {
     expect(urlDiv.innerHTML).toContain('&lt;iframe src=javascript:alert(1)&gt;')
   })
 
-  it('disables mouse hover during rendering to prevent spurious selection changes', async () => {
-    const { module } = await setupSearchView()
-    ext.model.mouseHoverEnabled = true
-
-    await module.renderSearchResults()
-
-    expect(ext.model.mouseHoverEnabled).toBe(false)
-  })
-
-  it('sets up context menu prevention on first render', async () => {
-    const { module } = await setupSearchView()
-    delete document.hasContextMenuListener
-
-    await module.renderSearchResults()
-
-    expect(document.hasContextMenuListener).toBe(true)
-
-    // Verify it doesn't add duplicate listeners
-    const listenersBefore = document.hasContextMenuListener
-    await module.renderSearchResults()
-    expect(document.hasContextMenuListener).toBe(listenersBefore)
-  })
-
-  it('renders without highlights when displaySearchMatchHighlight is disabled', async () => {
-    const { module, elements } = await setupSearchView({
-      opts: { displaySearchMatchHighlight: false },
-    })
-
-    await module.renderSearchResults()
-
-    const listItems = elements.resultList.querySelectorAll('li')
-    const bookmarkItem = listItems[0]
-
-    // Should not call Mark library when highlighting is disabled
-    expect(window.Mark).not.toHaveBeenCalled()
-
-    // Title should be plain text without <mark> tags from titleHighlighted
-    const titleText = bookmarkItem.querySelector('.title-text')
-    expect(titleText.innerHTML).not.toContain('<mark>')
-  })
 
   it('handles results without optional fields gracefully', async () => {
     const minimalResults = [

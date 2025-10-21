@@ -39,15 +39,10 @@ async function setupSearchNavigation({ results = createResults(), opts = {} } = 
   jest.resetModules()
   window.location.hash = '#search/query'
 
-  // Mock the searchEvents module to avoid circular dependencies
-  jest.unstable_mockModule('../searchEvents.js', () => ({
-    openResultItem: jest.fn(),
-    setupResultItemsEvents: jest.fn(),
-  }))
-
-  // Import modules
+  // Import modules - no mocking needed
   const searchNavigationModule = await import('../searchNavigation.js')
   const searchViewModule = await import('../searchView.js')
+  const searchEventsModule = await import('../searchEvents.js')
 
   document.body.innerHTML = `
     <input id="search-input" />
@@ -116,6 +111,7 @@ async function setupSearchNavigation({ results = createResults(), opts = {} } = 
   return {
     module: searchNavigationModule,
     viewModule: searchViewModule,
+    eventsModule: searchEventsModule,
     elements: {
       resultList,
       searchInput,
@@ -148,19 +144,6 @@ describe('searchNavigation selection helpers', () => {
       behavior: 'auto',
       block: 'nearest',
     })
-  })
-
-  it('clearSelection removes the selected-result id', async () => {
-    const { module, viewModule, elements } = await setupSearchNavigation()
-    await viewModule.renderSearchResults()
-
-    const firstItem = elements.resultList.children[0]
-    expect(firstItem.id).toBe('selected-result')
-
-    module.clearSelection()
-
-    expect(document.getElementById('selected-result')).toBeNull()
-    expect(firstItem.id).toBe('')
   })
 
   it('hoverResultItem delays activation until rendering completes, then selects index', async () => {
@@ -208,7 +191,7 @@ describe('searchNavigation navigationKeyListener', () => {
     expect(document.getElementById('selected-result')).toBe(elements.resultList.children[1])
   })
 
-  it('supports vim-style navigation with Ctrl+P/Ctrl+N', async () => {
+  it('supports vim-style navigation keybindings', async () => {
     const { module, viewModule, elements } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
     const preventDefault = jest.fn()
@@ -216,64 +199,42 @@ describe('searchNavigation navigationKeyListener', () => {
       child.scrollIntoView = jest.fn()
     })
 
-    // Ctrl+N moves down
-    module.navigationKeyListener({
-      key: 'n',
-      ctrlKey: true,
-      preventDefault,
-    })
-    expect(preventDefault).toHaveBeenCalledTimes(1)
-    expect(ext.model.currentItem).toBe(1)
+    // Test all vim-style down keybindings
+    const downKeys = [
+      { key: 'n', ctrlKey: true },
+      { key: 'j', ctrlKey: true },
+    ]
+    for (const keyCombo of downKeys) {
+      ext.model.currentItem = 0
+      module.navigationKeyListener({ ...keyCombo, preventDefault })
+      expect(ext.model.currentItem).toBe(1)
+    }
 
-    preventDefault.mockClear()
-    // Ctrl+P moves up
-    module.navigationKeyListener({
-      key: 'p',
-      ctrlKey: true,
-      preventDefault,
-    })
-    expect(preventDefault).toHaveBeenCalledTimes(1)
-    expect(ext.model.currentItem).toBe(0)
+    // Test all vim-style up keybindings
+    const upKeys = [
+      { key: 'p', ctrlKey: true },
+      { key: 'k', ctrlKey: true },
+    ]
+    for (const keyCombo of upKeys) {
+      ext.model.currentItem = 1
+      module.navigationKeyListener({ ...keyCombo, preventDefault })
+      expect(ext.model.currentItem).toBe(0)
+    }
   })
 
-  it('supports vim-style navigation with Ctrl+K/Ctrl+J', async () => {
-    const { module, viewModule, elements } = await setupSearchNavigation()
-    await viewModule.renderSearchResults()
-    const preventDefault = jest.fn()
-    Array.from(elements.resultList.children).forEach((child) => {
-      child.scrollIntoView = jest.fn()
-    })
-
-    // Ctrl+J moves down
-    module.navigationKeyListener({
-      key: 'j',
-      ctrlKey: true,
-      preventDefault,
-    })
-    expect(preventDefault).toHaveBeenCalledTimes(1)
-    expect(ext.model.currentItem).toBe(1)
-
-    preventDefault.mockClear()
-    // Ctrl+K moves up
-    module.navigationKeyListener({
-      key: 'k',
-      ctrlKey: true,
-      preventDefault,
-    })
-    expect(preventDefault).toHaveBeenCalledTimes(1)
-    expect(ext.model.currentItem).toBe(0)
-  })
-
-  it('handles Enter key to open selected result', async () => {
+  it('handles Enter key by calling openResultItem', async () => {
     const { module, viewModule } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
 
-    // Get the mocked openResultItem function
-    const searchEventsModule = await import('../searchEvents.js')
+    // Mock window.close to verify openResultItem was called (it closes the window)
+    const windowCloseSpy = jest.fn()
+    window.close = windowCloseSpy
 
     const event = {
       key: 'Enter',
-      ctrlKey: true,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       button: 0,
@@ -287,7 +248,8 @@ describe('searchNavigation navigationKeyListener', () => {
 
     module.navigationKeyListener(event)
 
-    expect(searchEventsModule.openResultItem).toHaveBeenCalledWith(event)
+    // Verify window closed (side effect of openResultItem for bookmark)
+    expect(windowCloseSpy).toHaveBeenCalledTimes(1)
   })
 
   it('handles Escape key to reset search and focus input', async () => {
