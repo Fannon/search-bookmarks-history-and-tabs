@@ -1,13 +1,13 @@
 /**
  * @file Lightweight custom tag input component with autocomplete.
  *
- * A minimal replacement for Tagify library that provides:
+ * A custom tag input component that provides:
  * - Tag creation/editing/removal
  * - Autocomplete dropdown with keyboard navigation
  * - Tag validation and transformation
- * - Compatible API surface for drop-in replacement
+ * - Clean API for managing tags
  *
- * Size: ~2-3 KB unminified vs 77 KB for Tagify
+ * Size: ~14 KB unminified
  */
 
 /**
@@ -53,29 +53,29 @@ export class CustomTagInput {
   _init() {
     // Create container
     this.container = document.createElement('div')
-    this.container.className = 'tagify'
+    this.container.className = 'tag-input'
     this.container.setAttribute('role', 'application')
     this.container.setAttribute('aria-label', 'Tag input')
 
     // Create tags container
     this.tagsContainer = document.createElement('div')
-    this.tagsContainer.className = 'tagify__tags'
+    this.tagsContainer.className = 'tag-input__list'
 
     // Create input field
     this.input = document.createElement('input')
     this.input.type = 'text'
-    this.input.className = 'tagify__input'
+    this.input.className = 'tag-input__field'
     this.input.placeholder = 'Type to add tags...'
     this.input.setAttribute('aria-autocomplete', 'list')
 
     // Create dropdown
     this.dropdown = document.createElement('div')
-    this.dropdown.className = 'tagify__dropdown'
+    this.dropdown.className = 'tag-input__dropdown'
     this.dropdown.style.display = 'none'
     this.dropdown.setAttribute('role', 'listbox')
 
     const dropdownWrapper = document.createElement('div')
-    dropdownWrapper.className = 'tagify__dropdown__wrapper'
+    dropdownWrapper.className = 'tag-input__dropdown-wrapper'
     dropdownWrapper.appendChild(this.dropdown)
 
     // Assemble structure
@@ -135,7 +135,7 @@ export class CustomTagInput {
         e.preventDefault()
         if (this.selectedIndex >= 0 && this.dropdown.style.display !== 'none') {
           // Select from dropdown
-          const items = this.dropdown.querySelectorAll('.tagify__dropdown__item')
+          const items = this.dropdown.querySelectorAll('.tag-input__dropdown-item')
           const selectedItem = items[this.selectedIndex]
           if (selectedItem) {
             this._addTag(selectedItem.textContent)
@@ -222,7 +222,7 @@ export class CustomTagInput {
     const maxItems = Math.min(filtered.length, this.options.dropdown.maxItems)
     for (let i = 0; i < maxItems; i++) {
       const item = document.createElement('div')
-      item.className = 'tagify__dropdown__item'
+      item.className = 'tag-input__dropdown-item'
       item.textContent = filtered[i]
       item.setAttribute('role', 'option')
       item.addEventListener('mousedown', (e) => {
@@ -255,7 +255,7 @@ export class CustomTagInput {
    * @private
    */
   _navigateDropdown(direction) {
-    const items = this.dropdown.querySelectorAll('.tagify__dropdown__item')
+    const items = this.dropdown.querySelectorAll('.tag-input__dropdown-item')
     if (items.length === 0) {
       this.selectedIndex = -1
       return
@@ -263,7 +263,7 @@ export class CustomTagInput {
 
     // Remove previous selection
     if (this.selectedIndex >= 0 && this.selectedIndex < items.length) {
-      items[this.selectedIndex].classList.remove('tagify__dropdown__item--active')
+      items[this.selectedIndex].classList.remove('tag-input__dropdown-item--active')
     }
 
     // Update index
@@ -275,7 +275,7 @@ export class CustomTagInput {
     }
 
     // Apply selection
-    items[this.selectedIndex].classList.add('tagify__dropdown__item--active')
+    items[this.selectedIndex].classList.add('tag-input__dropdown-item--active')
     // scrollIntoView may not be available in test environments
     if (typeof items[this.selectedIndex].scrollIntoView === 'function') {
       items[this.selectedIndex].scrollIntoView({ block: 'nearest' })
@@ -353,13 +353,13 @@ export class CustomTagInput {
    */
   _renderTags() {
     // Clear existing tags (but keep input)
-    const existingTags = this.tagsContainer.querySelectorAll('.tagify__tag')
+    const existingTags = this.tagsContainer.querySelectorAll('.tag-input__tag')
     existingTags.forEach((tag) => tag.remove())
 
     // Render each tag
     this.tags.forEach((tag, index) => {
       const tagEl = document.createElement('div')
-      tagEl.className = 'tagify__tag'
+      tagEl.className = 'tag-input__tag'
       tagEl.setAttribute('role', 'button')
       tagEl.setAttribute('aria-label', `Tag: ${tag.value}`)
 
@@ -375,7 +375,7 @@ export class CustomTagInput {
       }
 
       const removeBtn = document.createElement('button')
-      removeBtn.className = 'tagify__tag-remove'
+      removeBtn.className = 'tag-input__remove'
       removeBtn.innerHTML = '&times;'
       removeBtn.setAttribute('aria-label', 'Remove tag')
       removeBtn.addEventListener('click', (e) => {
@@ -400,7 +400,7 @@ export class CustomTagInput {
     const input = document.createElement('input')
     input.type = 'text'
     input.value = tag.value
-    input.className = 'tagify__tag-edit'
+    input.className = 'tag-input__edit'
     input.style.width = `${Math.max(50, tag.value.length * 8)}px`
 
     const saveEdit = () => {

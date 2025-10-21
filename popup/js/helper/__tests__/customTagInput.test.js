@@ -2,7 +2,7 @@
  * @file Unit tests for CustomTagInput component
  *
  * Tests the lightweight custom tag input implementation
- * that replaces the Tagify library.
+ * for bookmark tag autocompletion.
  */
 
 import { jest } from '@jest/globals'
@@ -32,8 +32,8 @@ describe('CustomTagInput', () => {
 
       expect(textarea.style.display).toBe('none')
       const container = textarea.previousSibling
-      expect(container.className).toBe('tagify')
-      expect(container.querySelector('.tagify__input')).not.toBeNull()
+      expect(container.className).toBe('tag-input')
+      expect(container.querySelector('.tag-input__field')).not.toBeNull()
     })
 
     it('should initialize with default options', () => {
@@ -210,7 +210,7 @@ describe('CustomTagInput', () => {
       tagInput._showDropdown('a')
 
       expect(tagInput.dropdown.style.display).toBe('block')
-      const items = tagInput.dropdown.querySelectorAll('.tagify__dropdown__item')
+      const items = tagInput.dropdown.querySelectorAll('.tag-input__dropdown-item')
       expect(items.length).toBeLessThanOrEqual(3)
     })
 
@@ -223,7 +223,7 @@ describe('CustomTagInput', () => {
     it('should limit dropdown items to maxItems', () => {
       tagInput._showDropdown('')
 
-      const items = tagInput.dropdown.querySelectorAll('.tagify__dropdown__item')
+      const items = tagInput.dropdown.querySelectorAll('.tag-input__dropdown-item')
       expect(items.length).toBeLessThanOrEqual(3)
     })
 
@@ -246,13 +246,13 @@ describe('CustomTagInput', () => {
 
     it('should navigate dropdown with arrow keys', () => {
       tagInput._showDropdown('a')
-      let items = tagInput.dropdown.querySelectorAll('.tagify__dropdown__item')
+      let items = tagInput.dropdown.querySelectorAll('.tag-input__dropdown-item')
       expect(items.length).toBeGreaterThan(0) // Ensure we have items
 
       tagInput._navigateDropdown(1)
-      items = tagInput.dropdown.querySelectorAll('.tagify__dropdown__item')
+      items = tagInput.dropdown.querySelectorAll('.tag-input__dropdown-item')
       expect(tagInput.selectedIndex).toBe(0)
-      expect(items[0].classList.contains('tagify__dropdown__item--active')).toBe(true)
+      expect(items[0].classList.contains('tag-input__dropdown-item--active')).toBe(true)
 
       tagInput._navigateDropdown(1)
       expect(tagInput.selectedIndex).toBe(1)
@@ -260,12 +260,12 @@ describe('CustomTagInput', () => {
 
     it('should wrap around when navigating past the end', () => {
       tagInput._showDropdown('e')
-      const items = tagInput.dropdown.querySelectorAll('.tagify__dropdown__item')
+      const items = tagInput.dropdown.querySelectorAll('.tag-input__dropdown-item')
       expect(items.length).toBeGreaterThan(0) // Ensure we have items
 
       tagInput.selectedIndex = items.length - 1
       // Remove the active class from current item before navigating
-      items[tagInput.selectedIndex].classList.add('tagify__dropdown__item--active')
+      items[tagInput.selectedIndex].classList.add('tag-input__dropdown-item--active')
       tagInput._navigateDropdown(1)
 
       expect(tagInput.selectedIndex).toBe(0)
@@ -273,12 +273,12 @@ describe('CustomTagInput', () => {
 
     it('should wrap around when navigating before the start', () => {
       tagInput._showDropdown('a')
-      const items = tagInput.dropdown.querySelectorAll('.tagify__dropdown__item')
+      const items = tagInput.dropdown.querySelectorAll('.tag-input__dropdown-item')
       expect(items.length).toBeGreaterThan(0) // Ensure we have items
 
       tagInput.selectedIndex = 0
       // Add active class to current item before navigating
-      items[tagInput.selectedIndex].classList.add('tagify__dropdown__item--active')
+      items[tagInput.selectedIndex].classList.add('tag-input__dropdown-item--active')
       tagInput._navigateDropdown(-1)
 
       expect(tagInput.selectedIndex).toBe(items.length - 1)
@@ -295,7 +295,7 @@ describe('CustomTagInput', () => {
     it('should render tags in the UI', () => {
       tagInput.addTags(['alpha', 'beta'])
 
-      const tagElements = tagInput.container.querySelectorAll('.tagify__tag')
+      const tagElements = tagInput.container.querySelectorAll('.tag-input__tag')
       expect(tagElements).toHaveLength(2)
       expect(tagElements[0].textContent).toContain('alpha')
       expect(tagElements[1].textContent).toContain('beta')
@@ -304,7 +304,7 @@ describe('CustomTagInput', () => {
     it('should render remove buttons for each tag', () => {
       tagInput.addTags(['alpha'])
 
-      const removeBtn = tagInput.container.querySelector('.tagify__tag-remove')
+      const removeBtn = tagInput.container.querySelector('.tag-input__remove')
       expect(removeBtn).not.toBeNull()
       // jsdom renders &times; as ×
       expect(removeBtn.innerHTML).toBe('×')
@@ -312,11 +312,11 @@ describe('CustomTagInput', () => {
 
     it('should re-render when tags are updated', () => {
       tagInput.addTags(['alpha', 'beta'])
-      let tagElements = tagInput.container.querySelectorAll('.tagify__tag')
+      let tagElements = tagInput.container.querySelectorAll('.tag-input__tag')
       expect(tagElements).toHaveLength(2)
 
       tagInput._removeTag(0)
-      tagElements = tagInput.container.querySelectorAll('.tagify__tag')
+      tagElements = tagInput.container.querySelectorAll('.tag-input__tag')
       expect(tagElements).toHaveLength(1)
       expect(tagElements[0].textContent).toContain('beta')
     })

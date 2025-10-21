@@ -165,7 +165,7 @@ Bookmarks can be tagged using `#tag` syntax in titles:
 
 - Tags are extracted from bookmark titles via regex (`popup/js/helper/browserApi.js`)
 - Tags cannot start with numbers (filters out issue numbers)
-- Tag autocomplete uses Tagify library (`popup/lib/tagify.min.js`)
+- Tag autocomplete uses custom lightweight tag input component (`popup/js/helper/customTagInput.js`)
 - Custom scores can be added: `Bookmark Title +20 #tag1 #tag2`
 
 ## Key Technical Constraints
