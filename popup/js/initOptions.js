@@ -7,7 +7,7 @@
  * - Surface initialization errors via the common `printError` helper to align UX with other entry points.
  */
 
-import { printError } from './helper/utils.js'
+import { printError } from './view/errorView.js'
 import { initOptions } from './view/editOptionsView.js'
 import { createExtensionContext } from './helper/extensionContext.js'
 

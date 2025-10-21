@@ -36,9 +36,10 @@ beforeAll(async () => {
     ...utilsModule,
     loadScript: mockLoadScript,
   }))
-  await jest.unstable_mockModule('../../initSearch.js', () => ({
+  await jest.unstable_mockModule('../../view/errorView.js', () => ({
     __esModule: true,
     closeErrors: mockCloseErrors,
+    printError: jest.fn(),
   }))
   await jest.unstable_mockModule('../../view/searchView.js', () => ({
     __esModule: true,

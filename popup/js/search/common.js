@@ -16,8 +16,8 @@
  * 6. Render results via view layer.
  */
 
-import { cleanUpUrl, printError } from '../helper/utils.js'
-import { closeErrors } from '../initSearch.js'
+import { cleanUpUrl } from '../helper/utils.js'
+import { closeErrors, printError } from '../view/errorView.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { fuzzySearch } from './fuzzySearch.js'
 import { calculateFinalScore } from './scoring.js'

@@ -54,7 +54,7 @@ describe('initEditBookmark entry point', () => {
       __esModule: true,
       getSearchData,
     }))
-    await jest.unstable_mockModule('../helper/utils.js', () => ({
+    await jest.unstable_mockModule('../view/errorView.js', () => ({
       __esModule: true,
       printError,
     }))
@@ -110,7 +110,7 @@ describe('initEditBookmark entry point', () => {
       __esModule: true,
       getSearchData,
     }))
-    await jest.unstable_mockModule('../helper/utils.js', () => ({
+    await jest.unstable_mockModule('../view/errorView.js', () => ({
       __esModule: true,
       printError,
     }))
@@ -145,7 +145,7 @@ describe('initEditBookmark entry point', () => {
       __esModule: true,
       getSearchData: jest.fn(() => Promise.resolve({ bookmarks: [] })),
     }))
-    await jest.unstable_mockModule('../helper/utils.js', () => ({
+    await jest.unstable_mockModule('../view/errorView.js', () => ({
       __esModule: true,
       printError,
     }))
@@ -183,7 +183,7 @@ describe('initEditBookmark entry point', () => {
       __esModule: true,
       getSearchData: jest.fn(() => Promise.resolve({ bookmarks: [] })),
     }))
-    await jest.unstable_mockModule('../helper/utils.js', () => ({
+    await jest.unstable_mockModule('../view/errorView.js', () => ({
       __esModule: true,
       printError: jest.fn(),
     }))

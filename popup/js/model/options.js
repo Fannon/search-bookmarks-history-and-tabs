@@ -1,8 +1,8 @@
 /**
- * @file Centralises extension configuration and user overrides.
+ * @file Centralizes extension configuration and user overrides.
  *
  * Responsibilities:
-* - Define default options for all extension features
+ * - Define default options for all extension features
  * - Merge user options with defaults to get effective configuration
  * - Load/save user options to browser storage (with sync/local fallback)
  * - Validate user options to prevent invalid configurations
@@ -17,7 +17,7 @@
  * @see https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration
  */
 
-import { printError } from '../helper/utils.js'
+import { printError } from '../view/errorView.js'
 
 /**
  * The default options
