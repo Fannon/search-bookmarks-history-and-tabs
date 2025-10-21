@@ -36,6 +36,7 @@ node_modules/
 # Temporary files
 tmp/
 temp/
+.serena/
 
 # Built files
 popup/js/*.min.js*
