@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
 import {
+  browserApi,
+  getBrowserTabs,
   convertBrowserTabs,
   convertBrowserBookmarks,
   convertBrowserHistory,
@@ -22,6 +24,26 @@ beforeEach(() => {
 afterEach(() => {
   delete globalThis.ext
   jest.restoreAllMocks()
+  delete browserApi.tabs
+})
+
+describe('getBrowserTabs', () => {
+  it('filters out extension URLs and entries missing a usable url', async () => {
+    const queryMock = jest.fn().mockResolvedValue([
+      { id: 1, title: 'Internal tab' },
+      { id: 2, url: '', title: 'Empty url' },
+      { id: 3, url: 'chrome-extension://abcdef', title: 'Extension page' },
+      { id: 4, url: 'https://example.com', title: 'Example' },
+    ])
+
+    browserApi.tabs = { query: queryMock }
+
+    const result = await getBrowserTabs()
+
+    expect(queryMock).toHaveBeenCalledWith({})
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({ id: 4, url: 'https://example.com' })
+  })
 })
 
 describe('convertBrowserTabs', () => {
@@ -53,6 +75,24 @@ describe('convertBrowserTabs', () => {
       searchStringLower: 'example¦example.com/path',
     })
     expect(tab.lastVisitSecondsAgo).toBe(1)
+  })
+
+  it('skips tabs without a usable url', () => {
+    const tabs = [
+      { id: 1, title: 'Missing url' },
+      { id: 2, url: '', title: 'Empty url' },
+      { id: 3, url: '   ', title: 'Whitespace url' },
+      { id: 4, url: 'https://valid.example.com/', title: 'Valid tab', lastAccessed: 1_000 },
+    ]
+
+    const result = convertBrowserTabs(tabs)
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({
+      originalId: 4,
+      url: 'valid.example.com',
+      originalUrl: 'https://valid.example.com',
+    })
   })
 })
 
