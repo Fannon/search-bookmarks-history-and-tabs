@@ -3,7 +3,8 @@
 ## [unreleased]
 
 - **IMPROVED**: Improved scoring logic through a few minor bugfixes, better defaults and better documentation.
-  - See **[popup/js/search/scoring.js](popup/js/search/scoring.js)** for comprehensive documentation
+  - Detailed user-visible scoring adjustments are documented in the [search result scoring changelog](docs/search-scoring-changelog.md).
+- **DOCS**: Added a dedicated [search result scoring changelog](docs/search-scoring-changelog.md) that tracks ranking-affecting changes across releases.
 - **IMPROVED**: Init load Performance: further reduced initial load bundle size
 - **FIXED**: When editing a bookmark and saving, the search state was sometimes not properly updated. Now the search is completely reset, but remembers the search term
 
