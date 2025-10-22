@@ -216,7 +216,7 @@ describe('searchView renderSearchResults', () => {
     expect(tagBadge.innerHTML).toContain('&lt;svg onload=alert(1)&gt;')
 
     const folderBadge = listItem.querySelector('.badge.folder')
-    expect(folderBadge.textContent).toBe('~Folder\"><img src=x>')
+    expect(folderBadge.textContent).toBe('~Folder"><img src=x>')
     expect(folderBadge.innerHTML).toContain('&lt;img src=x&gt;')
 
     const urlDiv = listItem.querySelector('.url')

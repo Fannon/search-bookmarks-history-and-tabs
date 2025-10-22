@@ -18,10 +18,13 @@ const baseOpts = {
   scoreFolderWeight: 1,
   scoreExactIncludesBonus: 0,
   scoreExactIncludesBonusMinChars: 1,
+  scoreExactIncludesMaxBonuses: Infinity,
   scoreExactStartsWithBonus: 0,
   scoreExactEqualsBonus: 0,
   scoreExactTagMatchBonus: 0,
   scoreExactFolderMatchBonus: 0,
+  scoreExactPhraseTitleBonus: 0,
+  scoreExactPhraseUrlBonus: 0,
   scoreVisitedBonusScore: 0,
   scoreVisitedBonusScoreMaximum: 0,
   scoreRecentBonusScoreMaximum: 0,
@@ -30,6 +33,7 @@ const baseOpts = {
   scoreDateAddedBonusScorePerDay: 0,
   scoreCustomBonusScore: false,
   scoreWeakMatchPenalty: 0,
+  scoreStopwords: [],
 }
 
 const baseResult = {
@@ -166,6 +170,66 @@ describe('scoring', () => {
     })
 
     expect(score).toBeCloseTo(110)
+  })
+
+  it('ignores stopwords when calculating includes bonus', () => {
+    const score = scoreFor({
+      searchTerm: 'the alpha',
+      opts: { scoreExactIncludesBonus: 5, scoreStopwords: ['the'] },
+      result: { title: 'alpha reference' },
+    })
+
+    expect(score).toBeCloseTo(105)
+  })
+
+  it('does not award includes bonus for stopwords alone', () => {
+    const score = scoreFor({
+      searchTerm: 'the',
+      opts: { scoreExactIncludesBonus: 5, scoreStopwords: ['the'] },
+      result: { title: 'the article' },
+    })
+
+    expect(score).toBeCloseTo(100)
+  })
+
+  it('allows numeric tokens shorter than the min character threshold', () => {
+    const score = scoreFor({
+      searchTerm: '42',
+      opts: { scoreExactIncludesBonus: 5, scoreExactIncludesBonusMinChars: 3 },
+      result: { title: 'version 42 release' },
+    })
+
+    expect(score).toBeCloseTo(105)
+  })
+
+  it('limits substring bonuses when max cap is configured', () => {
+    const score = scoreFor({
+      searchTerm: 'alpha beta',
+      opts: { scoreExactIncludesBonus: 5, scoreExactIncludesMaxBonuses: 1 },
+      result: { url: 'https://example.test/alpha-beta' },
+    })
+
+    expect(score).toBeCloseTo(105)
+  })
+
+  it('adds phrase bonus when the entire query appears in the title', () => {
+    const score = scoreFor({
+      searchTerm: 'project plan',
+      opts: { scoreExactPhraseTitleBonus: 3, scoreExactIncludesBonus: 0 },
+      result: { title: 'project plan document' },
+    })
+
+    expect(score).toBeCloseTo(103)
+  })
+
+  it('adds phrase bonus when the entire query appears in the url', () => {
+    const score = scoreFor({
+      searchTerm: 'project plan',
+      opts: { scoreExactPhraseUrlBonus: 2, scoreExactIncludesBonus: 0 },
+      result: { url: 'https://docs.test/project-plan-overview' },
+    })
+
+    expect(score).toBeCloseTo(102)
   })
 
   it('adds exact tag match bonus when the tag matches a search term', () => {
@@ -733,7 +797,7 @@ describe('scoring', () => {
       return score
     }
 
-    it('validates that tag-only match scores higher than title-only match with defaults', () => {
+    it('validates that tag-only matches remain competitive with defaults', () => {
       const tagOnlyScore = scoreWithDefaults({
         searchTerm: 'javascript',
         result: {
@@ -771,12 +835,12 @@ describe('scoring', () => {
       // - scoreTagWeight: 0.7
       //
       // Tag-only: 100 (base) + 3.5 (includes 5*0.7) + 15 (exact tag) = 118.5
-      // Title-only: 100 (base) + 5 (includes 5*1.0) + 10 (starts with "JavaScript") = 115
+      // Title-only: 100 (base) + 5 (includes 5*1.0) + 10 (starts with "JavaScript") + 8 (phrase bonus) = 123
       //
-      // Tag should WIN but by smaller margin!
+      // Phrase bonus nudges the title slightly ahead, but tags stay close.
       expect(tagOnlyScore).toBeCloseTo(118.5)
-      expect(titleOnlyScore).toBeCloseTo(115)
-      expect(tagOnlyScore).toBeGreaterThan(titleOnlyScore)
+      expect(titleOnlyScore).toBeCloseTo(123)
+      expect(titleOnlyScore - tagOnlyScore).toBeCloseTo(4.5)
     })
 
     it('validates that both title AND tag match scores highest with defaults', () => {
@@ -822,14 +886,15 @@ describe('scoring', () => {
         },
       })
 
-      // Both title+tag: 100 + 5 (title includes) + 10 (title starts with) + 15 (exact tag) = 130
+      // Both title+tag: 100 + 5 (title includes) + 10 (title starts with) + 15 (exact tag) + 8 (title phrase) + 4 (url phrase) = 142
       // Tag-only: 100 + 3.5 (tag includes) + 15 (exact tag) = 118.5
-      // Title-only: 100 + 5 (title includes) + 10 (title starts with "React") = 115
-      expect(bothScore).toBeCloseTo(130)
+      // Title-only: 100 + 5 (title includes) + 10 (title starts with "React") + 8 (title phrase) = 123
+      expect(bothScore).toBeCloseTo(142)
       expect(tagOnlyScore).toBeCloseTo(118.5)
-      expect(titleOnlyScore).toBeCloseTo(115)
+      expect(titleOnlyScore).toBeCloseTo(123)
       expect(bothScore).toBeGreaterThan(tagOnlyScore)
-      expect(tagOnlyScore).toBeGreaterThan(titleOnlyScore)
+      expect(bothScore).toBeGreaterThan(titleOnlyScore)
+      expect(titleOnlyScore).toBeGreaterThan(tagOnlyScore)
     })
 
     it('validates partial tag matches still get some benefit (includes bonus only)', () => {
@@ -885,9 +950,9 @@ describe('scoring', () => {
         },
       })
 
-      // Both get base 100 + includes 5, but one gets +50 custom bonus
-      expect(withCustomBonus).toBeCloseTo(155)
-      expect(withoutCustomBonus).toBeCloseTo(105)
+      // Both get base 100 + includes 5 + 8 (phrase bonus), but one gets +50 custom bonus
+      expect(withCustomBonus).toBeCloseTo(163)
+      expect(withoutCustomBonus).toBeCloseTo(113)
       expect(withCustomBonus - withoutCustomBonus).toBeCloseTo(50)
     })
 
@@ -920,10 +985,10 @@ describe('scoring', () => {
         },
       })
 
-      // Exact: 100 + 5 (includes) + 10 (starts with) + 20 (equals) = 135
-      // Partial: 100 + 5 (includes) + 10 (starts with "React") = 115
-      expect(exactTitleMatch).toBeCloseTo(135)
-      expect(partialTitleMatch).toBeCloseTo(115)
+      // Exact: 100 + 5 (includes) + 10 (starts with) + 20 (equals) + 8 (phrase) = 143
+      // Partial: 100 + 5 (includes) + 10 (starts with "React") + 8 (phrase) = 123
+      expect(exactTitleMatch).toBeCloseTo(143)
+      expect(partialTitleMatch).toBeCloseTo(123)
       expect(exactTitleMatch - partialTitleMatch).toBeCloseTo(20)
     })
 
@@ -959,10 +1024,10 @@ describe('scoring', () => {
 
       // Tag: 100 + 3.5 (includes with 0.7 weight) + 15 (exact tag) = 118.5
       // Title: 100 + 5 (includes with 1.0 weight) + 10 (starts with "Tutorial") = 115
-      // With bonus of 15, tags win by 3.5 points!
+      // With phrase bonus, titles edge ahead by 4.5 points despite the strong tag bonus.
       expect(tagScore).toBeCloseTo(118.5)
-      expect(titleScore).toBeCloseTo(115)
-      expect(tagScore - titleScore).toBeCloseTo(3.5)
+      expect(titleScore).toBeCloseTo(123)
+      expect(titleScore - tagScore).toBeCloseTo(4.5)
 
       // If bonus was still 10 (old default):
       // Tag would be: 100 + 3.5 + 10 = 113.5

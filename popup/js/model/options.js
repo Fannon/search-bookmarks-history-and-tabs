@@ -328,6 +328,10 @@ export const defaultOptions = {
    */
   scoreExactIncludesBonus: 5,
   /**
+   * Maximum number of substring bonuses per result (prevents noisy documents from stacking).
+   */
+  scoreExactIncludesMaxBonuses: 3,
+  /**
    * The minimum characters a search term needs to have to consider a exact includes match
    */
   scoreExactIncludesBonusMinChars: 3,
@@ -350,6 +354,14 @@ export const defaultOptions = {
    */
   scoreExactFolderMatchBonus: 10,
   /**
+   * Bonus if the full search phrase appears in the title.
+   */
+  scoreExactPhraseTitleBonus: 8,
+  /**
+   * Bonus if the full search phrase appears in the URL (hyphen-normalized).
+   */
+  scoreExactPhraseUrlBonus: 4,
+  /**
    * Adds score points for every site visit according to browsing history
    * Please note that only history items within `history.daysAgo` can be considered,
    * however the visited counter itself considers your complete history.
@@ -365,6 +377,36 @@ export const defaultOptions = {
    * If it has been visited at the end of `historyDaysAgo`, score is 0
    */
   scoreRecentBonusScoreMaximum: 20,
+  /**
+   * Words ignored when computing substring bonuses to avoid noisy matches.
+   */
+  scoreStopwords: [
+    'the',
+    'and',
+    'for',
+    'with',
+    'from',
+    'that',
+    'this',
+    'are',
+    'was',
+    'were',
+    'how',
+    'what',
+    'when',
+    'where',
+    'why',
+    'guide',
+    'using',
+    'use',
+    'und',
+    'der',
+    'die',
+    'das',
+    'ein',
+    'eine',
+    'ist',
+  ],
 
   //////////////////////////////////////////
   // POWER USER OPTIONS                   //
