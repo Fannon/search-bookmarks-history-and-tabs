@@ -25,7 +25,11 @@ export async function getBrowserTabs(queryOptions = {}) {
   }
   if (browserApi.tabs) {
     return (await browserApi.tabs.query(queryOptions)).filter((el) => {
-      return !el.url.includes('extension://')
+      const url = typeof el?.url === 'string' ? el.url : ''
+      if (!url.trim()) {
+        return false
+      }
+      return !url.includes('extension://')
     })
   } else {
     console.warn(`No browser tab API found. Returning no results.`)
@@ -40,22 +44,25 @@ export async function getBrowserTabs(queryOptions = {}) {
  * @returns {Array<Object>} Standardised tab entries.
  */
 export function convertBrowserTabs(chromeTabs) {
-  return chromeTabs.map((el) => {
-    const cleanUrl = cleanUpUrl(el.url)
-    const searchString = createSearchString(el.title, cleanUrl)
-    return {
-      type: 'tab',
-      title: getTitle(el.title, cleanUrl),
-      url: cleanUrl,
-      originalUrl: el.url.replace(/\/$/, ''),
-      originalId: el.id,
-      active: el.active,
-      windowId: el.windowId,
-      searchString,
-      searchStringLower: searchString.toLowerCase(),
-      lastVisitSecondsAgo: el.lastAccessed ? (Date.now() - el.lastAccessed) / 1000 : undefined,
-    }
-  })
+  return chromeTabs
+    .filter((el) => typeof el?.url === 'string' && el.url.trim())
+    .map((el) => {
+      const rawUrl = el.url
+      const cleanUrl = cleanUpUrl(rawUrl)
+      const searchString = createSearchString(el.title, cleanUrl)
+      return {
+        type: 'tab',
+        title: getTitle(el.title, cleanUrl),
+        url: cleanUrl,
+        originalUrl: rawUrl.replace(/\/$/, ''),
+        originalId: el.id,
+        active: el.active,
+        windowId: el.windowId,
+        searchString,
+        searchStringLower: searchString.toLowerCase(),
+        lastVisitSecondsAgo: el.lastAccessed ? (Date.now() - el.lastAccessed) / 1000 : undefined,
+      }
+    })
 }
 
 /**
