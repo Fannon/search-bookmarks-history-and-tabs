@@ -7,7 +7,7 @@
  * - Provide reset/save controls and navigate back to the search view so tweaks can be tested immediately.
  */
 
-import { getUserOptions, setUserOptions } from '../model/options.js'
+import { emptyOptions, getUserOptions, setUserOptions } from '../model/options.js'
 
 /**
  * Initialise the options editor view by loading and displaying user overrides.
@@ -55,5 +55,23 @@ async function saveOptions() {
  * Clear user overrides, reverting to defaults on next load.
  */
 async function resetOptions() {
-  document.getElementById('user-config').value = ''
+  const textarea = document.getElementById('user-config')
+  const errorMessageEl = document.getElementById('error-message')
+
+  textarea.value = ''
+
+  if (errorMessageEl) {
+    errorMessageEl.style.display = 'none'
+    errorMessageEl.innerText = ''
+  }
+
+  try {
+    await setUserOptions(emptyOptions)
+  } catch (error) {
+    console.error(error)
+    if (errorMessageEl) {
+      errorMessageEl.style.display = ''
+      errorMessageEl.innerText = 'Could not reset options. ' + error.message
+    }
+  }
 }

@@ -15,11 +15,21 @@ function setupDom() {
   `
 }
 
-async function loadEditOptionsView({ userOptions = {}, dumpImpl, loadImpl } = {}) {
+async function loadEditOptionsView({
+  userOptions = {},
+  dumpImpl,
+  loadImpl,
+  getUserOptionsImpl,
+  setUserOptionsImpl,
+  emptyOptions: emptyOptionsOverride,
+} = {}) {
   jest.resetModules()
 
-  const getUserOptions = jest.fn(() => Promise.resolve(userOptions))
-  const setUserOptions = jest.fn(() => Promise.resolve())
+  const getUserOptions =
+    getUserOptionsImpl || jest.fn(() => Promise.resolve(userOptions))
+  const setUserOptions =
+    setUserOptionsImpl || jest.fn(() => Promise.resolve())
+  const emptyOptions = emptyOptionsOverride || { searchStrategy: 'precise' }
 
   const dumpMock =
     dumpImpl ||
@@ -46,6 +56,7 @@ async function loadEditOptionsView({ userOptions = {}, dumpImpl, loadImpl } = {}
   jest.unstable_mockModule('../../model/options.js', () => ({
     getUserOptions,
     setUserOptions,
+    emptyOptions,
   }))
 
   const module = await import('../editOptionsView.js')
@@ -57,6 +68,7 @@ async function loadEditOptionsView({ userOptions = {}, dumpImpl, loadImpl } = {}
       setUserOptions,
       dump: dumpMock,
       load: loadMock,
+      emptyOptions,
     },
   }
 }
@@ -151,20 +163,52 @@ describe('editOptionsView', () => {
     errorSpy.mockRestore()
   })
 
-  it('resetOptions clears the textarea value', async () => {
+  it('resetOptions clears overrides, hides errors, and reloads defaults on next init', async () => {
     setupDom()
-    const { module } = await loadEditOptionsView({
-      userOptions: {},
-      dumpImpl: jest.fn(() => '{}'),
+
+    const dumpImpl = jest
+      .fn()
+      .mockReturnValueOnce('theme: dark')
+      .mockReturnValue('{}')
+    const getUserOptionsImpl = jest
+      .fn()
+      .mockResolvedValueOnce({ theme: 'dark' })
+      .mockResolvedValue({})
+
+    const { module, mocks } = await loadEditOptionsView({
+      dumpImpl,
+      getUserOptionsImpl,
     })
 
     await module.initOptions()
-    const input = document.getElementById('user-config')
-    input.value = 'some config'
 
-    document.getElementById('edit-options-reset').dispatchEvent(new MouseEvent('click'))
+    const textarea = document.getElementById('user-config')
+    const errorMessage = document.getElementById('error-message')
+
+    expect(textarea.value).toBe('theme: dark')
+
+    errorMessage.style.display = ''
+    errorMessage.innerText = 'Invalid something'
+
+    textarea.value = 'custom: value'
+
+    document
+      .getElementById('edit-options-reset')
+      .dispatchEvent(new MouseEvent('click'))
+
+    await Promise.resolve()
     await Promise.resolve()
 
-    expect(input.value).toBe('')
+    expect(mocks.setUserOptions).toHaveBeenCalledWith(mocks.emptyOptions)
+    expect(textarea.value).toBe('')
+    expect(errorMessage.style.display).toBe('none')
+    expect(errorMessage.innerText).toBe('')
+
+    await module.initOptions()
+
+    expect(mocks.getUserOptions).toHaveBeenCalledTimes(2)
+    expect(textarea.value).toBe('')
+    expect(errorMessage.style.display).toBe('none')
+    expect(mocks.dump).toHaveBeenLastCalledWith({})
   })
 })
