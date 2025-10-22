@@ -377,37 +377,6 @@ export const defaultOptions = {
    * If it has been visited at the end of `historyDaysAgo`, score is 0
    */
   scoreRecentBonusScoreMaximum: 20,
-  /**
-   * Words ignored when computing substring bonuses to avoid noisy matches.
-   */
-  scoreStopwords: [
-    'the',
-    'and',
-    'for',
-    'with',
-    'from',
-    'that',
-    'this',
-    'are',
-    'was',
-    'were',
-    'how',
-    'what',
-    'when',
-    'where',
-    'why',
-    'guide',
-    'using',
-    'use',
-    'und',
-    'der',
-    'die',
-    'das',
-    'ein',
-    'eine',
-    'ist',
-  ],
-
   //////////////////////////////////////////
   // POWER USER OPTIONS                   //
   //////////////////////////////////////////

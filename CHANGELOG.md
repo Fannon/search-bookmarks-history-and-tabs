@@ -6,6 +6,7 @@
   - See **[popup/js/search/scoring.js](popup/js/search/scoring.js)** for comprehensive documentation
 - **IMPROVED**: Init load Performance: further reduced initial load bundle size
 - **FIXED**: When editing a bookmark and saving, the search state was sometimes not properly updated. Now the search is completely reset, but remembers the search term
+- **CHANGED**: Removed stopword filtering and legacy base-score option fallbacks from search scoring so configurations always use the canonical keys.
 
 ## [v1.15.0]
 

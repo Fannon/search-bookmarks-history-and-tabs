@@ -77,20 +77,13 @@ export function calculateFinalScore(results, searchTerm) {
     scoreUrlWeight,
     scoreTagWeight,
     scoreFolderWeight,
-    scoreStopwords,
   } = opts
-
-  const stopwordSet = new Set(Array.isArray(scoreStopwords) ? scoreStopwords.map((word) => word.toLowerCase()) : [])
 
   const includeTerms = rawSearchTermParts
     .map((token) => token.replace(/^[#~]+/, ''))
     .map((token) => token.trim())
     .filter((token) => {
       if (!token) {
-        return false
-      }
-
-      if (stopwordSet.has(token)) {
         return false
       }
 
@@ -269,38 +262,13 @@ export const BASE_SCORE_KEYS = {
   direct: 'scoreDirectUrlScore',
 }
 
-const LEGACY_BASE_SCORE_KEYS = {
-  scoreBookmarkBase: 'scoreBookmarkBaseScore',
-  scoreTabBase: 'scoreTabBaseScore',
-  scoreHistoryBase: 'scoreHistoryBaseScore',
-  scoreSearchEngineBase: 'scoreSearchEngineBaseScore',
-  scoreCustomSearchEngineBase: 'scoreCustomSearchEngineBaseScore',
-  scoreDirectUrlScore: 'scoreDirectUrlBaseScore',
-}
-
-const legacyBaseWarningsShown = new Set()
-
 /**
- * Resolves the base score for a given result type, keeping legacy option keys working.
+ * Resolves the base score for a given result type.
  *
  * @param {Record<string, number>} opts - Effective extension options.
  * @param {string} baseKey - The canonical base score option key.
  * @returns {number}
  */
 function getBaseScoreForType(opts, baseKey) {
-  if (opts[baseKey] != null) {
-    return opts[baseKey]
-  }
-
-  const legacyKey = LEGACY_BASE_SCORE_KEYS[baseKey]
-  if (legacyKey && opts[legacyKey] != null) {
-    if (!legacyBaseWarningsShown.has(legacyKey) && typeof console !== 'undefined' && console.warn) {
-      console.warn(`Legacy option "${legacyKey}" is deprecated. Please rename it to "${baseKey}".`)
-      legacyBaseWarningsShown.add(legacyKey)
-    }
-
-    return opts[legacyKey]
-  }
-
   return opts[baseKey]
 }

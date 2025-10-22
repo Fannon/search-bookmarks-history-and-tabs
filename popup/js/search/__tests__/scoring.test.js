@@ -33,7 +33,6 @@ const baseOpts = {
   scoreDateAddedBonusScorePerDay: 0,
   scoreCustomBonusScore: false,
   scoreWeakMatchPenalty: 0,
-  scoreStopwords: [],
 }
 
 const baseResult = {
@@ -170,26 +169,6 @@ describe('scoring', () => {
     })
 
     expect(score).toBeCloseTo(110)
-  })
-
-  it('ignores stopwords when calculating includes bonus', () => {
-    const score = scoreFor({
-      searchTerm: 'the alpha',
-      opts: { scoreExactIncludesBonus: 5, scoreStopwords: ['the'] },
-      result: { title: 'alpha reference' },
-    })
-
-    expect(score).toBeCloseTo(105)
-  })
-
-  it('does not award includes bonus for stopwords alone', () => {
-    const score = scoreFor({
-      searchTerm: 'the',
-      opts: { scoreExactIncludesBonus: 5, scoreStopwords: ['the'] },
-      result: { title: 'the article' },
-    })
-
-    expect(score).toBeCloseTo(100)
   })
 
   it('allows numeric tokens shorter than the min character threshold', () => {
