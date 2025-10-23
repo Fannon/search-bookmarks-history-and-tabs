@@ -63,11 +63,48 @@ export async function initExtension() {
   // Debounced search: Clear pending search and schedule new one
   // This prevents executing search algorithm on every keystroke, improving performance
   // during rapid typing. Delay is configurable via searchDebounceMs option.
-  let searchTimeout = null
   const debounceMs = ext.opts.searchDebounceMs || 100
-  const debouncedSearch = (event) => {
-    clearTimeout(searchTimeout)
-    searchTimeout = setTimeout(() => search(event), debounceMs)
+  if (!ext.model.searchDebounce) {
+    ext.model.searchDebounce = {
+      timeoutId: null,
+      isPending: false,
+    }
+  } else {
+    ext.model.searchDebounce.timeoutId = null
+    ext.model.searchDebounce.isPending = false
+  }
+
+  const runSearchNow = async () => {
+    ext.model.searchDebounce.timeoutId = null
+    ext.model.searchDebounce.isPending = false
+    await search()
+  }
+
+  ext.model.flushPendingSearch = async () => {
+    const normalizedInput = (ext.dom.searchInput?.value || '')
+      .trimStart()
+      .toLowerCase()
+      .replace(/ +(?= )/g, '')
+    const lastSearchTerm = ext.model.searchTerm || ''
+
+    if (ext.model.searchDebounce.isPending && ext.model.searchDebounce.timeoutId) {
+      clearTimeout(ext.model.searchDebounce.timeoutId)
+      await runSearchNow()
+      return true
+    }
+
+    if (normalizedInput !== lastSearchTerm) {
+      await search()
+      return true
+    }
+
+    return false
+  }
+
+  const debouncedSearch = () => {
+    clearTimeout(ext.model.searchDebounce.timeoutId)
+    ext.model.searchDebounce.isPending = true
+    ext.model.searchDebounce.timeoutId = setTimeout(runSearchNow, debounceMs)
   }
   ext.dom.searchInput.addEventListener('input', debouncedSearch)
 

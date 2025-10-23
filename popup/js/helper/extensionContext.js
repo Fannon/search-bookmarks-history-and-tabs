@@ -38,6 +38,13 @@ export function createExtensionContext() {
       currentItem: 0,
       /** Current search results array */
       result: [],
+      /** Tracks pending debounced search state */
+      searchDebounce: {
+        timeoutId: null,
+        isPending: false,
+      },
+      /** Flush handler assigned during initialization */
+      flushPendingSearch: null,
     },
     /** Search indexes (e.g., taxonomy for tags and folders) */
     index: {

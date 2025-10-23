@@ -79,6 +79,11 @@ async function setupSearchNavigation({ results = createResults(), opts = {} } = 
       searchTerm: 'query',
       mouseHoverEnabled: true,
       currentItem: 0,
+      searchDebounce: {
+        timeoutId: null,
+        isPending: false,
+      },
+      flushPendingSearch: jest.fn(() => Promise.resolve(false)),
     },
     opts: {
       displaySearchMatchHighlight: true,
@@ -172,7 +177,7 @@ describe('searchNavigation navigationKeyListener', () => {
     })
 
     elements.searchInput.value = 'typed'
-    module.navigationKeyListener({
+    await module.navigationKeyListener({
       key: 'ArrowUp',
       ctrlKey: false,
       preventDefault,
@@ -181,7 +186,7 @@ describe('searchNavigation navigationKeyListener', () => {
     expect(ext.model.currentItem).toBe(0)
 
     preventDefault.mockClear()
-    module.navigationKeyListener({
+    await module.navigationKeyListener({
       key: 'ArrowDown',
       ctrlKey: false,
       preventDefault,
@@ -206,7 +211,7 @@ describe('searchNavigation navigationKeyListener', () => {
     ]
     for (const keyCombo of downKeys) {
       ext.model.currentItem = 0
-      module.navigationKeyListener({ ...keyCombo, preventDefault })
+      await module.navigationKeyListener({ ...keyCombo, preventDefault })
       expect(ext.model.currentItem).toBe(1)
     }
 
@@ -217,7 +222,7 @@ describe('searchNavigation navigationKeyListener', () => {
     ]
     for (const keyCombo of upKeys) {
       ext.model.currentItem = 1
-      module.navigationKeyListener({ ...keyCombo, preventDefault })
+      await module.navigationKeyListener({ ...keyCombo, preventDefault })
       expect(ext.model.currentItem).toBe(0)
     }
   })
@@ -246,10 +251,61 @@ describe('searchNavigation navigationKeyListener', () => {
     }
     window.location.hash = '#search/query'
 
-    module.navigationKeyListener(event)
+    await module.navigationKeyListener(event)
 
     // Verify window closed (side effect of openResultItem for bookmark)
     expect(windowCloseSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('flushes pending search work before opening result on Enter', async () => {
+    const { module, viewModule } = await setupSearchNavigation()
+    await viewModule.renderSearchResults()
+
+    const newResults = [
+      {
+        type: 'bookmark',
+        originalId: 'fresh-1',
+        originalUrl: 'https://fresh.example',
+        url: 'fresh.example',
+        title: 'Fresh Result',
+        score: 99,
+      },
+    ]
+
+    const flushSpy = jest.fn(async () => {
+      ext.model.result = newResults
+      await viewModule.renderSearchResults(newResults)
+      return true
+    })
+    ext.model.flushPendingSearch = flushSpy
+
+    const windowCloseSpy = jest.fn()
+    window.close = windowCloseSpy
+
+    const event = {
+      key: 'Enter',
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      preventDefault: jest.fn(),
+      stopPropagation: jest.fn(),
+      button: 0,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+    }
+
+    window.location.hash = '#search/query'
+
+    await module.navigationKeyListener(event)
+
+    expect(flushSpy).toHaveBeenCalledTimes(1)
+    expect(windowCloseSpy).toHaveBeenCalledTimes(1)
+    const selectedResult = document.getElementById('selected-result')
+    expect(selectedResult).not.toBeNull()
+    expect(selectedResult.getAttribute('x-open-url')).toBe('https://fresh.example')
   })
 
   it('handles Escape key to reset search and focus input', async () => {
