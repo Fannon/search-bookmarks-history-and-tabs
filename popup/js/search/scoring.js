@@ -21,6 +21,8 @@
  *      - scoreExactEqualsBonus: title exactly equals search term
  *      - scoreExactTagMatchBonus: tag name matches a search term (15 points default)
  *      - scoreExactFolderMatchBonus: folder name matches a search term
+ *      - scoreExactPhraseTitleBonus: title contains the full search phrase (8 points default)
+ *      - scoreExactPhraseUrlBonus: URL contains the full search phrase (hyphen-normalized, 4 points default)
  *    STEP 3B - Includes Bonuses (substring matching):
  *      - scoreExactIncludesBonus: weighted by field (title × 1.0, tag × 0.7, url × 0.6, folder × 0.5)
  *      - Only FIRST matching field per search term gets bonus (no double-counting)
@@ -97,9 +99,7 @@ export function calculateFinalScore(results, searchTerm) {
   // Only check includes bonus if configured and there are tokens that qualify
   const canCheckIncludes = hasSearchTerm && scoreExactIncludesBonus && includeTerms.length > 0
 
-  const includesBonusCap = Number.isFinite(scoreExactIncludesMaxBonuses)
-    ? scoreExactIncludesMaxBonuses
-    : Infinity
+  const includesBonusCap = Number.isFinite(scoreExactIncludesMaxBonuses) ? scoreExactIncludesMaxBonuses : Infinity
 
   for (let i = 0; i < results.length; i++) {
     const el = results[i]
@@ -195,7 +195,7 @@ export function calculateFinalScore(results, searchTerm) {
         }
       }
 
-      if (normalizedSearchTerm && (scoreExactPhraseTitleBonus || scoreExactPhraseUrlBonus)) {
+      if (normalizedSearchTerm) {
         if (scoreExactPhraseTitleBonus && lowerTitle && lowerTitle.includes(normalizedSearchTerm)) {
           score += scoreExactPhraseTitleBonus
         }
