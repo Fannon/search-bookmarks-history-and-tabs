@@ -1,6 +1,6 @@
 {
   "name": "search-bookmarks-history-and-tabs",
-  "version": "1.15.0",
+  "version": "1.16.0",
   "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.",
   "main": "index.js",
   "type": "module",
@@ -12,11 +12,11 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",
-    "@playwright/test": "^1.56.0",
+    "@playwright/test": "^1.56.1",
     "archiver": "^7.0.1",
     "chokidar": "^4.0.3",
     "esbuild": "^0.25.11",
-    "eslint": "^9.37.0",
+    "eslint": "^9.38.0",
     "fs-extra": "^11.3.2",
     "globals": "^16.4.0",
     "jest": "^30.2.0",

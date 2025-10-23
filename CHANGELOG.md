@@ -2,38 +2,29 @@
 
 ## [unreleased]
 
-- **IMPROVED**: Improved scoring logic through a few minor bugfixes, better defaults and better documentation.
-- **IMPROVED**: Search scoring now normalizes queries once, caps substring bonuses per result, and adds configurable phrase boosts so exact matches climb higher again.
-  - Capped includes bonuses via `scoreExactIncludesMaxBonuses` (default: 3) to prevent noisy documents from excessive stacking.
-  - Added `scoreExactPhraseTitleBonus` (default: 8) and `scoreExactPhraseUrlBonus` (default: 4) options for boosting results where the full search phrase appears as substring in title or URL.
-- **IMPROVED**: Init load Performance: further reduced initial load bundle size
-- **FIXED**: When editing a bookmark and saving, the search state was sometimes not properly updated. Now the search is completely reset, but remembers the search term
+## [v1.16.0]
+
+- **IMPROVED**: Search scoring precision and reliability
+  - **Higher bonuses for perfect matches**: Exact matches on titles, tags, and folders now receive +20, +15, and +10 points respectively (previously +15, +10, +5), so precise results appear ahead of partial matches by default.
+  - **Better multi-term query handling**: Search terms are normalized once and evaluated individually in a case-insensitive way, ensuring multi-word queries and mixed-case text reliably trigger the configured substring bonuses.
+  - **New phrase boost options**: Added `scoreExactPhraseTitleBonus` (default: 8) and `scoreExactPhraseUrlBonus` (default: 4) to boost results where the full search phrase appears as substring. For example, searching "javascript tutorial" will boost a bookmark titled "Advanced JavaScript Tutorial Guide" (+8) or with URL "example.com/javascript-tutorial" (+4).
+  - **Capped substring bonuses**: Introduced `scoreExactIncludesMaxBonuses` (default: 3) to prevent noisy documents from excessive stacking of includes bonuses.
+- **IMPROVED**: Further reduced initial load bundle size for faster startup.
+- **FIXED**: When editing a bookmark and saving, the search state was sometimes not properly updated. Now the search is completely reset, but remembers the search term.
 - **FIXED**: Search debounce logic was creating race-condition issues when pressing ENTER too quickly after typing the search string. Removed the debounce logic to fix this issue.
-
-### Search Score Changes Details
-
-- **Higher bonuses for perfect matches.** Exact matches on titles, tags, and folders now receive +20, +15, and +10 points respectively (previously +15, +10, +5), so precise results appear ahead of partial matches by default.
-- **Better handling of multi-term queries.** Search terms are evaluated individually in a case-insensitive way, ensuring multi-word queries and mixed-case text reliably trigger the configured substring bonuses.
-- **Phrase bonuses for full query matches.** Results containing the complete search phrase as substring in title (+8) or URL (+4) receive boosted ranking.
-  - For example, searching "javascript tutorial" will boost a bookmark titled "Advanced JavaScript Tutorial Guide" (+8) or with URL "example.com/javascript-tutorial" (+4).
 
 ## [v1.15.0]
 
 - **IMPROVED**: Various performance improvements:
-  - Creating a single minified production bundle, should speed up initial loading time a lot when IO is slow
-  - lazy-loading the search highlight library, speeds up initial load further
-  - More general caching of search results, now also for fuzzy search
-  - Various smaller improvements that increase search and render performance
-- **FIXED**: Bug in scoring that `lastVisited`: 0 was not treated as most recent (max score)
-- **FIXED**: Bug in scoring where `visitCount` was not correctly merged in from history
+  - Creating a single minified production bundle, should speed up initial loading time significantly when IO is slow.
+  - Lazy-loading the search highlight library, speeds up initial load further.
+  - More general caching of search results, now also for fuzzy search.
+  - Various smaller improvements that increase search and render performance.
+- **FIXED**: Scoring bug where `lastVisited: 0` was not treated as most recent (max score). Results you opened moments ago now receive the maximum recency bonus instead of being skipped.
+- **FIXED**: Scoring bug where `visitCount` was not correctly merged in from history.
 - **IMPROVED**: Improved unit-test coverage and switched for E2E testing to Playwright, leading to faster and less brittle tests.
-- **CHANGED**: Renamed some options, e.g. `scoreBookmarkBaseScore` to `scoreBookmarkBase`
+- **CHANGED**: Renamed some options for clarity, e.g. `scoreBookmarkBaseScore` to `scoreBookmarkBase`. Custom configuration keys for base bookmark, history, and tab weights no longer include the trailing "Score" word, so existing overrides must adopt the shorter names to keep working.
 - **REMOVED**: Removed `debug` option, as debug logging will now always take place if console is loaded - and the performance.\* logging has been removed to clean up the code.
-
-### Search Score Changes Details
-
-- **Recency bonus applies to just-opened items.** Results you opened moments ago now receive the maximum recency bonus instead of being skipped.
-- **Option names for base weights shortened.** Custom configuration keys for base bookmark, history, and tab weights no longer include the trailing "Score" word, so existing overrides must adopt the shorter names to keep working.
 
 ## [v1.14.0]
 
