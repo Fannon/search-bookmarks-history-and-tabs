@@ -3,14 +3,13 @@
 ## [unreleased]
 
 - **IMPROVED**: Improved scoring logic through a few minor bugfixes, better defaults and better documentation.
-  - Detailed user-visible scoring adjustments are documented in the [search result scoring changelog](docs/search-scoring-changelog.md).
 - **IMPROVED**: Search scoring now normalizes queries once, caps substring bonuses per result, and adds configurable phrase boosts so exact matches climb higher again.
+  - Capped includes bonuses via `scoreExactIncludesMaxBonuses` (default: 3) to prevent noisy documents from excessive stacking.
   - Added `scoreExactPhraseTitleBonus` (default: 8) and `scoreExactPhraseUrlBonus` (default: 4) options for boosting results where the full search phrase appears as substring in title or URL.
-- **DOCS**: Added a dedicated [search result scoring changelog](docs/search-scoring-changelog.md) that tracks ranking-affecting changes across releases.
 - **IMPROVED**: Init load Performance: further reduced initial load bundle size
 - **FIXED**: When editing a bookmark and saving, the search state was sometimes not properly updated. Now the search is completely reset, but remembers the search term
 
-### Search Score Changes Summary
+### Search Score Changes Details
 
 - **Higher bonuses for perfect matches.** Exact matches on titles, tags, and folders now receive +20, +15, and +10 points respectively (previously +15, +10, +5), so precise results appear ahead of partial matches by default.
 - **Better handling of multi-term queries.** Search terms are evaluated individually in a case-insensitive way, ensuring multi-word queries and mixed-case text reliably trigger the configured substring bonuses.
@@ -30,7 +29,7 @@
 - **CHANGED**: Renamed some options, e.g. `scoreBookmarkBaseScore` to `scoreBookmarkBase`
 - **REMOVED**: Removed `debug` option, as debug logging will now always take place if console is loaded - and the performance.\* logging has been removed to clean up the code.
 
-### Search Score Changes Summary
+### Search Score Changes Details
 
 - **Recency bonus applies to just-opened items.** Results you opened moments ago now receive the maximum recency bonus instead of being skipped.
 - **Option names for base weights shortened.** Custom configuration keys for base bookmark, history, and tab weights no longer include the trailing "Score" word, so existing overrides must adopt the shorter names to keep working.
