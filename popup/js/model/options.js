@@ -369,7 +369,7 @@ export const defaultOptions = {
    * This is in addition to individual word bonuses from scoreExactIncludesBonus.
    * Single-word searches do not receive this bonus.
    */
-  scoreExactPhraseUrlBonus: 4,
+  scoreExactPhraseUrlBonus: 5,
   /**
    * Adds score points for every site visit according to browsing history
    * Please note that only history items within `history.daysAgo` can be considered,
