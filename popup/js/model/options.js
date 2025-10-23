@@ -354,11 +354,20 @@ export const defaultOptions = {
    */
   scoreExactFolderMatchBonus: 10,
   /**
-   * Bonus if the full search phrase appears in the title.
+   * Bonus if the full search phrase appears in the title (multi-word searches only).
+   * This rewards results where ALL search terms appear together as a phrase, not just individually.
+   * Example: searching "react hooks" gives this bonus if title contains "react hooks" exactly.
+   * This is in addition to individual word bonuses from scoreExactIncludesBonus.
+   * Single-word searches do not receive this bonus.
    */
   scoreExactPhraseTitleBonus: 8,
   /**
-   * Bonus if the full search phrase appears in the URL (hyphen-normalized).
+   * Bonus if the full search phrase appears in the URL (multi-word searches only, hyphen-normalized).
+   * URLs typically use hyphens instead of spaces, so "react hooks" matches "react-hooks" in URLs.
+   * This rewards results where the search phrase appears as a cohesive unit in the URL path.
+   * Example: searching "user profile" matches URLs containing "user-profile".
+   * This is in addition to individual word bonuses from scoreExactIncludesBonus.
+   * Single-word searches do not receive this bonus.
    */
   scoreExactPhraseUrlBonus: 4,
   /**

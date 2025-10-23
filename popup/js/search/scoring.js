@@ -195,12 +195,14 @@ export function calculateFinalScore(results, searchTerm) {
         }
       }
 
-      if (normalizedSearchTerm) {
+      // Award bonus for full phrase match (multi-word searches only)
+      // Single-word searches already get includes/exact bonuses, so phrase bonus is redundant
+      if (rawSearchTermParts.length > 1) {
         if (scoreExactPhraseTitleBonus && lowerTitle && lowerTitle.includes(normalizedSearchTerm)) {
           score += scoreExactPhraseTitleBonus
         }
 
-        if (scoreExactPhraseUrlBonus && lowerUrl && lowerUrl.includes(normalizedSearchTerm.replace(/\s+/g, '-'))) {
+        if (scoreExactPhraseUrlBonus && lowerUrl && lowerUrl.includes(hyphenatedSearchTerm)) {
           score += scoreExactPhraseUrlBonus
         }
       }
