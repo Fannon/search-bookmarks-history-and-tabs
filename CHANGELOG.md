@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+## [v1.16.0]
+
 - **IMPROVED**: Improved scoring logic through a few minor bugfixes, better defaults and better documentation.
 - **IMPROVED**: Search scoring now normalizes queries once, caps substring bonuses per result, and adds configurable phrase boosts so exact matches climb higher again.
   - Capped includes bonuses via `scoreExactIncludesMaxBonuses` (default: 3) to prevent noisy documents from excessive stacking.
