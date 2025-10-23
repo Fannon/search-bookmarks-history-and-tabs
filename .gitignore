@@ -37,6 +37,7 @@ node_modules/
 tmp/
 temp/
 .serena/
+.wireit/
 
 # Built files
 popup/js/*.min.js*

@@ -8,6 +8,7 @@
   - Added `scoreExactPhraseTitleBonus` (default: 8) and `scoreExactPhraseUrlBonus` (default: 4) options for boosting results where the full search phrase appears as substring in title or URL.
 - **IMPROVED**: Init load Performance: further reduced initial load bundle size
 - **FIXED**: When editing a bookmark and saving, the search state was sometimes not properly updated. Now the search is completely reset, but remembers the search term
+- **FIXED**: Search debounce logic was creating race-condition issues when pressing ENTER too quickly after typing the search string. Removed the debounce logic to fix this issue.
 
 ### Search Score Changes Details
 
