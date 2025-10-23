@@ -4,7 +4,7 @@
  * Responsibilities:
  * - Initialize the shared extension context and expose it on `window.ext` for debugging.
  * - Load options plus bookmarks, tabs, and history data before wiring up search handlers.
- * - Bind navigation listeners, search input debouncing, and strategy toggles for simple/fuzzy/taxonomy flows.
+ * - Bind navigation listeners, search input handling, and strategy toggles for simple/fuzzy/taxonomy flows.
  * - Maintain hash-based routing (`#search/<term>`) and restore cached results to keep navigation snappy.
  * - Lazy-load mark.js highlighting so first paint stays lightweight while results still highlight matches.
  */
@@ -60,16 +60,10 @@ export async function initExtension() {
   window.addEventListener('hashchange', hashRouter, false)
   ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
 
-  // Debounced search: Clear pending search and schedule new one
-  // This prevents executing search algorithm on every keystroke, improving performance
-  // during rapid typing. Delay is configurable via searchDebounceMs option.
-  let searchTimeout = null
-  const debounceMs = ext.opts.searchDebounceMs || 100
-  const debouncedSearch = (event) => {
-    clearTimeout(searchTimeout)
-    searchTimeout = setTimeout(() => search(event), debounceMs)
-  }
-  ext.dom.searchInput.addEventListener('input', debouncedSearch)
+  // Run a search on every input event instead of debouncing. The popup dataset is small
+  // enough that the simpler approach keeps navigation in sync with what the user sees,
+  // avoiding stale selections when Enter is pressed quickly after typing.
+  ext.dom.searchInput.addEventListener('input', search)
 
   // Cache search results by (term, strategy, mode) to avoid re-running algorithms
   // when user navigates or repeats searches. Cache is simple with no expiration
