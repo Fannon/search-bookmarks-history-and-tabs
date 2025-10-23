@@ -18,10 +18,13 @@ const baseOpts = {
   scoreFolderWeight: 1,
   scoreExactIncludesBonus: 0,
   scoreExactIncludesBonusMinChars: 1,
+  scoreExactIncludesMaxBonuses: Infinity,
   scoreExactStartsWithBonus: 0,
   scoreExactEqualsBonus: 0,
   scoreExactTagMatchBonus: 0,
   scoreExactFolderMatchBonus: 0,
+  scoreExactPhraseTitleBonus: 0,
+  scoreExactPhraseUrlBonus: 0,
   scoreVisitedBonusScore: 0,
   scoreVisitedBonusScoreMaximum: 0,
   scoreRecentBonusScoreMaximum: 0,
@@ -166,6 +169,68 @@ describe('scoring', () => {
     })
 
     expect(score).toBeCloseTo(110)
+  })
+
+  it('allows numeric tokens shorter than the min character threshold', () => {
+    const score = scoreFor({
+      searchTerm: '42',
+      opts: { scoreExactIncludesBonus: 5, scoreExactIncludesBonusMinChars: 3 },
+      result: { title: 'version 42 release' },
+    })
+
+    expect(score).toBeCloseTo(105)
+  })
+
+  it('limits substring bonuses when max cap is configured', () => {
+    const score = scoreFor({
+      searchTerm: 'alpha beta',
+      opts: { scoreExactIncludesBonus: 5, scoreExactIncludesMaxBonuses: 1 },
+      result: { url: 'https://example.test/alpha-beta' },
+    })
+
+    expect(score).toBeCloseTo(105)
+  })
+
+  it('adds phrase bonus when the entire query appears in the title', () => {
+    const score = scoreFor({
+      searchTerm: 'project plan',
+      opts: { scoreExactPhraseTitleBonus: 3, scoreExactIncludesBonus: 0 },
+      result: { title: 'project plan document' },
+    })
+
+    expect(score).toBeCloseTo(103)
+  })
+
+  it('adds phrase bonus when the entire query appears in the url', () => {
+    const score = scoreFor({
+      searchTerm: 'project plan',
+      opts: { scoreExactPhraseUrlBonus: 2, scoreExactIncludesBonus: 0 },
+      result: { url: 'https://docs.test/project-plan-overview' },
+    })
+
+    expect(score).toBeCloseTo(102)
+  })
+
+  it('does NOT add phrase bonus for single-word searches in title', () => {
+    const score = scoreFor({
+      searchTerm: 'project',
+      opts: { scoreExactPhraseTitleBonus: 8, scoreExactIncludesBonus: 0 },
+      result: { title: 'project document' },
+    })
+
+    // Should be base score only (100), no phrase bonus for single word
+    expect(score).toBeCloseTo(100)
+  })
+
+  it('does NOT add phrase bonus for single-word searches in url', () => {
+    const score = scoreFor({
+      searchTerm: 'project',
+      opts: { scoreExactPhraseUrlBonus: 4, scoreExactIncludesBonus: 0 },
+      result: { url: 'https://docs.test/project-overview' },
+    })
+
+    // Should be base score only (100), no phrase bonus for single word
+    expect(score).toBeCloseTo(100)
   })
 
   it('adds exact tag match bonus when the tag matches a search term', () => {
@@ -733,7 +798,7 @@ describe('scoring', () => {
       return score
     }
 
-    it('validates that tag-only match scores higher than title-only match with defaults', () => {
+    it('validates that tag-only matches remain competitive with defaults', () => {
       const tagOnlyScore = scoreWithDefaults({
         searchTerm: 'javascript',
         result: {
@@ -773,10 +838,10 @@ describe('scoring', () => {
       // Tag-only: 100 (base) + 3.5 (includes 5*0.7) + 15 (exact tag) = 118.5
       // Title-only: 100 (base) + 5 (includes 5*1.0) + 10 (starts with "JavaScript") = 115
       //
-      // Tag should WIN but by smaller margin!
+      // Note: No phrase bonus for single-word search "javascript"
       expect(tagOnlyScore).toBeCloseTo(118.5)
       expect(titleOnlyScore).toBeCloseTo(115)
-      expect(tagOnlyScore).toBeGreaterThan(titleOnlyScore)
+      expect(tagOnlyScore - titleOnlyScore).toBeCloseTo(3.5)
     })
 
     it('validates that both title AND tag match scores highest with defaults', () => {
@@ -825,11 +890,13 @@ describe('scoring', () => {
       // Both title+tag: 100 + 5 (title includes) + 10 (title starts with) + 15 (exact tag) = 130
       // Tag-only: 100 + 3.5 (tag includes) + 15 (exact tag) = 118.5
       // Title-only: 100 + 5 (title includes) + 10 (title starts with "React") = 115
+      // Note: No phrase bonus for single-word search "react"
       expect(bothScore).toBeCloseTo(130)
       expect(tagOnlyScore).toBeCloseTo(118.5)
       expect(titleOnlyScore).toBeCloseTo(115)
       expect(bothScore).toBeGreaterThan(tagOnlyScore)
-      expect(tagOnlyScore).toBeGreaterThan(titleOnlyScore)
+      expect(bothScore).toBeGreaterThan(titleOnlyScore)
+      expect(tagOnlyScore).toBeGreaterThan(titleOnlyScore) // Tag wins over title for single-word
     })
 
     it('validates partial tag matches still get some benefit (includes bonus only)', () => {
@@ -886,6 +953,7 @@ describe('scoring', () => {
       })
 
       // Both get base 100 + includes 5, but one gets +50 custom bonus
+      // Note: No phrase bonus for single-word search "docs"
       expect(withCustomBonus).toBeCloseTo(155)
       expect(withoutCustomBonus).toBeCloseTo(105)
       expect(withCustomBonus - withoutCustomBonus).toBeCloseTo(50)
@@ -922,6 +990,7 @@ describe('scoring', () => {
 
       // Exact: 100 + 5 (includes) + 10 (starts with) + 20 (equals) = 135
       // Partial: 100 + 5 (includes) + 10 (starts with "React") = 115
+      // Note: No phrase bonus for single-word search "react"
       expect(exactTitleMatch).toBeCloseTo(135)
       expect(partialTitleMatch).toBeCloseTo(115)
       expect(exactTitleMatch - partialTitleMatch).toBeCloseTo(20)
@@ -959,7 +1028,8 @@ describe('scoring', () => {
 
       // Tag: 100 + 3.5 (includes with 0.7 weight) + 15 (exact tag) = 118.5
       // Title: 100 + 5 (includes with 1.0 weight) + 10 (starts with "Tutorial") = 115
-      // With bonus of 15, tags win by 3.5 points!
+      // Note: No phrase bonus for single-word search "tutorial"
+      // Tags now edge ahead despite lower field weight!
       expect(tagScore).toBeCloseTo(118.5)
       expect(titleScore).toBeCloseTo(115)
       expect(tagScore - titleScore).toBeCloseTo(3.5)

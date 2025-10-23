@@ -21,6 +21,8 @@
  *      - scoreExactEqualsBonus: title exactly equals search term
  *      - scoreExactTagMatchBonus: tag name matches a search term (15 points default)
  *      - scoreExactFolderMatchBonus: folder name matches a search term
+ *      - scoreExactPhraseTitleBonus: title contains the full search phrase (8 points default)
+ *      - scoreExactPhraseUrlBonus: URL contains the full search phrase (hyphen-normalized, 4 points default)
  *    STEP 3B - Includes Bonuses (substring matching):
  *      - scoreExactIncludesBonus: weighted by field (title × 1.0, tag × 0.7, url × 0.6, folder × 0.5)
  *      - Only FIRST matching field per search term gets bonus (no double-counting)
@@ -46,14 +48,13 @@
 export function calculateFinalScore(results, searchTerm) {
   const now = Date.now()
   const hasSearchTerm = Boolean(ext.model.searchTerm)
-  const searchTermParts = hasSearchTerm ? searchTerm.split(' ') : []
-  const hyphenatedSearchTerm = hasSearchTerm ? searchTermParts.join('-') : ''
-  const tagTerms = hasSearchTerm ? searchTerm.split('#').join('').split(' ') : []
-  const folderTerms = hasSearchTerm ? searchTerm.split('~').join('').split(' ') : []
 
-  // Only check includes bonus if configured and search term is long enough
-  const canCheckIncludes =
-    hasSearchTerm && ext.opts.scoreExactIncludesBonus && searchTerm.length >= ext.opts.scoreExactIncludesBonusMinChars
+  // Normalize query once for all downstream checks to keep comparisons consistent and cheap.
+  const normalizedSearchTerm = hasSearchTerm ? searchTerm.toLowerCase().trim() : ''
+  const rawSearchTermParts = hasSearchTerm ? normalizedSearchTerm.split(/\s+/).filter(Boolean) : []
+  const hyphenatedSearchTerm = rawSearchTermParts.join('-')
+  const tagTerms = hasSearchTerm ? normalizedSearchTerm.split('#').join(' ').split(/\s+/).filter(Boolean) : []
+  const folderTerms = hasSearchTerm ? normalizedSearchTerm.split('~').join(' ').split(/\s+/).filter(Boolean) : []
 
   // Cache scoring options to avoid repeated property lookups
   const opts = ext.opts
@@ -64,6 +65,9 @@ export function calculateFinalScore(results, searchTerm) {
     scoreExactFolderMatchBonus,
     scoreExactIncludesBonus,
     scoreExactIncludesBonusMinChars,
+    scoreExactIncludesMaxBonuses,
+    scoreExactPhraseTitleBonus,
+    scoreExactPhraseUrlBonus,
     scoreVisitedBonusScore,
     scoreVisitedBonusScoreMaximum,
     scoreRecentBonusScoreMaximum,
@@ -77,6 +81,26 @@ export function calculateFinalScore(results, searchTerm) {
     scoreFolderWeight,
   } = opts
 
+  const includeTerms = rawSearchTermParts
+    .map((token) => token.replace(/^[#~]+/, ''))
+    .map((token) => token.trim())
+    .filter((token) => {
+      if (!token) {
+        return false
+      }
+
+      if (token.length < scoreExactIncludesBonusMinChars && !/^\d+$/.test(token)) {
+        return false
+      }
+
+      return true
+    })
+
+  // Only check includes bonus if configured and there are tokens that qualify
+  const canCheckIncludes = hasSearchTerm && scoreExactIncludesBonus && includeTerms.length > 0
+
+  const includesBonusCap = Number.isFinite(scoreExactIncludesMaxBonuses) ? scoreExactIncludesMaxBonuses : Infinity
+
   for (let i = 0; i < results.length; i++) {
     const el = results[i]
     const baseKey = BASE_SCORE_KEYS[el.type]
@@ -85,7 +109,7 @@ export function calculateFinalScore(results, searchTerm) {
     }
 
     // STEP 1: Start with base score (bookmark=100, tab=70, history=45, etc.)
-    let score = opts[baseKey]
+    let score = getBaseScoreForType(opts, baseKey)
 
     // STEP 2: Multiply by search quality score (0-1 from fuzzy/precise search)
     // This reduces score if the match quality is poor
@@ -106,7 +130,7 @@ export function calculateFinalScore(results, searchTerm) {
       // STEP 3A: Exact match bonuses
       // Award bonus if title/URL starts with the exact search term
       if (scoreExactStartsWithBonus) {
-        if (lowerTitle && lowerTitle.startsWith(searchTerm)) {
+        if (lowerTitle && lowerTitle.startsWith(normalizedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreTitleWeight
         } else if (lowerUrl && lowerUrl.startsWith(hyphenatedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreUrlWeight
@@ -114,7 +138,7 @@ export function calculateFinalScore(results, searchTerm) {
       }
 
       // Award bonus if title exactly equals the search term
-      if (scoreExactEqualsBonus && lowerTitle && lowerTitle === searchTerm) {
+      if (scoreExactEqualsBonus && lowerTitle && lowerTitle === normalizedSearchTerm) {
         score += scoreExactEqualsBonus * scoreTitleWeight
       }
 
@@ -144,10 +168,11 @@ export function calculateFinalScore(results, searchTerm) {
       // Check each word in the search query for matches in title/url/tags/folder
       // Priority order: title > url > tags > folder (only first match counts per term)
       if (canCheckIncludes) {
-        for (const rawTerm of searchTermParts) {
-          const term = rawTerm.trim()
-          if (!term || term.length < scoreExactIncludesBonusMinChars) {
-            continue
+        let includesBonusesAwarded = 0
+
+        for (const term of includeTerms) {
+          if (includesBonusesAwarded >= includesBonusCap) {
+            break
           }
 
           // URLs use hyphens instead of spaces, so normalize for matching
@@ -156,13 +181,29 @@ export function calculateFinalScore(results, searchTerm) {
           // Check fields in priority order - first match wins
           if (lowerTitle && lowerTitle.includes(term)) {
             score += scoreExactIncludesBonus * scoreTitleWeight
+            includesBonusesAwarded++
           } else if (lowerUrl && lowerUrl.includes(normalizedUrlTerm)) {
             score += scoreExactIncludesBonus * scoreUrlWeight
+            includesBonusesAwarded++
           } else if (lowerTags && lowerTags.includes(term)) {
             score += scoreExactIncludesBonus * scoreTagWeight
+            includesBonusesAwarded++
           } else if (lowerFolder && lowerFolder.includes(term)) {
             score += scoreExactIncludesBonus * scoreFolderWeight
+            includesBonusesAwarded++
           }
+        }
+      }
+
+      // Award bonus for full phrase match (multi-word searches only)
+      // Single-word searches already get includes/exact bonuses, so phrase bonus is redundant
+      if (rawSearchTermParts.length > 1) {
+        if (scoreExactPhraseTitleBonus && lowerTitle && lowerTitle.includes(normalizedSearchTerm)) {
+          score += scoreExactPhraseTitleBonus
+        }
+
+        if (scoreExactPhraseUrlBonus && lowerUrl && lowerUrl.includes(hyphenatedSearchTerm)) {
+          score += scoreExactPhraseUrlBonus
         }
       }
     }
@@ -221,4 +262,15 @@ export const BASE_SCORE_KEYS = {
   search: 'scoreSearchEngineBase',
   customSearch: 'scoreCustomSearchEngineBase',
   direct: 'scoreDirectUrlScore',
+}
+
+/**
+ * Resolves the base score for a given result type.
+ *
+ * @param {Record<string, number>} opts - Effective extension options.
+ * @param {string} baseKey - The canonical base score option key.
+ * @returns {number}
+ */
+function getBaseScoreForType(opts, baseKey) {
+  return opts[baseKey]
 }

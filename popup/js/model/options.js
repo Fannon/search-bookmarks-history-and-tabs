@@ -328,6 +328,10 @@ export const defaultOptions = {
    */
   scoreExactIncludesBonus: 5,
   /**
+   * Maximum number of substring bonuses per result (prevents noisy documents from stacking).
+   */
+  scoreExactIncludesMaxBonuses: 3,
+  /**
    * The minimum characters a search term needs to have to consider a exact includes match
    */
   scoreExactIncludesBonusMinChars: 3,
@@ -350,6 +354,23 @@ export const defaultOptions = {
    */
   scoreExactFolderMatchBonus: 10,
   /**
+   * Bonus if the full search phrase appears in the title (multi-word searches only).
+   * This rewards results where ALL search terms appear together as a phrase, not just individually.
+   * Example: searching "react hooks" gives this bonus if title contains "react hooks" exactly.
+   * This is in addition to individual word bonuses from scoreExactIncludesBonus.
+   * Single-word searches do not receive this bonus.
+   */
+  scoreExactPhraseTitleBonus: 8,
+  /**
+   * Bonus if the full search phrase appears in the URL (multi-word searches only, hyphen-normalized).
+   * URLs typically use hyphens instead of spaces, so "react hooks" matches "react-hooks" in URLs.
+   * This rewards results where the search phrase appears as a cohesive unit in the URL path.
+   * Example: searching "user profile" matches URLs containing "user-profile".
+   * This is in addition to individual word bonuses from scoreExactIncludesBonus.
+   * Single-word searches do not receive this bonus.
+   */
+  scoreExactPhraseUrlBonus: 5,
+  /**
    * Adds score points for every site visit according to browsing history
    * Please note that only history items within `history.daysAgo` can be considered,
    * however the visited counter itself considers your complete history.
@@ -365,7 +386,6 @@ export const defaultOptions = {
    * If it has been visited at the end of `historyDaysAgo`, score is 0
    */
   scoreRecentBonusScoreMaximum: 20,
-
   //////////////////////////////////////////
   // POWER USER OPTIONS                   //
   //////////////////////////////////////////
