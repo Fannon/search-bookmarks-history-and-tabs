@@ -22,7 +22,6 @@ const mockDependencies = async (overrides = {}) => {
     getEffectiveOptions: jest.fn(() =>
       Promise.resolve({
         searchStrategy: 'precise',
-        searchDebounceMs: 10,
         debug: false,
         enableTabs: true,
         enableBookmarks: true,
@@ -173,45 +172,27 @@ describe('initSearch entry point', () => {
     }
   })
 
-  test('debounced search input triggers search once after delay', async () => {
-    jest.useFakeTimers()
+  test('search input triggers search immediately on each input event', async () => {
+    const searchMock = jest.fn()
     const mocks = await mockDependencies({
-      search: jest.fn(),
-      getEffectiveOptions: jest.fn(() =>
-        Promise.resolve({
-          searchStrategy: 'precise',
-          searchDebounceMs: 50,
-          debug: false,
-          enableTabs: true,
-          enableBookmarks: true,
-          enableHistory: true,
-          maxRecentTabsToShow: 5,
-        }),
-      ),
+      search: searchMock,
     })
 
-    try {
-      const module = await import('../initSearch.js')
-      moduleUnderTest = module
+    const module = await import('../initSearch.js')
+    moduleUnderTest = module
+    await flushPromises()
 
-      const initPromises = flushPromises()
-      jest.runOnlyPendingTimers()
-      await initPromises
+    const firstInput = new Event('input')
+    const secondInput = new Event('input')
 
-      const firstInput = new Event('input')
-      const secondInput = new Event('input')
+    module.ext.dom.searchInput.value = 'first'
+    module.ext.dom.searchInput.dispatchEvent(firstInput)
+    module.ext.dom.searchInput.value = 'second'
+    module.ext.dom.searchInput.dispatchEvent(secondInput)
 
-      module.ext.dom.searchInput.value = 'test'
-      module.ext.dom.searchInput.dispatchEvent(firstInput)
-      module.ext.dom.searchInput.value = 'test updated'
-      module.ext.dom.searchInput.dispatchEvent(secondInput)
-
-      expect(mocks.search).not.toHaveBeenCalled()
-      jest.runOnlyPendingTimers()
-      expect(mocks.search).toHaveBeenCalledTimes(1)
-    } finally {
-      jest.useRealTimers()
-    }
+    expect(mocks.search).toHaveBeenCalledTimes(2)
+    expect(mocks.search).toHaveBeenNthCalledWith(1, firstInput)
+    expect(mocks.search).toHaveBeenNthCalledWith(2, secondInput)
   })
 
   test('closeErrors hides overlay containers', async () => {
