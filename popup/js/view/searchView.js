@@ -116,19 +116,37 @@ export async function renderSearchResults(result) {
     const originalUrlAttr = resultEntry.originalUrl ? ` x-open-url="${escapeHtml(resultEntry.originalUrl)}"` : ''
     const originalIdAttr =
       resultEntry.originalId !== undefined ? ` x-original-id="${escapeHtml(String(resultEntry.originalId))}"` : ''
+    const bookmarkIdForEdit =
+      resultEntry.bookmarkOriginalId !== undefined
+        ? resultEntry.bookmarkOriginalId
+        : resultEntry.type === 'bookmark'
+        ? resultEntry.originalId
+        : undefined
+    const tabIdForClose =
+      resultEntry.tabOriginalId !== undefined
+        ? resultEntry.tabOriginalId
+        : resultEntry.type === 'tab'
+        ? resultEntry.originalId
+        : undefined
     const colorValue = escapeHtml(String(opts[resultEntry.type + 'Color']))
 
     const itemHTML = `
       <li class="${typeClass}"${originalUrlAttr} x-index="${i}"${originalIdAttr}
           style="border-left: ${opts.colorStripeWidth}px solid ${colorValue}">
         ${
-          resultEntry.type === 'bookmark'
+          bookmarkIdForEdit !== undefined
             ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(
-                resultEntry.originalId,
+                bookmarkIdForEdit,
               )}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">`
             : ''
         }
-        ${resultEntry.type === 'tab' ? '<img class="close-button" title="Close Tab" src="./img/x.svg">' : ''}
+        ${
+          tabIdForClose !== undefined
+            ? `<img class="close-button" data-tab-id="${escapeHtml(
+                String(tabIdForClose),
+              )}" title="Close Tab" src="./img/x.svg">`
+            : ''
+        }
         <div class="title">
           <span class="title-text">${titleContent} </span>
           ${badgesHTML}

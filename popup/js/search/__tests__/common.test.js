@@ -450,19 +450,13 @@ describe('search', () => {
     await search({ key: 'd' })
 
     const rendered = mockRenderSearchResults.mock.calls.at(-1)?.[0]
-    expect(rendered).toHaveLength(2)
-    expect(rendered).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: 'bookmark',
-          originalId: 11,
-          isOpenTab: true,
-        }),
-        expect.objectContaining({
-          type: 'tab',
-          originalId: 22,
-        }),
-      ]),
-    )
+    expect(rendered).toHaveLength(1)
+    const merged = rendered[0]
+    expect(merged.type).toBe('bookmark')
+    expect(merged.originalId).toBe(11)
+    expect(merged.bookmarkOriginalId).toBe(11)
+    expect(merged.tabOriginalId).toBe(22)
+    expect(merged.isOpenTab).toBe(true)
+    expect(merged.sourceTypes).toEqual(expect.arrayContaining(['bookmark', 'tab']))
   })
 })

@@ -171,16 +171,21 @@ describe('searchView renderSearchResults', () => {
 
     const tabItem = listItems[1]
     expect(tabItem.className).toBe('tab')
-    expect(tabItem.querySelector('.close-button')).not.toBeNull()
+    const closeButton = tabItem.querySelector('.close-button')
+    expect(closeButton).not.toBeNull()
+    expect(closeButton.getAttribute('data-tab-id')).toBe('2')
     expect(tabItem.querySelector('.url').innerHTML).toBe('tab.<mark>test</mark>')
 
     expect(document.getElementById('selected-result')).toBe(bookmarkItem)
     expect(ext.model.currentItem).toBe(0)
     expect(window.Mark).toHaveBeenCalledTimes(2)
     const firstMarkInstance = window.Mark.mock.results[0].value
-    expect(firstMarkInstance.mark).toHaveBeenCalledWith('query', {
-      exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
-    })
+    expect(firstMarkInstance.mark).toHaveBeenCalledWith(
+      'query',
+      expect.objectContaining({
+        exclude: expect.arrayContaining(['.last-visited', '.score', '.visit-counter', '.date-added', '.source-tab']),
+      }),
+    )
   })
 
   it('escapes HTML content coming from bookmarks and metadata', async () => {

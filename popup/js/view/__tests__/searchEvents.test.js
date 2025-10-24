@@ -196,9 +196,8 @@ describe('searchEvents openResultItem', () => {
 
     expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(2)
     expect(ext.model.tabs).toHaveLength(0)
-    expect(ext.model.result).toHaveLength(1)
-    expect(elements.resultList.children).toHaveLength(1)
     expect(mocks.markBookmarksWithOpenTabs).toHaveBeenCalledWith([], [])
+    expect(mocks.search).toHaveBeenCalled()
   })
 
   it('opens URLs in the current tab when shift is held and closes the popup afterward', async () => {

@@ -32,6 +32,15 @@ export { calculateFinalScore }
 
 const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 const protocolRegex = /^[a-zA-Z]+:\/\//
+const MERGEABLE_TYPES = new Set(['bookmark', 'tab', 'history'])
+const TYPE_PRIORITY = ['bookmark', 'tab', 'history']
+const MODE_TYPE_PRIORITY = {
+  bookmarks: ['bookmark', 'tab', 'history'],
+  tags: ['bookmark', 'tab', 'history'],
+  folders: ['bookmark', 'tab', 'history'],
+  tabs: ['tab', 'bookmark', 'history'],
+  history: ['history', 'tab', 'bookmark'],
+}
 
 /**
  * Maps search mode prefixes to their data sources.
@@ -281,6 +290,10 @@ export async function search(event) {
       results.push(...(await executeSearch(searchTerm, searchMode)))
       addDirectUrlIfApplicable(searchTerm, results)
 
+      if (searchTerm.trim()) {
+        results = mergeDuplicateResults(results, searchMode)
+      }
+
       // Add search engine result items
       if (searchMode === 'all' || searchMode === 'search') {
         results.push(...addSearchEngines(searchTerm))
@@ -334,6 +347,253 @@ export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode
   }
 
   return results
+}
+
+function mergeDuplicateResults(results, searchMode) {
+  if (!Array.isArray(results) || results.length === 0) {
+    return results
+  }
+
+  const mergedByKey = new Map()
+  const mergedResults = []
+
+  for (const result of results) {
+    if (!result) {
+      continue
+    }
+
+    const mergeKey = getMergeKey(result)
+    if (!mergeKey) {
+      mergedResults.push(result)
+      continue
+    }
+
+    let entry = mergedByKey.get(mergeKey)
+    if (!entry) {
+      entry = createMergedEntry(result)
+      mergedByKey.set(mergeKey, entry)
+      mergedResults.push(entry)
+    } else {
+      mergeEntry(entry, result)
+    }
+  }
+
+  for (const entry of mergedByKey.values()) {
+    finalizeMergedEntry(entry, searchMode)
+  }
+
+  return mergedResults
+}
+
+function getMergeKey(result) {
+  if (!MERGEABLE_TYPES.has(result.type)) {
+    return null
+  }
+  return result.originalUrl || result.url || null
+}
+
+function createMergedEntry(result) {
+  const entry = cloneResult(result)
+  entry.sourceTypes = [result.type]
+  if (result.type === 'bookmark') {
+    entry.bookmarkOriginalId = result.originalId
+  } else if (result.type === 'tab') {
+    entry.tabOriginalId = result.originalId
+    entry.isOpenTab = true
+  } else if (result.type === 'history') {
+    entry.historyOriginalId = result.originalId
+  }
+  if (result.isOpenTab) {
+    entry.isOpenTab = true
+  }
+  return entry
+}
+
+function cloneResult(result) {
+  const clone = { ...result }
+  if (result.tagsArray) {
+    clone.tagsArray = [...result.tagsArray]
+  }
+  if (result.folderArray) {
+    clone.folderArray = [...result.folderArray]
+  }
+  return clone
+}
+
+function mergeEntry(entry, result) {
+  if (!entry.sourceTypes.includes(result.type)) {
+    entry.sourceTypes.push(result.type)
+  } else if (result.type === 'bookmark') {
+    entry.isDuplicateBookmark = true
+    const existingFolder =
+      Array.isArray(entry.folderArray) && entry.folderArray.length ? entry.folderArray.join(' / ') : 'n/a'
+    const incomingFolder =
+      Array.isArray(result.folderArray) && result.folderArray.length ? result.folderArray.join(' / ') : 'n/a'
+    console.warn(
+      `Duplicate bookmark detected for ${
+        entry.originalUrl || entry.url || 'unknown URL'
+      } (existing folder: ${existingFolder}, incoming folder: ${incomingFolder})`,
+    )
+  }
+
+  const resultScore = typeof result.searchScore === 'number' ? result.searchScore : Number.NEGATIVE_INFINITY
+  const entryScore = typeof entry.searchScore === 'number' ? entry.searchScore : Number.NEGATIVE_INFINITY
+
+  if (resultScore > entryScore) {
+    entry.searchScore = resultScore
+    entry.searchApproach = result.searchApproach
+    if (result.titleHighlighted !== undefined) {
+      entry.titleHighlighted = result.titleHighlighted
+    }
+    if (result.urlHighlighted !== undefined) {
+      entry.urlHighlighted = result.urlHighlighted
+    }
+  } else if (entry.searchScore === undefined) {
+    entry.searchScore = resultScore
+    entry.searchApproach = result.searchApproach
+  } else {
+    entry.searchScore = Math.max(entryScore, resultScore)
+    if (entry.titleHighlighted === undefined && result.titleHighlighted !== undefined) {
+      entry.titleHighlighted = result.titleHighlighted
+    }
+    if (entry.urlHighlighted === undefined && result.urlHighlighted !== undefined) {
+      entry.urlHighlighted = result.urlHighlighted
+    }
+  }
+
+  if (result.type === 'bookmark') {
+    entry.bookmarkOriginalId = entry.bookmarkOriginalId ?? result.originalId
+    if (result.title) {
+      entry.title = result.title
+    }
+    if (result.tagsArray?.length) {
+      entry.tagsArray = mergeUniqueValues(entry.tagsArray, result.tagsArray)
+    }
+    if (!entry.folderArray?.length && result.folderArray?.length) {
+      entry.folderArray = [...result.folderArray]
+    }
+    if (result.dateAdded !== undefined && entry.dateAdded === undefined) {
+      entry.dateAdded = result.dateAdded
+    }
+    if (result.customBonusScore !== undefined) {
+      entry.customBonusScore =
+        entry.customBonusScore === undefined
+          ? result.customBonusScore
+          : Math.max(entry.customBonusScore, result.customBonusScore)
+    }
+  } else if (result.type === 'tab') {
+    entry.tabOriginalId = result.originalId
+    entry.isOpenTab = true
+    entry.active = entry.active || result.active
+    if (entry.windowId === undefined && result.windowId !== undefined) {
+      entry.windowId = result.windowId
+    }
+  } else if (result.type === 'history') {
+    entry.historyOriginalId = result.originalId
+  }
+
+  if (result.lastVisitSecondsAgo !== undefined) {
+    if (
+      entry.lastVisitSecondsAgo === undefined ||
+      (typeof result.lastVisitSecondsAgo === 'number' &&
+        (typeof entry.lastVisitSecondsAgo !== 'number' || result.lastVisitSecondsAgo < entry.lastVisitSecondsAgo))
+    ) {
+      entry.lastVisitSecondsAgo = result.lastVisitSecondsAgo
+    }
+  }
+
+  if (result.visitCount !== undefined) {
+    entry.visitCount =
+      entry.visitCount === undefined ? result.visitCount : Math.max(entry.visitCount, result.visitCount)
+  }
+
+  if (result.active) {
+    entry.active = true
+  }
+
+  if (!entry.url && result.url) {
+    entry.url = result.url
+  }
+  if (!entry.originalUrl && result.originalUrl) {
+    entry.originalUrl = result.originalUrl
+  }
+  if (result.isOpenTab) {
+    entry.isOpenTab = true
+  }
+}
+
+function finalizeMergedEntry(entry, searchMode) {
+  entry.sourceTypes = Array.from(new Set(entry.sourceTypes)).sort(
+    (a, b) => TYPE_PRIORITY.indexOf(a) - TYPE_PRIORITY.indexOf(b),
+  )
+
+  const typeOrder = MODE_TYPE_PRIORITY[searchMode] || TYPE_PRIORITY
+  const finalType = typeOrder.find((type) => entry.sourceTypes.includes(type)) || entry.sourceTypes[0] || entry.type
+  entry.type = finalType || entry.type
+
+  if (finalType === 'bookmark' && entry.bookmarkOriginalId !== undefined) {
+    entry.originalId = entry.bookmarkOriginalId
+  } else if (finalType === 'tab' && entry.tabOriginalId !== undefined) {
+    entry.originalId = entry.tabOriginalId
+  } else if (finalType === 'history' && entry.historyOriginalId !== undefined) {
+    entry.originalId = entry.historyOriginalId
+  } else if (entry.originalId === undefined) {
+    entry.originalId = entry.bookmarkOriginalId ?? entry.tabOriginalId ?? entry.historyOriginalId ?? entry.originalId
+  }
+
+  if (entry.tagsArray?.length) {
+    entry.tagsArray = mergeUniqueValues([], entry.tagsArray)
+    entry.tags = entry.tagsArray.map((tag) => `#${tag}`).join(' ')
+  } else {
+    delete entry.tags
+  }
+
+  if (entry.folderArray?.length) {
+    entry.folder = entry.folderArray.map((folder) => `~${folder}`).join(' ')
+  } else {
+    delete entry.folder
+  }
+
+  if (!entry.url && entry.originalUrl) {
+    entry.url = cleanUpUrl(entry.originalUrl)
+  }
+
+  const title = entry.title || ''
+  const url = entry.url || ''
+  const tags = entry.tags || ''
+  const folder = entry.folder || ''
+  entry.searchString = buildSearchString(title, url, tags, folder)
+  entry.searchStringLower = entry.searchString.toLowerCase()
+}
+
+function mergeUniqueValues(target = [], source = []) {
+  const merged = new Set(target || [])
+  for (const value of source || []) {
+    if (value !== undefined && value !== null && value !== '') {
+      merged.add(value)
+    }
+  }
+  return Array.from(merged)
+}
+
+function buildSearchString(title, url, tags, folder) {
+  if (!url) {
+    return ''
+  }
+  const separator = '¦'
+  let searchString = ''
+  if (title && !title.toLowerCase().includes(url.toLowerCase())) {
+    searchString += title + separator + url
+  } else {
+    searchString += url
+  }
+  if (tags) {
+    searchString += separator + tags
+  }
+  if (folder) {
+    searchString += separator + folder
+  }
+  return searchString
 }
 
 /**
