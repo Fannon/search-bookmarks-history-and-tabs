@@ -116,6 +116,7 @@ historyIgnoreList:
   - http://127.0.0.1
 colorStripeWidth: 4 # Customize width of search result color stripe
 scoreTabBase: 70 # customize base score for open tabs
+displayVisitCounter: true # Show visited counter
 searchEngineChoices:
   - name: Google
     urlPrefix: https://google.com/search?q=
@@ -162,6 +163,7 @@ The scoring system calculates a relevance score for each search result using a 5
 5. **Custom Bonus** - User-defined bonus via `+<number>` notation in bookmark titles (if `scoreCustomBonusScore` is enabled)
 
 For detailed implementation and all scoring configuration options, see:
+
 - **[popup/js/search/scoring.js](popup/js/search/scoring.js)** - Core scoring algorithm with comprehensive documentation
 - **[popup/js/model/options.js](popup/js/model/options.js)** - Complete list of scoring configuration options
 

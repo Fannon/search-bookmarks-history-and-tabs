@@ -117,19 +117,21 @@ function applySourceMetadata(target, source) {
   const combinedTypes = target.sourceTypes ? [...target.sourceTypes, source.type] : [source.type]
   target.sourceTypes = sortSourceTypes(combinedTypes)
 
+  // Apply type-specific metadata
   if (source.type === 'bookmark') {
     if (source.originalId !== undefined) {
       target.bookmarkOriginalId = source.originalId
     }
-    if (source.tagsArray && source.tagsArray.length) {
+    if (source.tagsArray?.length) {
       target.tagsArray = [...source.tagsArray]
     }
-    if (source.folderArray && source.folderArray.length) {
+    if (source.folderArray?.length) {
       target.folderArray = [...source.folderArray]
     }
     if (source.dateAdded !== undefined) {
       target.dateAdded = source.dateAdded
     }
+    // Bookmarks have priority for title and titleHighlighted
     if (source.title) {
       target.title = source.title
     }
@@ -149,6 +151,7 @@ function applySourceMetadata(target, source) {
     }
   }
 
+  // Merge numeric fields (prefer more recent/higher values)
   if (source.lastVisitSecondsAgo !== undefined) {
     if (
       target.lastVisitSecondsAgo === undefined ||
@@ -160,37 +163,28 @@ function applySourceMetadata(target, source) {
   }
 
   if (source.visitCount !== undefined) {
-    if (target.visitCount === undefined) {
-      target.visitCount = source.visitCount
-    } else {
-      target.visitCount = Math.max(target.visitCount, source.visitCount)
-    }
+    target.visitCount =
+      target.visitCount === undefined ? source.visitCount : Math.max(target.visitCount, source.visitCount)
   }
 
   if (source.searchScore !== undefined) {
-    if (target.searchScore === undefined) {
-      target.searchScore = source.searchScore
-    } else {
-      target.searchScore = Math.max(target.searchScore, source.searchScore)
-    }
+    target.searchScore =
+      target.searchScore === undefined ? source.searchScore : Math.max(target.searchScore, source.searchScore)
   }
 
+  // Fallback values for common fields (only if not already set)
   if (!target.title && source.title) {
     target.title = source.title
   }
-
   if (!target.url && source.url) {
     target.url = source.url
   }
-
   if (!target.titleHighlighted && source.titleHighlighted) {
     target.titleHighlighted = source.titleHighlighted
   }
-
   if (!target.urlHighlighted && source.urlHighlighted) {
     target.urlHighlighted = source.urlHighlighted
   }
-
   if (!target.searchApproach && source.searchApproach) {
     target.searchApproach = source.searchApproach
   }
@@ -490,9 +484,8 @@ export async function search(event) {
       results = await addDefaultEntries()
     }
 
-    if (searchTerm) {
-      results = mergeResultsByUrl(results)
-    }
+    // Merge duplicate URLs and set sourceTypes for all results
+    results = mergeResultsByUrl(results)
 
     // Apply scoring and sorting
     results = applyScoring(results, searchTerm, searchMode)

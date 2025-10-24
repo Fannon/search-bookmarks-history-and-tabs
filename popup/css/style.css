@@ -136,14 +136,14 @@ code {
   position: relative;
   top: -2px;
 }
-.badge.source {
-  background: #5f6368;
-}
 .badge.source-tab {
-  background: #4a6cf1;
+  background: #b89aff;
+}
+.badge.source-bookmark {
+  background: #3c8d8d;
 }
 .badge.source-history {
-  background: #bb6c26;
+  background: #9ece2f;
 }
 /* Tag styles */
 .tags {
@@ -189,11 +189,11 @@ code {
   color: #fff;
 }
 .visit-counter {
-  background: #bbac26;
+  background: #d39f3e;
   color: #fff;
 }
 .date-added {
-  background: #bb8c26;
+  background: #c3b51e;
   color: #fff;
 }
 .url {

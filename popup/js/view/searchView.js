@@ -12,14 +12,9 @@ import { selectListItem } from './searchNavigation.js'
 import { setupResultItemsEvents } from './searchEvents.js'
 
 const SOURCE_LABELS = {
-  tab: 'Open tab',
-  bookmark: 'Bookmarked',
-  history: 'History',
-}
-
-const SOURCE_BADGE_CLASS = {
-  tab: 'source-tab',
-  history: 'source-history',
+  tab: 'T',
+  bookmark: 'B',
+  history: 'H',
 }
 
 /**
@@ -68,9 +63,7 @@ export async function renderSearchResults(result) {
         if (!label) {
           continue
         }
-        const sourceClass = SOURCE_BADGE_CLASS[sourceType]
-        const classSuffix = sourceClass ? ` ${escapeHtml(sourceClass)}` : ''
-        badgesHTML += `<span class="badge source${classSuffix}">${escapeHtml(label)}</span>`
+        badgesHTML += `<span class="badge source-${escapeHtml(sourceType)}">${escapeHtml(label)}</span>`
       }
     }
 

@@ -471,7 +471,7 @@ export async function getEffectiveOptions() {
 }
 
 /**
- * Ensure user options are valid JSON-serialisable objects.
+ * Ensure user options are valid JSON-serializable objects.
  *
  * @param {Object} userOptions - Options object to validate.
  */
