@@ -136,6 +136,18 @@ code {
   position: relative;
   top: -2px;
 }
+.badge.source {
+  background: #5f6368;
+}
+.badge.source-tab {
+  background: #4a6cf1;
+}
+.badge.source-bookmark {
+  background: #2a9c68;
+}
+.badge.source-history {
+  background: #bb6c26;
+}
 /* Tag styles */
 .tags {
   background: #557292;

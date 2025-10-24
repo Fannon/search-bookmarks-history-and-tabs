@@ -209,6 +209,61 @@ describe('addDefaultEntries', () => {
   })
 })
 
+describe('mergeResultsByUrl', () => {
+  test('merges bookmark, tab, and history entries sharing the same URL', () => {
+    const merged = commonModule.mergeResultsByUrl([
+      {
+        type: 'bookmark',
+        originalUrl: 'https://example.test',
+        originalId: 1,
+        title: 'Example bookmark',
+        url: 'https://example.test',
+        searchScore: 1,
+        tagsArray: ['Work'],
+        folderArray: ['Work'],
+        dateAdded: 123,
+      },
+      {
+        type: 'tab',
+        originalUrl: 'https://example.test',
+        originalId: 200,
+        title: 'Example tab',
+        url: 'https://example.test',
+        searchScore: 1,
+        windowId: 2,
+      },
+      {
+        type: 'history',
+        originalUrl: 'https://example.test',
+        originalId: 'hist-1',
+        title: 'Example history',
+        url: 'https://example.test',
+        searchScore: 1,
+        lastVisitSecondsAgo: 120,
+        visitCount: 5,
+      },
+      {
+        type: 'direct',
+        originalUrl: 'https://other.test',
+        originalId: 'direct',
+      },
+    ])
+
+    expect(merged).toHaveLength(2)
+    const mergedEntry = merged.find((item) => item.originalUrl === 'https://example.test')
+    expect(mergedEntry).toBeDefined()
+    expect(mergedEntry?.sourceTypes).toEqual(['tab', 'bookmark', 'history'])
+    expect(mergedEntry?.type).toBe('tab')
+    expect(mergedEntry?.originalId).toBe(200)
+    expect(mergedEntry?.tabOriginalId).toBe(200)
+    expect(mergedEntry?.bookmarkOriginalId).toBe(1)
+    expect(mergedEntry?.historyOriginalId).toBe('hist-1')
+    expect(mergedEntry?.tagsArray).toEqual(['Work'])
+    expect(mergedEntry?.lastVisitSecondsAgo).toBe(120)
+    expect(mergedEntry?.visitCount).toBe(5)
+  })
+})
+
 describe('search', () => {
   test('returns early for navigation keys', async () => {
     await search({ key: 'ArrowUp' })
@@ -401,5 +456,43 @@ describe('search', () => {
 
     expect(cache.has).toHaveBeenCalledWith('remember_precise_all')
     expect(cache.set).toHaveBeenCalledWith('remember_precise_all', ext.model.result)
+  })
+
+  test('merges duplicate URLs across sources during search', async () => {
+    ext.dom.searchInput.value = 'duplicate'
+    ext.opts.scoreMinScore = 0
+    ext.opts.enableDirectUrl = false
+    ext.opts.enableSearchEngines = false
+
+    ext.model.bookmarks = [
+      {
+        type: 'bookmark',
+        originalUrl: 'https://merge.test',
+        originalId: 11,
+        url: 'https://merge.test',
+        title: 'Merge Bookmark',
+        searchString: 'merge bookmark duplicate https://merge.test',
+      },
+    ]
+    ext.model.tabs = [
+      {
+        type: 'tab',
+        originalUrl: 'https://merge.test',
+        originalId: 22,
+        url: 'https://merge.test',
+        title: 'Merge Tab',
+        searchString: 'merge tab duplicate https://merge.test',
+      },
+    ]
+
+    await search({ key: 'd' })
+
+    const rendered = mockRenderSearchResults.mock.calls.at(-1)?.[0]
+    expect(rendered).toHaveLength(1)
+    const [merged] = rendered
+    expect(merged.sourceTypes).toEqual(['tab', 'bookmark'])
+    expect(merged.type).toBe('tab')
+    expect(merged.tabOriginalId).toBe(22)
+    expect(merged.bookmarkOriginalId).toBe(11)
   })
 })

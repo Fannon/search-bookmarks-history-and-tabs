@@ -32,6 +32,8 @@ export { calculateFinalScore }
 
 const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 const protocolRegex = /^[a-zA-Z]+:\/\//
+const MERGEABLE_TYPES = new Set(['bookmark', 'tab', 'history'])
+const TYPE_PRIORITY = ['tab', 'bookmark', 'history']
 
 /**
  * Maps search mode prefixes to their data sources.
@@ -62,6 +64,186 @@ export function resolveSearchTargets(searchMode) {
  */
 function generateRandomId() {
   return Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36)
+}
+
+/**
+ * Sort source identifiers using the defined priority order.
+ *
+ * @param {Array<string>} sourceTypes - Source identifiers to rank.
+ * @returns {Array<string>} Sorted identifiers.
+ */
+function sortSourceTypes(sourceTypes) {
+  return [...new Set(sourceTypes)].sort((a, b) => {
+    const aIndex = TYPE_PRIORITY.indexOf(a)
+    const bIndex = TYPE_PRIORITY.indexOf(b)
+    if (aIndex === -1 && bIndex === -1) return 0
+    if (aIndex === -1) return 1
+    if (bIndex === -1) return -1
+    return aIndex - bIndex
+  })
+}
+
+/**
+ * Resolve which source type should drive rendering metadata.
+ *
+ * @param {Array<string>} sourceTypes - Source identifiers contributing to an entry.
+ * @returns {string|null} The preferred type, or null when unavailable.
+ */
+function determinePrimaryType(sourceTypes) {
+  if (!sourceTypes || !sourceTypes.length) {
+    return null
+  }
+
+  for (const type of TYPE_PRIORITY) {
+    if (sourceTypes.includes(type)) {
+      return type
+    }
+  }
+
+  return sourceTypes[0] || null
+}
+
+/**
+ * Merge metadata from a source item into an aggregated search result entry.
+ *
+ * @param {Object} target - Aggregated entry representing one URL.
+ * @param {Object} source - Source-specific result being merged.
+ */
+function applySourceMetadata(target, source) {
+  if (!source || !MERGEABLE_TYPES.has(source.type)) {
+    return
+  }
+
+  const combinedTypes = target.sourceTypes ? [...target.sourceTypes, source.type] : [source.type]
+  target.sourceTypes = sortSourceTypes(combinedTypes)
+
+  if (source.type === 'bookmark') {
+    if (source.originalId !== undefined) {
+      target.bookmarkOriginalId = source.originalId
+    }
+    if ((!target.tagsArray || target.tagsArray.length === 0) && source.tagsArray && source.tagsArray.length) {
+      target.tagsArray = source.tagsArray
+    }
+    if ((!target.folderArray || target.folderArray.length === 0) && source.folderArray && source.folderArray.length) {
+      target.folderArray = source.folderArray
+    }
+    if (target.dateAdded === undefined && source.dateAdded !== undefined) {
+      target.dateAdded = source.dateAdded
+    }
+  } else if (source.type === 'tab') {
+    if (source.originalId !== undefined) {
+      target.tabOriginalId = source.originalId
+    }
+    if (target.windowId === undefined && source.windowId !== undefined) {
+      target.windowId = source.windowId
+    }
+  } else if (source.type === 'history') {
+    if (source.originalId !== undefined) {
+      target.historyOriginalId = source.originalId
+    }
+  }
+
+  if (source.lastVisitSecondsAgo !== undefined) {
+    if (
+      target.lastVisitSecondsAgo === undefined ||
+      (typeof source.lastVisitSecondsAgo === 'number' &&
+        (typeof target.lastVisitSecondsAgo !== 'number' || source.lastVisitSecondsAgo < target.lastVisitSecondsAgo))
+    ) {
+      target.lastVisitSecondsAgo = source.lastVisitSecondsAgo
+    }
+  }
+
+  if (source.visitCount !== undefined) {
+    if (target.visitCount === undefined) {
+      target.visitCount = source.visitCount
+    } else {
+      target.visitCount = Math.max(target.visitCount, source.visitCount)
+    }
+  }
+
+  if (source.searchScore !== undefined) {
+    if (target.searchScore === undefined) {
+      target.searchScore = source.searchScore
+    } else {
+      target.searchScore = Math.max(target.searchScore, source.searchScore)
+    }
+  }
+
+  if (!target.title && source.title) {
+    target.title = source.title
+  }
+
+  if (!target.url && source.url) {
+    target.url = source.url
+  }
+
+  if (!target.titleHighlighted && source.titleHighlighted) {
+    target.titleHighlighted = source.titleHighlighted
+  }
+
+  if (!target.urlHighlighted && source.urlHighlighted) {
+    target.urlHighlighted = source.urlHighlighted
+  }
+
+  if (!target.searchApproach && source.searchApproach) {
+    target.searchApproach = source.searchApproach
+  }
+
+  const primaryType = determinePrimaryType(target.sourceTypes)
+  if (primaryType) {
+    target.type = primaryType
+    if (primaryType === 'tab' && target.tabOriginalId !== undefined) {
+      target.originalId = target.tabOriginalId
+    } else if (primaryType === 'bookmark' && target.bookmarkOriginalId !== undefined) {
+      target.originalId = target.bookmarkOriginalId
+    } else if (primaryType === 'history' && target.historyOriginalId !== undefined) {
+      target.originalId = target.historyOriginalId
+    }
+  }
+}
+
+/**
+ * Merge duplicate bookmark/tab/history results sharing the same URL while preserving context badges.
+ *
+ * @param {Array<Object>} results - Raw search results across datasets.
+ * @returns {Array<Object>} Results with duplicates collapsed per URL.
+ */
+export function mergeResultsByUrl(results) {
+  if (!Array.isArray(results) || !results.length) {
+    return results
+  }
+
+  const merged = []
+  const byUrl = new Map()
+
+  for (const entry of results) {
+    if (!entry) {
+      continue
+    }
+
+    const mergeKey =
+      MERGEABLE_TYPES.has(entry.type) && (entry.originalUrl || entry.url)
+        ? entry.originalUrl || entry.url
+        : undefined
+
+    if (!mergeKey) {
+      merged.push(entry)
+      continue
+    }
+
+    const existing = byUrl.get(mergeKey)
+    if (!existing) {
+      const base = { ...entry }
+      applySourceMetadata(base, entry)
+      byUrl.set(mergeKey, base)
+      merged.push(base)
+      continue
+    }
+
+    applySourceMetadata(existing, entry)
+  }
+
+  return merged
 }
 
 /**
@@ -300,6 +482,10 @@ export async function search(event) {
       }
     } else {
       results = await addDefaultEntries()
+    }
+
+    if (searchTerm) {
+      results = mergeResultsByUrl(results)
     }
 
     // Apply scoring and sorting

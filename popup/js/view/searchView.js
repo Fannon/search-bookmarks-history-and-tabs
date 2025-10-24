@@ -11,6 +11,18 @@ import { escapeHtml, timeSince } from '../helper/utils.js'
 import { selectListItem } from './searchNavigation.js'
 import { setupResultItemsEvents } from './searchEvents.js'
 
+const SOURCE_LABELS = {
+  tab: 'Open tab',
+  bookmark: 'Bookmarked',
+  history: 'History',
+}
+
+const SOURCE_BADGE_CLASS = {
+  tab: 'source-tab',
+  bookmark: 'source-bookmark',
+  history: 'source-history',
+}
+
 /**
  * Render the search results in UI as result items
  */
@@ -50,6 +62,17 @@ export async function renderSearchResults(result) {
     }
 
     let badgesHTML = ''
+
+    if (Array.isArray(resultEntry.sourceTypes) && resultEntry.sourceTypes.length) {
+      for (const sourceType of resultEntry.sourceTypes) {
+        const label = SOURCE_LABELS[sourceType]
+        if (!label) {
+          continue
+        }
+        const sourceClass = SOURCE_BADGE_CLASS[sourceType] || 'source-generic'
+        badgesHTML += `<span class="badge source ${escapeHtml(sourceClass)}">${escapeHtml(label)}</span>`
+      }
+    }
 
     if (opts.displayTags && resultEntry.tagsArray) {
       for (const tag of resultEntry.tagsArray) {
@@ -112,19 +135,37 @@ export async function renderSearchResults(result) {
     const originalUrlAttr = resultEntry.originalUrl ? ` x-open-url="${escapeHtml(resultEntry.originalUrl)}"` : ''
     const originalIdAttr =
       resultEntry.originalId !== undefined ? ` x-original-id="${escapeHtml(String(resultEntry.originalId))}"` : ''
+    const bookmarkIdForEdit =
+      resultEntry.bookmarkOriginalId !== undefined
+        ? resultEntry.bookmarkOriginalId
+        : resultEntry.type === 'bookmark'
+        ? resultEntry.originalId
+        : undefined
+    const tabIdForClose =
+      resultEntry.tabOriginalId !== undefined
+        ? resultEntry.tabOriginalId
+        : resultEntry.type === 'tab'
+        ? resultEntry.originalId
+        : undefined
     const colorValue = escapeHtml(String(opts[resultEntry.type + 'Color']))
 
     const itemHTML = `
       <li class="${typeClass}"${originalUrlAttr} x-index="${i}"${originalIdAttr}
           style="border-left: ${opts.colorStripeWidth}px solid ${colorValue}">
         ${
-          resultEntry.type === 'bookmark'
+          bookmarkIdForEdit !== undefined
             ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(
-                resultEntry.originalId,
+                bookmarkIdForEdit,
               )}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">`
             : ''
         }
-        ${resultEntry.type === 'tab' ? '<img class="close-button" title="Close Tab" src="./img/x.svg">' : ''}
+        ${
+          tabIdForClose !== undefined
+            ? `<img class="close-button" data-tab-id="${escapeHtml(
+                String(tabIdForClose),
+              )}" title="Close Tab" src="./img/x.svg">`
+            : ''
+        }
         <div class="title">
           <span class="title-text">${titleContent} </span>
           ${badgesHTML}

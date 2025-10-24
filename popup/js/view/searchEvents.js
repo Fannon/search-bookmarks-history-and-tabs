@@ -12,7 +12,6 @@
 import { getUserOptions, setUserOptions } from '../model/options.js'
 import { search } from '../search/common.js'
 import { hoverResultItem, clearSelection } from './searchNavigation.js'
-import { renderSearchResults } from './searchView.js'
 
 /**
  * Handle click/mouse events on search results with different behaviors based on modifiers and target elements
@@ -42,26 +41,36 @@ export function openResultItem(event) {
 
     // Handle close button clicks on tab entries
     if (target && target.className.includes('close-button')) {
-      const targetId = parseInt(originalId)
+      const tabIdAttr = target.getAttribute('data-tab-id')
+      const targetId = Number.parseInt(tabIdAttr || originalId, 10)
 
-      // Close the browser tab
-      ext.browserApi.tabs.remove(targetId)
+      if (!Number.isNaN(targetId)) {
+        // Close the browser tab
+        ext.browserApi.tabs.remove(targetId)
 
-      // Remove the item from the UI
-      document.querySelector(`#result-list > li[x-original-id="${originalId}"]`).remove()
+        // Remove the item from the UI
+        const listItem = document.querySelector(`#result-list > li[x-original-id="${originalId}"]`)
+        if (listItem) {
+          listItem.remove()
+        }
 
-      // Update the application state
-      ext.model.tabs.splice(
-        ext.model.tabs.findIndex((el) => el.originalId === targetId),
-        1,
-      )
-      ext.model.result.splice(
-        ext.model.result.findIndex((el) => el.originalId === targetId),
-        1,
-      )
+        // Update the application state
+        const tabIndex = ext.model.tabs.findIndex((el) => el.originalId === targetId)
+        if (tabIndex !== -1) {
+          ext.model.tabs.splice(tabIndex, 1)
+        }
+        const resultIndex = ext.model.result.findIndex((el) => {
+          if (el && el.tabOriginalId !== undefined) {
+            return el.tabOriginalId === targetId
+          }
+          return el?.originalId === targetId
+        })
+        if (resultIndex !== -1) {
+          ext.model.result.splice(resultIndex, 1)
+        }
+      }
 
-      // Re-render to update indices and selection
-      renderSearchResults()
+      search()
       return
     }
   }
