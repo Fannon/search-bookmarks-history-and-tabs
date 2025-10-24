@@ -33,7 +33,7 @@ export { calculateFinalScore }
 const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 const protocolRegex = /^[a-zA-Z]+:\/\//
 const MERGEABLE_TYPES = new Set(['bookmark', 'tab', 'history'])
-const TYPE_PRIORITY = ['tab', 'bookmark', 'history']
+const TYPE_PRIORITY = ['bookmark', 'tab', 'history']
 
 /**
  * Maps search mode prefixes to their data sources.

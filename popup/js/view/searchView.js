@@ -19,7 +19,6 @@ const SOURCE_LABELS = {
 
 const SOURCE_BADGE_CLASS = {
   tab: 'source-tab',
-  bookmark: 'source-bookmark',
   history: 'source-history',
 }
 
@@ -69,8 +68,9 @@ export async function renderSearchResults(result) {
         if (!label) {
           continue
         }
-        const sourceClass = SOURCE_BADGE_CLASS[sourceType] || 'source-generic'
-        badgesHTML += `<span class="badge source ${escapeHtml(sourceClass)}">${escapeHtml(label)}</span>`
+        const sourceClass = SOURCE_BADGE_CLASS[sourceType]
+        const classSuffix = sourceClass ? ` ${escapeHtml(sourceClass)}` : ''
+        badgesHTML += `<span class="badge source${classSuffix}">${escapeHtml(label)}</span>`
       }
     }
 
