@@ -122,11 +122,21 @@ function applySourceMetadata(target, source) {
     if (source.originalId !== undefined) {
       target.bookmarkOriginalId = source.originalId
     }
+    // Merge tags from multiple bookmarks (combine and deduplicate)
     if (source.tagsArray?.length) {
-      target.tagsArray = [...source.tagsArray]
+      if (target.tagsArray?.length) {
+        target.tagsArray = [...new Set([...target.tagsArray, ...source.tagsArray])]
+      } else {
+        target.tagsArray = [...source.tagsArray]
+      }
+      // Reconstruct tags string from merged array
+      target.tags = target.tagsArray.map((tag) => `#${tag}`).join(' ')
     }
+    // Folder assignment: last/first wins (no merging)
     if (source.folderArray?.length) {
       target.folderArray = [...source.folderArray]
+      // Reconstruct folder string from array
+      target.folder = source.folderArray.map((folder) => `~${folder}`).join(' ')
     }
     if (source.dateAdded !== undefined) {
       target.dateAdded = source.dateAdded

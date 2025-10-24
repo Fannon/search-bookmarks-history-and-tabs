@@ -294,6 +294,39 @@ describe('mergeResultsByUrl', () => {
     expect(mergedEntry?.type).toBe('bookmark')
     expect(mergedEntry?.originalId).toBe(77)
   })
+
+  test('merges tags from multiple bookmarks with the same URL', () => {
+    const merged = commonModule.mergeResultsByUrl([
+      {
+        type: 'bookmark',
+        originalUrl: 'https://multi-bookmark.test',
+        originalId: 1,
+        title: 'First Bookmark',
+        url: 'https://multi-bookmark.test',
+        tagsArray: ['work', 'project-a'],
+        tags: '#work #project-a',
+      },
+      {
+        type: 'bookmark',
+        originalUrl: 'https://multi-bookmark.test',
+        originalId: 2,
+        title: 'Second Bookmark',
+        url: 'https://multi-bookmark.test',
+        tagsArray: ['personal', 'project-a'],
+        tags: '#personal #project-a',
+      },
+    ])
+
+    expect(merged).toHaveLength(1)
+    const mergedEntry = merged[0]
+    // Tags should be merged and deduplicated
+    expect(mergedEntry?.tagsArray).toEqual(['work', 'project-a', 'personal'])
+    // Tags string should be reconstructed from merged array
+    expect(mergedEntry?.tags).toBe('#work #project-a #personal')
+    // Title from last bookmark wins
+    expect(mergedEntry?.title).toBe('Second Bookmark')
+    expect(mergedEntry?.type).toBe('bookmark')
+  })
 })
 
 describe('search', () => {
