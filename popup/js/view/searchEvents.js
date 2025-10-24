@@ -10,7 +10,7 @@
  */
 
 import { getUserOptions, setUserOptions } from '../model/options.js'
-import { search } from '../search/common.js'
+import { prepareSearchIndex, search } from '../search/common.js'
 import { hoverResultItem, clearSelection } from './searchNavigation.js'
 
 /**
@@ -58,6 +58,11 @@ export function openResultItem(event) {
         const tabIndex = ext.model.tabs.findIndex((el) => el.originalId === targetId)
         if (tabIndex !== -1) {
           ext.model.tabs.splice(tabIndex, 1)
+          prepareSearchIndex({
+            bookmarks: ext.model.bookmarks || [],
+            tabs: ext.model.tabs,
+            history: ext.model.history || [],
+          })
         }
         const resultIndex = ext.model.result.findIndex((el) => {
           if (el && el.tabOriginalId !== undefined) {

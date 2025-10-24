@@ -29,6 +29,21 @@ beforeAll(async () => {
   await jest.unstable_mockModule('../../helper/browserApi.js', () => ({
     __esModule: true,
     getBrowserTabs: mockGetBrowserTabs,
+    createSearchString: (title = '', url = '', tags = '', folder = '') => {
+      if (!url) {
+        return ''
+      }
+      const separator = '¦'
+      const normalizedTitle = title && !title.toLowerCase().includes(url.toLowerCase()) ? title : ''
+      let searchString = normalizedTitle ? `${normalizedTitle}${separator}${url}` : url
+      if (tags) {
+        searchString += `${separator}${tags}`
+      }
+      if (folder) {
+        searchString += `${separator}${folder}`
+      }
+      return searchString
+    },
   }))
   const utilsModule = await import('../../helper/utils.js')
   await jest.unstable_mockModule('../../helper/utils.js', () => ({
@@ -209,45 +224,60 @@ describe('addDefaultEntries', () => {
   })
 })
 
-describe('mergeResultsByUrl', () => {
+describe('mergeResultsFromIndex', () => {
   test('merges bookmark, tab, and history entries sharing the same URL', () => {
-    const merged = commonModule.mergeResultsByUrl([
-      {
-        type: 'bookmark',
-        originalUrl: 'https://example.test',
-        originalId: 1,
-        title: 'Example bookmark',
-        url: 'https://example.test',
-        searchScore: 1,
-        tagsArray: ['Work'],
-        folderArray: ['Work'],
-        dateAdded: 123,
-      },
-      {
-        type: 'tab',
-        originalUrl: 'https://example.test',
-        originalId: 200,
-        title: 'Example tab',
-        url: 'https://example.test',
-        searchScore: 1,
-        windowId: 2,
-      },
-      {
-        type: 'history',
-        originalUrl: 'https://example.test',
-        originalId: 'hist-1',
-        title: 'Example history',
-        url: 'https://example.test',
-        searchScore: 1,
-        lastVisitSecondsAgo: 120,
-        visitCount: 5,
-      },
+    const bookmark = {
+      type: 'bookmark',
+      originalUrl: 'https://example.test',
+      originalId: 1,
+      title: 'Example bookmark',
+      url: 'https://example.test',
+      searchScore: 1,
+      tagsArray: ['Work'],
+      folderArray: ['Work'],
+      dateAdded: 123,
+    }
+    const tab = {
+      type: 'tab',
+      originalUrl: 'https://example.test',
+      originalId: 200,
+      title: 'Example tab',
+      url: 'https://example.test',
+      searchScore: 1,
+      windowId: 2,
+    }
+    const history = {
+      type: 'history',
+      originalUrl: 'https://example.test',
+      originalId: 'hist-1',
+      title: 'Example history',
+      url: 'https://example.test',
+      searchScore: 1,
+      lastVisitSecondsAgo: 120,
+      visitCount: 5,
+    }
+
+    ext.model.bookmarks = [bookmark]
+    ext.model.tabs = [tab]
+    ext.model.history = [history]
+    commonModule.prepareSearchIndex({
+      bookmarks: ext.model.bookmarks,
+      tabs: ext.model.tabs,
+      history: ext.model.history,
+    })
+
+    const merged = commonModule.mergeResultsFromIndex([
+      { ...bookmark, searchApproach: 'precise' },
+      { ...tab, searchApproach: 'precise' },
+      { ...history, searchApproach: 'precise' },
       {
         type: 'direct',
         originalUrl: 'https://other.test',
         originalId: 'direct',
+        searchScore: 1,
+        searchApproach: 'precise',
       },
-    ])
+    ], 'all')
 
     expect(merged).toHaveLength(2)
     const mergedEntry = merged.find((item) => item.originalUrl === 'https://example.test')
@@ -264,25 +294,40 @@ describe('mergeResultsByUrl', () => {
   })
 
   test('prefers bookmark metadata for titles and tags when available', () => {
-    const merged = commonModule.mergeResultsByUrl([
-      {
-        type: 'tab',
-        originalUrl: 'https://bookmark-first.test',
-        originalId: 33,
-        title: 'Active tab title',
-        titleHighlighted: '<mark>Active</mark> tab title',
-        url: 'https://bookmark-first.test',
-      },
-      {
-        type: 'bookmark',
-        originalUrl: 'https://bookmark-first.test',
-        originalId: 77,
-        title: 'Bookmark title',
-        titleHighlighted: '<mark>Bookmark</mark> title',
-        url: 'https://bookmark-first.test',
-        tagsArray: ['personal', 'ideas'],
-      },
-    ])
+    const tab = {
+      type: 'tab',
+      originalUrl: 'https://bookmark-first.test',
+      originalId: 33,
+      title: 'Active tab title',
+      titleHighlighted: '<mark>Active</mark> tab title',
+      url: 'https://bookmark-first.test',
+    }
+    const bookmark = {
+      type: 'bookmark',
+      originalUrl: 'https://bookmark-first.test',
+      originalId: 77,
+      title: 'Bookmark title',
+      titleHighlighted: '<mark>Bookmark</mark> title',
+      url: 'https://bookmark-first.test',
+      tagsArray: ['personal', 'ideas'],
+    }
+
+    ext.model.bookmarks = [bookmark]
+    ext.model.tabs = [tab]
+    ext.model.history = []
+    commonModule.prepareSearchIndex({
+      bookmarks: ext.model.bookmarks,
+      tabs: ext.model.tabs,
+      history: [],
+    })
+
+    const merged = commonModule.mergeResultsFromIndex(
+      [
+        { ...tab, searchApproach: 'precise', searchScore: 1 },
+        { ...bookmark, searchApproach: 'precise', searchScore: 1 },
+      ],
+      'all',
+    )
 
     expect(merged).toHaveLength(1)
     const mergedEntry = merged[0]
@@ -296,26 +341,41 @@ describe('mergeResultsByUrl', () => {
   })
 
   test('merges tags from multiple bookmarks with the same URL', () => {
-    const merged = commonModule.mergeResultsByUrl([
-      {
-        type: 'bookmark',
-        originalUrl: 'https://multi-bookmark.test',
-        originalId: 1,
-        title: 'First Bookmark',
-        url: 'https://multi-bookmark.test',
-        tagsArray: ['work', 'project-a'],
-        tags: '#work #project-a',
-      },
-      {
-        type: 'bookmark',
-        originalUrl: 'https://multi-bookmark.test',
-        originalId: 2,
-        title: 'Second Bookmark',
-        url: 'https://multi-bookmark.test',
-        tagsArray: ['personal', 'project-a'],
-        tags: '#personal #project-a',
-      },
-    ])
+    const firstBookmark = {
+      type: 'bookmark',
+      originalUrl: 'https://multi-bookmark.test',
+      originalId: 1,
+      title: 'First Bookmark',
+      url: 'https://multi-bookmark.test',
+      tagsArray: ['work', 'project-a'],
+      tags: '#work #project-a',
+    }
+    const secondBookmark = {
+      type: 'bookmark',
+      originalUrl: 'https://multi-bookmark.test',
+      originalId: 2,
+      title: 'Second Bookmark',
+      url: 'https://multi-bookmark.test',
+      tagsArray: ['personal', 'project-a'],
+      tags: '#personal #project-a',
+    }
+
+    ext.model.bookmarks = [firstBookmark, secondBookmark]
+    ext.model.tabs = []
+    ext.model.history = []
+    commonModule.prepareSearchIndex({
+      bookmarks: ext.model.bookmarks,
+      tabs: [],
+      history: [],
+    })
+
+    const merged = commonModule.mergeResultsFromIndex(
+      [
+        { ...firstBookmark, searchApproach: 'precise', searchScore: 1 },
+        { ...secondBookmark, searchApproach: 'precise', searchScore: 1 },
+      ],
+      'bookmarks',
+    )
 
     expect(merged).toHaveLength(1)
     const mergedEntry = merged[0]

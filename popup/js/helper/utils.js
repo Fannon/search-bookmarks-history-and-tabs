@@ -18,6 +18,15 @@ const HTML_ESCAPE_MAP = {
 }
 
 /**
+ * Generate a unique identifier for synthetic search result entries.
+ *
+ * @returns {string} Identifier combining random and timestamp components.
+ */
+export function generateRandomId() {
+  return Math.random().toString(36).slice(2, 11) + '_' + Date.now().toString(36)
+}
+
+/**
  * Escape HTML special characters to prevent markup injection.
  *
  * @param {*} value - Value to escape.

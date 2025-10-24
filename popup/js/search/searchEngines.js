@@ -10,16 +10,7 @@
  * new search engines or modify alias behavior without touching orchestration code.
  */
 
-import { cleanUpUrl } from '../helper/utils.js'
-
-/**
- * Generate a unique identifier for synthetic search result entries.
- *
- * @returns {string} Identifier combining random and timestamp components.
- */
-function generateRandomId() {
-  return Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36)
-}
+import { cleanUpUrl, generateRandomId } from '../helper/utils.js'
 
 /**
  * Build a single search result entry that targets a custom search engine.

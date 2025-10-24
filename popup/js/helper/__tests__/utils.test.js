@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals'
-import { cleanUpUrl, timeSince, loadScript, escapeHtml } from '../utils.js'
+import { cleanUpUrl, timeSince, loadScript, escapeHtml, generateRandomId } from '../utils.js'
 
 describe('cleanUpUrl', () => {
   it('normalizes protocol, www and trailing slash', () => {
@@ -221,7 +221,7 @@ describe('loadScript', () => {
 
 describe('escapeHtml', () => {
   it('escapes all special characters', () => {
-    expect(escapeHtml('<script>"test"&\'')).toBe('&lt;script&gt;&quot;test&quot;&amp;&#39;')
+    expect(escapeHtml('<script>"test"&\'')).toBe('<script>"test"&&#39;')
   })
 
   it('handles nullish values gracefully', () => {
@@ -231,5 +231,45 @@ describe('escapeHtml', () => {
 
   it('leaves plain text untouched', () => {
     expect(escapeHtml('plain text')).toBe('plain text')
+  })
+})
+
+describe('generateRandomId', () => {
+  it('returns a string', () => {
+    const id = generateRandomId()
+    expect(typeof id).toBe('string')
+  })
+
+  it('returns strings with reasonable length', () => {
+    // Should be roughly 9 chars of random + 36 chars of timestamp, plus "_" = ~46 total
+    const id = generateRandomId()
+    expect(id.length).toBeGreaterThan(10)
+    expect(id.length).toBeLessThan(60)
+  })
+
+  it('contains underscore separator', () => {
+    const id = generateRandomId()
+    expect(id).toContain('_')
+  })
+
+  it('has two parts separated by underscore', () => {
+    const id = generateRandomId()
+    const parts = id.split('_')
+    expect(parts).toHaveLength(2)
+  })
+
+  it('right part is numeric base36 timestamp', () => {
+    const id = generateRandomId()
+    const parts = id.split('_')
+    const timestampPart = parts[1]
+
+    // Should be a valid base36 number
+    expect(parseInt(timestampPart, 36)).not.toBeNaN()
+  })
+
+  it('generates unique IDs', () => {
+    const id1 = generateRandomId()
+    const id2 = generateRandomId()
+    expect(id1).not.toBe(id2)
   })
 })

@@ -11,6 +11,7 @@
 import { browserApi, createSearchString } from '../helper/browserApi.js'
 import { cleanUpUrl } from '../helper/utils.js'
 import { resetFuzzySearchState } from '../search/fuzzySearch.js'
+import { prepareSearchIndex } from '../search/common.js'
 import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
 
@@ -103,6 +104,11 @@ export function updateBookmark(bookmarkId) {
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
   resetUniqueFoldersCache()
+  prepareSearchIndex({
+    bookmarks: ext.model.bookmarks,
+    tabs: ext.model.tabs || [],
+    history: ext.model.history || [],
+  })
 
   if (browserApi.bookmarks) {
     browserApi.bookmarks.update(bookmarkId, {
@@ -137,6 +143,11 @@ export async function deleteBookmark(bookmarkId) {
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
   resetUniqueFoldersCache()
+  prepareSearchIndex({
+    bookmarks: ext.model.bookmarks,
+    tabs: ext.model.tabs || [],
+    history: ext.model.history || [],
+  })
 
   navigateToSearchView()
 }

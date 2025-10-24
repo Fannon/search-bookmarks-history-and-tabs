@@ -16,7 +16,8 @@
  * 6. Render results via view layer.
  */
 
-import { cleanUpUrl } from '../helper/utils.js'
+import { createSearchString } from '../helper/browserApi.js'
+import { cleanUpUrl, generateRandomId } from '../helper/utils.js'
 import { closeErrors, printError } from '../view/errorView.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { fuzzySearch } from './fuzzySearch.js'
@@ -30,10 +31,158 @@ import { addDefaultEntries } from './defaultResults.js'
 // Re-export scoring function for backward compatibility
 export { calculateFinalScore }
 
+/**
+ * Build the merged-results index used to deduplicate search responses.
+ *
+ * @param {Object} datasets - Raw search datasets partitioned by source.
+ * @param {Array<Object>} [datasets.bookmarks] - Bookmark entries.
+ * @param {Array<Object>} [datasets.tabs] - Tab entries.
+ * @param {Array<Object>} [datasets.history] - History entries.
+ * @returns {Map<string, Object>} Map keyed by URL containing merged metadata.
+ */
+export function prepareSearchIndex({ bookmarks = [], tabs = [], history = [] } = {}) {
+  const mergedByUrl = new Map()
+
+  accumulateDataset(mergedByUrl, bookmarks)
+  accumulateDataset(mergedByUrl, tabs)
+  accumulateDataset(mergedByUrl, history)
+
+  for (const mergedEntry of mergedByUrl.values()) {
+    finalizeMergedEntry(mergedEntry)
+  }
+
+  if (!ext.index) {
+    ext.index = {}
+  }
+  ext.index.mergedResults = mergedByUrl
+
+  return mergedByUrl
+}
+
+/**
+ * Merge search results using the precomputed index.
+ *
+ * @param {Array<Object>} results - Raw search results across datasets.
+ * @param {string} searchMode - Active search mode controlling type alignment.
+ * @returns {Array<Object>} Deduplicated results enriched with merged metadata.
+ */
+export function mergeResultsFromIndex(results, searchMode) {
+  if (!Array.isArray(results) || !results.length) {
+    return results
+  }
+
+  let mergedIndex = ext.index?.mergedResults
+  if (!mergedIndex || mergedIndex.size === undefined) {
+    mergedIndex = prepareSearchIndex({
+      bookmarks: ext.model?.bookmarks || [],
+      tabs: ext.model?.tabs || [],
+      history: ext.model?.history || [],
+    })
+  }
+
+  if (!mergedIndex || !mergedIndex.size) {
+    return results.map((entry) => ({ ...entry }))
+  }
+
+  const deduped = []
+  const dedupedByKey = new Map()
+
+  for (const result of results) {
+    if (!result) {
+      continue
+    }
+
+    const mergeKey =
+      MERGEABLE_TYPES.has(result.type) && (result.originalUrl || result.url)
+        ? result.originalUrl || result.url
+        : undefined
+
+    if (!mergeKey) {
+      deduped.push({ ...result })
+      continue
+    }
+
+    const base = mergedIndex.get(mergeKey)
+    let mergedEntry = dedupedByKey.get(mergeKey)
+
+    if (!mergedEntry) {
+      mergedEntry = base ? cloneMergedEntry(base) : { ...result }
+      applyModeOverride(mergedEntry, searchMode)
+
+      if (result.titleHighlighted) {
+        mergedEntry.titleHighlighted = result.titleHighlighted
+      } else if (mergedEntry.titleHighlighted === undefined) {
+        delete mergedEntry.titleHighlighted
+      }
+
+      if (result.urlHighlighted) {
+        mergedEntry.urlHighlighted = result.urlHighlighted
+      } else if (mergedEntry.urlHighlighted === undefined) {
+        delete mergedEntry.urlHighlighted
+      }
+
+      if (result.active !== undefined) {
+        mergedEntry.active = result.active
+      }
+
+      if (result.customBonusScore !== undefined) {
+        mergedEntry.customBonusScore = result.customBonusScore
+      }
+
+      if (result.visitCount !== undefined && mergedEntry.visitCount === undefined) {
+        mergedEntry.visitCount = result.visitCount
+      }
+
+      mergedEntry.searchScore = result.searchScore
+      mergedEntry.searchApproach = result.searchApproach
+
+      dedupedByKey.set(mergeKey, mergedEntry)
+      deduped.push(mergedEntry)
+      continue
+    }
+
+    if (result.titleHighlighted) {
+      mergedEntry.titleHighlighted = result.titleHighlighted
+    }
+
+    if (result.urlHighlighted) {
+      mergedEntry.urlHighlighted = result.urlHighlighted
+    }
+
+    if (result.active !== undefined) {
+      mergedEntry.active = result.active
+    }
+
+    if (result.customBonusScore !== undefined) {
+      mergedEntry.customBonusScore =
+        mergedEntry.customBonusScore === undefined
+          ? result.customBonusScore
+          : Math.max(mergedEntry.customBonusScore, result.customBonusScore)
+    }
+
+    if (typeof result.searchScore === 'number') {
+      const previousScore = typeof mergedEntry.searchScore === 'number' ? mergedEntry.searchScore : -Infinity
+      if (result.searchScore > previousScore) {
+        mergedEntry.searchApproach = result.searchApproach
+      }
+      mergedEntry.searchScore = Math.max(previousScore, result.searchScore)
+    }
+  }
+
+  return deduped
+}
+
 const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 const protocolRegex = /^[a-zA-Z]+:\/\//
 const MERGEABLE_TYPES = new Set(['bookmark', 'tab', 'history'])
 const TYPE_PRIORITY = ['bookmark', 'tab', 'history']
+const MODE_TO_TYPE = {
+  bookmarks: 'bookmark',
+  tags: 'bookmark',
+  folders: 'bookmark',
+  tabs: 'tab',
+  history: 'history',
+}
 
 /**
  * Maps search mode prefixes to their data sources.
@@ -55,15 +204,6 @@ const MODE_TARGETS = {
  */
 export function resolveSearchTargets(searchMode) {
   return MODE_TARGETS[searchMode] || MODE_TARGETS.all
-}
-
-/**
- * Generate a unique identifier for synthetic search result entries.
- *
- * @returns {string} Identifier combining random and timestamp components.
- */
-function generateRandomId() {
-  return Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36)
 }
 
 /**
@@ -120,11 +260,9 @@ function applySourceMetadata(target, source) {
     // Check if target already has 'bookmark' in sourceTypes (before we add the new one)
     if (target.sourceTypes?.includes('bookmark')) {
       target.isDuplicateBookmark = true
-      console.warn('Duplicate bookmark detected:', {
-        url: target.originalUrl || target.url,
-        folder1: target.folder,
-        folder2: source.folder,
-      })
+      console.warn(
+        `Duplicate bookmark detected: ${target.originalUrl || target.url} in ${target.folder} and ${source.folder}`,
+      )
     }
   }
 
@@ -227,45 +365,108 @@ function applySourceMetadata(target, source) {
 }
 
 /**
- * Merge duplicate bookmark/tab/history results sharing the same URL while preserving context badges.
+ * Clone a merged entry so callers can safely mutate without affecting the cache.
  *
- * @param {Array<Object>} results - Raw search results across datasets.
- * @returns {Array<Object>} Results with duplicates collapsed per URL.
+ * @param {Object} entry - Entry retrieved from the merged index.
+ * @returns {Object} Shallow clone with defensive copies for arrays.
  */
-export function mergeResultsByUrl(results) {
-  if (!Array.isArray(results) || !results.length) {
-    return results
+function cloneMergedEntry(entry) {
+  const clone = { ...entry }
+  if (entry.sourceTypes) {
+    clone.sourceTypes = [...entry.sourceTypes]
+  }
+  if (entry.tagsArray) {
+    clone.tagsArray = [...entry.tagsArray]
+  }
+  if (entry.folderArray) {
+    clone.folderArray = [...entry.folderArray]
+  }
+  return clone
+}
+
+/**
+ * Adds dataset entries to the merged-results index.
+ *
+ * @param {Map<string, Object>} mergedByUrl - Target index map.
+ * @param {Array<Object>} dataset - Dataset to integrate.
+ */
+function accumulateDataset(mergedByUrl, dataset) {
+  if (!Array.isArray(dataset)) {
+    return
   }
 
-  const merged = []
-  const byUrl = new Map()
-
-  for (const entry of results) {
-    if (!entry) {
+  for (const entry of dataset) {
+    if (!entry || !MERGEABLE_TYPES.has(entry.type)) {
       continue
     }
 
-    const mergeKey =
-      MERGEABLE_TYPES.has(entry.type) && (entry.originalUrl || entry.url) ? entry.originalUrl || entry.url : undefined
-
+    const mergeKey = entry.originalUrl || entry.url
     if (!mergeKey) {
-      merged.push(entry)
       continue
     }
 
-    const existing = byUrl.get(mergeKey)
-    if (!existing) {
+    const existing = mergedByUrl.get(mergeKey)
+    if (existing) {
+      applySourceMetadata(existing, entry)
+    } else {
       const base = { ...entry }
       applySourceMetadata(base, entry)
-      byUrl.set(mergeKey, base)
-      merged.push(base)
-      continue
+      mergedByUrl.set(mergeKey, base)
     }
+  }
+}
 
-    applySourceMetadata(existing, entry)
+/**
+ * Finalise merged entry metadata (search strings, ordering helpers, etc.).
+ *
+ * @param {Object} entry - Entry to finalise.
+ */
+function finalizeMergedEntry(entry) {
+  if (!entry) {
+    return
   }
 
-  return merged
+  if (entry.sourceTypes) {
+    entry.sourceTypes = sortSourceTypes(entry.sourceTypes)
+  }
+
+  if (!entry.url && entry.originalUrl) {
+    entry.url = cleanUpUrl(entry.originalUrl)
+  }
+
+  entry.searchString = createSearchString(entry.title, entry.url, entry.tags, entry.folder)
+  entry.searchStringLower = entry.searchString.toLowerCase()
+}
+
+/**
+ * Align merged entry metadata with the active search mode type.
+ *
+ * @param {Object} entry - Entry to adjust.
+ * @param {string} searchMode - Active search mode.
+ */
+function applyModeOverride(entry, searchMode) {
+  if (!entry || !searchMode) {
+    return
+  }
+
+  const targetType = MODE_TO_TYPE[searchMode]
+  if (!targetType) {
+    return
+  }
+
+  if (!entry.sourceTypes || !entry.sourceTypes.includes(targetType)) {
+    return
+  }
+
+  if (targetType === 'bookmark' && entry.bookmarkOriginalId !== undefined) {
+    entry.originalId = entry.bookmarkOriginalId
+  } else if (targetType === 'tab' && entry.tabOriginalId !== undefined) {
+    entry.originalId = entry.tabOriginalId
+  } else if (targetType === 'history' && entry.historyOriginalId !== undefined) {
+    entry.originalId = entry.historyOriginalId
+  }
+
+  entry.type = targetType
 }
 
 /**
@@ -502,8 +703,8 @@ export async function search(event) {
       results = await addDefaultEntries()
     }
 
-    // Merge duplicate URLs and set sourceTypes for all results
-    results = mergeResultsByUrl(results)
+    // Merge duplicate URLs using the precomputed index
+    results = mergeResultsFromIndex(results, searchMode)
 
     // Apply scoring and sorting
     results = applyScoring(results, searchTerm, searchMode)
