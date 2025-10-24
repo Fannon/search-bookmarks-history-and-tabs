@@ -121,14 +121,20 @@ function applySourceMetadata(target, source) {
     if (source.originalId !== undefined) {
       target.bookmarkOriginalId = source.originalId
     }
-    if ((!target.tagsArray || target.tagsArray.length === 0) && source.tagsArray && source.tagsArray.length) {
-      target.tagsArray = source.tagsArray
+    if (source.tagsArray && source.tagsArray.length) {
+      target.tagsArray = [...source.tagsArray]
     }
-    if ((!target.folderArray || target.folderArray.length === 0) && source.folderArray && source.folderArray.length) {
-      target.folderArray = source.folderArray
+    if (source.folderArray && source.folderArray.length) {
+      target.folderArray = [...source.folderArray]
     }
-    if (target.dateAdded === undefined && source.dateAdded !== undefined) {
+    if (source.dateAdded !== undefined) {
       target.dateAdded = source.dateAdded
+    }
+    if (source.title) {
+      target.title = source.title
+    }
+    if (source.titleHighlighted) {
+      target.titleHighlighted = source.titleHighlighted
     }
   } else if (source.type === 'tab') {
     if (source.originalId !== undefined) {

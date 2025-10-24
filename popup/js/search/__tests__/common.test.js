@@ -262,6 +262,36 @@ describe('mergeResultsByUrl', () => {
     expect(mergedEntry?.lastVisitSecondsAgo).toBe(120)
     expect(mergedEntry?.visitCount).toBe(5)
   })
+
+  test('prefers bookmark metadata for titles and tags when available', () => {
+    const merged = commonModule.mergeResultsByUrl([
+      {
+        type: 'tab',
+        originalUrl: 'https://bookmark-first.test',
+        originalId: 33,
+        title: 'Active tab title',
+        titleHighlighted: '<mark>Active</mark> tab title',
+        url: 'https://bookmark-first.test',
+      },
+      {
+        type: 'bookmark',
+        originalUrl: 'https://bookmark-first.test',
+        originalId: 77,
+        title: 'Bookmark title',
+        titleHighlighted: '<mark>Bookmark</mark> title',
+        url: 'https://bookmark-first.test',
+        tagsArray: ['personal', 'ideas'],
+      },
+    ])
+
+    expect(merged).toHaveLength(1)
+    const mergedEntry = merged[0]
+    expect(mergedEntry?.title).toBe('Bookmark title')
+    expect(mergedEntry?.titleHighlighted).toBe('<mark>Bookmark</mark> title')
+    expect(mergedEntry?.tagsArray).toEqual(['personal', 'ideas'])
+    expect(mergedEntry?.tabOriginalId).toBe(33)
+    expect(mergedEntry?.bookmarkOriginalId).toBe(77)
+  })
 })
 
 describe('search', () => {
