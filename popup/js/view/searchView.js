@@ -11,12 +11,6 @@ import { escapeHtml, timeSince } from '../helper/utils.js'
 import { selectListItem } from './searchNavigation.js'
 import { setupResultItemsEvents } from './searchEvents.js'
 
-const SOURCE_LABELS = {
-  tab: 'T',
-  bookmark: 'B',
-  history: 'H',
-}
-
 /**
  * Render the search results in UI as result items
  */
@@ -57,14 +51,8 @@ export async function renderSearchResults(result) {
 
     let badgesHTML = ''
 
-    if (Array.isArray(resultEntry.sourceTypes) && resultEntry.sourceTypes.length) {
-      for (const sourceType of resultEntry.sourceTypes) {
-        const label = SOURCE_LABELS[sourceType]
-        if (!label) {
-          continue
-        }
-        badgesHTML += `<span class="badge source-${escapeHtml(sourceType)}">${escapeHtml(label)}</span>`
-      }
+    if (Array.isArray(resultEntry.sourceTypes) && resultEntry.sourceTypes.includes('tag')) {
+      badgesHTML += `<span class="badge source-tag" title="Tag result">TAG</span>`
     }
 
     if (resultEntry.isDuplicateBookmark) {
