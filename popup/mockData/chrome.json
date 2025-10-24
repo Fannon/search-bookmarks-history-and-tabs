@@ -307,6 +307,14 @@
                   "parentId": "5",
                   "title": "JSON Schema Getting Started",
                   "url": "https://json-schema.org/learn/getting-started-step-by-step.html"
+                },
+                {
+                  "dateAdded": 1724182500000,
+                  "id": "2001",
+                  "index": 26,
+                  "parentId": "5",
+                  "title": "quicktype - duplicate bookmark #typescript #codegen",
+                  "url": "https://app.quicktype.io/"
                 }
               ],
               "dateAdded": 1627220684098,

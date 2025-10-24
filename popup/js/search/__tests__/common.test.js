@@ -326,6 +326,8 @@ describe('mergeResultsByUrl', () => {
     // Title from last bookmark wins
     expect(mergedEntry?.title).toBe('Second Bookmark')
     expect(mergedEntry?.type).toBe('bookmark')
+    // Should be marked as duplicate
+    expect(mergedEntry?.isDuplicateBookmark).toBe(true)
   })
 })
 

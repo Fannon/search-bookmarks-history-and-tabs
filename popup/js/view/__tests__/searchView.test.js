@@ -284,4 +284,31 @@ describe('searchView renderSearchResults', () => {
     expect(link).toContain('bookmark%2Fwith%2Fslashes')
     expect(link).not.toContain('bookmark/with/slashes')
   })
+
+  it('renders DUPLICATE badge for merged bookmarks', async () => {
+    const duplicateResults = [
+      {
+        type: 'bookmark',
+        originalId: 'bm-duplicate',
+        originalUrl: 'https://duplicate.test',
+        url: 'duplicate.test',
+        title: 'Duplicate Bookmark',
+        isDuplicateBookmark: true,
+        sourceTypes: ['bookmark'],
+      },
+    ]
+
+    const { module, elements } = await setupSearchView({
+      results: duplicateResults,
+    })
+
+    await module.renderSearchResults()
+
+    const listItem = elements.resultList.querySelector('li')
+    const duplicateBadge = listItem.querySelector('.badge.duplicate')
+
+    expect(duplicateBadge).not.toBeNull()
+    expect(duplicateBadge.textContent).toBe('DUPLICATE')
+    expect(duplicateBadge.getAttribute('title')).toBe('Multiple bookmarks with the same URL')
+  })
 })

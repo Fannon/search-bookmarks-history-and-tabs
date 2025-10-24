@@ -67,6 +67,10 @@ export async function renderSearchResults(result) {
       }
     }
 
+    if (resultEntry.isDuplicateBookmark) {
+      badgesHTML += `<span class="badge duplicate" title="Multiple bookmarks with the same URL">DUPLICATE</span>`
+    }
+
     if (opts.displayTags && resultEntry.tagsArray) {
       for (const tag of resultEntry.tagsArray) {
         const safeTag = escapeHtml(tag)

@@ -114,6 +114,20 @@ function applySourceMetadata(target, source) {
     return
   }
 
+  // Track duplicate bookmarks BEFORE adding to sourceTypes
+  // (only if this is the second+ bookmark being merged)
+  if (source.type === 'bookmark' && target.type === 'bookmark') {
+    // Check if target already has 'bookmark' in sourceTypes (before we add the new one)
+    if (target.sourceTypes?.includes('bookmark')) {
+      target.isDuplicateBookmark = true
+      console.warn('Duplicate bookmark detected:', {
+        url: target.originalUrl || target.url,
+        folder1: target.folder,
+        folder2: source.folder,
+      })
+    }
+  }
+
   const combinedTypes = target.sourceTypes ? [...target.sourceTypes, source.type] : [source.type]
   target.sourceTypes = sortSourceTypes(combinedTypes)
 
@@ -232,9 +246,7 @@ export function mergeResultsByUrl(results) {
     }
 
     const mergeKey =
-      MERGEABLE_TYPES.has(entry.type) && (entry.originalUrl || entry.url)
-        ? entry.originalUrl || entry.url
-        : undefined
+      MERGEABLE_TYPES.has(entry.type) && (entry.originalUrl || entry.url) ? entry.originalUrl || entry.url : undefined
 
     if (!mergeKey) {
       merged.push(entry)
@@ -358,11 +370,7 @@ async function executeSearch(searchTerm, searchMode) {
  * @param {Array} results - Current result array.
  */
 function addDirectUrlIfApplicable(searchTerm, results) {
-  if (
-    ext.opts.enableDirectUrl &&
-    urlRegex.test(searchTerm) &&
-    results.length < ext.opts.searchMaxResults
-  ) {
+  if (ext.opts.enableDirectUrl && urlRegex.test(searchTerm) && results.length < ext.opts.searchMaxResults) {
     const url = protocolRegex.test(searchTerm) ? searchTerm : `https://${searchTerm.replace(/^\/+/, '')}`
     results.push({
       type: 'direct',

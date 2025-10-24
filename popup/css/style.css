@@ -145,6 +145,9 @@ code {
 .badge.source-history {
   background: #9ece2f;
 }
+.badge.duplicate {
+  background: #d9534f;
+}
 /* Tag styles */
 .tags {
   background: #557292;
