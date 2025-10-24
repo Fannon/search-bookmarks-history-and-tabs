@@ -139,12 +139,6 @@ code {
 .badge.source-tab {
   background: #b89aff;
 }
-.badge.source-bookmark {
-  background: #3c8d8d;
-}
-.badge.source-history {
-  background: #9ece2f;
-}
 .badge.duplicate {
   background: #d9534f;
 }

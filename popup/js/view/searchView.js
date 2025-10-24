@@ -51,8 +51,8 @@ export async function renderSearchResults(result) {
 
     let badgesHTML = ''
 
-    if (Array.isArray(resultEntry.sourceTypes) && resultEntry.sourceTypes.includes('tag')) {
-      badgesHTML += `<span class="badge source-tag" title="Tag result">TAG</span>`
+    if (Array.isArray(resultEntry.sourceTypes) && resultEntry.sourceTypes.includes('tab')) {
+      badgesHTML += `<span class="badge source-tab" title="Active Tab">T</span>`
     }
 
     if (resultEntry.isDuplicateBookmark) {
