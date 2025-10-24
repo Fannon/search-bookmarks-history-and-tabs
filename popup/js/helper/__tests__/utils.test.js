@@ -221,7 +221,7 @@ describe('loadScript', () => {
 
 describe('escapeHtml', () => {
   it('escapes all special characters', () => {
-    expect(escapeHtml('<script>"test"&\'')).toBe('<script>"test"&&#39;')
+    expect(escapeHtml('<script>"test"&\'')).toBe('&lt;script&gt;&quot;test&quot;&amp;&#39;')
   })
 
   it('handles nullish values gracefully', () => {

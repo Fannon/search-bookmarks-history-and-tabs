@@ -50,7 +50,6 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   const resetFuzzySearchState = jest.fn()
   const resetSimpleSearchState = jest.fn()
   const searchMock = jest.fn(() => Promise.resolve())
-  const prepareSearchIndex = jest.fn()
   const createSearchString = jest.fn((title, url, tags, folder) => `search:${title}|${url}|${tags}|${folder}`)
   const browserApi = {
     bookmarks: {
@@ -60,6 +59,7 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   }
   const getUniqueTags = jest.fn(() => uniqueTagsMockValue)
   const resetUniqueFoldersCache = jest.fn()
+  const markBookmarksWithOpenTabs = jest.fn()
 
   class BaseTagify {
     constructor(element, options) {
@@ -96,11 +96,13 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
     resetUniqueFoldersCache,
   }))
   jest.unstable_mockModule('../../search/common.js', () => ({
-    prepareSearchIndex,
     search: searchMock,
   }))
   jest.unstable_mockModule('../../search/simpleSearch.js', () => ({
     resetSimpleSearchState,
+  }))
+  jest.unstable_mockModule('../../model/searchData.js', () => ({
+    markBookmarksWithOpenTabs,
   }))
 
   const module = await import('../editBookmarkView.js')
@@ -111,11 +113,11 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
       resetFuzzySearchState,
       resetSimpleSearchState,
       searchMock,
-      prepareSearchIndex,
       createSearchString,
       browserApi,
       getUniqueTags,
       resetUniqueFoldersCache,
+      markBookmarksWithOpenTabs,
     },
     helpers: {
       tagifyInstances,
@@ -224,7 +226,7 @@ describe('editBookmarkView', () => {
     }
     setupExt([bookmark])
     const { module, mocks, helpers } = await loadEditBookmarkView()
-    mocks.prepareSearchIndex.mockClear()
+    mocks.markBookmarksWithOpenTabs.mockClear()
     global.ext.returnHash = '#search/foo'
 
     document.getElementById('bookmark-title').value = 'Updated Title'
@@ -252,11 +254,7 @@ describe('editBookmarkView', () => {
       title: 'Updated Title #alpha #beta',
       url: 'http://updated.com',
     })
-    expect(mocks.prepareSearchIndex).toHaveBeenCalledWith({
-      bookmarks: global.ext.model.bookmarks,
-      tabs: [],
-      history: [],
-    })
+    expect(mocks.markBookmarksWithOpenTabs).toHaveBeenCalledWith(global.ext.model.bookmarks, [])
   })
 
   it('handles missing browser API and empty tag selection during update', async () => {
@@ -272,7 +270,7 @@ describe('editBookmarkView', () => {
     }
     setupExt([bookmark])
     const { module, mocks } = await loadEditBookmarkView()
-    mocks.prepareSearchIndex.mockClear()
+    mocks.markBookmarksWithOpenTabs.mockClear()
     global.ext.returnHash = '#search/foo'
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 
@@ -289,11 +287,7 @@ describe('editBookmarkView', () => {
     expect(mocks.browserApi.bookmarks?.update).toBeUndefined()
     expect(warnSpy).toHaveBeenCalledWith('No browser bookmarks API found. Bookmark update will not persist.')
     expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
-    expect(mocks.prepareSearchIndex).toHaveBeenCalledWith({
-      bookmarks: global.ext.model.bookmarks,
-      tabs: [],
-      history: [],
-    })
+    expect(mocks.markBookmarksWithOpenTabs).toHaveBeenCalledWith(global.ext.model.bookmarks, [])
 
     warnSpy.mockRestore()
   })
@@ -306,7 +300,7 @@ describe('editBookmarkView', () => {
     ]
     setupExt(bookmarks, { returnHash: '#search/foo' })
     const { module, mocks } = await loadEditBookmarkView()
-    mocks.prepareSearchIndex.mockClear()
+    mocks.markBookmarksWithOpenTabs.mockClear()
     global.ext.returnHash = '#search/foo'
 
     await module.deleteBookmark(BOOKMARK_ID)
@@ -319,11 +313,7 @@ describe('editBookmarkView', () => {
     expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.searchMock).not.toHaveBeenCalled()
     expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
-    expect(mocks.prepareSearchIndex).toHaveBeenCalledWith({
-      bookmarks: global.ext.model.bookmarks,
-      tabs: [],
-      history: [],
-    })
+    expect(mocks.markBookmarksWithOpenTabs).toHaveBeenCalledWith(global.ext.model.bookmarks, [])
   })
 
   it('reruns search after deletion when search UI is available', async () => {
@@ -342,15 +332,11 @@ describe('editBookmarkView', () => {
       },
     )
     const { module, mocks } = await loadEditBookmarkView()
-    mocks.prepareSearchIndex.mockClear()
+    mocks.markBookmarksWithOpenTabs.mockClear()
     await module.deleteBookmark(BOOKMARK_ID)
 
     expect(mocks.searchMock).not.toHaveBeenCalled()
-    expect(mocks.prepareSearchIndex).toHaveBeenCalledWith({
-      bookmarks: global.ext.model.bookmarks,
-      tabs: [],
-      history: [],
-    })
+    expect(mocks.markBookmarksWithOpenTabs).toHaveBeenCalledWith(global.ext.model.bookmarks, [])
   })
 
   it('logs a warning when attempting to delete without bookmark API', async () => {
@@ -359,18 +345,14 @@ describe('editBookmarkView', () => {
     const { module, mocks } = await loadEditBookmarkView()
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
     mocks.browserApi.bookmarks = undefined
-    mocks.prepareSearchIndex.mockClear()
+    mocks.markBookmarksWithOpenTabs.mockClear()
 
     await module.deleteBookmark(BOOKMARK_ID)
 
     expect(warnSpy).toHaveBeenCalledWith('No browser bookmarks API found. Bookmark remove will not persist.')
     expect(global.ext.model.bookmarks).toHaveLength(0)
     expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
-    expect(mocks.prepareSearchIndex).toHaveBeenCalledWith({
-      bookmarks: global.ext.model.bookmarks,
-      tabs: [],
-      history: [],
-    })
+    expect(mocks.markBookmarksWithOpenTabs).toHaveBeenCalledWith(global.ext.model.bookmarks, [])
     warnSpy.mockRestore()
   })
 

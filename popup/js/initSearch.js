@@ -12,7 +12,7 @@
 import { loadScript } from './helper/utils.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
-import { addDefaultEntries, prepareSearchIndex, search } from './search/common.js'
+import { addDefaultEntries, search } from './search/common.js'
 import { renderSearchResults } from './view/searchView.js'
 import { navigationKeyListener } from './view/searchNavigation.js'
 import { toggleSearchApproach, updateSearchApproachToggle } from './view/searchEvents.js'
@@ -49,13 +49,11 @@ export async function initExtension() {
 
   updateSearchApproachToggle()
 
+  // Or simpler?: ext.model = await getSearchData()
   const { bookmarks, tabs, history } = await getSearchData()
   ext.model.tabs = tabs
   ext.model.bookmarks = bookmarks
   ext.model.history = history
-
-  // Pre-compute merged search index so deduplication no longer runs per query
-  prepareSearchIndex({ bookmarks, tabs, history })
 
   // Register Events
   document.addEventListener('keydown', navigationKeyListener)

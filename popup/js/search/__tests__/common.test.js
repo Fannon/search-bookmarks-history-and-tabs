@@ -224,172 +224,6 @@ describe('addDefaultEntries', () => {
   })
 })
 
-describe('mergeResultsFromIndex', () => {
-  test('merges bookmark, tab, and history entries sharing the same URL', () => {
-    const bookmark = {
-      type: 'bookmark',
-      originalUrl: 'https://example.test',
-      originalId: 1,
-      title: 'Example bookmark',
-      url: 'https://example.test',
-      searchScore: 1,
-      tagsArray: ['Work'],
-      folderArray: ['Work'],
-      dateAdded: 123,
-    }
-    const tab = {
-      type: 'tab',
-      originalUrl: 'https://example.test',
-      originalId: 200,
-      title: 'Example tab',
-      url: 'https://example.test',
-      searchScore: 1,
-      windowId: 2,
-    }
-    const history = {
-      type: 'history',
-      originalUrl: 'https://example.test',
-      originalId: 'hist-1',
-      title: 'Example history',
-      url: 'https://example.test',
-      searchScore: 1,
-      lastVisitSecondsAgo: 120,
-      visitCount: 5,
-    }
-
-    ext.model.bookmarks = [bookmark]
-    ext.model.tabs = [tab]
-    ext.model.history = [history]
-    commonModule.prepareSearchIndex({
-      bookmarks: ext.model.bookmarks,
-      tabs: ext.model.tabs,
-      history: ext.model.history,
-    })
-
-    const merged = commonModule.mergeResultsFromIndex([
-      { ...bookmark, searchApproach: 'precise' },
-      { ...tab, searchApproach: 'precise' },
-      { ...history, searchApproach: 'precise' },
-      {
-        type: 'direct',
-        originalUrl: 'https://other.test',
-        originalId: 'direct',
-        searchScore: 1,
-        searchApproach: 'precise',
-      },
-    ], 'all')
-
-    expect(merged).toHaveLength(2)
-    const mergedEntry = merged.find((item) => item.originalUrl === 'https://example.test')
-    expect(mergedEntry).toBeDefined()
-    expect(mergedEntry?.sourceTypes).toEqual(['bookmark', 'tab', 'history'])
-    expect(mergedEntry?.type).toBe('bookmark')
-    expect(mergedEntry?.originalId).toBe(1)
-    expect(mergedEntry?.tabOriginalId).toBe(200)
-    expect(mergedEntry?.bookmarkOriginalId).toBe(1)
-    expect(mergedEntry?.historyOriginalId).toBe('hist-1')
-    expect(mergedEntry?.tagsArray).toEqual(['Work'])
-    expect(mergedEntry?.lastVisitSecondsAgo).toBe(120)
-    expect(mergedEntry?.visitCount).toBe(5)
-  })
-
-  test('prefers bookmark metadata for titles and tags when available', () => {
-    const tab = {
-      type: 'tab',
-      originalUrl: 'https://bookmark-first.test',
-      originalId: 33,
-      title: 'Active tab title',
-      titleHighlighted: '<mark>Active</mark> tab title',
-      url: 'https://bookmark-first.test',
-    }
-    const bookmark = {
-      type: 'bookmark',
-      originalUrl: 'https://bookmark-first.test',
-      originalId: 77,
-      title: 'Bookmark title',
-      titleHighlighted: '<mark>Bookmark</mark> title',
-      url: 'https://bookmark-first.test',
-      tagsArray: ['personal', 'ideas'],
-    }
-
-    ext.model.bookmarks = [bookmark]
-    ext.model.tabs = [tab]
-    ext.model.history = []
-    commonModule.prepareSearchIndex({
-      bookmarks: ext.model.bookmarks,
-      tabs: ext.model.tabs,
-      history: [],
-    })
-
-    const merged = commonModule.mergeResultsFromIndex(
-      [
-        { ...tab, searchApproach: 'precise', searchScore: 1 },
-        { ...bookmark, searchApproach: 'precise', searchScore: 1 },
-      ],
-      'all',
-    )
-
-    expect(merged).toHaveLength(1)
-    const mergedEntry = merged[0]
-    expect(mergedEntry?.title).toBe('Bookmark title')
-    expect(mergedEntry?.titleHighlighted).toBe('<mark>Bookmark</mark> title')
-    expect(mergedEntry?.tagsArray).toEqual(['personal', 'ideas'])
-    expect(mergedEntry?.tabOriginalId).toBe(33)
-    expect(mergedEntry?.bookmarkOriginalId).toBe(77)
-    expect(mergedEntry?.type).toBe('bookmark')
-    expect(mergedEntry?.originalId).toBe(77)
-  })
-
-  test('merges tags from multiple bookmarks with the same URL', () => {
-    const firstBookmark = {
-      type: 'bookmark',
-      originalUrl: 'https://multi-bookmark.test',
-      originalId: 1,
-      title: 'First Bookmark',
-      url: 'https://multi-bookmark.test',
-      tagsArray: ['work', 'project-a'],
-      tags: '#work #project-a',
-    }
-    const secondBookmark = {
-      type: 'bookmark',
-      originalUrl: 'https://multi-bookmark.test',
-      originalId: 2,
-      title: 'Second Bookmark',
-      url: 'https://multi-bookmark.test',
-      tagsArray: ['personal', 'project-a'],
-      tags: '#personal #project-a',
-    }
-
-    ext.model.bookmarks = [firstBookmark, secondBookmark]
-    ext.model.tabs = []
-    ext.model.history = []
-    commonModule.prepareSearchIndex({
-      bookmarks: ext.model.bookmarks,
-      tabs: [],
-      history: [],
-    })
-
-    const merged = commonModule.mergeResultsFromIndex(
-      [
-        { ...firstBookmark, searchApproach: 'precise', searchScore: 1 },
-        { ...secondBookmark, searchApproach: 'precise', searchScore: 1 },
-      ],
-      'bookmarks',
-    )
-
-    expect(merged).toHaveLength(1)
-    const mergedEntry = merged[0]
-    // Tags should be merged and deduplicated
-    expect(mergedEntry?.tagsArray).toEqual(['work', 'project-a', 'personal'])
-    // Tags string should be reconstructed from merged array
-    expect(mergedEntry?.tags).toBe('#work #project-a #personal')
-    // Title from last bookmark wins
-    expect(mergedEntry?.title).toBe('Second Bookmark')
-    expect(mergedEntry?.type).toBe('bookmark')
-    // Should be marked as duplicate
-    expect(mergedEntry?.isDuplicateBookmark).toBe(true)
-  })
-})
 
 describe('search', () => {
   test('returns early for navigation keys', async () => {
@@ -599,6 +433,7 @@ describe('search', () => {
         url: 'https://merge.test',
         title: 'Merge Bookmark',
         searchString: 'merge bookmark duplicate https://merge.test',
+        isOpenTab: true,
       },
     ]
     ext.model.tabs = [
@@ -615,12 +450,19 @@ describe('search', () => {
     await search({ key: 'd' })
 
     const rendered = mockRenderSearchResults.mock.calls.at(-1)?.[0]
-    expect(rendered).toHaveLength(1)
-    const [merged] = rendered
-    expect(merged.sourceTypes).toEqual(['bookmark', 'tab'])
-    expect(merged.type).toBe('bookmark')
-    expect(merged.tabOriginalId).toBe(22)
-    expect(merged.bookmarkOriginalId).toBe(11)
-    expect(merged.originalId).toBe(11)
+    expect(rendered).toHaveLength(2)
+    expect(rendered).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'bookmark',
+          originalId: 11,
+          isOpenTab: true,
+        }),
+        expect.objectContaining({
+          type: 'tab',
+          originalId: 22,
+        }),
+      ]),
+    )
   })
 })

@@ -51,12 +51,8 @@ export async function renderSearchResults(result) {
 
     let badgesHTML = ''
 
-    if (Array.isArray(resultEntry.sourceTypes) && resultEntry.sourceTypes.includes('tab')) {
-      badgesHTML += `<span class="badge source-tab" title="Active Tab">T</span>`
-    }
-
-    if (resultEntry.isDuplicateBookmark) {
-      badgesHTML += `<span class="badge duplicate" title="Multiple bookmarks with the same URL">DUPLICATE</span>`
+    if (resultEntry.type === 'bookmark' && resultEntry.isOpenTab) {
+      badgesHTML += `<span class="badge source-tab" title="Also open in a tab">T</span>`
     }
 
     if (opts.displayTags && resultEntry.tagsArray) {
@@ -120,37 +116,19 @@ export async function renderSearchResults(result) {
     const originalUrlAttr = resultEntry.originalUrl ? ` x-open-url="${escapeHtml(resultEntry.originalUrl)}"` : ''
     const originalIdAttr =
       resultEntry.originalId !== undefined ? ` x-original-id="${escapeHtml(String(resultEntry.originalId))}"` : ''
-    const bookmarkIdForEdit =
-      resultEntry.bookmarkOriginalId !== undefined
-        ? resultEntry.bookmarkOriginalId
-        : resultEntry.type === 'bookmark'
-        ? resultEntry.originalId
-        : undefined
-    const tabIdForClose =
-      resultEntry.tabOriginalId !== undefined
-        ? resultEntry.tabOriginalId
-        : resultEntry.type === 'tab'
-        ? resultEntry.originalId
-        : undefined
     const colorValue = escapeHtml(String(opts[resultEntry.type + 'Color']))
 
     const itemHTML = `
       <li class="${typeClass}"${originalUrlAttr} x-index="${i}"${originalIdAttr}
           style="border-left: ${opts.colorStripeWidth}px solid ${colorValue}">
         ${
-          bookmarkIdForEdit !== undefined
+          resultEntry.type === 'bookmark'
             ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(
-                bookmarkIdForEdit,
+                resultEntry.originalId,
               )}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">`
             : ''
         }
-        ${
-          tabIdForClose !== undefined
-            ? `<img class="close-button" data-tab-id="${escapeHtml(
-                String(tabIdForClose),
-              )}" title="Close Tab" src="./img/x.svg">`
-            : ''
-        }
+        ${resultEntry.type === 'tab' ? '<img class="close-button" title="Close Tab" src="./img/x.svg">' : ''}
         <div class="title">
           <span class="title-text">${titleContent} </span>
           ${badgesHTML}
@@ -167,7 +145,7 @@ export async function renderSearchResults(result) {
       if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
         const mark = new window.Mark(resultListItem)
         mark.mark(searchTerm, {
-          exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
+          exclude: ['.last-visited', '.score', '.visit-counter', '.date-added', '.source-tab'],
         })
       }
     }

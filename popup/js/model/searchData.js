@@ -57,6 +57,32 @@ function mergeHistoryLazily(items, historyMap, mergedUrls) {
 }
 
 /**
+ * Flag bookmarks whose URLs match currently open tabs.
+ *
+ * @param {Array<Object>} bookmarks - Bookmark entries to annotate.
+ * @param {Array<Object>} tabs - Open tab entries.
+ * @returns {Array<Object>} The bookmarks array with updated flags.
+ */
+export function markBookmarksWithOpenTabs(bookmarks, tabs) {
+  if (!Array.isArray(bookmarks)) {
+    return bookmarks
+  }
+  const openUrls = new Set()
+  if (Array.isArray(tabs)) {
+    for (const tab of tabs) {
+      const url = tab?.originalUrl || tab?.url
+      if (url) {
+        openUrls.add(url)
+      }
+    }
+  }
+  for (const bookmark of bookmarks) {
+    bookmark.isOpenTab = bookmark?.originalUrl ? openUrls.has(bookmark.originalUrl) : false
+  }
+  return bookmarks
+}
+
+/**
  * Fetch and normalize the datasets used by the popup search experience.
  *
  * @returns {Promise<{tabs: Array, bookmarks: Array, history: Array}>} Prepared search data.
@@ -82,6 +108,7 @@ export async function getSearchData() {
       if (ext.opts.enableHistory) {
         result.history = convertBrowserHistory(chromeMockData.history)
       }
+      markBookmarksWithOpenTabs(result.bookmarks, result.tabs)
     } catch (err) {
       console.warn('Could not load example mock data', err)
     }
@@ -109,7 +136,10 @@ export async function getSearchData() {
 
       result.history = result.history.filter((item) => !mergedHistoryUrls.has(item.originalUrl))
     }
+    markBookmarksWithOpenTabs(result.bookmarks, result.tabs)
   }
+  markBookmarksWithOpenTabs(result.bookmarks, result.tabs)
+
   console.debug(
     `Loaded ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${
       result.history.length

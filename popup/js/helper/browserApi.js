@@ -264,9 +264,6 @@ export function createSearchString(title, url, tags, folder) {
     console.error('createSearchString: No URL given', { title, url, tags, folder })
     return searchString
   }
-  // Keep the original casing intact. Fuzzy search relies on searchString
-  // to generate highlighted snippets for the UI, so we compute
-  // searchStringLower separately when building the data model.
   if (title && !title.toLowerCase().includes(url.toLowerCase())) {
     searchString += title + separator + url
   } else {

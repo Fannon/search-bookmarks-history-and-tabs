@@ -19,7 +19,6 @@ const mockDependencies = async (overrides = {}) => {
   const defaults = {
     loadScript: jest.fn(() => Promise.resolve()),
     printError: jest.fn(),
-    prepareSearchIndex: jest.fn(),
     getEffectiveOptions: jest.fn(() =>
       Promise.resolve({
         searchStrategy: 'precise',
@@ -78,7 +77,6 @@ const mockDependencies = async (overrides = {}) => {
     __esModule: true,
     search: config.search,
     addDefaultEntries: config.addDefaultEntries,
-    prepareSearchIndex: config.prepareSearchIndex,
   }))
   await jest.unstable_mockModule('../helper/browserApi.js', () => ({
     __esModule: true,
@@ -135,11 +133,6 @@ describe('initSearch entry point', () => {
     expect(module.ext.initialized).toBe(true)
     expect(module.ext.model.tabs).toEqual([{ originalId: 't1' }])
     expect(module.ext.searchCache instanceof Map).toBe(true)
-    expect(mocks.prepareSearchIndex).toHaveBeenCalledWith({
-      bookmarks: [{ originalId: 'b1' }],
-      tabs: [{ originalId: 't1' }],
-      history: [{ originalId: 'h1' }],
-    })
     expect(mocks.addDefaultEntries).toHaveBeenCalled()
     expect(mocks.renderSearchResults).toHaveBeenCalled()
     expect(mocks.loadScript).toHaveBeenCalledWith('./lib/mark.es6.min.js')

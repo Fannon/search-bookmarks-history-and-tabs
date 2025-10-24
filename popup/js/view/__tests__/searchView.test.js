@@ -25,6 +25,7 @@ function createResults() {
       visitCount: 7,
       dateAdded: new Date('2023-01-02').getTime(),
       score: 41.8,
+      isOpenTab: true,
     },
     {
       type: 'tab',
@@ -159,6 +160,9 @@ describe('searchView renderSearchResults', () => {
     expect(tagBadges.map((el) => el.getAttribute('x-link'))).toEqual(['#search/#alpha', '#search/#beta'])
     const folderBadges = Array.from(bookmarkItem.querySelectorAll('.badge.folder'))
     expect(folderBadges.map((el) => el.getAttribute('x-link'))).toEqual(['#search/~Work', '#search/~Work ~Docs'])
+    const tabBadge = bookmarkItem.querySelector('.badge.source-tab')
+    expect(tabBadge).not.toBeNull()
+    expect(tabBadge.textContent).toBe('T')
     expect(bookmarkItem.querySelector('.badge.last-visited')).not.toBeNull()
     const visitCounterBadge = bookmarkItem.querySelector('.badge.visit-counter')
     expect(visitCounterBadge).not.toBeNull()
@@ -285,30 +289,4 @@ describe('searchView renderSearchResults', () => {
     expect(link).not.toContain('bookmark/with/slashes')
   })
 
-  it('renders DUPLICATE badge for merged bookmarks', async () => {
-    const duplicateResults = [
-      {
-        type: 'bookmark',
-        originalId: 'bm-duplicate',
-        originalUrl: 'https://duplicate.test',
-        url: 'duplicate.test',
-        title: 'Duplicate Bookmark',
-        isDuplicateBookmark: true,
-        sourceTypes: ['bookmark'],
-      },
-    ]
-
-    const { module, elements } = await setupSearchView({
-      results: duplicateResults,
-    })
-
-    await module.renderSearchResults()
-
-    const listItem = elements.resultList.querySelector('li')
-    const duplicateBadge = listItem.querySelector('.badge.duplicate')
-
-    expect(duplicateBadge).not.toBeNull()
-    expect(duplicateBadge.textContent).toBe('DUPLICATE')
-    expect(duplicateBadge.getAttribute('title')).toBe('Multiple bookmarks with the same URL')
-  })
 })

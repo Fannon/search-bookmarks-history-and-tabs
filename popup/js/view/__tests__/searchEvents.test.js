@@ -46,15 +46,17 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
   const getUserOptions = jest.fn(async () => ({ searchStrategy: 'precise' }))
   const setUserOptions = jest.fn(async () => {})
   const searchMock = jest.fn(() => Promise.resolve())
-  const prepareSearchIndex = jest.fn()
+  const markBookmarksWithOpenTabs = jest.fn()
 
   jest.unstable_mockModule('../../model/options.js', () => ({
     getUserOptions,
     setUserOptions,
   }))
   jest.unstable_mockModule('../../search/common.js', () => ({
-    prepareSearchIndex,
     search: searchMock,
+  }))
+  jest.unstable_mockModule('../../model/searchData.js', () => ({
+    markBookmarksWithOpenTabs,
   }))
 
   // Import modules needed for events
@@ -139,7 +141,7 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
       getUserOptions,
       setUserOptions,
       search: searchMock,
-      prepareSearchIndex,
+      markBookmarksWithOpenTabs,
     },
     elements: {
       resultList,
@@ -185,7 +187,7 @@ describe('searchEvents openResultItem', () => {
 
   it('closes tabs from the result list when the close button is pressed', async () => {
     const { viewModule, elements, mocks } = await setupSearchEvents()
-    mocks.prepareSearchIndex.mockClear()
+    mocks.markBookmarksWithOpenTabs.mockClear()
     await viewModule.renderSearchResults()
     const tabItem = elements.resultList.children[1]
     const closeButton = tabItem.querySelector('.close-button')
@@ -196,11 +198,7 @@ describe('searchEvents openResultItem', () => {
     expect(ext.model.tabs).toHaveLength(0)
     expect(ext.model.result).toHaveLength(1)
     expect(elements.resultList.children).toHaveLength(1)
-    expect(mocks.prepareSearchIndex).toHaveBeenCalledWith({
-      bookmarks: [],
-      tabs: [],
-      history: [],
-    })
+    expect(mocks.markBookmarksWithOpenTabs).toHaveBeenCalledWith([], [])
   })
 
   it('opens URLs in the current tab when shift is held and closes the popup afterward', async () => {

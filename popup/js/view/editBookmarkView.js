@@ -11,9 +11,9 @@
 import { browserApi, createSearchString } from '../helper/browserApi.js'
 import { cleanUpUrl } from '../helper/utils.js'
 import { resetFuzzySearchState } from '../search/fuzzySearch.js'
-import { prepareSearchIndex } from '../search/common.js'
 import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
+import { markBookmarksWithOpenTabs } from '../model/searchData.js'
 
 /**
  * Populate the bookmark editor form for the given bookmark id.
@@ -104,11 +104,7 @@ export function updateBookmark(bookmarkId) {
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
   resetUniqueFoldersCache()
-  prepareSearchIndex({
-    bookmarks: ext.model.bookmarks,
-    tabs: ext.model.tabs || [],
-    history: ext.model.history || [],
-  })
+  markBookmarksWithOpenTabs(ext.model.bookmarks, ext.model.tabs || [])
 
   if (browserApi.bookmarks) {
     browserApi.bookmarks.update(bookmarkId, {
@@ -143,11 +139,7 @@ export async function deleteBookmark(bookmarkId) {
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
   resetUniqueFoldersCache()
-  prepareSearchIndex({
-    bookmarks: ext.model.bookmarks,
-    tabs: ext.model.tabs || [],
-    history: ext.model.history || [],
-  })
+  markBookmarksWithOpenTabs(ext.model.bookmarks, ext.model.tabs || [])
 
   navigateToSearchView()
 }

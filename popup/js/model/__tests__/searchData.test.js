@@ -181,6 +181,7 @@ describe('getSearchData', () => {
       const mergedBookmark = result.bookmarks.find((bookmark) => bookmark.originalUrl === 'https://example.com')
       expect(mergedBookmark.lastVisitSecondsAgo).toBe(25)
       expect(mergedBookmark.visitCount).toBe(12)
+      expect(mergedBookmark.isOpenTab).toBe(true)
 
       const remainingHistory = historyAfterConvert.filter((entry) => entry.originalUrl !== 'https://example.com')
       expect(result.history).toEqual(remainingHistory)
@@ -324,6 +325,9 @@ describe('getSearchData', () => {
 
       const expectedTabs = actualConvertBrowserTabs(mockState.tabs)
       const expectedBookmarks = actualConvertBrowserBookmarks(mockState.bookmarks)
+      expectedBookmarks.forEach((bookmark) => {
+        bookmark.isOpenTab = false
+      })
 
       const result = await getSearchData()
 
