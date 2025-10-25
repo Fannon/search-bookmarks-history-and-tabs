@@ -33,7 +33,8 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
       const searchString = `${entry[taxonomyType] || ''}`.toLowerCase()
       let searchTermMatches = 0
       for (const term of searchTermArray) {
-        if (searchString.includes(taxonomyMarker + term)) {
+        const trimmedTerm = term.trim()
+        if (trimmedTerm && searchString.includes(taxonomyMarker + trimmedTerm)) {
           searchTermMatches++
         }
       }
