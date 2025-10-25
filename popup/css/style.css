@@ -136,6 +136,9 @@ code {
   position: relative;
   top: -2px;
 }
+.badge.duplicate {
+  background: #d9534f;
+}
 /* Tag styles */
 .tags {
   background: #557292;

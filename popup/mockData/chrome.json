@@ -80,6 +80,33 @@
       "windowId": 1,
       "lastVisitSecondsAgo": 10,
       "lastAccessed": 1724182409000
+    },
+    {
+      "active": false,
+      "audible": false,
+      "autoDiscardable": true,
+      "discarded": false,
+      "favIconUrl": "https://app.quicktype.io/favicon.ico",
+      "groupId": -1,
+      "height": 1172,
+      "highlighted": false,
+      "id": 190,
+      "incognito": false,
+      "index": 3,
+      "mutedInfo": {
+        "muted": false
+      },
+      "pinned": false,
+      "selected": false,
+      "status": "complete",
+      "title": "quicktype generator #json #json-schema",
+      "type": "tab",
+      "url": "https://app.quicktype.io/",
+      "originalUrl": "https://app.quicktype.io/",
+      "width": 1334,
+      "windowId": 1,
+      "lastVisitSecondsAgo": 5,
+      "lastAccessed": 1724182419000
     }
   ],
   "bookmarks": [
@@ -272,6 +299,22 @@
                   "parentId": "5",
                   "title": "One Two Three Four Five Six Seven Eight Nine Ten",
                   "url": "https://example.com"
+                },
+                {
+                  "dateAdded": 1724182419000,
+                  "id": "2000",
+                  "index": 25,
+                  "parentId": "5",
+                  "title": "JSON Schema Getting Started",
+                  "url": "https://json-schema.org/learn/getting-started-step-by-step.html"
+                },
+                {
+                  "dateAdded": 1724182500000,
+                  "id": "2001",
+                  "index": 26,
+                  "parentId": "5",
+                  "title": "quicktype - duplicate bookmark #typescript #codegen",
+                  "url": "https://app.quicktype.io/"
                 }
               ],
               "dateAdded": 1627220684098,
@@ -393,6 +436,22 @@
     }
   ],
   "history": [
+    {
+      "id": "h16",
+      "lastVisitTime": 1724182420000,
+      "title": "quicktype generator #json #json-schema",
+      "typedCount": 1,
+      "url": "https://app.quicktype.io/",
+      "visitCount": 4
+    },
+    {
+      "id": "h15",
+      "lastVisitTime": 1724182415000,
+      "title": "Getting Started Step-By-Step | JSON Schema",
+      "typedCount": 0,
+      "url": "https://json-schema.org/learn/getting-started-step-by-step.html",
+      "visitCount": 2
+    },
     {
       "id": "h14",
       "lastVisitTime": 1627244145754.936,

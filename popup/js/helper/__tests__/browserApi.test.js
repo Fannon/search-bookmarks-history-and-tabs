@@ -196,6 +196,43 @@ describe('convertBrowserBookmarks', () => {
     const result = convertBrowserBookmarks(tree, ['Ignore me'], 3)
     expect(result).toHaveLength(0)
   })
+
+  it('flags duplicate bookmarks as they are converted', () => {
+    ext.opts.bookmarksIgnoreFolderList = []
+    const tree = [
+      {
+        title: 'Root',
+        children: [
+          {
+            id: 'bookmark-1',
+            title: 'First entry',
+            url: 'https://duplicate.example.com',
+          },
+          {
+            id: 'bookmark-2',
+            title: 'Second entry',
+            url: 'https://duplicate.example.com',
+          },
+        ],
+      },
+    ]
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    try {
+      const result = convertBrowserBookmarks(tree)
+
+      const duplicates = result.filter((bookmark) => bookmark.dupe)
+      expect(duplicates).toHaveLength(2)
+      expect(duplicates.every((bookmark) => bookmark.dupe)).toBe(true)
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy.mock.calls[0][0]).toContain('Duplicate bookmark detected')
+      expect(warnSpy.mock.calls[0][0]).toContain('https://duplicate.example.com')
+      expect(warnSpy.mock.calls[0][0]).toContain('folder: /')
+    } finally {
+      warnSpy.mockRestore()
+    }
+  })
 })
 
 describe('convertBrowserHistory', () => {

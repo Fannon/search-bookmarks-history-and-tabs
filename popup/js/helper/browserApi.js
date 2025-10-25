@@ -1,11 +1,11 @@
 /**
- * @file Normalises browser APIs for bookmarks, tabs, and history sources.
+ * @file Normalizes browser APIs for bookmarks, tabs, and history sources.
  *
  * Responsibilities:
  * - Fetch raw entries with defensive fallbacks for browsers that omit certain APIs.
  * - Convert every record into the shared `searchItem` shape (type, title, url, tags, folder trail, search strings).
  * - Parse inline annotations like `#tag` taxonomy markers and `+20` custom bonus hints from bookmark titles.
- * - Clean URLs/titles by stripping protocol, `www`, and trailing slashes to stabilise comparisons and cache keys.
+ * - Clean URLs/titles by stripping protocol, `www`, and trailing slashes to stabilize comparisons and cache keys.
  * - Preserve breadcrumb-style folder metadata so taxonomy pages and scoring rules stay in sync across browsers.
  */
 
@@ -41,7 +41,7 @@ export async function getBrowserTabs(queryOptions = {}) {
  * Normalize browser tab objects into the shared search item shape.
  *
  * @param {Array<Object>} chromeTabs - Raw tab entries from the browser API.
- * @returns {Array<Object>} Standardised tab entries.
+ * @returns {Array<Object>} Standardized tab entries.
  */
 export function convertBrowserTabs(chromeTabs) {
   return chromeTabs
@@ -87,10 +87,11 @@ export async function getBrowserBookmarks() {
  * @param {number} [depth] - Current traversal depth.
  * @returns {Array<Object>} Flattened bookmark entries.
  */
-export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
+export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl) {
   depth = depth || 1
   let result = []
   folderTrail = folderTrail || []
+  seenByUrl = seenByUrl || new Map()
 
   for (const entry of bookmarks) {
     let newFolderTrail = folderTrail.slice() // clone
@@ -177,11 +178,26 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
       )
       mappedEntry.searchStringLower = mappedEntry.searchString.toLowerCase()
 
+      if (mappedEntry.url) {
+        const existingEntry = seenByUrl.get(mappedEntry.url)
+        if (existingEntry) {
+          existingEntry.dupe = true
+          mappedEntry.dupe = true
+          console.warn(
+            `Duplicate bookmark detected for ${mappedEntry.originalUrl} in folder: ${
+              mappedEntry.folderArray.join(' > ') || '/'
+            }`,
+          )
+        } else {
+          seenByUrl.set(mappedEntry.url, mappedEntry)
+        }
+      }
+
       result.push(mappedEntry)
     }
 
     if (entry.children) {
-      result = result.concat(convertBrowserBookmarks(entry.children, newFolderTrail, depth + 1))
+      result = result.concat(convertBrowserBookmarks(entry.children, newFolderTrail, depth + 1, seenByUrl))
     }
   }
 
@@ -213,7 +229,7 @@ export async function getBrowserHistory(startTime, maxResults) {
  * Convert chrome history into our internal, flat array format
  *
  * @param {Array<Object>} history - Raw history entries.
- * @returns {Array<Object>} Normalised history items.
+ * @returns {Array<Object>} Normalized history items.
  */
 export function convertBrowserHistory(history) {
   if (ext.opts.historyIgnoreList && ext.opts.historyIgnoreList.length) {
@@ -252,7 +268,7 @@ export function convertBrowserHistory(history) {
  * Combine title/url/tags/folder fields into a single search string.
  *
  * @param {string} title - Bookmark title.
- * @param {string} url - Normalised URL.
+ * @param {string} url - Normalized URL.
  * @param {string} [tags] - Tag string.
  * @param {string} [folder] - Folder breadcrumb string.
  * @returns {string} Combined search string.
@@ -283,10 +299,6 @@ export function createSearchString(title, url, tags, folder) {
 
 /**
  * Ensure bookmarks have a human-readable title, falling back to shortened URLs.
- *
- * @param {string} title - Original title.
- * @param {string} url - Normalised URL.
- * @returns {string} Cleaned title.
  */
 export function getTitle(title, url) {
   let newTitle = title || ''
