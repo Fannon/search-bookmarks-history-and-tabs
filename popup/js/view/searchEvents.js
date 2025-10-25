@@ -81,14 +81,16 @@ export function openResultItem(event) {
           active: true,
           currentWindow: true,
         })
-        .then(([currentTab]) => {
-          ext.browserApi.tabs.update(currentTab.id, {
-            url: url,
-          })
+        .then((tabs) => {
+          if (tabs && tabs.length > 0) {
+            ext.browserApi.tabs.update(tabs[0].id, {
+              url: url,
+            })
 
-          // Close popup unless Ctrl is also pressed
-          if (!event.ctrlKey) {
-            window.close()
+            // Close popup unless Ctrl is also pressed
+            if (!event.ctrlKey) {
+              window.close()
+            }
           }
         })
         .catch(console.error)
