@@ -391,6 +391,44 @@ describe('scoring', () => {
     expect(score).toBeCloseTo(109)
   })
 
+  it('drops the date-added bonus once the decay exceeds the configured maximum', () => {
+    const fixedNow = 1_700_000_000_000
+    jest.spyOn(Date, 'now').mockReturnValue(fixedNow)
+
+    const score = scoreFor({
+      searchTerm: 'alpha',
+      opts: {
+        scoreDateAddedBonusScoreMaximum: 10,
+        scoreDateAddedBonusScorePerDay: 2,
+      },
+      result: {
+        // 6 days ago -> penalty 12 which exceeds the 10 point cap, so zero bonus
+        dateAdded: fixedNow - 6 * 24 * 60 * 60 * 1000,
+      },
+    })
+
+    expect(score).toBeCloseTo(100)
+  })
+
+  it('requires both date-added bonus options before applying any bonus', () => {
+    const fixedNow = 1_700_000_000_000
+    jest.spyOn(Date, 'now').mockReturnValue(fixedNow)
+
+    const score = scoreFor({
+      searchTerm: 'alpha',
+      opts: {
+        scoreDateAddedBonusScoreMaximum: 10,
+        // Explicitly disable per-day penalty which previously defaulted to undefined
+        scoreDateAddedBonusScorePerDay: 0,
+      },
+      result: {
+        dateAdded: fixedNow - 12 * 60 * 60 * 1000,
+      },
+    })
+
+    expect(score).toBeCloseTo(100)
+  })
+
   it('BEHAVIOR: repeated search terms each get exact tag match bonus (intentional)', () => {
     const score = scoreFor({
       searchTerm: 'tag tag tag',

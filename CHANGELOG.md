@@ -18,6 +18,7 @@
   - Bonus applies only to bookmarks with an active tab, keeping other result types unchanged
 
 * **CHANGED**: More concise / simple last visited time
+- **FIXED**: Date-added scoring bonus now respects the new `scoreDateAddedBonusScoreMaximum`/`scoreDateAddedBonusScorePerDay` options so recently created bookmarks get their intended lift again, with regression tests safeguarding the decay logic.
 
 ## [v1.16.0]
 
