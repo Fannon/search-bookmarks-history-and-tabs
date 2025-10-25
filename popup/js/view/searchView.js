@@ -55,6 +55,10 @@ export async function renderSearchResults(result) {
       badgesHTML += '<span class="badge duplicate" title="Duplicate Bookmark">Duplicate</span>'
     }
 
+    if (resultEntry.type === 'bookmark' && resultEntry.tab) {
+      badgesHTML += '<span class="badge source-tab" title="Open Tab">T</span>'
+    }
+
     if (opts.displayTags && resultEntry.tagsArray) {
       for (const tag of resultEntry.tagsArray) {
         const safeTag = escapeHtml(tag)
