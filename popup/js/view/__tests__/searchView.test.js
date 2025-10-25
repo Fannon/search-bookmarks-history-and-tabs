@@ -284,4 +284,32 @@ describe('searchView renderSearchResults', () => {
     expect(link).toContain('bookmark%2Fwith%2Fslashes')
     expect(link).not.toContain('bookmark/with/slashes')
   })
+
+  it('displays last-visited badge for items visited 0 seconds ago (just now)', async () => {
+    const justNowResults = [
+      {
+        type: 'bookmark',
+        originalId: 'bm-justnow',
+        originalUrl: 'https://justnow.test',
+        url: 'justnow.test',
+        title: 'Just Now Bookmark',
+        lastVisitSecondsAgo: 0,
+      },
+    ]
+
+    const { module, elements } = await setupSearchView({
+      results: justNowResults,
+      opts: {
+        displayLastVisit: true,
+      },
+    })
+
+    await module.renderSearchResults()
+
+    const listItem = elements.resultList.querySelector('li')
+    const lastVisitedBadge = listItem.querySelector('.badge.last-visited')
+
+    expect(lastVisitedBadge).not.toBeNull()
+    expect(lastVisitedBadge.textContent).toBe('-0 s')
+  })
 })
