@@ -17,11 +17,15 @@ const HTML_ESCAPE_MAP = {
   "'": '&#39;',
 }
 
+let nextGeneratedId = 1
+
 /**
- * Generate a unique identifier for synthetic search result entries.
+ * Generate a deterministic identifier for synthetic search result entries.
  */
 export function generateRandomId() {
-  return Math.random().toString(36).slice(2)
+  const id = `R${nextGeneratedId}`
+  nextGeneratedId += 1
+  return id
 }
 
 /**

@@ -2,14 +2,17 @@ import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals
 import { cleanUpUrl, timeSince, loadScript, escapeHtml, generateRandomId } from '../utils.js'
 
 describe('generateRandomId', () => {
-  it('returns a lowercase alphanumeric identifier', () => {
-    expect(generateRandomId()).toMatch(/^[a-z0-9]+$/)
+  it('returns a deterministic identifier prefixed with R', () => {
+    expect(generateRandomId()).toMatch(/^R\d+$/)
   })
 
-  it('generates different values on consecutive calls', () => {
+  it('increments the numeric portion on each call', () => {
     const first = generateRandomId()
     const second = generateRandomId()
-    expect(first).not.toBe(second)
+    const firstNumeric = Number(first.slice(1))
+    const secondNumeric = Number(second.slice(1))
+
+    expect(secondNumeric).toBe(firstNumeric + 1)
   })
 })
 
