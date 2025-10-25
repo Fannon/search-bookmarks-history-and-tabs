@@ -2,6 +2,14 @@
 
 ## [unreleased]
 
+- **NEW**: Duplicate bookmark detection and indication
+  - Detects bookmarks with identical URLs during data loading and marks them with a `dupe` flag
+  - Visual indication in search results with a red badge on duplicate bookmarks
+  - Console warning logs when duplicates are found, including the URL and affected folders
+  - Helps users identify and clean up redundant bookmarks across different folders
+
+* **CHANGED**: More concise / simple last visited time
+
 ## [v1.16.0]
 
 - **IMPROVED**: Search scoring precision and reliability

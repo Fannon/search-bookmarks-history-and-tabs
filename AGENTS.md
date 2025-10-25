@@ -58,6 +58,7 @@
 
 ## Commit & Pull Request Guidelines
 
+- **REQUIRED**: Write a changelog entry for any end-user relevant change (features, bug fixes, UI changes, performance improvements, etc.).
 - Write imperative, descriptive commits (e.g. `Add Jest unit testing setup and initial tests`).
 - Reference related issues, include context, and attach screenshots or GIFs for visual changes.
 - Run lint, Jest, and Playwright locally before opening or updating a PR.
