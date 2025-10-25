@@ -16,6 +16,7 @@ const baseOpts = {
   scoreTagWeight: 1,
   scoreUrlWeight: 1,
   scoreFolderWeight: 1,
+  scoreBookmarkOpenTabBonus: 0,
   scoreExactIncludesBonus: 0,
   scoreExactIncludesBonusMinChars: 1,
   scoreExactIncludesMaxBonuses: Infinity,
@@ -179,6 +180,26 @@ describe('scoring', () => {
     })
 
     expect(score).toBeCloseTo(105)
+  })
+
+  it('adds the configured bonus when a bookmark is also an open tab', () => {
+    const score = scoreFor({
+      searchTerm: '',
+      opts: { scoreBookmarkOpenTabBonus: 25 },
+      result: { tab: true },
+    })
+
+    expect(score).toBeCloseTo(125)
+  })
+
+  it('does not apply open-tab bonus to non-bookmark types', () => {
+    const score = scoreFor({
+      searchTerm: '',
+      opts: { scoreBookmarkOpenTabBonus: 25 },
+      result: { type: 'tab', tab: true, searchScore: 1 },
+    })
+
+    expect(score).toBeCloseTo(70)
   })
 
   it('limits substring bonuses when max cap is configured', () => {

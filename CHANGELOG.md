@@ -13,6 +13,10 @@
   - Search results render a lilac `T` badge so it’s obvious when a bookmark is already open
   - Makes it easier to avoid opening duplicates when triaging lots of tabs
 
+- **IMPROVED**: Prioritize already-open bookmarks in scoring
+  - Added `scoreBookmarkOpenTabBonus` (defaults to +20) so matching bookmarks float above unopened ones
+  - Bonus applies only to bookmarks with an active tab, keeping other result types unchanged
+
 * **CHANGED**: More concise / simple last visited time
 
 ## [v1.16.0]

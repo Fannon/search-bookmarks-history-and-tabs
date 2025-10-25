@@ -380,6 +380,12 @@ export const defaultOptions = {
    * If it has been visited at the end of `historyDaysAgo`, score is 0
    */
   scoreRecentBonusScoreMaximum: 20,
+  /**
+   * Adds bonus points when a bookmark is also currently open as a browser tab.
+   * Helps prioritize results that already exist in your session to prevent duplicate openings.
+   */
+  scoreBookmarkOpenTabBonus: 20,
+
   //////////////////////////////////////////
   // POWER USER OPTIONS                   //
   //////////////////////////////////////////

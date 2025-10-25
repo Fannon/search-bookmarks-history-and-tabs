@@ -79,6 +79,7 @@ export function calculateFinalScore(results, searchTerm) {
     scoreUrlWeight,
     scoreTagWeight,
     scoreFolderWeight,
+    scoreBookmarkOpenTabBonus,
   } = opts
 
   const includeTerms = rawSearchTermParts
@@ -237,6 +238,11 @@ export function calculateFinalScore(results, searchTerm) {
       const daysAgo = (now - el.dateAdded) / 1000 / 60 / 60 / 24
       const penalty = daysAgo * scoreDateAddedBonusScorePerDay
       score += Math.max(0, scoreDateAddedBonusScoreMaximum - penalty)
+    }
+
+    // Award bonus when bookmark already has a matching open tab (prevents duplicate opens)
+    if (scoreBookmarkOpenTabBonus && el.type === 'bookmark' && el.tab) {
+      score += scoreBookmarkOpenTabBonus
     }
 
     // STEP 5: Add custom user-defined bonus score (e.g., "Title +20 #tag")
