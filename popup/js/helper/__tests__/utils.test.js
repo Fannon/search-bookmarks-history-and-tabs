@@ -1,5 +1,17 @@
 import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals'
-import { cleanUpUrl, timeSince, loadScript, escapeHtml } from '../utils.js'
+import { cleanUpUrl, timeSince, loadScript, escapeHtml, generateRandomId } from '../utils.js'
+
+describe('generateRandomId', () => {
+  it('returns a lowercase alphanumeric identifier', () => {
+    expect(generateRandomId()).toMatch(/^[a-z0-9]+$/)
+  })
+
+  it('generates different values on consecutive calls', () => {
+    const first = generateRandomId()
+    const second = generateRandomId()
+    expect(first).not.toBe(second)
+  })
+})
 
 describe('cleanUpUrl', () => {
   it('normalizes protocol, www and trailing slash', () => {
@@ -60,54 +72,54 @@ describe('timeSince', () => {
 
   it('returns seconds for very recent times', () => {
     const thirtySecondsAgo = new Date('2024-01-01T11:59:30Z')
-    expect(timeSince(thirtySecondsAgo)).toBe('30 seconds')
+    expect(timeSince(thirtySecondsAgo)).toBe('30 s')
 
     const oneSecondAgo = new Date('2024-01-01T11:59:59Z')
-    expect(timeSince(oneSecondAgo)).toBe('1 second')
+    expect(timeSince(oneSecondAgo)).toBe('1 s')
   })
 
   it('returns minutes for times less than an hour', () => {
     const thirtyMinutesAgo = new Date('2024-01-01T11:30:00Z')
-    expect(timeSince(thirtyMinutesAgo)).toBe('30 minutes')
+    expect(timeSince(thirtyMinutesAgo)).toBe('30 m')
   })
 
   it('returns hours for times less than a day', () => {
     const twelveHoursAgo = new Date('2024-01-01T00:00:00Z')
-    expect(timeSince(twelveHoursAgo)).toBe('12 hours')
+    expect(timeSince(twelveHoursAgo)).toBe('12 h')
   })
 
   it('returns days for times less than a month', () => {
     const tenDaysAgo = new Date('2023-12-22T12:00:00Z')
-    expect(timeSince(tenDaysAgo)).toBe('10 days')
+    expect(timeSince(tenDaysAgo)).toBe('10 d')
   })
 
   it('returns months for times less than a year', () => {
     const sixMonthsAgo = new Date('2023-07-01T12:00:00Z')
-    expect(timeSince(sixMonthsAgo)).toBe('6 months')
+    expect(timeSince(sixMonthsAgo)).toBe('6 month')
   })
 
   it('returns years for times more than a year', () => {
     const twoYearsAgo = new Date('2022-01-01T12:00:00Z')
-    expect(timeSince(twoYearsAgo)).toBe('2 years')
+    expect(timeSince(twoYearsAgo)).toBe('2 year')
   })
 
   it('handles boundary conditions correctly', () => {
-    // Test minute boundary: 59 seconds = "59 seconds", 61 seconds = "1 minute"
-    expect(timeSince(new Date('2024-01-01T11:59:01Z'))).toBe('59 seconds')
-    expect(timeSince(new Date('2024-01-01T11:58:59Z'))).toBe('1 minute')
+    // Test minute boundary: 59 seconds = "59 s", 61 seconds = "1 m"
+    expect(timeSince(new Date('2024-01-01T11:59:01Z'))).toBe('59 s')
+    expect(timeSince(new Date('2024-01-01T11:58:59Z'))).toBe('1 m')
 
-    // Test hour boundary: 59 minutes = "59 minutes", 61 minutes = "1 hour"
-    expect(timeSince(new Date('2024-01-01T11:01:00Z'))).toBe('59 minutes')
-    expect(timeSince(new Date('2024-01-01T10:59:00Z'))).toBe('1 hour')
+    // Test hour boundary: 59 minutes = "59 m", 61 minutes = "1 h"
+    expect(timeSince(new Date('2024-01-01T11:01:00Z'))).toBe('59 m')
+    expect(timeSince(new Date('2024-01-01T10:59:00Z'))).toBe('1 h')
 
-    // Test day boundary: 23 hours = "0 seconds", 25 hours = "1 day"
-    expect(timeSince(new Date('2024-01-01T13:00:00Z'))).toBe('0 seconds')
-    expect(timeSince(new Date('2023-12-31T11:00:00Z'))).toBe('1 day')
+    // Test day boundary: 23 hours = "0 s", 25 hours = "1 d"
+    expect(timeSince(new Date('2024-01-01T13:00:00Z'))).toBe('0 s')
+    expect(timeSince(new Date('2023-12-31T11:00:00Z'))).toBe('1 d')
   })
 
   it('handles edge cases', () => {
     // Future dates
-    expect(timeSince(new Date('2024-01-02T12:00:00Z'))).toBe('0 seconds')
+    expect(timeSince(new Date('2024-01-02T12:00:00Z'))).toBe('0 s')
 
     // Invalid inputs
     expect(timeSince('invalid')).toBe('Invalid date')
