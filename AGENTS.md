@@ -43,7 +43,7 @@
 
 ## Testing Guidelines
 
-- Follow the verify loop: run `npm run lint`, then run focused Jest specs via `npm run test <file>` for fast feedback, and finish with a full `npm run test:e2e`. When the e2e suite fails, narrow it down by rerunning a single spec file (e.g. `npm run test:e2e -- tests/popup/editBookmark.spec.ts`).
+- Follow the verify loop: run `npm run lint`, then run focused Jest specs via `npm run test <file>` for fast feedback, and finish with a full `npm run test:e2e`. When the e2e suite fails, narrow it down by rerunning a single spec file (e.g. `npm run test:e2e -- tests/editBookmark.spec.js`).
 - Use Jest for deterministic unit coverage; stub DOM APIs with jsdom helpers when needed.
 - Use Playwright for integration coverage of popup interactions; keep specs independent and idempotent.
 - Name unit tests `<module>.test.js` under `__tests__` directories and describe behavior in plain language (`describe('timeSince')`).

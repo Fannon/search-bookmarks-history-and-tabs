@@ -29,7 +29,7 @@
 - **IMPROVED**: Search scoring precision and reliability
   - **Higher bonuses for perfect matches**: Exact matches on titles, tags, and folders now receive +20, +15, and +10 points respectively (previously +15, +10, +5), so precise results appear ahead of partial matches by default.
   - **Better multi-term query handling**: Search terms are normalized once and evaluated individually in a case-insensitive way, ensuring multi-word queries and mixed-case text reliably trigger the configured substring bonuses.
-  - **New phrase boost options**: Added `scoreExactPhraseTitleBonus` (default: 8) and `scoreExactPhraseUrlBonus` (default: 4) to boost results where the full search phrase appears as substring. For example, searching "javascript tutorial" will boost a bookmark titled "Advanced JavaScript Tutorial Guide" (+8) or with URL "example.com/javascript-tutorial" (+4).
+  - **New phrase boost options**: Added `scoreExactPhraseTitleBonus` (default: 8) and `scoreExactPhraseUrlBonus` (default: 5) to boost results where the full search phrase appears as substring. For example, searching "javascript tutorial" will boost a bookmark titled "Advanced JavaScript Tutorial Guide" (+8) or with URL "example.com/javascript-tutorial" (+5).
   - **Capped substring bonuses**: Introduced `scoreExactIncludesMaxBonuses` (default: 3) to prevent noisy documents from excessive stacking of includes bonuses.
 - **IMPROVED**: Further reduced initial load bundle size for faster startup.
 - **FIXED**: When editing a bookmark and saving, the search state was sometimes not properly updated. Now the search is completely reset, but remembers the search term.

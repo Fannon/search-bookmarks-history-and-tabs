@@ -22,7 +22,7 @@
  *      - scoreExactTagMatchBonus: tag name matches a search term (15 points default)
  *      - scoreExactFolderMatchBonus: folder name matches a search term
  *      - scoreExactPhraseTitleBonus: title contains the full search phrase (8 points default)
- *      - scoreExactPhraseUrlBonus: URL contains the full search phrase (hyphen-normalized, 4 points default)
+ *      - scoreExactPhraseUrlBonus: URL contains the full search phrase (hyphen-normalized, 5 points default)
  *    STEP 3B - Includes Bonuses (substring matching):
  *      - scoreExactIncludesBonus: weighted by field (title × 1.0, tag × 0.7, url × 0.6, folder × 0.5)
  *      - Only FIRST matching field per search term gets bonus (no double-counting)
