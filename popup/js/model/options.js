@@ -381,6 +381,17 @@ export const defaultOptions = {
    */
   scoreRecentBonusScoreMaximum: 20,
   /**
+   * Adds bonus score for recently added bookmarks (linear decay).
+   * Newer bookmarks receive higher scores, older bookmarks score lower.
+   * Score = max(0, scoreDateAddedBonusScoreMaximum - (daysAgo * scoreDateAddedBonusScorePerDay))
+   */
+  scoreDateAddedBonusScoreMaximum: 10,
+  /**
+   * Score penalty per day for date-added bonus calculation.
+   * Higher values mean faster decay of the date-added bonus over time.
+   */
+  scoreDateAddedBonusScorePerDay: 2,
+  /**
    * Adds bonus points when a bookmark is also currently open as a browser tab.
    * Helps prioritize results that already exist in your session to prevent duplicate openings.
    */
