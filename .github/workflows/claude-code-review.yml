@@ -6,7 +6,9 @@ on:
 
 jobs:
   claude-review:
-    if: contains(github.event.comment.body, '@claude') && github.event.issue.pull_request
+    # DISABLED for now.
+    if: ${{ false }}
+    # if: contains(github.event.comment.body, '@claude') && github.event.issue.pull_request
 
     runs-on: ubuntu-latest
     permissions:
