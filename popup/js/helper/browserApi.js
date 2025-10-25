@@ -178,18 +178,18 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
       )
       mappedEntry.searchStringLower = mappedEntry.searchString.toLowerCase()
 
-      const duplicateKey = mappedEntry.originalUrl || mappedEntry.url
-      if (duplicateKey) {
-        const existingEntry = seenByUrl.get(duplicateKey)
+      if (mappedEntry.url) {
+        const existingEntry = seenByUrl.get(mappedEntry.url)
         if (existingEntry) {
           existingEntry.dupe = true
           mappedEntry.dupe = true
           console.warn(
-            `Duplicate bookmark detected for ${mappedEntry.originalUrl || mappedEntry.url || 'unknown URL'} in folder:`,
-            mappedEntry.folderArray || [],
+            `Duplicate bookmark detected for ${mappedEntry.originalUrl} in folder ${mappedEntry.folderArray.join(
+              ' > ',
+            )}`,
           )
         } else {
-          seenByUrl.set(duplicateKey, mappedEntry)
+          seenByUrl.set(mappedEntry.url, mappedEntry)
         }
       }
 
