@@ -17,6 +17,10 @@
   - Added `scoreBookmarkOpenTabBonus` (defaults to +20) so matching bookmarks float above unopened ones
   - Bonus applies only to bookmarks with an active tab, keeping other result types unchanged
 
+- **FIXED**: Search score multiplier incorrectly handled zero scores
+  - Fixed falsy coalescing bug where valid `searchScore: 0` was treated as missing, incorrectly falling back to `scoreTitleWeight`
+  - Now uses proper null check (`!= null`) to distinguish between 0 (valid) and undefined/null (missing)
+
 * **CHANGED**: More concise / simple last visited time
 
 ## [v1.16.0]

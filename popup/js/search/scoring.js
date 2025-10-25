@@ -114,7 +114,7 @@ export function calculateFinalScore(results, searchTerm) {
 
     // STEP 2: Multiply by search quality score (0-1 from fuzzy/precise search)
     // This reduces score if the match quality is poor
-    const searchScoreMultiplier = el.searchScore || scoreTitleWeight
+    const searchScoreMultiplier = el.searchScore != null ? el.searchScore : scoreTitleWeight
     score = score * searchScoreMultiplier
 
     if (hasSearchTerm) {
