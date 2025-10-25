@@ -78,7 +78,7 @@ export async function renderSearchResults(result) {
       }
     }
 
-    if (opts.displayLastVisit && resultEntry.lastVisitSecondsAgo) {
+    if (opts.displayLastVisit && resultEntry.lastVisitSecondsAgo != null) {
       const lastVisit = timeSince(new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000))
       badgesHTML += `<span class="badge last-visited" title="Last Visited">-${escapeHtml(lastVisit)}</span>`
     }
