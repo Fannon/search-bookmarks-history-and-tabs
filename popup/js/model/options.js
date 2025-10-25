@@ -376,7 +376,7 @@ export const defaultOptions = {
    * Adds bonus points when a bookmark is also currently open as a browser tab.
    * Helps prioritize results that already exist in your session to prevent duplicate openings.
    */
-  scoreBookmarkOpenTabBonus: 20,
+  scoreBookmarkOpenTabBonus: 10,
 
   //////////////////////////////////////////
   // POWER USER OPTIONS                   //
