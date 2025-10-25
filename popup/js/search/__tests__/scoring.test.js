@@ -30,8 +30,6 @@ const baseOpts = {
   scoreVisitedBonusScoreMaximum: 0,
   scoreRecentBonusScoreMaximum: 0,
   historyDaysAgo: 7,
-  scoreDateAddedBonusScoreMaximum: 0,
-  scoreDateAddedBonusScorePerDay: 0,
   scoreCustomBonusScore: false,
   scoreWeakMatchPenalty: 0,
 }
@@ -371,24 +369,6 @@ describe('scoring', () => {
     })
 
     expect(score).toBeCloseTo(120)
-  })
-
-  it('adds date-added bonus with per-day decay', () => {
-    const fixedNow = 1_700_000_000_000
-    jest.spyOn(Date, 'now').mockReturnValue(fixedNow)
-
-    const score = scoreFor({
-      searchTerm: 'alpha',
-      opts: {
-        scoreDateAddedBonusScoreMaximum: 10,
-        scoreDateAddedBonusScorePerDay: 2,
-      },
-      result: {
-        dateAdded: fixedNow - 12 * 60 * 60 * 1000,
-      },
-    })
-
-    expect(score).toBeCloseTo(109)
   })
 
   it('BEHAVIOR: repeated search terms each get exact tag match bonus (intentional)', () => {
