@@ -69,17 +69,13 @@ function flagBookmarksWithOpenTabs(bookmarks, tabs) {
 
   const tabUrls = new Set()
   for (const tab of tabs) {
-    if (tab?.originalUrl) {
-      tabUrls.add(tab.originalUrl)
+    if (tab?.url) {
+      tabUrls.add(tab.url)
     }
   }
 
-  if (!tabUrls.size) {
-    return
-  }
-
   for (const bookmark of bookmarks) {
-    if (bookmark && tabUrls.has(bookmark.originalUrl)) {
+    if (bookmark && tabUrls.has(bookmark.url)) {
       bookmark.tab = true
     }
   }
@@ -135,12 +131,10 @@ export async function getSearchData() {
 
       result.bookmarks = mergeHistoryLazily(result.bookmarks, historyMap, mergedHistoryUrls)
       result.tabs = mergeHistoryLazily(result.tabs, historyMap, mergedHistoryUrls)
+      flagBookmarksWithOpenTabs(result.bookmarks, result.tabs)
 
       result.history = result.history.filter((item) => !mergedHistoryUrls.has(item.originalUrl))
     }
-  }
-  if (result.bookmarks.length && result.tabs.length) {
-    flagBookmarksWithOpenTabs(result.bookmarks, result.tabs)
   }
   console.debug(
     `Loaded ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${
