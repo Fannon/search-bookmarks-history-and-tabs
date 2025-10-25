@@ -21,7 +21,8 @@
 
 * **CHANGED**: More concise / simple last visited time
 
-- **FIXED**: Date-added scoring bonus now respects the new `scoreDateAddedBonusScoreMaximum`/`scoreDateAddedBonusScorePerDay` options so recently created bookmarks get their intended lift again
+- **REMOVED**: Date-added scoring bonus along with the `scoreDateAddedBonusScoreMaximum` / `scoreDateAddedBonusScorePerDay` options to keep ranking focused on usage signals.
+  - The options had already been removed, this was a code leftover
 
 ## [v1.16.0]
 

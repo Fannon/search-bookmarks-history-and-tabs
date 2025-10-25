@@ -158,7 +158,6 @@ The scoring system calculates a relevance score for each search result using a 5
 4. **Behavioral Bonuses** - Additional points based on usage patterns:
    - `scoreVisitedBonusScore` - Points per visit (up to `scoreVisitedBonusScoreMaximum`)
    - `scoreRecentBonusScoreMaximum` - Bonus for recently visited items
-   - `scoreDateAddedBonusScoreMaximum` - Bonus for recently added bookmarks
 5. **Custom Bonus** - User-defined bonus via `+<number>` notation in bookmark titles (if `scoreCustomBonusScore` is enabled)
 
 For detailed implementation and all scoring configuration options, see:
