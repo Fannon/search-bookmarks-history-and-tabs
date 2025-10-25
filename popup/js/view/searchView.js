@@ -51,12 +51,11 @@ export async function renderSearchResults(result) {
 
     let badgesHTML = ''
 
-    if (resultEntry.dupe) {
-      badgesHTML += '<span class="badge duplicate" title="Duplicate Bookmark">Duplicate</span>'
-    }
-
     if (resultEntry.type === 'bookmark' && resultEntry.tab) {
       badgesHTML += '<span class="badge source-tab" title="Open Tab">T</span>'
+    }
+    if (resultEntry.dupe) {
+      badgesHTML += '<span class="badge duplicate" title="Duplicate Bookmark">Duplicate</span>'
     }
 
     if (opts.displayTags && resultEntry.tagsArray) {
