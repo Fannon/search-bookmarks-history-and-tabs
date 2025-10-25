@@ -227,7 +227,8 @@ describe('convertBrowserBookmarks', () => {
       expect(duplicates.every((bookmark) => bookmark.dupe)).toBe(true)
       expect(warnSpy).toHaveBeenCalledTimes(1)
       expect(warnSpy.mock.calls[0][0]).toContain('Duplicate bookmark detected')
-      expect(warnSpy.mock.calls[0][1]).toEqual([])
+      expect(warnSpy.mock.calls[0][0]).toContain('https://duplicate.example.com')
+      expect(warnSpy.mock.calls[0][0]).toContain('folder: /')
     } finally {
       warnSpy.mockRestore()
     }

@@ -17,7 +17,7 @@
 - `npm run start` serves the popup source (`./popup/`) via `serve` for quick UI checks with mock data.
 - `npm run start:dist` previews the built Chrome bundle from `dist/chrome/popup/`.
 - `npm run test` executes Jest unit tests (alias of `test:unit`) and forwards additional arguments, so use `npm run test path/to/file.test.js` for single-file runs.
-- `npm run test:e2e` executes the Playwright flow tests headlessly. The Playwright runner boots its own static server automatically.
+- `npm run test:e2e` executes the Playwright flow tests headless. The Playwright runner boots its own static server automatically.
 - `npm run test:e2e:chromium|firefox|edge` target individual browsers.
 - `npm run test:unit` runs Jest unit tests. Run it like `npm run test:unit <filename>.test.js` for individual test file execution.
 - `npm run test:unit:coverage` runs Jest unit tests with code coverage report. Run it like `npm run test:unit:coverage <filename>.test.js` for individual test file execution.
@@ -31,7 +31,7 @@
 - Follow `eslint.config.mjs`: two-space indentation, single quotes, and no trailing semicolons.
 - Name files by feature (e.g. `searchResultsView.js`, `browserApi.js`) and mirror that style for co-located tests (`*.test.js`).
 - Do not excessively create dependencies, prefer a lightweight "vanilla JS" style
-- Use american english consistently
+- Use US English spellings consistently (avoid UK variants)
 
 ## Documentation & Comment Style
 
