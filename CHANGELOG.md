@@ -13,10 +13,10 @@
 
   - Bookmarks sharing a URL with an open tab are tagged during dataset preparation
   - Search results render a lilac `T` badge so it’s obvious when a bookmark is already open
-  - Makes it easier to avoid opening duplicates when triaging lots of tabs
 
 - **IMPROVED**: Prioritize already-open bookmarks in scoring
-  - Added `scoreBookmarkOpenTabBonus` (defaults to +20) so matching bookmarks float above unopened ones
+
+  - Added `scoreBookmarkOpenTabBonus` (defaults to +10) so matching bookmarks float above unopened ones
   - Bonus applies only to bookmarks with an active tab, keeping other result types unchanged
 
 - **FIXED**: Search score multiplier incorrectly handled zero scores
