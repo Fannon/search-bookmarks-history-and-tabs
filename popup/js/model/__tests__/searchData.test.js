@@ -189,6 +189,62 @@ describe('getSearchData', () => {
     }
   })
 
+  test('marks bookmarks that have an open browser tab', async () => {
+    const baseTime = 1700000200000
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
+
+    try {
+      setBrowserData({
+        tabs: [
+          {
+            url: 'https://example.com',
+            title: 'Example Tab',
+            id: 'tab-1',
+            active: true,
+            windowId: 1,
+            lastAccessed: baseTime - 1000,
+          },
+        ],
+        bookmarks: [
+          {
+            title: '',
+            children: [
+              {
+                title: 'Bookmarks Bar',
+                children: [
+                  {
+                    id: 'bookmark-1',
+                    title: 'Example Bookmark',
+                    url: 'https://example.com',
+                    dateAdded: baseTime - 5000,
+                  },
+                  {
+                    id: 'bookmark-2',
+                    title: 'Standalone Bookmark',
+                    url: 'https://no-open-tab.com',
+                    dateAdded: baseTime - 6000,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: [],
+      })
+
+      const result = await getSearchData()
+      const flaggedBookmark = result.bookmarks.find((bookmark) => bookmark.originalUrl === 'https://example.com')
+      const plainBookmark = result.bookmarks.find(
+        (bookmark) => bookmark.originalUrl === 'https://no-open-tab.com',
+      )
+
+      expect(flaggedBookmark.tab).toBe(true)
+      expect(plainBookmark.tab).toBeUndefined()
+    } finally {
+      nowSpy.mockRestore()
+    }
+  })
+
   test('uses bundled mock data when browser APIs are unavailable', async () => {
     setBrowserApiAvailability({ tabs: false, bookmarks: false, history: false })
     ext.opts.enableBookmarks = false

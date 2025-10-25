@@ -57,6 +57,31 @@ function mergeHistoryLazily(items, historyMap, mergedUrls) {
 }
 
 /**
+ * Annotate bookmark entries that have a currently open browser tab.
+ *
+ * @param {Array} bookmarks - Bookmark search items.
+ * @param {Array} tabs - Tab search items.
+ */
+function flagBookmarksWithOpenTabs(bookmarks, tabs) {
+  if (!bookmarks.length || !tabs.length) {
+    return
+  }
+
+  const tabUrls = new Set()
+  for (const tab of tabs) {
+    if (tab?.url) {
+      tabUrls.add(tab.url)
+    }
+  }
+
+  for (const bookmark of bookmarks) {
+    if (bookmark && tabUrls.has(bookmark.url)) {
+      bookmark.tab = true
+    }
+  }
+}
+
+/**
  * Fetch and normalize the datasets used by the popup search experience.
  *
  * @returns {Promise<{tabs: Array, bookmarks: Array, history: Array}>} Prepared search data.
@@ -106,6 +131,7 @@ export async function getSearchData() {
 
       result.bookmarks = mergeHistoryLazily(result.bookmarks, historyMap, mergedHistoryUrls)
       result.tabs = mergeHistoryLazily(result.tabs, historyMap, mergedHistoryUrls)
+      flagBookmarksWithOpenTabs(result.bookmarks, result.tabs)
 
       result.history = result.history.filter((item) => !mergedHistoryUrls.has(item.originalUrl))
     }

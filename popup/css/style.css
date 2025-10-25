@@ -136,6 +136,11 @@ code {
   position: relative;
   top: -2px;
 }
+
+.badge.source-tab {
+  background: #b89aff;
+}
+
 .badge.duplicate {
   background: #d9534f;
 }

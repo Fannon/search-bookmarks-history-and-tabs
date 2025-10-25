@@ -8,6 +8,15 @@
   - Console warning logs when duplicates are found, including the URL and affected folders
   - Helps users identify and clean up redundant bookmarks across different folders
 
+- **NEW**: Highlight bookmarks that are currently open
+  - Bookmarks sharing a URL with an open tab are tagged during dataset preparation
+  - Search results render a lilac `T` badge so it’s obvious when a bookmark is already open
+  - Makes it easier to avoid opening duplicates when triaging lots of tabs
+
+- **IMPROVED**: Prioritize already-open bookmarks in scoring
+  - Added `scoreBookmarkOpenTabBonus` (defaults to +20) so matching bookmarks float above unopened ones
+  - Bonus applies only to bookmarks with an active tab, keeping other result types unchanged
+
 * **CHANGED**: More concise / simple last visited time
 
 ## [v1.16.0]
