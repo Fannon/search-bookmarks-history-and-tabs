@@ -87,10 +87,22 @@ export async function getBrowserBookmarks() {
  * @param {number} [depth] - Current traversal depth.
  * @returns {Array<Object>} Flattened bookmark entries.
  */
-export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
+function logDuplicateBookmark(entry) {
+  const folderLabel =
+    entry?.folderArray && entry.folderArray.length ? entry.folderArray.join(' / ') : 'root'
+
+  console.warn(
+    `Duplicate bookmark detected for ${
+      entry?.originalUrl || entry?.url || 'unknown URL'
+    } in folder: ${folderLabel})`,
+  )
+}
+
+export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl) {
   depth = depth || 1
   let result = []
   folderTrail = folderTrail || []
+  seenByUrl = seenByUrl || new Map()
 
   for (const entry of bookmarks) {
     let newFolderTrail = folderTrail.slice() // clone
@@ -177,11 +189,28 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
       )
       mappedEntry.searchStringLower = mappedEntry.searchString.toLowerCase()
 
+      const duplicateKey = mappedEntry.originalUrl || mappedEntry.url
+      if (duplicateKey) {
+        const existingEntry = seenByUrl.get(duplicateKey)
+        if (existingEntry) {
+          if (!existingEntry.dupe) {
+            existingEntry.dupe = true
+            logDuplicateBookmark(existingEntry)
+          }
+          mappedEntry.dupe = true
+          logDuplicateBookmark(mappedEntry)
+        } else {
+          seenByUrl.set(duplicateKey, mappedEntry)
+        }
+      }
+
       result.push(mappedEntry)
     }
 
     if (entry.children) {
-      result = result.concat(convertBrowserBookmarks(entry.children, newFolderTrail, depth + 1))
+      result = result.concat(
+        convertBrowserBookmarks(entry.children, newFolderTrail, depth + 1, seenByUrl),
+      )
     }
   }
 

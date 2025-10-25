@@ -51,6 +51,10 @@ export async function renderSearchResults(result) {
 
     let badgesHTML = ''
 
+    if (resultEntry.dupe) {
+      badgesHTML += '<span class="badge duplicate" title="Duplicate Bookmark">Duplicate</span>'
+    }
+
     if (opts.displayTags && resultEntry.tagsArray) {
       for (const tag of resultEntry.tagsArray) {
         const safeTag = escapeHtml(tag)
