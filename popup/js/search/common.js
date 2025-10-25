@@ -16,7 +16,7 @@
  * 6. Render results via view layer.
  */
 
-import { cleanUpUrl } from '../helper/utils.js'
+import { cleanUpUrl, generateRandomId } from '../helper/utils.js'
 import { closeErrors, printError } from '../view/errorView.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { fuzzySearch } from './fuzzySearch.js'
@@ -53,15 +53,6 @@ const MODE_TARGETS = {
  */
 export function resolveSearchTargets(searchMode) {
   return MODE_TARGETS[searchMode] || MODE_TARGETS.all
-}
-
-/**
- * Generate a unique identifier for synthetic search result entries.
- *
- * @returns {string} Identifier combining random and timestamp components.
- */
-function generateRandomId() {
-  return Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36)
 }
 
 /**

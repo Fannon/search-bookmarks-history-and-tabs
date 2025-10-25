@@ -222,7 +222,7 @@ export function calculateFinalScore(results, searchTerm) {
     if (scoreRecentBonusScoreMaximum && el.lastVisitSecondsAgo != null) {
       const maxSeconds = historyDaysAgo * 24 * 60 * 60
       if (maxSeconds > 0 && el.lastVisitSecondsAgo >= 0) {
-        // Calculate proportional bonus: 0 seconds ago = full bonus, maxSeconds ago = 0 bonus
+        // Calculate proportional bonus: 0 s ago = full bonus, maxSeconds ago = 0 bonus
         score += Math.max(0, (1 - el.lastVisitSecondsAgo / maxSeconds) * scoreRecentBonusScoreMaximum)
       } else if (el.lastVisitSecondsAgo === 0) {
         // Special case: visited in this exact moment gets maximum bonus

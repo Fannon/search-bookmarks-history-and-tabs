@@ -17,6 +17,17 @@ const HTML_ESCAPE_MAP = {
   "'": '&#39;',
 }
 
+let nextGeneratedId = 1
+
+/**
+ * Generate a deterministic identifier for synthetic search result entries.
+ */
+export function generateRandomId() {
+  const id = `R${nextGeneratedId}`
+  nextGeneratedId += 1
+  return id
+}
+
 /**
  * Escape HTML special characters to prevent markup injection.
  *
@@ -31,47 +42,38 @@ export function escapeHtml(value) {
 }
 
 /**
- * Converts a date to a human-readable "time ago" format
+ * Converts a date to a compact "time since" string.
  *
  * Converts Unix timestamps or Date objects to relative time strings like
- * "2 hours ago", "3 days ago", etc. Falls back to smaller units if date
- * is within the current day.
+ * "3 m" or "2 month". Values are simple integer counts plus unit labels with
+ * no pluralization or "ago" suffix.
  *
- * @param {Date|number} date - Date object or Unix timestamp
- * @returns {string} Formatted relative time (e.g., "5 minutes ago")
+ * @param {Date|number} date - Date object or Unix timestamp.
+ * @returns {string} Compact relative time (e.g., "5 h").
  *
  * @see https://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
  */
 export function timeSince(date) {
-  if (!date || isNaN(new Date(date).getTime())) {
+  const timestamp = new Date(date).getTime()
+  if (!date || Number.isNaN(timestamp)) {
     return 'Invalid date'
   }
 
-  const seconds = Math.floor((new Date() - new Date(date)) / 1000)
-
-  if (seconds < 0) {
-    return '0 seconds'
-  }
-
-  // Use fixed intervals (30 days/month, 365 days/year) - not accounting for actual length variations
-  const intervals = [
-    { unitSeconds: 31536000, label: 'year' },
-    { unitSeconds: 2592000, label: 'month' },
-    { unitSeconds: 86400, label: 'day' },
-    { unitSeconds: 3600, label: 'hour' },
-    { unitSeconds: 60, label: 'minute' },
-  ]
-
-  for (const { unitSeconds, label } of intervals) {
+  const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000))
+  for (const [unitSeconds, label] of [
+    [31536000, 'year'],
+    [2592000, 'month'],
+    [86400, 'd'],
+    [3600, 'h'],
+    [60, 'm'],
+  ]) {
     const count = Math.floor(seconds / unitSeconds)
     if (count >= 1) {
-      return `${count} ${label}${count === 1 ? '' : 's'}`
+      return `${count} ${label}`
     }
   }
 
-  const secondsCount = Math.floor(seconds)
-  const secondsLabel = secondsCount === 1 ? 'second' : 'seconds'
-  return `${secondsCount} ${secondsLabel}`
+  return `${seconds} s`
 }
 
 /**
