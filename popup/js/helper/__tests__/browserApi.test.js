@@ -178,6 +178,46 @@ describe('convertBrowserBookmarks', () => {
     })
   })
 
+  it('parses custom bonus scores correctly with radix 10', () => {
+    const tree = [
+      {
+        title: 'Root',
+        children: [
+          {
+            id: 'bookmark-1',
+            title: 'Score with leading zero +08',
+            url: 'https://example.com/',
+          },
+          {
+            id: 'bookmark-2',
+            title: 'Double digit score +10',
+            url: 'https://test.com/',
+          },
+          {
+            id: 'bookmark-3',
+            title: 'Large score +100',
+            url: 'https://large.com/',
+          },
+        ],
+      },
+    ]
+
+    const bookmarks = convertBrowserBookmarks(tree)
+
+    expect(bookmarks[0]).toMatchObject({
+      title: 'Score with leading zero',
+      customBonusScore: 8,
+    })
+    expect(bookmarks[1]).toMatchObject({
+      title: 'Double digit score',
+      customBonusScore: 10,
+    })
+    expect(bookmarks[2]).toMatchObject({
+      title: 'Large score',
+      customBonusScore: 100,
+    })
+  })
+
   it('skips bookmarks located in ignored folders', () => {
     ext.opts.bookmarksIgnoreFolderList = ['Ignore me']
 

@@ -42,7 +42,7 @@ export function openResultItem(event) {
 
     // Handle close button clicks on tab entries
     if (target && target.className.includes('close-button')) {
-      const targetId = parseInt(originalId)
+      const targetId = parseInt(originalId, 10)
 
       // Close the browser tab
       ext.browserApi.tabs.remove(targetId)
