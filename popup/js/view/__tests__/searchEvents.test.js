@@ -284,6 +284,33 @@ describe('searchEvents openResultItem', () => {
     expect(window.close).toHaveBeenCalledTimes(1)
   })
 
+  it('handles shift-click gracefully when no active tab is found', async () => {
+    const { module, viewModule } = await setupSearchEvents()
+    await viewModule.renderSearchResults()
+
+    // Mock query to return empty array (no active tabs)
+    ext.browserApi.tabs.query = jest.fn(() => Promise.resolve([]))
+
+    module.openResultItem({
+      button: 0,
+      shiftKey: true,
+      altKey: false,
+      ctrlKey: false,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+    await Promise.resolve()
+
+    expect(ext.browserApi.tabs.query).toHaveBeenCalledTimes(1)
+    expect(ext.browserApi.tabs.update).not.toHaveBeenCalled()
+    expect(window.close).not.toHaveBeenCalled()
+  })
+
   it('opens URLs in a background tab when ctrl is held', async () => {
     const { module, viewModule } = await setupSearchEvents()
     await viewModule.renderSearchResults()
