@@ -185,9 +185,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
           existingEntry.dupe = true
           mappedEntry.dupe = true
           console.warn(
-            `Duplicate bookmark detected for ${
-              mappedEntry.originalUrl || mappedEntry.url || 'unknown URL'
-            } in folder:`,
+            `Duplicate bookmark detected for ${mappedEntry.originalUrl || mappedEntry.url || 'unknown URL'} in folder:`,
             mappedEntry.folderArray || [],
           )
         } else {
@@ -199,9 +197,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
     }
 
     if (entry.children) {
-      result = result.concat(
-        convertBrowserBookmarks(entry.children, newFolderTrail, depth + 1, seenByUrl),
-      )
+      result = result.concat(convertBrowserBookmarks(entry.children, newFolderTrail, depth + 1, seenByUrl))
     }
   }
 
