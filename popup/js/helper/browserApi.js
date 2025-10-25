@@ -87,17 +87,6 @@ export async function getBrowserBookmarks() {
  * @param {number} [depth] - Current traversal depth.
  * @returns {Array<Object>} Flattened bookmark entries.
  */
-function logDuplicateBookmark(entry) {
-  const folderLabel =
-    entry?.folderArray && entry.folderArray.length ? entry.folderArray.join(' / ') : 'root'
-
-  console.warn(
-    `Duplicate bookmark detected for ${
-      entry?.originalUrl || entry?.url || 'unknown URL'
-    } in folder: ${folderLabel})`,
-  )
-}
-
 export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl) {
   depth = depth || 1
   let result = []
@@ -193,12 +182,14 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
       if (duplicateKey) {
         const existingEntry = seenByUrl.get(duplicateKey)
         if (existingEntry) {
-          if (!existingEntry.dupe) {
-            existingEntry.dupe = true
-            logDuplicateBookmark(existingEntry)
-          }
+          existingEntry.dupe = true
           mappedEntry.dupe = true
-          logDuplicateBookmark(mappedEntry)
+          console.warn(
+            `Duplicate bookmark detected for ${
+              mappedEntry.originalUrl || mappedEntry.url || 'unknown URL'
+            } in folder:`,
+            mappedEntry.folderArray || [],
+          )
         } else {
           seenByUrl.set(duplicateKey, mappedEntry)
         }
