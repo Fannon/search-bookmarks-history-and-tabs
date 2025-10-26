@@ -241,14 +241,16 @@ function cacheResults(searchTerm, results) {
  * @returns {Promise<void>}
  */
 export async function search(event) {
-  try {
-    if (shouldSkipSearch(event)) return
-    if (!ext.initialized) {
-      console.warn('Extension not initialized (yet). Skipping search')
-      return
-    }
+  // Create a promise that we'll track so Enter key can await completion
+  const searchPromise = (async () => {
+    try {
+      if (shouldSkipSearch(event)) return
+      if (!ext.initialized) {
+        console.warn('Extension not initialized (yet). Skipping search')
+        return
+      }
 
-    const startTime = Date.now()
+      const startTime = Date.now()
 
     // Get and clean up original search query
     let searchTerm = normalizeSearchTerm(ext.dom.searchInput.value)
@@ -305,13 +307,19 @@ export async function search(event) {
     // Cache the results for better performance (only for actual searches)
     cacheResults(searchTerm, results)
 
-    renderSearchResults(results)
+      renderSearchResults(results)
 
-    // Simple timing for debugging (only if debug is enabled)
-    console.debug('Search completed in ' + (Date.now() - startTime) + 'ms')
-  } catch (err) {
-    printError(err)
-  }
+      // Simple timing for debugging (only if debug is enabled)
+      console.debug('Search completed in ' + (Date.now() - startTime) + 'ms')
+    } catch (err) {
+      printError(err)
+    }
+  })()
+
+  // Store the active search promise so Enter key can await it
+  ext.model.activeSearchPromise = searchPromise
+
+  return searchPromise
 }
 
 /**

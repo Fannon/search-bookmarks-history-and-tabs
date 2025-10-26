@@ -456,6 +456,51 @@ describe('searchEvents openResultItem', () => {
 
     expect(window.open).toHaveBeenCalledWith('https://bookmark.test', '_newtab')
   })
+
+  it('reads result data from model state instead of stale DOM attributes (BUG: race condition fix)', async () => {
+    const { module, viewModule } = await setupSearchEvents()
+    await viewModule.renderSearchResults()
+
+    // Simulate a race condition: DOM shows old results, but model has new results
+    // This happens when Enter is pressed before search completes and re-renders
+    const newResult = {
+      type: 'bookmark',
+      originalId: 'new-bm-123',
+      originalUrl: 'https://correct-new-result.test',
+      url: 'correct-new-result.test',
+      title: 'Correct New Result',
+      score: 999,
+    }
+
+    // Update model with new result (simulating completed search)
+    ext.model.result = [newResult]
+    ext.model.currentItem = 0
+
+    // DOM still shows old result (hasn't re-rendered yet)
+    const staleSelectedElement = document.getElementById('selected-result')
+    expect(staleSelectedElement.getAttribute('x-open-url')).toBe('https://bookmark.test') // Old result
+
+    // Call openResultItem - it should use model state, not DOM
+    module.openResultItem({
+      button: 0,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+
+    // Verify it opened the NEW result from the model, not the old one from DOM
+    expect(ext.browserApi.tabs.create).toHaveBeenCalledWith({
+      active: true,
+      url: 'https://correct-new-result.test', // New result, not old!
+    })
+  })
 })
 
 describe('search approach controls', () => {

@@ -246,9 +246,70 @@ describe('searchNavigation navigationKeyListener', () => {
     }
     window.location.hash = '#search/query'
 
-    module.navigationKeyListener(event)
+    await module.navigationKeyListener(event)
 
     // Verify window closed (side effect of openResultItem for bookmark)
+    expect(windowCloseSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('waits for in-flight search to complete before opening result on Enter', async () => {
+    const { module, viewModule } = await setupSearchNavigation()
+    await viewModule.renderSearchResults()
+
+    // Mock window.close to verify openResultItem was called
+    const windowCloseSpy = jest.fn()
+    window.close = windowCloseSpy
+
+    // Simulate an in-flight search by creating a pending promise
+    let resolveSearch
+    const searchPromise = new Promise((resolve) => {
+      resolveSearch = resolve
+    })
+    ext.model.activeSearchPromise = searchPromise
+
+    // Update the model with new results that will be available after search completes
+    const newResults = [
+      {
+        type: 'bookmark',
+        originalId: 'new-bm',
+        originalUrl: 'https://new-result.test',
+        url: 'new-result.test',
+        title: 'New Search Result',
+        score: 100,
+      },
+    ]
+
+    const event = {
+      key: 'Enter',
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      preventDefault: jest.fn(),
+      stopPropagation: jest.fn(),
+      button: 0,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+    }
+    window.location.hash = '#search/query'
+
+    // Start the navigation (it should wait for the search to complete)
+    const navigationPromise = module.navigationKeyListener(event)
+
+    // Verify that window.close hasn't been called yet (still waiting for search)
+    expect(windowCloseSpy).not.toHaveBeenCalled()
+
+    // Now complete the search and update results
+    ext.model.result = newResults
+    ext.model.currentItem = 0
+    resolveSearch()
+
+    // Wait for navigation to complete
+    await navigationPromise
+
+    // Now verify window closed (openResultItem was called with the correct result)
     expect(windowCloseSpy).toHaveBeenCalledTimes(1)
   })
 

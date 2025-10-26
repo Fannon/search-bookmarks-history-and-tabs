@@ -14,7 +14,7 @@ import { openResultItem } from './searchEvents.js'
  * Handle keyboard navigation for search results
  * Supports arrow keys and vim-style keybindings (Ctrl+P/Ctrl+N, Ctrl+K/Ctrl+J)
  */
-export function navigationKeyListener(event) {
+export async function navigationKeyListener(event) {
   // Define navigation directions with multiple keybinding options
   const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p') || (event.ctrlKey && event.key === 'k')
   const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n') || (event.ctrlKey && event.key === 'j')
@@ -33,6 +33,11 @@ export function navigationKeyListener(event) {
   } else if (event.key === 'Enter' && ext.model.result.length > 0) {
     // Activate selected result when Enter is pressed
     if (window.location.hash.startsWith('#search/') || !window.location.hash) {
+      // Wait for any in-flight search to complete before opening result
+      // This prevents race condition where Enter is pressed before search finishes
+      if (ext.model.activeSearchPromise) {
+        await ext.model.activeSearchPromise
+      }
       openResultItem(event)
     }
   } else if (event.key === 'Escape') {
