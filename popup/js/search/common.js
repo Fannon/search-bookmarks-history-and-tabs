@@ -105,7 +105,7 @@ function useCachedResultsIfAvailable(searchTerm) {
     console.debug(`Using cached results for key "${cacheKey}"`)
     ext.model.searchTerm = searchTerm
     ext.model.result = ext.searchCache.get(cacheKey)
-    renderSearchResults(ext.model.result)
+    renderSearchResults()
     return true
   }
 
@@ -120,7 +120,7 @@ function useCachedResultsIfAvailable(searchTerm) {
 async function handleEmptySearch() {
   ext.model.searchTerm = '' // Clear search term for default results
   ext.model.result = await addDefaultEntries()
-  renderSearchResults(ext.model.result)
+  renderSearchResults()
 }
 
 /**
@@ -281,16 +281,13 @@ export async function search(event) {
     }
 
     // Execute search if we have a search term
-    if (searchTerm) {
-      results.push(...(await executeSearch(searchTerm, searchMode)))
-      addDirectUrlIfApplicable(searchTerm, results)
+    // Note: searchTerm is guaranteed to be non-empty here due to early return at line 260-263
+    results.push(...(await executeSearch(searchTerm, searchMode)))
+    addDirectUrlIfApplicable(searchTerm, results)
 
-      // Add search engine result items
-      if (searchMode === 'all' || searchMode === 'search') {
-        results.push(...addSearchEngines(searchTerm))
-      }
-    } else {
-      results = await addDefaultEntries()
+    // Add search engine result items
+    if (searchMode === 'all' || searchMode === 'search') {
+      results.push(...addSearchEngines(searchTerm))
     }
 
     // Apply scoring and sorting
@@ -300,12 +297,11 @@ export async function search(event) {
     results = filterResults(results, searchMode)
 
     ext.model.result = results
-    ext.dom.resultCounter.innerText = `(${results.length})`
 
     // Cache the results for better performance (only for actual searches)
     cacheResults(searchTerm, results)
 
-    renderSearchResults(results)
+    renderSearchResults()
 
     // Simple timing for debugging (only if debug is enabled)
     console.debug('Search completed in ' + (Date.now() - startTime) + 'ms')

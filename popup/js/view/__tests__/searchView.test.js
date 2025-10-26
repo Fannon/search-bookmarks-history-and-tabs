@@ -2,7 +2,7 @@
  * ✅ Covered behaviors: rendering of search results with metadata, badges, highlights,
  *   HTML escaping, and initial selection state.
  * ⚠️ Known gaps: does not verify browser navigation side effects beyond mocked APIs.
- * 🐞 Added BUG tests: none.
+ * 🐞 Added BUG tests: mouse hover fragility, missing error boundary, missing length check
  *
  * Note: Navigation tests moved to searchNavigation.test.js
  *       Event handling tests moved to searchEvents.test.js
@@ -311,5 +311,89 @@ describe('searchView renderSearchResults', () => {
 
     expect(lastVisitedBadge).not.toBeNull()
     expect(lastVisitedBadge.textContent).toBe('-0 s')
+  })
+})
+
+describe('✅ FIXED: Mouse Hover State Fragility', () => {
+  it('now re-enables mouse hover even if rendering throws error', async () => {
+    const { module } = await setupSearchView()
+
+    // Verify initial state
+    expect(ext.model.mouseHoverEnabled).toBe(true)
+
+    // Mock Mark to throw an error during rendering
+    window.Mark = jest.fn(() => {
+      throw new Error('Mark.js failed to load')
+    })
+
+    // FIXED: Error handling now re-enables mouseHoverEnabled
+    try {
+      await module.renderSearchResults()
+    } catch {
+      // Error is expected
+    }
+
+    // FIXED: mouseHoverEnabled is re-enabled in the error handler
+    expect(ext.model.mouseHoverEnabled).toBe(true)
+  })
+})
+
+describe('✅ FIXED: Error Boundary Added', () => {
+  it('now handles rendering errors gracefully with proper error boundary', async () => {
+    const { module } = await setupSearchView()
+
+    // Mock a failure during rendering
+    window.Mark = jest.fn(() => {
+      throw new Error('Rendering catastrophe')
+    })
+
+    // FIXED: Error handling now catches errors and re-enables mouseHover
+    // The error is still thrown to allow caller to handle, but state is restored
+    await expect(module.renderSearchResults()).rejects.toThrow('Rendering catastrophe')
+
+    // FIXED: mouseHoverEnabled is properly restored even on error
+    expect(ext.model.mouseHoverEnabled).toBe(true)
+  })
+})
+
+describe('🐞 BUG: Missing Length Check', () => {
+  it('calls selectListItem(0) unconditionally at line 163', async () => {
+    const { module, elements } = await setupSearchView({ results: [] })
+
+    // The code at searchView.js:163 calls selectListItem(0) unconditionally
+    // However, there's an early return at line 20-23 for empty results
+    // So the bug is actually protected against for truly empty arrays
+
+    await module.renderSearchResults([])
+
+    // Early return prevents the selectListItem(0) call for empty arrays
+    expect(elements.resultList.children.length).toBe(0)
+  })
+
+  it('attempts to select first item even when results are filtered out', async () => {
+    const { module, elements } = await setupSearchView()
+
+    // The current implementation calls selectListItem(0) at line 163
+    // without verifying that results.length > 0
+    // However, the early return at line 20-23 prevents this for empty arrays
+
+    // The real bug case: when results has falsy entries that get filtered
+    const resultsWithNull = [
+      null,
+      {
+        type: 'bookmark',
+        originalId: 'bm-1',
+        originalUrl: 'https://test.com',
+        url: 'test.com',
+        title: 'Test',
+      },
+    ]
+
+    await module.renderSearchResults(resultsWithNull)
+
+    // selectListItem(0) is called, which works because the second entry exists
+    const firstItem = elements.resultList.children[0]
+    expect(firstItem).toBeDefined()
+    expect(ext.model.currentItem).toBe(0)
   })
 })

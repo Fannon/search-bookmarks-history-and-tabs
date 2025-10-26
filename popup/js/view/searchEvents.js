@@ -61,6 +61,11 @@ export function openResultItem(event) {
         ext.model.result.splice(resultIndex, 1)
       }
 
+      // Clear the search cache to prevent ghost tabs in cached results
+      if (ext.searchCache) {
+        ext.searchCache.clear()
+      }
+
       // Re-render to update indices and selection
       renderSearchResults()
       return
