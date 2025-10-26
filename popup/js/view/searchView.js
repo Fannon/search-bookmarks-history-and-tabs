@@ -22,6 +22,10 @@ export async function renderSearchResults() {
 
     if (!result || result.length === 0) {
       ext.dom.resultList.replaceChildren()
+      // Clear result counter when no results to show
+      if (ext.dom.resultCounter) {
+        ext.dom.resultCounter.innerText = ''
+      }
       return
     }
 

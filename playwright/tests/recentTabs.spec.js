@@ -139,7 +139,7 @@ test.describe('Recent Tabs on Open Functionality', () => {
       await expectNoClientErrors(page)
     })
 
-    test('maintains the result counter behavior', async ({ page }) => {
+    test('shows result counter for recent tabs', async ({ page }) => {
       await updateUserConfig(page, { maxRecentTabsToShow: 10 })
 
       await page.goto('/')
@@ -149,7 +149,8 @@ test.describe('Recent Tabs on Open Functionality', () => {
       expect(count).toBeLessThanOrEqual(10)
       expect(count).toBeGreaterThanOrEqual(1)
 
-      await expect(page.locator('#result-counter')).toHaveText('')
+      // Result counter should show count even for default entries (recent tabs)
+      await expect(page.locator('#result-counter')).toHaveText(`(${count})`)
       await expectNoClientErrors(page)
     })
   })
