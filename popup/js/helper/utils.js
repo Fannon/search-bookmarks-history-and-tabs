@@ -14,7 +14,7 @@ const HTML_ESCAPE_MAP = {
   '<': '&lt;',
   '>': '&gt;',
   '"': '&quot;',
-  "'": '&#39;',
+  "'": '&#39;'
 }
 
 let nextGeneratedId = 1
@@ -38,7 +38,10 @@ export function escapeHtml(value) {
   if (value === null || value === undefined) {
     return ''
   }
-  return String(value).replace(HTML_ESCAPE_REGEX, (match) => HTML_ESCAPE_MAP[match])
+  return String(value).replace(
+    HTML_ESCAPE_REGEX,
+    (match) => HTML_ESCAPE_MAP[match]
+  )
 }
 
 /**
@@ -65,7 +68,7 @@ export function timeSince(date) {
     [2592000, 'month'],
     [86400, 'd'],
     [3600, 'h'],
-    [60, 'm'],
+    [60, 'm']
   ]) {
     const count = Math.floor(seconds / unitSeconds)
     if (count >= 1) {
@@ -123,7 +126,7 @@ export async function loadScript(url) {
     return Promise.resolve()
   }
 
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     const s = document.createElement('script')
     s.type = 'text/javascript'
     s.onload = () => {

@@ -20,7 +20,7 @@ import { resolveSearchTargets } from './common.js'
 /**
  * Memoize some state, to avoid re-creating haystack and fuzzy search instances.
  */
-let state = {}
+const state = {}
 
 /**
  * Reset cached simple search state when datasets or mode change.
@@ -87,7 +87,7 @@ function simpleSearchWithScoring(searchTerm, searchMode) {
 
   if (!state[searchMode]) {
     state[searchMode] = {
-      cachedData: prepareSearchData(data),
+      cachedData: prepareSearchData(data)
     }
   }
   const s = state[searchMode]
@@ -107,12 +107,13 @@ function simpleSearchWithScoring(searchTerm, searchMode) {
     const localResults = []
     for (const entry of s.cachedData) {
       // Cache the normalized search string to avoid repeated toLowerCase() calls
-      const normalizedSearchString = entry.searchStringLower || entry.searchString.toLowerCase()
+      const normalizedSearchString =
+        entry.searchStringLower || entry.searchString.toLowerCase()
       if (normalizedSearchString.includes(term)) {
         localResults.push({
           ...entry,
           searchScore: 1,
-          searchApproach: 'precise',
+          searchApproach: 'precise'
         })
       }
     }

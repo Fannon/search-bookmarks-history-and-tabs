@@ -29,6 +29,8 @@
 - **REMOVED**: Date-added scoring bonus along with the `scoreDateAddedBonusScoreMaximum` / `scoreDateAddedBonusScorePerDay` options to keep ranking focused on usage signals.
   - The options had already been removed, this was a code leftover
 
+- **DEV**: Replaced the ESLint + Prettier toolchain with Biome (config, scripts, and editor defaults) for a single-source formatter and linter.
+
 ## [v1.16.0]
 
 - **IMPROVED**: Search scoring precision and reliability

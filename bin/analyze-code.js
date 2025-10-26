@@ -25,7 +25,7 @@ const INCLUDE_PATTERNS = [
   '**/*.css',
   '**/*.md',
   '**/*.yml',
-  '**/*.yaml',
+  '**/*.yaml'
 ]
 
 const EXCLUDE_PATTERNS = [
@@ -37,7 +37,7 @@ const EXCLUDE_PATTERNS = [
   '**/reports/**',
   'package-lock.json',
   '**/*.min.js',
-  '**/mockData/**',
+  '**/mockData/**'
 ]
 
 const TEST_PATTERNS = [
@@ -46,7 +46,7 @@ const TEST_PATTERNS = [
   '**/*.spec.js',
   '**/*.test.mjs',
   '**/*.spec.mjs',
-  '**/tests/**',
+  '**/tests/**'
 ]
 
 class CodeAnalyzer {
@@ -57,29 +57,29 @@ class CodeAnalyzer {
         lines: 0,
         codeLines: 0,
         commentLines: 0,
-        emptyLines: 0,
+        emptyLines: 0
       },
       source: {
         files: 0,
         lines: 0,
         codeLines: 0,
         commentLines: 0,
-        emptyLines: 0,
+        emptyLines: 0
       },
       tests: {
         files: 0,
         lines: 0,
         codeLines: 0,
         commentLines: 0,
-        emptyLines: 0,
+        emptyLines: 0
       },
       other: {
         files: 0,
         lines: 0,
         codeLines: 0,
         commentLines: 0,
-        emptyLines: 0,
-      },
+        emptyLines: 0
+      }
     }
   }
 
@@ -99,7 +99,11 @@ class CodeAnalyzer {
 
     // Check include patterns
     for (const pattern of INCLUDE_PATTERNS) {
-      if (new RegExp(pattern.replace(/\*\*/g, '.*').replace(/\./g, '\\.')).test(filePath)) {
+      if (
+        new RegExp(pattern.replace(/\*\*/g, '.*').replace(/\./g, '\\.')).test(
+          filePath
+        )
+      ) {
         return true
       }
     }
@@ -136,11 +140,11 @@ class CodeAnalyzer {
     const lines = content.split('\n')
     const isTest = this.isTestFile(filePath)
 
-    let fileStats = {
+    const fileStats = {
       lines: lines.length,
       codeLines: 0,
       commentLines: 0,
-      emptyLines: 0,
+      emptyLines: 0
     }
 
     for (let i = 0; i < lines.length; i++) {
@@ -206,9 +210,15 @@ class CodeAnalyzer {
    * @returns {boolean} True when line is a comment.
    */
   isCommentLine(line, filePath) {
-    if (filePath.endsWith('.js') || filePath.endsWith('.mjs') || filePath.endsWith('.ts')) {
+    if (
+      filePath.endsWith('.js') ||
+      filePath.endsWith('.mjs') ||
+      filePath.endsWith('.ts')
+    ) {
       // JavaScript/TypeScript comments
-      return line.startsWith('//') || line.startsWith('/*') || line.startsWith('*')
+      return (
+        line.startsWith('//') || line.startsWith('/*') || line.startsWith('*')
+      )
     } else if (filePath.endsWith('.html')) {
       // HTML comments
       return line.startsWith('<!--')
@@ -259,8 +269,13 @@ class CodeAnalyzer {
       if (stats.files === 0) return ''
 
       const codePercentage = ((stats.codeLines / stats.lines) * 100).toFixed(1)
-      const commentPercentage = ((stats.commentLines / stats.lines) * 100).toFixed(1)
-      const emptyPercentage = ((stats.emptyLines / stats.lines) * 100).toFixed(1)
+      const commentPercentage = (
+        (stats.commentLines / stats.lines) *
+        100
+      ).toFixed(1)
+      const emptyPercentage = ((stats.emptyLines / stats.lines) * 100).toFixed(
+        1
+      )
 
       return `
 ${title}:
@@ -281,12 +296,18 @@ ${title}:
     console.error('\nSUMMARY RATIOS:')
     console.error('=====================================')
     if (this.stats.source.lines > 0) {
-      const testToSourceRatio = ((this.stats.tests.lines / this.stats.source.lines) * 100).toFixed(1)
+      const testToSourceRatio = (
+        (this.stats.tests.lines / this.stats.source.lines) *
+        100
+      ).toFixed(1)
       console.error(`Test to Source Code Ratio: ${testToSourceRatio}%`)
     }
 
     if (this.stats.total.lines > 0) {
-      const commentToCodeRatio = ((this.stats.total.commentLines / this.stats.total.codeLines) * 100).toFixed(1)
+      const commentToCodeRatio = (
+        (this.stats.total.commentLines / this.stats.total.codeLines) *
+        100
+      ).toFixed(1)
       console.error(`Comment to Code Ratio: ${commentToCodeRatio}%`)
     }
   }

@@ -31,7 +31,7 @@ const baseOpts = {
   scoreRecentBonusScoreMaximum: 0,
   historyDaysAgo: 7,
   scoreCustomBonusScore: false,
-  scoreWeakMatchPenalty: 0,
+  scoreWeakMatchPenalty: 0
 }
 
 const baseResult = {
@@ -43,16 +43,19 @@ const baseResult = {
   folder: '',
   folderArray: [],
   searchScore: 1,
-  customBonusScore: 0,
+  customBonusScore: 0
 }
 
 function scoreFor({ searchTerm = 'query', opts = {}, result = {} }) {
   createTestExt({
     model: { searchTerm },
-    opts: { ...baseOpts, ...opts },
+    opts: { ...baseOpts, ...opts }
   })
 
-  const [scored] = calculateFinalScore([{ ...baseResult, ...result }], searchTerm)
+  const [scored] = calculateFinalScore(
+    [{ ...baseResult, ...result }],
+    searchTerm
+  )
   const score = scored.score
 
   clearTestExt()
@@ -68,20 +71,37 @@ describe('scoring', () => {
   it('applies base scores for each result type', () => {
     createTestExt({
       model: { searchTerm: '' },
-      opts: baseOpts,
+      opts: baseOpts
     })
 
     const results = [
-      { type: 'bookmark', title: 'Bookmark', url: 'bookmark.test', searchScore: 0.55 },
+      {
+        type: 'bookmark',
+        title: 'Bookmark',
+        url: 'bookmark.test',
+        searchScore: 0.55
+      },
       { type: 'tab', title: 'Tab', url: 'tab.test', searchScore: 1 },
-      { type: 'history', title: 'History', url: 'history.test', searchScore: 1 },
+      {
+        type: 'history',
+        title: 'History',
+        url: 'history.test',
+        searchScore: 1
+      },
       { type: 'search', title: 'Search', url: 'search.test', searchScore: 0.5 },
-      { type: 'customSearch', title: 'Custom search', url: 'custom.test', searchScore: 1 },
-      { type: 'direct', title: 'Direct', url: 'direct.test', searchScore: 1 },
+      {
+        type: 'customSearch',
+        title: 'Custom search',
+        url: 'custom.test',
+        searchScore: 1
+      },
+      { type: 'direct', title: 'Direct', url: 'direct.test', searchScore: 1 }
     ]
 
     const scored = calculateFinalScore(results, '')
-    const scoreByType = Object.fromEntries(scored.map((item) => [item.type, item.score]))
+    const scoreByType = Object.fromEntries(
+      scored.map((item) => [item.type, item.score])
+    )
 
     expect(scoreByType).toMatchObject({
       bookmark: expect.any(Number),
@@ -89,7 +109,7 @@ describe('scoring', () => {
       history: expect.any(Number),
       search: expect.any(Number),
       customSearch: expect.any(Number),
-      direct: expect.any(Number),
+      direct: expect.any(Number)
     })
     expect(scoreByType.bookmark).toBeCloseTo(55)
     expect(scoreByType.tab).toBeCloseTo(70)
@@ -102,18 +122,28 @@ describe('scoring', () => {
   it('throws on unsupported result type', () => {
     createTestExt({
       model: { searchTerm: 'test' },
-      opts: baseOpts,
+      opts: baseOpts
     })
 
     expect(() =>
-      calculateFinalScore([{ type: 'unsupported', title: 'X', url: 'https://x.test', searchScore: 1 }], 'test'),
+      calculateFinalScore(
+        [
+          {
+            type: 'unsupported',
+            title: 'X',
+            url: 'https://x.test',
+            searchScore: 1
+          }
+        ],
+        'test'
+      )
     ).toThrow('Search result type "unsupported" not supported')
   })
 
   it('scales the base score by the searchScore multiplier', () => {
     const score = scoreFor({
       searchTerm: 'alpha',
-      result: { searchScore: 0.5 },
+      result: { searchScore: 0.5 }
     })
 
     expect(score).toBeCloseTo(50)
@@ -123,7 +153,7 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: 'alpha',
       opts: { scoreExactIncludesBonus: 5 },
-      result: { title: 'alpha value' },
+      result: { title: 'alpha value' }
     })
 
     expect(score).toBeCloseTo(105)
@@ -136,8 +166,8 @@ describe('scoring', () => {
       result: {
         title: 'neutral title',
         tags: '#taggy',
-        tagsArray: ['taggy'],
-      },
+        tagsArray: ['taggy']
+      }
     })
 
     expect(score).toBeCloseTo(105)
@@ -150,8 +180,8 @@ describe('scoring', () => {
       result: {
         title: 'neutral title',
         folder: '~Projects',
-        folderArray: ['Projects'],
-      },
+        folderArray: ['Projects']
+      }
     })
 
     expect(score).toBeCloseTo(105)
@@ -163,8 +193,8 @@ describe('scoring', () => {
       opts: { scoreExactIncludesBonus: 5 },
       result: {
         title: 'neutral title',
-        url: 'example.com/project-plan',
-      },
+        url: 'example.com/project-plan'
+      }
     })
 
     expect(score).toBeCloseTo(110)
@@ -174,7 +204,7 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: '42',
       opts: { scoreExactIncludesBonus: 5, scoreExactIncludesBonusMinChars: 3 },
-      result: { title: 'version 42 release' },
+      result: { title: 'version 42 release' }
     })
 
     expect(score).toBeCloseTo(105)
@@ -184,7 +214,7 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: '',
       opts: { scoreBookmarkOpenTabBonus: 25 },
-      result: { tab: true },
+      result: { tab: true }
     })
 
     expect(score).toBeCloseTo(125)
@@ -194,7 +224,7 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: '',
       opts: { scoreBookmarkOpenTabBonus: 25 },
-      result: { type: 'tab', tab: true, searchScore: 1 },
+      result: { type: 'tab', tab: true, searchScore: 1 }
     })
 
     expect(score).toBeCloseTo(70)
@@ -204,7 +234,7 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: 'alpha beta',
       opts: { scoreExactIncludesBonus: 5, scoreExactIncludesMaxBonuses: 1 },
-      result: { url: 'https://example.test/alpha-beta' },
+      result: { url: 'https://example.test/alpha-beta' }
     })
 
     expect(score).toBeCloseTo(105)
@@ -214,7 +244,7 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: 'project plan',
       opts: { scoreExactPhraseTitleBonus: 3, scoreExactIncludesBonus: 0 },
-      result: { title: 'project plan document' },
+      result: { title: 'project plan document' }
     })
 
     expect(score).toBeCloseTo(103)
@@ -224,7 +254,7 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: 'project plan',
       opts: { scoreExactPhraseUrlBonus: 2, scoreExactIncludesBonus: 0 },
-      result: { url: 'https://docs.test/project-plan-overview' },
+      result: { url: 'https://docs.test/project-plan-overview' }
     })
 
     expect(score).toBeCloseTo(102)
@@ -234,7 +264,7 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: 'project',
       opts: { scoreExactPhraseTitleBonus: 8, scoreExactIncludesBonus: 0 },
-      result: { title: 'project document' },
+      result: { title: 'project document' }
     })
 
     // Should be base score only (100), no phrase bonus for single word
@@ -245,7 +275,7 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: 'project',
       opts: { scoreExactPhraseUrlBonus: 4, scoreExactIncludesBonus: 0 },
-      result: { url: 'https://docs.test/project-overview' },
+      result: { url: 'https://docs.test/project-overview' }
     })
 
     // Should be base score only (100), no phrase bonus for single word
@@ -258,8 +288,8 @@ describe('scoring', () => {
       opts: { scoreExactTagMatchBonus: 7, scoreExactIncludesBonus: 0 },
       result: {
         tags: '#taggy',
-        tagsArray: ['taggy'],
-      },
+        tagsArray: ['taggy']
+      }
     })
 
     expect(score).toBeCloseTo(107)
@@ -271,8 +301,8 @@ describe('scoring', () => {
       opts: { scoreExactFolderMatchBonus: 6, scoreExactIncludesBonus: 0 },
       result: {
         folder: '~Projects',
-        folderArray: ['Projects'],
-      },
+        folderArray: ['Projects']
+      }
     })
 
     expect(score).toBeCloseTo(106)
@@ -283,8 +313,8 @@ describe('scoring', () => {
       searchTerm: 'alpha',
       opts: { scoreExactStartsWithBonus: 8 },
       result: {
-        title: 'alpha project plan',
-      },
+        title: 'alpha project plan'
+      }
     })
 
     expect(score).toBeCloseTo(108)
@@ -295,8 +325,8 @@ describe('scoring', () => {
       searchTerm: 'alpha beta',
       opts: { scoreExactStartsWithBonus: 8 },
       result: {
-        url: 'alpha-beta.com/path',
-      },
+        url: 'alpha-beta.com/path'
+      }
     })
 
     expect(score).toBeCloseTo(108)
@@ -307,8 +337,8 @@ describe('scoring', () => {
       searchTerm: 'alpha',
       opts: { scoreExactEqualsBonus: 9 },
       result: {
-        title: 'alpha',
-      },
+        title: 'alpha'
+      }
     })
 
     expect(score).toBeCloseTo(109)
@@ -319,8 +349,8 @@ describe('scoring', () => {
       searchTerm: 'alpha',
       opts: { scoreCustomBonusScore: true },
       result: {
-        customBonusScore: 7,
-      },
+        customBonusScore: 7
+      }
     })
 
     expect(score).toBeCloseTo(107)
@@ -331,11 +361,11 @@ describe('scoring', () => {
       searchTerm: 'alpha',
       opts: {
         scoreVisitedBonusScore: 2,
-        scoreVisitedBonusScoreMaximum: 5,
+        scoreVisitedBonusScoreMaximum: 5
       },
       result: {
-        visitCount: 10,
-      },
+        visitCount: 10
+      }
     })
 
     expect(score).toBeCloseTo(105)
@@ -346,11 +376,11 @@ describe('scoring', () => {
       searchTerm: 'alpha',
       opts: {
         scoreRecentBonusScoreMaximum: 20,
-        historyDaysAgo: 1,
+        historyDaysAgo: 1
       },
       result: {
-        lastVisitSecondsAgo: 3600,
-      },
+        lastVisitSecondsAgo: 3600
+      }
     })
 
     expect(score).toBeCloseTo(119.1666667)
@@ -361,11 +391,11 @@ describe('scoring', () => {
       searchTerm: 'alpha',
       opts: {
         scoreRecentBonusScoreMaximum: 20,
-        historyDaysAgo: 1,
+        historyDaysAgo: 1
       },
       result: {
-        lastVisitSecondsAgo: 0,
-      },
+        lastVisitSecondsAgo: 0
+      }
     })
 
     expect(score).toBeCloseTo(120)
@@ -377,8 +407,8 @@ describe('scoring', () => {
       opts: { scoreExactTagMatchBonus: 10, scoreExactIncludesBonus: 0 },
       result: {
         tags: '#tag',
-        tagsArray: ['tag'],
-      },
+        tagsArray: ['tag']
+      }
     })
 
     // Each "tag" in the search gets the exact tag match bonus: 100 + (10 * 3) = 130
@@ -391,8 +421,8 @@ describe('scoring', () => {
       searchTerm: 'alpha',
       opts: { scoreExactStartsWithBonus: 8 },
       result: {
-        title: '  alpha project',
-      },
+        title: '  alpha project'
+      }
     })
 
     // Should match even with leading spaces (now fixed with title.trim())
@@ -405,8 +435,8 @@ describe('scoring', () => {
       opts: { scoreExactTagMatchBonus: 5, scoreExactIncludesBonus: 0 },
       result: {
         tags: '#Tag1#OtherTag',
-        tagsArray: ['Tag1', 'OtherTag'],
-      },
+        tagsArray: ['Tag1', 'OtherTag']
+      }
     })
 
     // Should match Tag1 without repeated toLowerCase
@@ -416,13 +446,13 @@ describe('scoring', () => {
   it('IMPROVEMENT: penalizes results missing all search terms more aggressively', () => {
     const scoreNoMatch = scoreFor({
       searchTerm: 'alpha beta gamma',
-      result: { title: 'delta' },
+      result: { title: 'delta' }
     })
 
     const scoreOneMatch = scoreFor({
       searchTerm: 'alpha beta gamma',
       opts: { scoreExactIncludesBonus: 5 },
-      result: { title: 'alpha delta epsilon' },
+      result: { title: 'alpha delta epsilon' }
     })
 
     // Single match should not score close to base
@@ -436,8 +466,8 @@ describe('scoring', () => {
       result: {
         type: 'bookmark',
         title: 'test',
-        fromMultipleSources: true,
-      },
+        fromMultipleSources: true
+      }
     })
 
     // Should not double-count bonuses for duplicates
@@ -450,8 +480,8 @@ describe('scoring', () => {
       opts: { scoreExactIncludesBonus: 8 },
       result: {
         title: 'My Project',
-        url: 'github.com/user/repo',
-      },
+        url: 'github.com/user/repo'
+      }
     })
 
     // Should match domain exactly
@@ -462,7 +492,7 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: 'test test test',
       opts: { scoreExactIncludesBonus: 5 },
-      result: { title: 'test value' },
+      result: { title: 'test value' }
     })
 
     // Each "test" in the search gets bonus: 100 + (5 * 3) = 115
@@ -474,7 +504,7 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: 'alpha beta',
       opts: { scoreExactIncludesBonus: 5 },
-      result: { title: 'alpha beta gamma' },
+      result: { title: 'alpha beta gamma' }
     })
 
     // Both 'alpha' and 'beta' match: 100 + (5 * 2) = 110
@@ -487,8 +517,8 @@ describe('scoring', () => {
       opts: { scoreExactIncludesBonus: 8 },
       result: {
         title: 'neutral title',
-        url: 'EXAMPLE.COM/path',
-      },
+        url: 'EXAMPLE.COM/path'
+      }
     })
 
     // Should match despite URL being uppercase
@@ -501,8 +531,8 @@ describe('scoring', () => {
       opts: { scoreExactStartsWithBonus: 10 },
       result: {
         title: 'neutral title',
-        url: 'EXAMPLE-PATH/file',
-      },
+        url: 'EXAMPLE-PATH/file'
+      }
     })
 
     // Should match despite URL being uppercase
@@ -513,13 +543,13 @@ describe('scoring', () => {
     const weakMatchScore = scoreFor({
       searchTerm: 'xyz',
       opts: { scoreWeakMatchPenalty: 0.3 },
-      result: { searchScore: 0.3 },
+      result: { searchScore: 0.3 }
     })
 
     const strongMatchScore = scoreFor({
       searchTerm: 'xyz',
       opts: { scoreWeakMatchPenalty: 0.3 },
-      result: { searchScore: 0.8 },
+      result: { searchScore: 0.8 }
     })
 
     // Weak match should score significantly lower than strong match
@@ -530,7 +560,7 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: 'xyz',
       opts: { scoreWeakMatchPenalty: 0.5 },
-      result: { searchScore: 0.05 },
+      result: { searchScore: 0.05 }
     })
 
     // Should be base score * 0.05, no additional penalty
@@ -544,8 +574,8 @@ describe('scoring', () => {
       result: {
         title: 'test',
         tags: '#test',
-        tagsArray: ['test'],
-      },
+        tagsArray: ['test']
+      }
     })
 
     // Should apply only title bonus (first match), not title + tag bonuses
@@ -555,12 +585,12 @@ describe('scoring', () => {
   it('handles empty and null search scores gracefully', () => {
     const scoreNoSearchScore = scoreFor({
       searchTerm: 'test',
-      result: { searchScore: undefined },
+      result: { searchScore: undefined }
     })
 
     const scoreZeroSearchScore = scoreFor({
       searchTerm: 'test',
-      result: { searchScore: 0 },
+      result: { searchScore: 0 }
     })
 
     // undefined searchScore should use title weight (1) as fallback
@@ -578,14 +608,14 @@ describe('scoring', () => {
         scoreTitleWeight: 2,
         scoreUrlWeight: 1,
         scoreTagWeight: 1,
-        scoreFolderWeight: 1,
+        scoreFolderWeight: 1
       },
       result: {
         title: 'priority test',
         url: 'priority.com',
         tags: '#priority',
-        folder: 'priority',
-      },
+        folder: 'priority'
+      }
     })
 
     // Should apply title weight bonus (5 * 2 = 10 added)
@@ -599,14 +629,14 @@ describe('scoring', () => {
         opts: {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 10,
-          scoreTagWeight: 0.7,
+          scoreTagWeight: 0.7
         },
         result: {
           title: 'MDN Documentation',
           url: 'developer.mozilla.org',
           tags: '#javascript',
-          tagsArray: ['javascript'],
-        },
+          tagsArray: ['javascript']
+        }
       })
 
       // Base: 100, includes bonus (tag): 5 * 0.7 = 3.5, exact tag match: 10
@@ -621,14 +651,14 @@ describe('scoring', () => {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 10,
           scoreTitleWeight: 1,
-          scoreTagWeight: 0.7,
+          scoreTagWeight: 0.7
         },
         result: {
           title: 'JavaScript Tutorial',
           url: 'example.com',
           tags: '#javascript',
-          tagsArray: ['javascript'],
-        },
+          tagsArray: ['javascript']
+        }
       })
 
       // Base: 100, includes bonus (title, not tag): 5 * 1 = 5, exact tag match: 10
@@ -643,14 +673,14 @@ describe('scoring', () => {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 10,
           scoreTitleWeight: 1,
-          scoreTagWeight: 0.7,
+          scoreTagWeight: 0.7
         },
         result: {
           title: 'MDN Docs',
           url: 'developer.mozilla.org',
           tags: '#javascript',
-          tagsArray: ['javascript'],
-        },
+          tagsArray: ['javascript']
+        }
       })
 
       const titleOnlyScore = scoreFor({
@@ -659,14 +689,14 @@ describe('scoring', () => {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 10,
           scoreTitleWeight: 1,
-          scoreTagWeight: 0.7,
+          scoreTagWeight: 0.7
         },
         result: {
           title: 'JavaScript Tutorial',
           url: 'example.com',
           tags: '',
-          tagsArray: [],
-        },
+          tagsArray: []
+        }
       })
 
       // Tag-only: 100 + (5 * 0.7) + 10 = 113.5
@@ -683,14 +713,14 @@ describe('scoring', () => {
         opts: {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 10,
-          scoreTagWeight: 0.7,
+          scoreTagWeight: 0.7
         },
         result: {
           title: 'Programming Tutorial',
           url: 'example.com',
           tags: '#javascript',
-          tagsArray: ['javascript'],
-        },
+          tagsArray: ['javascript']
+        }
       })
 
       // Base: 100, includes bonus (tag): 5 * 0.7 = 3.5
@@ -707,14 +737,14 @@ describe('scoring', () => {
           scoreExactIncludesBonusMinChars: 3,
           scoreExactTagMatchBonus: 10,
           scoreTitleWeight: 1,
-          scoreTagWeight: 0.7,
+          scoreTagWeight: 0.7
         },
         result: {
           title: 'Programming Guide',
           url: 'example.com',
           tags: '#tutorial',
-          tagsArray: ['tutorial'],
-        },
+          tagsArray: ['tutorial']
+        }
       })
 
       const titleMatchScore = scoreFor({
@@ -724,14 +754,14 @@ describe('scoring', () => {
           scoreExactIncludesBonusMinChars: 3,
           scoreExactTagMatchBonus: 10,
           scoreTitleWeight: 1,
-          scoreTagWeight: 0.7,
+          scoreTagWeight: 0.7
         },
         result: {
           title: 'Tutorial Guide',
           url: 'example.com',
           tags: '',
-          tagsArray: [],
-        },
+          tagsArray: []
+        }
       })
 
       // Tag match should be: 100 + (10 * 0.7 includes bonus) + (10 exact tag bonus) = 117
@@ -750,14 +780,14 @@ describe('scoring', () => {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 0, // disabled
           scoreTitleWeight: 1,
-          scoreTagWeight: 0.7,
+          scoreTagWeight: 0.7
         },
         result: {
           title: 'Framework Docs',
           url: 'example.com',
           tags: '#react',
-          tagsArray: ['react'],
-        },
+          tagsArray: ['react']
+        }
       })
 
       const titleMatch = scoreFor({
@@ -766,14 +796,14 @@ describe('scoring', () => {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 0,
           scoreTitleWeight: 1,
-          scoreTagWeight: 0.7,
+          scoreTagWeight: 0.7
         },
         result: {
           title: 'React Documentation',
           url: 'example.com',
           tags: '',
-          tagsArray: [],
-        },
+          tagsArray: []
+        }
       })
 
       // Tag: 100 + (5 * 0.7) = 103.5
@@ -789,7 +819,7 @@ describe('scoring', () => {
     function scoreWithDefaults({ searchTerm, result }) {
       createTestExt({
         model: { searchTerm },
-        opts: defaultOptions, // Use actual defaults!
+        opts: defaultOptions // Use actual defaults!
       })
 
       const [scored] = calculateFinalScore([result], searchTerm)
@@ -810,8 +840,8 @@ describe('scoring', () => {
           tagsArray: ['javascript'],
           folder: '',
           folderArray: [],
-          searchScore: 1,
-        },
+          searchScore: 1
+        }
       })
 
       const titleOnlyScore = scoreWithDefaults({
@@ -824,8 +854,8 @@ describe('scoring', () => {
           tagsArray: [],
           folder: '',
           folderArray: [],
-          searchScore: 1,
-        },
+          searchScore: 1
+        }
       })
 
       // With defaults:
@@ -856,8 +886,8 @@ describe('scoring', () => {
           tagsArray: ['react', 'frontend'],
           folder: '',
           folderArray: [],
-          searchScore: 1,
-        },
+          searchScore: 1
+        }
       })
 
       const tagOnlyScore = scoreWithDefaults({
@@ -870,8 +900,8 @@ describe('scoring', () => {
           tagsArray: ['react'],
           folder: '',
           folderArray: [],
-          searchScore: 1,
-        },
+          searchScore: 1
+        }
       })
 
       const titleOnlyScore = scoreWithDefaults({
@@ -884,8 +914,8 @@ describe('scoring', () => {
           tagsArray: [],
           folder: '',
           folderArray: [],
-          searchScore: 1,
-        },
+          searchScore: 1
+        }
       })
 
       // Both title+tag: 100 + 5 (title includes) + 10 (title starts with) + 15 (exact tag) = 130
@@ -911,8 +941,8 @@ describe('scoring', () => {
           tagsArray: ['javascript'],
           folder: '',
           folderArray: [],
-          searchScore: 1,
-        },
+          searchScore: 1
+        }
       })
 
       // Partial tag "java" in "#javascript":
@@ -934,8 +964,8 @@ describe('scoring', () => {
           folder: '',
           folderArray: [],
           searchScore: 1,
-          customBonusScore: 50, // User added +50 to title
-        },
+          customBonusScore: 50 // User added +50 to title
+        }
       })
 
       const withoutCustomBonus = scoreWithDefaults({
@@ -949,8 +979,8 @@ describe('scoring', () => {
           folder: '',
           folderArray: [],
           searchScore: 1,
-          customBonusScore: 0,
-        },
+          customBonusScore: 0
+        }
       })
 
       // Both get base 100 + includes 5, but one gets +50 custom bonus
@@ -971,8 +1001,8 @@ describe('scoring', () => {
           tagsArray: [],
           folder: '',
           folderArray: [],
-          searchScore: 1,
-        },
+          searchScore: 1
+        }
       })
 
       const partialTitleMatch = scoreWithDefaults({
@@ -985,8 +1015,8 @@ describe('scoring', () => {
           tagsArray: [],
           folder: '',
           folderArray: [],
-          searchScore: 1,
-        },
+          searchScore: 1
+        }
       })
 
       // Exact: 100 + 5 (includes) + 10 (starts with) + 20 (equals) = 135
@@ -1009,8 +1039,8 @@ describe('scoring', () => {
           tagsArray: ['tutorial'],
           folder: '',
           folderArray: [],
-          searchScore: 1,
-        },
+          searchScore: 1
+        }
       })
 
       const titleScore = scoreWithDefaults({
@@ -1023,8 +1053,8 @@ describe('scoring', () => {
           tagsArray: [],
           folder: '',
           folderArray: [],
-          searchScore: 1,
-        },
+          searchScore: 1
+        }
       })
 
       // Tag: 100 + 3.5 (includes with 0.7 weight) + 15 (exact tag) = 118.5

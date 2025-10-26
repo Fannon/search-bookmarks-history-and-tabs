@@ -7,13 +7,14 @@
  * - Link each tag back into the main search view via hash routing so users can drill into results immediately.
  */
 
-import { printError } from './view/errorView.js'
+import { createExtensionContext } from './helper/extensionContext.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
+import { printError } from './view/errorView.js'
 import { loadTagsOverview } from './view/tagsView.js'
-import { createExtensionContext } from './helper/extensionContext.js'
 
-export const ext = (window.ext = createExtensionContext())
+export const ext = createExtensionContext()
+window.ext = ext
 
 /**
  * Load bookmark data and render the tags overview page.

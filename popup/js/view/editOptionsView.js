@@ -22,8 +22,12 @@ export async function initOptions() {
   } else {
     document.getElementById('user-config').value = userOptionsYaml
   }
-  document.getElementById('edit-options-reset').addEventListener('click', resetOptions)
-  document.getElementById('edit-options-save').addEventListener('click', saveOptions)
+  document
+    .getElementById('edit-options-reset')
+    .addEventListener('click', resetOptions)
+  document
+    .getElementById('edit-options-save')
+    .addEventListener('click', saveOptions)
 }
 
 /**
@@ -35,7 +39,8 @@ async function saveOptions() {
   const userOptionsString = document.getElementById('user-config').value
   try {
     const userOptions = window.jsyaml.load(userOptionsString)
-    document.getElementById('user-config').value = window.jsyaml.dump(userOptions)
+    document.getElementById('user-config').value =
+      window.jsyaml.dump(userOptions)
     await setUserOptions(userOptions)
   } catch (e) {
     console.error(e)
@@ -47,7 +52,10 @@ async function saveOptions() {
   try {
     window.location.href = './index.html#search/'
   } catch (navigationError) {
-    console.warn('Navigation to search view not supported in this environment.', navigationError)
+    console.warn(
+      'Navigation to search view not supported in this environment.',
+      navigationError
+    )
   }
 }
 

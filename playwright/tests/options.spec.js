@@ -1,4 +1,4 @@
-import { test, expect, expectNoClientErrors } from './fixtures.js'
+import { expect, expectNoClientErrors, test } from './fixtures.js'
 
 test.describe('Options View', () => {
   test.beforeEach(async ({ page }) => {
@@ -18,10 +18,10 @@ test.describe('Options View', () => {
     test('saves a new user config in JSON format', async ({ page }) => {
       const newConfig = JSON.stringify(
         {
-          displayVisitCounter: true,
+          displayVisitCounter: true
         },
         null,
-        2,
+        2
       )
 
       const userConfig = page.locator('#user-config')
@@ -32,7 +32,9 @@ test.describe('Options View', () => {
       await page.locator('#edit-options-save').click()
 
       await page.goto('/options.html')
-      await expect(page.locator('#user-config')).toHaveValue(/displayVisitCounter/)
+      await expect(page.locator('#user-config')).toHaveValue(
+        /displayVisitCounter/
+      )
       await expectNoClientErrors(page)
     })
 
@@ -47,7 +49,9 @@ test.describe('Options View', () => {
       await page.locator('#edit-options-save').click()
 
       await page.goto('/options.html')
-      await expect(page.locator('#user-config')).toHaveValue(/displayVisitCounter/)
+      await expect(page.locator('#user-config')).toHaveValue(
+        /displayVisitCounter/
+      )
       await expectNoClientErrors(page)
     })
   })

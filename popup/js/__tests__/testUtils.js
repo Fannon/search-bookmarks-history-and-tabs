@@ -14,7 +14,7 @@ export function createTestExt(overrides = {}) {
     dom: {},
     browserApi: {},
     initialized: false,
-    searchCache: new Map(),
+    searchCache: new Map()
   }
   const ext = {
     ...base,
@@ -22,15 +22,21 @@ export function createTestExt(overrides = {}) {
     opts: { ...base.opts, ...(overrides.opts || {}) },
     model: { ...base.model, ...(overrides.model || {}) },
     index: {
-      taxonomy: { ...(base.index.taxonomy || {}), ...((overrides.index && overrides.index.taxonomy) || {}) },
+      taxonomy: {
+        ...(base.index.taxonomy || {}),
+        ...(overrides.index?.taxonomy || {})
+      }
     },
     dom: { ...base.dom, ...(overrides.dom || {}) },
-    browserApi: { ...base.browserApi, ...(overrides.browserApi || {}) },
+    browserApi: { ...base.browserApi, ...(overrides.browserApi || {}) }
   }
   global.ext = ext
   if (typeof window !== 'undefined') {
     window.ext = ext
-    if (typeof document !== 'undefined' && !document.getElementById('error-list')) {
+    if (
+      typeof document !== 'undefined' &&
+      !document.getElementById('error-list')
+    ) {
       const errorContainer = document.createElement('div')
       errorContainer.id = 'error-list'
       errorContainer.style = 'display: none;'
@@ -42,13 +48,15 @@ export function createTestExt(overrides = {}) {
 
 export function clearTestExt() {
   // Clear any existing searchCache if it's a Map
-  if (globalThis.ext && globalThis.ext.searchCache && typeof globalThis.ext.searchCache.clear === 'function') {
+  if (
+    globalThis.ext?.searchCache &&
+    typeof globalThis.ext.searchCache.clear === 'function'
+  ) {
     globalThis.ext.searchCache.clear()
   }
   if (
     typeof window !== 'undefined' &&
-    window.ext &&
-    window.ext.searchCache &&
+    window.ext?.searchCache &&
     typeof window.ext.searchCache.clear === 'function'
   ) {
     window.ext.searchCache.clear()

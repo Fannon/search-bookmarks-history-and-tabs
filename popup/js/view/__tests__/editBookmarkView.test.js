@@ -23,22 +23,28 @@ function setupDom() {
 }
 
 function setupExt(bookmarks = [], overrides = {}) {
-  const { model: modelOverrides, opts: optsOverrides, dom: domOverrides, returnHash, ...restOverrides } = overrides
+  const {
+    model: modelOverrides,
+    opts: optsOverrides,
+    dom: domOverrides,
+    returnHash,
+    ...restOverrides
+  } = overrides
 
   global.ext = {
     model: {
       bookmarks,
-      ...(modelOverrides || {}),
+      ...(modelOverrides || {})
     },
     opts: {
       debug: false,
-      ...(optsOverrides || {}),
+      ...(optsOverrides || {})
     },
     dom: {
-      ...(domOverrides || {}),
+      ...(domOverrides || {})
     },
     returnHash: returnHash || '#search/',
-    ...restOverrides,
+    ...restOverrides
   }
 }
 
@@ -50,12 +56,14 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   const resetFuzzySearchState = jest.fn()
   const resetSimpleSearchState = jest.fn()
   const searchMock = jest.fn(() => Promise.resolve())
-  const createSearchString = jest.fn((title, url, tags, folder) => `search:${title}|${url}|${tags}|${folder}`)
+  const createSearchString = jest.fn(
+    (title, url, tags, folder) => `search:${title}|${url}|${tags}|${folder}`
+  )
   const browserApi = {
     bookmarks: {
       update: jest.fn(),
-      remove: jest.fn(),
-    },
+      remove: jest.fn()
+    }
   }
   const getUniqueTags = jest.fn(() => uniqueTagsMockValue)
   const resetUniqueFoldersCache = jest.fn()
@@ -85,20 +93,20 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   jest.unstable_mockModule('../../helper/browserApi.js', () => ({
     __esModule: true,
     browserApi,
-    createSearchString,
+    createSearchString
   }))
   jest.unstable_mockModule('../../search/fuzzySearch.js', () => ({
-    resetFuzzySearchState,
+    resetFuzzySearchState
   }))
   jest.unstable_mockModule('../../search/taxonomySearch.js', () => ({
     getUniqueTags,
-    resetUniqueFoldersCache,
+    resetUniqueFoldersCache
   }))
   jest.unstable_mockModule('../../search/common.js', () => ({
-    search: searchMock,
+    search: searchMock
   }))
   jest.unstable_mockModule('../../search/simpleSearch.js', () => ({
-    resetSimpleSearchState,
+    resetSimpleSearchState
   }))
 
   const module = await import('../editBookmarkView.js')
@@ -112,15 +120,15 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
       createSearchString,
       browserApi,
       getUniqueTags,
-      resetUniqueFoldersCache,
+      resetUniqueFoldersCache
     },
     helpers: {
       tagifyInstances,
-      cleanUpUrl: realCleanUpUrl,
+      cleanUpUrl: realCleanUpUrl
     },
     setUniqueTags(value) {
       uniqueTagsMockValue = value
-    },
+    }
   }
 }
 
@@ -144,23 +152,33 @@ describe('editBookmarkView', () => {
         title: 'Original Title',
         originalUrl: 'http://example.com',
         tags: '#alpha #beta',
-        folder: '~Work',
-      },
+        folder: '~Work'
+      }
     ])
     const { module, helpers } = await loadEditBookmarkView({
       uniqueTags: {
         beta: [{ id: 2 }],
-        alpha: [{ id: 1 }],
-      },
+        alpha: [{ id: 1 }]
+      }
     })
 
     await module.editBookmark(BOOKMARK_ID)
 
-    expect(document.getElementById('edit-bookmark').getAttribute('style')).toBe('')
-    expect(document.getElementById('bookmark-title').value).toBe('Original Title')
-    expect(document.getElementById('bookmark-url').value).toBe('http://example.com')
-    expect(document.getElementById('edit-bookmark-save').dataset.bookmarkId).toBe(BOOKMARK_ID)
-    expect(document.getElementById('edit-bookmark-delete').dataset.bookmarkId).toBe(BOOKMARK_ID)
+    expect(document.getElementById('edit-bookmark').getAttribute('style')).toBe(
+      ''
+    )
+    expect(document.getElementById('bookmark-title').value).toBe(
+      'Original Title'
+    )
+    expect(document.getElementById('bookmark-url').value).toBe(
+      'http://example.com'
+    )
+    expect(
+      document.getElementById('edit-bookmark-save').dataset.bookmarkId
+    ).toBe(BOOKMARK_ID)
+    expect(
+      document.getElementById('edit-bookmark-delete').dataset.bookmarkId
+    ).toBe(BOOKMARK_ID)
     expect(global.ext.currentBookmarkId).toBe(BOOKMARK_ID)
 
     expect(helpers.tagifyInstances).toHaveLength(1)
@@ -181,14 +199,14 @@ describe('editBookmarkView', () => {
       title: 'Original Title',
       originalUrl: 'http://example.com',
       tags: '#alpha #beta',
-      folder: '~Work',
+      folder: '~Work'
     }
     setupExt([bookmark], { returnHash: '#search/foo' })
     const { module, helpers, setUniqueTags } = await loadEditBookmarkView({
       uniqueTags: {
         alpha: [{ id: 1 }],
-        beta: [{ id: 2 }],
-      },
+        beta: [{ id: 2 }]
+      }
     })
 
     await module.editBookmark(BOOKMARK_ID)
@@ -197,7 +215,7 @@ describe('editBookmarkView', () => {
     bookmark.tags = '#gamma #delta'
     setUniqueTags({
       delta: [{ id: 3 }],
-      gamma: [{ id: 4 }],
+      gamma: [{ id: 4 }]
     })
 
     await module.editBookmark(BOOKMARK_ID)
@@ -217,7 +235,7 @@ describe('editBookmarkView', () => {
       tags: '#old',
       folder: '~Work',
       searchString: 'old',
-      searchStringLower: 'old',
+      searchStringLower: 'old'
     }
     setupExt([bookmark])
     const { module, mocks, helpers } = await loadEditBookmarkView()
@@ -226,7 +244,7 @@ describe('editBookmarkView', () => {
     document.getElementById('bookmark-title').value = 'Updated Title'
     document.getElementById('bookmark-url').value = 'http://updated.com'
     global.ext.tagify = {
-      value: [{ value: 'alpha' }, { value: 'beta' }],
+      value: [{ value: 'alpha' }, { value: 'beta' }]
     }
 
     module.updateBookmark(BOOKMARK_ID)
@@ -244,10 +262,13 @@ describe('editBookmarkView', () => {
     expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
-    expect(mocks.browserApi.bookmarks.update).toHaveBeenCalledWith(BOOKMARK_ID, {
-      title: 'Updated Title #alpha #beta',
-      url: 'http://updated.com',
-    })
+    expect(mocks.browserApi.bookmarks.update).toHaveBeenCalledWith(
+      BOOKMARK_ID,
+      {
+        title: 'Updated Title #alpha #beta',
+        url: 'http://updated.com'
+      }
+    )
   })
 
   it('handles missing browser API and empty tag selection during update', async () => {
@@ -259,7 +280,7 @@ describe('editBookmarkView', () => {
       tags: '#old',
       folder: '~Work',
       searchString: 'old',
-      searchStringLower: 'old',
+      searchStringLower: 'old'
     }
     setupExt([bookmark])
     const { module, mocks } = await loadEditBookmarkView()
@@ -269,7 +290,7 @@ describe('editBookmarkView', () => {
     document.getElementById('bookmark-title').value = 'Updated Title'
     document.getElementById('bookmark-url').value = 'http://updated.com'
     global.ext.tagify = {
-      value: [],
+      value: []
     }
     mocks.browserApi.bookmarks = undefined
 
@@ -277,7 +298,9 @@ describe('editBookmarkView', () => {
 
     expect(bookmark.tags).toBe('')
     expect(mocks.browserApi.bookmarks?.update).toBeUndefined()
-    expect(warnSpy).toHaveBeenCalledWith('No browser bookmarks API found. Bookmark update will not persist.')
+    expect(warnSpy).toHaveBeenCalledWith(
+      'No browser bookmarks API found. Bookmark update will not persist.'
+    )
     expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
 
     warnSpy.mockRestore()
@@ -286,8 +309,18 @@ describe('editBookmarkView', () => {
   it('removes bookmark, resets search state, and redirects after deletion', async () => {
     setupDom()
     const bookmarks = [
-      { originalId: BOOKMARK_ID, title: 'Bookmark 1', tags: '', folder: '~Work' },
-      { originalId: 'bookmark-2', title: 'Bookmark 2', tags: '', folder: '~Play' },
+      {
+        originalId: BOOKMARK_ID,
+        title: 'Bookmark 1',
+        tags: '',
+        folder: '~Work'
+      },
+      {
+        originalId: 'bookmark-2',
+        title: 'Bookmark 2',
+        tags: '',
+        folder: '~Play'
+      }
     ]
     setupExt(bookmarks, { returnHash: '#search/foo' })
     const { module, mocks } = await loadEditBookmarkView()
@@ -297,7 +330,12 @@ describe('editBookmarkView', () => {
 
     expect(mocks.browserApi.bookmarks.remove).toHaveBeenCalledWith(BOOKMARK_ID)
     expect(global.ext.model.bookmarks).toEqual([
-      { originalId: 'bookmark-2', title: 'Bookmark 2', tags: '', folder: '~Play' },
+      {
+        originalId: 'bookmark-2',
+        title: 'Bookmark 2',
+        tags: '',
+        folder: '~Play'
+      }
     ])
     expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
@@ -310,15 +348,25 @@ describe('editBookmarkView', () => {
     const searchInput = document.createElement('input')
     setupExt(
       [
-        { originalId: BOOKMARK_ID, title: 'Bookmark 1', tags: '', folder: '~Work' },
-        { originalId: 'bookmark-2', title: 'Bookmark 2', tags: '', folder: '~Play' },
+        {
+          originalId: BOOKMARK_ID,
+          title: 'Bookmark 1',
+          tags: '',
+          folder: '~Work'
+        },
+        {
+          originalId: 'bookmark-2',
+          title: 'Bookmark 2',
+          tags: '',
+          folder: '~Play'
+        }
       ],
       {
         dom: {
-          searchInput,
+          searchInput
         },
-        returnHash: '#search/foo',
-      },
+        returnHash: '#search/foo'
+      }
     )
     const { module, mocks } = await loadEditBookmarkView()
     await module.deleteBookmark(BOOKMARK_ID)
@@ -328,14 +376,23 @@ describe('editBookmarkView', () => {
 
   it('logs a warning when attempting to delete without bookmark API', async () => {
     setupDom()
-    setupExt([{ originalId: BOOKMARK_ID, title: 'Bookmark 1', tags: '', folder: '~Work' }])
+    setupExt([
+      {
+        originalId: BOOKMARK_ID,
+        title: 'Bookmark 1',
+        tags: '',
+        folder: '~Work'
+      }
+    ])
     const { module, mocks } = await loadEditBookmarkView()
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
     mocks.browserApi.bookmarks = undefined
 
     await module.deleteBookmark(BOOKMARK_ID)
 
-    expect(warnSpy).toHaveBeenCalledWith('No browser bookmarks API found. Bookmark remove will not persist.')
+    expect(warnSpy).toHaveBeenCalledWith(
+      'No browser bookmarks API found. Bookmark remove will not persist.'
+    )
     expect(global.ext.model.bookmarks).toHaveLength(0)
     expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
     warnSpy.mockRestore()
@@ -349,7 +406,9 @@ describe('editBookmarkView', () => {
 
     await module.editBookmark('missing-id')
 
-    expect(warnSpy).toHaveBeenCalledWith('Tried to edit bookmark id="missing-id", but could not find it in searchData.')
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Tried to edit bookmark id="missing-id", but could not find it in searchData.'
+    )
     warnSpy.mockRestore()
   })
 })

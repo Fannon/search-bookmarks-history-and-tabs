@@ -54,7 +54,7 @@ Please review the guidelines below before submitting changes.
 - `npm run start` / `npm run start:dist` - Serve the popup source or built output locally.
 - `npm run test` or `npm run test:unit` - Run Jest unit tests; use `npm run test:unit:coverage` for coverage.
 - `npm run test:e2e` - Run Playwright end-to-end tests (browser-specific variants available).
-- `npm run lint` - Enforce shared ESLint rules.
+- `npm run lint` - Run Biome checks (format + lint) across the source.
 - `npm run analyze` - Run code analysis helper (`bin/analyze-code.js`).
 - `npm run size` - Report bundle sizes after a build.
 
@@ -79,7 +79,7 @@ npm install
 
 4. **Testing:**
 
-- Lint source code: `npm run lint` (ESLint over `popup/js/`).
+- Lint source code: `npm run lint` (Biome verification across the repo).
 - Run Jest unit tests: `npm run test` or `npm run test:unit`. Scope to a file with `npm run test:unit <module>.test.js`.
 - Collect coverage when needed: `npm run test:unit:coverage <module>.test.js`.
 - Run Playwright end-to-end specs: `npm run test:e2e`. Browser-specific runners exist (`test:e2e:chromium`, `test:e2e:firefox`, `test:e2e:edge`).

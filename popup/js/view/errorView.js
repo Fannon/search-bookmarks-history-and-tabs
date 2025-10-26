@@ -34,7 +34,10 @@ export function printError(err, text) {
   console.error(err)
 
   if (!errorList) {
-    console.warn('Error list element not found in DOM. Error:', err?.message || err)
+    console.warn(
+      'Error list element not found in DOM. Error:',
+      err?.message || err
+    )
     return
   }
 
@@ -44,7 +47,8 @@ export function printError(err, text) {
     html += `<li class="error"><b>Error</b>: ${escapeHtml(text)}</li>`
   }
 
-  const message = err && typeof err.message === 'string' ? err.message : String(err)
+  const message =
+    err && typeof err.message === 'string' ? err.message : String(err)
   html += `<li class="error"><b>Error Message</b>: ${escapeHtml(message)}</li>`
 
   if (err && err.stack) {

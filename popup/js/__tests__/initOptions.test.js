@@ -1,5 +1,12 @@
-import { jest, describe, test, expect, beforeEach, afterEach } from '@jest/globals'
-import { flushPromises, clearTestExt } from './testUtils.js'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test
+} from '@jest/globals'
+import { clearTestExt, flushPromises } from './testUtils.js'
 
 describe('initOptions entry point', () => {
   beforeEach(() => {
@@ -18,16 +25,16 @@ describe('initOptions entry point', () => {
 
     await jest.unstable_mockModule('../view/editOptionsView.js', () => ({
       __esModule: true,
-      initOptions: initOptionsMock,
+      initOptions: initOptionsMock
     }))
     await jest.unstable_mockModule('../view/errorView.js', () => ({
       __esModule: true,
-      printError: jest.fn(),
+      printError: jest.fn()
     }))
     const browserApi = { storage: { sync: {} } }
     await jest.unstable_mockModule('../helper/browserApi.js', () => ({
       __esModule: true,
-      browserApi,
+      browserApi
     }))
 
     const module = await import('../initOptions.js')
@@ -44,20 +51,23 @@ describe('initOptions entry point', () => {
 
     await jest.unstable_mockModule('../view/editOptionsView.js', () => ({
       __esModule: true,
-      initOptions: jest.fn(() => Promise.reject(error)),
+      initOptions: jest.fn(() => Promise.reject(error))
     }))
     await jest.unstable_mockModule('../view/errorView.js', () => ({
       __esModule: true,
-      printError,
+      printError
     }))
     await jest.unstable_mockModule('../helper/browserApi.js', () => ({
       __esModule: true,
-      browserApi: {},
+      browserApi: {}
     }))
 
     await import('../initOptions.js')
     await flushPromises()
 
-    expect(printError).toHaveBeenCalledWith(error, 'Could not initialize options view.')
+    expect(printError).toHaveBeenCalledWith(
+      error,
+      'Could not initialize options view.'
+    )
   })
 })

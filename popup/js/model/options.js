@@ -220,8 +220,8 @@ export const defaultOptions = {
   searchEngineChoices: [
     {
       name: 'Google',
-      urlPrefix: 'https://www.google.com/search?q=$s',
-    },
+      urlPrefix: 'https://www.google.com/search?q=$s'
+    }
   ],
 
   /**
@@ -240,14 +240,14 @@ export const defaultOptions = {
       alias: ['g', 'google'],
       name: 'Google',
       urlPrefix: 'https://www.google.com/search?q=$s',
-      blank: 'https://www.google.com',
+      blank: 'https://www.google.com'
     },
     {
       alias: ['d', 'dict'],
       name: 'dict.cc',
       urlPrefix: 'https://www.dict.cc/?s=$s',
-      blank: 'https://www.dict.cc',
-    },
+      blank: 'https://www.dict.cc'
+    }
   ],
 
   //////////////////////////////////////////
@@ -395,11 +395,11 @@ export const defaultOptions = {
    * Customized options for the fuzzy search library uFuzzy ('@leeoniya/ufuzzy')
    * @see https://github.com/leeoniya/uFuzzy/blob/main/src/uFuzzy.js#L9
    */
-  uFuzzyOptions: {},
+  uFuzzyOptions: {}
 }
 
 export const emptyOptions = {
-  searchStrategy: defaultOptions.searchStrategy,
+  searchStrategy: defaultOptions.searchStrategy
 }
 
 /**
@@ -453,7 +453,9 @@ export async function getUserOptions() {
       } else {
         console.warn('No storage API found. Falling back to local Web Storage')
         const userOptionsString = window.localStorage.getItem('userOptions')
-        const userOptions = userOptionsString ? JSON.parse(userOptionsString) : emptyOptions
+        const userOptions = userOptionsString
+          ? JSON.parse(userOptionsString)
+          : emptyOptions
         return resolve(userOptions)
       }
     } catch (err) {
@@ -474,10 +476,13 @@ export async function getEffectiveOptions() {
     validateUserOptions(userOptions)
     return {
       ...defaultOptions,
-      ...userOptions,
+      ...userOptions
     }
   } catch (err) {
-    printError(err, 'Could not get valid user options, falling back to defaults.')
+    printError(
+      err,
+      'Could not get valid user options, falling back to defaults.'
+    )
     return defaultOptions
   }
 }
@@ -495,7 +500,7 @@ export function validateUserOptions(userOptions) {
     try {
       JSON.stringify(userOptions)
     } catch (err) {
-      throw new Error('User options cannot be parsed into JSON: ' + err.message)
+      throw new Error(`User options cannot be parsed into JSON: ${err.message}`)
     }
   }
 }

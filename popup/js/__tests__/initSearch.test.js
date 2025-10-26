@@ -1,5 +1,12 @@
-import { jest, describe, test, expect, beforeEach, afterEach } from '@jest/globals'
-import { flushPromises, clearTestExt } from './testUtils.js'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test
+} from '@jest/globals'
+import { clearTestExt, flushPromises } from './testUtils.js'
 
 const setupDom = () => {
   document.body.innerHTML = `
@@ -26,15 +33,15 @@ const mockDependencies = async (overrides = {}) => {
         enableTabs: true,
         enableBookmarks: true,
         enableHistory: true,
-        maxRecentTabsToShow: 5,
-      }),
+        maxRecentTabsToShow: 5
+      })
     ),
     getSearchData: jest.fn(() =>
       Promise.resolve({
         tabs: [{ originalId: 't1' }],
         bookmarks: [{ originalId: 'b1' }],
-        history: [{ originalId: 'h1' }],
-      }),
+        history: [{ originalId: 'h1' }]
+      })
     ),
     addDefaultEntries: jest.fn(async () => {
       const defaults = [{ originalId: 'default' }]
@@ -44,13 +51,13 @@ const mockDependencies = async (overrides = {}) => {
       return defaults
     }),
     renderSearchResults: jest.fn(),
-    search: jest.fn(() => Promise.resolve()),
+    search: jest.fn(() => Promise.resolve())
   }
   const config = { ...defaults, ...overrides }
 
   await jest.unstable_mockModule('../helper/utils.js', () => ({
     __esModule: true,
-    loadScript: config.loadScript,
+    loadScript: config.loadScript
   }))
   await jest.unstable_mockModule('../view/errorView.js', () => ({
     __esModule: true,
@@ -60,44 +67,46 @@ const mockDependencies = async (overrides = {}) => {
         element.style = 'display: none;'
       }
     },
-    printError: config.printError,
+    printError: config.printError
   }))
   await jest.unstable_mockModule('../model/options.js', () => ({
     __esModule: true,
     getEffectiveOptions: config.getEffectiveOptions,
-    getUserOptions: jest.fn(() => Promise.resolve({ searchStrategy: 'precise' })),
-    setUserOptions: jest.fn(() => Promise.resolve()),
+    getUserOptions: jest.fn(() =>
+      Promise.resolve({ searchStrategy: 'precise' })
+    ),
+    setUserOptions: jest.fn(() => Promise.resolve())
   }))
   await jest.unstable_mockModule('../model/searchData.js', () => ({
     __esModule: true,
-    getSearchData: config.getSearchData,
+    getSearchData: config.getSearchData
   }))
   await jest.unstable_mockModule('../search/common.js', () => ({
     __esModule: true,
     search: config.search,
-    addDefaultEntries: config.addDefaultEntries,
+    addDefaultEntries: config.addDefaultEntries
   }))
   await jest.unstable_mockModule('../helper/browserApi.js', () => ({
     __esModule: true,
-    browserApi: {},
+    browserApi: {}
   }))
   await jest.unstable_mockModule('../view/searchView.js', () => ({
     __esModule: true,
-    renderSearchResults: config.renderSearchResults,
+    renderSearchResults: config.renderSearchResults
   }))
   await jest.unstable_mockModule('../view/searchNavigation.js', () => ({
     __esModule: true,
     navigationKeyListener: jest.fn(),
     hoverResultItem: jest.fn(),
     clearSelection: jest.fn(),
-    selectListItem: jest.fn(),
+    selectListItem: jest.fn()
   }))
   await jest.unstable_mockModule('../view/searchEvents.js', () => ({
     __esModule: true,
     toggleSearchApproach: jest.fn(),
     updateSearchApproachToggle: jest.fn(),
     openResultItem: jest.fn(),
-    setupResultItemsEvents: jest.fn(),
+    setupResultItemsEvents: jest.fn()
   }))
 
   return config
@@ -175,7 +184,7 @@ describe('initSearch entry point', () => {
   test('search input triggers search immediately on each input event', async () => {
     const searchMock = jest.fn()
     const mocks = await mockDependencies({
-      search: searchMock,
+      search: searchMock
     })
 
     const module = await import('../initSearch.js')
@@ -207,7 +216,9 @@ describe('initSearch entry point', () => {
 
     module.closeErrors()
 
-    expect(document.getElementById('error-list').style.cssText).toBe('display: none;')
+    expect(document.getElementById('error-list').style.cssText).toBe(
+      'display: none;'
+    )
     expect(document.getElementById('tags-overview').style.cssText).toBe('')
     expect(document.getElementById('folders-overview').style.cssText).toBe('')
   })

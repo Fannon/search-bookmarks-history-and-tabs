@@ -18,7 +18,7 @@ const SEARCH_MODE_PREFIXES = [
   ['h ', 'history'],
   ['b ', 'bookmarks'],
   ['t ', 'tabs'],
-  ['s ', 'search'],
+  ['s ', 'search']
 ]
 
 /**
@@ -27,7 +27,7 @@ const SEARCH_MODE_PREFIXES = [
  */
 const SEARCH_MODE_MARKERS = {
   '#': 'tags',
-  '~': 'folders',
+  '~': 'folders'
 }
 
 /**

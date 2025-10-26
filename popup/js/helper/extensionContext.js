@@ -39,17 +39,17 @@ export function createExtensionContext() {
       /** Current search results array */
       result: [],
       /** Tracks an in-flight search promise so navigation can await completion */
-      activeSearchPromise: null,
+      activeSearchPromise: null
     },
     /** Search indexes (e.g., taxonomy for tags and folders) */
     index: {
-      taxonomy: {},
+      taxonomy: {}
     },
     /** Commonly used DOM Elements (cached references) */
     dom: {},
     /** The browser / extension API (chrome or firefox) */
     browserApi,
     /** Whether the extension entry point finished initialization */
-    initialized: false,
+    initialized: false
   }
 }

@@ -19,13 +19,13 @@
  */
 
 import { jest } from '@jest/globals'
-import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
+import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
 // Mock the utils module
 const mockPrintError = jest.fn()
 jest.mock('../../view/errorView.js', () => ({
   __esModule: true,
-  printError: mockPrintError,
+  printError: mockPrintError
 }))
 
 describe('options model', () => {
@@ -45,7 +45,9 @@ describe('options model', () => {
 
   describe('validateUserOptions', () => {
     test('accepts valid objects', () => {
-      expect(() => optionsModule.validateUserOptions({ searchStrategy: 'fuzzy' })).not.toThrow()
+      expect(() =>
+        optionsModule.validateUserOptions({ searchStrategy: 'fuzzy' })
+      ).not.toThrow()
       expect(() => optionsModule.validateUserOptions({})).not.toThrow()
       expect(() => optionsModule.validateUserOptions(null)).not.toThrow()
       expect(() => optionsModule.validateUserOptions(undefined)).not.toThrow()
@@ -53,15 +55,19 @@ describe('options model', () => {
 
     test('rejects invalid structures', () => {
       expect(() => optionsModule.validateUserOptions('string')).toThrow(
-        'User options must be a valid YAML / JSON object',
+        'User options must be a valid YAML / JSON object'
       )
-      expect(() => optionsModule.validateUserOptions(123)).toThrow('User options must be a valid YAML / JSON object')
+      expect(() => optionsModule.validateUserOptions(123)).toThrow(
+        'User options must be a valid YAML / JSON object'
+      )
     })
 
     test('rejects circular references', () => {
       const circular = {}
       circular.self = circular
-      expect(() => optionsModule.validateUserOptions(circular)).toThrow(/User options cannot be parsed into JSON/)
+      expect(() => optionsModule.validateUserOptions(circular)).toThrow(
+        /User options cannot be parsed into JSON/
+      )
     })
   })
 
@@ -71,21 +77,30 @@ describe('options model', () => {
       createTestExt({
         browserApi: {
           storage: { sync: { set: syncSet } },
-          runtime: {},
-        },
+          runtime: {}
+        }
       })
 
-      await expect(optionsModule.setUserOptions({ searchStrategy: 'fuzzy' })).resolves.toBeUndefined()
-      expect(syncSet).toHaveBeenCalledWith({ userOptions: { searchStrategy: 'fuzzy' } }, expect.any(Function))
+      await expect(
+        optionsModule.setUserOptions({ searchStrategy: 'fuzzy' })
+      ).resolves.toBeUndefined()
+      expect(syncSet).toHaveBeenCalledWith(
+        { userOptions: { searchStrategy: 'fuzzy' } },
+        expect.any(Function)
+      )
     })
 
     test('falls back to localStorage when sync storage missing', async () => {
       createTestExt({
-        browserApi: {},
+        browserApi: {}
       })
 
-      await expect(optionsModule.setUserOptions({ enableHelp: false })).resolves.toBeUndefined()
-      expect(localStorage.getItem('userOptions')).toBe(JSON.stringify({ enableHelp: false }))
+      await expect(
+        optionsModule.setUserOptions({ enableHelp: false })
+      ).resolves.toBeUndefined()
+      expect(localStorage.getItem('userOptions')).toBe(
+        JSON.stringify({ enableHelp: false })
+      )
     })
 
     test('handles storage API errors', async () => {
@@ -99,48 +114,64 @@ describe('options model', () => {
       createTestExt({
         browserApi: {
           storage: { sync: { set: syncSet } },
-          runtime: {},
-        },
+          runtime: {}
+        }
       })
 
-      await expect(optionsModule.setUserOptions({ searchStrategy: 'fuzzy' })).rejects.toThrow(runtimeError)
+      await expect(
+        optionsModule.setUserOptions({ searchStrategy: 'fuzzy' })
+      ).rejects.toThrow(runtimeError)
     })
   })
 
   describe('getUserOptions', () => {
     test('reads from sync storage when available', async () => {
-      const syncGet = jest.fn((keys, callback) => callback({ userOptions: { searchStrategy: 'precise' } }))
+      const syncGet = jest.fn((keys, callback) =>
+        callback({ userOptions: { searchStrategy: 'precise' } })
+      )
       createTestExt({
         browserApi: {
           storage: { sync: { get: syncGet } },
-          runtime: {},
-        },
+          runtime: {}
+        }
       })
 
-      await expect(optionsModule.getUserOptions()).resolves.toEqual({ searchStrategy: 'precise' })
-      expect(syncGet).toHaveBeenCalledWith(['userOptions'], expect.any(Function))
+      await expect(optionsModule.getUserOptions()).resolves.toEqual({
+        searchStrategy: 'precise'
+      })
+      expect(syncGet).toHaveBeenCalledWith(
+        ['userOptions'],
+        expect.any(Function)
+      )
     })
 
     test('falls back to localStorage when sync storage missing', async () => {
       createTestExt({
-        browserApi: {},
+        browserApi: {}
       })
-      localStorage.setItem('userOptions', JSON.stringify({ searchMaxResults: 5 }))
+      localStorage.setItem(
+        'userOptions',
+        JSON.stringify({ searchMaxResults: 5 })
+      )
 
-      await expect(optionsModule.getUserOptions()).resolves.toEqual({ searchMaxResults: 5 })
+      await expect(optionsModule.getUserOptions()).resolves.toEqual({
+        searchMaxResults: 5
+      })
     })
 
     test('returns emptyOptions when no user options exist', async () => {
       createTestExt({
-        browserApi: {},
+        browserApi: {}
       })
 
-      await expect(optionsModule.getUserOptions()).resolves.toEqual(optionsModule.emptyOptions)
+      await expect(optionsModule.getUserOptions()).resolves.toEqual(
+        optionsModule.emptyOptions
+      )
     })
 
     test('handles malformed JSON in localStorage', async () => {
       createTestExt({
-        browserApi: {},
+        browserApi: {}
       })
       localStorage.setItem('userOptions', 'invalid json{')
 
@@ -157,8 +188,8 @@ describe('options model', () => {
       createTestExt({
         browserApi: {
           storage: { sync: { get: syncGet } },
-          runtime: {},
-        },
+          runtime: {}
+        }
       })
 
       await expect(optionsModule.getUserOptions()).rejects.toThrow(runtimeError)
@@ -169,12 +200,17 @@ describe('options model', () => {
     test('merges defaults with user overrides', async () => {
       // Use localStorage to simulate user options
       createTestExt({ browserApi: {} })
-      localStorage.setItem('userOptions', JSON.stringify({ searchMaxResults: 10, debug: true }))
+      localStorage.setItem(
+        'userOptions',
+        JSON.stringify({ searchMaxResults: 10, debug: true })
+      )
 
       const effective = await optionsModule.getEffectiveOptions()
       expect(effective.searchMaxResults).toBe(10)
       expect(effective.debug).toBe(true)
-      expect(effective.bookmarkColor).toBe(optionsModule.defaultOptions.bookmarkColor)
+      expect(effective.bookmarkColor).toBe(
+        optionsModule.defaultOptions.bookmarkColor
+      )
     })
 
     test('returns defaults when user options are empty', async () => {
@@ -191,8 +227,12 @@ describe('options model', () => {
       expect(optionsModule.defaultOptions).toBeDefined()
       expect(typeof optionsModule.defaultOptions).toBe('object')
       expect(optionsModule.defaultOptions.searchStrategy).toBe('precise')
-      expect(typeof optionsModule.defaultOptions.searchMaxResults).toBe('number')
-      expect(Array.isArray(optionsModule.defaultOptions.bookmarksIgnoreFolderList)).toBe(true)
+      expect(typeof optionsModule.defaultOptions.searchMaxResults).toBe(
+        'number'
+      )
+      expect(
+        Array.isArray(optionsModule.defaultOptions.bookmarksIgnoreFolderList)
+      ).toBe(true)
     })
 
     test('emptyOptions has expected structure', () => {
@@ -219,7 +259,7 @@ describe('options model', () => {
         'displaySearchMatchHighlight',
         'scoreMinScore',
         'scoreBookmarkBase',
-        'scoreTabBase',
+        'scoreTabBase'
       ]
 
       requiredCategories.forEach((category) => {
@@ -234,7 +274,10 @@ describe('options model', () => {
       createTestExt({ browserApi: {} })
 
       // Set user options
-      await optionsModule.setUserOptions({ searchMaxResults: 20, colorStripeWidth: 5 })
+      await optionsModule.setUserOptions({
+        searchMaxResults: 20,
+        colorStripeWidth: 5
+      })
 
       // Get user options
       const userOptions = await optionsModule.getUserOptions()
@@ -244,7 +287,9 @@ describe('options model', () => {
       const effectiveOptions = await optionsModule.getEffectiveOptions()
       expect(effectiveOptions.searchMaxResults).toBe(20)
       expect(effectiveOptions.colorStripeWidth).toBe(5)
-      expect(effectiveOptions.bookmarkColor).toBe(optionsModule.defaultOptions.bookmarkColor)
+      expect(effectiveOptions.bookmarkColor).toBe(
+        optionsModule.defaultOptions.bookmarkColor
+      )
 
       expect(mockPrintError).not.toHaveBeenCalled()
     })

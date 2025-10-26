@@ -1,5 +1,12 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals'
-import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest
+} from '@jest/globals'
+import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 import { fuzzySearch, resetFuzzySearchState } from '../fuzzySearch.js'
 
 const delimiter = '\u00A6'
@@ -19,7 +26,11 @@ class TrackedUFuzzy {
     uFuzzyInstances.push(this)
 
     // Use real uFuzzy if available, otherwise create a minimal fallback
-    if (typeof window !== 'undefined' && window.uFuzzy && window.uFuzzy !== TrackedUFuzzy) {
+    if (
+      typeof window !== 'undefined' &&
+      window.uFuzzy &&
+      window.uFuzzy !== TrackedUFuzzy
+    ) {
       this.uf = new window.uFuzzy(options)
     } else {
       // Fallback for when uFuzzy is not loaded yet
@@ -32,7 +43,7 @@ class TrackedUFuzzy {
     uFuzzyCallHistory.push({
       method: 'filter',
       instanceId: this.instanceId,
-      args: { haystack, term },
+      args: { haystack, term }
     })
 
     if (this.uf && typeof this.uf.filter === 'function') {
@@ -54,7 +65,7 @@ class TrackedUFuzzy {
     uFuzzyCallHistory.push({
       method: 'info',
       instanceId: this.instanceId,
-      args: { indices, haystack, term },
+      args: { indices, haystack, term }
     })
 
     if (this.uf && typeof this.uf.info === 'function') {
@@ -65,14 +76,14 @@ class TrackedUFuzzy {
     return {
       idx: indices,
       ranges: indices.map(() => [[0, term.length - 1]]),
-      intraIns: indices.map(() => 1),
+      intraIns: indices.map(() => 1)
     }
   }
 
   static highlight(searchString, ranges) {
     uFuzzyCallHistory.push({
       method: 'highlight',
-      args: { searchString, ranges },
+      args: { searchString, ranges }
     })
 
     // Use real uFuzzy highlight if available
@@ -121,7 +132,7 @@ describe('fuzzySearch', () => {
           if (id === 'error-list') {
             return {
               innerHTML: '',
-              style: { display: '' },
+              style: { display: '' }
             }
           }
           return null
@@ -129,12 +140,12 @@ describe('fuzzySearch', () => {
         createElement: () => ({
           id: '',
           style: {},
-          appendChild: () => {},
+          appendChild: () => {}
         }),
         getElementsByTagName: () => [{ appendChild: () => {} }],
         body: {
-          appendChild: () => {},
-        },
+          appendChild: () => {}
+        }
       }
     }
 
@@ -149,7 +160,10 @@ describe('fuzzySearch', () => {
       // Load the actual uFuzzy library
       const fs = await import('fs')
       const path = await import('path')
-      const uFuzzyPath = path.join(process.cwd(), 'popup/lib/uFuzzy.iife.min.js')
+      const uFuzzyPath = path.join(
+        process.cwd(),
+        'popup/lib/uFuzzy.iife.min.js'
+      )
 
       if (fs.existsSync(uFuzzyPath)) {
         const uFuzzyScript = fs.readFileSync(uFuzzyPath, 'utf8')
@@ -157,7 +171,10 @@ describe('fuzzySearch', () => {
         new Function(uFuzzyScript)()
       }
     } catch (error) {
-      console.warn('Could not load real uFuzzy library, using fallback:', error.message)
+      console.warn(
+        'Could not load real uFuzzy library, using fallback:',
+        error.message
+      )
     }
 
     // Ensure complete reset of all state
@@ -168,12 +185,12 @@ describe('fuzzySearch', () => {
       model: {
         bookmarks: [],
         tabs: [],
-        history: [],
+        history: []
       },
       opts: {
         searchFuzzyness: 0.3,
-        uFuzzyOptions: null,
-      },
+        uFuzzyOptions: null
+      }
     })
 
     window.uFuzzy = TrackedUFuzzy
@@ -199,8 +216,8 @@ describe('fuzzySearch', () => {
         id: 'bookmark-1',
         title: 'Term bookmark',
         url: 'https://example.com/term',
-        searchString: `term bookmark${delimiter}https://example.com/term`,
-      },
+        searchString: `term bookmark${delimiter}https://example.com/term`
+      }
     ]
 
     const results = await fuzzySearch('bookmarks', 'term')
@@ -208,7 +225,7 @@ describe('fuzzySearch', () => {
     expect(results).toHaveLength(1)
     expect(results[0]).toMatchObject({
       id: 'bookmark-1',
-      searchApproach: 'fuzzy',
+      searchApproach: 'fuzzy'
     })
     expect(typeof results[0].searchScore).toBe('number')
     expect(results[0].searchScore).toBeGreaterThan(0)
@@ -236,16 +253,16 @@ describe('fuzzySearch', () => {
         id: 'tab-1',
         title: 'Term tab',
         url: 'https://example.com/term-tab',
-        searchString: `term tab entry${delimiter}https://example.com/term-tab`,
-      },
+        searchString: `term tab entry${delimiter}https://example.com/term-tab`
+      }
     ]
     ext.model.history = [
       {
         id: 'history-1',
         title: 'Term history',
         url: 'https://example.com/term-history',
-        searchString: `term history entry${delimiter}https://example.com/term-history`,
-      },
+        searchString: `term history entry${delimiter}https://example.com/term-history`
+      }
     ]
 
     const results = await fuzzySearch('history', 'term')
@@ -253,7 +270,9 @@ describe('fuzzySearch', () => {
     expect(results).toHaveLength(2)
     expect(results[0].id).toBe('tab-1')
     expect(results[1].id).toBe('history-1')
-    expect(results.every((result) => result.searchApproach === 'fuzzy')).toBe(true)
+    expect(results.every((result) => result.searchApproach === 'fuzzy')).toBe(
+      true
+    )
   })
 
   it('reuses cached state until resetFuzzySearchState is called', async () => {
@@ -262,8 +281,8 @@ describe('fuzzySearch', () => {
         id: 'bookmark-cache',
         title: 'Cached term',
         url: 'https://example.com/cached-term',
-        searchString: `cached term entry${delimiter}https://example.com/cached-term`,
-      },
+        searchString: `cached term entry${delimiter}https://example.com/cached-term`
+      }
     ]
 
     await fuzzySearch('bookmarks', 'cached')
@@ -292,8 +311,8 @@ describe('fuzzySearch', () => {
         id: 'bookmark-warm',
         title: 'Warm entry',
         url: 'https://example.com/warm',
-        searchString: `warm bookmark${delimiter}https://example.com/warm`,
-      },
+        searchString: `warm bookmark${delimiter}https://example.com/warm`
+      }
     ]
 
     await fuzzySearch('bookmarks', 'warm')
@@ -301,11 +320,13 @@ describe('fuzzySearch', () => {
     expect(instancesAfterWarm.length).toBeGreaterThan(0)
 
     // Find the top-level instance (not nested)
-    const topLevelInstance = instancesAfterWarm.find((instance) => !instance.uf || !instance.uf.instanceId)
+    const topLevelInstance = instancesAfterWarm.find(
+      (instance) => !instance.uf || !instance.uf.instanceId
+    )
     expect(topLevelInstance).toBeDefined()
     expect(topLevelInstance.options).toMatchObject({
       intraIns: Math.round(0.85 * 4.2),
-      extra: 'option',
+      extra: 'option'
     })
     expect(topLevelInstance.options.interSplit).toBeUndefined()
 
@@ -314,8 +335,8 @@ describe('fuzzySearch', () => {
         id: 'bookmark-cjk',
         title: `${cjkTerm} entry`,
         url: 'https://example.com/kanji',
-        searchString: `${cjkTerm} bookmark${delimiter}https://example.com/${cjkTerm}`,
-      },
+        searchString: `${cjkTerm} bookmark${delimiter}https://example.com/${cjkTerm}`
+      }
     ]
 
     await fuzzySearch('bookmarks', cjkTerm)
@@ -326,7 +347,9 @@ describe('fuzzySearch', () => {
 
     // Find the CJK instance (should be the most recent top-level instance)
     const cjkInstance = instancesAfterCJK.find(
-      (instance) => instance.options && instance.options.interSplit === '(p{Unified_Ideograph=yes})+',
+      (instance) =>
+        instance.options &&
+        instance.options.interSplit === '(p{Unified_Ideograph=yes})+'
     )
     expect(cjkInstance).toBeDefined()
     expect(cjkInstance.options).toMatchObject({
@@ -336,7 +359,7 @@ describe('fuzzySearch', () => {
       intraTrn: 1,
       intraDel: 1,
       interSplit: '(p{Unified_Ideograph=yes})+',
-      extra: 'option',
+      extra: 'option'
     })
   })
 
@@ -346,8 +369,8 @@ describe('fuzzySearch', () => {
         id: 'bookmark-1',
         title: 'Different title',
         url: 'https://example.com/different',
-        searchString: `different title${delimiter}https://example.com/different`,
-      },
+        searchString: `different title${delimiter}https://example.com/different`
+      }
     ]
 
     const results = await fuzzySearch('bookmarks', 'nonexistent')
@@ -370,9 +393,9 @@ describe('fuzzySearch', () => {
         innerHTML: '',
         style: { display: '' },
         firstChild: null,
-        insertBefore: jest.fn(),
+        insertBefore: jest.fn()
       })),
-      writable: true,
+      writable: true
     })
 
     ext.model.bookmarks = [
@@ -380,8 +403,8 @@ describe('fuzzySearch', () => {
         id: 'bookmark-malformed',
         title: 'Valid title',
         url: 'https://example.com/valid',
-        searchString: null, // Malformed - missing searchString
-      },
+        searchString: null // Malformed - missing searchString
+      }
     ]
 
     // Should not throw an error even with malformed data
@@ -397,8 +420,8 @@ describe('fuzzySearch', () => {
         id: 'bookmark-1',
         title: 'Test bookmark',
         url: 'https://example.com/test',
-        searchString: `test bookmark${delimiter}https://example.com/test`,
-      },
+        searchString: `test bookmark${delimiter}https://example.com/test`
+      }
     ]
 
     const results = await fuzzySearch('bookmarks', '')
@@ -412,8 +435,8 @@ describe('fuzzySearch', () => {
         id: 'bookmark-1',
         title: 'Test bookmark',
         url: 'https://example.com/test',
-        searchString: `test bookmark${delimiter}https://example.com/test`,
-      },
+        searchString: `test bookmark${delimiter}https://example.com/test`
+      }
     ]
 
     const results = await fuzzySearch('bookmarks', '   ')
@@ -427,8 +450,8 @@ describe('fuzzySearch', () => {
         id: 'bookmark-special',
         title: 'GitHub repo',
         url: 'https://github.com/user/repo',
-        searchString: `github repo${delimiter}https://github.com/user/repo`,
-      },
+        searchString: `github repo${delimiter}https://github.com/user/repo`
+      }
     ]
 
     const results = await fuzzySearch('bookmarks', 'github.com')
@@ -443,14 +466,14 @@ describe('fuzzySearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript framework',
         url: 'https://reactjs.org',
-        searchString: `javascript framework${delimiter}https://reactjs.org`,
+        searchString: `javascript framework${delimiter}https://reactjs.org`
       },
       {
         id: 'bookmark-2',
         title: 'Python library',
         url: 'https://pypi.org/project/requests',
-        searchString: `python library${delimiter}https://pypi.org/project/requests`,
-      },
+        searchString: `python library${delimiter}https://pypi.org/project/requests`
+      }
     ]
 
     const results = await fuzzySearch('bookmarks', 'javascript python')
@@ -466,16 +489,16 @@ describe('fuzzySearch', () => {
         id: 'bookmark-1',
         title: 'Test bookmark',
         url: 'https://example.com/bookmark',
-        searchString: `test bookmark${delimiter}https://example.com/bookmark`,
-      },
+        searchString: `test bookmark${delimiter}https://example.com/bookmark`
+      }
     ]
     ext.model.tabs = [
       {
         id: 'tab-1',
         title: 'Test tab',
         url: 'https://example.com/tab',
-        searchString: `test tab${delimiter}https://example.com/tab`,
-      },
+        searchString: `test tab${delimiter}https://example.com/tab`
+      }
     ]
 
     const bookmarkResults = await fuzzySearch('bookmarks', 'test')
@@ -493,8 +516,8 @@ describe('fuzzySearch', () => {
         id: 'bookmark-highlight',
         title: 'Highlight persistence test',
         url: 'https://example.com/highlight',
-        searchString: `highlight persistence test${delimiter}https://example.com/highlight`,
-      },
+        searchString: `highlight persistence test${delimiter}https://example.com/highlight`
+      }
     ]
 
     const firstResults = await fuzzySearch('bookmarks', 'highlight')

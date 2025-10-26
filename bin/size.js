@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
 /**
  * @file Reports bundle sizes for the packaged Chrome distribution.
  *
@@ -27,7 +26,9 @@ async function ensureDistExists(dir) {
     }
   } catch (error) {
     if (error && error.code === 'ENOENT') {
-      console.error(`Missing build output at ${dir}. Run "npm run build" first.`)
+      console.error(
+        `Missing build output at ${dir}. Run "npm run build" first.`
+      )
       process.exitCode = 1
       return false
     }
@@ -74,7 +75,10 @@ function formatBytes(bytes) {
   }
 
   const units = ['B', 'KB', 'MB', 'GB']
-  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+  const exponent = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1
+  )
   const value = bytes / 1024 ** exponent
   const digits = value < 10 && exponent > 0 ? 2 : 1
   return `${value.toFixed(digits)} ${units[exponent]}`
@@ -120,7 +124,8 @@ async function summarize(files) {
       bucket.set(secondaryKey, (bucket.get(secondaryKey) ?? 0) + file.size)
     }
 
-    const isPopupMinifiedJs = file.path.endsWith('.min.js') && file.path.startsWith('popup/js/')
+    const isPopupMinifiedJs =
+      file.path.endsWith('.min.js') && file.path.startsWith('popup/js/')
     const isStyleMinCss = path.basename(file.path) === 'style.min.css'
 
     if (isPopupMinifiedJs || isStyleMinCss) {
@@ -144,7 +149,7 @@ async function summarize(files) {
   for (const [topName, bucket] of secondLevel.entries()) {
     sortedSecondLevel.set(
       topName,
-      [...bucket.entries()].sort((a, b) => b[1] - a[1]),
+      [...bucket.entries()].sort((a, b) => b[1] - a[1])
     )
   }
 
@@ -172,8 +177,10 @@ function printTable(headers, rows, indent = '', columnWidths) {
       return Math.max(header.length, ...rows.map((row) => row[index].length))
     })
 
-  const formatRow = (row) => indent + row.map((value, index) => value.padEnd(widths[index])).join('  ')
-  const divider = indent + widths.map((width) => ''.padEnd(width, '-')).join('  ')
+  const formatRow = (row) =>
+    indent + row.map((value, index) => value.padEnd(widths[index])).join('  ')
+  const divider =
+    indent + widths.map((width) => ''.padEnd(width, '-')).join('  ')
 
   console.log(formatRow(headers))
   console.log(divider)
@@ -198,7 +205,9 @@ function printTree(entries, totalSize, indent = '  ') {
     nodes.forEach((node, index) => {
       const isLast = index === nodes.length - 1
       const branch = isLast ? '└─ ' : '├─ '
-      console.log(`${prefix}${branch}${node.name} (${formatBytes(node.size)}, ${percentage(node.size, totalSize)})`)
+      console.log(
+        `${prefix}${branch}${node.name} (${formatBytes(node.size)}, ${percentage(node.size, totalSize)})`
+      )
       if (node.children && node.children.length > 0) {
         const nextPrefix = `${prefix}${isLast ? '   ' : '│  '}`
         traverse(node.children, nextPrefix)
@@ -215,7 +224,10 @@ function printTree(entries, totalSize, indent = '  ') {
  * @param {Object} summary - Aggregated size details from `summarize`.
  * @param {number} fileCount - Number of files processed.
  */
-function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMinified }, fileCount) {
+function printSummary(
+  { totalSize, sortedTopLevel, sortedSecondLevel, sortedMinified },
+  fileCount
+) {
   if (fileCount === 0) {
     console.log('No files found.')
     return
@@ -224,9 +236,13 @@ function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMini
   console.log(`<root> (${formatBytes(totalSize)}, ${fileCount} files)`)
   const topEntries = sortedTopLevel.map(([name, size]) => {
     const segments = sortedSecondLevel.get(name)
-    const shouldAttachChildren = segments && segments.length > 0 && name !== 'images'
+    const shouldAttachChildren =
+      segments && segments.length > 0 && name !== 'images'
     const children = shouldAttachChildren
-      ? segments.map(([segmentName, segmentSize]) => ({ name: segmentName, size: segmentSize }))
+      ? segments.map(([segmentName, segmentSize]) => ({
+          name: segmentName,
+          size: segmentSize
+        }))
       : undefined
     return { name, size, children }
   })
@@ -237,7 +253,7 @@ function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMini
     ['ZIP File', []],
     ['Minified JS', []],
     ['Minified CSS', []],
-    ['Other', []],
+    ['Other', []]
   ])
 
   for (const file of sortedMinified) {
@@ -252,11 +268,12 @@ function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMini
     }
   }
 
-  const stripPrefix = (filePath) => filePath.replace(/^dist\//, '').replace(/^popup\//, '')
+  const stripPrefix = (filePath) =>
+    filePath.replace(/^dist\//, '').replace(/^popup\//, '')
   const allRows = sortedMinified.map((file) => [
     stripPrefix(file.path),
     formatBytes(file.size),
-    percentage(file.size, totalSize),
+    percentage(file.size, totalSize)
   ])
   let tableHeaders = ['File', 'Size', 'Share']
   const columnWidths = tableHeaders.map((header, index) => {
@@ -271,7 +288,11 @@ function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMini
     const rows = files
       .slice()
       .sort((a, b) => b.size - a.size)
-      .map((file) => [stripPrefix(file.path), formatBytes(file.size), percentage(file.size, totalSize)])
+      .map((file) => [
+        stripPrefix(file.path),
+        formatBytes(file.size),
+        percentage(file.size, totalSize)
+      ])
     printTable(tableHeaders, rows, '', columnWidths)
     console.log('')
   }

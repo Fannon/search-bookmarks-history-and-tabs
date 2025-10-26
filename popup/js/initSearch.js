@@ -9,16 +9,18 @@
  * - Lazy-load mark.js highlighting so first paint stays lightweight while results still highlight matches.
  */
 
+import { createExtensionContext } from './helper/extensionContext.js'
 import { loadScript } from './helper/utils.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
-import { search } from './search/common.js'
-import { addDefaultEntries } from './search/common.js'
-import { renderSearchResults } from './view/searchView.js'
-import { navigationKeyListener } from './view/searchNavigation.js'
-import { toggleSearchApproach, updateSearchApproachToggle } from './view/searchEvents.js'
-import { createExtensionContext } from './helper/extensionContext.js'
+import { addDefaultEntries, search } from './search/common.js'
 import { closeErrors, printError } from './view/errorView.js'
+import {
+  toggleSearchApproach,
+  updateSearchApproachToggle
+} from './view/searchEvents.js'
+import { navigationKeyListener } from './view/searchNavigation.js'
+import { renderSearchResults } from './view/searchView.js'
 
 export { closeErrors } from './view/errorView.js'
 
@@ -46,7 +48,9 @@ export async function initExtension() {
   ext.dom.searchInput = document.getElementById('search-input')
   ext.dom.resultList = document.getElementById('result-list')
   ext.dom.resultCounter = document.getElementById('result-counter')
-  ext.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
+  ext.dom.searchApproachToggle = document.getElementById(
+    'search-approach-toggle'
+  )
 
   updateSearchApproachToggle()
 
@@ -76,7 +80,7 @@ export async function initExtension() {
     document.getElementById('results-loading').remove()
   }
 
-  console.debug('Extension initialized in ' + (Date.now() - startTime) + 'ms')
+  console.debug(`Extension initialized in ${Date.now() - startTime}ms`)
 
   // Lazy load mark.js for highlighting search results after init phase
   await loadScript('./lib/mark.es6.min.js')
@@ -94,7 +98,7 @@ export async function initExtension() {
 export async function hashRouter() {
   let hash = window.location.hash
   if (!hash || hash === '#' || hash === '#/') {
-    hash = '#search/' + ext.dom.searchInput.value
+    hash = `#search/${ext.dom.searchInput.value}`
   }
   closeErrors()
   if (hash.startsWith('#search/')) {

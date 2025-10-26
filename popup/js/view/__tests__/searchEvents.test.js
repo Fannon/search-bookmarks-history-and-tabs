@@ -25,7 +25,7 @@ function createResults() {
       lastVisitSecondsAgo: 3600,
       visitCount: 7,
       dateAdded: new Date('2023-01-02').getTime(),
-      score: 41.8,
+      score: 41.8
     },
     {
       type: 'tab',
@@ -34,12 +34,15 @@ function createResults() {
       url: 'tab.test',
       title: 'Tab Title',
       urlHighlighted: 'tab.<mark>test</mark>',
-      score: 8.4,
-    },
+      score: 8.4
+    }
   ]
 }
 
-async function setupSearchEvents({ results = createResults(), opts = {} } = {}) {
+async function setupSearchEvents({
+  results = createResults(),
+  opts = {}
+} = {}) {
   jest.resetModules()
   window.location.hash = '#search/query'
 
@@ -49,10 +52,10 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
 
   jest.unstable_mockModule('../../model/options.js', () => ({
     getUserOptions,
-    setUserOptions,
+    setUserOptions
   }))
   jest.unstable_mockModule('../../search/common.js', () => ({
-    search: searchMock,
+    search: searchMock
   }))
 
   // Import modules needed for events
@@ -76,14 +79,14 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
     .map((entry) => ({
       originalId: entry.originalId,
       originalUrl: entry.originalUrl,
-      windowId: 101,
+      windowId: 101
     }))
 
   navigator.clipboard = {
-    writeText: jest.fn(() => Promise.resolve()),
+    writeText: jest.fn(() => Promise.resolve())
   }
   window.Mark = jest.fn(() => ({
-    mark: jest.fn(),
+    mark: jest.fn()
   }))
   window.close = jest.fn()
   window.open = jest.fn()
@@ -92,14 +95,14 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
     dom: {
       resultList,
       searchInput,
-      searchApproachToggle,
+      searchApproachToggle
     },
     model: {
       result: copiedResults,
       tabs: tabEntries,
       searchTerm: 'query',
       mouseHoverEnabled: true,
-      currentItem: 0,
+      currentItem: 0
     },
     opts: {
       displaySearchMatchHighlight: true,
@@ -113,7 +116,7 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
       displayDateAdded: true,
       displayScore: true,
       searchStrategy: 'precise',
-      ...opts,
+      ...opts
     },
     browserApi: {
       tabs: {
@@ -121,12 +124,12 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
         query: jest.fn(() => Promise.resolve([{ id: 77 }])),
         update: jest.fn(),
         create: jest.fn(),
-        highlight: jest.fn(),
+        highlight: jest.fn()
       },
       windows: {
-        update: jest.fn(),
-      },
-    },
+        update: jest.fn()
+      }
+    }
   }
 
   return {
@@ -136,14 +139,14 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
     mocks: {
       getUserOptions,
       setUserOptions,
-      search: searchMock,
+      search: searchMock
     },
     elements: {
       resultList,
       searchInput,
-      searchApproachToggle,
+      searchApproachToggle
     },
-    results: copiedResults,
+    results: copiedResults
   }
 }
 
@@ -171,13 +174,15 @@ describe('searchEvents openResultItem', () => {
       target: {
         nodeName: 'LI',
         getAttribute: () => null,
-        className: '',
+        className: ''
       },
       preventDefault: jest.fn(),
-      stopPropagation: jest.fn(),
+      stopPropagation: jest.fn()
     })
 
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(selected.getAttribute('x-open-url'))
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      selected.getAttribute('x-open-url')
+    )
   })
 
   it('closes tabs from the result list when the close button is pressed', async () => {
@@ -203,7 +208,7 @@ describe('searchEvents openResultItem', () => {
         originalUrl: 'https://tab1.test',
         url: 'tab1.test',
         title: 'Tab 1',
-        score: 10,
+        score: 10
       },
       {
         type: 'tab',
@@ -211,7 +216,7 @@ describe('searchEvents openResultItem', () => {
         originalUrl: 'https://tab2.test',
         url: 'tab2.test',
         title: 'Tab 2',
-        score: 9,
+        score: 9
       },
       {
         type: 'tab',
@@ -219,11 +224,13 @@ describe('searchEvents openResultItem', () => {
         originalUrl: 'https://tab3.test',
         url: 'tab3.test',
         title: 'Tab 3',
-        score: 8,
-      },
+        score: 8
+      }
     ]
 
-    const { module, viewModule } = await setupSearchEvents({ results: multipleResults })
+    const { module, viewModule } = await setupSearchEvents({
+      results: multipleResults
+    })
     await viewModule.renderSearchResults()
 
     // Store initial state
@@ -246,10 +253,10 @@ describe('searchEvents openResultItem', () => {
       target: {
         nodeName: 'BUTTON',
         className: 'close-button',
-        getAttribute: () => null,
+        getAttribute: () => null
       },
       stopPropagation: jest.fn(),
-      preventDefault: jest.fn(),
+      preventDefault: jest.fn()
     })
 
     // BEFORE FIX: splice(-1, 1) would delete the last element
@@ -268,7 +275,7 @@ describe('searchEvents openResultItem', () => {
         originalUrl: 'https://tab1.test',
         url: 'tab1.test',
         title: 'Tab with ID 8',
-        score: 10,
+        score: 10
       },
       {
         type: 'tab',
@@ -276,7 +283,7 @@ describe('searchEvents openResultItem', () => {
         originalUrl: 'https://tab2.test',
         url: 'tab2.test',
         title: 'Tab with ID 10',
-        score: 9,
+        score: 9
       },
       {
         type: 'tab',
@@ -284,28 +291,37 @@ describe('searchEvents openResultItem', () => {
         originalUrl: 'https://tab3.test',
         url: 'tab3.test',
         title: 'Tab with ID 100',
-        score: 8,
-      },
+        score: 8
+      }
     ]
 
     const { viewModule, elements } = await setupSearchEvents({ results })
     await viewModule.renderSearchResults()
 
     // Test closing tab with ID 8
-    const firstTabCloseButton = elements.resultList.children[0].querySelector('.close-button')
-    firstTabCloseButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+    const firstTabCloseButton =
+      elements.resultList.children[0].querySelector('.close-button')
+    firstTabCloseButton.dispatchEvent(
+      new MouseEvent('mouseup', { bubbles: true })
+    )
     expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(8)
 
     // Test closing tab with ID 10
     await viewModule.renderSearchResults()
-    const secondTabCloseButton = elements.resultList.children[0].querySelector('.close-button')
-    secondTabCloseButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+    const secondTabCloseButton =
+      elements.resultList.children[0].querySelector('.close-button')
+    secondTabCloseButton.dispatchEvent(
+      new MouseEvent('mouseup', { bubbles: true })
+    )
     expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(10)
 
     // Test closing tab with ID 100
     await viewModule.renderSearchResults()
-    const thirdTabCloseButton = elements.resultList.children[0].querySelector('.close-button')
-    thirdTabCloseButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+    const thirdTabCloseButton =
+      elements.resultList.children[0].querySelector('.close-button')
+    thirdTabCloseButton.dispatchEvent(
+      new MouseEvent('mouseup', { bubbles: true })
+    )
     expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(100)
   })
 
@@ -321,15 +337,17 @@ describe('searchEvents openResultItem', () => {
       target: {
         nodeName: 'LI',
         getAttribute: () => null,
-        className: '',
+        className: ''
       },
       stopPropagation: jest.fn(),
-      preventDefault: jest.fn(),
+      preventDefault: jest.fn()
     })
     await Promise.resolve()
 
     expect(ext.browserApi.tabs.query).toHaveBeenCalledTimes(1)
-    expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(77, { url: 'https://bookmark.test' })
+    expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(77, {
+      url: 'https://bookmark.test'
+    })
     expect(window.close).toHaveBeenCalledTimes(1)
   })
 
@@ -348,10 +366,10 @@ describe('searchEvents openResultItem', () => {
       target: {
         nodeName: 'LI',
         getAttribute: () => null,
-        className: '',
+        className: ''
       },
       stopPropagation: jest.fn(),
-      preventDefault: jest.fn(),
+      preventDefault: jest.fn()
     })
     await Promise.resolve()
 
@@ -372,15 +390,15 @@ describe('searchEvents openResultItem', () => {
       target: {
         nodeName: 'LI',
         getAttribute: () => null,
-        className: '',
+        className: ''
       },
       stopPropagation: jest.fn(),
-      preventDefault: jest.fn(),
+      preventDefault: jest.fn()
     })
 
     expect(ext.browserApi.tabs.create).toHaveBeenCalledWith({
       active: false,
-      url: 'https://bookmark.test',
+      url: 'https://bookmark.test'
     })
   })
 
@@ -398,14 +416,16 @@ describe('searchEvents openResultItem', () => {
       target: {
         nodeName: 'LI',
         getAttribute: () => null,
-        className: '',
+        className: ''
       },
       stopPropagation: jest.fn(),
-      preventDefault: jest.fn(),
+      preventDefault: jest.fn()
     })
 
     expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(2, { active: true })
-    expect(ext.browserApi.windows.update).toHaveBeenCalledWith(101, { focused: true })
+    expect(ext.browserApi.windows.update).toHaveBeenCalledWith(101, {
+      focused: true
+    })
     expect(window.close).toHaveBeenCalledTimes(1)
   })
 
@@ -422,15 +442,15 @@ describe('searchEvents openResultItem', () => {
       target: {
         nodeName: 'LI',
         getAttribute: () => null,
-        className: '',
+        className: ''
       },
       stopPropagation: jest.fn(),
-      preventDefault: jest.fn(),
+      preventDefault: jest.fn()
     })
 
     expect(ext.browserApi.tabs.create).toHaveBeenCalledWith({
       active: true,
-      url: 'https://bookmark.test',
+      url: 'https://bookmark.test'
     })
     expect(window.close).toHaveBeenCalledTimes(1)
   })
@@ -448,10 +468,10 @@ describe('searchEvents openResultItem', () => {
       target: {
         nodeName: 'LI',
         getAttribute: () => null,
-        className: '',
+        className: ''
       },
       stopPropagation: jest.fn(),
-      preventDefault: jest.fn(),
+      preventDefault: jest.fn()
     })
 
     expect(window.open).toHaveBeenCalledWith('https://bookmark.test', '_newtab')
@@ -469,7 +489,7 @@ describe('searchEvents openResultItem', () => {
       originalUrl: 'https://correct-new-result.test',
       url: 'correct-new-result.test',
       title: 'Correct New Result',
-      score: 999,
+      score: 999
     }
 
     // Update model with new result (simulating completed search)
@@ -478,7 +498,9 @@ describe('searchEvents openResultItem', () => {
 
     // DOM still shows old result (hasn't re-rendered yet)
     const staleSelectedElement = document.getElementById('selected-result')
-    expect(staleSelectedElement.getAttribute('x-open-url')).toBe('https://bookmark.test') // Old result
+    expect(staleSelectedElement.getAttribute('x-open-url')).toBe(
+      'https://bookmark.test'
+    ) // Old result
 
     // Call openResultItem - it should use model state, not DOM
     module.openResultItem({
@@ -489,16 +511,16 @@ describe('searchEvents openResultItem', () => {
       target: {
         nodeName: 'LI',
         getAttribute: () => null,
-        className: '',
+        className: ''
       },
       stopPropagation: jest.fn(),
-      preventDefault: jest.fn(),
+      preventDefault: jest.fn()
     })
 
     // Verify it opened the NEW result from the model, not the old one from DOM
     expect(ext.browserApi.tabs.create).toHaveBeenCalledWith({
       active: true,
-      url: 'https://correct-new-result.test', // New result, not old!
+      url: 'https://correct-new-result.test' // New result, not old!
     })
   })
 })
@@ -512,7 +534,9 @@ describe('search approach controls', () => {
 
     expect(ext.opts.searchStrategy).toBe('fuzzy')
     expect(mocks.getUserOptions).toHaveBeenCalledTimes(1)
-    expect(mocks.setUserOptions).toHaveBeenCalledWith({ searchStrategy: 'fuzzy' })
+    expect(mocks.setUserOptions).toHaveBeenCalledWith({
+      searchStrategy: 'fuzzy'
+    })
     expect(elements.searchApproachToggle.innerText).toBe('FUZZY')
     expect(elements.searchApproachToggle.className).toBe('fuzzy')
     expect(mocks.search).toHaveBeenCalledTimes(1)

@@ -48,11 +48,19 @@ export function calculateFinalScore(results, searchTerm) {
   const hasSearchTerm = Boolean(ext.model.searchTerm)
 
   // Normalize query once for all downstream checks to keep comparisons consistent and cheap.
-  const normalizedSearchTerm = hasSearchTerm ? searchTerm.toLowerCase().trim() : ''
-  const rawSearchTermParts = hasSearchTerm ? normalizedSearchTerm.split(/\s+/).filter(Boolean) : []
+  const normalizedSearchTerm = hasSearchTerm
+    ? searchTerm.toLowerCase().trim()
+    : ''
+  const rawSearchTermParts = hasSearchTerm
+    ? normalizedSearchTerm.split(/\s+/).filter(Boolean)
+    : []
   const hyphenatedSearchTerm = rawSearchTermParts.join('-')
-  const tagTerms = hasSearchTerm ? normalizedSearchTerm.split('#').join(' ').split(/\s+/).filter(Boolean) : []
-  const folderTerms = hasSearchTerm ? normalizedSearchTerm.split('~').join(' ').split(/\s+/).filter(Boolean) : []
+  const tagTerms = hasSearchTerm
+    ? normalizedSearchTerm.split('#').join(' ').split(/\s+/).filter(Boolean)
+    : []
+  const folderTerms = hasSearchTerm
+    ? normalizedSearchTerm.split('~').join(' ').split(/\s+/).filter(Boolean)
+    : []
 
   // Cache scoring options to avoid repeated property lookups
   const opts = ext.opts
@@ -75,7 +83,7 @@ export function calculateFinalScore(results, searchTerm) {
     scoreUrlWeight,
     scoreTagWeight,
     scoreFolderWeight,
-    scoreBookmarkOpenTabBonus,
+    scoreBookmarkOpenTabBonus
   } = opts
 
   const includeTerms = rawSearchTermParts
@@ -86,7 +94,10 @@ export function calculateFinalScore(results, searchTerm) {
         return false
       }
 
-      if (token.length < scoreExactIncludesBonusMinChars && !/^\d+$/.test(token)) {
+      if (
+        token.length < scoreExactIncludesBonusMinChars &&
+        !/^\d+$/.test(token)
+      ) {
         return false
       }
 
@@ -94,9 +105,12 @@ export function calculateFinalScore(results, searchTerm) {
     })
 
   // Only check includes bonus if configured and there are tokens that qualify
-  const canCheckIncludes = hasSearchTerm && scoreExactIncludesBonus && includeTerms.length > 0
+  const canCheckIncludes =
+    hasSearchTerm && scoreExactIncludesBonus && includeTerms.length > 0
 
-  const includesBonusCap = Number.isFinite(scoreExactIncludesMaxBonuses) ? scoreExactIncludesMaxBonuses : Infinity
+  const includesBonusCap = Number.isFinite(scoreExactIncludesMaxBonuses)
+    ? scoreExactIncludesMaxBonuses
+    : Infinity
 
   for (let i = 0; i < results.length; i++) {
     const el = results[i]
@@ -110,7 +124,8 @@ export function calculateFinalScore(results, searchTerm) {
 
     // STEP 2: Multiply by search quality score (0-1 from fuzzy/precise search)
     // This reduces score if the match quality is poor
-    const searchScoreMultiplier = el.searchScore != null ? el.searchScore : scoreTitleWeight
+    const searchScoreMultiplier =
+      el.searchScore != null ? el.searchScore : scoreTitleWeight
     score = score * searchScoreMultiplier
 
     if (hasSearchTerm) {
@@ -121,8 +136,12 @@ export function calculateFinalScore(results, searchTerm) {
       const lowerFolder = el.folder ? el.folder.toLowerCase() : null
 
       // Pre-compute normalized arrays for exact tag/folder matching
-      const lowerTagValues = el.tagsArray ? el.tagsArray.map((tag) => tag.toLowerCase()) : []
-      const lowerFolderValues = el.folderArray ? el.folderArray.map((folder) => folder.toLowerCase()) : []
+      const lowerTagValues = el.tagsArray
+        ? el.tagsArray.map((tag) => tag.toLowerCase())
+        : []
+      const lowerFolderValues = el.folderArray
+        ? el.folderArray.map((folder) => folder.toLowerCase())
+        : []
 
       // STEP 3A: Exact match bonuses
       // Award bonus if title/URL starts with the exact search term
@@ -135,7 +154,11 @@ export function calculateFinalScore(results, searchTerm) {
       }
 
       // Award bonus if title exactly equals the search term
-      if (scoreExactEqualsBonus && lowerTitle && lowerTitle === normalizedSearchTerm) {
+      if (
+        scoreExactEqualsBonus &&
+        lowerTitle &&
+        lowerTitle === normalizedSearchTerm
+      ) {
         score += scoreExactEqualsBonus * scoreTitleWeight
       }
 
@@ -195,11 +218,19 @@ export function calculateFinalScore(results, searchTerm) {
       // Award bonus for full phrase match (multi-word searches only)
       // Single-word searches already get includes/exact bonuses, so phrase bonus is redundant
       if (rawSearchTermParts.length > 1) {
-        if (scoreExactPhraseTitleBonus && lowerTitle && lowerTitle.includes(normalizedSearchTerm)) {
+        if (
+          scoreExactPhraseTitleBonus &&
+          lowerTitle &&
+          lowerTitle.includes(normalizedSearchTerm)
+        ) {
           score += scoreExactPhraseTitleBonus
         }
 
-        if (scoreExactPhraseUrlBonus && lowerUrl && lowerUrl.includes(hyphenatedSearchTerm)) {
+        if (
+          scoreExactPhraseUrlBonus &&
+          lowerUrl &&
+          lowerUrl.includes(hyphenatedSearchTerm)
+        ) {
           score += scoreExactPhraseUrlBonus
         }
       }
@@ -210,7 +241,10 @@ export function calculateFinalScore(results, searchTerm) {
     // Award bonus based on visit frequency (more visits = higher score, up to cap)
     // Example: visited 50 times with 0.5 points per visit = +20 (capped at scoreVisitedBonusScoreMaximum)
     if (scoreVisitedBonusScore && el.visitCount) {
-      score += Math.min(scoreVisitedBonusScoreMaximum, el.visitCount * scoreVisitedBonusScore)
+      score += Math.min(
+        scoreVisitedBonusScoreMaximum,
+        el.visitCount * scoreVisitedBonusScore
+      )
     }
 
     // Award bonus based on recency of last visit (linear decay)
@@ -220,7 +254,11 @@ export function calculateFinalScore(results, searchTerm) {
       const maxSeconds = historyDaysAgo * 24 * 60 * 60
       if (maxSeconds > 0 && el.lastVisitSecondsAgo >= 0) {
         // Calculate proportional bonus: 0 s ago = full bonus, maxSeconds ago = 0 bonus
-        score += Math.max(0, (1 - el.lastVisitSecondsAgo / maxSeconds) * scoreRecentBonusScoreMaximum)
+        score += Math.max(
+          0,
+          (1 - el.lastVisitSecondsAgo / maxSeconds) *
+            scoreRecentBonusScoreMaximum
+        )
       } else if (el.lastVisitSecondsAgo === 0) {
         // Special case: visited in this exact moment gets maximum bonus
         score += scoreRecentBonusScoreMaximum
@@ -254,7 +292,7 @@ export const BASE_SCORE_KEYS = {
   history: 'scoreHistoryBase',
   search: 'scoreSearchEngineBase',
   customSearch: 'scoreCustomSearchEngineBase',
-  direct: 'scoreDirectUrlScore',
+  direct: 'scoreDirectUrlScore'
 }
 
 /**

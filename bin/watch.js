@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+import { performance } from 'node:perf_hooks'
+import process from 'node:process'
 /**
  * @file Watches popup sources and triggers incremental rebuilds.
  *
@@ -8,8 +9,6 @@
  * side-loaded extension in sync without manual rebuilds.
  */
 import chokidar from 'chokidar'
-import process from 'node:process'
-import { performance } from 'node:perf_hooks'
 import { bundleAll } from './bundle.js'
 import { createDist } from './createDist.js'
 
@@ -24,7 +23,11 @@ const isIgnoredPath = (filePath) => {
 
   const normalized = filePath.replace(/\\/g, '/')
 
-  if (normalized.startsWith('popup/lib') || normalized.includes('/popup/lib/') || normalized.endsWith('/popup/lib')) {
+  if (
+    normalized.startsWith('popup/lib') ||
+    normalized.includes('/popup/lib/') ||
+    normalized.endsWith('/popup/lib')
+  ) {
     return true
   }
 
@@ -38,8 +41,8 @@ const watcher = chokidar.watch('popup', {
   ignored: isIgnoredPath,
   awaitWriteFinish: {
     stabilityThreshold: 200,
-    pollInterval: 100,
-  },
+    pollInterval: 100
+  }
 })
 
 let pendingTimer = null

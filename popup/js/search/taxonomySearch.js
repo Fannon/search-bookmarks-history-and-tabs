@@ -26,7 +26,7 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
   /** Marker for taxonomy search mode */
   const taxonomyMarker = taxonomyType === 'tags' ? '#' : '~'
 
-  let searchTermArray = searchTerm.split(taxonomyMarker)
+  const searchTermArray = searchTerm.split(taxonomyMarker)
 
   if (searchTermArray.length) {
     for (const entry of data) {
@@ -34,7 +34,10 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
       let searchTermMatches = 0
       for (const term of searchTermArray) {
         const trimmedTerm = term.trim()
-        if (trimmedTerm && searchString.includes(taxonomyMarker + trimmedTerm)) {
+        if (
+          trimmedTerm &&
+          searchString.includes(taxonomyMarker + trimmedTerm)
+        ) {
           searchTermMatches++
         }
       }
@@ -42,7 +45,7 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
         results.push({
           ...entry,
           searchScore: 1,
-          searchApproach: 'taxonomy',
+          searchApproach: 'taxonomy'
         })
       }
     }

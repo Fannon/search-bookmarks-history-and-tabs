@@ -21,14 +21,14 @@
 - `npm run test:e2e:chromium|firefox|edge` target individual browsers.
 - `npm run test:unit` runs Jest unit tests. Run it like `npm run test:unit <filename>.test.js` for individual test file execution.
 - `npm run test:unit:coverage` runs Jest unit tests with code coverage report. Run it like `npm run test:unit:coverage <filename>.test.js` for individual test file execution.
-- `npm run lint` enforces the shared ESLint rules across popup JavaScript.
+- `npm run lint` runs Biome's lint + format verification across the popup source.
 - `npm run analyze` runs `bin/analyze-code.js` for bundle diagnostics.
 - `npm run size` reports post-build bundle sizes.
 
 ## Coding Style & Naming Conventions
 
 - Source is modern ESM JavaScript; keep modules side-effect-light and prefer explicit exports.
-- Follow `eslint.config.mjs`: two-space indentation, single quotes, and no trailing semicolons.
+- Follow `biome.json`: two-space indentation, single quotes, and no trailing semicolons.
 - Name files by feature (e.g. `searchResultsView.js`, `browserApi.js`) and mirror that style for co-located tests (`*.test.js`).
 - Do not excessively create dependencies, prefer a lightweight "vanilla JS" style
 - Use US English spellings consistently (avoid UK variants)

@@ -24,7 +24,7 @@ function createResults() {
       lastVisitSecondsAgo: 3600,
       visitCount: 7,
       dateAdded: new Date('2023-01-02').getTime(),
-      score: 41.8,
+      score: 41.8
     },
     {
       type: 'tab',
@@ -33,8 +33,8 @@ function createResults() {
       url: 'tab.test',
       title: 'Tab Title',
       urlHighlighted: 'tab.<mark>test</mark>',
-      score: 8.4,
-    },
+      score: 8.4
+    }
   ]
 }
 
@@ -62,25 +62,25 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
     .map((entry) => ({
       originalId: entry.originalId,
       originalUrl: entry.originalUrl,
-      windowId: 101,
+      windowId: 101
     }))
 
   window.Mark = jest.fn(() => ({
-    mark: jest.fn(),
+    mark: jest.fn()
   }))
 
   global.ext = {
     dom: {
       resultList,
       searchInput,
-      searchApproachToggle,
+      searchApproachToggle
     },
     model: {
       result: copiedResults,
       tabs: tabEntries,
       searchTerm: 'query',
       mouseHoverEnabled: true,
-      currentItem: 0,
+      currentItem: 0
     },
     opts: {
       displaySearchMatchHighlight: true,
@@ -94,7 +94,7 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
       displayDateAdded: true,
       displayScore: true,
       searchStrategy: 'precise',
-      ...opts,
+      ...opts
     },
     browserApi: {
       tabs: {
@@ -102,12 +102,12 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
         query: jest.fn(() => Promise.resolve([{ id: 77 }])),
         update: jest.fn(),
         create: jest.fn(),
-        highlight: jest.fn(),
+        highlight: jest.fn()
       },
       windows: {
-        update: jest.fn(),
-      },
-    },
+        update: jest.fn()
+      }
+    }
   }
 
   return {
@@ -115,9 +115,9 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
     elements: {
       resultList,
       searchInput,
-      searchApproachToggle,
+      searchApproachToggle
     },
-    results: copiedResults,
+    results: copiedResults
   }
 }
 
@@ -149,16 +149,26 @@ describe('searchView renderSearchResults', () => {
 
     const bookmarkItem = listItems[0]
     expect(bookmarkItem.className).toBe('bookmark')
-    expect(bookmarkItem.getAttribute('x-open-url')).toBe('https://bookmark.test')
-    expect(bookmarkItem.style.borderLeft).toBe('4px solid rgb(17, 17, 17)')
-    expect(bookmarkItem.querySelector('.edit-button').getAttribute('x-link')).toBe(
-      './editBookmark.html#bookmark/bm-1/search/query',
+    expect(bookmarkItem.getAttribute('x-open-url')).toBe(
+      'https://bookmark.test'
     )
+    expect(bookmarkItem.style.borderLeft).toBe('4px solid rgb(17, 17, 17)')
+    expect(
+      bookmarkItem.querySelector('.edit-button').getAttribute('x-link')
+    ).toBe('./editBookmark.html#bookmark/bm-1/search/query')
 
     const tagBadges = Array.from(bookmarkItem.querySelectorAll('.badge.tags'))
-    expect(tagBadges.map((el) => el.getAttribute('x-link'))).toEqual(['#search/#alpha', '#search/#beta'])
-    const folderBadges = Array.from(bookmarkItem.querySelectorAll('.badge.folder'))
-    expect(folderBadges.map((el) => el.getAttribute('x-link'))).toEqual(['#search/~Work', '#search/~Work ~Docs'])
+    expect(tagBadges.map((el) => el.getAttribute('x-link'))).toEqual([
+      '#search/#alpha',
+      '#search/#beta'
+    ])
+    const folderBadges = Array.from(
+      bookmarkItem.querySelectorAll('.badge.folder')
+    )
+    expect(folderBadges.map((el) => el.getAttribute('x-link'))).toEqual([
+      '#search/~Work',
+      '#search/~Work ~Docs'
+    ])
     expect(bookmarkItem.querySelector('.badge.last-visited')).not.toBeNull()
     const visitCounterBadge = bookmarkItem.querySelector('.badge.visit-counter')
     expect(visitCounterBadge).not.toBeNull()
@@ -168,14 +178,16 @@ describe('searchView renderSearchResults', () => {
     const tabItem = listItems[1]
     expect(tabItem.className).toBe('tab')
     expect(tabItem.querySelector('.close-button')).not.toBeNull()
-    expect(tabItem.querySelector('.url').innerHTML).toBe('tab.<mark>test</mark>')
+    expect(tabItem.querySelector('.url').innerHTML).toBe(
+      'tab.<mark>test</mark>'
+    )
 
     expect(document.getElementById('selected-result')).toBe(bookmarkItem)
     expect(ext.model.currentItem).toBe(0)
     expect(window.Mark).toHaveBeenCalledTimes(2)
     const firstMarkInstance = window.Mark.mock.results[0].value
     expect(firstMarkInstance.mark).toHaveBeenCalledWith('query', {
-      exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
+      exclude: ['.last-visited', '.score', '.visit-counter', '.date-added']
     })
   })
 
@@ -192,13 +204,13 @@ describe('searchView renderSearchResults', () => {
         lastVisitSecondsAgo: 30,
         visitCount: 2,
         dateAdded: new Date('2023-06-01').getTime(),
-        score: 12,
-      },
+        score: 12
+      }
     ]
 
     const { module, elements } = await setupSearchView({
       results: maliciousResults,
-      opts: { displaySearchMatchHighlight: false },
+      opts: { displaySearchMatchHighlight: false }
     })
 
     await module.renderSearchResults()
@@ -208,7 +220,9 @@ describe('searchView renderSearchResults', () => {
     expect(listItem.querySelectorAll('script')).toHaveLength(0)
 
     const titleText = listItem.querySelector('.title-text')
-    expect(titleText.textContent.trim()).toBe('Title <img src=x onerror=alert(1)>')
+    expect(titleText.textContent.trim()).toBe(
+      'Title <img src=x onerror=alert(1)>'
+    )
     expect(titleText.innerHTML).toContain('&lt;img src=x onerror=alert(1)&gt;')
 
     const tagBadge = listItem.querySelector('.badge.tags')
@@ -220,10 +234,11 @@ describe('searchView renderSearchResults', () => {
     expect(folderBadge.innerHTML).toContain('&lt;img src=x&gt;')
 
     const urlDiv = listItem.querySelector('.url')
-    expect(urlDiv.textContent).toBe('example.com/<iframe src=javascript:alert(1)>')
+    expect(urlDiv.textContent).toBe(
+      'example.com/<iframe src=javascript:alert(1)>'
+    )
     expect(urlDiv.innerHTML).toContain('&lt;iframe src=javascript:alert(1)&gt;')
   })
-
 
   it('handles results without optional fields gracefully', async () => {
     const minimalResults = [
@@ -232,8 +247,8 @@ describe('searchView renderSearchResults', () => {
         originalId: 'bm-minimal',
         originalUrl: 'https://minimal.test',
         url: 'minimal.test',
-        title: 'Minimal Bookmark',
-      },
+        title: 'Minimal Bookmark'
+      }
     ]
 
     const { module, elements } = await setupSearchView({
@@ -244,8 +259,8 @@ describe('searchView renderSearchResults', () => {
         displayLastVisit: true,
         displayVisitCounter: true,
         displayDateAdded: true,
-        displayScore: true,
-      },
+        displayScore: true
+      }
     })
 
     await module.renderSearchResults()
@@ -267,12 +282,12 @@ describe('searchView renderSearchResults', () => {
         originalId: 'bookmark/with/slashes',
         originalUrl: 'https://example.com',
         url: 'example.com',
-        title: 'Special Bookmark',
-      },
+        title: 'Special Bookmark'
+      }
     ]
 
     const { module, elements } = await setupSearchView({
-      results: specialResults,
+      results: specialResults
     })
 
     await module.renderSearchResults()
@@ -293,15 +308,15 @@ describe('searchView renderSearchResults', () => {
         originalUrl: 'https://justnow.test',
         url: 'justnow.test',
         title: 'Just Now Bookmark',
-        lastVisitSecondsAgo: 0,
-      },
+        lastVisitSecondsAgo: 0
+      }
     ]
 
     const { module, elements } = await setupSearchView({
       results: justNowResults,
       opts: {
-        displayLastVisit: true,
-      },
+        displayLastVisit: true
+      }
     })
 
     await module.renderSearchResults()
@@ -349,7 +364,9 @@ describe('✅ FIXED: Error Boundary Added', () => {
 
     // FIXED: Error handling now catches errors and re-enables mouseHover
     // The error is still thrown to allow caller to handle, but state is restored
-    await expect(module.renderSearchResults()).rejects.toThrow('Rendering catastrophe')
+    await expect(module.renderSearchResults()).rejects.toThrow(
+      'Rendering catastrophe'
+    )
 
     // FIXED: mouseHoverEnabled is properly restored even on error
     expect(ext.model.mouseHoverEnabled).toBe(true)
@@ -385,8 +402,8 @@ describe('🐞 BUG: Missing Length Check', () => {
         originalId: 'bm-1',
         originalUrl: 'https://test.com',
         url: 'test.com',
-        title: 'Test',
-      },
+        title: 'Test'
+      }
     ]
 
     await module.renderSearchResults(resultsWithNull)

@@ -15,7 +15,7 @@ import {
   convertBrowserTabs,
   getBrowserBookmarks,
   getBrowserHistory,
-  getBrowserTabs,
+  getBrowserTabs
 } from '../helper/browserApi.js'
 
 /**
@@ -42,8 +42,9 @@ function mergeHistoryLazily(items, historyMap, mergedUrls) {
       }
       result[i] = {
         ...item,
-        lastVisitSecondsAgo: historyEntry.lastVisitSecondsAgo ?? item.lastVisitSecondsAgo,
-        visitCount: historyEntry.visitCount ?? item.visitCount,
+        lastVisitSecondsAgo:
+          historyEntry.lastVisitSecondsAgo ?? item.lastVisitSecondsAgo,
+        visitCount: historyEntry.visitCount ?? item.visitCount
       }
       hasMerged = true
     } else {
@@ -91,12 +92,14 @@ export async function getSearchData() {
   const result = {
     tabs: [],
     bookmarks: [],
-    history: [],
+    history: []
   }
 
   // Use mock data (for localhost preview / development)
   if (!browserApi.bookmarks || !browserApi.history) {
-    console.warn(`No Chrome API found. Switching to local dev mode with mock data only`)
+    console.warn(
+      `No Chrome API found. Switching to local dev mode with mock data only`
+    )
     try {
       const requestChromeMockData = await fetch('./mockData/chrome.json')
       const chromeMockData = await requestChromeMockData.json()
@@ -120,26 +123,42 @@ export async function getSearchData() {
       result.bookmarks = convertBrowserBookmarks(browserBookmarks)
     }
     if (browserApi.history && ext.opts.enableHistory) {
-      let startTime = Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
-      const browserHistory = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
+      const startTime =
+        Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
+      const browserHistory = await getBrowserHistory(
+        startTime,
+        ext.opts.historyMaxItems
+      )
       result.history = convertBrowserHistory(browserHistory)
 
       // Build maps with URL as key, so we have fast hashmap access
-      const historyMap = new Map(result.history.map((item) => [item.originalUrl, item]))
+      const historyMap = new Map(
+        result.history.map((item) => [item.originalUrl, item])
+      )
 
       const mergedHistoryUrls = new Set()
 
-      result.bookmarks = mergeHistoryLazily(result.bookmarks, historyMap, mergedHistoryUrls)
-      result.tabs = mergeHistoryLazily(result.tabs, historyMap, mergedHistoryUrls)
+      result.bookmarks = mergeHistoryLazily(
+        result.bookmarks,
+        historyMap,
+        mergedHistoryUrls
+      )
+      result.tabs = mergeHistoryLazily(
+        result.tabs,
+        historyMap,
+        mergedHistoryUrls
+      )
       flagBookmarksWithOpenTabs(result.bookmarks, result.tabs)
 
-      result.history = result.history.filter((item) => !mergedHistoryUrls.has(item.originalUrl))
+      result.history = result.history.filter(
+        (item) => !mergedHistoryUrls.has(item.originalUrl)
+      )
     }
   }
   console.debug(
     `Loaded ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${
       result.history.length
-    } history items in ${Date.now() - startTime}ms.`,
+    } history items in ${Date.now() - startTime}ms.`
   )
   // let oldestHistoryItem = 0
   // for (const item of result.history) {

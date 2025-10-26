@@ -11,7 +11,7 @@
 
 import { getUserOptions, setUserOptions } from '../model/options.js'
 import { search } from '../search/common.js'
-import { hoverResultItem, clearSelection } from './searchNavigation.js'
+import { clearSelection, hoverResultItem } from './searchNavigation.js'
 import { renderSearchResults } from './searchView.js'
 
 /**
@@ -54,18 +54,24 @@ export function openResultItem(event) {
       ext.browserApi.tabs.remove(targetId)
 
       // Remove the item from the UI - use targetId to ensure we have a valid value
-      const domElement = document.querySelector(`#result-list > li[x-original-id="${targetId}"]`)
+      const domElement = document.querySelector(
+        `#result-list > li[x-original-id="${targetId}"]`
+      )
       if (domElement) {
         domElement.remove()
       }
 
       // Update the application state - only remove if found (findIndex returns -1 if not found)
-      const tabIndex = ext.model.tabs.findIndex((el) => el.originalId === targetId)
+      const tabIndex = ext.model.tabs.findIndex(
+        (el) => el.originalId === targetId
+      )
       if (tabIndex !== -1) {
         ext.model.tabs.splice(tabIndex, 1)
       }
 
-      const resultIndex = ext.model.result.findIndex((el) => el.originalId === targetId)
+      const resultIndex = ext.model.result.findIndex(
+        (el) => el.originalId === targetId
+      )
       if (resultIndex !== -1) {
         ext.model.result.splice(resultIndex, 1)
       }
@@ -91,7 +97,9 @@ export function openResultItem(event) {
     if (listItem) {
       const clickedIndex = parseInt(listItem.getAttribute('x-index'), 10)
       const hasValidIndex =
-        Number.isInteger(clickedIndex) && clickedIndex >= 0 && clickedIndex < ext.model.result.length
+        Number.isInteger(clickedIndex) &&
+        clickedIndex >= 0 &&
+        clickedIndex < ext.model.result.length
       if (hasValidIndex) {
         selectedResult = ext.model.result[clickedIndex]
       }
@@ -104,7 +112,8 @@ export function openResultItem(event) {
   }
 
   // Final fallback to DOM attributes if model state is unavailable
-  const url = selectedResult?.originalUrl ?? resultEntry?.getAttribute('x-open-url')
+  const url =
+    selectedResult?.originalUrl ?? resultEntry?.getAttribute('x-open-url')
 
   // Handle right-click to copy URL to clipboard
   if (event.button === 2) {
@@ -119,12 +128,12 @@ export function openResultItem(event) {
       ext.browserApi.tabs
         .query({
           active: true,
-          currentWindow: true,
+          currentWindow: true
         })
         .then((tabs) => {
           if (tabs && tabs.length > 0) {
             ext.browserApi.tabs.update(tabs[0].id, {
-              url: url,
+              url: url
             })
 
             // Close popup unless Ctrl is also pressed
@@ -146,7 +155,7 @@ export function openResultItem(event) {
     if (ext.browserApi.tabs) {
       ext.browserApi.tabs.create({
         active: false,
-        url: url,
+        url: url
       })
     } else {
       window.open(url, '_newtab')
@@ -162,17 +171,17 @@ export function openResultItem(event) {
   if (foundTab && ext.browserApi.tabs.highlight) {
     // Switch to existing tab if found
     ext.browserApi.tabs.update(foundTab.originalId, {
-      active: true,
+      active: true
     })
     ext.browserApi.windows.update(foundTab.windowId, {
-      focused: true,
+      focused: true
     })
     window.close()
   } else if (ext.browserApi.tabs) {
     // Create new tab as active
     ext.browserApi.tabs.create({
       active: true,
-      url: url,
+      url: url
     })
     window.close()
   } else {
@@ -235,11 +244,11 @@ export function setupResultItemsEvents() {
       if (listItem) {
         hoverResultItem({
           target: listItem,
-          srcElement: listItem,
+          srcElement: listItem
         })
       }
     },
-    true,
+    true
   )
 
   // Handle mouse up events for clicks and interactions
@@ -258,11 +267,11 @@ export function setupResultItemsEvents() {
           shiftKey: event.shiftKey,
           altKey: event.altKey,
           ctrlKey: event.ctrlKey,
-          stopPropagation: () => event.stopPropagation(),
+          stopPropagation: () => event.stopPropagation()
         })
       }
     },
-    true,
+    true
   )
 
   ext.dom.resultList.hasEventDelegation = true

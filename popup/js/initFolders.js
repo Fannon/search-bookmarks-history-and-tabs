@@ -7,13 +7,14 @@
  * - Render folder navigation chips that link back into the main search view using hash routing.
  */
 
-import { printError } from './view/errorView.js'
+import { createExtensionContext } from './helper/extensionContext.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
+import { printError } from './view/errorView.js'
 import { loadFoldersOverview } from './view/foldersView.js'
-import { createExtensionContext } from './helper/extensionContext.js'
 
-export const ext = (window.ext = createExtensionContext())
+export const ext = createExtensionContext()
+window.ext = ext
 
 /**
  * Load bookmark data and render the folders overview page.

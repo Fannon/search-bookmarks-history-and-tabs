@@ -3,8 +3,15 @@
  * Tests how different components work together and handle real-world scenarios
  */
 
-import { jest, describe, test, expect, beforeEach, afterEach } from '@jest/globals'
-import { createTestExt, clearTestExt } from './testUtils.js'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test
+} from '@jest/globals'
+import { clearTestExt, createTestExt } from './testUtils.js'
 
 describe('Extension Integration Tests', () => {
   beforeEach(() => {
@@ -15,7 +22,7 @@ describe('Extension Integration Tests', () => {
         enableTabs: true,
         enableBookmarks: true,
         enableHistory: true,
-        maxRecentTabsToShow: 5,
+        maxRecentTabsToShow: 5
       },
       model: {
         bookmarks: [
@@ -26,7 +33,7 @@ describe('Extension Integration Tests', () => {
             url: 'https://example.com/js',
             searchString: 'javascript guide¦https://example.com/js',
             tags: '#javascript #web',
-            folder: '~Work ~Programming',
+            folder: '~Work ~Programming'
           },
           {
             type: 'bookmark',
@@ -35,8 +42,8 @@ describe('Extension Integration Tests', () => {
             url: 'https://reactjs.org',
             searchString: 'react documentation¦https://reactjs.org',
             tags: '#react #javascript #frontend',
-            folder: '~Work ~Frontend',
-          },
+            folder: '~Work ~Frontend'
+          }
         ],
         tabs: [
           {
@@ -45,8 +52,8 @@ describe('Extension Integration Tests', () => {
             title: 'JavaScript Tutorial',
             url: 'https://example.com/tutorial',
             searchString: 'javascript tutorial¦https://example.com/tutorial',
-            lastVisitSecondsAgo: 300,
-          },
+            lastVisitSecondsAgo: 300
+          }
         ],
         history: [
           {
@@ -56,10 +63,10 @@ describe('Extension Integration Tests', () => {
             url: 'https://developer.mozilla.org',
             searchString: 'mdn web docs¦https://developer.mozilla.org',
             lastVisitSecondsAgo: 3600,
-            visitCount: 5,
-          },
-        ],
-      },
+            visitCount: 5
+          }
+        ]
+      }
     })
 
     // Setup DOM
@@ -78,7 +85,9 @@ describe('Extension Integration Tests', () => {
     ext.dom.searchInput = document.getElementById('search-input')
     ext.dom.resultList = document.getElementById('result-list')
     ext.dom.resultCounter = document.getElementById('result-counter')
-    ext.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
+    ext.dom.searchApproachToggle = document.getElementById(
+      'search-approach-toggle'
+    )
     ext.dom.resultsLoading = document.getElementById('results-loading')
   })
 
@@ -97,7 +106,7 @@ describe('Extension Integration Tests', () => {
         title: `Bookmark ${i}`,
         url: `https://example.com/${i}`,
         searchString: `bookmark ${i}¦https://example.com/${i}`,
-        type: 'bookmark',
+        type: 'bookmark'
       })
     }
 
@@ -153,7 +162,7 @@ describe('Extension Integration Tests', () => {
       simpleSearch: () => {
         throw new Error('Simple search failure')
       },
-      resetSimpleSearchState: jest.fn(),
+      resetSimpleSearchState: jest.fn()
     }))
 
     const { search } = await import('../search/common.js')
@@ -178,14 +187,14 @@ describe('Extension Integration Tests', () => {
         title: 'Cached Result',
         url: 'https://example.com',
         searchScore: 1,
-        score: 100,
-      },
+        score: 100
+      }
     ])
 
     await jest.unstable_mockModule('../search/simpleSearch.js', () => ({
       __esModule: true,
       simpleSearch: mockSimpleSearch,
-      resetSimpleSearchState: jest.fn(),
+      resetSimpleSearchState: jest.fn()
     }))
 
     const { search } = await import('../search/common.js')

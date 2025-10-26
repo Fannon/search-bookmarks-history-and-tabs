@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeEach, afterEach } from '@jest/globals'
-import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
-import { simpleSearch, resetSimpleSearchState } from '../simpleSearch.js'
+import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
+import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
+import { resetSimpleSearchState, simpleSearch } from '../simpleSearch.js'
 
 const resetModes = () => {
   for (const mode of ['bookmarks', 'tabs', 'history', 'all']) {
@@ -30,8 +30,8 @@ describe('simpleSearch', () => {
       model: {
         bookmarks: [],
         tabs: [],
-        history: [],
-      },
+        history: []
+      }
     })
     resetModes()
   })
@@ -47,13 +47,13 @@ describe('simpleSearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript handbook',
         url: 'https://example.com/js-handbook',
-        searchString: 'learn javascript fundamentals',
+        searchString: 'learn javascript fundamentals'
       }
       const partialMatchBookmark = {
         id: 'bookmark-2',
         title: 'Learning cooking',
         url: 'https://example.com/cooking',
-        searchString: 'learn basic cooking',
+        searchString: 'learn basic cooking'
       }
 
       globalThis.ext.model.bookmarks = [matchingBookmark, partialMatchBookmark]
@@ -64,7 +64,7 @@ describe('simpleSearch', () => {
       expect(results[0]).toMatchObject({
         id: 'bookmark-1',
         searchApproach: 'precise',
-        searchScore: 1,
+        searchScore: 1
       })
     })
 
@@ -73,13 +73,13 @@ describe('simpleSearch', () => {
         id: 'tab-1',
         title: 'JavaScript tutorial',
         url: 'https://example.com/js-tutorial',
-        searchString: 'learn javascript basics',
+        searchString: 'learn javascript basics'
       }
       const nonMatchingTab = {
         id: 'tab-2',
         title: 'Cooking recipes',
         url: 'https://example.com/recipes',
-        searchString: 'delicious food recipes',
+        searchString: 'delicious food recipes'
       }
 
       globalThis.ext.model.tabs = [matchingTab, nonMatchingTab]
@@ -90,7 +90,7 @@ describe('simpleSearch', () => {
       expect(results[0]).toMatchObject({
         id: 'tab-1',
         searchApproach: 'precise',
-        searchScore: 1,
+        searchScore: 1
       })
     })
 
@@ -99,13 +99,13 @@ describe('simpleSearch', () => {
         id: 'tab-1',
         title: 'Example tab',
         url: 'https://example.com',
-        searchString: 'example entry open in tab',
+        searchString: 'example entry open in tab'
       }
       const historyEntry = {
         id: 'history-1',
         title: 'History entry',
         url: 'https://example.com/history',
-        searchString: 'example entry visited before',
+        searchString: 'example entry visited before'
       }
 
       globalThis.ext.model.tabs = [tabEntry]
@@ -114,8 +114,14 @@ describe('simpleSearch', () => {
       const results = simpleSearch('history', 'example entry')
 
       expect(results).toHaveLength(2)
-      expect(results[0]).toMatchObject({ id: 'tab-1', searchApproach: 'precise' })
-      expect(results[1]).toMatchObject({ id: 'history-1', searchApproach: 'precise' })
+      expect(results[0]).toMatchObject({
+        id: 'tab-1',
+        searchApproach: 'precise'
+      })
+      expect(results[1]).toMatchObject({
+        id: 'history-1',
+        searchApproach: 'precise'
+      })
     })
 
     test('returns empty array for search mode', () => {
@@ -124,8 +130,8 @@ describe('simpleSearch', () => {
           id: 'bookmark-1',
           title: 'Test bookmark',
           url: 'https://example.com',
-          searchString: 'test content',
-        },
+          searchString: 'test content'
+        }
       ]
 
       const results = simpleSearch('search', 'test')
@@ -138,19 +144,19 @@ describe('simpleSearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript guide',
         url: 'https://example.com/js',
-        searchString: 'javascript programming',
+        searchString: 'javascript programming'
       }
       const tabEntry = {
         id: 'tab-1',
         title: 'JavaScript tutorial',
         url: 'https://example.com/tutorial',
-        searchString: 'javascript tutorial',
+        searchString: 'javascript tutorial'
       }
       const historyEntry = {
         id: 'history-1',
         title: 'JavaScript docs',
         url: 'https://example.com/docs',
-        searchString: 'javascript documentation',
+        searchString: 'javascript documentation'
       }
 
       globalThis.ext.model.bookmarks = [bookmarkEntry]
@@ -160,7 +166,9 @@ describe('simpleSearch', () => {
       const results = simpleSearch('unknown', 'javascript')
 
       expect(results).toHaveLength(3)
-      expect(results.map((r) => r.id)).toEqual(expect.arrayContaining(['bookmark-1', 'tab-1', 'history-1']))
+      expect(results.map((r) => r.id)).toEqual(
+        expect.arrayContaining(['bookmark-1', 'tab-1', 'history-1'])
+      )
     })
   })
 
@@ -170,7 +178,7 @@ describe('simpleSearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript Handbook',
         url: 'https://example.com',
-        searchString: 'Learn JavaScript Fundamentals',
+        searchString: 'Learn JavaScript Fundamentals'
       }
 
       globalThis.ext.model.bookmarks = [bookmark]
@@ -186,13 +194,13 @@ describe('simpleSearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript handbook',
         url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
+        searchString: 'learn javascript fundamentals'
       }
       const partialMatchBookmark = {
         id: 'bookmark-2',
         title: 'Learning guide',
         url: 'https://example.com',
-        searchString: 'learn programming basics',
+        searchString: 'learn programming basics'
       }
 
       globalThis.ext.model.bookmarks = [matchingBookmark, partialMatchBookmark]
@@ -208,7 +216,7 @@ describe('simpleSearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript programming',
         url: 'https://example.com',
-        searchString: 'comprehensive javascript guide',
+        searchString: 'comprehensive javascript guide'
       }
 
       globalThis.ext.model.bookmarks = [bookmark]
@@ -224,7 +232,7 @@ describe('simpleSearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript handbook',
         url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
+        searchString: 'learn javascript fundamentals'
       }
 
       globalThis.ext.model.bookmarks = [bookmark]
@@ -240,7 +248,7 @@ describe('simpleSearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript handbook',
         url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
+        searchString: 'learn javascript fundamentals'
       }
 
       globalThis.ext.model.bookmarks = [bookmark]
@@ -258,7 +266,7 @@ describe('simpleSearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript handbook',
         url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
+        searchString: 'learn javascript fundamentals'
       }
 
       globalThis.ext.model.bookmarks = [bookmark]
@@ -277,13 +285,13 @@ describe('simpleSearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript handbook',
         url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
+        searchString: 'learn javascript fundamentals'
       }
       const bookmark2 = {
         id: 'bookmark-2',
         title: 'Python tutorial',
         url: 'https://example.com/python',
-        searchString: 'learn python basics',
+        searchString: 'learn python basics'
       }
 
       globalThis.ext.model.bookmarks = [bookmark1, bookmark2]
@@ -303,13 +311,13 @@ describe('simpleSearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript handbook',
         url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
+        searchString: 'learn javascript fundamentals'
       }
       const bookmark2 = {
         id: 'bookmark-2',
         title: 'JavaScript advanced',
         url: 'https://example.com/advanced',
-        searchString: 'learn javascript advanced concepts',
+        searchString: 'learn javascript advanced concepts'
       }
 
       globalThis.ext.model.bookmarks = [bookmark1, bookmark2]
@@ -328,13 +336,13 @@ describe('simpleSearch', () => {
         id: 'bookmark-3',
         title: 'Reading list',
         url: 'https://example.com/reading',
-        searchString: 'learn reading techniques',
+        searchString: 'learn reading techniques'
       }
       const cookingBookmark = {
         id: 'bookmark-4',
         title: 'Cooking reference',
         url: 'https://example.com/cooking',
-        searchString: 'learn cooking basics',
+        searchString: 'learn cooking basics'
       }
 
       globalThis.ext.model.bookmarks = [readingBookmark, cookingBookmark]
@@ -359,13 +367,13 @@ describe('simpleSearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript guide',
         url: 'https://example.com',
-        searchString: 'javascript programming',
+        searchString: 'javascript programming'
       }
       const tab = {
         id: 'tab-1',
         title: 'JavaScript tutorial',
         url: 'https://example.com/tutorial',
-        searchString: 'javascript tutorial',
+        searchString: 'javascript tutorial'
       }
 
       globalThis.ext.model.bookmarks = [bookmark]
@@ -403,7 +411,7 @@ describe('simpleSearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript handbook',
         url: 'https://example.com',
-        searchString: 'Learn JavaScript Fundamentals',
+        searchString: 'Learn JavaScript Fundamentals'
         // No searchStringLower property
       }
 
@@ -419,7 +427,7 @@ describe('simpleSearch', () => {
       const bookmark = {
         id: 'bookmark-1',
         title: 'JavaScript handbook',
-        url: 'https://example.com',
+        url: 'https://example.com'
         // No searchString property
       }
 
@@ -433,19 +441,19 @@ describe('simpleSearch', () => {
         id: 'bookmark-1',
         title: 'JavaScript handbook',
         url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
+        searchString: 'learn javascript fundamentals'
       }
       const bookmark2 = {
         id: 'bookmark-2',
         title: 'Programming guide',
         url: 'https://example.com/programming',
-        searchString: 'learn programming basics',
+        searchString: 'learn programming basics'
       }
       const bookmark3 = {
         id: 'bookmark-3',
         title: 'Web development',
         url: 'https://example.com/web',
-        searchString: 'web development tutorial',
+        searchString: 'web development tutorial'
       }
 
       globalThis.ext.model.bookmarks = [bookmark1, bookmark2, bookmark3]

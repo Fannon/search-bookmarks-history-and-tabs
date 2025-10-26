@@ -8,47 +8,50 @@ export default defineConfig({
   testDir: 'playwright/tests',
   fullyParallel: true,
   reporter: process.env.CI
-    ? [['html', { outputFolder: './reports/playwright', open: 'never' }], ['github']]
+    ? [
+        ['html', { outputFolder: './reports/playwright', open: 'never' }],
+        ['github']
+      ]
     : [['dot']],
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   timeout: 5_000,
   expect: {
-    timeout: 5_000,
+    timeout: 5_000
   },
   use: {
     baseURL,
     viewport: { width: 500, height: 600 },
-    trace: 'on-first-retry',
+    trace: 'on-first-retry'
   },
   webServer: {
     command: 'npm run start',
     url: baseURL,
     timeout: 30_000,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !process.env.CI
   },
   projects: [
     {
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        viewport: { width: 500, height: 600 },
-      },
+        viewport: { width: 500, height: 600 }
+      }
     },
     {
       name: 'firefox',
       use: {
         ...devices['Desktop Firefox'],
-        viewport: { width: 500, height: 600 },
-      },
+        viewport: { width: 500, height: 600 }
+      }
     },
     {
       name: 'edge',
       use: {
         ...devices['Desktop Edge'],
         channel: 'msedge',
-        viewport: { width: 500, height: 600 },
-      },
-    },
-  ],
+        viewport: { width: 500, height: 600 }
+      }
+    }
+  ]
 })

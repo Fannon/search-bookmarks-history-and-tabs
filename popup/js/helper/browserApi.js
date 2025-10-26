@@ -60,7 +60,9 @@ export function convertBrowserTabs(chromeTabs) {
         windowId: el.windowId,
         searchString,
         searchStringLower: searchString.toLowerCase(),
-        lastVisitSecondsAgo: el.lastAccessed ? (Date.now() - el.lastAccessed) / 1000 : undefined,
+        lastVisitSecondsAgo: el.lastAccessed
+          ? (Date.now() - el.lastAccessed) / 1000
+          : undefined
       }
     })
 }
@@ -87,7 +89,12 @@ export async function getBrowserBookmarks() {
  * @param {number} [depth] - Current traversal depth.
  * @returns {Array<Object>} Flattened bookmark entries.
  */
-export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl) {
+export function convertBrowserBookmarks(
+  bookmarks,
+  folderTrail,
+  depth,
+  seenByUrl
+) {
   depth = depth || 1
   let result = []
   folderTrail = folderTrail || []
@@ -103,7 +110,11 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
 
     // Filter out bookmarks by ignored folder
     if (ext.opts.bookmarksIgnoreFolderList) {
-      if (folderTrail.some((el) => ext.opts.bookmarksIgnoreFolderList.includes(el))) {
+      if (
+        folderTrail.some((el) =>
+          ext.opts.bookmarksIgnoreFolderList.includes(el)
+        )
+      ) {
         continue
       }
     }
@@ -117,7 +128,11 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
       if (match && match.length > 0) {
         title = title.replace(match[0], '')
         if (match.length !== 2) {
-          console.error(`Unexpected custom bonus score match length`, match, entry)
+          console.error(
+            `Unexpected custom bonus score match length`,
+            match,
+            entry
+          )
         } else {
           customBonusScore = parseInt(match[1], 10)
         }
@@ -130,7 +145,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
         originalUrl: entry.url.replace(/\/$/, ''),
         url: cleanUpUrl(entry.url),
         dateAdded: entry.dateAdded,
-        customBonusScore,
+        customBonusScore
       }
 
       // Parse out tags from bookmark title (starting with " #")
@@ -174,7 +189,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
         mappedEntry.title,
         mappedEntry.url,
         mappedEntry.tags,
-        mappedEntry.folder,
+        mappedEntry.folder
       )
       mappedEntry.searchStringLower = mappedEntry.searchString.toLowerCase()
 
@@ -186,7 +201,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
           console.warn(
             `Duplicate bookmark detected for ${mappedEntry.originalUrl} in folder: ${
               mappedEntry.folderArray.join(' > ') || '/'
-            }`,
+            }`
           )
         } else {
           seenByUrl.set(mappedEntry.url, mappedEntry)
@@ -197,7 +212,14 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
     }
 
     if (entry.children) {
-      result = result.concat(convertBrowserBookmarks(entry.children, newFolderTrail, depth + 1, seenByUrl))
+      result = result.concat(
+        convertBrowserBookmarks(
+          entry.children,
+          newFolderTrail,
+          depth + 1,
+          seenByUrl
+        )
+      )
     }
   }
 
@@ -217,7 +239,7 @@ export async function getBrowserHistory(startTime, maxResults) {
     return await browserApi.history.search({
       text: '',
       startTime: startTime,
-      maxResults: maxResults,
+      maxResults: maxResults
     })
   } else {
     console.warn(`No browser history API found. Returning no results.`)
@@ -243,7 +265,9 @@ export function convertBrowserHistory(history) {
       }
       return true
     })
-    console.debug(`Ignored ${ignoredHistoryCounter} history items due to ignore list`)
+    console.debug(
+      `Ignored ${ignoredHistoryCounter} history items due to ignore list`
+    )
   }
 
   const now = Date.now()
@@ -259,7 +283,7 @@ export function convertBrowserHistory(history) {
       lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
       originalId: el.id,
       searchString,
-      searchStringLower: searchString.toLowerCase(),
+      searchStringLower: searchString.toLowerCase()
     }
   })
 }
@@ -277,7 +301,12 @@ export function createSearchString(title, url, tags, folder) {
   const separator = '¦'
   let searchString = ''
   if (!url) {
-    console.error('createSearchString: No URL given', { title, url, tags, folder })
+    console.error('createSearchString: No URL given', {
+      title,
+      url,
+      tags,
+      folder
+    })
     return searchString
   }
   // Keep the original casing intact. Fuzzy search relies on searchString
@@ -302,7 +331,11 @@ export function createSearchString(title, url, tags, folder) {
  */
 export function getTitle(title, url) {
   let newTitle = title || ''
-  if (newTitle.includes('http://') || newTitle.includes('https://') || newTitle === url) {
+  if (
+    newTitle.includes('http://') ||
+    newTitle.includes('https://') ||
+    newTitle === url
+  ) {
     newTitle = shortenTitle(cleanUpUrl(newTitle))
   }
   if (!newTitle.trim()) {

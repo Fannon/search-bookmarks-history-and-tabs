@@ -19,13 +19,16 @@
 import { cleanUpUrl, generateRandomId } from '../helper/utils.js'
 import { closeErrors, printError } from '../view/errorView.js'
 import { renderSearchResults } from '../view/searchView.js'
+import { addDefaultEntries } from './defaultResults.js'
 import { fuzzySearch } from './fuzzySearch.js'
+import { resolveSearchMode } from './queryParser.js'
 import { calculateFinalScore } from './scoring.js'
+import {
+  addSearchEngines,
+  collectCustomSearchAliasResults
+} from './searchEngines.js'
 import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
-import { resolveSearchMode } from './queryParser.js'
-import { addSearchEngines, collectCustomSearchAliasResults } from './searchEngines.js'
-import { addDefaultEntries } from './defaultResults.js'
 
 // Re-export scoring function for backward compatibility
 export { calculateFinalScore }
@@ -42,7 +45,7 @@ const MODE_TARGETS = {
   bookmarks: ['bookmarks'],
   tabs: ['tabs'],
   search: [],
-  all: ['bookmarks', 'tabs', 'history'],
+  all: ['bookmarks', 'tabs', 'history']
 }
 
 /**
@@ -65,11 +68,22 @@ function shouldSkipSearch(event) {
   if (!event) return false
 
   // Don't execute search on navigation keys
-  if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter' || event.key === 'Escape') {
+  if (
+    event.key === 'ArrowUp' ||
+    event.key === 'ArrowDown' ||
+    event.key === 'Enter' ||
+    event.key === 'Escape'
+  ) {
     return true
   }
   // Don't execute search on modifier keys
-  if (event.key === 'Control' || event.ctrlKey || event.key === 'Alt' || event.altKey || event.key === 'Shift') {
+  if (
+    event.key === 'Control' ||
+    event.ctrlKey ||
+    event.key === 'Alt' ||
+    event.altKey ||
+    event.key === 'Shift'
+  ) {
     return true
   }
 
@@ -138,13 +152,21 @@ async function executeSearch(searchTerm, searchMode) {
   } else if (searchMode === 'folders') {
     return searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
   } else if (ext.opts.searchStrategy === 'fuzzy') {
-    results.push(...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode)))
+    results.push(
+      ...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode))
+    )
   } else if (ext.opts.searchStrategy === 'precise') {
-    results.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
+    results.push(
+      ...(await searchWithAlgorithm('precise', searchTerm, searchMode))
+    )
   } else {
-    console.error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
+    console.error(
+      `Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`
+    )
     // Fall back to use precise search instead of crashing entirely
-    results.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
+    results.push(
+      ...(await searchWithAlgorithm('precise', searchTerm, searchMode))
+    )
   }
 
   return results
@@ -157,8 +179,14 @@ async function executeSearch(searchTerm, searchMode) {
  * @param {Array} results - Current result array.
  */
 function addDirectUrlIfApplicable(searchTerm, results) {
-  if (ext.opts.enableDirectUrl && urlRegex.test(searchTerm) && results.length < ext.opts.searchMaxResults) {
-    const url = protocolRegex.test(searchTerm) ? searchTerm : `https://${searchTerm.replace(/^\/+/, '')}`
+  if (
+    ext.opts.enableDirectUrl &&
+    urlRegex.test(searchTerm) &&
+    results.length < ext.opts.searchMaxResults
+  ) {
+    const url = protocolRegex.test(searchTerm)
+      ? searchTerm
+      : `https://${searchTerm.replace(/^\/+/, '')}`
     results.push({
       type: 'direct',
       title: `Direct: "${cleanUpUrl(url)}"`,
@@ -167,7 +195,7 @@ function addDirectUrlIfApplicable(searchTerm, results) {
       urlHighlighted: cleanUpUrl(url),
       originalUrl: url,
       originalId: generateRandomId(),
-      searchScore: 1,
+      searchScore: 1
     })
   }
 }
@@ -263,8 +291,9 @@ export async function search(event) {
       closeErrors()
 
       // Parse search mode and extract term
-      const { mode: detectedMode, term: trimmedTerm } = resolveSearchMode(searchTerm)
-      let searchMode = detectedMode
+      const { mode: detectedMode, term: trimmedTerm } =
+        resolveSearchMode(searchTerm)
+      const searchMode = detectedMode
       searchTerm = trimmedTerm.trim()
 
       ext.model.searchTerm = searchTerm
@@ -333,7 +362,11 @@ export async function search(event) {
  * @param {string} [searchMode='all'] - Active search mode.
  * @returns {Promise<Array>} Matching entries across requested datasets.
  */
-export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode = 'all') {
+export async function searchWithAlgorithm(
+  searchApproach,
+  searchTerm,
+  searchMode = 'all'
+) {
   let results = []
   // If the search term is below minMatchCharLength, no point in starting search
   if (searchTerm.length < ext.opts.searchMinMatchCharLength) {
@@ -365,7 +398,10 @@ export function sortResults(results, sortMode) {
     })
   } else if (sortMode === 'lastVisited') {
     results = results.sort((a, b) => {
-      return (a.lastVisitSecondsAgo || 99999999) - (b.lastVisitSecondsAgo || 99999999)
+      return (
+        (a.lastVisitSecondsAgo || 99999999) -
+        (b.lastVisitSecondsAgo || 99999999)
+      )
     })
   } else {
     throw new Error(`Unknown sortMode="${sortMode}"`)
