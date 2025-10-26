@@ -38,6 +38,8 @@ export function createExtensionContext() {
       currentItem: 0,
       /** Current search results array */
       result: [],
+      /** Tracks an in-flight search promise so navigation can await completion */
+      activeSearchPromise: null,
     },
     /** Search indexes (e.g., taxonomy for tags and folders) */
     index: {

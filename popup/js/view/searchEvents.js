@@ -85,7 +85,11 @@ export function openResultItem(event) {
     const listItem = event.target.closest('li[x-index]')
     if (listItem) {
       const clickedIndex = parseInt(listItem.getAttribute('x-index'), 10)
-      selectedResult = ext.model.result[clickedIndex]
+      const hasValidIndex =
+        Number.isInteger(clickedIndex) && clickedIndex >= 0 && clickedIndex < ext.model.result.length
+      if (hasValidIndex) {
+        selectedResult = ext.model.result[clickedIndex]
+      }
     }
   }
 
@@ -95,7 +99,6 @@ export function openResultItem(event) {
   }
 
   // Final fallback to DOM attributes if model state is unavailable
-  const originalId = selectedResult?.originalId ?? resultEntry?.getAttribute('x-original-id')
   const url = selectedResult?.originalUrl ?? resultEntry?.getAttribute('x-open-url')
 
   // Handle right-click to copy URL to clipboard
