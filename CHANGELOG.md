@@ -22,6 +22,7 @@
 - **FIXED**: Search score multiplier incorrectly handled zero scores
   - Fixed falsy coalescing bug where valid `searchScore: 0` was treated as missing, incorrectly falling back to `scoreTitleWeight`
   - Now uses proper null check (`!= null`) to distinguish between 0 (valid) and undefined/null (missing)
+- **FIXED**: Vim navigation shortcuts no longer close the popup when overshooting the first or last result, preventing Chrome's default Ctrl+K / Ctrl+J actions from taking over.
 
 * **CHANGED**: More concise / simple last visited time
 

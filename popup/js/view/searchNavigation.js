@@ -19,18 +19,25 @@ export async function navigationKeyListener(event) {
   const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p') || (event.ctrlKey && event.key === 'k')
   const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n') || (event.ctrlKey && event.key === 'j')
 
-  if (up && ext.dom.searchInput.value && ext.model.currentItem === 0) {
-    // Prevent navigation above first item when search field has content
+  if (up) {
+    // Always consume vim-style/arrow up to prevent browser defaults from closing popup
     event.preventDefault()
-  } else if (up && ext.model.currentItem > 0) {
-    // Navigate to previous result
+    if (ext.model.currentItem > 0) {
+      selectListItem(ext.model.currentItem - 1, true)
+    }
+    return
+  }
+
+  if (down) {
+    // Always consume vim-style/arrow down to prevent browser defaults from closing popup
     event.preventDefault()
-    selectListItem(ext.model.currentItem - 1, true)
-  } else if (down && ext.model.currentItem < ext.model.result.length - 1) {
-    // Navigate to next result
-    event.preventDefault()
-    selectListItem(ext.model.currentItem + 1, true)
-  } else if (event.key === 'Enter' && ext.model.result.length > 0) {
+    if (ext.model.currentItem < ext.model.result.length - 1) {
+      selectListItem(ext.model.currentItem + 1, true)
+    }
+    return
+  }
+
+  if (event.key === 'Enter' && ext.model.result.length > 0) {
     // Activate selected result when Enter is pressed
     if (window.location.hash.startsWith('#search/') || !window.location.hash) {
       // Wait for any in-flight search to complete before opening result
