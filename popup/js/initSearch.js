@@ -50,10 +50,8 @@ export async function initExtension() {
 
   updateSearchApproachToggle()
 
-  const { bookmarks, tabs, history } = await getSearchData()
-  ext.model.tabs = tabs
-  ext.model.bookmarks = bookmarks
-  ext.model.history = history
+  // Load bookmarks, tabs, and history data for searching
+  Object.assign(ext.model, await getSearchData())
 
   // Register Events
   document.addEventListener('keydown', navigationKeyListener)
