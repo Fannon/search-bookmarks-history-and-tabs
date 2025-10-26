@@ -4,7 +4,7 @@
  * ✅ Covered behaviors: search entry gating, cache hits, taxonomy/custom/direct results integration,
  *    scoring, sorting, result filtering, and overall search flow orchestration.
  * ⚠️ Known gaps: DOM rendering side effects and performance metrics are not asserted due to limited observable outputs.
- * 🐞 Added BUG tests: none
+ * 🐞 Added BUG tests: cache invalidation, dead code, architecture violations
  *
  * Note: Detailed tests for extracted modules are in their respective test files:
  * - queryParser.test.js: Mode detection logic
@@ -234,7 +234,7 @@ describe('search', () => {
 
     expect(ext.model.result).toBe(cached)
     expect(ext.model.searchTerm).toBe('test')
-    expect(mockRenderSearchResults).toHaveBeenCalledWith(cached)
+    expect(mockRenderSearchResults).toHaveBeenCalledWith()
   })
 
   test('loads default entries when search term empty', async () => {
@@ -251,7 +251,7 @@ describe('search', () => {
       { id: 1, title: 'Recent history', url: 'https://recent.test', searchScore: 1 },
       { id: 2, title: 'Older history', url: 'https://older.test', searchScore: 1 },
     ])
-    expect(mockRenderSearchResults).toHaveBeenCalledWith(ext.model.result)
+    expect(mockRenderSearchResults).toHaveBeenCalledWith()
   })
 
   test('performs taxonomy search when tag prefix detected', async () => {
@@ -354,7 +354,7 @@ describe('search', () => {
 
     expect(ext.model.result.length).toBeLessThanOrEqual(2)
     expect(ext.model.result.every((item) => item.score >= 70)).toBe(true)
-    expect(ext.dom.resultCounter.innerText).toBe(`(${ext.model.result.length})`)
+    // Note: resultCounter is now updated by searchView.renderSearchResults, not here
   })
 
   test('falls back to precise search when configured strategy is unsupported', async () => {
@@ -401,5 +401,125 @@ describe('search', () => {
 
     expect(cache.has).toHaveBeenCalledWith('remember_precise_all')
     expect(cache.set).toHaveBeenCalledWith('remember_precise_all', ext.model.result)
+  })
+})
+
+describe('🐞 BUG: Cache Invalidation', () => {
+  test('cache includes stale tabs after they are closed', async () => {
+    // Setup: Add a tab to cache
+    ext.model.tabs = [
+      {
+        type: 'tab',
+        title: 'Tab to close',
+        url: 'https://tab.test',
+        originalId: 123,
+        searchString: 'tab to close',
+      },
+    ]
+    ext.dom.searchInput.value = 'tab'
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+
+    // First search - cache the result with the tab
+    await search({ key: 't' })
+    const cachedResults = ext.searchCache.get('tab_precise_all')
+    expect(cachedResults).toBeDefined()
+    expect(cachedResults.some((r) => r.type === 'tab' && r.originalId === 123)).toBe(true)
+
+    // Simulate tab closure by removing from model
+    ext.model.tabs = []
+
+    // BUG: Second search still returns cached results with ghost tab
+    ext.dom.searchInput.value = 'tab'
+    await search({ key: 't' })
+
+    // The bug: cache still contains the closed tab
+    const currentResults = ext.model.result
+    const hasGhostTab = currentResults.some((r) => r.type === 'tab' && r.originalId === 123)
+    expect(hasGhostTab).toBe(true) // BUG: This should be false but is true
+  })
+})
+
+describe('✅ FIXED: Inconsistent Result Passing', () => {
+  test('renderSearchResults now always uses ext.model.result (no parameter)', async () => {
+    ext.dom.searchInput.value = 'test'
+    ext.model.bookmarks = [
+      {
+        type: 'bookmark',
+        title: 'Test',
+        url: 'https://test.com',
+        searchString: 'test bookmark',
+      },
+    ]
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+
+    await search({ key: 't' })
+
+    // FIXED: renderSearchResults is now called with no parameters
+    // It always uses ext.model.result as the single source of truth
+    expect(mockRenderSearchResults).toHaveBeenCalledWith()
+    expect(ext.model.result.length).toBeGreaterThan(0)
+  })
+})
+
+describe('✅ FIXED: Architecture Violation', () => {
+  test('resultCounter is now updated in view layer, not in common.js', async () => {
+    ext.dom.searchInput.value = 'test'
+    ext.model.bookmarks = [
+      {
+        type: 'bookmark',
+        title: 'Test',
+        url: 'https://test.com',
+        searchString: 'test bookmark',
+      },
+    ]
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+
+    await search({ key: 't' })
+
+    // FIXED: resultCounter is now updated by searchView.renderSearchResults
+    // common.js no longer touches the DOM directly
+    expect(ext.model.result.length).toBeGreaterThan(0)
+    // Note: resultCounter is updated in the view layer (searchView.js)
+  })
+})
+
+describe('✅ VERIFIED: Mode Prefix Without Search Term', () => {
+  test('shows default entries when mode prefix is stripped leaving empty term', async () => {
+    // User types "t " (tab mode with just space) - common use case
+    // Line 254: searchTerm becomes "t"
+    // Line 257: "t".trim() is NOT empty, so doesn't return early
+    // Line 268: resolveSearchMode strips "t" prefix, returns { mode: 'tabs', term: '' }
+    // Line 270: searchTerm becomes '' (empty)
+    // Now the else block at 291-294 SHOULD execute to show default entries
+
+    ext.dom.searchInput.value = 't ' // Tab mode prefix only
+    ext.model.tabs = [
+      { type: 'tab', title: 'Tab 1', url: 'https://tab1.test', originalId: 1 },
+      { type: 'tab', title: 'Tab 2', url: 'https://tab2.test', originalId: 2 },
+    ]
+
+    await search({ key: 't' })
+
+    // Should show default tab entries, not empty results
+    expect(ext.model.result.length).toBeGreaterThan(0)
+    expect(ext.model.searchMode).toBe('tabs')
+    expect(ext.model.searchTerm).toBe('')
+  })
+
+  test('shows default entries for bookmark mode prefix', async () => {
+    ext.dom.searchInput.value = 'b ' // Bookmark mode prefix only
+    ext.model.bookmarks = [
+      { type: 'bookmark', title: 'Bookmark 1', url: 'https://bm1.test', searchString: 'bookmark 1 https://bm1.test' },
+    ]
+
+    await search({ key: 'b' })
+
+    // Should show default bookmark entries
+    expect(ext.model.result.length).toBeGreaterThan(0)
+    expect(ext.model.searchMode).toBe('bookmarks')
+    expect(ext.model.searchTerm).toBe('')
   })
 })

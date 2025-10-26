@@ -50,10 +50,8 @@ export async function initExtension() {
 
   updateSearchApproachToggle()
 
-  const { bookmarks, tabs, history } = await getSearchData()
-  ext.model.tabs = tabs
-  ext.model.bookmarks = bookmarks
-  ext.model.history = history
+  // Load bookmarks, tabs, and history data for searching
+  Object.assign(ext.model, await getSearchData())
 
   // Register Events
   document.addEventListener('keydown', navigationKeyListener)
@@ -111,8 +109,8 @@ export async function hashRouter() {
       ext.dom.searchInput.value = ''
       ext.dom.searchInput.focus()
       // Display default entries
-      await addDefaultEntries()
-      renderSearchResults(ext.model.result)
+      ext.model.result = await addDefaultEntries()
+      renderSearchResults()
     }
   }
 }

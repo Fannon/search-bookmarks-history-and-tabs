@@ -105,7 +105,7 @@ function useCachedResultsIfAvailable(searchTerm) {
     console.debug(`Using cached results for key "${cacheKey}"`)
     ext.model.searchTerm = searchTerm
     ext.model.result = ext.searchCache.get(cacheKey)
-    renderSearchResults(ext.model.result)
+    renderSearchResults()
     return true
   }
 
@@ -120,7 +120,7 @@ function useCachedResultsIfAvailable(searchTerm) {
 async function handleEmptySearch() {
   ext.model.searchTerm = '' // Clear search term for default results
   ext.model.result = await addDefaultEntries()
-  renderSearchResults(ext.model.result)
+  renderSearchResults()
 }
 
 /**
@@ -278,7 +278,8 @@ export async function search(event) {
         results.push(...collectCustomSearchAliasResults(searchTerm))
       }
 
-      // Execute search if we have a search term
+      // Execute search if we have a search term after mode prefix is stripped
+      // Note: searchTerm can become empty after resolveSearchMode() strips mode prefix (e.g., "t ", "b ")
       if (searchTerm) {
         results.push(...(await executeSearch(searchTerm, searchMode)))
         addDirectUrlIfApplicable(searchTerm, results)
@@ -288,6 +289,8 @@ export async function search(event) {
           results.push(...addSearchEngines(searchTerm))
         }
       } else {
+        // Mode prefix without search term (e.g., "t ", "b ", "h ")
+        // Show default entries for that mode instead of empty results
         results = await addDefaultEntries()
       }
 
@@ -298,12 +301,11 @@ export async function search(event) {
       results = filterResults(results, searchMode)
 
       ext.model.result = results
-      ext.dom.resultCounter.innerText = `(${results.length})`
 
       // Cache the results for better performance (only for actual searches)
       cacheResults(searchTerm, results)
 
-      renderSearchResults(results)
+      renderSearchResults()
 
       // Simple timing for debugging (only if debug is enabled)
       console.debug('Search completed in ' + (Date.now() - startTime) + 'ms')
