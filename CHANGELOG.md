@@ -3,28 +3,37 @@
 ## [unreleased]
 
 - **NEW**: Duplicate bookmark detection and indication
+
   - Detects bookmarks with identical URLs during data loading and marks them with a `dupe` flag
   - Visual indication in search results with a red badge on duplicate bookmarks
   - Console warning logs when duplicates are found, including the URL and affected folders
   - Helps users identify and clean up redundant bookmarks across different folders
 
 - **NEW**: Highlight bookmarks that are currently open
+
   - Bookmarks sharing a URL with an open tab are tagged during dataset preparation
   - Search results render a lilac `T` badge so it’s obvious when a bookmark is already open
-  - Makes it easier to avoid opening duplicates when triaging lots of tabs
 
 - **IMPROVED**: Prioritize already-open bookmarks in scoring
-  - Added `scoreBookmarkOpenTabBonus` (defaults to +20) so matching bookmarks float above unopened ones
+
+  - Added `scoreBookmarkOpenTabBonus` (defaults to +10) so matching bookmarks float above unopened ones
   - Bonus applies only to bookmarks with an active tab, keeping other result types unchanged
 
+- **FIXED**: Search score multiplier incorrectly handled zero scores
+  - Fixed falsy coalescing bug where valid `searchScore: 0` was treated as missing, incorrectly falling back to `scoreTitleWeight`
+  - Now uses proper null check (`!= null`) to distinguish between 0 (valid) and undefined/null (missing)
+
 * **CHANGED**: More concise / simple last visited time
+
+- **REMOVED**: Date-added scoring bonus along with the `scoreDateAddedBonusScoreMaximum` / `scoreDateAddedBonusScorePerDay` options to keep ranking focused on usage signals.
+  - The options had already been removed, this was a code leftover
 
 ## [v1.16.0]
 
 - **IMPROVED**: Search scoring precision and reliability
   - **Higher bonuses for perfect matches**: Exact matches on titles, tags, and folders now receive +20, +15, and +10 points respectively (previously +15, +10, +5), so precise results appear ahead of partial matches by default.
   - **Better multi-term query handling**: Search terms are normalized once and evaluated individually in a case-insensitive way, ensuring multi-word queries and mixed-case text reliably trigger the configured substring bonuses.
-  - **New phrase boost options**: Added `scoreExactPhraseTitleBonus` (default: 8) and `scoreExactPhraseUrlBonus` (default: 4) to boost results where the full search phrase appears as substring. For example, searching "javascript tutorial" will boost a bookmark titled "Advanced JavaScript Tutorial Guide" (+8) or with URL "example.com/javascript-tutorial" (+4).
+  - **New phrase boost options**: Added `scoreExactPhraseTitleBonus` (default: 8) and `scoreExactPhraseUrlBonus` (default: 5) to boost results where the full search phrase appears as substring. For example, searching "javascript tutorial" will boost a bookmark titled "Advanced JavaScript Tutorial Guide" (+8) or with URL "example.com/javascript-tutorial" (+5).
   - **Capped substring bonuses**: Introduced `scoreExactIncludesMaxBonuses` (default: 3) to prevent noisy documents from excessive stacking of includes bonuses.
 - **IMPROVED**: Further reduced initial load bundle size for faster startup.
 - **FIXED**: When editing a bookmark and saving, the search state was sometimes not properly updated. Now the search is completely reset, but remembers the search term.

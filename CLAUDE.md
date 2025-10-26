@@ -26,7 +26,7 @@ npm run test                   # Jest unit tests (alias of test:unit, supports e
 npm run test:unit <file>.test.js              # Run specific unit test (identical to npm run test with file)
 npm run test:unit:coverage <file>.test.js     # Run with coverage report
 npm run test:e2e               # Playwright end-to-end tests (chromium only)
-npm run test:e2e -- tests/<file>.spec.ts      # Run specific e2e test file
+npm run test:e2e -- tests/<file>.spec.js      # Run specific e2e test file
 npm run test:e2e:chromium      # Playwright for Chromium only
 npm run test:e2e:firefox       # Playwright for Firefox only
 ```
@@ -36,7 +36,7 @@ npm run test:e2e:firefox       # Playwright for Firefox only
 1. `npm run lint`
 2. `npm run test <path/to/file.test.js>` (iterate on focused Jest specs)
 3. `npm run test:e2e`
-4. If the e2e suite fails, rerun the specific spec via `npm run test:e2e -- tests/<file>.spec.ts`
+4. If the e2e suite fails, rerun the specific spec via `npm run test:e2e -- tests/<file>.spec.js`
 
 ### Build Components
 

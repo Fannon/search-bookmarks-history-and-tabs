@@ -108,4 +108,70 @@ describe('taxonomy search', () => {
     expect(second.Work).toEqual(['2'])
     expect(second).not.toBe(first)
   })
+
+  test('searchTaxonomy handles trailing whitespace in tag terms', () => {
+    const { searchTaxonomy } = taxonomyModule
+    const data = [
+      {
+        originalId: '1',
+        tags: '#react #node',
+        type: 'bookmark',
+      },
+      {
+        originalId: '2',
+        tags: '#react',
+        type: 'bookmark',
+      },
+    ]
+
+    // Test with trailing whitespace after tag
+    const resultWithTrailingSpace = searchTaxonomy('react ', 'tags', data)
+    expect(resultWithTrailingSpace).toHaveLength(2)
+    expect(resultWithTrailingSpace[0].originalId).toBe('1')
+    expect(resultWithTrailingSpace[1].originalId).toBe('2')
+
+    // Test with multiple tags where last has trailing whitespace
+    const resultMultipleTags = searchTaxonomy('react #node ', 'tags', data)
+    expect(resultMultipleTags).toHaveLength(1)
+    expect(resultMultipleTags[0].originalId).toBe('1')
+  })
+
+  test('searchTaxonomy handles trailing whitespace in folder terms', () => {
+    const { searchTaxonomy } = taxonomyModule
+    const data = [
+      {
+        originalId: '1',
+        folder: '~Work ~Projects',
+      },
+      {
+        originalId: '2',
+        folder: '~Work',
+      },
+    ]
+
+    // Test with trailing whitespace after folder
+    const resultWithTrailingSpace = searchTaxonomy('work ', 'folder', data)
+    expect(resultWithTrailingSpace).toHaveLength(2)
+
+    // Test with multiple folders where last has trailing whitespace
+    const resultMultipleFolders = searchTaxonomy('work ~projects ', 'folder', data)
+    expect(resultMultipleFolders).toHaveLength(1)
+    expect(resultMultipleFolders[0].originalId).toBe('1')
+  })
+
+  test('searchTaxonomy ignores empty terms from excessive whitespace', () => {
+    const { searchTaxonomy } = taxonomyModule
+    const data = [
+      {
+        originalId: '1',
+        tags: '#test',
+        type: 'bookmark',
+      },
+    ]
+
+    // Test with multiple spaces creating empty terms
+    const result = searchTaxonomy('test  ', 'tags', data)
+    expect(result).toHaveLength(1)
+    expect(result[0].originalId).toBe('1')
+  })
 })

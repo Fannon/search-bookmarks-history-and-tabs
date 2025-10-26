@@ -30,8 +30,6 @@ const baseOpts = {
   scoreVisitedBonusScoreMaximum: 0,
   scoreRecentBonusScoreMaximum: 0,
   historyDaysAgo: 7,
-  scoreDateAddedBonusScoreMaximum: 0,
-  scoreDateAddedBonusScorePerDay: 0,
   scoreCustomBonusScore: false,
   scoreWeakMatchPenalty: 0,
 }
@@ -373,24 +371,6 @@ describe('scoring', () => {
     expect(score).toBeCloseTo(120)
   })
 
-  it('adds date-added bonus with per-day decay', () => {
-    const fixedNow = 1_700_000_000_000
-    jest.spyOn(Date, 'now').mockReturnValue(fixedNow)
-
-    const score = scoreFor({
-      searchTerm: 'alpha',
-      opts: {
-        scoreDateAddedBonusScoreMaximum: 10,
-        scoreDateAddedBonusScorePerDay: 2,
-      },
-      result: {
-        dateAdded: fixedNow - 12 * 60 * 60 * 1000,
-      },
-    })
-
-    expect(score).toBeCloseTo(109)
-  })
-
   it('BEHAVIOR: repeated search terms each get exact tag match bonus (intentional)', () => {
     const score = scoreFor({
       searchTerm: 'tag tag tag',
@@ -585,9 +565,9 @@ describe('scoring', () => {
 
     // undefined searchScore should use title weight (1) as fallback
     expect(scoreNoSearchScore).toBeCloseTo(100)
-    // Zero searchScore should also fallback to title weight (1) due to || operator
-    // This is the current behavior - searchScore: 0 is falsy and triggers the fallback
-    expect(scoreZeroSearchScore).toBeCloseTo(100)
+    // Zero searchScore is now correctly treated as a valid score (not falsy)
+    // BUG FIX: searchScore: 0 should multiply base score by 0, resulting in 0
+    expect(scoreZeroSearchScore).toBeCloseTo(0)
   })
 
   it('applies includes bonuses in priority order (title > url > tags > folder)', () => {

@@ -2,7 +2,7 @@
  * ✅ Covered behaviors: result opening flows (close, copy, modifiers, tab switching),
  *   and search approach toggling.
  * ⚠️ Known gaps: does not verify browser navigation side effects beyond mocked APIs.
- * 🐞 Added BUG tests: none.
+ * 🐞 Added BUG tests: tab deletion with findIndex returning -1.
  */
 
 import { jest } from '@jest/globals'
@@ -194,6 +194,72 @@ describe('searchEvents openResultItem', () => {
     expect(elements.resultList.children).toHaveLength(1)
   })
 
+  it('does not delete wrong tab when originalId is not found in model (BUG: findIndex returns -1)', async () => {
+    // Set up multiple tabs and results to verify wrong deletion doesn't occur
+    const multipleResults = [
+      {
+        type: 'tab',
+        originalId: 100,
+        originalUrl: 'https://tab1.test',
+        url: 'tab1.test',
+        title: 'Tab 1',
+        score: 10,
+      },
+      {
+        type: 'tab',
+        originalId: 200,
+        originalUrl: 'https://tab2.test',
+        url: 'tab2.test',
+        title: 'Tab 2',
+        score: 9,
+      },
+      {
+        type: 'tab',
+        originalId: 300,
+        originalUrl: 'https://tab3.test',
+        url: 'tab3.test',
+        title: 'Tab 3',
+        score: 8,
+      },
+    ]
+
+    const { module, viewModule } = await setupSearchEvents({ results: multipleResults })
+    await viewModule.renderSearchResults()
+
+    // Store initial state
+    const initialTabsLength = ext.model.tabs.length
+    const initialResultLength = ext.model.result.length
+    const lastTab = { ...ext.model.tabs[ext.model.tabs.length - 1] }
+    const lastResult = { ...ext.model.result[ext.model.result.length - 1] }
+
+    // Mock the selected result to have a non-existent ID
+    const selectedResult = document.getElementById('selected-result')
+    selectedResult.setAttribute('x-original-id', '999')
+
+    // Try to close a tab with an ID that doesn't exist in the model
+    // This simulates a race condition or stale UI state
+    module.openResultItem({
+      button: 0,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      target: {
+        nodeName: 'BUTTON',
+        className: 'close-button',
+        getAttribute: () => null,
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+
+    // BEFORE FIX: splice(-1, 1) would delete the last element
+    // AFTER FIX: arrays should remain unchanged
+    expect(ext.model.tabs).toHaveLength(initialTabsLength)
+    expect(ext.model.result).toHaveLength(initialResultLength)
+    expect(ext.model.tabs[ext.model.tabs.length - 1]).toEqual(lastTab)
+    expect(ext.model.result[ext.model.result.length - 1]).toEqual(lastResult)
+  })
+
   it('parses tab IDs correctly with radix 10 when closing tabs', async () => {
     const results = [
       {
@@ -265,6 +331,33 @@ describe('searchEvents openResultItem', () => {
     expect(ext.browserApi.tabs.query).toHaveBeenCalledTimes(1)
     expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(77, { url: 'https://bookmark.test' })
     expect(window.close).toHaveBeenCalledTimes(1)
+  })
+
+  it('handles shift-click gracefully when no active tab is found', async () => {
+    const { module, viewModule } = await setupSearchEvents()
+    await viewModule.renderSearchResults()
+
+    // Mock query to return empty array (no active tabs)
+    ext.browserApi.tabs.query = jest.fn(() => Promise.resolve([]))
+
+    module.openResultItem({
+      button: 0,
+      shiftKey: true,
+      altKey: false,
+      ctrlKey: false,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+    await Promise.resolve()
+
+    expect(ext.browserApi.tabs.query).toHaveBeenCalledTimes(1)
+    expect(ext.browserApi.tabs.update).not.toHaveBeenCalled()
+    expect(window.close).not.toHaveBeenCalled()
   })
 
   it('opens URLs in a background tab when ctrl is held', async () => {

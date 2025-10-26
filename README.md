@@ -88,7 +88,7 @@ An exemplary user config can look like the following example:
 searchStrategy: fuzzy
 displayVisitCounter: true
 historyMaxItems: 2048 # Increase max number of browser history items to load
-maxRecentTabsToShow: 32 # Limit number of recent tabs shown (default: 32)
+maxRecentTabsToShow: 32 # Limit number of recent tabs shown (default: 16)
 ```
 
 If you have **troubles with performance**, here are a few options that might help. Feel free to pick & choose and tune the values to your situation. In particular `historyMaxItems` and how many bookmarks you have will impact init and search performance.
@@ -98,7 +98,7 @@ Here is a suggestion for low-performance machines:
 ```yaml
 searchStrategy: precise # Precise search is faster than fuzzy search.
 searchMinMatchCharLength: 2 # Start searching only when at least 2 characters are entered
-displaySearchMatchHighlight: false, # Not highlighting search matches improves render performance.
+displaySearchMatchHighlight: false # Not highlighting search matches improves render performance.
 searchMaxResults: 20 # Number of search results can be further limited
 historyMaxItems: 512 # Number of browser history items can be further reduced
 maxRecentTabsToShow: 8 # Reduce number of recent tabs for better performance
@@ -158,7 +158,6 @@ The scoring system calculates a relevance score for each search result using a 5
 4. **Behavioral Bonuses** - Additional points based on usage patterns:
    - `scoreVisitedBonusScore` - Points per visit (up to `scoreVisitedBonusScoreMaximum`)
    - `scoreRecentBonusScoreMaximum` - Bonus for recently visited items
-   - `scoreDateAddedBonusScoreMaximum` - Bonus for recently added bookmarks
 5. **Custom Bonus** - User-defined bonus via `+<number>` notation in bookmark titles (if `scoreCustomBonusScore` is enabled)
 
 For detailed implementation and all scoring configuration options, see:

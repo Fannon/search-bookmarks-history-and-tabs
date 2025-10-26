@@ -50,15 +50,16 @@ export function openResultItem(event) {
       // Remove the item from the UI
       document.querySelector(`#result-list > li[x-original-id="${originalId}"]`).remove()
 
-      // Update the application state
-      ext.model.tabs.splice(
-        ext.model.tabs.findIndex((el) => el.originalId === targetId),
-        1,
-      )
-      ext.model.result.splice(
-        ext.model.result.findIndex((el) => el.originalId === targetId),
-        1,
-      )
+      // Update the application state - only remove if found (findIndex returns -1 if not found)
+      const tabIndex = ext.model.tabs.findIndex((el) => el.originalId === targetId)
+      if (tabIndex !== -1) {
+        ext.model.tabs.splice(tabIndex, 1)
+      }
+
+      const resultIndex = ext.model.result.findIndex((el) => el.originalId === targetId)
+      if (resultIndex !== -1) {
+        ext.model.result.splice(resultIndex, 1)
+      }
 
       // Re-render to update indices and selection
       renderSearchResults()
@@ -81,14 +82,16 @@ export function openResultItem(event) {
           active: true,
           currentWindow: true,
         })
-        .then(([currentTab]) => {
-          ext.browserApi.tabs.update(currentTab.id, {
-            url: url,
-          })
+        .then((tabs) => {
+          if (tabs && tabs.length > 0) {
+            ext.browserApi.tabs.update(tabs[0].id, {
+              url: url,
+            })
 
-          // Close popup unless Ctrl is also pressed
-          if (!event.ctrlKey) {
-            window.close()
+            // Close popup unless Ctrl is also pressed
+            if (!event.ctrlKey) {
+              window.close()
+            }
           }
         })
         .catch(console.error)
