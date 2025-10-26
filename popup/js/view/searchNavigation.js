@@ -16,14 +16,8 @@ import { openResultItem } from './searchEvents.js'
  */
 export async function navigationKeyListener(event) {
   // Define navigation directions with multiple keybinding options
-  const up =
-    event.key === 'ArrowUp' ||
-    (event.ctrlKey && event.key === 'p') ||
-    (event.ctrlKey && event.key === 'k')
-  const down =
-    event.key === 'ArrowDown' ||
-    (event.ctrlKey && event.key === 'n') ||
-    (event.ctrlKey && event.key === 'j')
+  const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p') || (event.ctrlKey && event.key === 'k')
+  const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n') || (event.ctrlKey && event.key === 'j')
 
   if (up) {
     // Always consume vim-style/arrow up to prevent browser defaults from closing popup

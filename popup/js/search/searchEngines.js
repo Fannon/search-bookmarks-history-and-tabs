@@ -29,13 +29,7 @@ import { cleanUpUrl, generateRandomId } from '../helper/utils.js'
  * getCustomSearchEngineResult('javascript', 'Google', 'https://google.com/search?q=$s')
  * // Returns: { type: 'search', title: 'Google: "javascript"', url: '...', ... }
  */
-export function getCustomSearchEngineResult(
-  searchTerm,
-  name,
-  urlPrefix,
-  urlBlank,
-  custom,
-) {
+export function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlank, custom) {
   let url
   let title = `${name}: "${searchTerm}"`
   let titleHighlighted = `${name}: "<mark>${searchTerm}</mark>"`
@@ -80,13 +74,7 @@ export function addSearchEngines(searchTerm) {
   const results = []
   if (ext.opts.enableSearchEngines) {
     for (const searchEngine of ext.opts.searchEngineChoices) {
-      results.push(
-        getCustomSearchEngineResult(
-          searchTerm,
-          searchEngine.name,
-          searchEngine.urlPrefix,
-        ),
-      )
+      results.push(getCustomSearchEngineResult(searchTerm, searchEngine.name, searchEngine.urlPrefix))
     }
   }
   return results
@@ -114,9 +102,7 @@ export function collectCustomSearchAliasResults(searchTerm) {
 
   const results = []
   for (const customSearchEngine of ext.opts.customSearchEngines) {
-    const aliases = Array.isArray(customSearchEngine.alias)
-      ? customSearchEngine.alias
-      : [customSearchEngine.alias]
+    const aliases = Array.isArray(customSearchEngine.alias) ? customSearchEngine.alias : [customSearchEngine.alias]
 
     for (const alias of aliases) {
       const lowerAlias = alias.toLowerCase()

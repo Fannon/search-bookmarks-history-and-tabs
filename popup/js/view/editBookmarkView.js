@@ -12,10 +12,7 @@ import { browserApi, createSearchString } from '../helper/browserApi.js'
 import { cleanUpUrl } from '../helper/utils.js'
 import { resetFuzzySearchState } from '../search/fuzzySearch.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
-import {
-  getUniqueTags,
-  resetUniqueFoldersCache,
-} from '../search/taxonomySearch.js'
+import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
 
 /**
  * Populate the bookmark editor form for the given bookmark id.
@@ -24,9 +21,7 @@ import {
  * @returns {Promise<void>}
  */
 export async function editBookmark(bookmarkId) {
-  const bookmark = ext.model.bookmarks.find(
-    (el) => el.originalId === bookmarkId,
-  )
+  const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
   const uniqueTags = getUniqueTags() || {}
   const tags = Object.keys(uniqueTags).sort()
   const editContainer = document.getElementById('edit-bookmark')
@@ -74,9 +69,7 @@ export async function editBookmark(bookmarkId) {
     deleteButton.dataset.bookmarkId = bookmarkId
     ext.currentBookmarkId = bookmarkId
   } else {
-    console.warn(
-      `Tried to edit bookmark id="${bookmarkId}", but could not find it in searchData.`,
-    )
+    console.warn(`Tried to edit bookmark id="${bookmarkId}", but could not find it in searchData.`)
   }
 
   function transformTag(tagData) {
@@ -92,9 +85,7 @@ export async function editBookmark(bookmarkId) {
  * @param {string} bookmarkId - Identifier of the bookmark being updated.
  */
 export function updateBookmark(bookmarkId) {
-  const bookmark = ext.model.bookmarks.find(
-    (el) => el.originalId === bookmarkId,
-  )
+  const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
   const titleInput = document.getElementById('bookmark-title').value.trim()
   const urlInput = document.getElementById('bookmark-url').value.trim()
   let tagsInput = ''
@@ -107,12 +98,7 @@ export function updateBookmark(bookmarkId) {
   bookmark.originalUrl = urlInput
   bookmark.url = cleanUpUrl(urlInput)
   bookmark.tags = tagsInput
-  bookmark.searchString = createSearchString(
-    bookmark.title,
-    bookmark.url,
-    bookmark.tags,
-    bookmark.folder,
-  )
+  bookmark.searchString = createSearchString(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
   bookmark.searchStringLower = bookmark.searchString.toLowerCase()
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
@@ -124,9 +110,7 @@ export function updateBookmark(bookmarkId) {
       url: urlInput,
     })
   } else {
-    console.warn(
-      `No browser bookmarks API found. Bookmark update will not persist.`,
-    )
+    console.warn(`No browser bookmarks API found. Bookmark update will not persist.`)
   }
 
   // Start search again to update the search index and the UI with new bookmark model
@@ -143,9 +127,7 @@ export async function deleteBookmark(bookmarkId) {
   if (browserApi.bookmarks) {
     browserApi.bookmarks.remove(bookmarkId)
   } else {
-    console.warn(
-      `No browser bookmarks API found. Bookmark remove will not persist.`,
-    )
+    console.warn(`No browser bookmarks API found. Bookmark remove will not persist.`)
   }
 
   // Remove item from search data and reset search caches
@@ -164,11 +146,7 @@ export async function deleteBookmark(bookmarkId) {
  */
 function navigateToSearchView() {
   const redirectHash =
-    ext &&
-    typeof ext.returnHash === 'string' &&
-    ext.returnHash.startsWith('#search')
-      ? ext.returnHash
-      : '#search/'
+    ext && typeof ext.returnHash === 'string' && ext.returnHash.startsWith('#search') ? ext.returnHash : '#search/'
   const redirectTarget = `./index.html${redirectHash}`
   let resolvedTarget = redirectTarget
   try {
@@ -183,18 +161,12 @@ function navigateToSearchView() {
       window.location.href = resolvedTarget
     }
   } catch (navigationError) {
-    console.warn(
-      'Navigation to search view not supported in this environment.',
-      navigationError,
-    )
+    console.warn('Navigation to search view not supported in this environment.', navigationError)
     if (window.history && window.history.replaceState) {
       try {
         window.history.replaceState(null, '', resolvedTarget)
       } catch (historyError) {
-        console.warn(
-          'Failed to update history state for search view navigation.',
-          historyError,
-        )
+        console.warn('Failed to update history state for search view navigation.', historyError)
       }
     }
   }

@@ -11,15 +11,7 @@
  * - searchEngines.test.js: Search engine result generation
  * - defaultResults.test.js: Default entry sourcing
  */
-import {
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test,
-} from '@jest/globals'
+import { afterEach, beforeAll, beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
 const mockGetBrowserTabs = jest.fn()
@@ -177,9 +169,7 @@ describe('searchWithAlgorithm', () => {
   })
 
   test('throws when search approach unsupported', async () => {
-    await expect(searchWithAlgorithm('unknown', 'test')).rejects.toThrow(
-      'Unknown search approach: unknown',
-    )
+    await expect(searchWithAlgorithm('unknown', 'test')).rejects.toThrow('Unknown search approach: unknown')
   })
 })
 
@@ -194,19 +184,11 @@ describe('sortResults', () => {
   test('sorts by score descending', () => {
     const results = [{ score: 10 }, { score: 40 }, { score: 25 }]
 
-    expect(sortResults(results, 'score')).toEqual([
-      { score: 40 },
-      { score: 25 },
-      { score: 10 },
-    ])
+    expect(sortResults(results, 'score')).toEqual([{ score: 40 }, { score: 25 }, { score: 10 }])
   })
 
   test('sorts by last visited with missing values pushed last', () => {
-    const results = [
-      { lastVisitSecondsAgo: 5 },
-      { lastVisitSecondsAgo: null },
-      { lastVisitSecondsAgo: 2 },
-    ]
+    const results = [{ lastVisitSecondsAgo: 5 }, { lastVisitSecondsAgo: null }, { lastVisitSecondsAgo: 2 }]
 
     expect(sortResults(results, 'lastVisited')).toEqual([
       { lastVisitSecondsAgo: 2 },
@@ -223,9 +205,7 @@ describe('sortResults', () => {
 describe('addDefaultEntries', () => {
   test('re-exports defaultResults implementation', async () => {
     const defaultResultsModule = await import('../defaultResults.js')
-    expect(commonModule.addDefaultEntries).toBe(
-      defaultResultsModule.addDefaultEntries,
-    )
+    expect(commonModule.addDefaultEntries).toBe(defaultResultsModule.addDefaultEntries)
   })
 })
 
@@ -314,9 +294,7 @@ describe('search', () => {
 
     await search({ key: 'c' })
 
-    const hasCustom = ext.model.result.some(
-      (item) => item.type === 'customSearch',
-    )
+    const hasCustom = ext.model.result.some((item) => item.type === 'customSearch')
     expect(hasCustom).toBe(true)
   })
 
@@ -404,14 +382,10 @@ describe('search', () => {
 
     await search({ key: 'f' })
 
-    const fallbackResult = ext.model.result.find(
-      (item) => item.title === 'Fallback',
-    )
+    const fallbackResult = ext.model.result.find((item) => item.title === 'Fallback')
     expect(fallbackResult).toBeDefined()
     expect(fallbackResult?.searchApproach).toBe('precise')
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Unsupported option "search.approach" value: "unsupported"',
-    )
+    expect(consoleSpy).toHaveBeenCalledWith('Unsupported option "search.approach" value: "unsupported"')
     consoleSpy.mockRestore()
   })
 
@@ -436,10 +410,7 @@ describe('search', () => {
     await search({ key: 'r' })
 
     expect(cache.has).toHaveBeenCalledWith('remember_precise_all')
-    expect(cache.set).toHaveBeenCalledWith(
-      'remember_precise_all',
-      ext.model.result,
-    )
+    expect(cache.set).toHaveBeenCalledWith('remember_precise_all', ext.model.result)
   })
 })
 
@@ -463,9 +434,7 @@ describe('🐞 BUG: Cache Invalidation', () => {
     await search({ key: 't' })
     const cachedResults = ext.searchCache.get('tab_precise_all')
     expect(cachedResults).toBeDefined()
-    expect(
-      cachedResults.some((r) => r.type === 'tab' && r.originalId === 123),
-    ).toBe(true)
+    expect(cachedResults.some((r) => r.type === 'tab' && r.originalId === 123)).toBe(true)
 
     // Simulate tab closure by removing from model
     ext.model.tabs = []
@@ -476,9 +445,7 @@ describe('🐞 BUG: Cache Invalidation', () => {
 
     // The bug: cache still contains the closed tab
     const currentResults = ext.model.result
-    const hasGhostTab = currentResults.some(
-      (r) => r.type === 'tab' && r.originalId === 123,
-    )
+    const hasGhostTab = currentResults.some((r) => r.type === 'tab' && r.originalId === 123)
     expect(hasGhostTab).toBe(true) // BUG: This should be false but is true
   })
 })

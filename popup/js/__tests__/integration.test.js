@@ -3,14 +3,7 @@
  * Tests how different components work together and handle real-world scenarios
  */
 
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test,
-} from '@jest/globals'
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { clearTestExt, createTestExt } from './testUtils.js'
 
 describe('Extension Integration Tests', () => {
@@ -85,9 +78,7 @@ describe('Extension Integration Tests', () => {
     ext.dom.searchInput = document.getElementById('search-input')
     ext.dom.resultList = document.getElementById('result-list')
     ext.dom.resultCounter = document.getElementById('result-counter')
-    ext.dom.searchApproachToggle = document.getElementById(
-      'search-approach-toggle',
-    )
+    ext.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
     ext.dom.resultsLoading = document.getElementById('results-loading')
   })
 

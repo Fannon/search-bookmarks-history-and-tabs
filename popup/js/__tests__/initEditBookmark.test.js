@@ -1,11 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test,
-} from '@jest/globals'
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { clearTestExt, flushPromises } from './testUtils.js'
 
 function setupDom() {
@@ -44,9 +37,7 @@ describe('initEditBookmark entry point', () => {
     const updateBookmark = jest.fn()
     const deleteBookmark = jest.fn(() => Promise.resolve())
     const getEffectiveOptions = jest.fn(() => Promise.resolve({}))
-    const getSearchData = jest.fn(() =>
-      Promise.resolve({ bookmarks: [{ originalId: 'bookmark-1' }] }),
-    )
+    const getSearchData = jest.fn(() => Promise.resolve({ bookmarks: [{ originalId: 'bookmark-1' }] }))
     const printError = jest.fn()
 
     await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
@@ -83,18 +74,12 @@ describe('initEditBookmark entry point', () => {
     expect(getEffectiveOptions).toHaveBeenCalled()
     expect(getSearchData).toHaveBeenCalled()
     expect(document.getElementById('edit-bookmark-loading')).toBeNull()
-    expect(
-      document.getElementById('edit-bookmark-cancel').getAttribute('href'),
-    ).toBe('./index.html#search/foo')
+    expect(document.getElementById('edit-bookmark-cancel').getAttribute('href')).toBe('./index.html#search/foo')
 
-    document
-      .getElementById('edit-bookmark-save')
-      .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    document.getElementById('edit-bookmark-save').dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(updateBookmark).toHaveBeenCalledWith('bookmark-1')
 
-    document
-      .getElementById('edit-bookmark-delete')
-      .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    document.getElementById('edit-bookmark-delete').dispatchEvent(new MouseEvent('click', { bubbles: true }))
     await flushPromises()
     expect(deleteBookmark).toHaveBeenCalledWith('bookmark-1')
   })
@@ -108,9 +93,7 @@ describe('initEditBookmark entry point', () => {
     const updateBookmark = jest.fn()
     const deleteBookmark = jest.fn(() => Promise.resolve())
     const getEffectiveOptions = jest.fn(() => Promise.resolve({}))
-    const getSearchData = jest.fn(() =>
-      Promise.resolve({ bookmarks: [{ originalId: 'legacy-bookmark' }] }),
-    )
+    const getSearchData = jest.fn(() => Promise.resolve({ bookmarks: [{ originalId: 'legacy-bookmark' }] }))
     const printError = jest.fn()
 
     await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({

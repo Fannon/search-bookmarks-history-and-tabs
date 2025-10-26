@@ -84,13 +84,7 @@ export async function addDefaultEntries() {
     // Always add recently visited tabs when option is enabled and no search term
     if (ext.model.tabs && ext.opts.maxRecentTabsToShow > 0) {
       const recentTabs = ext.model.tabs
-        .filter(
-          (tab) =>
-            tab &&
-            tab.url &&
-            !tab.url.startsWith('chrome://') &&
-            !tab.url.startsWith('about:'),
-        )
+        .filter((tab) => tab && tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('about:'))
         .map(withDefaultScore)
         .sort((a, b) => {
           // Sort by last accessed time (most recent first)

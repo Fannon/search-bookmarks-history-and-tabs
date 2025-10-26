@@ -32,9 +32,7 @@ test.describe('Options View', () => {
       await page.locator('#edit-options-save').click()
 
       await page.goto('/options.html')
-      await expect(page.locator('#user-config')).toHaveValue(
-        /displayVisitCounter/,
-      )
+      await expect(page.locator('#user-config')).toHaveValue(/displayVisitCounter/)
       await expectNoClientErrors(page)
     })
 
@@ -49,9 +47,7 @@ test.describe('Options View', () => {
       await page.locator('#edit-options-save').click()
 
       await page.goto('/options.html')
-      await expect(page.locator('#user-config')).toHaveValue(
-        /displayVisitCounter/,
-      )
+      await expect(page.locator('#user-config')).toHaveValue(/displayVisitCounter/)
       await expectNoClientErrors(page)
     })
   })

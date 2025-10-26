@@ -52,10 +52,7 @@ function scoreFor({ searchTerm = 'query', opts = {}, result = {} }) {
     opts: { ...baseOpts, ...opts },
   })
 
-  const [scored] = calculateFinalScore(
-    [{ ...baseResult, ...result }],
-    searchTerm,
-  )
+  const [scored] = calculateFinalScore([{ ...baseResult, ...result }], searchTerm)
   const score = scored.score
 
   clearTestExt()
@@ -99,9 +96,7 @@ describe('scoring', () => {
     ]
 
     const scored = calculateFinalScore(results, '')
-    const scoreByType = Object.fromEntries(
-      scored.map((item) => [item.type, item.score]),
-    )
+    const scoreByType = Object.fromEntries(scored.map((item) => [item.type, item.score]))
 
     expect(scoreByType).toMatchObject({
       bookmark: expect.any(Number),

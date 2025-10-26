@@ -15,11 +15,7 @@ function setupDom() {
   `
 }
 
-async function loadEditOptionsView({
-  userOptions = {},
-  dumpImpl,
-  loadImpl,
-} = {}) {
+async function loadEditOptionsView({ userOptions = {}, dumpImpl, loadImpl } = {}) {
   jest.resetModules()
 
   const getUserOptions = jest.fn(() => Promise.resolve(userOptions))
@@ -119,16 +115,12 @@ describe('editOptionsView', () => {
     await module.initOptions()
     document.getElementById('user-config').value = 'theme: dark'
 
-    document
-      .getElementById('edit-options-save')
-      .dispatchEvent(new MouseEvent('click'))
+    document.getElementById('edit-options-save').dispatchEvent(new MouseEvent('click'))
     await Promise.resolve()
 
     expect(mocks.load).toHaveBeenCalledWith('theme: dark')
     expect(mocks.setUserOptions).toHaveBeenCalledWith({ theme: 'dark' })
-    expect(document.getElementById('user-config').value).toBe(
-      'normalized: dark',
-    )
+    expect(document.getElementById('user-config').value).toBe('normalized: dark')
   })
 
   it('saveOptions displays an error message when YAML parsing fails', async () => {
@@ -147,9 +139,7 @@ describe('editOptionsView', () => {
     await module.initOptions()
     document.getElementById('user-config').value = 'invalid yaml'
 
-    document
-      .getElementById('edit-options-save')
-      .dispatchEvent(new MouseEvent('click'))
+    document.getElementById('edit-options-save').dispatchEvent(new MouseEvent('click'))
     await Promise.resolve()
 
     const errorMessageEl = document.getElementById('error-message')
@@ -172,9 +162,7 @@ describe('editOptionsView', () => {
     const input = document.getElementById('user-config')
     input.value = 'some config'
 
-    document
-      .getElementById('edit-options-reset')
-      .dispatchEvent(new MouseEvent('click'))
+    document.getElementById('edit-options-reset').dispatchEvent(new MouseEvent('click'))
     await Promise.resolve()
 
     expect(input.value).toBe('')

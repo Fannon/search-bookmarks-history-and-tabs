@@ -11,9 +11,7 @@ test.describe('Tag View', () => {
     })
 
     test('contains a list of tags', async ({ page }) => {
-      await expect(
-        page.locator('#tags-overview #tags-list [x-tag="json"]'),
-      ).toBeVisible()
+      await expect(page.locator('#tags-overview #tags-list [x-tag="json"]')).toBeVisible()
       await expectNoClientErrors(page)
     })
 
@@ -23,9 +21,7 @@ test.describe('Tag View', () => {
 
       await expect(page.locator('#search-input')).toHaveValue('#json')
       await expect(page.locator('#result-list')).not.toHaveCount(0)
-      await expect(
-        page.locator('#result-list [x-original-id="7"]'),
-      ).toBeVisible()
+      await expect(page.locator('#result-list [x-original-id="7"]')).toBeVisible()
       await expect(page.locator('#result-list li.bookmark')).not.toHaveCount(0)
 
       await expectNoClientErrors(page)

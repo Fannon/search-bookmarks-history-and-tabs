@@ -7,11 +7,7 @@
  */
 import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
-import {
-  addSearchEngines,
-  collectCustomSearchAliasResults,
-  getCustomSearchEngineResult,
-} from '../searchEngines.js'
+import { addSearchEngines, collectCustomSearchAliasResults, getCustomSearchEngineResult } from '../searchEngines.js'
 
 beforeEach(() => {
   createTestExt({
@@ -49,11 +45,7 @@ afterEach(() => {
 
 describe('getCustomSearchEngineResult', () => {
   test('creates search result with $s placeholder replacement', () => {
-    const result = getCustomSearchEngineResult(
-      'javascript',
-      'Google',
-      'https://www.google.com/search?q=$s',
-    )
+    const result = getCustomSearchEngineResult('javascript', 'Google', 'https://www.google.com/search?q=$s')
 
     expect(result).toMatchObject({
       type: 'search',
@@ -66,11 +58,7 @@ describe('getCustomSearchEngineResult', () => {
   })
 
   test('creates search result with URL prefix concatenation', () => {
-    const result = getCustomSearchEngineResult(
-      'test query',
-      'SearchEngine',
-      'https://example.com/search?q=',
-    )
+    const result = getCustomSearchEngineResult('test query', 'SearchEngine', 'https://example.com/search?q=')
 
     expect(result).toMatchObject({
       type: 'search',
@@ -108,28 +96,14 @@ describe('getCustomSearchEngineResult', () => {
   })
 
   test('encodes special characters in search term', () => {
-    const result = getCustomSearchEngineResult(
-      'hello & goodbye',
-      'Google',
-      'https://www.google.com/search?q=$s',
-    )
+    const result = getCustomSearchEngineResult('hello & goodbye', 'Google', 'https://www.google.com/search?q=$s')
 
-    expect(result.originalUrl).toBe(
-      'https://www.google.com/search?q=hello%20%26%20goodbye',
-    )
+    expect(result.originalUrl).toBe('https://www.google.com/search?q=hello%20%26%20goodbye')
   })
 
   test('generates unique IDs for different results', () => {
-    const result1 = getCustomSearchEngineResult(
-      'test1',
-      'Google',
-      'https://google.com?q=$s',
-    )
-    const result2 = getCustomSearchEngineResult(
-      'test2',
-      'Google',
-      'https://google.com?q=$s',
-    )
+    const result1 = getCustomSearchEngineResult('test1', 'Google', 'https://google.com?q=$s')
+    const result2 = getCustomSearchEngineResult('test2', 'Google', 'https://google.com?q=$s')
 
     expect(result1.originalId).not.toBe(result2.originalId)
   })

@@ -166,9 +166,7 @@ describe('simpleSearch', () => {
       const results = simpleSearch('unknown', 'javascript')
 
       expect(results).toHaveLength(3)
-      expect(results.map((r) => r.id)).toEqual(
-        expect.arrayContaining(['bookmark-1', 'tab-1', 'history-1']),
-      )
+      expect(results.map((r) => r.id)).toEqual(expect.arrayContaining(['bookmark-1', 'tab-1', 'history-1']))
     })
   })
 

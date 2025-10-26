@@ -15,10 +15,7 @@ import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { addDefaultEntries, search } from './search/common.js'
 import { closeErrors, printError } from './view/errorView.js'
-import {
-  toggleSearchApproach,
-  updateSearchApproachToggle,
-} from './view/searchEvents.js'
+import { toggleSearchApproach, updateSearchApproachToggle } from './view/searchEvents.js'
 import { navigationKeyListener } from './view/searchNavigation.js'
 import { renderSearchResults } from './view/searchView.js'
 
@@ -48,9 +45,7 @@ export async function initExtension() {
   ext.dom.searchInput = document.getElementById('search-input')
   ext.dom.resultList = document.getElementById('result-list')
   ext.dom.resultCounter = document.getElementById('result-counter')
-  ext.dom.searchApproachToggle = document.getElementById(
-    'search-approach-toggle',
-  )
+  ext.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
 
   updateSearchApproachToggle()
 

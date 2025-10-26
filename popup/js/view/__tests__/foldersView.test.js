@@ -48,25 +48,19 @@ describe('foldersView', () => {
     module.loadFoldersOverview()
 
     expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
-    expect(
-      document.getElementById('folders-overview').getAttribute('style'),
-    ).toBe(null)
-    const badges = Array.from(
-      document.querySelectorAll('#folders-list a.badge.folder'),
-    )
-    expect(badges.map((el) => el.getAttribute('x-folder'))).toEqual([
-      'Archive',
-      'Personal',
-      'Work',
-    ])
+    expect(document.getElementById('folders-overview').getAttribute('style')).toBe(null)
+    const badges = Array.from(document.querySelectorAll('#folders-list a.badge.folder'))
+    expect(badges.map((el) => el.getAttribute('x-folder'))).toEqual(['Archive', 'Personal', 'Work'])
     expect(badges.map((el) => el.getAttribute('href'))).toEqual([
       './index.html#search/~Archive',
       './index.html#search/~Personal',
       './index.html#search/~Work',
     ])
-    expect(
-      badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim()),
-    ).toEqual(['~Archive (1)', '~Personal (3)', '~Work (2)'])
+    expect(badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())).toEqual([
+      '~Archive (1)',
+      '~Personal (3)',
+      '~Work (2)',
+    ])
   })
 
   it('renders an empty list when no folders exist', async () => {
@@ -75,19 +69,13 @@ describe('foldersView', () => {
 
     module.loadFoldersOverview()
 
-    expect(
-      document.getElementById('folders-overview').getAttribute('style'),
-    ).toBe(null)
-    expect(
-      document.querySelectorAll('#folders-list a.badge.folder'),
-    ).toHaveLength(0)
+    expect(document.getElementById('folders-overview').getAttribute('style')).toBe(null)
+    expect(document.querySelectorAll('#folders-list a.badge.folder')).toHaveLength(0)
   })
 
   it('handles malformed folder data gracefully', async () => {
     setupDom()
-    const consoleWarnSpy = jest
-      .spyOn(console, 'warn')
-      .mockImplementation(() => {})
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 
     // Test with malformed folder data
     const folders = {
@@ -102,24 +90,16 @@ describe('foldersView', () => {
     module.loadFoldersOverview()
 
     expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
-    expect(
-      document.getElementById('folders-overview').getAttribute('style'),
-    ).toBe(null)
+    expect(document.getElementById('folders-overview').getAttribute('style')).toBe(null)
 
     // The actual implementation renders all folders including malformed ones
-    const badges = Array.from(
-      document.querySelectorAll('#folders-list a.badge.folder'),
-    )
+    const badges = Array.from(document.querySelectorAll('#folders-list a.badge.folder'))
     expect(badges).toHaveLength(4) // All folders are rendered
 
     // Check that valid folders are still rendered correctly
-    const validBadge = badges.find(
-      (badge) => badge.getAttribute('x-folder') === 'Valid Folder',
-    )
+    const validBadge = badges.find((badge) => badge.getAttribute('x-folder') === 'Valid Folder')
     expect(validBadge).toBeDefined()
-    expect(validBadge.getAttribute('href')).toBe(
-      './index.html#search/~Valid Folder',
-    )
+    expect(validBadge.getAttribute('href')).toBe('./index.html#search/~Valid Folder')
 
     consoleWarnSpy.mockRestore()
   })
@@ -130,12 +110,9 @@ describe('foldersView', () => {
     // Create many folders to test performance
     const folders = {}
     for (let i = 0; i < 100; i++) {
-      folders[`Folder ${i}`] = Array.from(
-        { length: Math.floor(Math.random() * 10) + 1 },
-        (_, idx) => ({
-          id: `${i}-${idx}`,
-        }),
-      )
+      folders[`Folder ${i}`] = Array.from({ length: Math.floor(Math.random() * 10) + 1 }, (_, idx) => ({
+        id: `${i}-${idx}`,
+      }))
     }
 
     const { module, mocks } = await loadFoldersView({ folders })
@@ -145,13 +122,9 @@ describe('foldersView', () => {
     const endTime = Date.now()
 
     expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
-    expect(
-      document.getElementById('folders-overview').getAttribute('style'),
-    ).toBe(null)
+    expect(document.getElementById('folders-overview').getAttribute('style')).toBe(null)
 
-    const badges = Array.from(
-      document.querySelectorAll('#folders-list a.badge.folder'),
-    )
+    const badges = Array.from(document.querySelectorAll('#folders-list a.badge.folder'))
     expect(badges).toHaveLength(100)
 
     // Should render within reasonable time (less than 100ms for 100 folders)
@@ -172,13 +145,9 @@ describe('foldersView', () => {
     module.loadFoldersOverview()
 
     expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
-    expect(
-      document.getElementById('folders-overview').getAttribute('style'),
-    ).toBe(null)
+    expect(document.getElementById('folders-overview').getAttribute('style')).toBe(null)
 
-    const badges = Array.from(
-      document.querySelectorAll('#folders-list a.badge.folder'),
-    )
+    const badges = Array.from(document.querySelectorAll('#folders-list a.badge.folder'))
     expect(badges).toHaveLength(4)
 
     const hrefs = badges.map((el) => el.getAttribute('href'))
@@ -189,9 +158,7 @@ describe('foldersView', () => {
       './index.html#search/~Work & Projects',
     ])
 
-    const labelTexts = badges.map((el) =>
-      el.textContent.replace(/\s+/g, ' ').trim(),
-    )
+    const labelTexts = badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())
     expect(labelTexts).toEqual([
       '~Folder with "quotes" (1)',
       '~Personal/Archive (1)',

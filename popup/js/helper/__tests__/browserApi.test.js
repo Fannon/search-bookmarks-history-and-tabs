@@ -1,11 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals'
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
 import {
   browserApi,
   convertBrowserBookmarks,
@@ -110,22 +103,12 @@ describe('convertBrowserTabs', () => {
 
 describe('createSearchString', () => {
   it('includes title, url, tags and folder when available', () => {
-    const result = createSearchString(
-      'Example title',
-      'example.com',
-      '#tag',
-      '~Folder',
-    )
+    const result = createSearchString('Example title', 'example.com', '#tag', '~Folder')
     expect(result).toBe('Example title¦example.com¦#tag¦~Folder')
   })
 
   it('avoids duplicating url when the title already includes it', () => {
-    const result = createSearchString(
-      'example.com',
-      'example.com',
-      undefined,
-      undefined,
-    )
+    const result = createSearchString('example.com', 'example.com', undefined, undefined)
     expect(result).toBe('example.com')
   })
 
@@ -141,9 +124,7 @@ describe('createSearchString', () => {
 
 describe('getTitle', () => {
   it('cleans title when it is a raw url', () => {
-    expect(
-      getTitle('https://Example.com/path', 'https://Example.com/path'),
-    ).toBe('example.com/path')
+    expect(getTitle('https://Example.com/path', 'https://Example.com/path')).toBe('example.com/path')
   })
 
   it('falls back to cleaned url when title is empty', () => {
@@ -197,10 +178,8 @@ describe('convertBrowserBookmarks', () => {
       tagsArray: ['tag1', 'tag2'],
       folder: '~Root ~Parent folder ~Work',
       folderArray: ['Root', 'Parent folder', 'Work'],
-      searchString:
-        'Example¦example.com¦#tag1 #tag2¦~Root ~Parent folder ~Work',
-      searchStringLower:
-        'example¦example.com¦#tag1 #tag2¦~root ~parent folder ~work',
+      searchString: 'Example¦example.com¦#tag1 #tag2¦~Root ~Parent folder ~Work',
+      searchStringLower: 'example¦example.com¦#tag1 #tag2¦~root ~parent folder ~work',
     })
   })
 
@@ -293,9 +272,7 @@ describe('convertBrowserBookmarks', () => {
       expect(duplicates.every((bookmark) => bookmark.dupe)).toBe(true)
       expect(warnSpy).toHaveBeenCalledTimes(1)
       expect(warnSpy.mock.calls[0][0]).toContain('Duplicate bookmark detected')
-      expect(warnSpy.mock.calls[0][0]).toContain(
-        'https://duplicate.example.com',
-      )
+      expect(warnSpy.mock.calls[0][0]).toContain('https://duplicate.example.com')
       expect(warnSpy.mock.calls[0][0]).toContain('folder: /')
     } finally {
       warnSpy.mockRestore()

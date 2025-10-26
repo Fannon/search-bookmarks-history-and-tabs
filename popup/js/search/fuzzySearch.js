@@ -167,8 +167,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
 
       s.idxs = idxs // Save idxs cache to state
     } catch (err) {
-      err.message =
-        'Fuzzy search could not handle search term. Please try precise search instead.'
+      err.message = 'Fuzzy search could not handle search term. Please try precise search instead.'
       printError(err)
     }
 

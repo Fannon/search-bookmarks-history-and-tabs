@@ -45,9 +45,7 @@ describe('options model', () => {
 
   describe('validateUserOptions', () => {
     test('accepts valid objects', () => {
-      expect(() =>
-        optionsModule.validateUserOptions({ searchStrategy: 'fuzzy' }),
-      ).not.toThrow()
+      expect(() => optionsModule.validateUserOptions({ searchStrategy: 'fuzzy' })).not.toThrow()
       expect(() => optionsModule.validateUserOptions({})).not.toThrow()
       expect(() => optionsModule.validateUserOptions(null)).not.toThrow()
       expect(() => optionsModule.validateUserOptions(undefined)).not.toThrow()
@@ -57,17 +55,13 @@ describe('options model', () => {
       expect(() => optionsModule.validateUserOptions('string')).toThrow(
         'User options must be a valid YAML / JSON object',
       )
-      expect(() => optionsModule.validateUserOptions(123)).toThrow(
-        'User options must be a valid YAML / JSON object',
-      )
+      expect(() => optionsModule.validateUserOptions(123)).toThrow('User options must be a valid YAML / JSON object')
     })
 
     test('rejects circular references', () => {
       const circular = {}
       circular.self = circular
-      expect(() => optionsModule.validateUserOptions(circular)).toThrow(
-        /User options cannot be parsed into JSON/,
-      )
+      expect(() => optionsModule.validateUserOptions(circular)).toThrow(/User options cannot be parsed into JSON/)
     })
   })
 
@@ -81,13 +75,8 @@ describe('options model', () => {
         },
       })
 
-      await expect(
-        optionsModule.setUserOptions({ searchStrategy: 'fuzzy' }),
-      ).resolves.toBeUndefined()
-      expect(syncSet).toHaveBeenCalledWith(
-        { userOptions: { searchStrategy: 'fuzzy' } },
-        expect.any(Function),
-      )
+      await expect(optionsModule.setUserOptions({ searchStrategy: 'fuzzy' })).resolves.toBeUndefined()
+      expect(syncSet).toHaveBeenCalledWith({ userOptions: { searchStrategy: 'fuzzy' } }, expect.any(Function))
     })
 
     test('falls back to localStorage when sync storage missing', async () => {
@@ -95,12 +84,8 @@ describe('options model', () => {
         browserApi: {},
       })
 
-      await expect(
-        optionsModule.setUserOptions({ enableHelp: false }),
-      ).resolves.toBeUndefined()
-      expect(localStorage.getItem('userOptions')).toBe(
-        JSON.stringify({ enableHelp: false }),
-      )
+      await expect(optionsModule.setUserOptions({ enableHelp: false })).resolves.toBeUndefined()
+      expect(localStorage.getItem('userOptions')).toBe(JSON.stringify({ enableHelp: false }))
     })
 
     test('handles storage API errors', async () => {
@@ -118,17 +103,13 @@ describe('options model', () => {
         },
       })
 
-      await expect(
-        optionsModule.setUserOptions({ searchStrategy: 'fuzzy' }),
-      ).rejects.toThrow(runtimeError)
+      await expect(optionsModule.setUserOptions({ searchStrategy: 'fuzzy' })).rejects.toThrow(runtimeError)
     })
   })
 
   describe('getUserOptions', () => {
     test('reads from sync storage when available', async () => {
-      const syncGet = jest.fn((keys, callback) =>
-        callback({ userOptions: { searchStrategy: 'precise' } }),
-      )
+      const syncGet = jest.fn((keys, callback) => callback({ userOptions: { searchStrategy: 'precise' } }))
       createTestExt({
         browserApi: {
           storage: { sync: { get: syncGet } },
@@ -139,20 +120,14 @@ describe('options model', () => {
       await expect(optionsModule.getUserOptions()).resolves.toEqual({
         searchStrategy: 'precise',
       })
-      expect(syncGet).toHaveBeenCalledWith(
-        ['userOptions'],
-        expect.any(Function),
-      )
+      expect(syncGet).toHaveBeenCalledWith(['userOptions'], expect.any(Function))
     })
 
     test('falls back to localStorage when sync storage missing', async () => {
       createTestExt({
         browserApi: {},
       })
-      localStorage.setItem(
-        'userOptions',
-        JSON.stringify({ searchMaxResults: 5 }),
-      )
+      localStorage.setItem('userOptions', JSON.stringify({ searchMaxResults: 5 }))
 
       await expect(optionsModule.getUserOptions()).resolves.toEqual({
         searchMaxResults: 5,
@@ -164,9 +139,7 @@ describe('options model', () => {
         browserApi: {},
       })
 
-      await expect(optionsModule.getUserOptions()).resolves.toEqual(
-        optionsModule.emptyOptions,
-      )
+      await expect(optionsModule.getUserOptions()).resolves.toEqual(optionsModule.emptyOptions)
     })
 
     test('handles malformed JSON in localStorage', async () => {
@@ -200,17 +173,12 @@ describe('options model', () => {
     test('merges defaults with user overrides', async () => {
       // Use localStorage to simulate user options
       createTestExt({ browserApi: {} })
-      localStorage.setItem(
-        'userOptions',
-        JSON.stringify({ searchMaxResults: 10, debug: true }),
-      )
+      localStorage.setItem('userOptions', JSON.stringify({ searchMaxResults: 10, debug: true }))
 
       const effective = await optionsModule.getEffectiveOptions()
       expect(effective.searchMaxResults).toBe(10)
       expect(effective.debug).toBe(true)
-      expect(effective.bookmarkColor).toBe(
-        optionsModule.defaultOptions.bookmarkColor,
-      )
+      expect(effective.bookmarkColor).toBe(optionsModule.defaultOptions.bookmarkColor)
     })
 
     test('returns defaults when user options are empty', async () => {
@@ -227,12 +195,8 @@ describe('options model', () => {
       expect(optionsModule.defaultOptions).toBeDefined()
       expect(typeof optionsModule.defaultOptions).toBe('object')
       expect(optionsModule.defaultOptions.searchStrategy).toBe('precise')
-      expect(typeof optionsModule.defaultOptions.searchMaxResults).toBe(
-        'number',
-      )
-      expect(
-        Array.isArray(optionsModule.defaultOptions.bookmarksIgnoreFolderList),
-      ).toBe(true)
+      expect(typeof optionsModule.defaultOptions.searchMaxResults).toBe('number')
+      expect(Array.isArray(optionsModule.defaultOptions.bookmarksIgnoreFolderList)).toBe(true)
     })
 
     test('emptyOptions has expected structure', () => {
@@ -287,9 +251,7 @@ describe('options model', () => {
       const effectiveOptions = await optionsModule.getEffectiveOptions()
       expect(effectiveOptions.searchMaxResults).toBe(20)
       expect(effectiveOptions.colorStripeWidth).toBe(5)
-      expect(effectiveOptions.bookmarkColor).toBe(
-        optionsModule.defaultOptions.bookmarkColor,
-      )
+      expect(effectiveOptions.bookmarkColor).toBe(optionsModule.defaultOptions.bookmarkColor)
 
       expect(mockPrintError).not.toHaveBeenCalled()
     })

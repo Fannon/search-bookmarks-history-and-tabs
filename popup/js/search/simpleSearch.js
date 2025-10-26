@@ -107,8 +107,7 @@ function simpleSearchWithScoring(searchTerm, searchMode) {
     const localResults = []
     for (const entry of s.cachedData) {
       // Cache the normalized search string to avoid repeated toLowerCase() calls
-      const normalizedSearchString =
-        entry.searchStringLower || entry.searchString.toLowerCase()
+      const normalizedSearchString = entry.searchStringLower || entry.searchString.toLowerCase()
       if (normalizedSearchString.includes(term)) {
         localResults.push({
           ...entry,

@@ -1,11 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals'
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
 import { closeErrors, printError } from '../errorView.js'
 
 describe('closeErrors', () => {
@@ -55,9 +48,7 @@ describe('printError', () => {
     expect(items[0].innerHTML).toContain('&lt;b&gt;bad markup&lt;/b&gt;')
 
     expect(items[1].querySelector('b').textContent).toBe('Error Message')
-    expect(items[1].innerHTML).toContain(
-      '&lt;script&gt;alert(1)&lt;/script&gt;',
-    )
+    expect(items[1].innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
 
     expect(items[2].querySelector('b').textContent).toBe('Error Stack')
     expect(items[3].textContent).toBe('existing')

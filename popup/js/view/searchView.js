@@ -62,8 +62,7 @@ export async function renderSearchResults() {
         badgesHTML += '<span class="badge source-tab" title="Open Tab">T</span>'
       }
       if (resultEntry.dupe) {
-        badgesHTML +=
-          '<span class="badge duplicate" title="Duplicate Bookmark">Duplicate</span>'
+        badgesHTML += '<span class="badge duplicate" title="Duplicate Bookmark">Duplicate</span>'
       }
 
       if (opts.displayTags && resultEntry.tagsArray) {
@@ -87,9 +86,7 @@ export async function renderSearchResults() {
       }
 
       if (opts.displayLastVisit && resultEntry.lastVisitSecondsAgo != null) {
-        const lastVisit = timeSince(
-          new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000),
-        )
+        const lastVisit = timeSince(new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000))
         badgesHTML += `<span class="badge last-visited" title="Last Visited">-${escapeHtml(lastVisit)}</span>`
       }
 
@@ -112,40 +109,23 @@ export async function renderSearchResults() {
       }
 
       const highlightCandidate =
-        resultEntry.titleHighlighted ||
-        resultEntry.title ||
-        resultEntry.urlHighlighted ||
-        resultEntry.url ||
-        ''
+        resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
       const titleContent =
         shouldHighlight && searchTerm && searchTerm.trim()
           ? // escape everything first, then allow only the `<mark>` tags that the highlighter inserts
-            escapeHtml(highlightCandidate).replace(
-              /&lt;(\/?)mark&gt;/gi,
-              '<$1mark>',
-            )
+            escapeHtml(highlightCandidate).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
           : escapeHtml(resultEntry.title || resultEntry.url || '')
 
       const urlContent =
-        shouldHighlight &&
-        searchTerm &&
-        searchTerm.trim() &&
-        resultEntry.urlHighlighted
+        shouldHighlight && searchTerm && searchTerm.trim() && resultEntry.urlHighlighted
           ? // same approach for the URL snippet – keep highlight markup, escape everything else
-            escapeHtml(resultEntry.urlHighlighted).replace(
-              /&lt;(\/?)mark&gt;/gi,
-              '<$1mark>',
-            )
+            escapeHtml(resultEntry.urlHighlighted).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
           : escapeHtml(resultEntry.url || '')
 
       const typeClass = escapeHtml(resultEntry.type || '')
-      const originalUrlAttr = resultEntry.originalUrl
-        ? ` x-open-url="${escapeHtml(resultEntry.originalUrl)}"`
-        : ''
+      const originalUrlAttr = resultEntry.originalUrl ? ` x-open-url="${escapeHtml(resultEntry.originalUrl)}"` : ''
       const originalIdAttr =
-        resultEntry.originalId !== undefined
-          ? ` x-original-id="${escapeHtml(String(resultEntry.originalId))}"`
-          : ''
+        resultEntry.originalId !== undefined ? ` x-original-id="${escapeHtml(String(resultEntry.originalId))}"` : ''
       const colorValue = escapeHtml(String(opts[resultEntry.type + 'Color']))
 
       const itemHTML = `
@@ -175,12 +155,7 @@ export async function renderSearchResults() {
         if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
           const mark = new window.Mark(resultListItem)
           mark.mark(searchTerm, {
-            exclude: [
-              '.last-visited',
-              '.score',
-              '.visit-counter',
-              '.date-added',
-            ],
+            exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
           })
         }
       }

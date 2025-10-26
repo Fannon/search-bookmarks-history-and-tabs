@@ -1,11 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals'
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 import { fuzzySearch, resetFuzzySearchState } from '../fuzzySearch.js'
 
@@ -26,11 +19,7 @@ class TrackedUFuzzy {
     uFuzzyInstances.push(this)
 
     // Use real uFuzzy if available, otherwise create a minimal fallback
-    if (
-      typeof window !== 'undefined' &&
-      window.uFuzzy &&
-      window.uFuzzy !== TrackedUFuzzy
-    ) {
+    if (typeof window !== 'undefined' && window.uFuzzy && window.uFuzzy !== TrackedUFuzzy) {
       this.uf = new window.uFuzzy(options)
     } else {
       // Fallback for when uFuzzy is not loaded yet
@@ -160,10 +149,7 @@ describe('fuzzySearch', () => {
       // Load the actual uFuzzy library
       const fs = await import('fs')
       const path = await import('path')
-      const uFuzzyPath = path.join(
-        process.cwd(),
-        'popup/lib/uFuzzy.iife.min.js',
-      )
+      const uFuzzyPath = path.join(process.cwd(), 'popup/lib/uFuzzy.iife.min.js')
 
       if (fs.existsSync(uFuzzyPath)) {
         const uFuzzyScript = fs.readFileSync(uFuzzyPath, 'utf8')
@@ -171,10 +157,7 @@ describe('fuzzySearch', () => {
         new Function(uFuzzyScript)()
       }
     } catch (error) {
-      console.warn(
-        'Could not load real uFuzzy library, using fallback:',
-        error.message,
-      )
+      console.warn('Could not load real uFuzzy library, using fallback:', error.message)
     }
 
     // Ensure complete reset of all state
@@ -270,9 +253,7 @@ describe('fuzzySearch', () => {
     expect(results).toHaveLength(2)
     expect(results[0].id).toBe('tab-1')
     expect(results[1].id).toBe('history-1')
-    expect(results.every((result) => result.searchApproach === 'fuzzy')).toBe(
-      true,
-    )
+    expect(results.every((result) => result.searchApproach === 'fuzzy')).toBe(true)
   })
 
   it('reuses cached state until resetFuzzySearchState is called', async () => {
@@ -320,9 +301,7 @@ describe('fuzzySearch', () => {
     expect(instancesAfterWarm.length).toBeGreaterThan(0)
 
     // Find the top-level instance (not nested)
-    const topLevelInstance = instancesAfterWarm.find(
-      (instance) => !instance.uf || !instance.uf.instanceId,
-    )
+    const topLevelInstance = instancesAfterWarm.find((instance) => !instance.uf || !instance.uf.instanceId)
     expect(topLevelInstance).toBeDefined()
     expect(topLevelInstance.options).toMatchObject({
       intraIns: Math.round(0.85 * 4.2),
@@ -347,9 +326,7 @@ describe('fuzzySearch', () => {
 
     // Find the CJK instance (should be the most recent top-level instance)
     const cjkInstance = instancesAfterCJK.find(
-      (instance) =>
-        instance.options &&
-        instance.options.interSplit === '(p{Unified_Ideograph=yes})+',
+      (instance) => instance.options && instance.options.interSplit === '(p{Unified_Ideograph=yes})+',
     )
     expect(cjkInstance).toBeDefined()
     expect(cjkInstance.options).toMatchObject({

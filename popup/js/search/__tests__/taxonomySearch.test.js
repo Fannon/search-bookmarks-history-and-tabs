@@ -158,11 +158,7 @@ describe('taxonomy search', () => {
     expect(resultWithTrailingSpace).toHaveLength(2)
 
     // Test with multiple folders where last has trailing whitespace
-    const resultMultipleFolders = searchTaxonomy(
-      'work ~projects ',
-      'folder',
-      data,
-    )
+    const resultMultipleFolders = searchTaxonomy('work ~projects ', 'folder', data)
     expect(resultMultipleFolders).toHaveLength(1)
     expect(resultMultipleFolders[0].originalId).toBe('1')
   })

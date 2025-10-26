@@ -1,18 +1,5 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals'
-import {
-  cleanUpUrl,
-  escapeHtml,
-  generateRandomId,
-  loadScript,
-  timeSince,
-} from '../utils.js'
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
+import { cleanUpUrl, escapeHtml, generateRandomId, loadScript, timeSince } from '../utils.js'
 
 describe('generateRandomId', () => {
   it('returns a deterministic identifier prefixed with R', () => {
@@ -35,9 +22,7 @@ describe('cleanUpUrl', () => {
   })
 
   it('leaves hostname and path intact', () => {
-    expect(cleanUpUrl('http://docs.example.com/path/to/page')).toBe(
-      'docs.example.com/path/to/page',
-    )
+    expect(cleanUpUrl('http://docs.example.com/path/to/page')).toBe('docs.example.com/path/to/page')
   })
 
   it('converts to lowercase', () => {
@@ -45,21 +30,15 @@ describe('cleanUpUrl', () => {
   })
 
   it('handles URLs with paths', () => {
-    expect(cleanUpUrl('https://www.example.com/path/to/resource')).toBe(
-      'example.com/path/to/resource',
-    )
+    expect(cleanUpUrl('https://www.example.com/path/to/resource')).toBe('example.com/path/to/resource')
   })
 
   it('handles URLs with query parameters', () => {
-    expect(cleanUpUrl('https://www.example.com/search?q=test')).toBe(
-      'example.com/search?q=test',
-    )
+    expect(cleanUpUrl('https://www.example.com/search?q=test')).toBe('example.com/search?q=test')
   })
 
   it('handles URLs with fragments', () => {
-    expect(cleanUpUrl('https://www.example.com/page#section')).toBe(
-      'example.com/page#section',
-    )
+    expect(cleanUpUrl('https://www.example.com/page#section')).toBe('example.com/page#section')
   })
 
   it('handles edge cases gracefully', () => {
@@ -73,11 +52,9 @@ describe('cleanUpUrl', () => {
   })
 
   it('handles complex URLs', () => {
-    expect(
-      cleanUpUrl(
-        'HTTPS://WWW.SUBDOMAIN.EXAMPLE.CO.UK/PATH/TO/RESOURCE?QUERY=VALUE#FRAGMENT',
-      ),
-    ).toBe('subdomain.example.co.uk/path/to/resource?query=value#fragment')
+    expect(cleanUpUrl('HTTPS://WWW.SUBDOMAIN.EXAMPLE.CO.UK/PATH/TO/RESOURCE?QUERY=VALUE#FRAGMENT')).toBe(
+      'subdomain.example.co.uk/path/to/resource?query=value#fragment',
+    )
   })
 
   it('handles international domains and unicode characters', () => {
@@ -259,9 +236,7 @@ describe('loadScript', () => {
 
 describe('escapeHtml', () => {
   it('escapes all special characters', () => {
-    expect(escapeHtml('<script>"test"&\'')).toBe(
-      '&lt;script&gt;&quot;test&quot;&amp;&#39;',
-    )
+    expect(escapeHtml('<script>"test"&\'')).toBe('&lt;script&gt;&quot;test&quot;&amp;&#39;')
   })
 
   it('handles nullish values gracefully', () => {

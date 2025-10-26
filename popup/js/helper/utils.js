@@ -38,10 +38,7 @@ export function escapeHtml(value) {
   if (value === null || value === undefined) {
     return ''
   }
-  return String(value).replace(
-    HTML_ESCAPE_REGEX,
-    (match) => HTML_ESCAPE_MAP[match],
-  )
+  return String(value).replace(HTML_ESCAPE_REGEX, (match) => HTML_ESCAPE_MAP[match])
 }
 
 /**

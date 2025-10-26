@@ -32,7 +32,8 @@
       "quoteStyle": "single",
       "jsxQuoteStyle": "double",
       "semicolons": "asNeeded",
-      "trailingCommas": "all"
+      "trailingCommas": "all",
+      "lineWidth": 120
     },
     "globals": ["browser", "chrome", "Tagify", "uFuzzy", "process"]
   },

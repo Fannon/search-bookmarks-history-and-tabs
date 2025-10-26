@@ -4,15 +4,7 @@
  * 🐞 Added BUG tests: none – verified lazy merge regression via reference assertions
  */
 
-import {
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test,
-} from '@jest/globals'
+import { afterEach, beforeAll, beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
 const originalFetch = global.fetch
@@ -54,18 +46,12 @@ function setBrowserData({ tabs = [], bookmarks = [], history = [] } = {}) {
   mockState.history = currentHistory
 }
 
-function setBrowserApiAvailability({
-  tabs = true,
-  bookmarks = true,
-  history = true,
-} = {}) {
+function setBrowserApiAvailability({ tabs = true, bookmarks = true, history = true } = {}) {
   if (!browserApi) {
     return
   }
   browserApi.tabs = tabs ? { query: tabsQueryMock } : undefined
-  browserApi.bookmarks = bookmarks
-    ? { getTree: bookmarksGetTreeMock }
-    : undefined
+  browserApi.bookmarks = bookmarks ? { getTree: bookmarksGetTreeMock } : undefined
   browserApi.history = history ? { search: historySearchMock } : undefined
 }
 
@@ -182,33 +168,21 @@ describe('getSearchData', () => {
       expect(historySearchMock).toHaveBeenCalled()
       const [historySearchArgs] = historySearchMock.mock.calls[0]
       expect(historySearchArgs.maxResults).toBe(ext.opts.historyMaxItems)
-      expect(historySearchArgs.startTime).toBe(
-        baseTime - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo,
-      )
+      expect(historySearchArgs.startTime).toBe(baseTime - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo)
 
-      const mergedTab = result.tabs.find(
-        (tab) => tab.originalUrl === 'https://example.com',
-      )
+      const mergedTab = result.tabs.find((tab) => tab.originalUrl === 'https://example.com')
       expect(mergedTab.lastVisitSecondsAgo).toBe(25)
       expect(mergedTab.visitCount).toBe(12)
 
-      const untouchedTab = result.tabs.find(
-        (tab) => tab.originalUrl === 'https://no-match.com',
-      )
-      const originalUntouchedTab = tabsAfterConvert.find(
-        (tab) => tab.originalUrl === 'https://no-match.com',
-      )
+      const untouchedTab = result.tabs.find((tab) => tab.originalUrl === 'https://no-match.com')
+      const originalUntouchedTab = tabsAfterConvert.find((tab) => tab.originalUrl === 'https://no-match.com')
       expect(untouchedTab).toEqual(originalUntouchedTab)
 
-      const mergedBookmark = result.bookmarks.find(
-        (bookmark) => bookmark.originalUrl === 'https://example.com',
-      )
+      const mergedBookmark = result.bookmarks.find((bookmark) => bookmark.originalUrl === 'https://example.com')
       expect(mergedBookmark.lastVisitSecondsAgo).toBe(25)
       expect(mergedBookmark.visitCount).toBe(12)
 
-      const remainingHistory = historyAfterConvert.filter(
-        (entry) => entry.originalUrl !== 'https://example.com',
-      )
+      const remainingHistory = historyAfterConvert.filter((entry) => entry.originalUrl !== 'https://example.com')
       expect(result.history).toEqual(remainingHistory)
     } finally {
       nowSpy.mockRestore()
@@ -259,12 +233,8 @@ describe('getSearchData', () => {
       })
 
       const result = await getSearchData()
-      const flaggedBookmark = result.bookmarks.find(
-        (bookmark) => bookmark.originalUrl === 'https://example.com',
-      )
-      const plainBookmark = result.bookmarks.find(
-        (bookmark) => bookmark.originalUrl === 'https://no-open-tab.com',
-      )
+      const flaggedBookmark = result.bookmarks.find((bookmark) => bookmark.originalUrl === 'https://example.com')
+      const plainBookmark = result.bookmarks.find((bookmark) => bookmark.originalUrl === 'https://no-open-tab.com')
 
       expect(flaggedBookmark.tab).toBe(true)
       expect(plainBookmark.tab).toBeUndefined()
@@ -354,10 +324,7 @@ describe('getSearchData', () => {
     const result = await getSearchData()
 
     expect(global.fetch).toHaveBeenCalledWith('./mockData/chrome.json')
-    expect(warnSpy).toHaveBeenCalledWith(
-      'Could not load example mock data',
-      expect.any(Error),
-    )
+    expect(warnSpy).toHaveBeenCalledWith('Could not load example mock data', expect.any(Error))
     expect(result).toEqual({ tabs: [], bookmarks: [], history: [] })
 
     warnSpy.mockRestore()
@@ -410,9 +377,7 @@ describe('getSearchData', () => {
       })
 
       const expectedTabs = actualConvertBrowserTabs(mockState.tabs)
-      const expectedBookmarks = actualConvertBrowserBookmarks(
-        mockState.bookmarks,
-      )
+      const expectedBookmarks = actualConvertBrowserBookmarks(mockState.bookmarks)
 
       const result = await getSearchData()
 

@@ -1,11 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test,
-} from '@jest/globals'
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { clearTestExt, flushPromises } from './testUtils.js'
 
 describe('initOptions entry point', () => {
@@ -65,9 +58,6 @@ describe('initOptions entry point', () => {
     await import('../initOptions.js')
     await flushPromises()
 
-    expect(printError).toHaveBeenCalledWith(
-      error,
-      'Could not initialize options view.',
-    )
+    expect(printError).toHaveBeenCalledWith(error, 'Could not initialize options view.')
   })
 })

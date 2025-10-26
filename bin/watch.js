@@ -23,11 +23,7 @@ const isIgnoredPath = (filePath) => {
 
   const normalized = filePath.replace(/\\/g, '/')
 
-  if (
-    normalized.startsWith('popup/lib') ||
-    normalized.includes('/popup/lib/') ||
-    normalized.endsWith('/popup/lib')
-  ) {
+  if (normalized.startsWith('popup/lib') || normalized.includes('/popup/lib/') || normalized.endsWith('/popup/lib')) {
     return true
   }
 

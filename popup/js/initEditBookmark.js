@@ -11,11 +11,7 @@
 import { createExtensionContext } from './helper/extensionContext.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
-import {
-  deleteBookmark,
-  editBookmark,
-  updateBookmark,
-} from './view/editBookmarkView.js'
+import { deleteBookmark, editBookmark, updateBookmark } from './view/editBookmarkView.js'
 import { printError } from './view/errorView.js'
 
 export const ext = createExtensionContext()
@@ -39,9 +35,7 @@ export async function initEditBookmark() {
     ext.dom.saveButton = document.getElementById('edit-bookmark-save')
     ext.dom.deleteButton = document.getElementById('edit-bookmark-delete')
     ext.dom.cancelButton = document.getElementById('edit-bookmark-cancel')
-    ext.dom.searchApproachToggle = document.getElementById(
-      'search-approach-toggle',
-    )
+    ext.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
     ext.opts = await getEffectiveOptions()
 
     const { bookmarkId, returnHash } = parseBookmarkHash(window.location.hash)
@@ -105,10 +99,8 @@ function parseBookmarkHash(hash) {
  */
 function parseBookmarkComponents(hashBody) {
   const delimiterIndex = hashBody.search(/[&?]/)
-  const pathPart =
-    delimiterIndex === -1 ? hashBody : hashBody.slice(0, delimiterIndex)
-  const paramsString =
-    delimiterIndex === -1 ? '' : hashBody.slice(delimiterIndex + 1)
+  const pathPart = delimiterIndex === -1 ? hashBody : hashBody.slice(0, delimiterIndex)
+  const paramsString = delimiterIndex === -1 ? '' : hashBody.slice(delimiterIndex + 1)
 
   let bookmarkIdPart = pathPart
   let derivedReturnHash = null
@@ -117,9 +109,7 @@ function parseBookmarkComponents(hashBody) {
   const searchSegmentIndex = pathPart.indexOf(searchSegmentMarker)
   if (searchSegmentIndex !== -1) {
     bookmarkIdPart = pathPart.slice(0, searchSegmentIndex)
-    const searchTermSegment = pathPart.slice(
-      searchSegmentIndex + searchSegmentMarker.length,
-    )
+    const searchTermSegment = pathPart.slice(searchSegmentIndex + searchSegmentMarker.length)
     const decodedSearchTerm = decodeURIComponentSafe(searchTermSegment)
     derivedReturnHash = buildSearchHash(decodedSearchTerm)
   }

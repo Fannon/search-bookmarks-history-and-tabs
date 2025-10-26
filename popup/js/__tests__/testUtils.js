@@ -33,10 +33,7 @@ export function createTestExt(overrides = {}) {
   global.ext = ext
   if (typeof window !== 'undefined') {
     window.ext = ext
-    if (
-      typeof document !== 'undefined' &&
-      !document.getElementById('error-list')
-    ) {
+    if (typeof document !== 'undefined' && !document.getElementById('error-list')) {
       const errorContainer = document.createElement('div')
       errorContainer.id = 'error-list'
       errorContainer.style = 'display: none;'
@@ -48,17 +45,10 @@ export function createTestExt(overrides = {}) {
 
 export function clearTestExt() {
   // Clear any existing searchCache if it's a Map
-  if (
-    globalThis.ext?.searchCache &&
-    typeof globalThis.ext.searchCache.clear === 'function'
-  ) {
+  if (globalThis.ext?.searchCache && typeof globalThis.ext.searchCache.clear === 'function') {
     globalThis.ext.searchCache.clear()
   }
-  if (
-    typeof window !== 'undefined' &&
-    window.ext?.searchCache &&
-    typeof window.ext.searchCache.clear === 'function'
-  ) {
+  if (typeof window !== 'undefined' && window.ext?.searchCache && typeof window.ext.searchCache.clear === 'function') {
     window.ext.searchCache.clear()
   }
 

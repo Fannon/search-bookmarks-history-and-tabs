@@ -48,25 +48,19 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(
-      null,
-    )
-    const badges = Array.from(
-      document.querySelectorAll('#tags-list a.badge.tags'),
-    )
-    expect(badges.map((el) => el.getAttribute('x-tag'))).toEqual([
-      'alpha',
-      'beta',
-      'release',
-    ])
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
+    const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
+    expect(badges.map((el) => el.getAttribute('x-tag'))).toEqual(['alpha', 'beta', 'release'])
     expect(badges.map((el) => el.getAttribute('href'))).toEqual([
       './index.html#search/#alpha',
       './index.html#search/#beta',
       './index.html#search/#release',
     ])
-    expect(
-      badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim()),
-    ).toEqual(['#alpha (2)', '#beta (1)', '#release (3)'])
+    expect(badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())).toEqual([
+      '#alpha (2)',
+      '#beta (1)',
+      '#release (3)',
+    ])
   })
 
   it('renders nothing when no tags are returned', async () => {
@@ -75,17 +69,13 @@ describe('tagsView', () => {
 
     module.loadTagsOverview()
 
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(
-      null,
-    )
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
     expect(document.querySelectorAll('#tags-list a.badge.tags')).toHaveLength(0)
   })
 
   it('handles malformed tag data gracefully', async () => {
     setupDom()
-    const consoleWarnSpy = jest
-      .spyOn(console, 'warn')
-      .mockImplementation(() => {})
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 
     // Test with malformed tag data - the actual implementation renders all tags
     const tags = {
@@ -100,24 +90,16 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(
-      null,
-    )
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     // The actual implementation renders all tags including malformed ones
-    const badges = Array.from(
-      document.querySelectorAll('#tags-list a.badge.tags'),
-    )
+    const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges).toHaveLength(4) // All tags are rendered
 
     // Check that valid tags are still rendered correctly
-    const validBadge = badges.find(
-      (badge) => badge.getAttribute('x-tag') === 'valid-tag',
-    )
+    const validBadge = badges.find((badge) => badge.getAttribute('x-tag') === 'valid-tag')
     expect(validBadge).toBeDefined()
-    expect(validBadge.getAttribute('href')).toBe(
-      './index.html#search/#valid-tag',
-    )
+    expect(validBadge.getAttribute('href')).toBe('./index.html#search/#valid-tag')
 
     consoleWarnSpy.mockRestore()
   })
@@ -128,10 +110,7 @@ describe('tagsView', () => {
     // Create many tags to test performance
     const tags = {}
     for (let i = 0; i < 100; i++) {
-      tags[`tag${i}`] = Array.from(
-        { length: Math.floor(Math.random() * 10) + 1 },
-        (_, idx) => ({ id: `${i}-${idx}` }),
-      )
+      tags[`tag${i}`] = Array.from({ length: Math.floor(Math.random() * 10) + 1 }, (_, idx) => ({ id: `${i}-${idx}` }))
     }
 
     const { module, mocks } = await loadTagsView({ tags })
@@ -141,13 +120,9 @@ describe('tagsView', () => {
     const endTime = Date.now()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(
-      null,
-    )
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
-    const badges = Array.from(
-      document.querySelectorAll('#tags-list a.badge.tags'),
-    )
+    const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges).toHaveLength(100)
 
     // Should render within reasonable time (less than 100ms for 100 tags)
@@ -169,13 +144,9 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(
-      null,
-    )
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
-    const badges = Array.from(
-      document.querySelectorAll('#tags-list a.badge.tags'),
-    )
+    const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges).toHaveLength(5)
 
     // Check that special characters are handled in hrefs (no encoding in actual implementation)
@@ -206,13 +177,9 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(
-      null,
-    )
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
-    const badges = Array.from(
-      document.querySelectorAll('#tags-list a.badge.tags'),
-    )
+    const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges).toHaveLength(5)
 
     // Check that unicode characters are properly handled in hrefs

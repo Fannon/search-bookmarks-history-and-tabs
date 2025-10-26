@@ -23,13 +23,7 @@ function setupDom() {
 }
 
 function setupExt(bookmarks = [], overrides = {}) {
-  const {
-    model: modelOverrides,
-    opts: optsOverrides,
-    dom: domOverrides,
-    returnHash,
-    ...restOverrides
-  } = overrides
+  const { model: modelOverrides, opts: optsOverrides, dom: domOverrides, returnHash, ...restOverrides } = overrides
 
   global.ext = {
     model: {
@@ -56,9 +50,7 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   const resetFuzzySearchState = jest.fn()
   const resetSimpleSearchState = jest.fn()
   const searchMock = jest.fn(() => Promise.resolve())
-  const createSearchString = jest.fn(
-    (title, url, tags, folder) => `search:${title}|${url}|${tags}|${folder}`,
-  )
+  const createSearchString = jest.fn((title, url, tags, folder) => `search:${title}|${url}|${tags}|${folder}`)
   const browserApi = {
     bookmarks: {
       update: jest.fn(),
@@ -164,21 +156,11 @@ describe('editBookmarkView', () => {
 
     await module.editBookmark(BOOKMARK_ID)
 
-    expect(document.getElementById('edit-bookmark').getAttribute('style')).toBe(
-      '',
-    )
-    expect(document.getElementById('bookmark-title').value).toBe(
-      'Original Title',
-    )
-    expect(document.getElementById('bookmark-url').value).toBe(
-      'http://example.com',
-    )
-    expect(
-      document.getElementById('edit-bookmark-save').dataset.bookmarkId,
-    ).toBe(BOOKMARK_ID)
-    expect(
-      document.getElementById('edit-bookmark-delete').dataset.bookmarkId,
-    ).toBe(BOOKMARK_ID)
+    expect(document.getElementById('edit-bookmark').getAttribute('style')).toBe('')
+    expect(document.getElementById('bookmark-title').value).toBe('Original Title')
+    expect(document.getElementById('bookmark-url').value).toBe('http://example.com')
+    expect(document.getElementById('edit-bookmark-save').dataset.bookmarkId).toBe(BOOKMARK_ID)
+    expect(document.getElementById('edit-bookmark-delete').dataset.bookmarkId).toBe(BOOKMARK_ID)
     expect(global.ext.currentBookmarkId).toBe(BOOKMARK_ID)
 
     expect(helpers.tagifyInstances).toHaveLength(1)
@@ -262,13 +244,10 @@ describe('editBookmarkView', () => {
     expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
-    expect(mocks.browserApi.bookmarks.update).toHaveBeenCalledWith(
-      BOOKMARK_ID,
-      {
-        title: 'Updated Title #alpha #beta',
-        url: 'http://updated.com',
-      },
-    )
+    expect(mocks.browserApi.bookmarks.update).toHaveBeenCalledWith(BOOKMARK_ID, {
+      title: 'Updated Title #alpha #beta',
+      url: 'http://updated.com',
+    })
   })
 
   it('handles missing browser API and empty tag selection during update', async () => {
@@ -298,9 +277,7 @@ describe('editBookmarkView', () => {
 
     expect(bookmark.tags).toBe('')
     expect(mocks.browserApi.bookmarks?.update).toBeUndefined()
-    expect(warnSpy).toHaveBeenCalledWith(
-      'No browser bookmarks API found. Bookmark update will not persist.',
-    )
+    expect(warnSpy).toHaveBeenCalledWith('No browser bookmarks API found. Bookmark update will not persist.')
     expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
 
     warnSpy.mockRestore()
@@ -390,9 +367,7 @@ describe('editBookmarkView', () => {
 
     await module.deleteBookmark(BOOKMARK_ID)
 
-    expect(warnSpy).toHaveBeenCalledWith(
-      'No browser bookmarks API found. Bookmark remove will not persist.',
-    )
+    expect(warnSpy).toHaveBeenCalledWith('No browser bookmarks API found. Bookmark remove will not persist.')
     expect(global.ext.model.bookmarks).toHaveLength(0)
     expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
     warnSpy.mockRestore()
@@ -406,9 +381,7 @@ describe('editBookmarkView', () => {
 
     await module.editBookmark('missing-id')
 
-    expect(warnSpy).toHaveBeenCalledWith(
-      'Tried to edit bookmark id="missing-id", but could not find it in searchData.',
-    )
+    expect(warnSpy).toHaveBeenCalledWith('Tried to edit bookmark id="missing-id", but could not find it in searchData.')
     warnSpy.mockRestore()
   })
 })

@@ -54,24 +54,18 @@ export function openResultItem(event) {
       ext.browserApi.tabs.remove(targetId)
 
       // Remove the item from the UI - use targetId to ensure we have a valid value
-      const domElement = document.querySelector(
-        `#result-list > li[x-original-id="${targetId}"]`,
-      )
+      const domElement = document.querySelector(`#result-list > li[x-original-id="${targetId}"]`)
       if (domElement) {
         domElement.remove()
       }
 
       // Update the application state - only remove if found (findIndex returns -1 if not found)
-      const tabIndex = ext.model.tabs.findIndex(
-        (el) => el.originalId === targetId,
-      )
+      const tabIndex = ext.model.tabs.findIndex((el) => el.originalId === targetId)
       if (tabIndex !== -1) {
         ext.model.tabs.splice(tabIndex, 1)
       }
 
-      const resultIndex = ext.model.result.findIndex(
-        (el) => el.originalId === targetId,
-      )
+      const resultIndex = ext.model.result.findIndex((el) => el.originalId === targetId)
       if (resultIndex !== -1) {
         ext.model.result.splice(resultIndex, 1)
       }
@@ -97,9 +91,7 @@ export function openResultItem(event) {
     if (listItem) {
       const clickedIndex = parseInt(listItem.getAttribute('x-index'), 10)
       const hasValidIndex =
-        Number.isInteger(clickedIndex) &&
-        clickedIndex >= 0 &&
-        clickedIndex < ext.model.result.length
+        Number.isInteger(clickedIndex) && clickedIndex >= 0 && clickedIndex < ext.model.result.length
       if (hasValidIndex) {
         selectedResult = ext.model.result[clickedIndex]
       }
@@ -112,8 +104,7 @@ export function openResultItem(event) {
   }
 
   // Final fallback to DOM attributes if model state is unavailable
-  const url =
-    selectedResult?.originalUrl ?? resultEntry?.getAttribute('x-open-url')
+  const url = selectedResult?.originalUrl ?? resultEntry?.getAttribute('x-open-url')
 
   // Handle right-click to copy URL to clipboard
   if (event.button === 2) {

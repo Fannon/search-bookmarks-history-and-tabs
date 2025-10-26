@@ -1,11 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test,
-} from '@jest/globals'
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { clearTestExt, flushPromises } from './testUtils.js'
 
 const setupDom = () => {
@@ -72,9 +65,7 @@ const mockDependencies = async (overrides = {}) => {
   await jest.unstable_mockModule('../model/options.js', () => ({
     __esModule: true,
     getEffectiveOptions: config.getEffectiveOptions,
-    getUserOptions: jest.fn(() =>
-      Promise.resolve({ searchStrategy: 'precise' }),
-    ),
+    getUserOptions: jest.fn(() => Promise.resolve({ searchStrategy: 'precise' })),
     setUserOptions: jest.fn(() => Promise.resolve()),
   }))
   await jest.unstable_mockModule('../model/searchData.js', () => ({
@@ -216,9 +207,7 @@ describe('initSearch entry point', () => {
 
     module.closeErrors()
 
-    expect(document.getElementById('error-list').style.cssText).toBe(
-      'display: none;',
-    )
+    expect(document.getElementById('error-list').style.cssText).toBe('display: none;')
     expect(document.getElementById('tags-overview').style.cssText).toBe('')
     expect(document.getElementById('folders-overview').style.cssText).toBe('')
   })

@@ -39,10 +39,7 @@ function createResults() {
   ]
 }
 
-async function setupSearchEvents({
-  results = createResults(),
-  opts = {},
-} = {}) {
+async function setupSearchEvents({ results = createResults(), opts = {} } = {}) {
   jest.resetModules()
   window.location.hash = '#search/query'
 
@@ -180,9 +177,7 @@ describe('searchEvents openResultItem', () => {
       stopPropagation: jest.fn(),
     })
 
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      selected.getAttribute('x-open-url'),
-    )
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(selected.getAttribute('x-open-url'))
   })
 
   it('closes tabs from the result list when the close button is pressed', async () => {
@@ -299,29 +294,20 @@ describe('searchEvents openResultItem', () => {
     await viewModule.renderSearchResults()
 
     // Test closing tab with ID 8
-    const firstTabCloseButton =
-      elements.resultList.children[0].querySelector('.close-button')
-    firstTabCloseButton.dispatchEvent(
-      new MouseEvent('mouseup', { bubbles: true }),
-    )
+    const firstTabCloseButton = elements.resultList.children[0].querySelector('.close-button')
+    firstTabCloseButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
     expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(8)
 
     // Test closing tab with ID 10
     await viewModule.renderSearchResults()
-    const secondTabCloseButton =
-      elements.resultList.children[0].querySelector('.close-button')
-    secondTabCloseButton.dispatchEvent(
-      new MouseEvent('mouseup', { bubbles: true }),
-    )
+    const secondTabCloseButton = elements.resultList.children[0].querySelector('.close-button')
+    secondTabCloseButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
     expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(10)
 
     // Test closing tab with ID 100
     await viewModule.renderSearchResults()
-    const thirdTabCloseButton =
-      elements.resultList.children[0].querySelector('.close-button')
-    thirdTabCloseButton.dispatchEvent(
-      new MouseEvent('mouseup', { bubbles: true }),
-    )
+    const thirdTabCloseButton = elements.resultList.children[0].querySelector('.close-button')
+    thirdTabCloseButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
     expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(100)
   })
 
@@ -498,9 +484,7 @@ describe('searchEvents openResultItem', () => {
 
     // DOM still shows old result (hasn't re-rendered yet)
     const staleSelectedElement = document.getElementById('selected-result')
-    expect(staleSelectedElement.getAttribute('x-open-url')).toBe(
-      'https://bookmark.test',
-    ) // Old result
+    expect(staleSelectedElement.getAttribute('x-open-url')).toBe('https://bookmark.test') // Old result
 
     // Call openResultItem - it should use model state, not DOM
     module.openResultItem({

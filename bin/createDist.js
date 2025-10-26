@@ -12,12 +12,7 @@ import fs from 'fs-extra'
 import { join } from 'path'
 
 // Track CSS files that receive minified companions so we can prune originals
-const CSS_BUNDLED_FILENAMES = new Set([
-  'style.css',
-  'options.css',
-  'taxonomy.css',
-  'editBookmark.css',
-])
+const CSS_BUNDLED_FILENAMES = new Set(['style.css', 'options.css', 'taxonomy.css', 'editBookmark.css'])
 
 /**
  * Build the Chrome distribution directory and accompanying archive.
@@ -35,9 +30,7 @@ export async function createDist(clean = true) {
 
   // Copy images
   const images = ['logo-16.png', 'logo-32.png', 'logo-48.png', 'logo-128.png']
-  await Promise.all(
-    images.map((img) => fs.copy(`images/${img}`, `dist/chrome/images/${img}`)),
-  )
+  await Promise.all(images.map((img) => fs.copy(`images/${img}`, `dist/chrome/images/${img}`)))
 
   // Copy popup directory
   await fs.copy('popup/', 'dist/chrome/popup/', { recursive: true })
@@ -98,11 +91,7 @@ async function removeBundledJs(dir) {
         if (!remaining.length) {
           await fs.remove(fullPath)
         }
-      } else if (
-        entry.isFile() &&
-        entry.name.endsWith('.js') &&
-        !entry.name.endsWith('.bundle.min.js')
-      ) {
+      } else if (entry.isFile() && entry.name.endsWith('.js') && !entry.name.endsWith('.bundle.min.js')) {
         await fs.remove(fullPath)
       }
     }
@@ -180,10 +169,8 @@ async function modifyHtmlFile(filePath) {
 function replaceStylesheetReferences(htmlContent) {
   const replacements = [
     {
-      source:
-        '<link rel="stylesheet" href="./css/style.css" type="text/css" />',
-      target:
-        '<link rel="stylesheet" href="./css/style.min.css" type="text/css" />',
+      source: '<link rel="stylesheet" href="./css/style.css" type="text/css" />',
+      target: '<link rel="stylesheet" href="./css/style.min.css" type="text/css" />',
     },
     {
       source: '<link rel="stylesheet" href="./css/style.css" />',
@@ -194,16 +181,12 @@ function replaceStylesheetReferences(htmlContent) {
       target: '<link rel="stylesheet" href="./css/options.min.css" />',
     },
     {
-      source:
-        '<link rel="stylesheet" href="./css/taxonomy.css" type="text/css" />',
-      target:
-        '<link rel="stylesheet" href="./css/taxonomy.min.css" type="text/css" />',
+      source: '<link rel="stylesheet" href="./css/taxonomy.css" type="text/css" />',
+      target: '<link rel="stylesheet" href="./css/taxonomy.min.css" type="text/css" />',
     },
     {
-      source:
-        '<link rel="stylesheet" href="./css/editBookmark.css" type="text/css" />',
-      target:
-        '<link rel="stylesheet" href="./css/editBookmark.min.css" type="text/css" />',
+      source: '<link rel="stylesheet" href="./css/editBookmark.css" type="text/css" />',
+      target: '<link rel="stylesheet" href="./css/editBookmark.min.css" type="text/css" />',
     },
     {
       source: '<link rel="stylesheet" href="./css/editBookmark.css" />',
@@ -211,10 +194,7 @@ function replaceStylesheetReferences(htmlContent) {
     },
   ]
 
-  return replacements.reduce(
-    (result, { source, target }) => result.replace(source, target),
-    htmlContent,
-  )
+  return replacements.reduce((result, { source, target }) => result.replace(source, target), htmlContent)
 }
 
 /**

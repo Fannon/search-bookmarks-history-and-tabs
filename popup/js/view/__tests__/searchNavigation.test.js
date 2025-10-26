@@ -35,10 +35,7 @@ function createResults() {
   ]
 }
 
-async function setupSearchNavigation({
-  results = createResults(),
-  opts = {},
-} = {}) {
+async function setupSearchNavigation({ results = createResults(), opts = {} } = {}) {
   jest.resetModules()
   window.location.hash = '#search/query'
 
@@ -191,9 +188,7 @@ describe('searchNavigation navigationKeyListener', () => {
     })
     expect(preventDefault).toHaveBeenCalledTimes(1)
     expect(ext.model.currentItem).toBe(1)
-    expect(document.getElementById('selected-result')).toBe(
-      elements.resultList.children[1],
-    )
+    expect(document.getElementById('selected-result')).toBe(elements.resultList.children[1])
   })
 
   it('supports vim-style navigation keybindings', async () => {

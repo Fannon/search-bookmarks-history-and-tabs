@@ -19,9 +19,7 @@ test.describe('Recent Tabs on Open Functionality', () => {
   })
 
   test.describe('Default Behavior (maxRecentTabsToShow > 0)', () => {
-    test('shows tabs sorted by recent access when popup opens', async ({
-      page,
-    }) => {
+    test('shows tabs sorted by recent access when popup opens', async ({ page }) => {
       await waitForInitialization(page)
 
       await expect(page.locator('#search-input')).toHaveValue('')

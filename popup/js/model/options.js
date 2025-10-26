@@ -453,9 +453,7 @@ export async function getUserOptions() {
       } else {
         console.warn('No storage API found. Falling back to local Web Storage')
         const userOptionsString = window.localStorage.getItem('userOptions')
-        const userOptions = userOptionsString
-          ? JSON.parse(userOptionsString)
-          : emptyOptions
+        const userOptions = userOptionsString ? JSON.parse(userOptionsString) : emptyOptions
         return resolve(userOptions)
       }
     } catch (err) {
@@ -479,10 +477,7 @@ export async function getEffectiveOptions() {
       ...userOptions,
     }
   } catch (err) {
-    printError(
-      err,
-      'Could not get valid user options, falling back to defaults.',
-    )
+    printError(err, 'Could not get valid user options, falling back to defaults.')
     return defaultOptions
   }
 }
