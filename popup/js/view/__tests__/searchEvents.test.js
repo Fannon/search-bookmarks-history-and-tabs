@@ -260,6 +260,55 @@ describe('searchEvents openResultItem', () => {
     expect(ext.model.result[ext.model.result.length - 1]).toEqual(lastResult)
   })
 
+  it('parses tab IDs correctly with radix 10 when closing tabs', async () => {
+    const results = [
+      {
+        type: 'tab',
+        originalId: 8,
+        originalUrl: 'https://tab1.test',
+        url: 'tab1.test',
+        title: 'Tab with ID 8',
+        score: 10,
+      },
+      {
+        type: 'tab',
+        originalId: 10,
+        originalUrl: 'https://tab2.test',
+        url: 'tab2.test',
+        title: 'Tab with ID 10',
+        score: 9,
+      },
+      {
+        type: 'tab',
+        originalId: 100,
+        originalUrl: 'https://tab3.test',
+        url: 'tab3.test',
+        title: 'Tab with ID 100',
+        score: 8,
+      },
+    ]
+
+    const { viewModule, elements } = await setupSearchEvents({ results })
+    await viewModule.renderSearchResults()
+
+    // Test closing tab with ID 8
+    const firstTabCloseButton = elements.resultList.children[0].querySelector('.close-button')
+    firstTabCloseButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+    expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(8)
+
+    // Test closing tab with ID 10
+    await viewModule.renderSearchResults()
+    const secondTabCloseButton = elements.resultList.children[0].querySelector('.close-button')
+    secondTabCloseButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+    expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(10)
+
+    // Test closing tab with ID 100
+    await viewModule.renderSearchResults()
+    const thirdTabCloseButton = elements.resultList.children[0].querySelector('.close-button')
+    thirdTabCloseButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+    expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(100)
+  })
+
   it('opens URLs in the current tab when shift is held and closes the popup afterward', async () => {
     const { module, viewModule } = await setupSearchEvents()
     await viewModule.renderSearchResults()

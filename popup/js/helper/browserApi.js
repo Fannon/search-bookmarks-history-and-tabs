@@ -119,7 +119,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
         if (match.length !== 2) {
           console.error(`Unexpected custom bonus score match length`, match, entry)
         } else {
-          customBonusScore = parseInt(match[1])
+          customBonusScore = parseInt(match[1], 10)
         }
       }
 
