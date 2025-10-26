@@ -33,14 +33,14 @@ export function openResultItem(event) {
     }
 
     // Handle clicks on special navigation elements (tags, folders, etc.)
-    if (target && target.getAttribute('x-link')) {
+    if (target?.getAttribute('x-link')) {
       window.location = target.getAttribute('x-link')
       return
     }
 
     // Handle close button clicks on tab entries
     // For close buttons, ALWAYS read from DOM to match the visually clicked item
-    if (target && target.className.includes('close-button')) {
+    if (target?.className.includes('close-button')) {
       // Find the parent list item to get the correct originalId
       let listItem = target.parentElement
       while (listItem && listItem.nodeName !== 'LI') {

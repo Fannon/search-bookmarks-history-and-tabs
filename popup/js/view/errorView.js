@@ -47,7 +47,7 @@ export function printError(err, text) {
   const message = err && typeof err.message === 'string' ? err.message : String(err)
   html += `<li class="error"><b>Error Message</b>: ${escapeHtml(message)}</li>`
 
-  if (err && err.stack) {
+  if (err?.stack) {
     html += `<li class="error"><b>Error Stack</b>: ${escapeHtml(err.stack)}</li>`
   }
 

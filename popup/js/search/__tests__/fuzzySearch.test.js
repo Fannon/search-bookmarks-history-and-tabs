@@ -76,7 +76,7 @@ class TrackedUFuzzy {
     })
 
     // Use real uFuzzy highlight if available
-    if (originalUFuzzy && originalUFuzzy.highlight) {
+    if (originalUFuzzy?.highlight) {
       return originalUFuzzy.highlight(searchString, ranges)
     }
 
@@ -147,8 +147,8 @@ describe('fuzzySearch', () => {
       originalUFuzzy = window.uFuzzy
 
       // Load the actual uFuzzy library
-      const fs = await import('fs')
-      const path = await import('path')
+      const fs = await import('node:fs')
+      const path = await import('node:path')
       const uFuzzyPath = path.join(process.cwd(), 'popup/lib/uFuzzy.iife.min.js')
 
       if (fs.existsSync(uFuzzyPath)) {

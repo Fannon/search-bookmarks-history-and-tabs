@@ -126,7 +126,7 @@ export async function renderSearchResults() {
       const originalUrlAttr = resultEntry.originalUrl ? ` x-open-url="${escapeHtml(resultEntry.originalUrl)}"` : ''
       const originalIdAttr =
         resultEntry.originalId !== undefined ? ` x-original-id="${escapeHtml(String(resultEntry.originalId))}"` : ''
-      const colorValue = escapeHtml(String(opts[resultEntry.type + 'Color']))
+      const colorValue = escapeHtml(String(opts[`${resultEntry.type}Color`]))
 
       const itemHTML = `
         <li class="${typeClass}"${originalUrlAttr} x-index="${i}"${originalIdAttr}

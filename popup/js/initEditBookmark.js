@@ -55,7 +55,7 @@ export async function initEditBookmark() {
     ext.initialized = true
   } catch (error) {
     printError(error, 'Could not initialize bookmark editor.')
-    if (ext.dom && ext.dom.cancelButton) {
+    if (ext.dom?.cancelButton) {
       ext.dom.cancelButton.focus()
     }
   } finally {
@@ -207,7 +207,7 @@ async function handleHashChange() {
   }
 
   ext.returnHash = normalizeReturnHash(returnHash)
-  if (ext.dom && ext.dom.cancelButton) {
+  if (ext.dom?.cancelButton) {
     ext.dom.cancelButton.href = getReturnTarget()
   }
 

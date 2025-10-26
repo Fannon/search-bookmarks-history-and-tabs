@@ -108,7 +108,7 @@ export function getUniqueFolders() {
  * Call this after mutating ext.model.bookmarks to keep folder views in sync.
  */
 export function resetUniqueFoldersCache() {
-  if (ext && ext.index && ext.index.taxonomy) {
+  if (ext?.index?.taxonomy) {
     ext.index.taxonomy.folders = undefined
   }
 }

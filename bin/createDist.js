@@ -1,6 +1,7 @@
 #!/usr/bin/env node
+import { createWriteStream } from 'node:fs'
+import { join } from 'node:path'
 import archiver from 'archiver'
-import { createWriteStream } from 'fs'
 /**
  * @file Builds the Chrome-ready distribution directory and archive.
  *
@@ -9,7 +10,6 @@ import { createWriteStream } from 'fs'
  * file. This mirrors the artifact uploaded to browser extension stores.
  */
 import fs from 'fs-extra'
-import { join } from 'path'
 
 // Track CSS files that receive minified companions so we can prune originals
 const CSS_BUNDLED_FILENAMES = new Set(['style.css', 'options.css', 'taxonomy.css', 'editBookmark.css'])

@@ -71,7 +71,7 @@ export function convertBrowserTabs(chromeTabs) {
  * @returns {Promise<Array>} Bookmark hierarchy or empty array when unsupported.
  */
 export async function getBrowserBookmarks() {
-  if (browserApi.bookmarks && browserApi.bookmarks.getTree) {
+  if (browserApi.bookmarks?.getTree) {
     return browserApi.bookmarks.getTree()
   } else {
     console.warn(`No browser bookmark API found. Returning no results.`)
@@ -142,7 +142,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
 
         tagsArray = tagSplit.filter((el) => {
           if (el.match(/^\d/)) {
-            title += ' #' + el
+            title += ` #${el}`
             return false
           } else if (!el.trim()) {
             return false
@@ -151,7 +151,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
           }
         })
         for (const tag of tagsArray) {
-          tagsText += '#' + tag.trim() + ' '
+          tagsText += `#${tag.trim()} `
         }
         tagsText = tagsText.slice(0, -1)
       }
@@ -163,7 +163,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
       // Consider the folder names / structure of bookmarks
       let folderText = ''
       for (const folder of folderTrail) {
-        folderText += '~' + folder + ' '
+        folderText += `~${folder} `
       }
       folderText = folderText.slice(0, -1)
 
@@ -232,7 +232,7 @@ export async function getBrowserHistory(startTime, maxResults) {
  * @returns {Array<Object>} Normalized history items.
  */
 export function convertBrowserHistory(history) {
-  if (ext.opts.historyIgnoreList && ext.opts.historyIgnoreList.length) {
+  if (ext.opts.historyIgnoreList?.length) {
     let ignoredHistoryCounter = 0
     history = history.filter((el) => {
       for (const ignoreUrl of ext.opts.historyIgnoreList) {

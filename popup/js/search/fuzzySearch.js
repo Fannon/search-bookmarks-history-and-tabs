@@ -45,7 +45,7 @@ export function resetFuzzySearchState(searchMode) {
  */
 export async function fuzzySearch(searchMode, searchTerm) {
   // Lazy load the uFuzzy library if not there already
-  if (!window['uFuzzy']) {
+  if (!window.uFuzzy) {
     try {
       await loadScript('./lib/uFuzzy.iife.min.js')
     } catch (err) {
@@ -146,12 +146,12 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
         const highlightedResult = {
           ...result,
         }
-        if (highlightArray[0] && highlightArray[0].includes('<mark>')) {
+        if (highlightArray[0]?.includes('<mark>')) {
           highlightedResult.titleHighlighted = highlightArray[0]
         } else {
           delete highlightedResult.titleHighlighted
         }
-        if (highlightArray[1] && highlightArray[1].includes('<mark>')) {
+        if (highlightArray[1]?.includes('<mark>')) {
           highlightedResult.urlHighlighted = highlightArray[1]
         } else {
           delete highlightedResult.urlHighlighted

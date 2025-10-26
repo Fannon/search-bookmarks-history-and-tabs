@@ -308,7 +308,7 @@ export async function search(event) {
       renderSearchResults()
 
       // Simple timing for debugging (only if debug is enabled)
-      console.debug('Search completed in ' + (Date.now() - startTime) + 'ms')
+      console.debug(`Search completed in ${Date.now() - startTime}ms`)
     } catch (err) {
       printError(err)
     }
@@ -345,7 +345,7 @@ export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode
   } else if (searchApproach === 'fuzzy') {
     results = await fuzzySearch(searchMode, searchTerm)
   } else {
-    throw new Error('Unknown search approach: ' + searchApproach)
+    throw new Error(`Unknown search approach: ${searchApproach}`)
   }
 
   return results

@@ -67,7 +67,7 @@ describe('options model', () => {
 
   describe('setUserOptions', () => {
     test('saves through sync storage when available', async () => {
-      const syncSet = jest.fn((payload, callback) => callback())
+      const syncSet = jest.fn((_payload, callback) => callback())
       createTestExt({
         browserApi: {
           storage: { sync: { set: syncSet } },
@@ -90,7 +90,7 @@ describe('options model', () => {
 
     test('handles storage API errors', async () => {
       const runtimeError = new Error('Storage quota exceeded')
-      const syncSet = jest.fn((payload, callback) => {
+      const syncSet = jest.fn((_payload, callback) => {
         // Simulate runtime error
         global.ext.browserApi.runtime.lastError = runtimeError
         callback()
@@ -109,7 +109,7 @@ describe('options model', () => {
 
   describe('getUserOptions', () => {
     test('reads from sync storage when available', async () => {
-      const syncGet = jest.fn((keys, callback) => callback({ userOptions: { searchStrategy: 'precise' } }))
+      const syncGet = jest.fn((_keys, callback) => callback({ userOptions: { searchStrategy: 'precise' } }))
       createTestExt({
         browserApi: {
           storage: { sync: { get: syncGet } },
@@ -153,7 +153,7 @@ describe('options model', () => {
 
     test('handles storage API errors', async () => {
       const runtimeError = new Error('Storage API unavailable')
-      const syncGet = jest.fn((keys, callback) => {
+      const syncGet = jest.fn((_keys, callback) => {
         global.ext.browserApi.runtime.lastError = runtimeError
         callback()
       })

@@ -86,7 +86,7 @@ const installChromeMock = (() => {
               return node
             }
 
-            if (node.children && node.children.length) {
+            if (node.children?.length) {
               const match = findNode(node.children, targetId)
               if (match) {
                 return match
@@ -105,7 +105,7 @@ const installChromeMock = (() => {
               return true
             }
 
-            if (node.children && node.children.length) {
+            if (node.children?.length) {
               const removed = removeNode(node.children, targetId)
               if (removed) {
                 return true

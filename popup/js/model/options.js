@@ -419,7 +419,7 @@ export async function setUserOptions(userOptions = {}) {
       return reject(err)
     }
 
-    if (ext.browserApi.storage && ext.browserApi.storage.sync) {
+    if (ext.browserApi.storage?.sync) {
       ext.browserApi.storage.sync.set({ userOptions: userOptions }, () => {
         if (ext.browserApi.runtime.lastError) {
           return reject(ext.browserApi.runtime.lastError)
@@ -442,7 +442,7 @@ export async function setUserOptions(userOptions = {}) {
 export async function getUserOptions() {
   return new Promise((resolve, reject) => {
     try {
-      if (ext.browserApi.storage && ext.browserApi.storage.sync) {
+      if (ext.browserApi.storage?.sync) {
         ext.browserApi.storage.sync.get(['userOptions'], (result) => {
           if (ext.browserApi.runtime.lastError) {
             return reject(ext.browserApi.runtime.lastError)
