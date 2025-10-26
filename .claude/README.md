@@ -57,6 +57,28 @@ Pre-approved permissions:
 - `WebFetch(domain:github.com)` - Fetch GitHub documentation and issues
 - `Read(//tmp/**)` - Read temporary files (e.g., test artifacts)
 
+## Git Hooks
+
+Pre-commit hooks automatically run via **simple-git-hooks + lint-staged**:
+
+### What happens on commit:
+1. **JS/MJS files**: Biome check with auto-fix (lint + format)
+2. **CSS/HTML/JSON/MD**: Biome format
+3. Files are auto-fixed and re-staged
+4. Commit proceeds with clean code
+
+### Bypass hooks (emergency only):
+```bash
+git commit --no-verify -m "message"
+# or
+SKIP_SIMPLE_GIT_HOOKS=1 git commit -m "message"
+```
+
+### Manual lint staged files:
+```bash
+npm run lint:staged
+```
+
 ## Recommended Workflow
 
 1. Start development with `/context` to load project conventions
@@ -64,11 +86,12 @@ Pre-approved permissions:
 3. Run `/lint` to check style (fast feedback)
 4. Run `/test <file>` for focused unit testing
 5. Run `/verify` before committing
-6. Create commits/PRs (hooks will auto-verify)
+6. Commit changes (hooks auto-fix style issues)
 
 ## Development Tips
 
 - Use `npm run watch` for auto-rebuild during development
 - Keep `/verify` passing before creating PRs
-- Hooks provide automatic reminders but don't block work
+- Pre-commit hooks auto-fix style issues
 - All slash commands map to npm scripts documented in CLAUDE.md
+- Hooks use `simple-git-hooks` (~10KB, zero deps) for speed
