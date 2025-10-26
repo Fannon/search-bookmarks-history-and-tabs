@@ -78,9 +78,7 @@ body small {
 }
 body,
 textarea {
-  font-family:
-    "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Helvetica Neue",
-    sans-serif;
+  font-family: "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
 }
 .input,
 .input:active,
