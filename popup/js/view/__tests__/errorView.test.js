@@ -4,7 +4,7 @@ import {
   describe,
   expect,
   it,
-  jest
+  jest,
 } from '@jest/globals'
 import { closeErrors, printError } from '../errorView.js'
 
@@ -56,7 +56,7 @@ describe('printError', () => {
 
     expect(items[1].querySelector('b').textContent).toBe('Error Message')
     expect(items[1].innerHTML).toContain(
-      '&lt;script&gt;alert(1)&lt;/script&gt;'
+      '&lt;script&gt;alert(1)&lt;/script&gt;',
     )
 
     expect(items[2].querySelector('b').textContent).toBe('Error Stack')

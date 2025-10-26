@@ -18,7 +18,7 @@ async function loadFoldersView({ folders = {} } = {}) {
 
   const getUniqueFolders = jest.fn(() => folders)
   jest.unstable_mockModule('../../search/taxonomySearch.js', () => ({
-    getUniqueFolders
+    getUniqueFolders,
   }))
 
   const module = await import('../foldersView.js')
@@ -26,8 +26,8 @@ async function loadFoldersView({ folders = {} } = {}) {
   return {
     module,
     mocks: {
-      getUniqueFolders
-    }
+      getUniqueFolders,
+    },
   }
 }
 
@@ -41,7 +41,7 @@ describe('foldersView', () => {
     const folders = {
       Work: [{ id: 1 }, { id: 2 }],
       Archive: [{ id: 3 }],
-      Personal: [{ id: 4 }, { id: 5 }, { id: 6 }]
+      Personal: [{ id: 4 }, { id: 5 }, { id: 6 }],
     }
     const { module, mocks } = await loadFoldersView({ folders })
 
@@ -49,23 +49,23 @@ describe('foldersView', () => {
 
     expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
     expect(
-      document.getElementById('folders-overview').getAttribute('style')
+      document.getElementById('folders-overview').getAttribute('style'),
     ).toBe(null)
     const badges = Array.from(
-      document.querySelectorAll('#folders-list a.badge.folder')
+      document.querySelectorAll('#folders-list a.badge.folder'),
     )
     expect(badges.map((el) => el.getAttribute('x-folder'))).toEqual([
       'Archive',
       'Personal',
-      'Work'
+      'Work',
     ])
     expect(badges.map((el) => el.getAttribute('href'))).toEqual([
       './index.html#search/~Archive',
       './index.html#search/~Personal',
-      './index.html#search/~Work'
+      './index.html#search/~Work',
     ])
     expect(
-      badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())
+      badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim()),
     ).toEqual(['~Archive (1)', '~Personal (3)', '~Work (2)'])
   })
 
@@ -76,10 +76,10 @@ describe('foldersView', () => {
     module.loadFoldersOverview()
 
     expect(
-      document.getElementById('folders-overview').getAttribute('style')
+      document.getElementById('folders-overview').getAttribute('style'),
     ).toBe(null)
     expect(
-      document.querySelectorAll('#folders-list a.badge.folder')
+      document.querySelectorAll('#folders-list a.badge.folder'),
     ).toHaveLength(0)
   })
 
@@ -94,7 +94,7 @@ describe('foldersView', () => {
       '': [], // Empty folder name
       null: [{ id: 1 }], // null key
       undefined: [{ id: 2 }], // undefined key
-      'Valid Folder': [{ id: 3 }]
+      'Valid Folder': [{ id: 3 }],
     }
 
     const { module, mocks } = await loadFoldersView({ folders })
@@ -103,22 +103,22 @@ describe('foldersView', () => {
 
     expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
     expect(
-      document.getElementById('folders-overview').getAttribute('style')
+      document.getElementById('folders-overview').getAttribute('style'),
     ).toBe(null)
 
     // The actual implementation renders all folders including malformed ones
     const badges = Array.from(
-      document.querySelectorAll('#folders-list a.badge.folder')
+      document.querySelectorAll('#folders-list a.badge.folder'),
     )
     expect(badges).toHaveLength(4) // All folders are rendered
 
     // Check that valid folders are still rendered correctly
     const validBadge = badges.find(
-      (badge) => badge.getAttribute('x-folder') === 'Valid Folder'
+      (badge) => badge.getAttribute('x-folder') === 'Valid Folder',
     )
     expect(validBadge).toBeDefined()
     expect(validBadge.getAttribute('href')).toBe(
-      './index.html#search/~Valid Folder'
+      './index.html#search/~Valid Folder',
     )
 
     consoleWarnSpy.mockRestore()
@@ -133,8 +133,8 @@ describe('foldersView', () => {
       folders[`Folder ${i}`] = Array.from(
         { length: Math.floor(Math.random() * 10) + 1 },
         (_, idx) => ({
-          id: `${i}-${idx}`
-        })
+          id: `${i}-${idx}`,
+        }),
       )
     }
 
@@ -146,11 +146,11 @@ describe('foldersView', () => {
 
     expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
     expect(
-      document.getElementById('folders-overview').getAttribute('style')
+      document.getElementById('folders-overview').getAttribute('style'),
     ).toBe(null)
 
     const badges = Array.from(
-      document.querySelectorAll('#folders-list a.badge.folder')
+      document.querySelectorAll('#folders-list a.badge.folder'),
     )
     expect(badges).toHaveLength(100)
 
@@ -164,7 +164,7 @@ describe('foldersView', () => {
       'Work & Projects': [{ id: 1 }],
       'Personal/Archive': [{ id: 2 }],
       'Test (2024)': [{ id: 3 }],
-      'Folder with "quotes"': [{ id: 4 }]
+      'Folder with "quotes"': [{ id: 4 }],
     }
 
     const { module, mocks } = await loadFoldersView({ folders })
@@ -173,11 +173,11 @@ describe('foldersView', () => {
 
     expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
     expect(
-      document.getElementById('folders-overview').getAttribute('style')
+      document.getElementById('folders-overview').getAttribute('style'),
     ).toBe(null)
 
     const badges = Array.from(
-      document.querySelectorAll('#folders-list a.badge.folder')
+      document.querySelectorAll('#folders-list a.badge.folder'),
     )
     expect(badges).toHaveLength(4)
 
@@ -186,24 +186,24 @@ describe('foldersView', () => {
       './index.html#search/~Folder with "quotes"',
       './index.html#search/~Personal/Archive',
       './index.html#search/~Test (2024)',
-      './index.html#search/~Work & Projects'
+      './index.html#search/~Work & Projects',
     ])
 
     const labelTexts = badges.map((el) =>
-      el.textContent.replace(/\s+/g, ' ').trim()
+      el.textContent.replace(/\s+/g, ' ').trim(),
     )
     expect(labelTexts).toEqual([
       '~Folder with "quotes" (1)',
       '~Personal/Archive (1)',
       '~Test (2024) (1)',
-      '~Work & Projects (1)'
+      '~Work & Projects (1)',
     ])
   })
 
   it('escapes HTML content in folder names', async () => {
     setupDom()
     const folders = {
-      'Danger<script>alert(1)</script>': [{ id: 1 }]
+      'Danger<script>alert(1)</script>': [{ id: 1 }],
     }
 
     const { module } = await loadFoldersView({ folders })

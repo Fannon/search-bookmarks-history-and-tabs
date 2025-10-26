@@ -11,7 +11,7 @@ import {
   describe,
   expect,
   jest,
-  test
+  test,
 } from '@jest/globals'
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
@@ -21,7 +21,7 @@ const originalPerformance = global.performance
 const mockState = {
   tabs: [],
   bookmarks: [],
-  history: []
+  history: [],
 }
 
 let tabsQueryMock
@@ -57,7 +57,7 @@ function setBrowserData({ tabs = [], bookmarks = [], history = [] } = {}) {
 function setBrowserApiAvailability({
   tabs = true,
   bookmarks = true,
-  history = true
+  history = true,
 } = {}) {
   if (!browserApi) {
     return
@@ -98,8 +98,8 @@ describe('getSearchData', () => {
         enableHistory: true,
         debug: false,
         historyDaysAgo: 7,
-        historyMaxItems: 100
-      }
+        historyMaxItems: 100,
+      },
     })
     global.fetch = originalFetch
   })
@@ -128,7 +128,7 @@ describe('getSearchData', () => {
             id: 'tab-1',
             active: true,
             windowId: 1,
-            lastAccessed: baseTime - 400 * 1000
+            lastAccessed: baseTime - 400 * 1000,
           },
           {
             url: 'https://no-match.com',
@@ -136,8 +136,8 @@ describe('getSearchData', () => {
             id: 'tab-2',
             active: false,
             windowId: 1,
-            lastAccessed: baseTime - 200 * 1000
-          }
+            lastAccessed: baseTime - 200 * 1000,
+          },
         ],
         bookmarks: [
           {
@@ -150,12 +150,12 @@ describe('getSearchData', () => {
                     id: 'bookmark-1',
                     title: 'Example Bookmark',
                     url: 'https://example.com',
-                    dateAdded: baseTime - 1000 * 1000
-                  }
-                ]
-              }
-            ]
-          }
+                    dateAdded: baseTime - 1000 * 1000,
+                  },
+                ],
+              },
+            ],
+          },
         ],
         history: [
           {
@@ -163,16 +163,16 @@ describe('getSearchData', () => {
             url: 'https://example.com',
             title: 'Example History',
             lastVisitTime: baseTime - 25 * 1000,
-            visitCount: 12
+            visitCount: 12,
           },
           {
             id: 'history-2',
             url: 'https://history-only.com',
             title: 'Standalone History',
             lastVisitTime: baseTime - 300 * 1000,
-            visitCount: 5
-          }
-        ]
+            visitCount: 5,
+          },
+        ],
       })
       const tabsAfterConvert = actualConvertBrowserTabs(mockState.tabs)
       const historyAfterConvert = actualConvertBrowserHistory(mockState.history)
@@ -183,31 +183,31 @@ describe('getSearchData', () => {
       const [historySearchArgs] = historySearchMock.mock.calls[0]
       expect(historySearchArgs.maxResults).toBe(ext.opts.historyMaxItems)
       expect(historySearchArgs.startTime).toBe(
-        baseTime - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
+        baseTime - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo,
       )
 
       const mergedTab = result.tabs.find(
-        (tab) => tab.originalUrl === 'https://example.com'
+        (tab) => tab.originalUrl === 'https://example.com',
       )
       expect(mergedTab.lastVisitSecondsAgo).toBe(25)
       expect(mergedTab.visitCount).toBe(12)
 
       const untouchedTab = result.tabs.find(
-        (tab) => tab.originalUrl === 'https://no-match.com'
+        (tab) => tab.originalUrl === 'https://no-match.com',
       )
       const originalUntouchedTab = tabsAfterConvert.find(
-        (tab) => tab.originalUrl === 'https://no-match.com'
+        (tab) => tab.originalUrl === 'https://no-match.com',
       )
       expect(untouchedTab).toEqual(originalUntouchedTab)
 
       const mergedBookmark = result.bookmarks.find(
-        (bookmark) => bookmark.originalUrl === 'https://example.com'
+        (bookmark) => bookmark.originalUrl === 'https://example.com',
       )
       expect(mergedBookmark.lastVisitSecondsAgo).toBe(25)
       expect(mergedBookmark.visitCount).toBe(12)
 
       const remainingHistory = historyAfterConvert.filter(
-        (entry) => entry.originalUrl !== 'https://example.com'
+        (entry) => entry.originalUrl !== 'https://example.com',
       )
       expect(result.history).toEqual(remainingHistory)
     } finally {
@@ -228,8 +228,8 @@ describe('getSearchData', () => {
             id: 'tab-1',
             active: true,
             windowId: 1,
-            lastAccessed: baseTime - 1000
-          }
+            lastAccessed: baseTime - 1000,
+          },
         ],
         bookmarks: [
           {
@@ -242,28 +242,28 @@ describe('getSearchData', () => {
                     id: 'bookmark-1',
                     title: 'Example Bookmark',
                     url: 'https://example.com',
-                    dateAdded: baseTime - 5000
+                    dateAdded: baseTime - 5000,
                   },
                   {
                     id: 'bookmark-2',
                     title: 'Standalone Bookmark',
                     url: 'https://no-open-tab.com',
-                    dateAdded: baseTime - 6000
-                  }
-                ]
-              }
-            ]
-          }
+                    dateAdded: baseTime - 6000,
+                  },
+                ],
+              },
+            ],
+          },
         ],
-        history: []
+        history: [],
       })
 
       const result = await getSearchData()
       const flaggedBookmark = result.bookmarks.find(
-        (bookmark) => bookmark.originalUrl === 'https://example.com'
+        (bookmark) => bookmark.originalUrl === 'https://example.com',
       )
       const plainBookmark = result.bookmarks.find(
-        (bookmark) => bookmark.originalUrl === 'https://no-open-tab.com'
+        (bookmark) => bookmark.originalUrl === 'https://no-open-tab.com',
       )
 
       expect(flaggedBookmark.tab).toBe(true)
@@ -289,8 +289,8 @@ describe('getSearchData', () => {
             id: 'tab-1',
             active: true,
             windowId: 2,
-            lastAccessed: baseTime - 60 * 1000
-          }
+            lastAccessed: baseTime - 60 * 1000,
+          },
         ],
         bookmarks: [
           {
@@ -303,12 +303,12 @@ describe('getSearchData', () => {
                     id: 'bookmark-1',
                     title: 'Mock Bookmark',
                     url: 'https://mock-bookmark.com',
-                    dateAdded: baseTime - 500 * 1000
-                  }
-                ]
-              }
-            ]
-          }
+                    dateAdded: baseTime - 500 * 1000,
+                  },
+                ],
+              },
+            ],
+          },
         ],
         history: [
           {
@@ -316,14 +316,14 @@ describe('getSearchData', () => {
             title: 'Mock History',
             id: 'history-1',
             visitCount: 4,
-            lastVisitTime: baseTime - 120 * 1000
-          }
-        ]
+            lastVisitTime: baseTime - 120 * 1000,
+          },
+        ],
       }
       const fetchMock = jest.fn(() =>
         Promise.resolve({
-          json: () => Promise.resolve(mockResponse)
-        })
+          json: () => Promise.resolve(mockResponse),
+        }),
       )
       global.fetch = fetchMock
 
@@ -356,7 +356,7 @@ describe('getSearchData', () => {
     expect(global.fetch).toHaveBeenCalledWith('./mockData/chrome.json')
     expect(warnSpy).toHaveBeenCalledWith(
       'Could not load example mock data',
-      expect.any(Error)
+      expect.any(Error),
     )
     expect(result).toEqual({ tabs: [], bookmarks: [], history: [] })
 
@@ -377,8 +377,8 @@ describe('getSearchData', () => {
             id: 'tab-1',
             active: true,
             windowId: 3,
-            lastAccessed: baseTime - 5 * 1000
-          }
+            lastAccessed: baseTime - 5 * 1000,
+          },
         ],
         bookmarks: [
           {
@@ -391,12 +391,12 @@ describe('getSearchData', () => {
                     id: 'bookmark-1',
                     title: 'Saved Page',
                     url: 'https://bookmark.com',
-                    dateAdded: baseTime - 1000
-                  }
-                ]
-              }
-            ]
-          }
+                    dateAdded: baseTime - 1000,
+                  },
+                ],
+              },
+            ],
+          },
         ],
         history: [
           {
@@ -404,14 +404,14 @@ describe('getSearchData', () => {
             url: 'https://history.com',
             title: 'History Entry',
             lastVisitTime: baseTime - 75 * 1000,
-            visitCount: 9
-          }
-        ]
+            visitCount: 9,
+          },
+        ],
       })
 
       const expectedTabs = actualConvertBrowserTabs(mockState.tabs)
       const expectedBookmarks = actualConvertBrowserBookmarks(
-        mockState.bookmarks
+        mockState.bookmarks,
       )
 
       const result = await getSearchData()

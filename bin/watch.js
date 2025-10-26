@@ -41,8 +41,8 @@ const watcher = chokidar.watch('popup', {
   ignored: isIgnoredPath,
   awaitWriteFinish: {
     stabilityThreshold: 200,
-    pollInterval: 100
-  }
+    pollInterval: 100,
+  },
 })
 
 let pendingTimer = null

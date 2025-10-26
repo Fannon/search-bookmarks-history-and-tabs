@@ -75,7 +75,7 @@ export function selectListItem(index, scroll = false) {
     if (scroll) {
       ext.dom.resultList.children[index].scrollIntoView({
         behavior: 'auto',
-        block: 'nearest'
+        block: 'nearest',
       })
     }
   }

@@ -18,7 +18,7 @@ function setupDom() {
 async function loadEditOptionsView({
   userOptions = {},
   dumpImpl,
-  loadImpl
+  loadImpl,
 } = {}) {
   jest.resetModules()
 
@@ -44,12 +44,12 @@ async function loadEditOptionsView({
 
   window.jsyaml = {
     dump: dumpMock,
-    load: loadMock
+    load: loadMock,
   }
 
   jest.unstable_mockModule('../../model/options.js', () => ({
     getUserOptions,
-    setUserOptions
+    setUserOptions,
   }))
 
   const module = await import('../editOptionsView.js')
@@ -60,8 +60,8 @@ async function loadEditOptionsView({
       getUserOptions,
       setUserOptions,
       dump: dumpMock,
-      load: loadMock
-    }
+      load: loadMock,
+    },
   }
 }
 
@@ -79,7 +79,7 @@ describe('editOptionsView', () => {
     setupDom()
     const { module, mocks } = await loadEditOptionsView({
       userOptions: { theme: 'dark' },
-      dumpImpl: jest.fn(() => 'theme: dark')
+      dumpImpl: jest.fn(() => 'theme: dark'),
     })
 
     await module.initOptions()
@@ -94,7 +94,7 @@ describe('editOptionsView', () => {
     const dumpImpl = jest.fn(() => '{}')
     const { module, mocks } = await loadEditOptionsView({
       userOptions: {},
-      dumpImpl
+      dumpImpl,
     })
 
     await module.initOptions()
@@ -113,7 +113,7 @@ describe('editOptionsView', () => {
     const { module, mocks } = await loadEditOptionsView({
       userOptions: { theme: 'dark' },
       dumpImpl,
-      loadImpl
+      loadImpl,
     })
 
     await module.initOptions()
@@ -127,7 +127,7 @@ describe('editOptionsView', () => {
     expect(mocks.load).toHaveBeenCalledWith('theme: dark')
     expect(mocks.setUserOptions).toHaveBeenCalledWith({ theme: 'dark' })
     expect(document.getElementById('user-config').value).toBe(
-      'normalized: dark'
+      'normalized: dark',
     )
   })
 
@@ -140,7 +140,7 @@ describe('editOptionsView', () => {
     const { module, mocks } = await loadEditOptionsView({
       userOptions: {},
       dumpImpl: jest.fn(() => '{}'),
-      loadImpl
+      loadImpl,
     })
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -165,7 +165,7 @@ describe('editOptionsView', () => {
     setupDom()
     const { module } = await loadEditOptionsView({
       userOptions: {},
-      dumpImpl: jest.fn(() => '{}')
+      dumpImpl: jest.fn(() => '{}'),
     })
 
     await module.initOptions()

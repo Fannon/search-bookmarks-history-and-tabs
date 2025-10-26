@@ -7,11 +7,11 @@ describe('taxonomy search', () => {
   beforeEach(async () => {
     createTestExt({
       model: {
-        bookmarks: []
+        bookmarks: [],
       },
       index: {
-        taxonomy: {}
-      }
+        taxonomy: {},
+      },
     })
     taxonomyModule = await import('../taxonomySearch.js')
   })
@@ -26,13 +26,13 @@ describe('taxonomy search', () => {
       {
         originalId: '1',
         tags: '#foo #bar',
-        type: 'bookmark'
+        type: 'bookmark',
       },
       {
         originalId: '2',
         tags: '#foo',
-        type: 'bookmark'
-      }
+        type: 'bookmark',
+      },
     ]
 
     const result = searchTaxonomy('foo #bar', 'tags', data)
@@ -41,7 +41,7 @@ describe('taxonomy search', () => {
     expect(result[0]).toMatchObject({
       originalId: '1',
       searchScore: 1,
-      searchApproach: 'taxonomy'
+      searchApproach: 'taxonomy',
     })
   })
 
@@ -50,12 +50,12 @@ describe('taxonomy search', () => {
     const data = [
       {
         originalId: '3',
-        folder: '~Work ~Projects'
+        folder: '~Work ~Projects',
       },
       {
         originalId: '4',
-        folder: '~Personal'
-      }
+        folder: '~Personal',
+      },
     ]
 
     const result = searchTaxonomy('work ~projects', 'folder', data)
@@ -69,7 +69,7 @@ describe('taxonomy search', () => {
     ext.model.bookmarks = [
       { originalId: '1', tags: '#foo #bar' },
       { originalId: '2', tags: '#foo' },
-      { originalId: '3', tags: '' }
+      { originalId: '3', tags: '' },
     ]
 
     const result = getUniqueTags()
@@ -82,7 +82,7 @@ describe('taxonomy search', () => {
     const { getUniqueFolders } = taxonomyModule
     ext.model.bookmarks = [
       { originalId: '1', folder: '~Parent ~Child' },
-      { originalId: '2', folder: '~Parent' }
+      { originalId: '2', folder: '~Parent' },
     ]
 
     const first = getUniqueFolders()
@@ -98,7 +98,7 @@ describe('taxonomy search', () => {
     const { getUniqueFolders, resetUniqueFoldersCache } = taxonomyModule
     ext.model.bookmarks = [
       { originalId: '1', folder: '~Work ~Projects' },
-      { originalId: '2', folder: '~Work' }
+      { originalId: '2', folder: '~Work' },
     ]
 
     const first = getUniqueFolders()
@@ -119,13 +119,13 @@ describe('taxonomy search', () => {
       {
         originalId: '1',
         tags: '#react #node',
-        type: 'bookmark'
+        type: 'bookmark',
       },
       {
         originalId: '2',
         tags: '#react',
-        type: 'bookmark'
-      }
+        type: 'bookmark',
+      },
     ]
 
     // Test with trailing whitespace after tag
@@ -145,12 +145,12 @@ describe('taxonomy search', () => {
     const data = [
       {
         originalId: '1',
-        folder: '~Work ~Projects'
+        folder: '~Work ~Projects',
       },
       {
         originalId: '2',
-        folder: '~Work'
-      }
+        folder: '~Work',
+      },
     ]
 
     // Test with trailing whitespace after folder
@@ -161,7 +161,7 @@ describe('taxonomy search', () => {
     const resultMultipleFolders = searchTaxonomy(
       'work ~projects ',
       'folder',
-      data
+      data,
     )
     expect(resultMultipleFolders).toHaveLength(1)
     expect(resultMultipleFolders[0].originalId).toBe('1')
@@ -173,8 +173,8 @@ describe('taxonomy search', () => {
       {
         originalId: '1',
         tags: '#test',
-        type: 'bookmark'
-      }
+        type: 'bookmark',
+      },
     ]
 
     // Test with multiple spaces creating empty terms

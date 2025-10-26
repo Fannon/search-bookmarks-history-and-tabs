@@ -34,7 +34,7 @@ export function getCustomSearchEngineResult(
   name,
   urlPrefix,
   urlBlank,
-  custom
+  custom,
 ) {
   let url
   let title = `${name}: "${searchTerm}"`
@@ -58,7 +58,7 @@ export function getCustomSearchEngineResult(
     urlHighlighted: cleanUpUrl(url),
     originalUrl: url,
     originalId: generateRandomId(),
-    searchScore: 1
+    searchScore: 1,
   }
 }
 
@@ -84,8 +84,8 @@ export function addSearchEngines(searchTerm) {
         getCustomSearchEngineResult(
           searchTerm,
           searchEngine.name,
-          searchEngine.urlPrefix
-        )
+          searchEngine.urlPrefix,
+        ),
       )
     }
   }
@@ -129,8 +129,8 @@ export function collectCustomSearchAliasResults(searchTerm) {
             customSearchEngine.name,
             customSearchEngine.urlPrefix,
             customSearchEngine.blank,
-            true
-          )
+            true,
+          ),
         )
       }
     }

@@ -54,7 +54,7 @@ async function saveOptions() {
   } catch (navigationError) {
     console.warn(
       'Navigation to search view not supported in this environment.',
-      navigationError
+      navigationError,
     )
   }
 }

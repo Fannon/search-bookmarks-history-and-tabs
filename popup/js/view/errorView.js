@@ -36,7 +36,7 @@ export function printError(err, text) {
   if (!errorList) {
     console.warn(
       'Error list element not found in DOM. Error:',
-      err?.message || err
+      err?.message || err,
     )
     return
   }

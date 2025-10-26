@@ -220,8 +220,8 @@ export const defaultOptions = {
   searchEngineChoices: [
     {
       name: 'Google',
-      urlPrefix: 'https://www.google.com/search?q=$s'
-    }
+      urlPrefix: 'https://www.google.com/search?q=$s',
+    },
   ],
 
   /**
@@ -240,14 +240,14 @@ export const defaultOptions = {
       alias: ['g', 'google'],
       name: 'Google',
       urlPrefix: 'https://www.google.com/search?q=$s',
-      blank: 'https://www.google.com'
+      blank: 'https://www.google.com',
     },
     {
       alias: ['d', 'dict'],
       name: 'dict.cc',
       urlPrefix: 'https://www.dict.cc/?s=$s',
-      blank: 'https://www.dict.cc'
-    }
+      blank: 'https://www.dict.cc',
+    },
   ],
 
   //////////////////////////////////////////
@@ -395,11 +395,11 @@ export const defaultOptions = {
    * Customized options for the fuzzy search library uFuzzy ('@leeoniya/ufuzzy')
    * @see https://github.com/leeoniya/uFuzzy/blob/main/src/uFuzzy.js#L9
    */
-  uFuzzyOptions: {}
+  uFuzzyOptions: {},
 }
 
 export const emptyOptions = {
-  searchStrategy: defaultOptions.searchStrategy
+  searchStrategy: defaultOptions.searchStrategy,
 }
 
 /**
@@ -476,12 +476,12 @@ export async function getEffectiveOptions() {
     validateUserOptions(userOptions)
     return {
       ...defaultOptions,
-      ...userOptions
+      ...userOptions,
     }
   } catch (err) {
     printError(
       err,
-      'Could not get valid user options, falling back to defaults.'
+      'Could not get valid user options, falling back to defaults.',
     )
     return defaultOptions
   }

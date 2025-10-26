@@ -17,7 +17,7 @@ import { addDefaultEntries, search } from './search/common.js'
 import { closeErrors, printError } from './view/errorView.js'
 import {
   toggleSearchApproach,
-  updateSearchApproachToggle
+  updateSearchApproachToggle,
 } from './view/searchEvents.js'
 import { navigationKeyListener } from './view/searchNavigation.js'
 import { renderSearchResults } from './view/searchView.js'
@@ -49,7 +49,7 @@ export async function initExtension() {
   ext.dom.resultList = document.getElementById('result-list')
   ext.dom.resultCounter = document.getElementById('result-counter')
   ext.dom.searchApproachToggle = document.getElementById(
-    'search-approach-toggle'
+    'search-approach-toggle',
   )
 
   updateSearchApproachToggle()

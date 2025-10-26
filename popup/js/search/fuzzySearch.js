@@ -91,7 +91,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
     const options = {
       // How many characters "in between" are allowed -> increased fuzzyness
       intraIns: Math.round(searchFuzzyness * 4.2),
-      ...(opts.uFuzzyOptions || {})
+      ...(opts.uFuzzyOptions || {}),
     }
 
     if (containsNonASCII(searchTerm)) {
@@ -112,7 +112,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
       haystack: data.map((el) => {
         return el.searchString
       }),
-      uf: new uFuzzy(options)
+      uf: new uFuzzy(options),
     }
   }
 
@@ -144,7 +144,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
         // Split highlighted string back into its original multiple properties
         const highlightArray = highlight.split('¦')
         const highlightedResult = {
-          ...result
+          ...result,
         }
         if (highlightArray[0] && highlightArray[0].includes('<mark>')) {
           highlightedResult.titleHighlighted = highlightArray[0]
@@ -161,7 +161,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
           ...highlightedResult,
           // 0 intra chars are perfect score, 5 and more are 0 score.
           searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
-          searchApproach: 'fuzzy'
+          searchApproach: 'fuzzy',
         })
       }
 

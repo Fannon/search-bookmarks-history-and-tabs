@@ -62,7 +62,7 @@ export function convertBrowserTabs(chromeTabs) {
         searchStringLower: searchString.toLowerCase(),
         lastVisitSecondsAgo: el.lastAccessed
           ? (Date.now() - el.lastAccessed) / 1000
-          : undefined
+          : undefined,
       }
     })
 }
@@ -93,7 +93,7 @@ export function convertBrowserBookmarks(
   bookmarks,
   folderTrail,
   depth,
-  seenByUrl
+  seenByUrl,
 ) {
   depth = depth || 1
   let result = []
@@ -112,7 +112,7 @@ export function convertBrowserBookmarks(
     if (ext.opts.bookmarksIgnoreFolderList) {
       if (
         folderTrail.some((el) =>
-          ext.opts.bookmarksIgnoreFolderList.includes(el)
+          ext.opts.bookmarksIgnoreFolderList.includes(el),
         )
       ) {
         continue
@@ -131,7 +131,7 @@ export function convertBrowserBookmarks(
           console.error(
             `Unexpected custom bonus score match length`,
             match,
-            entry
+            entry,
           )
         } else {
           customBonusScore = parseInt(match[1], 10)
@@ -145,7 +145,7 @@ export function convertBrowserBookmarks(
         originalUrl: entry.url.replace(/\/$/, ''),
         url: cleanUpUrl(entry.url),
         dateAdded: entry.dateAdded,
-        customBonusScore
+        customBonusScore,
       }
 
       // Parse out tags from bookmark title (starting with " #")
@@ -189,7 +189,7 @@ export function convertBrowserBookmarks(
         mappedEntry.title,
         mappedEntry.url,
         mappedEntry.tags,
-        mappedEntry.folder
+        mappedEntry.folder,
       )
       mappedEntry.searchStringLower = mappedEntry.searchString.toLowerCase()
 
@@ -201,7 +201,7 @@ export function convertBrowserBookmarks(
           console.warn(
             `Duplicate bookmark detected for ${mappedEntry.originalUrl} in folder: ${
               mappedEntry.folderArray.join(' > ') || '/'
-            }`
+            }`,
           )
         } else {
           seenByUrl.set(mappedEntry.url, mappedEntry)
@@ -217,8 +217,8 @@ export function convertBrowserBookmarks(
           entry.children,
           newFolderTrail,
           depth + 1,
-          seenByUrl
-        )
+          seenByUrl,
+        ),
       )
     }
   }
@@ -239,7 +239,7 @@ export async function getBrowserHistory(startTime, maxResults) {
     return await browserApi.history.search({
       text: '',
       startTime: startTime,
-      maxResults: maxResults
+      maxResults: maxResults,
     })
   } else {
     console.warn(`No browser history API found. Returning no results.`)
@@ -266,7 +266,7 @@ export function convertBrowserHistory(history) {
       return true
     })
     console.debug(
-      `Ignored ${ignoredHistoryCounter} history items due to ignore list`
+      `Ignored ${ignoredHistoryCounter} history items due to ignore list`,
     )
   }
 
@@ -283,7 +283,7 @@ export function convertBrowserHistory(history) {
       lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
       originalId: el.id,
       searchString,
-      searchStringLower: searchString.toLowerCase()
+      searchStringLower: searchString.toLowerCase(),
     }
   })
 }
@@ -305,7 +305,7 @@ export function createSearchString(title, url, tags, folder) {
       title,
       url,
       tags,
-      folder
+      folder,
     })
     return searchString
   }

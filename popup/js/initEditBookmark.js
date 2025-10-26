@@ -14,7 +14,7 @@ import { getSearchData } from './model/searchData.js'
 import {
   deleteBookmark,
   editBookmark,
-  updateBookmark
+  updateBookmark,
 } from './view/editBookmarkView.js'
 import { printError } from './view/errorView.js'
 
@@ -40,7 +40,7 @@ export async function initEditBookmark() {
     ext.dom.deleteButton = document.getElementById('edit-bookmark-delete')
     ext.dom.cancelButton = document.getElementById('edit-bookmark-cancel')
     ext.dom.searchApproachToggle = document.getElementById(
-      'search-approach-toggle'
+      'search-approach-toggle',
     )
     ext.opts = await getEffectiveOptions()
 
@@ -118,7 +118,7 @@ function parseBookmarkComponents(hashBody) {
   if (searchSegmentIndex !== -1) {
     bookmarkIdPart = pathPart.slice(0, searchSegmentIndex)
     const searchTermSegment = pathPart.slice(
-      searchSegmentIndex + searchSegmentMarker.length
+      searchSegmentIndex + searchSegmentMarker.length,
     )
     const decodedSearchTerm = decodeURIComponentSafe(searchTermSegment)
     derivedReturnHash = buildSearchHash(decodedSearchTerm)
@@ -134,7 +134,7 @@ function parseBookmarkComponents(hashBody) {
 
   return {
     bookmarkId: decodeURIComponent(bookmarkIdPart),
-    returnHash: derivedReturnHash
+    returnHash: derivedReturnHash,
   }
 }
 

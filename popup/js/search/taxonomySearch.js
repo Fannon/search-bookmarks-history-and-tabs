@@ -45,7 +45,7 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
         results.push({
           ...entry,
           searchScore: 1,
-          searchApproach: 'taxonomy'
+          searchApproach: 'taxonomy',
         })
       }
     }

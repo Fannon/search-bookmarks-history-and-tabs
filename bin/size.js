@@ -27,7 +27,7 @@ async function ensureDistExists(dir) {
   } catch (error) {
     if (error && error.code === 'ENOENT') {
       console.error(
-        `Missing build output at ${dir}. Run "npm run build" first.`
+        `Missing build output at ${dir}. Run "npm run build" first.`,
       )
       process.exitCode = 1
       return false
@@ -77,7 +77,7 @@ function formatBytes(bytes) {
   const units = ['B', 'KB', 'MB', 'GB']
   const exponent = Math.min(
     Math.floor(Math.log(bytes) / Math.log(1024)),
-    units.length - 1
+    units.length - 1,
   )
   const value = bytes / 1024 ** exponent
   const digits = value < 10 && exponent > 0 ? 2 : 1
@@ -149,7 +149,7 @@ async function summarize(files) {
   for (const [topName, bucket] of secondLevel.entries()) {
     sortedSecondLevel.set(
       topName,
-      [...bucket.entries()].sort((a, b) => b[1] - a[1])
+      [...bucket.entries()].sort((a, b) => b[1] - a[1]),
     )
   }
 
@@ -206,7 +206,7 @@ function printTree(entries, totalSize, indent = '  ') {
       const isLast = index === nodes.length - 1
       const branch = isLast ? '└─ ' : '├─ '
       console.log(
-        `${prefix}${branch}${node.name} (${formatBytes(node.size)}, ${percentage(node.size, totalSize)})`
+        `${prefix}${branch}${node.name} (${formatBytes(node.size)}, ${percentage(node.size, totalSize)})`,
       )
       if (node.children && node.children.length > 0) {
         const nextPrefix = `${prefix}${isLast ? '   ' : '│  '}`
@@ -226,7 +226,7 @@ function printTree(entries, totalSize, indent = '  ') {
  */
 function printSummary(
   { totalSize, sortedTopLevel, sortedSecondLevel, sortedMinified },
-  fileCount
+  fileCount,
 ) {
   if (fileCount === 0) {
     console.log('No files found.')
@@ -241,7 +241,7 @@ function printSummary(
     const children = shouldAttachChildren
       ? segments.map(([segmentName, segmentSize]) => ({
           name: segmentName,
-          size: segmentSize
+          size: segmentSize,
         }))
       : undefined
     return { name, size, children }
@@ -253,7 +253,7 @@ function printSummary(
     ['ZIP File', []],
     ['Minified JS', []],
     ['Minified CSS', []],
-    ['Other', []]
+    ['Other', []],
   ])
 
   for (const file of sortedMinified) {
@@ -273,7 +273,7 @@ function printSummary(
   const allRows = sortedMinified.map((file) => [
     stripPrefix(file.path),
     formatBytes(file.size),
-    percentage(file.size, totalSize)
+    percentage(file.size, totalSize),
   ])
   let tableHeaders = ['File', 'Size', 'Share']
   const columnWidths = tableHeaders.map((header, index) => {
@@ -291,7 +291,7 @@ function printSummary(
       .map((file) => [
         stripPrefix(file.path),
         formatBytes(file.size),
-        percentage(file.size, totalSize)
+        percentage(file.size, totalSize),
       ])
     printTable(tableHeaders, rows, '', columnWidths)
     console.log('')

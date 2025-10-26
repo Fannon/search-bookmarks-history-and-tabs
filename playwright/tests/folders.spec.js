@@ -8,13 +8,13 @@ test.describe('Folder View', () => {
   test.describe('Initializing Phase', () => {
     test('successfully loads', async ({ page }) => {
       await expect(
-        page.locator('#folders-overview #folders-list')
+        page.locator('#folders-overview #folders-list'),
       ).toBeVisible()
     })
 
     test('contains a list of folders', async ({ page }) => {
       await expect(
-        page.locator('#folders-overview #folders-list [x-folder="Tools"]')
+        page.locator('#folders-overview #folders-list [x-folder="Tools"]'),
       ).toBeVisible()
       await expectNoClientErrors(page)
     })
@@ -28,7 +28,7 @@ test.describe('Folder View', () => {
       await expect(page.locator('#search-input')).toHaveValue('~Tools')
       await expect(page.locator('#result-list')).not.toHaveCount(0)
       await expect(
-        page.locator('#result-list [x-original-id="6"]')
+        page.locator('#result-list [x-original-id="6"]'),
       ).toBeVisible()
       await expect(page.locator('#result-list li.bookmark')).not.toHaveCount(0)
 

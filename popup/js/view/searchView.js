@@ -81,33 +81,33 @@ export async function renderSearchResults() {
           const safeLink = escapeHtml(folderLink)
           const label = `~${folderName}`
           badgesHTML += `<span class="badge folder" x-link="${safeLink}" title="Bookmark Folder" style="background-color: ${escapeHtml(
-            String(opts.bookmarkColor || 'none')
+            String(opts.bookmarkColor || 'none'),
           )}">${escapeHtml(label)}</span>`
         }
       }
 
       if (opts.displayLastVisit && resultEntry.lastVisitSecondsAgo != null) {
         const lastVisit = timeSince(
-          new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000)
+          new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000),
         )
         badgesHTML += `<span class="badge last-visited" title="Last Visited">-${escapeHtml(lastVisit)}</span>`
       }
 
       if (opts.displayVisitCounter && resultEntry.visitCount !== undefined) {
         badgesHTML += `<span class="badge visit-counter" title="Visited Counter">${escapeHtml(
-          String(resultEntry.visitCount)
+          String(resultEntry.visitCount),
         )}</span>`
       }
 
       if (opts.displayDateAdded && resultEntry.dateAdded) {
         badgesHTML += `<span class="badge date-added" title="Date Added">${escapeHtml(
-          new Date(resultEntry.dateAdded).toISOString().split('T')[0]
+          new Date(resultEntry.dateAdded).toISOString().split('T')[0],
         )}</span>`
       }
 
       if (opts.displayScore && resultEntry.score) {
         badgesHTML += `<span class="badge score" title="Score">${escapeHtml(
-          String(Math.round(resultEntry.score))
+          String(Math.round(resultEntry.score)),
         )}</span>`
       }
 
@@ -122,7 +122,7 @@ export async function renderSearchResults() {
           ? // escape everything first, then allow only the `<mark>` tags that the highlighter inserts
             escapeHtml(highlightCandidate).replace(
               /&lt;(\/?)mark&gt;/gi,
-              '<$1mark>'
+              '<$1mark>',
             )
           : escapeHtml(resultEntry.title || resultEntry.url || '')
 
@@ -134,7 +134,7 @@ export async function renderSearchResults() {
           ? // same approach for the URL snippet – keep highlight markup, escape everything else
             escapeHtml(resultEntry.urlHighlighted).replace(
               /&lt;(\/?)mark&gt;/gi,
-              '<$1mark>'
+              '<$1mark>',
             )
           : escapeHtml(resultEntry.url || '')
 
@@ -154,7 +154,7 @@ export async function renderSearchResults() {
           ${
             resultEntry.type === 'bookmark'
               ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(
-                  resultEntry.originalId
+                  resultEntry.originalId,
                 )}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">`
               : ''
           }
@@ -179,8 +179,8 @@ export async function renderSearchResults() {
               '.last-visited',
               '.score',
               '.visit-counter',
-              '.date-added'
-            ]
+              '.date-added',
+            ],
           })
         }
       }

@@ -21,7 +21,7 @@ function createResults() {
       lastVisitSecondsAgo: 3600,
       visitCount: 7,
       dateAdded: new Date('2023-01-02').getTime(),
-      score: 41.8
+      score: 41.8,
     },
     {
       type: 'tab',
@@ -30,14 +30,14 @@ function createResults() {
       url: 'tab.test',
       title: 'Tab Title',
       urlHighlighted: 'tab.<mark>test</mark>',
-      score: 8.4
-    }
+      score: 8.4,
+    },
   ]
 }
 
 async function setupSearchNavigation({
   results = createResults(),
-  opts = {}
+  opts = {},
 } = {}) {
   jest.resetModules()
   window.location.hash = '#search/query'
@@ -63,25 +63,25 @@ async function setupSearchNavigation({
     .map((entry) => ({
       originalId: entry.originalId,
       originalUrl: entry.originalUrl,
-      windowId: 101
+      windowId: 101,
     }))
 
   window.Mark = jest.fn(() => ({
-    mark: jest.fn()
+    mark: jest.fn(),
   }))
 
   global.ext = {
     dom: {
       resultList,
       searchInput,
-      searchApproachToggle
+      searchApproachToggle,
     },
     model: {
       result: copiedResults,
       tabs: tabEntries,
       searchTerm: 'query',
       mouseHoverEnabled: true,
-      currentItem: 0
+      currentItem: 0,
     },
     opts: {
       displaySearchMatchHighlight: true,
@@ -95,7 +95,7 @@ async function setupSearchNavigation({
       displayDateAdded: true,
       displayScore: true,
       searchStrategy: 'precise',
-      ...opts
+      ...opts,
     },
     browserApi: {
       tabs: {
@@ -103,12 +103,12 @@ async function setupSearchNavigation({
         query: jest.fn(() => Promise.resolve([{ id: 77 }])),
         update: jest.fn(),
         create: jest.fn(),
-        highlight: jest.fn()
+        highlight: jest.fn(),
       },
       windows: {
-        update: jest.fn()
-      }
-    }
+        update: jest.fn(),
+      },
+    },
   }
 
   return {
@@ -118,9 +118,9 @@ async function setupSearchNavigation({
     elements: {
       resultList,
       searchInput,
-      searchApproachToggle
+      searchApproachToggle,
     },
-    results: copiedResults
+    results: copiedResults,
   }
 }
 
@@ -145,7 +145,7 @@ describe('searchNavigation selection helpers', () => {
     expect(document.getElementById('selected-result')).toBe(secondItem)
     expect(secondItem.scrollIntoView).toHaveBeenCalledWith({
       behavior: 'auto',
-      block: 'nearest'
+      block: 'nearest',
     })
   })
 
@@ -178,7 +178,7 @@ describe('searchNavigation navigationKeyListener', () => {
     module.navigationKeyListener({
       key: 'ArrowUp',
       ctrlKey: false,
-      preventDefault
+      preventDefault,
     })
     expect(preventDefault).toHaveBeenCalledTimes(1)
     expect(ext.model.currentItem).toBe(0)
@@ -187,12 +187,12 @@ describe('searchNavigation navigationKeyListener', () => {
     module.navigationKeyListener({
       key: 'ArrowDown',
       ctrlKey: false,
-      preventDefault
+      preventDefault,
     })
     expect(preventDefault).toHaveBeenCalledTimes(1)
     expect(ext.model.currentItem).toBe(1)
     expect(document.getElementById('selected-result')).toBe(
-      elements.resultList.children[1]
+      elements.resultList.children[1],
     )
   })
 
@@ -207,7 +207,7 @@ describe('searchNavigation navigationKeyListener', () => {
     // Test all vim-style down keybindings
     const downKeys = [
       { key: 'n', ctrlKey: true },
-      { key: 'j', ctrlKey: true }
+      { key: 'j', ctrlKey: true },
     ]
     for (const keyCombo of downKeys) {
       ext.model.currentItem = 0
@@ -218,7 +218,7 @@ describe('searchNavigation navigationKeyListener', () => {
     // Test all vim-style up keybindings
     const upKeys = [
       { key: 'p', ctrlKey: true },
-      { key: 'k', ctrlKey: true }
+      { key: 'k', ctrlKey: true },
     ]
     for (const keyCombo of upKeys) {
       ext.model.currentItem = 1
@@ -246,8 +246,8 @@ describe('searchNavigation navigationKeyListener', () => {
       target: {
         nodeName: 'LI',
         getAttribute: () => null,
-        className: ''
-      }
+        className: '',
+      },
     }
     window.location.hash = '#search/query'
 
@@ -280,8 +280,8 @@ describe('searchNavigation navigationKeyListener', () => {
         originalUrl: 'https://new-result.test',
         url: 'new-result.test',
         title: 'New Search Result',
-        score: 100
-      }
+        score: 100,
+      },
     ]
 
     const event = {
@@ -295,8 +295,8 @@ describe('searchNavigation navigationKeyListener', () => {
       target: {
         nodeName: 'LI',
         getAttribute: () => null,
-        className: ''
-      }
+        className: '',
+      },
     }
     window.location.hash = '#search/query'
 
@@ -328,7 +328,7 @@ describe('searchNavigation navigationKeyListener', () => {
 
     module.navigationKeyListener({
       key: 'Escape',
-      preventDefault: jest.fn()
+      preventDefault: jest.fn(),
     })
 
     expect(window.location.hash).toBe('#search/')

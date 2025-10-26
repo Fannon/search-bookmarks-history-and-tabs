@@ -13,7 +13,7 @@ export default {
     'popup/js/**/*.js',
     '!popup/js/**/*.test.js',
     '!popup/js/**/__tests__/**',
-    '!popup/js/**/*.bundle.min.js'
+    '!popup/js/**/*.bundle.min.js',
   ],
   moduleFileExtensions: ['js', 'json'],
   transform: {},
@@ -37,5 +37,5 @@ export default {
   // Additional performance settings
   clearMocks: true,
   restoreMocks: true,
-  resetMocks: true
+  resetMocks: true,
 }

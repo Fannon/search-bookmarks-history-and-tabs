@@ -83,7 +83,7 @@ export function calculateFinalScore(results, searchTerm) {
     scoreUrlWeight,
     scoreTagWeight,
     scoreFolderWeight,
-    scoreBookmarkOpenTabBonus
+    scoreBookmarkOpenTabBonus,
   } = opts
 
   const includeTerms = rawSearchTermParts
@@ -243,7 +243,7 @@ export function calculateFinalScore(results, searchTerm) {
     if (scoreVisitedBonusScore && el.visitCount) {
       score += Math.min(
         scoreVisitedBonusScoreMaximum,
-        el.visitCount * scoreVisitedBonusScore
+        el.visitCount * scoreVisitedBonusScore,
       )
     }
 
@@ -257,7 +257,7 @@ export function calculateFinalScore(results, searchTerm) {
         score += Math.max(
           0,
           (1 - el.lastVisitSecondsAgo / maxSeconds) *
-            scoreRecentBonusScoreMaximum
+            scoreRecentBonusScoreMaximum,
         )
       } else if (el.lastVisitSecondsAgo === 0) {
         // Special case: visited in this exact moment gets maximum bonus
@@ -292,7 +292,7 @@ export const BASE_SCORE_KEYS = {
   history: 'scoreHistoryBase',
   search: 'scoreSearchEngineBase',
   customSearch: 'scoreCustomSearchEngineBase',
-  direct: 'scoreDirectUrlScore'
+  direct: 'scoreDirectUrlScore',
 }
 
 /**

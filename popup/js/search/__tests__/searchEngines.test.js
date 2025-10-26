@@ -10,7 +10,7 @@ import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 import {
   addSearchEngines,
   collectCustomSearchAliasResults,
-  getCustomSearchEngineResult
+  getCustomSearchEngineResult,
 } from '../searchEngines.js'
 
 beforeEach(() => {
@@ -20,26 +20,26 @@ beforeEach(() => {
       searchEngineChoices: [
         {
           name: 'Google',
-          urlPrefix: 'https://www.google.com/search?q=$s'
+          urlPrefix: 'https://www.google.com/search?q=$s',
         },
         {
           name: 'DuckDuckGo',
-          urlPrefix: 'https://duckduckgo.com/?q=$s'
-        }
+          urlPrefix: 'https://duckduckgo.com/?q=$s',
+        },
       ],
       customSearchEngines: [
         {
           alias: ['yt', 'youtube'],
           name: 'YouTube',
-          urlPrefix: 'https://youtube.com/results?search_query=$s'
+          urlPrefix: 'https://youtube.com/results?search_query=$s',
         },
         {
           alias: 'gh',
           name: 'GitHub',
-          urlPrefix: 'https://github.com/search?q=$s'
-        }
-      ]
-    }
+          urlPrefix: 'https://github.com/search?q=$s',
+        },
+      ],
+    },
   })
 })
 
@@ -52,7 +52,7 @@ describe('getCustomSearchEngineResult', () => {
     const result = getCustomSearchEngineResult(
       'javascript',
       'Google',
-      'https://www.google.com/search?q=$s'
+      'https://www.google.com/search?q=$s',
     )
 
     expect(result).toMatchObject({
@@ -60,7 +60,7 @@ describe('getCustomSearchEngineResult', () => {
       title: 'Google: "javascript"',
       titleHighlighted: 'Google: "<mark>javascript</mark>"',
       originalUrl: 'https://www.google.com/search?q=javascript',
-      searchScore: 1
+      searchScore: 1,
     })
     expect(result.originalId).toBeDefined()
   })
@@ -69,14 +69,14 @@ describe('getCustomSearchEngineResult', () => {
     const result = getCustomSearchEngineResult(
       'test query',
       'SearchEngine',
-      'https://example.com/search?q='
+      'https://example.com/search?q=',
     )
 
     expect(result).toMatchObject({
       type: 'search',
       title: 'SearchEngine: "test query"',
       originalUrl: 'https://example.com/search?q=test%20query',
-      searchScore: 1
+      searchScore: 1,
     })
   })
 
@@ -86,7 +86,7 @@ describe('getCustomSearchEngineResult', () => {
       'YouTube',
       'https://youtube.com/results?search_query=$s',
       null,
-      true
+      true,
     )
 
     expect(result.type).toBe('customSearch')
@@ -97,13 +97,13 @@ describe('getCustomSearchEngineResult', () => {
       '',
       'YouTube',
       'https://youtube.com/results?search_query=$s',
-      'https://youtube.com'
+      'https://youtube.com',
     )
 
     expect(result).toMatchObject({
       title: 'YouTube',
       titleHighlighted: 'YouTube',
-      originalUrl: 'https://youtube.com'
+      originalUrl: 'https://youtube.com',
     })
   })
 
@@ -111,11 +111,11 @@ describe('getCustomSearchEngineResult', () => {
     const result = getCustomSearchEngineResult(
       'hello & goodbye',
       'Google',
-      'https://www.google.com/search?q=$s'
+      'https://www.google.com/search?q=$s',
     )
 
     expect(result.originalUrl).toBe(
-      'https://www.google.com/search?q=hello%20%26%20goodbye'
+      'https://www.google.com/search?q=hello%20%26%20goodbye',
     )
   })
 
@@ -123,12 +123,12 @@ describe('getCustomSearchEngineResult', () => {
     const result1 = getCustomSearchEngineResult(
       'test1',
       'Google',
-      'https://google.com?q=$s'
+      'https://google.com?q=$s',
     )
     const result2 = getCustomSearchEngineResult(
       'test2',
       'Google',
-      'https://google.com?q=$s'
+      'https://google.com?q=$s',
     )
 
     expect(result1.originalId).not.toBe(result2.originalId)
@@ -142,11 +142,11 @@ describe('addSearchEngines', () => {
     expect(results).toHaveLength(2)
     expect(results[0]).toMatchObject({
       type: 'search',
-      title: 'Google: "javascript"'
+      title: 'Google: "javascript"',
     })
     expect(results[1]).toMatchObject({
       type: 'search',
-      title: 'DuckDuckGo: "javascript"'
+      title: 'DuckDuckGo: "javascript"',
     })
   })
 
@@ -174,7 +174,7 @@ describe('collectCustomSearchAliasResults', () => {
     expect(results[0]).toMatchObject({
       type: 'customSearch',
       title: 'GitHub: "typescript"',
-      originalUrl: 'https://github.com/search?q=typescript'
+      originalUrl: 'https://github.com/search?q=typescript',
     })
   })
 
@@ -193,7 +193,7 @@ describe('collectCustomSearchAliasResults', () => {
 
     expect(results[0]).toMatchObject({
       title: 'YouTube: "funny videos"',
-      originalUrl: 'https://youtube.com/results?search_query=funny%20videos'
+      originalUrl: 'https://youtube.com/results?search_query=funny%20videos',
     })
   })
 

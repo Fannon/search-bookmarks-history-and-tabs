@@ -12,7 +12,7 @@ test.describe('Search View', () => {
     })
 
     test('completes the initializing phase without errors', async ({
-      page
+      page,
     }) => {
       await expect(page.locator('#results-loading')).not.toBeVisible()
       await expectNoClientErrors(page)
@@ -21,7 +21,7 @@ test.describe('Search View', () => {
 
   test.describe('Result Navigation', () => {
     test('first result is highlighted and navigation works', async ({
-      page
+      page,
     }) => {
       await page.locator('#search-input').fill('JSON Edit')
 
@@ -55,29 +55,29 @@ test.describe('Search View', () => {
       await page.locator('#search-input').fill('JSON')
 
       await expect(
-        page.locator('#result-list [x-original-id="7"]')
+        page.locator('#result-list [x-original-id="7"]'),
       ).toBeVisible()
       await expect(
-        page.locator('#result-list [x-original-id="17"]')
+        page.locator('#result-list [x-original-id="17"]'),
       ).toBeVisible()
       await expect(
-        page.locator('#result-list [x-original-id="6"]')
+        page.locator('#result-list [x-original-id="6"]'),
       ).toBeVisible()
       await expect(
-        page.locator('#result-list [x-original-id="9"]')
+        page.locator('#result-list [x-original-id="9"]'),
       ).toBeVisible()
 
       await expect(page.locator('[x-original-id="7"] .title')).toContainText(
-        'JSON'
+        'JSON',
       )
       await expect(page.locator('[x-original-id="7"] .url')).toContainText(
-        'json'
+        'json',
       )
       await expect(page.locator('[x-original-id="7"] span.tags')).toContainText(
-        '#json'
+        '#json',
       )
       await expect(
-        page.locator('[x-original-id="7"] span.folder')
+        page.locator('[x-original-id="7"] span.folder'),
       ).toContainText('~Tools')
       await expect(page.locator('[x-original-id="7"] span.score')).toBeVisible()
 
@@ -88,7 +88,7 @@ test.describe('Search View', () => {
   test.describe('Precise search', () => {
     test('can execute search successfully', async ({ page }) => {
       await expect(page.locator('#search-approach-toggle')).toHaveText(
-        'PRECISE'
+        'PRECISE',
       )
 
       await page.locator('#search-input').fill('JSON')
@@ -97,7 +97,7 @@ test.describe('Search View', () => {
       await expect(results).not.toHaveCount(0)
 
       await expect(
-        page.locator('#result-list [x-original-id="7"]')
+        page.locator('#result-list [x-original-id="7"]'),
       ).toBeVisible()
       await expect(page.locator('#result-list li.bookmark')).not.toHaveCount(0)
       await expect(page.locator('#result-list li.history')).not.toHaveCount(0)
@@ -108,7 +108,7 @@ test.describe('Search View', () => {
 
     test('handles non-ASCII search queries', async ({ page }) => {
       await expect(page.locator('#search-approach-toggle')).toHaveText(
-        'PRECISE'
+        'PRECISE',
       )
 
       await page.locator('#search-input').fill('äe指事字₽')
@@ -157,7 +157,7 @@ test.describe('Search View', () => {
       await expect(directResult).toHaveCount(1)
       await expect(directResult).toHaveAttribute(
         'x-open-url',
-        'https://example.com'
+        'https://example.com',
       )
 
       await expectNoClientErrors(page)
@@ -170,7 +170,7 @@ test.describe('Search View', () => {
 
       await expect(page.locator('#result-list li.bookmark')).not.toHaveCount(0)
       await expect(
-        page.locator('#result-list [x-original-id="7"]')
+        page.locator('#result-list [x-original-id="7"]'),
       ).toBeVisible()
       await expect(page.locator('.tab')).toHaveCount(0)
       await expect(page.locator('.history')).toHaveCount(0)
@@ -182,7 +182,7 @@ test.describe('Search View', () => {
       await page.locator('#search-input').fill('b JSON')
 
       await expect(
-        page.locator('#result-list [x-original-id="7"]')
+        page.locator('#result-list [x-original-id="7"]'),
       ).toBeVisible()
       await expect(page.locator('.tab')).toHaveCount(0)
       await expect(page.locator('.history')).toHaveCount(0)
@@ -198,7 +198,7 @@ test.describe('Search View', () => {
 
       await expect(page.locator('#result-list li.history')).not.toHaveCount(0)
       await expect(
-        page.locator('#result-list [x-original-id="h6"]')
+        page.locator('#result-list [x-original-id="h6"]'),
       ).toBeVisible()
       await expect(page.locator('.tab')).toHaveCount(0)
       await expect(page.locator('.bookmark')).toHaveCount(0)
@@ -207,15 +207,15 @@ test.describe('Search View', () => {
     })
 
     test('history search includes history and tab results', async ({
-      page
+      page,
     }) => {
       await page.locator('#search-input').fill('h JSON')
 
       await expect(
-        page.locator('#result-list [x-original-id="h8"]')
+        page.locator('#result-list [x-original-id="h8"]'),
       ).toBeVisible()
       await expect(
-        page.locator('#result-list [x-original-id="185"]')
+        page.locator('#result-list [x-original-id="185"]'),
       ).toBeVisible()
       await expect(page.locator('.bookmark')).toHaveCount(0)
       await expect(page.locator('#result-counter')).toContainText('(9)')
@@ -230,7 +230,7 @@ test.describe('Search View', () => {
 
       await expect(page.locator('#result-list li.tab')).not.toHaveCount(0)
       await expect(
-        page.locator('#result-list [x-original-id="179"]')
+        page.locator('#result-list [x-original-id="179"]'),
       ).toBeVisible()
       await expect(page.locator('.bookmark')).toHaveCount(0)
       await expect(page.locator('.history')).toHaveCount(0)
@@ -242,7 +242,7 @@ test.describe('Search View', () => {
       await page.locator('#search-input').fill('t JSON')
 
       await expect(
-        page.locator('#result-list [x-original-id="185"]')
+        page.locator('#result-list [x-original-id="185"]'),
       ).toBeVisible()
       await expect(page.locator('#result-list li')).toHaveCount(2)
       await expect(page.locator('.bookmark')).toHaveCount(0)

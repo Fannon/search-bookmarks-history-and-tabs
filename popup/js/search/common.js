@@ -25,7 +25,7 @@ import { resolveSearchMode } from './queryParser.js'
 import { calculateFinalScore } from './scoring.js'
 import {
   addSearchEngines,
-  collectCustomSearchAliasResults
+  collectCustomSearchAliasResults,
 } from './searchEngines.js'
 import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
@@ -45,7 +45,7 @@ const MODE_TARGETS = {
   bookmarks: ['bookmarks'],
   tabs: ['tabs'],
   search: [],
-  all: ['bookmarks', 'tabs', 'history']
+  all: ['bookmarks', 'tabs', 'history'],
 }
 
 /**
@@ -153,19 +153,19 @@ async function executeSearch(searchTerm, searchMode) {
     return searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
   } else if (ext.opts.searchStrategy === 'fuzzy') {
     results.push(
-      ...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode))
+      ...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode)),
     )
   } else if (ext.opts.searchStrategy === 'precise') {
     results.push(
-      ...(await searchWithAlgorithm('precise', searchTerm, searchMode))
+      ...(await searchWithAlgorithm('precise', searchTerm, searchMode)),
     )
   } else {
     console.error(
-      `Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`
+      `Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`,
     )
     // Fall back to use precise search instead of crashing entirely
     results.push(
-      ...(await searchWithAlgorithm('precise', searchTerm, searchMode))
+      ...(await searchWithAlgorithm('precise', searchTerm, searchMode)),
     )
   }
 
@@ -195,7 +195,7 @@ function addDirectUrlIfApplicable(searchTerm, results) {
       urlHighlighted: cleanUpUrl(url),
       originalUrl: url,
       originalId: generateRandomId(),
-      searchScore: 1
+      searchScore: 1,
     })
   }
 }
@@ -365,7 +365,7 @@ export async function search(event) {
 export async function searchWithAlgorithm(
   searchApproach,
   searchTerm,
-  searchMode = 'all'
+  searchMode = 'all',
 ) {
   let results = []
   // If the search term is below minMatchCharLength, no point in starting search

@@ -14,7 +14,7 @@ const HTML_ESCAPE_MAP = {
   '<': '&lt;',
   '>': '&gt;',
   '"': '&quot;',
-  "'": '&#39;'
+  "'": '&#39;',
 }
 
 let nextGeneratedId = 1
@@ -40,7 +40,7 @@ export function escapeHtml(value) {
   }
   return String(value).replace(
     HTML_ESCAPE_REGEX,
-    (match) => HTML_ESCAPE_MAP[match]
+    (match) => HTML_ESCAPE_MAP[match],
   )
 }
 
@@ -68,7 +68,7 @@ export function timeSince(date) {
     [2592000, 'month'],
     [86400, 'd'],
     [3600, 'h'],
-    [60, 'm']
+    [60, 'm'],
   ]) {
     const count = Math.floor(seconds / unitSeconds)
     if (count >= 1) {

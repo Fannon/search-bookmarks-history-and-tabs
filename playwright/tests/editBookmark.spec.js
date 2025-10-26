@@ -28,7 +28,7 @@ const BOOKMARK_FIXTURE_TREE = [
                 index: 0,
                 title: 'Try pandoc! #md',
                 url: 'https://pandoc.org/try/',
-                dateAdded: 1627220684101
+                dateAdded: 1627220684101,
               },
               {
                 id: BOOKMARK_WITHOUT_TAGS_ID,
@@ -36,20 +36,20 @@ const BOOKMARK_FIXTURE_TREE = [
                 index: 1,
                 title: 'Edit playground reference',
                 url: 'https://example.com/reference',
-                dateAdded: 1627220684102
-              }
-            ]
-          }
-        ]
+                dateAdded: 1627220684102,
+              },
+            ],
+          },
+        ],
       },
       {
         id: '2',
         title: 'Other Bookmarks',
         dateAdded: 1627219418121,
-        children: []
-      }
-    ]
-  }
+        children: [],
+      },
+    ],
+  },
 ]
 
 const installChromeMock = (() => {
@@ -148,7 +148,7 @@ const installChromeMock = (() => {
             if (removeNode(tree, id)) {
               writeTree(tree)
             }
-          }
+          },
         }
 
         const chromeStub = {
@@ -156,27 +156,27 @@ const installChromeMock = (() => {
           history: {
             async search() {
               return []
-            }
+            },
           },
           tabs: {
             async query() {
               return []
-            }
+            },
           },
-          runtime: {}
+          runtime: {},
         }
 
         Object.defineProperty(window, 'chrome', {
           value: chromeStub,
-          configurable: true
+          configurable: true,
         })
 
         Object.defineProperty(window, 'browser', {
           value: chromeStub,
-          configurable: true
+          configurable: true,
         })
       },
-      { initialTree: BOOKMARK_FIXTURE_TREE, storageKey: BOOKMARK_STORAGE_KEY }
+      { initialTree: BOOKMARK_FIXTURE_TREE, storageKey: BOOKMARK_STORAGE_KEY },
     )
 
     installed = true
@@ -206,22 +206,22 @@ test.describe('Edit Bookmark View', () => {
   })
 
   test('prefills bookmark fields and tag list with existing data', async ({
-    page
+    page,
   }) => {
     await expect(page.locator('#bookmark-title')).toHaveValue('Try pandoc!')
     await expect(page.locator('#bookmark-url')).toHaveValue(
-      'https://pandoc.org/try'
+      'https://pandoc.org/try',
     )
 
     const tagValues = await page.evaluate(() =>
-      window.ext.tagify.value.map((tag) => tag.value)
+      window.ext.tagify.value.map((tag) => tag.value),
     )
     expect(tagValues).toEqual(['md'])
     await expectNoClientErrors(page)
   })
 
   test('saves updated bookmark details and renders new tags in search results', async ({
-    page
+    page,
   }) => {
     await page.locator('#bookmark-title').fill('Pandoc Playground')
     await page.locator('#bookmark-url').fill('https://pandoc.org/playground')
@@ -231,33 +231,33 @@ test.describe('Edit Bookmark View', () => {
 
     await Promise.all([
       page.waitForURL(/#search\/t$/),
-      page.locator('#edit-bookmark-save').click()
+      page.locator('#edit-bookmark-save').click(),
     ])
 
     await page.waitForSelector('#result-list [x-original-id="23"]')
     const bookmarkRow = page.locator('#result-list [x-original-id="23"]')
     await expect(bookmarkRow.locator('.title')).toContainText(
-      'Pandoc Playground'
+      'Pandoc Playground',
     )
     await expect(bookmarkRow.locator('.url')).toContainText(
-      'pandoc.org/playground'
+      'pandoc.org/playground',
     )
     await expect(bookmarkRow.locator('.badge.tags').nth(0)).toContainText(
-      '#markdown'
+      '#markdown',
     )
     await expect(bookmarkRow.locator('.badge.tags').nth(1)).toContainText(
-      '#docs'
+      '#docs',
     )
     await expect(bookmarkRow).not.toContainText('#md')
     await expectNoClientErrors(page)
   })
 
   test('supports adding tags to previously untagged bookmarks', async ({
-    page
+    page,
   }) => {
     await gotoEditBookmark(
       page,
-      `#bookmark/${BOOKMARK_WITHOUT_TAGS_ID}/search/reference`
+      `#bookmark/${BOOKMARK_WITHOUT_TAGS_ID}/search/reference`,
     )
 
     const initialTags = await page.evaluate(() => window.ext.tagify.value)
@@ -268,16 +268,16 @@ test.describe('Edit Bookmark View', () => {
 
     await Promise.all([
       page.waitForURL(/#search\/reference$/),
-      page.locator('#edit-bookmark-save').click()
+      page.locator('#edit-bookmark-save').click(),
     ])
 
     await page.waitForSelector('#result-list [x-original-id="29"]')
     const bookmarkRow = page.locator('#result-list [x-original-id="29"]')
     await expect(bookmarkRow.locator('.badge.tags').nth(0)).toContainText(
-      '#first-tag'
+      '#first-tag',
     )
     await expect(bookmarkRow.locator('.badge.tags').nth(1)).toContainText(
-      '#second-tag'
+      '#second-tag',
     )
     await expectNoClientErrors(page)
   })

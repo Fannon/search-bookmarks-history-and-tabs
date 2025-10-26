@@ -20,7 +20,7 @@ test.describe('Recent Tabs on Open Functionality', () => {
 
   test.describe('Default Behavior (maxRecentTabsToShow > 0)', () => {
     test('shows tabs sorted by recent access when popup opens', async ({
-      page
+      page,
     }) => {
       await waitForInitialization(page)
 
@@ -117,7 +117,7 @@ test.describe('Recent Tabs on Open Functionality', () => {
         const classes = await Promise.all(
           Array.from({ length: count }, (_, index) => {
             return results.nth(index).getAttribute('class')
-          })
+          }),
         )
         classes.forEach((className) => {
           const value = className ?? ''

@@ -87,7 +87,7 @@ function simpleSearchWithScoring(searchTerm, searchMode) {
 
   if (!state[searchMode]) {
     state[searchMode] = {
-      cachedData: prepareSearchData(data)
+      cachedData: prepareSearchData(data),
     }
   }
   const s = state[searchMode]
@@ -113,7 +113,7 @@ function simpleSearchWithScoring(searchTerm, searchMode) {
         localResults.push({
           ...entry,
           searchScore: 1,
-          searchApproach: 'precise'
+          searchApproach: 'precise',
         })
       }
     }

@@ -14,7 +14,7 @@ import { resetFuzzySearchState } from '../search/fuzzySearch.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
 import {
   getUniqueTags,
-  resetUniqueFoldersCache
+  resetUniqueFoldersCache,
 } from '../search/taxonomySearch.js'
 
 /**
@@ -25,7 +25,7 @@ import {
  */
 export async function editBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find(
-    (el) => el.originalId === bookmarkId
+    (el) => el.originalId === bookmarkId,
   )
   const uniqueTags = getUniqueTags() || {}
   const tags = Object.keys(uniqueTags).sort()
@@ -48,14 +48,14 @@ export async function editBookmark(bookmarkId) {
         skipInvalid: false,
         editTags: {
           clicks: 1,
-          keepInvalid: false
+          keepInvalid: false,
         },
         dropdown: {
           position: 'all',
           enabled: 0,
           maxItems: 12,
-          closeOnSelect: false
-        }
+          closeOnSelect: false,
+        },
       })
     } else {
       // If tagify was already initialized:
@@ -75,7 +75,7 @@ export async function editBookmark(bookmarkId) {
     ext.currentBookmarkId = bookmarkId
   } else {
     console.warn(
-      `Tried to edit bookmark id="${bookmarkId}", but could not find it in searchData.`
+      `Tried to edit bookmark id="${bookmarkId}", but could not find it in searchData.`,
     )
   }
 
@@ -93,7 +93,7 @@ export async function editBookmark(bookmarkId) {
  */
 export function updateBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find(
-    (el) => el.originalId === bookmarkId
+    (el) => el.originalId === bookmarkId,
   )
   const titleInput = document.getElementById('bookmark-title').value.trim()
   const urlInput = document.getElementById('bookmark-url').value.trim()
@@ -111,7 +111,7 @@ export function updateBookmark(bookmarkId) {
     bookmark.title,
     bookmark.url,
     bookmark.tags,
-    bookmark.folder
+    bookmark.folder,
   )
   bookmark.searchStringLower = bookmark.searchString.toLowerCase()
   resetFuzzySearchState('bookmarks')
@@ -121,11 +121,11 @@ export function updateBookmark(bookmarkId) {
   if (browserApi.bookmarks) {
     browserApi.bookmarks.update(bookmarkId, {
       title: `${titleInput} ${tagsInput}`,
-      url: urlInput
+      url: urlInput,
     })
   } else {
     console.warn(
-      `No browser bookmarks API found. Bookmark update will not persist.`
+      `No browser bookmarks API found. Bookmark update will not persist.`,
     )
   }
 
@@ -144,7 +144,7 @@ export async function deleteBookmark(bookmarkId) {
     browserApi.bookmarks.remove(bookmarkId)
   } else {
     console.warn(
-      `No browser bookmarks API found. Bookmark remove will not persist.`
+      `No browser bookmarks API found. Bookmark remove will not persist.`,
     )
   }
 
@@ -185,7 +185,7 @@ function navigateToSearchView() {
   } catch (navigationError) {
     console.warn(
       'Navigation to search view not supported in this environment.',
-      navigationError
+      navigationError,
     )
     if (window.history && window.history.replaceState) {
       try {
@@ -193,7 +193,7 @@ function navigateToSearchView() {
       } catch (historyError) {
         console.warn(
           'Failed to update history state for search view navigation.',
-          historyError
+          historyError,
         )
       }
     }

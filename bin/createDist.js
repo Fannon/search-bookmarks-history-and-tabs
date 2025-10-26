@@ -16,7 +16,7 @@ const CSS_BUNDLED_FILENAMES = new Set([
   'style.css',
   'options.css',
   'taxonomy.css',
-  'editBookmark.css'
+  'editBookmark.css',
 ])
 
 /**
@@ -36,7 +36,7 @@ export async function createDist(clean = true) {
   // Copy images
   const images = ['logo-16.png', 'logo-32.png', 'logo-48.png', 'logo-128.png']
   await Promise.all(
-    images.map((img) => fs.copy(`images/${img}`, `dist/chrome/images/${img}`))
+    images.map((img) => fs.copy(`images/${img}`, `dist/chrome/images/${img}`)),
   )
 
   // Copy popup directory
@@ -148,23 +148,23 @@ async function modifyHtmlFile(filePath) {
   let modified = content
     .replace(
       '<script defer type="module" src="./js/initOptions.js"></script>',
-      '<script defer src="./js/initOptions.bundle.min.js"></script>'
+      '<script defer src="./js/initOptions.bundle.min.js"></script>',
     )
     .replace(
       '<script defer type="module" src="./js/initSearch.js"></script>',
-      '<script defer src="./js/initSearch.bundle.min.js"></script>'
+      '<script defer src="./js/initSearch.bundle.min.js"></script>',
     )
     .replace(
       '<script defer type="module" src="./js/initTags.js"></script>',
-      '<script defer src="./js/initTags.bundle.min.js"></script>'
+      '<script defer src="./js/initTags.bundle.min.js"></script>',
     )
     .replace(
       '<script defer type="module" src="./js/initFolders.js"></script>',
-      '<script defer src="./js/initFolders.bundle.min.js"></script>'
+      '<script defer src="./js/initFolders.bundle.min.js"></script>',
     )
     .replace(
       '<script defer type="module" src="./js/initEditBookmark.js"></script>',
-      '<script defer src="./js/initEditBookmark.bundle.min.js"></script>'
+      '<script defer src="./js/initEditBookmark.bundle.min.js"></script>',
     )
 
   modified = replaceStylesheetReferences(modified)
@@ -183,37 +183,37 @@ function replaceStylesheetReferences(htmlContent) {
       source:
         '<link rel="stylesheet" href="./css/style.css" type="text/css" />',
       target:
-        '<link rel="stylesheet" href="./css/style.min.css" type="text/css" />'
+        '<link rel="stylesheet" href="./css/style.min.css" type="text/css" />',
     },
     {
       source: '<link rel="stylesheet" href="./css/style.css" />',
-      target: '<link rel="stylesheet" href="./css/style.min.css" />'
+      target: '<link rel="stylesheet" href="./css/style.min.css" />',
     },
     {
       source: '<link rel="stylesheet" href="./css/options.css" />',
-      target: '<link rel="stylesheet" href="./css/options.min.css" />'
+      target: '<link rel="stylesheet" href="./css/options.min.css" />',
     },
     {
       source:
         '<link rel="stylesheet" href="./css/taxonomy.css" type="text/css" />',
       target:
-        '<link rel="stylesheet" href="./css/taxonomy.min.css" type="text/css" />'
+        '<link rel="stylesheet" href="./css/taxonomy.min.css" type="text/css" />',
     },
     {
       source:
         '<link rel="stylesheet" href="./css/editBookmark.css" type="text/css" />',
       target:
-        '<link rel="stylesheet" href="./css/editBookmark.min.css" type="text/css" />'
+        '<link rel="stylesheet" href="./css/editBookmark.min.css" type="text/css" />',
     },
     {
       source: '<link rel="stylesheet" href="./css/editBookmark.css" />',
-      target: '<link rel="stylesheet" href="./css/editBookmark.min.css" />'
-    }
+      target: '<link rel="stylesheet" href="./css/editBookmark.min.css" />',
+    },
   ]
 
   return replacements.reduce(
     (result, { source, target }) => result.replace(source, target),
-    htmlContent
+    htmlContent,
   )
 }
 

@@ -18,7 +18,7 @@ async function loadTagsView({ tags = {} } = {}) {
 
   const getUniqueTags = jest.fn(() => tags)
   jest.unstable_mockModule('../../search/taxonomySearch.js', () => ({
-    getUniqueTags
+    getUniqueTags,
   }))
 
   const module = await import('../tagsView.js')
@@ -26,8 +26,8 @@ async function loadTagsView({ tags = {} } = {}) {
   return {
     module,
     mocks: {
-      getUniqueTags
-    }
+      getUniqueTags,
+    },
   }
 }
 
@@ -41,7 +41,7 @@ describe('tagsView', () => {
     const tags = {
       beta: [{ id: 2 }],
       alpha: [{ id: 1 }, { id: 3 }],
-      release: [{ id: 4 }, { id: 5 }, { id: 6 }]
+      release: [{ id: 4 }, { id: 5 }, { id: 6 }],
     }
     const { module, mocks } = await loadTagsView({ tags })
 
@@ -49,23 +49,23 @@ describe('tagsView', () => {
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
     expect(document.getElementById('tags-overview').getAttribute('style')).toBe(
-      null
+      null,
     )
     const badges = Array.from(
-      document.querySelectorAll('#tags-list a.badge.tags')
+      document.querySelectorAll('#tags-list a.badge.tags'),
     )
     expect(badges.map((el) => el.getAttribute('x-tag'))).toEqual([
       'alpha',
       'beta',
-      'release'
+      'release',
     ])
     expect(badges.map((el) => el.getAttribute('href'))).toEqual([
       './index.html#search/#alpha',
       './index.html#search/#beta',
-      './index.html#search/#release'
+      './index.html#search/#release',
     ])
     expect(
-      badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())
+      badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim()),
     ).toEqual(['#alpha (2)', '#beta (1)', '#release (3)'])
   })
 
@@ -76,7 +76,7 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(document.getElementById('tags-overview').getAttribute('style')).toBe(
-      null
+      null,
     )
     expect(document.querySelectorAll('#tags-list a.badge.tags')).toHaveLength(0)
   })
@@ -92,7 +92,7 @@ describe('tagsView', () => {
       '': [], // Empty tag name
       null: [{ id: 1 }], // null key
       undefined: [{ id: 2 }], // undefined key
-      'valid-tag': [{ id: 3 }]
+      'valid-tag': [{ id: 3 }],
     }
 
     const { module, mocks } = await loadTagsView({ tags })
@@ -101,22 +101,22 @@ describe('tagsView', () => {
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
     expect(document.getElementById('tags-overview').getAttribute('style')).toBe(
-      null
+      null,
     )
 
     // The actual implementation renders all tags including malformed ones
     const badges = Array.from(
-      document.querySelectorAll('#tags-list a.badge.tags')
+      document.querySelectorAll('#tags-list a.badge.tags'),
     )
     expect(badges).toHaveLength(4) // All tags are rendered
 
     // Check that valid tags are still rendered correctly
     const validBadge = badges.find(
-      (badge) => badge.getAttribute('x-tag') === 'valid-tag'
+      (badge) => badge.getAttribute('x-tag') === 'valid-tag',
     )
     expect(validBadge).toBeDefined()
     expect(validBadge.getAttribute('href')).toBe(
-      './index.html#search/#valid-tag'
+      './index.html#search/#valid-tag',
     )
 
     consoleWarnSpy.mockRestore()
@@ -130,7 +130,7 @@ describe('tagsView', () => {
     for (let i = 0; i < 100; i++) {
       tags[`tag${i}`] = Array.from(
         { length: Math.floor(Math.random() * 10) + 1 },
-        (_, idx) => ({ id: `${i}-${idx}` })
+        (_, idx) => ({ id: `${i}-${idx}` }),
       )
     }
 
@@ -142,11 +142,11 @@ describe('tagsView', () => {
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
     expect(document.getElementById('tags-overview').getAttribute('style')).toBe(
-      null
+      null,
     )
 
     const badges = Array.from(
-      document.querySelectorAll('#tags-list a.badge.tags')
+      document.querySelectorAll('#tags-list a.badge.tags'),
     )
     expect(badges).toHaveLength(100)
 
@@ -161,7 +161,7 @@ describe('tagsView', () => {
       'tag-with-dashes': [{ id: 2 }],
       tag_with_underscores: [{ id: 3 }],
       'tag.with.dots': [{ id: 4 }],
-      'tag(with)parentheses': [{ id: 5 }]
+      'tag(with)parentheses': [{ id: 5 }],
     }
 
     const { module, mocks } = await loadTagsView({ tags })
@@ -170,11 +170,11 @@ describe('tagsView', () => {
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
     expect(document.getElementById('tags-overview').getAttribute('style')).toBe(
-      null
+      null,
     )
 
     const badges = Array.from(
-      document.querySelectorAll('#tags-list a.badge.tags')
+      document.querySelectorAll('#tags-list a.badge.tags'),
     )
     expect(badges).toHaveLength(5)
 
@@ -198,7 +198,7 @@ describe('tagsView', () => {
       naïve: [{ id: 2 }],
       résumé: [{ id: 3 }],
       日本語: [{ id: 4 }],
-      '🚀': [{ id: 5 }]
+      '🚀': [{ id: 5 }],
     }
 
     const { module, mocks } = await loadTagsView({ tags })
@@ -207,11 +207,11 @@ describe('tagsView', () => {
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
     expect(document.getElementById('tags-overview').getAttribute('style')).toBe(
-      null
+      null,
     )
 
     const badges = Array.from(
-      document.querySelectorAll('#tags-list a.badge.tags')
+      document.querySelectorAll('#tags-list a.badge.tags'),
     )
     expect(badges).toHaveLength(5)
 
@@ -222,14 +222,14 @@ describe('tagsView', () => {
       './index.html#search/#naïve',
       './index.html#search/#résumé',
       './index.html#search/#日本語',
-      './index.html#search/#🚀'
+      './index.html#search/#🚀',
     ])
   })
 
   it('escapes HTML content in tag names', async () => {
     setupDom()
     const tags = {
-      'alpha<script>alert(1)</script>': [{ id: 1 }]
+      'alpha<script>alert(1)</script>': [{ id: 1 }],
     }
 
     const { module } = await loadTagsView({ tags })

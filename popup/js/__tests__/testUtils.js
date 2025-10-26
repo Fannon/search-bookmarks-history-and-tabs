@@ -14,7 +14,7 @@ export function createTestExt(overrides = {}) {
     dom: {},
     browserApi: {},
     initialized: false,
-    searchCache: new Map()
+    searchCache: new Map(),
   }
   const ext = {
     ...base,
@@ -24,11 +24,11 @@ export function createTestExt(overrides = {}) {
     index: {
       taxonomy: {
         ...(base.index.taxonomy || {}),
-        ...(overrides.index?.taxonomy || {})
-      }
+        ...(overrides.index?.taxonomy || {}),
+      },
     },
     dom: { ...base.dom, ...(overrides.dom || {}) },
-    browserApi: { ...base.browserApi, ...(overrides.browserApi || {}) }
+    browserApi: { ...base.browserApi, ...(overrides.browserApi || {}) },
   }
   global.ext = ext
   if (typeof window !== 'undefined') {

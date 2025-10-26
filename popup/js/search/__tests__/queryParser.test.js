@@ -13,7 +13,7 @@ describe('resolveSearchMode', () => {
     const result = resolveSearchMode('h example search')
     expect(result).toEqual({
       mode: 'history',
-      term: 'example search'
+      term: 'example search',
     })
   })
 
@@ -21,7 +21,7 @@ describe('resolveSearchMode', () => {
     const result = resolveSearchMode('b my bookmark')
     expect(result).toEqual({
       mode: 'bookmarks',
-      term: 'my bookmark'
+      term: 'my bookmark',
     })
   })
 
@@ -29,7 +29,7 @@ describe('resolveSearchMode', () => {
     const result = resolveSearchMode('t open tab')
     expect(result).toEqual({
       mode: 'tabs',
-      term: 'open tab'
+      term: 'open tab',
     })
   })
 
@@ -37,7 +37,7 @@ describe('resolveSearchMode', () => {
     const result = resolveSearchMode('s google query')
     expect(result).toEqual({
       mode: 'search',
-      term: 'google query'
+      term: 'google query',
     })
   })
 
@@ -45,7 +45,7 @@ describe('resolveSearchMode', () => {
     const result = resolveSearchMode('#javascript')
     expect(result).toEqual({
       mode: 'tags',
-      term: 'javascript'
+      term: 'javascript',
     })
   })
 
@@ -53,7 +53,7 @@ describe('resolveSearchMode', () => {
     const result = resolveSearchMode('~work/projects')
     expect(result).toEqual({
       mode: 'folders',
-      term: 'work/projects'
+      term: 'work/projects',
     })
   })
 
@@ -61,7 +61,7 @@ describe('resolveSearchMode', () => {
     const result = resolveSearchMode('normal search term')
     expect(result).toEqual({
       mode: 'all',
-      term: 'normal search term'
+      term: 'normal search term',
     })
   })
 
@@ -69,7 +69,7 @@ describe('resolveSearchMode', () => {
     const result = resolveSearchMode('')
     expect(result).toEqual({
       mode: 'all',
-      term: ''
+      term: '',
     })
   })
 
@@ -77,7 +77,7 @@ describe('resolveSearchMode', () => {
     const result = resolveSearchMode('   ')
     expect(result).toEqual({
       mode: 'all',
-      term: '   '
+      term: '   ',
     })
   })
 
@@ -85,7 +85,7 @@ describe('resolveSearchMode', () => {
     const result = resolveSearchMode('h #tag')
     expect(result).toEqual({
       mode: 'history',
-      term: '#tag'
+      term: '#tag',
     })
   })
 
@@ -93,7 +93,7 @@ describe('resolveSearchMode', () => {
     const result = resolveSearchMode('b MyBookmark')
     expect(result).toEqual({
       mode: 'bookmarks',
-      term: 'MyBookmark'
+      term: 'MyBookmark',
     })
   })
 
@@ -101,7 +101,7 @@ describe('resolveSearchMode', () => {
     const result = resolveSearchMode('hello')
     expect(result).toEqual({
       mode: 'all',
-      term: 'hello'
+      term: 'hello',
     })
   })
 })

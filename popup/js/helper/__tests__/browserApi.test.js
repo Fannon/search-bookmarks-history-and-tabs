@@ -4,7 +4,7 @@ import {
   describe,
   expect,
   it,
-  jest
+  jest,
 } from '@jest/globals'
 import {
   browserApi,
@@ -14,14 +14,14 @@ import {
   createSearchString,
   getBrowserTabs,
   getTitle,
-  shortenTitle
+  shortenTitle,
 } from '../browserApi.js'
 
 const baseExtOptions = {
   tabsOnlyCurrentWindow: false,
   bookmarksIgnoreFolderList: [],
   historyIgnoreList: [],
-  debug: false
+  debug: false,
 }
 
 beforeEach(() => {
@@ -40,7 +40,7 @@ describe('getBrowserTabs', () => {
       { id: 1, title: 'Internal tab' },
       { id: 2, url: '', title: 'Empty url' },
       { id: 3, url: 'chrome-extension://abcdef', title: 'Extension page' },
-      { id: 4, url: 'https://example.com', title: 'Example' }
+      { id: 4, url: 'https://example.com', title: 'Example' },
     ])
 
     browserApi.tabs = { query: queryMock }
@@ -64,8 +64,8 @@ describe('convertBrowserTabs', () => {
         id: 5,
         active: true,
         windowId: 3,
-        lastAccessed: 1_000
-      }
+        lastAccessed: 1_000,
+      },
     ]
 
     const [tab] = convertBrowserTabs(tabs)
@@ -79,7 +79,7 @@ describe('convertBrowserTabs', () => {
       active: true,
       windowId: 3,
       searchString: 'Example¦example.com/path',
-      searchStringLower: 'example¦example.com/path'
+      searchStringLower: 'example¦example.com/path',
     })
     expect(tab.lastVisitSecondsAgo).toBe(1)
   })
@@ -93,8 +93,8 @@ describe('convertBrowserTabs', () => {
         id: 4,
         url: 'https://valid.example.com/',
         title: 'Valid tab',
-        lastAccessed: 1_000
-      }
+        lastAccessed: 1_000,
+      },
     ]
 
     const result = convertBrowserTabs(tabs)
@@ -103,7 +103,7 @@ describe('convertBrowserTabs', () => {
     expect(result[0]).toMatchObject({
       originalId: 4,
       url: 'valid.example.com',
-      originalUrl: 'https://valid.example.com'
+      originalUrl: 'https://valid.example.com',
     })
   })
 })
@@ -114,7 +114,7 @@ describe('createSearchString', () => {
       'Example title',
       'example.com',
       '#tag',
-      '~Folder'
+      '~Folder',
     )
     expect(result).toBe('Example title¦example.com¦#tag¦~Folder')
   })
@@ -124,7 +124,7 @@ describe('createSearchString', () => {
       'example.com',
       'example.com',
       undefined,
-      undefined
+      undefined,
     )
     expect(result).toBe('example.com')
   })
@@ -142,7 +142,7 @@ describe('createSearchString', () => {
 describe('getTitle', () => {
   it('cleans title when it is a raw url', () => {
     expect(
-      getTitle('https://Example.com/path', 'https://Example.com/path')
+      getTitle('https://Example.com/path', 'https://Example.com/path'),
     ).toBe('example.com/path')
   })
 
@@ -175,12 +175,12 @@ describe('convertBrowserBookmarks', () => {
                 id: 'bookmark-1',
                 title: 'Example +5 #tag1 #tag2',
                 url: 'https://Example.com/',
-                dateAdded: 123
-              }
-            ]
-          }
-        ]
-      }
+                dateAdded: 123,
+              },
+            ],
+          },
+        ],
+      },
     ]
 
     const [bookmark] = convertBrowserBookmarks(tree, ['Root'], 3)
@@ -200,7 +200,7 @@ describe('convertBrowserBookmarks', () => {
       searchString:
         'Example¦example.com¦#tag1 #tag2¦~Root ~Parent folder ~Work',
       searchStringLower:
-        'example¦example.com¦#tag1 #tag2¦~root ~parent folder ~work'
+        'example¦example.com¦#tag1 #tag2¦~root ~parent folder ~work',
     })
   })
 
@@ -212,35 +212,35 @@ describe('convertBrowserBookmarks', () => {
           {
             id: 'bookmark-1',
             title: 'Score with leading zero +08',
-            url: 'https://example.com/'
+            url: 'https://example.com/',
           },
           {
             id: 'bookmark-2',
             title: 'Double digit score +10',
-            url: 'https://test.com/'
+            url: 'https://test.com/',
           },
           {
             id: 'bookmark-3',
             title: 'Large score +100',
-            url: 'https://large.com/'
-          }
-        ]
-      }
+            url: 'https://large.com/',
+          },
+        ],
+      },
     ]
 
     const bookmarks = convertBrowserBookmarks(tree)
 
     expect(bookmarks[0]).toMatchObject({
       title: 'Score with leading zero',
-      customBonusScore: 8
+      customBonusScore: 8,
     })
     expect(bookmarks[1]).toMatchObject({
       title: 'Double digit score',
-      customBonusScore: 10
+      customBonusScore: 10,
     })
     expect(bookmarks[2]).toMatchObject({
       title: 'Large score',
-      customBonusScore: 100
+      customBonusScore: 100,
     })
   })
 
@@ -253,10 +253,10 @@ describe('convertBrowserBookmarks', () => {
         children: [
           {
             title: 'Hidden bookmark',
-            url: 'https://hidden.example.com'
-          }
-        ]
-      }
+            url: 'https://hidden.example.com',
+          },
+        ],
+      },
     ]
 
     const result = convertBrowserBookmarks(tree, ['Ignore me'], 3)
@@ -272,15 +272,15 @@ describe('convertBrowserBookmarks', () => {
           {
             id: 'bookmark-1',
             title: 'First entry',
-            url: 'https://duplicate.example.com'
+            url: 'https://duplicate.example.com',
           },
           {
             id: 'bookmark-2',
             title: 'Second entry',
-            url: 'https://duplicate.example.com'
-          }
-        ]
-      }
+            url: 'https://duplicate.example.com',
+          },
+        ],
+      },
     ]
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
@@ -294,7 +294,7 @@ describe('convertBrowserBookmarks', () => {
       expect(warnSpy).toHaveBeenCalledTimes(1)
       expect(warnSpy.mock.calls[0][0]).toContain('Duplicate bookmark detected')
       expect(warnSpy.mock.calls[0][0]).toContain(
-        'https://duplicate.example.com'
+        'https://duplicate.example.com',
       )
       expect(warnSpy.mock.calls[0][0]).toContain('folder: /')
     } finally {
@@ -314,15 +314,15 @@ describe('convertBrowserHistory', () => {
         url: 'https://keep.example.com/page',
         title: 'Keep',
         visitCount: 3,
-        lastVisitTime: 9_000
+        lastVisitTime: 9_000,
       },
       {
         id: '2',
         url: 'https://ignore.example.com/secret',
         title: 'Ignore',
         visitCount: 5,
-        lastVisitTime: 8_500
-      }
+        lastVisitTime: 8_500,
+      },
     ]
 
     const result = convertBrowserHistory(history)
@@ -339,7 +339,7 @@ describe('convertBrowserHistory', () => {
       visitCount: 3,
       lastVisitSecondsAgo: 1,
       searchString: 'Keep¦keep.example.com/page',
-      searchStringLower: 'keep¦keep.example.com/page'
+      searchStringLower: 'keep¦keep.example.com/page',
     })
   })
 })

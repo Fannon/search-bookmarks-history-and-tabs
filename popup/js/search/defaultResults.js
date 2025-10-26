@@ -21,7 +21,7 @@ import { getBrowserTabs } from '../helper/browserApi.js'
  */
 const withDefaultScore = (entry) => ({
   searchScore: 1,
-  ...entry
+  ...entry,
 })
 
 /**
@@ -89,7 +89,7 @@ export async function addDefaultEntries() {
             tab &&
             tab.url &&
             !tab.url.startsWith('chrome://') &&
-            !tab.url.startsWith('about:')
+            !tab.url.startsWith('about:'),
         )
         .map(withDefaultScore)
         .sort((a, b) => {

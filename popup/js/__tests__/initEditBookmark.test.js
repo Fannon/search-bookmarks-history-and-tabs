@@ -4,7 +4,7 @@ import {
   describe,
   expect,
   jest,
-  test
+  test,
 } from '@jest/globals'
 import { clearTestExt, flushPromises } from './testUtils.js'
 
@@ -45,7 +45,7 @@ describe('initEditBookmark entry point', () => {
     const deleteBookmark = jest.fn(() => Promise.resolve())
     const getEffectiveOptions = jest.fn(() => Promise.resolve({}))
     const getSearchData = jest.fn(() =>
-      Promise.resolve({ bookmarks: [{ originalId: 'bookmark-1' }] })
+      Promise.resolve({ bookmarks: [{ originalId: 'bookmark-1' }] }),
     )
     const printError = jest.fn()
 
@@ -53,23 +53,23 @@ describe('initEditBookmark entry point', () => {
       __esModule: true,
       editBookmark,
       updateBookmark,
-      deleteBookmark
+      deleteBookmark,
     }))
     await jest.unstable_mockModule('../model/options.js', () => ({
       __esModule: true,
-      getEffectiveOptions
+      getEffectiveOptions,
     }))
     await jest.unstable_mockModule('../model/searchData.js', () => ({
       __esModule: true,
-      getSearchData
+      getSearchData,
     }))
     await jest.unstable_mockModule('../view/errorView.js', () => ({
       __esModule: true,
-      printError
+      printError,
     }))
     await jest.unstable_mockModule('../helper/browserApi.js', () => ({
       __esModule: true,
-      browserApi: {}
+      browserApi: {},
     }))
 
     const module = await import('../initEditBookmark.js')
@@ -84,7 +84,7 @@ describe('initEditBookmark entry point', () => {
     expect(getSearchData).toHaveBeenCalled()
     expect(document.getElementById('edit-bookmark-loading')).toBeNull()
     expect(
-      document.getElementById('edit-bookmark-cancel').getAttribute('href')
+      document.getElementById('edit-bookmark-cancel').getAttribute('href'),
     ).toBe('./index.html#search/foo')
 
     document
@@ -109,7 +109,7 @@ describe('initEditBookmark entry point', () => {
     const deleteBookmark = jest.fn(() => Promise.resolve())
     const getEffectiveOptions = jest.fn(() => Promise.resolve({}))
     const getSearchData = jest.fn(() =>
-      Promise.resolve({ bookmarks: [{ originalId: 'legacy-bookmark' }] })
+      Promise.resolve({ bookmarks: [{ originalId: 'legacy-bookmark' }] }),
     )
     const printError = jest.fn()
 
@@ -117,23 +117,23 @@ describe('initEditBookmark entry point', () => {
       __esModule: true,
       editBookmark,
       updateBookmark,
-      deleteBookmark
+      deleteBookmark,
     }))
     await jest.unstable_mockModule('../model/options.js', () => ({
       __esModule: true,
-      getEffectiveOptions
+      getEffectiveOptions,
     }))
     await jest.unstable_mockModule('../model/searchData.js', () => ({
       __esModule: true,
-      getSearchData
+      getSearchData,
     }))
     await jest.unstable_mockModule('../view/errorView.js', () => ({
       __esModule: true,
-      printError
+      printError,
     }))
     await jest.unstable_mockModule('../helper/browserApi.js', () => ({
       __esModule: true,
-      browserApi: {}
+      browserApi: {},
     }))
 
     const module = await import('../initEditBookmark.js')
@@ -152,23 +152,23 @@ describe('initEditBookmark entry point', () => {
       __esModule: true,
       editBookmark: jest.fn(),
       updateBookmark: jest.fn(),
-      deleteBookmark: jest.fn()
+      deleteBookmark: jest.fn(),
     }))
     await jest.unstable_mockModule('../model/options.js', () => ({
       __esModule: true,
-      getEffectiveOptions: jest.fn(() => Promise.resolve({}))
+      getEffectiveOptions: jest.fn(() => Promise.resolve({})),
     }))
     await jest.unstable_mockModule('../model/searchData.js', () => ({
       __esModule: true,
-      getSearchData: jest.fn(() => Promise.resolve({ bookmarks: [] }))
+      getSearchData: jest.fn(() => Promise.resolve({ bookmarks: [] })),
     }))
     await jest.unstable_mockModule('../view/errorView.js', () => ({
       __esModule: true,
-      printError
+      printError,
     }))
     await jest.unstable_mockModule('../helper/browserApi.js', () => ({
       __esModule: true,
-      browserApi: {}
+      browserApi: {},
     }))
 
     await import('../initEditBookmark.js')
@@ -190,23 +190,23 @@ describe('initEditBookmark entry point', () => {
       __esModule: true,
       editBookmark,
       updateBookmark: jest.fn(),
-      deleteBookmark: jest.fn()
+      deleteBookmark: jest.fn(),
     }))
     await jest.unstable_mockModule('../model/options.js', () => ({
       __esModule: true,
-      getEffectiveOptions: jest.fn(() => Promise.resolve({}))
+      getEffectiveOptions: jest.fn(() => Promise.resolve({})),
     }))
     await jest.unstable_mockModule('../model/searchData.js', () => ({
       __esModule: true,
-      getSearchData: jest.fn(() => Promise.resolve({ bookmarks: [] }))
+      getSearchData: jest.fn(() => Promise.resolve({ bookmarks: [] })),
     }))
     await jest.unstable_mockModule('../view/errorView.js', () => ({
       __esModule: true,
-      printError: jest.fn()
+      printError: jest.fn(),
     }))
     await jest.unstable_mockModule('../helper/browserApi.js', () => ({
       __esModule: true,
-      browserApi: {}
+      browserApi: {},
     }))
 
     await import('../initEditBookmark.js')

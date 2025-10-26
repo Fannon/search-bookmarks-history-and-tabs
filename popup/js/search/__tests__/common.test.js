@@ -18,7 +18,7 @@ import {
   describe,
   expect,
   jest,
-  test
+  test,
 } from '@jest/globals'
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
@@ -36,22 +36,22 @@ let sortResults
 beforeAll(async () => {
   await jest.unstable_mockModule('../../helper/browserApi.js', () => ({
     __esModule: true,
-    getBrowserTabs: mockGetBrowserTabs
+    getBrowserTabs: mockGetBrowserTabs,
   }))
   const utilsModule = await import('../../helper/utils.js')
   await jest.unstable_mockModule('../../helper/utils.js', () => ({
     __esModule: true,
     ...utilsModule,
-    loadScript: mockLoadScript
+    loadScript: mockLoadScript,
   }))
   await jest.unstable_mockModule('../../view/errorView.js', () => ({
     __esModule: true,
     closeErrors: mockCloseErrors,
-    printError: jest.fn()
+    printError: jest.fn(),
   }))
   await jest.unstable_mockModule('../../view/searchView.js', () => ({
     __esModule: true,
-    renderSearchResults: mockRenderSearchResults
+    renderSearchResults: mockRenderSearchResults,
   }))
 
   commonModule = await import('../common.js')
@@ -84,14 +84,14 @@ function setupExt(overrides = {}) {
         {
           alias: ['yt'],
           name: 'YouTube',
-          urlPrefix: 'https://youtube.com/results?search_query=$s'
-        }
+          urlPrefix: 'https://youtube.com/results?search_query=$s',
+        },
       ],
       searchEngineChoices: [
         {
           name: 'Google',
-          urlPrefix: 'https://www.google.com/search?q=$s'
-        }
+          urlPrefix: 'https://www.google.com/search?q=$s',
+        },
       ],
       searchStrategy: 'precise',
       searchMaxResults: 5,
@@ -119,7 +119,7 @@ function setupExt(overrides = {}) {
       scoreFolderWeight: 0.5,
       historyDaysAgo: 14,
       maxRecentTabsToShow: 3,
-      ...overrides.opts
+      ...overrides.opts,
     },
     model: {
       searchMode: 'all',
@@ -127,14 +127,14 @@ function setupExt(overrides = {}) {
       bookmarks: [],
       tabs: [],
       history: [],
-      ...overrides.model
+      ...overrides.model,
     },
     dom: {
       searchInput: { value: '' },
       resultCounter: { innerText: '' },
-      ...overrides.dom
+      ...overrides.dom,
     },
-    ...overrides
+    ...overrides,
   })
 }
 
@@ -153,8 +153,8 @@ describe('searchWithAlgorithm', () => {
         type: 'bookmark',
         title: 'Daily News Digest',
         url: 'https://news.test',
-        searchString: 'daily news digest'
-      }
+        searchString: 'daily news digest',
+      },
     ]
 
     const results = await searchWithAlgorithm('precise', 'news', 'bookmarks')
@@ -163,8 +163,8 @@ describe('searchWithAlgorithm', () => {
       expect.objectContaining({
         title: 'Daily News Digest',
         searchApproach: 'precise',
-        type: 'bookmark'
-      })
+        type: 'bookmark',
+      }),
     ])
   })
 
@@ -178,7 +178,7 @@ describe('searchWithAlgorithm', () => {
 
   test('throws when search approach unsupported', async () => {
     await expect(searchWithAlgorithm('unknown', 'test')).rejects.toThrow(
-      'Unknown search approach: unknown'
+      'Unknown search approach: unknown',
     )
   })
 })
@@ -197,7 +197,7 @@ describe('sortResults', () => {
     expect(sortResults(results, 'score')).toEqual([
       { score: 40 },
       { score: 25 },
-      { score: 10 }
+      { score: 10 },
     ])
   })
 
@@ -205,13 +205,13 @@ describe('sortResults', () => {
     const results = [
       { lastVisitSecondsAgo: 5 },
       { lastVisitSecondsAgo: null },
-      { lastVisitSecondsAgo: 2 }
+      { lastVisitSecondsAgo: 2 },
     ]
 
     expect(sortResults(results, 'lastVisited')).toEqual([
       { lastVisitSecondsAgo: 2 },
       { lastVisitSecondsAgo: 5 },
-      { lastVisitSecondsAgo: null }
+      { lastVisitSecondsAgo: null },
     ])
   })
 
@@ -224,7 +224,7 @@ describe('addDefaultEntries', () => {
   test('re-exports defaultResults implementation', async () => {
     const defaultResultsModule = await import('../defaultResults.js')
     expect(commonModule.addDefaultEntries).toBe(
-      defaultResultsModule.addDefaultEntries
+      defaultResultsModule.addDefaultEntries,
     )
   })
 })
@@ -261,7 +261,7 @@ describe('search', () => {
     ext.model.searchMode = 'history'
     ext.model.history = [
       { id: 1, title: 'Recent history', url: 'https://recent.test' },
-      { id: 2, title: 'Older history', url: 'https://older.test' }
+      { id: 2, title: 'Older history', url: 'https://older.test' },
     ]
     ext.dom.searchInput.value = '   '
 
@@ -272,14 +272,14 @@ describe('search', () => {
         id: 1,
         title: 'Recent history',
         url: 'https://recent.test',
-        searchScore: 1
+        searchScore: 1,
       },
       {
         id: 2,
         title: 'Older history',
         url: 'https://older.test',
-        searchScore: 1
-      }
+        searchScore: 1,
+      },
     ])
     expect(mockRenderSearchResults).toHaveBeenCalledWith()
   })
@@ -294,8 +294,8 @@ describe('search', () => {
         url: 'https://tag.test',
         searchString: 'Tagged result https://tag.test',
         tags: '#tagsearch#other',
-        tagsArray: ['TagSearch', 'Other']
-      }
+        tagsArray: ['TagSearch', 'Other'],
+      },
     ]
 
     await search({ key: 't' })
@@ -303,8 +303,8 @@ describe('search', () => {
     expect(ext.model.result).toEqual([
       expect.objectContaining({
         title: 'Tagged result',
-        searchApproach: 'taxonomy'
-      })
+        searchApproach: 'taxonomy',
+      }),
     ])
     expect(mockRenderSearchResults).toHaveBeenCalled()
   })
@@ -315,7 +315,7 @@ describe('search', () => {
     await search({ key: 'c' })
 
     const hasCustom = ext.model.result.some(
-      (item) => item.type === 'customSearch'
+      (item) => item.type === 'customSearch',
     )
     expect(hasCustom).toBe(true)
   })
@@ -327,8 +327,8 @@ describe('search', () => {
         type: 'bookmark',
         title: 'Example',
         url: 'https://example.com',
-        searchString: 'example.com example bookmark'
-      }
+        searchString: 'example.com example bookmark',
+      },
     ]
     ext.opts.scoreMinScore = 0
 
@@ -338,7 +338,7 @@ describe('search', () => {
     expect(direct).toBeDefined()
     expect(direct).toMatchObject({
       type: 'direct',
-      originalUrl: 'https://example.com'
+      originalUrl: 'https://example.com',
     })
     expect(direct.url).toBe('example.com')
     expect(direct.title).toBe('Direct: "example.com"')
@@ -352,29 +352,29 @@ describe('search', () => {
         title: 'High',
         url: 'https://high.test',
         searchString: 'filter high result',
-        customBonusScore: 50
+        customBonusScore: 50,
       },
       {
         type: 'bookmark',
         title: 'Mid',
         url: 'https://mid.test',
         searchString: 'filter mid result',
-        customBonusScore: 20
+        customBonusScore: 20,
       },
       {
         type: 'bookmark',
         title: 'Low',
         url: 'https://low.test',
         searchString: 'filter low result',
-        customBonusScore: 0
+        customBonusScore: 0,
       },
       {
         type: 'bookmark',
         title: 'Second Mid',
         url: 'https://mid2.test',
         searchString: 'filter second mid result',
-        customBonusScore: 15
-      }
+        customBonusScore: 15,
+      },
     ]
     ext.opts.scoreMinScore = 70
     ext.opts.searchMaxResults = 2
@@ -397,20 +397,20 @@ describe('search', () => {
         type: 'bookmark',
         title: 'Fallback',
         url: 'https://fallback.test',
-        searchString: 'fallback bookmark entry'
-      }
+        searchString: 'fallback bookmark entry',
+      },
     ]
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
     await search({ key: 'f' })
 
     const fallbackResult = ext.model.result.find(
-      (item) => item.title === 'Fallback'
+      (item) => item.title === 'Fallback',
     )
     expect(fallbackResult).toBeDefined()
     expect(fallbackResult?.searchApproach).toBe('precise')
     expect(consoleSpy).toHaveBeenCalledWith(
-      'Unsupported option "search.approach" value: "unsupported"'
+      'Unsupported option "search.approach" value: "unsupported"',
     )
     consoleSpy.mockRestore()
   })
@@ -422,12 +422,12 @@ describe('search', () => {
         type: 'bookmark',
         title: 'Remember',
         url: 'https://remember.test',
-        searchString: 'remember bookmark entry'
-      }
+        searchString: 'remember bookmark entry',
+      },
     ]
     const cache = {
       has: jest.fn(() => false),
-      set: jest.fn()
+      set: jest.fn(),
     }
     ext.searchCache = cache
     ext.opts.enableSearchEngines = false
@@ -438,7 +438,7 @@ describe('search', () => {
     expect(cache.has).toHaveBeenCalledWith('remember_precise_all')
     expect(cache.set).toHaveBeenCalledWith(
       'remember_precise_all',
-      ext.model.result
+      ext.model.result,
     )
   })
 })
@@ -452,8 +452,8 @@ describe('🐞 BUG: Cache Invalidation', () => {
         title: 'Tab to close',
         url: 'https://tab.test',
         originalId: 123,
-        searchString: 'tab to close'
-      }
+        searchString: 'tab to close',
+      },
     ]
     ext.dom.searchInput.value = 'tab'
     ext.opts.enableSearchEngines = false
@@ -464,7 +464,7 @@ describe('🐞 BUG: Cache Invalidation', () => {
     const cachedResults = ext.searchCache.get('tab_precise_all')
     expect(cachedResults).toBeDefined()
     expect(
-      cachedResults.some((r) => r.type === 'tab' && r.originalId === 123)
+      cachedResults.some((r) => r.type === 'tab' && r.originalId === 123),
     ).toBe(true)
 
     // Simulate tab closure by removing from model
@@ -477,7 +477,7 @@ describe('🐞 BUG: Cache Invalidation', () => {
     // The bug: cache still contains the closed tab
     const currentResults = ext.model.result
     const hasGhostTab = currentResults.some(
-      (r) => r.type === 'tab' && r.originalId === 123
+      (r) => r.type === 'tab' && r.originalId === 123,
     )
     expect(hasGhostTab).toBe(true) // BUG: This should be false but is true
   })
@@ -491,8 +491,8 @@ describe('✅ FIXED: Inconsistent Result Passing', () => {
         type: 'bookmark',
         title: 'Test',
         url: 'https://test.com',
-        searchString: 'test bookmark'
-      }
+        searchString: 'test bookmark',
+      },
     ]
     ext.opts.enableSearchEngines = false
     ext.opts.customSearchEngines = []
@@ -514,8 +514,8 @@ describe('✅ FIXED: Architecture Violation', () => {
         type: 'bookmark',
         title: 'Test',
         url: 'https://test.com',
-        searchString: 'test bookmark'
-      }
+        searchString: 'test bookmark',
+      },
     ]
     ext.opts.enableSearchEngines = false
     ext.opts.customSearchEngines = []
@@ -541,7 +541,7 @@ describe('✅ VERIFIED: Mode Prefix Without Search Term', () => {
     ext.dom.searchInput.value = 't ' // Tab mode prefix only
     ext.model.tabs = [
       { type: 'tab', title: 'Tab 1', url: 'https://tab1.test', originalId: 1 },
-      { type: 'tab', title: 'Tab 2', url: 'https://tab2.test', originalId: 2 }
+      { type: 'tab', title: 'Tab 2', url: 'https://tab2.test', originalId: 2 },
     ]
 
     await search({ key: 't' })
@@ -559,8 +559,8 @@ describe('✅ VERIFIED: Mode Prefix Without Search Term', () => {
         type: 'bookmark',
         title: 'Bookmark 1',
         url: 'https://bm1.test',
-        searchString: 'bookmark 1 https://bm1.test'
-      }
+        searchString: 'bookmark 1 https://bm1.test',
+      },
     ]
 
     await search({ key: 'b' })
