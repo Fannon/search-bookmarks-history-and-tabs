@@ -157,11 +157,7 @@ async function executeSearch(searchTerm, searchMode) {
  * @param {Array} results - Current result array.
  */
 function addDirectUrlIfApplicable(searchTerm, results) {
-  if (
-    ext.opts.enableDirectUrl &&
-    urlRegex.test(searchTerm) &&
-    results.length < ext.opts.searchMaxResults
-  ) {
+  if (ext.opts.enableDirectUrl && urlRegex.test(searchTerm) && results.length < ext.opts.searchMaxResults) {
     const url = protocolRegex.test(searchTerm) ? searchTerm : `https://${searchTerm.replace(/^\/+/, '')}`
     results.push({
       type: 'direct',
@@ -241,77 +237,90 @@ function cacheResults(searchTerm, results) {
  * @returns {Promise<void>}
  */
 export async function search(event) {
-  try {
-    if (shouldSkipSearch(event)) return
-    if (!ext.initialized) {
-      console.warn('Extension not initialized (yet). Skipping search')
-      return
-    }
-
-    const startTime = Date.now()
-
-    // Get and clean up original search query
-    let searchTerm = normalizeSearchTerm(ext.dom.searchInput.value)
-
-    // Check cache first for better performance (only for actual searches, not default results)
-    if (useCachedResultsIfAvailable(searchTerm)) return
-
-    // Handle empty search - show default results
-    if (!searchTerm.trim()) {
-      await handleEmptySearch()
-      return
-    }
-
-    closeErrors()
-
-    // Parse search mode and extract term
-    const { mode: detectedMode, term: trimmedTerm } = resolveSearchMode(searchTerm)
-    let searchMode = detectedMode
-    searchTerm = trimmedTerm.trim()
-
-    ext.model.searchTerm = searchTerm
-    ext.model.searchMode = searchMode
-
-    // Collect results
-    let results = []
-
-    // Add custom search alias results if in 'all' mode
-    if (searchMode === 'all') {
-      results.push(...collectCustomSearchAliasResults(searchTerm))
-    }
-
-    // Execute search if we have a search term
-    if (searchTerm) {
-      results.push(...(await executeSearch(searchTerm, searchMode)))
-      addDirectUrlIfApplicable(searchTerm, results)
-
-      // Add search engine result items
-      if (searchMode === 'all' || searchMode === 'search') {
-        results.push(...addSearchEngines(searchTerm))
+  // Create a promise that we'll track so Enter key can await completion
+  const searchPromise = (async () => {
+    try {
+      if (shouldSkipSearch(event)) return
+      if (!ext.initialized) {
+        console.warn('Extension not initialized (yet). Skipping search')
+        return
       }
-    } else {
-      results = await addDefaultEntries()
+
+      const startTime = Date.now()
+
+      // Get and clean up original search query
+      let searchTerm = normalizeSearchTerm(ext.dom.searchInput.value)
+
+      // Check cache first for better performance (only for actual searches, not default results)
+      if (useCachedResultsIfAvailable(searchTerm)) return
+
+      // Handle empty search - show default results
+      if (!searchTerm.trim()) {
+        await handleEmptySearch()
+        return
+      }
+
+      closeErrors()
+
+      // Parse search mode and extract term
+      const { mode: detectedMode, term: trimmedTerm } = resolveSearchMode(searchTerm)
+      let searchMode = detectedMode
+      searchTerm = trimmedTerm.trim()
+
+      ext.model.searchTerm = searchTerm
+      ext.model.searchMode = searchMode
+
+      // Collect results
+      let results = []
+
+      // Add custom search alias results if in 'all' mode
+      if (searchMode === 'all') {
+        results.push(...collectCustomSearchAliasResults(searchTerm))
+      }
+
+      // Execute search if we have a search term
+      if (searchTerm) {
+        results.push(...(await executeSearch(searchTerm, searchMode)))
+        addDirectUrlIfApplicable(searchTerm, results)
+
+        // Add search engine result items
+        if (searchMode === 'all' || searchMode === 'search') {
+          results.push(...addSearchEngines(searchTerm))
+        }
+      } else {
+        results = await addDefaultEntries()
+      }
+
+      // Apply scoring and sorting
+      results = applyScoring(results, searchTerm, searchMode)
+
+      // Filter by score and max results
+      results = filterResults(results, searchMode)
+
+      ext.model.result = results
+      ext.dom.resultCounter.innerText = `(${results.length})`
+
+      // Cache the results for better performance (only for actual searches)
+      cacheResults(searchTerm, results)
+
+      renderSearchResults(results)
+
+      // Simple timing for debugging (only if debug is enabled)
+      console.debug('Search completed in ' + (Date.now() - startTime) + 'ms')
+    } catch (err) {
+      printError(err)
     }
+  })()
 
-    // Apply scoring and sorting
-    results = applyScoring(results, searchTerm, searchMode)
+  // Store the active search promise so Enter key can await it
+  ext.model.activeSearchPromise = searchPromise
+  searchPromise.finally(() => {
+    if (ext.model.activeSearchPromise === searchPromise) {
+      ext.model.activeSearchPromise = null
+    }
+  })
 
-    // Filter by score and max results
-    results = filterResults(results, searchMode)
-
-    ext.model.result = results
-    ext.dom.resultCounter.innerText = `(${results.length})`
-
-    // Cache the results for better performance (only for actual searches)
-    cacheResults(searchTerm, results)
-
-    renderSearchResults(results)
-
-    // Simple timing for debugging (only if debug is enabled)
-    console.debug('Search completed in ' + (Date.now() - startTime) + 'ms')
-  } catch (err) {
-    printError(err)
-  }
+  return searchPromise
 }
 
 /**

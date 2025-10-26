@@ -20,8 +20,6 @@ import { renderSearchResults } from './searchView.js'
  */
 export function openResultItem(event) {
   const resultEntry = document.getElementById('selected-result')
-  const originalId = resultEntry.getAttribute('x-original-id')
-  const url = resultEntry.getAttribute('x-open-url')
 
   if (event) {
     event.stopPropagation()
@@ -41,14 +39,25 @@ export function openResultItem(event) {
     }
 
     // Handle close button clicks on tab entries
+    // For close buttons, ALWAYS read from DOM to match the visually clicked item
     if (target && target.className.includes('close-button')) {
-      const targetId = parseInt(originalId, 10)
+      // Find the parent list item to get the correct originalId
+      let listItem = target.parentElement
+      while (listItem && listItem.nodeName !== 'LI') {
+        listItem = listItem.parentElement
+      }
+
+      const originalIdFromDom = listItem?.getAttribute('x-original-id')
+      const targetId = parseInt(originalIdFromDom, 10)
 
       // Close the browser tab
       ext.browserApi.tabs.remove(targetId)
 
-      // Remove the item from the UI
-      document.querySelector(`#result-list > li[x-original-id="${originalId}"]`).remove()
+      // Remove the item from the UI - use targetId to ensure we have a valid value
+      const domElement = document.querySelector(`#result-list > li[x-original-id="${targetId}"]`)
+      if (domElement) {
+        domElement.remove()
+      }
 
       // Update the application state - only remove if found (findIndex returns -1 if not found)
       const tabIndex = ext.model.tabs.findIndex((el) => el.originalId === targetId)
@@ -66,6 +75,31 @@ export function openResultItem(event) {
       return
     }
   }
+
+  // Determine which result to use based on event context
+  // For mouse clicks on specific items, use the clicked item's index
+  // For keyboard navigation (Enter key), use the currently selected item
+  let selectedResult = null
+  if (event?.target && typeof event.target.closest === 'function') {
+    // Try to find the list item that was clicked
+    const listItem = event.target.closest('li[x-index]')
+    if (listItem) {
+      const clickedIndex = parseInt(listItem.getAttribute('x-index'), 10)
+      const hasValidIndex =
+        Number.isInteger(clickedIndex) && clickedIndex >= 0 && clickedIndex < ext.model.result.length
+      if (hasValidIndex) {
+        selectedResult = ext.model.result[clickedIndex]
+      }
+    }
+  }
+
+  // Fall back to currently selected item if we couldn't determine clicked item
+  if (!selectedResult) {
+    selectedResult = ext.model.result[ext.model.currentItem]
+  }
+
+  // Final fallback to DOM attributes if model state is unavailable
+  const url = selectedResult?.originalUrl ?? resultEntry?.getAttribute('x-open-url')
 
   // Handle right-click to copy URL to clipboard
   if (event.button === 2) {
