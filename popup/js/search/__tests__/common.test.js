@@ -486,29 +486,40 @@ describe('✅ FIXED: Architecture Violation', () => {
   })
 })
 
-describe('🐞 BUG: Dead Code', () => {
-  test('lines 292-294 can never execute due to earlier return', async () => {
-    // Lines 292-294 in common.js:
-    // } else {
-    //   results = await addDefaultEntries()
-    // }
-    //
-    // However, line 260-263 already handles empty searchTerm:
-    // if (!searchTerm.trim()) {
-    //   await handleEmptySearch()
-    //   return
-    // }
-    //
-    // This means the else block at 292-294 is unreachable
+describe('✅ VERIFIED: Mode Prefix Without Search Term', () => {
+  test('shows default entries when mode prefix is stripped leaving empty term', async () => {
+    // User types "t " (tab mode with just space) - common use case
+    // Line 254: searchTerm becomes "t"
+    // Line 257: "t".trim() is NOT empty, so doesn't return early
+    // Line 268: resolveSearchMode strips "t" prefix, returns { mode: 'tabs', term: '' }
+    // Line 270: searchTerm becomes '' (empty)
+    // Now the else block at 291-294 SHOULD execute to show default entries
 
-    ext.dom.searchInput.value = '   ' // Empty search
-    const defaultResults = [{ type: 'bookmark', title: 'Default' }]
-    ext.model.history = defaultResults
+    ext.dom.searchInput.value = 't ' // Tab mode prefix only
+    ext.model.tabs = [
+      { type: 'tab', title: 'Tab 1', url: 'https://tab1.test', originalId: 1 },
+      { type: 'tab', title: 'Tab 2', url: 'https://tab2.test', originalId: 2 },
+    ]
 
     await search({ key: 't' })
 
-    // The function returns early at line 262, so it never reaches line 292-294
-    // The code at 292-294 is dead code
-    expect(ext.model.result).toBeDefined() // Handled by early return, not dead code
+    // Should show default tab entries, not empty results
+    expect(ext.model.result.length).toBeGreaterThan(0)
+    expect(ext.model.searchMode).toBe('tabs')
+    expect(ext.model.searchTerm).toBe('')
+  })
+
+  test('shows default entries for bookmark mode prefix', async () => {
+    ext.dom.searchInput.value = 'b ' // Bookmark mode prefix only
+    ext.model.bookmarks = [
+      { type: 'bookmark', title: 'Bookmark 1', url: 'https://bm1.test', searchString: 'bookmark 1 https://bm1.test' },
+    ]
+
+    await search({ key: 'b' })
+
+    // Should show default bookmark entries
+    expect(ext.model.result.length).toBeGreaterThan(0)
+    expect(ext.model.searchMode).toBe('bookmarks')
+    expect(ext.model.searchTerm).toBe('')
   })
 })

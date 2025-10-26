@@ -278,14 +278,20 @@ export async function search(event) {
         results.push(...collectCustomSearchAliasResults(searchTerm))
       }
 
-      // Execute search if we have a search term
-      // Note: searchTerm is guaranteed to be non-empty here due to early return at line 260-263
-      results.push(...(await executeSearch(searchTerm, searchMode)))
-      addDirectUrlIfApplicable(searchTerm, results)
+      // Execute search if we have a search term after mode prefix is stripped
+      // Note: searchTerm can become empty after resolveSearchMode() strips mode prefix (e.g., "t ", "b ")
+      if (searchTerm) {
+        results.push(...(await executeSearch(searchTerm, searchMode)))
+        addDirectUrlIfApplicable(searchTerm, results)
 
-      // Add search engine result items
-      if (searchMode === 'all' || searchMode === 'search') {
-        results.push(...addSearchEngines(searchTerm))
+        // Add search engine result items
+        if (searchMode === 'all' || searchMode === 'search') {
+          results.push(...addSearchEngines(searchTerm))
+        }
+      } else {
+        // Mode prefix without search term (e.g., "t ", "b ", "h ")
+        // Show default entries for that mode instead of empty results
+        results = await addDefaultEntries()
       }
 
       // Apply scoring and sorting
