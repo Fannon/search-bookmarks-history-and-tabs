@@ -120,7 +120,7 @@ export async function getSearchData() {
       result.bookmarks = convertBrowserBookmarks(browserBookmarks)
     }
     if (browserApi.history && ext.opts.enableHistory) {
-      let startTime = Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
+      const startTime = Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
       const browserHistory = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
       result.history = convertBrowserHistory(browserHistory)
 

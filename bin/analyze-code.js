@@ -8,9 +8,9 @@
  * without building the extension.
  */
 
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -136,7 +136,7 @@ class CodeAnalyzer {
     const lines = content.split('\n')
     const isTest = this.isTestFile(filePath)
 
-    let fileStats = {
+    const fileStats = {
       lines: lines.length,
       codeLines: 0,
       commentLines: 0,

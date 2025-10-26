@@ -4,8 +4,8 @@
  * 🐞 Added BUG tests: none – verified lazy merge regression via reference assertions
  */
 
-import { jest, describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals'
-import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
+import { afterEach, beforeAll, beforeEach, describe, expect, jest, test } from '@jest/globals'
+import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
 const originalFetch = global.fetch
 const originalPerformance = global.performance
@@ -234,9 +234,7 @@ describe('getSearchData', () => {
 
       const result = await getSearchData()
       const flaggedBookmark = result.bookmarks.find((bookmark) => bookmark.originalUrl === 'https://example.com')
-      const plainBookmark = result.bookmarks.find(
-        (bookmark) => bookmark.originalUrl === 'https://no-open-tab.com',
-      )
+      const plainBookmark = result.bookmarks.find((bookmark) => bookmark.originalUrl === 'https://no-open-tab.com')
 
       expect(flaggedBookmark.tab).toBe(true)
       expect(plainBookmark.tab).toBeUndefined()

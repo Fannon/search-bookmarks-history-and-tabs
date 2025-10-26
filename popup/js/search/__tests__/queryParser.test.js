@@ -5,7 +5,7 @@
  * ⚠️ Known gaps: none
  * 🐞 Added BUG tests: none
  */
-import { describe, test, expect } from '@jest/globals'
+import { describe, expect, test } from '@jest/globals'
 import { resolveSearchMode } from '../queryParser.js'
 
 describe('resolveSearchMode', () => {

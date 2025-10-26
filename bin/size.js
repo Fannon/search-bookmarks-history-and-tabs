@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
 /**
  * @file Reports bundle sizes for the packaged Chrome distribution.
  *
@@ -226,7 +225,10 @@ function printSummary({ totalSize, sortedTopLevel, sortedSecondLevel, sortedMini
     const segments = sortedSecondLevel.get(name)
     const shouldAttachChildren = segments && segments.length > 0 && name !== 'images'
     const children = shouldAttachChildren
-      ? segments.map(([segmentName, segmentSize]) => ({ name: segmentName, size: segmentSize }))
+      ? segments.map(([segmentName, segmentSize]) => ({
+          name: segmentName,
+          size: segmentSize,
+        }))
       : undefined
     return { name, size, children }
   })

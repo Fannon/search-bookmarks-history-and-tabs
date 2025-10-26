@@ -19,7 +19,7 @@
  */
 
 import { jest } from '@jest/globals'
-import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
+import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
 // Mock the utils module
 const mockPrintError = jest.fn()
@@ -67,7 +67,7 @@ describe('options model', () => {
 
   describe('setUserOptions', () => {
     test('saves through sync storage when available', async () => {
-      const syncSet = jest.fn((payload, callback) => callback())
+      const syncSet = jest.fn((_payload, callback) => callback())
       createTestExt({
         browserApi: {
           storage: { sync: { set: syncSet } },
@@ -90,7 +90,7 @@ describe('options model', () => {
 
     test('handles storage API errors', async () => {
       const runtimeError = new Error('Storage quota exceeded')
-      const syncSet = jest.fn((payload, callback) => {
+      const syncSet = jest.fn((_payload, callback) => {
         // Simulate runtime error
         global.ext.browserApi.runtime.lastError = runtimeError
         callback()
@@ -109,7 +109,7 @@ describe('options model', () => {
 
   describe('getUserOptions', () => {
     test('reads from sync storage when available', async () => {
-      const syncGet = jest.fn((keys, callback) => callback({ userOptions: { searchStrategy: 'precise' } }))
+      const syncGet = jest.fn((_keys, callback) => callback({ userOptions: { searchStrategy: 'precise' } }))
       createTestExt({
         browserApi: {
           storage: { sync: { get: syncGet } },
@@ -117,7 +117,9 @@ describe('options model', () => {
         },
       })
 
-      await expect(optionsModule.getUserOptions()).resolves.toEqual({ searchStrategy: 'precise' })
+      await expect(optionsModule.getUserOptions()).resolves.toEqual({
+        searchStrategy: 'precise',
+      })
       expect(syncGet).toHaveBeenCalledWith(['userOptions'], expect.any(Function))
     })
 
@@ -127,7 +129,9 @@ describe('options model', () => {
       })
       localStorage.setItem('userOptions', JSON.stringify({ searchMaxResults: 5 }))
 
-      await expect(optionsModule.getUserOptions()).resolves.toEqual({ searchMaxResults: 5 })
+      await expect(optionsModule.getUserOptions()).resolves.toEqual({
+        searchMaxResults: 5,
+      })
     })
 
     test('returns emptyOptions when no user options exist', async () => {
@@ -149,7 +153,7 @@ describe('options model', () => {
 
     test('handles storage API errors', async () => {
       const runtimeError = new Error('Storage API unavailable')
-      const syncGet = jest.fn((keys, callback) => {
+      const syncGet = jest.fn((_keys, callback) => {
         global.ext.browserApi.runtime.lastError = runtimeError
         callback()
       })
@@ -234,7 +238,10 @@ describe('options model', () => {
       createTestExt({ browserApi: {} })
 
       // Set user options
-      await optionsModule.setUserOptions({ searchMaxResults: 20, colorStripeWidth: 5 })
+      await optionsModule.setUserOptions({
+        searchMaxResults: 20,
+        colorStripeWidth: 5,
+      })
 
       // Get user options
       const userOptions = await optionsModule.getUserOptions()

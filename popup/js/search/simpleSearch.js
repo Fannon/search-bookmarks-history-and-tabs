@@ -20,7 +20,7 @@ import { resolveSearchTargets } from './common.js'
 /**
  * Memoize some state, to avoid re-creating haystack and fuzzy search instances.
  */
-let state = {}
+const state = {}
 
 /**
  * Reset cached simple search state when datasets or mode change.

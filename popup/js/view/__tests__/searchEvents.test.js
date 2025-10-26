@@ -223,7 +223,9 @@ describe('searchEvents openResultItem', () => {
       },
     ]
 
-    const { module, viewModule } = await setupSearchEvents({ results: multipleResults })
+    const { module, viewModule } = await setupSearchEvents({
+      results: multipleResults,
+    })
     await viewModule.renderSearchResults()
 
     // Store initial state
@@ -329,7 +331,9 @@ describe('searchEvents openResultItem', () => {
     await Promise.resolve()
 
     expect(ext.browserApi.tabs.query).toHaveBeenCalledTimes(1)
-    expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(77, { url: 'https://bookmark.test' })
+    expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(77, {
+      url: 'https://bookmark.test',
+    })
     expect(window.close).toHaveBeenCalledTimes(1)
   })
 
@@ -405,7 +409,9 @@ describe('searchEvents openResultItem', () => {
     })
 
     expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(2, { active: true })
-    expect(ext.browserApi.windows.update).toHaveBeenCalledWith(101, { focused: true })
+    expect(ext.browserApi.windows.update).toHaveBeenCalledWith(101, {
+      focused: true,
+    })
     expect(window.close).toHaveBeenCalledTimes(1)
   })
 
@@ -512,7 +518,9 @@ describe('search approach controls', () => {
 
     expect(ext.opts.searchStrategy).toBe('fuzzy')
     expect(mocks.getUserOptions).toHaveBeenCalledTimes(1)
-    expect(mocks.setUserOptions).toHaveBeenCalledWith({ searchStrategy: 'fuzzy' })
+    expect(mocks.setUserOptions).toHaveBeenCalledWith({
+      searchStrategy: 'fuzzy',
+    })
     expect(elements.searchApproachToggle.innerText).toBe('FUZZY')
     expect(elements.searchApproachToggle.className).toBe('fuzzy')
     expect(mocks.search).toHaveBeenCalledTimes(1)

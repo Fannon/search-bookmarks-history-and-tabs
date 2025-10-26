@@ -72,11 +72,26 @@ describe('scoring', () => {
     })
 
     const results = [
-      { type: 'bookmark', title: 'Bookmark', url: 'bookmark.test', searchScore: 0.55 },
+      {
+        type: 'bookmark',
+        title: 'Bookmark',
+        url: 'bookmark.test',
+        searchScore: 0.55,
+      },
       { type: 'tab', title: 'Tab', url: 'tab.test', searchScore: 1 },
-      { type: 'history', title: 'History', url: 'history.test', searchScore: 1 },
+      {
+        type: 'history',
+        title: 'History',
+        url: 'history.test',
+        searchScore: 1,
+      },
       { type: 'search', title: 'Search', url: 'search.test', searchScore: 0.5 },
-      { type: 'customSearch', title: 'Custom search', url: 'custom.test', searchScore: 1 },
+      {
+        type: 'customSearch',
+        title: 'Custom search',
+        url: 'custom.test',
+        searchScore: 1,
+      },
       { type: 'direct', title: 'Direct', url: 'direct.test', searchScore: 1 },
     ]
 
@@ -106,7 +121,17 @@ describe('scoring', () => {
     })
 
     expect(() =>
-      calculateFinalScore([{ type: 'unsupported', title: 'X', url: 'https://x.test', searchScore: 1 }], 'test'),
+      calculateFinalScore(
+        [
+          {
+            type: 'unsupported',
+            title: 'X',
+            url: 'https://x.test',
+            searchScore: 1,
+          },
+        ],
+        'test',
+      ),
     ).toThrow('Search result type "unsupported" not supported')
   })
 

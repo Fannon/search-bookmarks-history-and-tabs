@@ -8,11 +8,11 @@
  * - Handle hash changes mid-session to reload different bookmarks without refreshing the page.
  */
 
-import { printError } from './view/errorView.js'
+import { createExtensionContext } from './helper/extensionContext.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { deleteBookmark, editBookmark, updateBookmark } from './view/editBookmarkView.js'
-import { createExtensionContext } from './helper/extensionContext.js'
+import { printError } from './view/errorView.js'
 
 export const ext = createExtensionContext()
 
@@ -55,7 +55,7 @@ export async function initEditBookmark() {
     ext.initialized = true
   } catch (error) {
     printError(error, 'Could not initialize bookmark editor.')
-    if (ext.dom && ext.dom.cancelButton) {
+    if (ext.dom?.cancelButton) {
       ext.dom.cancelButton.focus()
     }
   } finally {
@@ -207,7 +207,7 @@ async function handleHashChange() {
   }
 
   ext.returnHash = normalizeReturnHash(returnHash)
-  if (ext.dom && ext.dom.cancelButton) {
+  if (ext.dom?.cancelButton) {
     ext.dom.cancelButton.href = getReturnTarget()
   }
 

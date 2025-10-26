@@ -80,8 +80,8 @@ describe('tagsView', () => {
     // Test with malformed tag data - the actual implementation renders all tags
     const tags = {
       '': [], // Empty tag name
-      'null': [{ id: 1 }], // null key
-      'undefined': [{ id: 2 }], // undefined key
+      null: [{ id: 1 }], // null key
+      undefined: [{ id: 2 }], // undefined key
       'valid-tag': [{ id: 3 }],
     }
 
@@ -134,7 +134,7 @@ describe('tagsView', () => {
     const tags = {
       'tag with spaces': [{ id: 1 }],
       'tag-with-dashes': [{ id: 2 }],
-      'tag_with_underscores': [{ id: 3 }],
+      tag_with_underscores: [{ id: 3 }],
       'tag.with.dots': [{ id: 4 }],
       'tag(with)parentheses': [{ id: 5 }],
     }
@@ -165,10 +165,10 @@ describe('tagsView', () => {
   it('handles tags with unicode characters', async () => {
     setupDom()
     const tags = {
-      'café': [{ id: 1 }],
-      'naïve': [{ id: 2 }],
-      'résumé': [{ id: 3 }],
-      '日本語': [{ id: 4 }],
+      café: [{ id: 1 }],
+      naïve: [{ id: 2 }],
+      résumé: [{ id: 3 }],
+      日本語: [{ id: 4 }],
       '🚀': [{ id: 5 }],
     }
 

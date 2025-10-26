@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
 /**
  * @file Refreshes third-party libraries in popup/lib.
  *
@@ -31,6 +30,5 @@ async function updateLibs() {
 updateLibs().catch((error) => {
   console.error('Failed to update libraries')
   console.error(error)
-  // eslint-disable-next-line no-undef
   process.exit(1)
 })

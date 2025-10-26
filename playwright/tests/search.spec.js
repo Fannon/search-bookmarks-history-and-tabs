@@ -1,4 +1,4 @@
-import { test, expect, expectNoClientErrors } from './fixtures.js'
+import { expect, expectNoClientErrors, test } from './fixtures.js'
 
 test.describe('Search View', () => {
   test.beforeEach(async ({ page }) => {

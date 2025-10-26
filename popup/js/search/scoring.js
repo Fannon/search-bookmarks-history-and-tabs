@@ -127,9 +127,9 @@ export function calculateFinalScore(results, searchTerm) {
       // STEP 3A: Exact match bonuses
       // Award bonus if title/URL starts with the exact search term
       if (scoreExactStartsWithBonus) {
-        if (lowerTitle && lowerTitle.startsWith(normalizedSearchTerm)) {
+        if (lowerTitle?.startsWith(normalizedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreTitleWeight
-        } else if (lowerUrl && lowerUrl.startsWith(hyphenatedSearchTerm)) {
+        } else if (lowerUrl?.startsWith(hyphenatedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreUrlWeight
         }
       }
@@ -176,16 +176,16 @@ export function calculateFinalScore(results, searchTerm) {
           const normalizedUrlTerm = term.replace(/\s+/g, '-')
 
           // Check fields in priority order - first match wins
-          if (lowerTitle && lowerTitle.includes(term)) {
+          if (lowerTitle?.includes(term)) {
             score += scoreExactIncludesBonus * scoreTitleWeight
             includesBonusesAwarded++
-          } else if (lowerUrl && lowerUrl.includes(normalizedUrlTerm)) {
+          } else if (lowerUrl?.includes(normalizedUrlTerm)) {
             score += scoreExactIncludesBonus * scoreUrlWeight
             includesBonusesAwarded++
-          } else if (lowerTags && lowerTags.includes(term)) {
+          } else if (lowerTags?.includes(term)) {
             score += scoreExactIncludesBonus * scoreTagWeight
             includesBonusesAwarded++
-          } else if (lowerFolder && lowerFolder.includes(term)) {
+          } else if (lowerFolder?.includes(term)) {
             score += scoreExactIncludesBonus * scoreFolderWeight
             includesBonusesAwarded++
           }

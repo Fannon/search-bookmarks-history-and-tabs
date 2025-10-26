@@ -11,8 +11,8 @@
  * - searchEngines.test.js: Search engine result generation
  * - defaultResults.test.js: Default entry sourcing
  */
-import { jest, describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals'
-import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
+import { afterEach, beforeAll, beforeEach, describe, expect, jest, test } from '@jest/globals'
+import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
 const mockGetBrowserTabs = jest.fn()
 const mockCloseErrors = jest.fn()
@@ -248,8 +248,18 @@ describe('search', () => {
     await search({ key: 'a' })
 
     expect(ext.model.result).toEqual([
-      { id: 1, title: 'Recent history', url: 'https://recent.test', searchScore: 1 },
-      { id: 2, title: 'Older history', url: 'https://older.test', searchScore: 1 },
+      {
+        id: 1,
+        title: 'Recent history',
+        url: 'https://recent.test',
+        searchScore: 1,
+      },
+      {
+        id: 2,
+        title: 'Older history',
+        url: 'https://older.test',
+        searchScore: 1,
+      },
     ])
     expect(mockRenderSearchResults).toHaveBeenCalledWith()
   })
@@ -512,7 +522,12 @@ describe('✅ VERIFIED: Mode Prefix Without Search Term', () => {
   test('shows default entries for bookmark mode prefix', async () => {
     ext.dom.searchInput.value = 'b ' // Bookmark mode prefix only
     ext.model.bookmarks = [
-      { type: 'bookmark', title: 'Bookmark 1', url: 'https://bm1.test', searchString: 'bookmark 1 https://bm1.test' },
+      {
+        type: 'bookmark',
+        title: 'Bookmark 1',
+        url: 'https://bm1.test',
+        searchString: 'bookmark 1 https://bm1.test',
+      },
     ]
 
     await search({ key: 'b' })

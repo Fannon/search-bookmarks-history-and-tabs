@@ -22,7 +22,10 @@ export function createTestExt(overrides = {}) {
     opts: { ...base.opts, ...(overrides.opts || {}) },
     model: { ...base.model, ...(overrides.model || {}) },
     index: {
-      taxonomy: { ...(base.index.taxonomy || {}), ...((overrides.index && overrides.index.taxonomy) || {}) },
+      taxonomy: {
+        ...(base.index.taxonomy || {}),
+        ...(overrides.index?.taxonomy || {}),
+      },
     },
     dom: { ...base.dom, ...(overrides.dom || {}) },
     browserApi: { ...base.browserApi, ...(overrides.browserApi || {}) },
@@ -42,15 +45,10 @@ export function createTestExt(overrides = {}) {
 
 export function clearTestExt() {
   // Clear any existing searchCache if it's a Map
-  if (globalThis.ext && globalThis.ext.searchCache && typeof globalThis.ext.searchCache.clear === 'function') {
+  if (globalThis.ext?.searchCache && typeof globalThis.ext.searchCache.clear === 'function') {
     globalThis.ext.searchCache.clear()
   }
-  if (
-    typeof window !== 'undefined' &&
-    window.ext &&
-    window.ext.searchCache &&
-    typeof window.ext.searchCache.clear === 'function'
-  ) {
+  if (typeof window !== 'undefined' && window.ext?.searchCache && typeof window.ext.searchCache.clear === 'function') {
     window.ext.searchCache.clear()
   }
 

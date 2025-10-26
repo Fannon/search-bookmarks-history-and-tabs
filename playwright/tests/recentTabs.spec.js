@@ -1,4 +1,4 @@
-import { test, expect, expectNoClientErrors } from './fixtures.js'
+import { expect, expectNoClientErrors, test } from './fixtures.js'
 
 const waitForInitialization = async (page) => {
   await expect(page.locator('#results-loading')).toBeHidden()

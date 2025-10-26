@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+import { performance } from 'node:perf_hooks'
+import process from 'node:process'
 /**
  * @file Watches popup sources and triggers incremental rebuilds.
  *
@@ -8,8 +9,6 @@
  * side-loaded extension in sync without manual rebuilds.
  */
 import chokidar from 'chokidar'
-import process from 'node:process'
-import { performance } from 'node:perf_hooks'
 import { bundleAll } from './bundle.js'
 import { createDist } from './createDist.js'
 

@@ -1,5 +1,5 @@
-import { jest, describe, test, expect, beforeEach, afterEach } from '@jest/globals'
-import { flushPromises, clearTestExt } from './testUtils.js'
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
+import { clearTestExt, flushPromises } from './testUtils.js'
 
 const setupDom = () => {
   document.body.innerHTML = `

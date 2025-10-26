@@ -19,13 +19,13 @@
 import { cleanUpUrl, generateRandomId } from '../helper/utils.js'
 import { closeErrors, printError } from '../view/errorView.js'
 import { renderSearchResults } from '../view/searchView.js'
+import { addDefaultEntries } from './defaultResults.js'
 import { fuzzySearch } from './fuzzySearch.js'
+import { resolveSearchMode } from './queryParser.js'
 import { calculateFinalScore } from './scoring.js'
+import { addSearchEngines, collectCustomSearchAliasResults } from './searchEngines.js'
 import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
-import { resolveSearchMode } from './queryParser.js'
-import { addSearchEngines, collectCustomSearchAliasResults } from './searchEngines.js'
-import { addDefaultEntries } from './defaultResults.js'
 
 // Re-export scoring function for backward compatibility
 export { calculateFinalScore }
@@ -264,7 +264,7 @@ export async function search(event) {
 
       // Parse search mode and extract term
       const { mode: detectedMode, term: trimmedTerm } = resolveSearchMode(searchTerm)
-      let searchMode = detectedMode
+      const searchMode = detectedMode
       searchTerm = trimmedTerm.trim()
 
       ext.model.searchTerm = searchTerm
@@ -308,7 +308,7 @@ export async function search(event) {
       renderSearchResults()
 
       // Simple timing for debugging (only if debug is enabled)
-      console.debug('Search completed in ' + (Date.now() - startTime) + 'ms')
+      console.debug(`Search completed in ${Date.now() - startTime}ms`)
     } catch (err) {
       printError(err)
     }
@@ -345,7 +345,7 @@ export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode
   } else if (searchApproach === 'fuzzy') {
     results = await fuzzySearch(searchMode, searchTerm)
   } else {
-    throw new Error('Unknown search approach: ' + searchApproach)
+    throw new Error(`Unknown search approach: ${searchApproach}`)
   }
 
   return results

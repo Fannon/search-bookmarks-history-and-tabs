@@ -186,7 +186,7 @@ Bookmarks can be tagged using `#tag` syntax in titles:
 
 ## Code Style
 
-Enforced by `eslint.config.mjs`:
+Defined by `biome.json`:
 
 - 2-space indentation
 - Single quotes

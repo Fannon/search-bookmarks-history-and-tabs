@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+import { createWriteStream } from 'node:fs'
+import { join } from 'node:path'
+import archiver from 'archiver'
 /**
  * @file Builds the Chrome-ready distribution directory and archive.
  *
@@ -8,9 +10,6 @@
  * file. This mirrors the artifact uploaded to browser extension stores.
  */
 import fs from 'fs-extra'
-import { createWriteStream } from 'fs'
-import { join } from 'path'
-import archiver from 'archiver'
 
 // Track CSS files that receive minified companions so we can prune originals
 const CSS_BUNDLED_FILENAMES = new Set(['style.css', 'options.css', 'taxonomy.css', 'editBookmark.css'])
@@ -73,7 +72,6 @@ export async function createDist(clean = true) {
 createDist().catch((error) => {
   console.error('Failed to create distribution')
   console.error(error)
-  // eslint-disable-next-line no-undef
   process.exit(1)
 })
 
@@ -124,8 +122,7 @@ async function removeTestArtifacts(dir) {
         await fs.remove(fullPath)
       }
     }
-    // eslint-disable-next-line no-unused-vars
-  } catch (ignore) {
+  } catch {
     // Ignore errors if dir doesn't exist
   }
 }

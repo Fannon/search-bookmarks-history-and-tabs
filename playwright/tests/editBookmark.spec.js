@@ -1,4 +1,4 @@
-import { test, expect, expectNoClientErrors } from './fixtures.js'
+import { expect, expectNoClientErrors, test } from './fixtures.js'
 
 const BOOKMARK_STORAGE_KEY = '__playwright_bookmark_tree__'
 const BOOKMARK_ID = '23'
@@ -86,7 +86,7 @@ const installChromeMock = (() => {
               return node
             }
 
-            if (node.children && node.children.length) {
+            if (node.children?.length) {
               const match = findNode(node.children, targetId)
               if (match) {
                 return match
@@ -105,7 +105,7 @@ const installChromeMock = (() => {
               return true
             }
 
-            if (node.children && node.children.length) {
+            if (node.children?.length) {
               const removed = removeNode(node.children, targetId)
               if (removed) {
                 return true
@@ -132,11 +132,11 @@ const installChromeMock = (() => {
               return undefined
             }
 
-            if (Object.prototype.hasOwnProperty.call(changes, 'title')) {
+            if (Object.hasOwn(changes, 'title')) {
               node.title = changes.title
             }
 
-            if (Object.prototype.hasOwnProperty.call(changes, 'url')) {
+            if (Object.hasOwn(changes, 'url')) {
               node.url = changes.url
             }
 
@@ -221,10 +221,7 @@ test.describe('Edit Bookmark View', () => {
     await addTag(page, 'markdown')
     await addTag(page, 'docs')
 
-    await Promise.all([
-      page.waitForURL(/#search\/t$/),
-      page.locator('#edit-bookmark-save').click(),
-    ])
+    await Promise.all([page.waitForURL(/#search\/t$/), page.locator('#edit-bookmark-save').click()])
 
     await page.waitForSelector('#result-list [x-original-id="23"]')
     const bookmarkRow = page.locator('#result-list [x-original-id="23"]')
@@ -245,10 +242,7 @@ test.describe('Edit Bookmark View', () => {
     await addTag(page, 'first-tag')
     await addTag(page, 'second-tag')
 
-    await Promise.all([
-      page.waitForURL(/#search\/reference$/),
-      page.locator('#edit-bookmark-save').click(),
-    ])
+    await Promise.all([page.waitForURL(/#search\/reference$/), page.locator('#edit-bookmark-save').click()])
 
     await page.waitForSelector('#result-list [x-original-id="29"]')
     const bookmarkRow = page.locator('#result-list [x-original-id="29"]')

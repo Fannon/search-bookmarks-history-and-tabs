@@ -224,7 +224,6 @@ describe('searchView renderSearchResults', () => {
     expect(urlDiv.innerHTML).toContain('&lt;iframe src=javascript:alert(1)&gt;')
   })
 
-
   it('handles results without optional fields gracefully', async () => {
     const minimalResults = [
       {

@@ -5,8 +5,8 @@
  * ⚠️ Known gaps: none
  * 🐞 Added BUG tests: none
  */
-import { jest, describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals'
-import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
+import { afterEach, beforeAll, beforeEach, describe, expect, jest, test } from '@jest/globals'
+import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
 const mockGetBrowserTabs = jest.fn()
 
@@ -108,35 +108,25 @@ describe('addDefaultEntries', () => {
 
       const results = await addDefaultEntries()
 
-      expect(results).toEqual([
-        expect.objectContaining({ id: 1, title: 'Example', searchScore: 1 }),
-      ])
+      expect(results).toEqual([expect.objectContaining({ id: 1, title: 'Example', searchScore: 1 })])
     })
 
     test('matches URLs with and without trailing slashes', async () => {
-      ext.model.bookmarks = [
-        { id: 1, originalUrl: 'https://example.com/', title: 'With Slash' },
-      ]
+      ext.model.bookmarks = [{ id: 1, originalUrl: 'https://example.com/', title: 'With Slash' }]
       mockGetBrowserTabs.mockResolvedValue([{ url: 'https://example.com' }])
 
       const results = await addDefaultEntries()
 
-      expect(results).toEqual([
-        expect.objectContaining({ id: 1, title: 'With Slash' }),
-      ])
+      expect(results).toEqual([expect.objectContaining({ id: 1, title: 'With Slash' })])
     })
 
     test('matches URLs with and without protocol', async () => {
-      ext.model.bookmarks = [
-        { id: 1, originalUrl: 'https://example.com', title: 'Example' },
-      ]
+      ext.model.bookmarks = [{ id: 1, originalUrl: 'https://example.com', title: 'Example' }]
       mockGetBrowserTabs.mockResolvedValue([{ url: 'example.com' }])
 
       const results = await addDefaultEntries()
 
-      expect(results).toEqual([
-        expect.objectContaining({ id: 1, title: 'Example' }),
-      ])
+      expect(results).toEqual([expect.objectContaining({ id: 1, title: 'Example' })])
     })
 
     test('adds recent tabs when enabled', async () => {
@@ -171,9 +161,7 @@ describe('addDefaultEntries', () => {
 
     test('combines matching bookmarks and recent tabs', async () => {
       ext.opts.maxRecentTabsToShow = 2
-      ext.model.bookmarks = [
-        { id: 1, originalUrl: 'https://example.com', title: 'Example' },
-      ]
+      ext.model.bookmarks = [{ id: 1, originalUrl: 'https://example.com', title: 'Example' }]
       ext.model.tabs = [
         { id: 2, url: 'https://tab.test', lastVisitSecondsAgo: 10 },
         { id: 3, url: 'https://tab2.test', lastVisitSecondsAgo: 20 },
@@ -196,9 +184,7 @@ describe('addDefaultEntries', () => {
     })
 
     test('handles browser API errors gracefully', async () => {
-      ext.model.tabs = [
-        { id: 1, url: 'https://tab.test', lastVisitSecondsAgo: 10 },
-      ]
+      ext.model.tabs = [{ id: 1, url: 'https://tab.test', lastVisitSecondsAgo: 10 }]
       mockGetBrowserTabs.mockRejectedValue(new Error('API error'))
 
       const results = await addDefaultEntries()
@@ -209,9 +195,7 @@ describe('addDefaultEntries', () => {
 
     test('returns empty when maxRecentTabsToShow is 0', async () => {
       ext.opts.maxRecentTabsToShow = 0
-      ext.model.tabs = [
-        { id: 1, url: 'https://tab.test', lastVisitSecondsAgo: 10 },
-      ]
+      ext.model.tabs = [{ id: 1, url: 'https://tab.test', lastVisitSecondsAgo: 10 }]
       ext.model.bookmarks = []
       mockGetBrowserTabs.mockResolvedValue([])
 

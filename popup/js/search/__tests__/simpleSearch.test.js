@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeEach, afterEach } from '@jest/globals'
-import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
-import { simpleSearch, resetSimpleSearchState } from '../simpleSearch.js'
+import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
+import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
+import { resetSimpleSearchState, simpleSearch } from '../simpleSearch.js'
 
 const resetModes = () => {
   for (const mode of ['bookmarks', 'tabs', 'history', 'all']) {
@@ -114,8 +114,14 @@ describe('simpleSearch', () => {
       const results = simpleSearch('history', 'example entry')
 
       expect(results).toHaveLength(2)
-      expect(results[0]).toMatchObject({ id: 'tab-1', searchApproach: 'precise' })
-      expect(results[1]).toMatchObject({ id: 'history-1', searchApproach: 'precise' })
+      expect(results[0]).toMatchObject({
+        id: 'tab-1',
+        searchApproach: 'precise',
+      })
+      expect(results[1]).toMatchObject({
+        id: 'history-1',
+        searchApproach: 'precise',
+      })
     })
 
     test('returns empty array for search mode', () => {

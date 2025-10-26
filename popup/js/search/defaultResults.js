@@ -58,9 +58,9 @@ export async function addDefaultEntries() {
     // Default: Find bookmarks that match current page URL
     try {
       const [tab] = await getBrowserTabs({ active: true, currentWindow: true })
-      if (tab && tab.url) {
+      if (tab?.url) {
         // Use the current tab's URL instead of window.location.href for accuracy
-        let currentUrl = tab.url.replace(/[/#]$/, '')
+        const currentUrl = tab.url.replace(/[/#]$/, '')
 
         // Find bookmarks that match current page URL (with some flexibility)
         const matchingBookmarks = ext.model.bookmarks.filter((el) => {
@@ -84,7 +84,7 @@ export async function addDefaultEntries() {
     // Always add recently visited tabs when option is enabled and no search term
     if (ext.model.tabs && ext.opts.maxRecentTabsToShow > 0) {
       const recentTabs = ext.model.tabs
-        .filter((tab) => tab && tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('about:'))
+        .filter((tab) => tab?.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('about:'))
         .map(withDefaultScore)
         .sort((a, b) => {
           // Sort by last accessed time (most recent first)

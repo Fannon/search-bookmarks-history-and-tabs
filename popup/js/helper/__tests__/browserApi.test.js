@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
 import {
   browserApi,
-  getBrowserTabs,
-  convertBrowserTabs,
   convertBrowserBookmarks,
   convertBrowserHistory,
+  convertBrowserTabs,
   createSearchString,
+  getBrowserTabs,
   getTitle,
   shortenTitle,
 } from '../browserApi.js'
@@ -82,7 +82,12 @@ describe('convertBrowserTabs', () => {
       { id: 1, title: 'Missing url' },
       { id: 2, url: '', title: 'Empty url' },
       { id: 3, url: '   ', title: 'Whitespace url' },
-      { id: 4, url: 'https://valid.example.com/', title: 'Valid tab', lastAccessed: 1_000 },
+      {
+        id: 4,
+        url: 'https://valid.example.com/',
+        title: 'Valid tab',
+        lastAccessed: 1_000,
+      },
     ]
 
     const result = convertBrowserTabs(tabs)
@@ -130,7 +135,7 @@ describe('getTitle', () => {
 describe('shortenTitle', () => {
   it('truncates titles longer than the url length restriction', () => {
     const longTitle = 'a'.repeat(90)
-    expect(shortenTitle(longTitle)).toBe('a'.repeat(82) + '...')
+    expect(shortenTitle(longTitle)).toBe(`${'a'.repeat(82)}...`)
   })
 
   it('returns the title unchanged when it is under the limit', () => {

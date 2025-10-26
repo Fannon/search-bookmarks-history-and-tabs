@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach } from '@jest/globals'
-import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
+import { beforeEach, describe, expect, test } from '@jest/globals'
+import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
 describe('taxonomy search', () => {
   let taxonomyModule
@@ -38,7 +38,11 @@ describe('taxonomy search', () => {
     const result = searchTaxonomy('foo #bar', 'tags', data)
 
     expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject({ originalId: '1', searchScore: 1, searchApproach: 'taxonomy' })
+    expect(result[0]).toMatchObject({
+      originalId: '1',
+      searchScore: 1,
+      searchApproach: 'taxonomy',
+    })
   })
 
   test('searchTaxonomy finds entries based on folder names', () => {

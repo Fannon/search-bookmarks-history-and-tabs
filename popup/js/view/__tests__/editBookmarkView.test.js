@@ -286,8 +286,18 @@ describe('editBookmarkView', () => {
   it('removes bookmark, resets search state, and redirects after deletion', async () => {
     setupDom()
     const bookmarks = [
-      { originalId: BOOKMARK_ID, title: 'Bookmark 1', tags: '', folder: '~Work' },
-      { originalId: 'bookmark-2', title: 'Bookmark 2', tags: '', folder: '~Play' },
+      {
+        originalId: BOOKMARK_ID,
+        title: 'Bookmark 1',
+        tags: '',
+        folder: '~Work',
+      },
+      {
+        originalId: 'bookmark-2',
+        title: 'Bookmark 2',
+        tags: '',
+        folder: '~Play',
+      },
     ]
     setupExt(bookmarks, { returnHash: '#search/foo' })
     const { module, mocks } = await loadEditBookmarkView()
@@ -297,7 +307,12 @@ describe('editBookmarkView', () => {
 
     expect(mocks.browserApi.bookmarks.remove).toHaveBeenCalledWith(BOOKMARK_ID)
     expect(global.ext.model.bookmarks).toEqual([
-      { originalId: 'bookmark-2', title: 'Bookmark 2', tags: '', folder: '~Play' },
+      {
+        originalId: 'bookmark-2',
+        title: 'Bookmark 2',
+        tags: '',
+        folder: '~Play',
+      },
     ])
     expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
@@ -310,8 +325,18 @@ describe('editBookmarkView', () => {
     const searchInput = document.createElement('input')
     setupExt(
       [
-        { originalId: BOOKMARK_ID, title: 'Bookmark 1', tags: '', folder: '~Work' },
-        { originalId: 'bookmark-2', title: 'Bookmark 2', tags: '', folder: '~Play' },
+        {
+          originalId: BOOKMARK_ID,
+          title: 'Bookmark 1',
+          tags: '',
+          folder: '~Work',
+        },
+        {
+          originalId: 'bookmark-2',
+          title: 'Bookmark 2',
+          tags: '',
+          folder: '~Play',
+        },
       ],
       {
         dom: {
@@ -328,7 +353,14 @@ describe('editBookmarkView', () => {
 
   it('logs a warning when attempting to delete without bookmark API', async () => {
     setupDom()
-    setupExt([{ originalId: BOOKMARK_ID, title: 'Bookmark 1', tags: '', folder: '~Work' }])
+    setupExt([
+      {
+        originalId: BOOKMARK_ID,
+        title: 'Bookmark 1',
+        tags: '',
+        folder: '~Work',
+      },
+    ])
     const { module, mocks } = await loadEditBookmarkView()
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
     mocks.browserApi.bookmarks = undefined

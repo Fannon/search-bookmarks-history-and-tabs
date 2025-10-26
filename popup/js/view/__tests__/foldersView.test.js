@@ -80,8 +80,8 @@ describe('foldersView', () => {
     // Test with malformed folder data
     const folders = {
       '': [], // Empty folder name
-      'null': [{ id: 1 }], // null key
-      'undefined': [{ id: 2 }], // undefined key
+      null: [{ id: 1 }], // null key
+      undefined: [{ id: 2 }], // undefined key
       'Valid Folder': [{ id: 3 }],
     }
 

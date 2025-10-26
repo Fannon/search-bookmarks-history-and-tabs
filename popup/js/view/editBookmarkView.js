@@ -11,8 +11,8 @@
 import { browserApi, createSearchString } from '../helper/browserApi.js'
 import { cleanUpUrl } from '../helper/utils.js'
 import { resetFuzzySearchState } from '../search/fuzzySearch.js'
-import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
+import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
 
 /**
  * Populate the bookmark editor form for the given bookmark id.
@@ -90,7 +90,7 @@ export function updateBookmark(bookmarkId) {
   const urlInput = document.getElementById('bookmark-url').value.trim()
   let tagsInput = ''
   if (ext.tagify.value.length) {
-    tagsInput = '#' + ext.tagify.value.map((el) => el.value.trim()).join(' #')
+    tagsInput = `#${ext.tagify.value.map((el) => el.value.trim()).join(' #')}`
   }
 
   // Update search data model of bookmark
@@ -162,7 +162,7 @@ function navigateToSearchView() {
     }
   } catch (navigationError) {
     console.warn('Navigation to search view not supported in this environment.', navigationError)
-    if (window.history && window.history.replaceState) {
+    if (window.history?.replaceState) {
       try {
         window.history.replaceState(null, '', resolvedTarget)
       } catch (historyError) {

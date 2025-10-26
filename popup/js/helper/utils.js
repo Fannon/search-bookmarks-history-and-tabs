@@ -123,7 +123,7 @@ export async function loadScript(url) {
     return Promise.resolve()
   }
 
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     const s = document.createElement('script')
     s.type = 'text/javascript'
     s.onload = () => {

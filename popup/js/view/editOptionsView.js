@@ -40,7 +40,7 @@ async function saveOptions() {
   } catch (e) {
     console.error(e)
     document.getElementById('error-message').style = ''
-    document.getElementById('error-message').innerText = 'Invalid ' + e.message
+    document.getElementById('error-message').innerText = `Invalid ${e.message}`
     return
   }
 

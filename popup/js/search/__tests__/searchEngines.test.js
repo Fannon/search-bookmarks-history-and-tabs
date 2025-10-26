@@ -5,9 +5,9 @@
  * ⚠️ Known gaps: none
  * 🐞 Added BUG tests: none
  */
-import { describe, test, expect, beforeEach, afterEach } from '@jest/globals'
-import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
-import { getCustomSearchEngineResult, addSearchEngines, collectCustomSearchAliasResults } from '../searchEngines.js'
+import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
+import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
+import { addSearchEngines, collectCustomSearchAliasResults, getCustomSearchEngineResult } from '../searchEngines.js'
 
 beforeEach(() => {
   createTestExt({
@@ -45,11 +45,7 @@ afterEach(() => {
 
 describe('getCustomSearchEngineResult', () => {
   test('creates search result with $s placeholder replacement', () => {
-    const result = getCustomSearchEngineResult(
-      'javascript',
-      'Google',
-      'https://www.google.com/search?q=$s'
-    )
+    const result = getCustomSearchEngineResult('javascript', 'Google', 'https://www.google.com/search?q=$s')
 
     expect(result).toMatchObject({
       type: 'search',
@@ -62,11 +58,7 @@ describe('getCustomSearchEngineResult', () => {
   })
 
   test('creates search result with URL prefix concatenation', () => {
-    const result = getCustomSearchEngineResult(
-      'test query',
-      'SearchEngine',
-      'https://example.com/search?q='
-    )
+    const result = getCustomSearchEngineResult('test query', 'SearchEngine', 'https://example.com/search?q=')
 
     expect(result).toMatchObject({
       type: 'search',
@@ -82,7 +74,7 @@ describe('getCustomSearchEngineResult', () => {
       'YouTube',
       'https://youtube.com/results?search_query=$s',
       null,
-      true
+      true,
     )
 
     expect(result.type).toBe('customSearch')
@@ -93,7 +85,7 @@ describe('getCustomSearchEngineResult', () => {
       '',
       'YouTube',
       'https://youtube.com/results?search_query=$s',
-      'https://youtube.com'
+      'https://youtube.com',
     )
 
     expect(result).toMatchObject({
@@ -104,11 +96,7 @@ describe('getCustomSearchEngineResult', () => {
   })
 
   test('encodes special characters in search term', () => {
-    const result = getCustomSearchEngineResult(
-      'hello & goodbye',
-      'Google',
-      'https://www.google.com/search?q=$s'
-    )
+    const result = getCustomSearchEngineResult('hello & goodbye', 'Google', 'https://www.google.com/search?q=$s')
 
     expect(result.originalUrl).toBe('https://www.google.com/search?q=hello%20%26%20goodbye')
   })

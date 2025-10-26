@@ -1,5 +1,5 @@
-import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals'
-import { cleanUpUrl, timeSince, loadScript, escapeHtml, generateRandomId } from '../utils.js'
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
+import { cleanUpUrl, escapeHtml, generateRandomId, loadScript, timeSince } from '../utils.js'
 
 describe('generateRandomId', () => {
   it('returns a deterministic identifier prefixed with R', () => {

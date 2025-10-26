@@ -3,8 +3,8 @@
  * Tests how different components work together and handle real-world scenarios
  */
 
-import { jest, describe, test, expect, beforeEach, afterEach } from '@jest/globals'
-import { createTestExt, clearTestExt } from './testUtils.js'
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
+import { clearTestExt, createTestExt } from './testUtils.js'
 
 describe('Extension Integration Tests', () => {
   beforeEach(() => {

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+
 /**
  * @file Bundles popup entry points and styles with esbuild.
  *
@@ -8,9 +8,9 @@
  * stores and is invoked by `npm run build:bundle` and the watch pipeline.
  */
 
-import { build } from 'esbuild'
-import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { build } from 'esbuild'
 
 const thisFile = fileURLToPath(import.meta.url)
 const thisDir = dirname(thisFile)
@@ -118,6 +118,5 @@ export async function bundleAll() {
 bundleAll().catch((error) => {
   console.error('Failed to bundle popup entrypoints')
   console.error(error)
-  // eslint-disable-next-line no-undef
   process.exit(1)
 })

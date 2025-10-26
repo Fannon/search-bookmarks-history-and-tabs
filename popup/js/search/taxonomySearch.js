@@ -26,7 +26,7 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
   /** Marker for taxonomy search mode */
   const taxonomyMarker = taxonomyType === 'tags' ? '#' : '~'
 
-  let searchTermArray = searchTerm.split(taxonomyMarker)
+  const searchTermArray = searchTerm.split(taxonomyMarker)
 
   if (searchTermArray.length) {
     for (const entry of data) {
@@ -108,7 +108,7 @@ export function getUniqueFolders() {
  * Call this after mutating ext.model.bookmarks to keep folder views in sync.
  */
 export function resetUniqueFoldersCache() {
-  if (ext && ext.index && ext.index.taxonomy) {
+  if (ext?.index?.taxonomy) {
     ext.index.taxonomy.folders = undefined
   }
 }

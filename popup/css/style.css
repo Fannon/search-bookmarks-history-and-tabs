@@ -78,7 +78,7 @@ body small {
 }
 body,
 textarea {
-  font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Helvetica Neue', sans-serif;
+  font-family: "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
 }
 .input,
 .input:active,
@@ -149,7 +149,7 @@ code {
   background: #557292;
 }
 .tags .divider:before {
-  content: ' ';
+  content: " ";
 }
 .tags mark {
   color: #7cb3f6;
@@ -163,7 +163,7 @@ code {
   background: #3c8d8d;
 }
 .folder .divider:before {
-  content: ' \276F \0020';
+  content: " \276F \0020";
 }
 .folder mark {
   color: #8fefef;
