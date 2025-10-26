@@ -32,7 +32,7 @@
     "build:update-libs": "node bin/updateLibs.js",
     "build:create-dist": "node bin/createDist.js",
     "build:update-manifests": "node bin/updateManifests.js",
-    "benchmark": "hyperfine --warmup 2 --runs 5 --export-json hyperfine.json 'npm run clean' 'npm run lint' 'npm run format' 'npm run build' 'npm run test' 'npm run e2e",
+    "benchmark": "hyperfine --warmup 2 --runs 5 --export-json hyperfine.json 'npm run clean' 'npm run lint' 'npm run format' 'npm run build' 'npm run test' 'npm run test:e2e'",
     "test": "npm run test:unit",
     "test:watch": "npm run test:unit:watch",
     "test:e2e": "playwright test --project=chromium",
