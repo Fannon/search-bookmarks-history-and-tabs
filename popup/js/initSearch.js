@@ -111,8 +111,8 @@ export async function hashRouter() {
       ext.dom.searchInput.value = ''
       ext.dom.searchInput.focus()
       // Display default entries
-      await addDefaultEntries()
-      renderSearchResults(ext.model.result)
+      ext.model.result = await addDefaultEntries()
+      renderSearchResults()
     }
   }
 }

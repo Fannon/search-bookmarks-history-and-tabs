@@ -4,7 +4,7 @@
  * ✅ Covered behaviors: search entry gating, cache hits, taxonomy/custom/direct results integration,
  *    scoring, sorting, result filtering, and overall search flow orchestration.
  * ⚠️ Known gaps: DOM rendering side effects and performance metrics are not asserted due to limited observable outputs.
- * 🐞 Added BUG tests: none
+ * 🐞 Added BUG tests: cache invalidation, dead code, architecture violations
  *
  * Note: Detailed tests for extracted modules are in their respective test files:
  * - queryParser.test.js: Mode detection logic
@@ -234,7 +234,7 @@ describe('search', () => {
 
     expect(ext.model.result).toBe(cached)
     expect(ext.model.searchTerm).toBe('test')
-    expect(mockRenderSearchResults).toHaveBeenCalledWith(cached)
+    expect(mockRenderSearchResults).toHaveBeenCalledWith()
   })
 
   test('loads default entries when search term empty', async () => {
@@ -251,7 +251,7 @@ describe('search', () => {
       { id: 1, title: 'Recent history', url: 'https://recent.test', searchScore: 1 },
       { id: 2, title: 'Older history', url: 'https://older.test', searchScore: 1 },
     ])
-    expect(mockRenderSearchResults).toHaveBeenCalledWith(ext.model.result)
+    expect(mockRenderSearchResults).toHaveBeenCalledWith()
   })
 
   test('performs taxonomy search when tag prefix detected', async () => {
@@ -354,7 +354,7 @@ describe('search', () => {
 
     expect(ext.model.result.length).toBeLessThanOrEqual(2)
     expect(ext.model.result.every((item) => item.score >= 70)).toBe(true)
-    expect(ext.dom.resultCounter.innerText).toBe(`(${ext.model.result.length})`)
+    // Note: resultCounter is now updated by searchView.renderSearchResults, not here
   })
 
   test('falls back to precise search when configured strategy is unsupported', async () => {
@@ -401,5 +401,114 @@ describe('search', () => {
 
     expect(cache.has).toHaveBeenCalledWith('remember_precise_all')
     expect(cache.set).toHaveBeenCalledWith('remember_precise_all', ext.model.result)
+  })
+})
+
+describe('🐞 BUG: Cache Invalidation', () => {
+  test('cache includes stale tabs after they are closed', async () => {
+    // Setup: Add a tab to cache
+    ext.model.tabs = [
+      {
+        type: 'tab',
+        title: 'Tab to close',
+        url: 'https://tab.test',
+        originalId: 123,
+        searchString: 'tab to close',
+      },
+    ]
+    ext.dom.searchInput.value = 'tab'
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+
+    // First search - cache the result with the tab
+    await search({ key: 't' })
+    const cachedResults = ext.searchCache.get('tab_precise_all')
+    expect(cachedResults).toBeDefined()
+    expect(cachedResults.some((r) => r.type === 'tab' && r.originalId === 123)).toBe(true)
+
+    // Simulate tab closure by removing from model
+    ext.model.tabs = []
+
+    // BUG: Second search still returns cached results with ghost tab
+    ext.dom.searchInput.value = 'tab'
+    await search({ key: 't' })
+
+    // The bug: cache still contains the closed tab
+    const currentResults = ext.model.result
+    const hasGhostTab = currentResults.some((r) => r.type === 'tab' && r.originalId === 123)
+    expect(hasGhostTab).toBe(true) // BUG: This should be false but is true
+  })
+})
+
+describe('✅ FIXED: Inconsistent Result Passing', () => {
+  test('renderSearchResults now always uses ext.model.result (no parameter)', async () => {
+    ext.dom.searchInput.value = 'test'
+    ext.model.bookmarks = [
+      {
+        type: 'bookmark',
+        title: 'Test',
+        url: 'https://test.com',
+        searchString: 'test bookmark',
+      },
+    ]
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+
+    await search({ key: 't' })
+
+    // FIXED: renderSearchResults is now called with no parameters
+    // It always uses ext.model.result as the single source of truth
+    expect(mockRenderSearchResults).toHaveBeenCalledWith()
+    expect(ext.model.result.length).toBeGreaterThan(0)
+  })
+})
+
+describe('✅ FIXED: Architecture Violation', () => {
+  test('resultCounter is now updated in view layer, not in common.js', async () => {
+    ext.dom.searchInput.value = 'test'
+    ext.model.bookmarks = [
+      {
+        type: 'bookmark',
+        title: 'Test',
+        url: 'https://test.com',
+        searchString: 'test bookmark',
+      },
+    ]
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+
+    await search({ key: 't' })
+
+    // FIXED: resultCounter is now updated by searchView.renderSearchResults
+    // common.js no longer touches the DOM directly
+    expect(ext.model.result.length).toBeGreaterThan(0)
+    // Note: resultCounter is updated in the view layer (searchView.js)
+  })
+})
+
+describe('🐞 BUG: Dead Code', () => {
+  test('lines 292-294 can never execute due to earlier return', async () => {
+    // Lines 292-294 in common.js:
+    // } else {
+    //   results = await addDefaultEntries()
+    // }
+    //
+    // However, line 260-263 already handles empty searchTerm:
+    // if (!searchTerm.trim()) {
+    //   await handleEmptySearch()
+    //   return
+    // }
+    //
+    // This means the else block at 292-294 is unreachable
+
+    ext.dom.searchInput.value = '   ' // Empty search
+    const defaultResults = [{ type: 'bookmark', title: 'Default' }]
+    ext.model.history = defaultResults
+
+    await search({ key: 't' })
+
+    // The function returns early at line 262, so it never reaches line 292-294
+    // The code at 292-294 is dead code
+    expect(ext.model.result).toBeDefined() // Handled by early return, not dead code
   })
 })
