@@ -1,6 +1,6 @@
 {
   "name": "search-bookmarks-history-and-tabs",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.",
   "main": "index.js",
   "type": "module",
@@ -11,7 +11,7 @@
     "mark.js": "^8.11.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.0",
+    "@biomejs/biome": "^2.3.2",
     "@jest/globals": "^30.2.0",
     "@playwright/test": "^1.56.1",
     "archiver": "^7.0.1",

@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+## [v1.17.0]
+
 - **NEW**: Duplicate bookmark detection and indication
 
   - Detects bookmarks with identical URLs during data loading and marks them with a `dupe` flag
