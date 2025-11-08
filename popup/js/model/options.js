@@ -175,7 +175,7 @@ export const defaultOptions = {
    * Detect and mark duplicate bookmarks (same URL in different folders).
    * Disabling this can improve startup performance for large bookmark collections.
    */
-  detectDuplicateBookmarks: true,
+  detectDuplicateBookmarks: false,
   /**
    * Detect and mark bookmarks that have a currently open browser tab.
    * Disabling this can improve startup performance and reduces the bookmark-tab bonus score feature.
