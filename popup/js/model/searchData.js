@@ -151,16 +151,5 @@ export async function getSearchData() {
       result.history.length
     } history items in ${Date.now() - startTime}ms.`,
   )
-  // let oldestHistoryItem = 0
-  // for (const item of result.history) {
-  //   if (item.lastVisitSecondsAgo > oldestHistoryItem) {
-  //     oldestHistoryItem = item.lastVisitSecondsAgo
-  //   }
-  // }
-  // console.debug(
-  //   `Oldest history item is ${Math.round(oldestHistoryItem / 60 / 60 / 24)} days ago. Max history back is ${
-  //     ext.opts.historyDaysAgo
-  //   } days (Option: historyDaysAgo).`,
-  // )
   return result
 }

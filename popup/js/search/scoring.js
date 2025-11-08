@@ -1,7 +1,15 @@
 /**
- * @file Calculates final relevance scores for popup search results.
+ * @file Calculates final relevance scores for popup search results using a 5-step algorithm.
  *
- * For a detailed explanation of the scoring process, see the `calculateFinalScore` function documentation.
+ * The scoring system combines base scores, search quality multipliers, field-specific bonuses,
+ * behavioral patterns (visits, recency), and custom user-defined bonuses to rank results.
+ * Field priorities: title (1.0) > tag (0.7) > url (0.6) > folder (0.5).
+ *
+ * Exports:
+ * - `calculateFinalScore()` - Main scoring function with comprehensive algorithm documentation
+ * - `BASE_SCORE_KEYS` - Mapping of result types to their score configuration keys
+ *
+ * For detailed scoring algorithm documentation, see the `calculateFinalScore` function.
  */
 
 /**
