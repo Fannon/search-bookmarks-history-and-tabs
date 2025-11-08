@@ -171,6 +171,16 @@ export const defaultOptions = {
    * Ignores all bookmarks within the folders listed here, including their subfolders.
    */
   bookmarksIgnoreFolderList: [],
+  /**
+   * Detect and mark duplicate bookmarks (same URL in different folders).
+   * Disabling this can improve startup performance for large bookmark collections.
+   */
+  detectDuplicateBookmarks: false,
+  /**
+   * Detect and mark bookmarks that have a currently open browser tab.
+   * Disabling this can improve startup performance and reduces the bookmark-tab bonus score feature.
+   */
+  detectBookmarksWithOpenTabs: true,
 
   //////////////////////////////////////////
   // TABS OPTIONS                         //

@@ -189,11 +189,12 @@ describe('getSearchData', () => {
     }
   })
 
-  test('marks bookmarks that have an open browser tab', async () => {
+  test('marks bookmarks that have an open browser tab when enabled', async () => {
     const baseTime = 1700000200000
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
 
     try {
+      ext.opts.detectBookmarksWithOpenTabs = true
       setBrowserData({
         tabs: [
           {
@@ -238,6 +239,54 @@ describe('getSearchData', () => {
 
       expect(flaggedBookmark.tab).toBe(true)
       expect(plainBookmark.tab).toBeUndefined()
+    } finally {
+      nowSpy.mockRestore()
+    }
+  })
+
+  test('skips marking bookmarks with open tabs when disabled', async () => {
+    const baseTime = 1700000200000
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
+
+    try {
+      ext.opts.detectBookmarksWithOpenTabs = false
+      setBrowserData({
+        tabs: [
+          {
+            url: 'https://example.com',
+            title: 'Example Tab',
+            id: 'tab-1',
+            active: true,
+            windowId: 1,
+            lastAccessed: baseTime - 1000,
+          },
+        ],
+        bookmarks: [
+          {
+            title: '',
+            children: [
+              {
+                title: 'Bookmarks Bar',
+                children: [
+                  {
+                    id: 'bookmark-1',
+                    title: 'Example Bookmark',
+                    url: 'https://example.com',
+                    dateAdded: baseTime - 5000,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: [],
+      })
+
+      const result = await getSearchData()
+      const bookmark = result.bookmarks.find((bookmark) => bookmark.originalUrl === 'https://example.com')
+
+      // When disabled, tab flag should not be set even when there's a matching tab
+      expect(bookmark.tab).toBeUndefined()
     } finally {
       nowSpy.mockRestore()
     }

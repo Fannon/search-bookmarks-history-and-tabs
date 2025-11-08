@@ -102,6 +102,8 @@ displaySearchMatchHighlight: false # Not highlighting search matches improves re
 searchMaxResults: 20 # Number of search results can be further limited
 historyMaxItems: 512 # Number of browser history items can be further reduced
 maxRecentTabsToShow: 8 # Reduce number of recent tabs for better performance
+detectDuplicateBookmarks: false # Disable duplicate detection for faster startup (if you don't have duplicates)
+detectBookmarksWithOpenTabs: false # Disable bookmark-tab matching for faster startup (if you don't need the feature)
 ```
 
 Or a more advanced example:

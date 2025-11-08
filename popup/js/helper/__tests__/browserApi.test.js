@@ -242,8 +242,9 @@ describe('convertBrowserBookmarks', () => {
     expect(result).toHaveLength(0)
   })
 
-  it('flags duplicate bookmarks as they are converted', () => {
+  it('flags duplicate bookmarks when detection is enabled', () => {
     ext.opts.bookmarksIgnoreFolderList = []
+    ext.opts.detectDuplicateBookmarks = true
     const tree = [
       {
         title: 'Root',
@@ -274,6 +275,41 @@ describe('convertBrowserBookmarks', () => {
       expect(warnSpy.mock.calls[0][0]).toContain('Duplicate bookmark detected')
       expect(warnSpy.mock.calls[0][0]).toContain('https://duplicate.example.com')
       expect(warnSpy.mock.calls[0][0]).toContain('folder: /')
+    } finally {
+      warnSpy.mockRestore()
+    }
+  })
+
+  it('skips duplicate detection when disabled', () => {
+    ext.opts.bookmarksIgnoreFolderList = []
+    ext.opts.detectDuplicateBookmarks = false
+    const tree = [
+      {
+        title: 'Root',
+        children: [
+          {
+            id: 'bookmark-1',
+            title: 'First entry',
+            url: 'https://duplicate.example.com',
+          },
+          {
+            id: 'bookmark-2',
+            title: 'Second entry',
+            url: 'https://duplicate.example.com',
+          },
+        ],
+      },
+    ]
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    try {
+      const result = convertBrowserBookmarks(tree)
+
+      // When detection is disabled, dupe flag should not be set
+      const duplicates = result.filter((bookmark) => bookmark.dupe)
+      expect(duplicates).toHaveLength(0)
+      expect(warnSpy).not.toHaveBeenCalled()
     } finally {
       warnSpy.mockRestore()
     }

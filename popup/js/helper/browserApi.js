@@ -85,13 +85,17 @@ export async function getBrowserBookmarks() {
  * @param {Array<Object>} bookmarks - Raw bookmark tree nodes.
  * @param {Array<string>} [folderTrail] - Accumulated folder hierarchy.
  * @param {number} [depth] - Current traversal depth.
+ * @param {Map<string, Object>} [seenByUrl] - Map to track duplicate URLs (only if duplicate detection is enabled).
  * @returns {Array<Object>} Flattened bookmark entries.
  */
 export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl) {
   depth = depth || 1
   let result = []
   folderTrail = folderTrail || []
-  seenByUrl = seenByUrl || new Map()
+  // Only initialize seenByUrl Map if duplicate detection is enabled
+  if (seenByUrl === undefined && ext.opts.detectDuplicateBookmarks) {
+    seenByUrl = new Map()
+  }
 
   for (const entry of bookmarks) {
     let newFolderTrail = folderTrail.slice() // clone
@@ -178,7 +182,8 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
       )
       mappedEntry.searchStringLower = mappedEntry.searchString.toLowerCase()
 
-      if (mappedEntry.url) {
+      // Only detect duplicates if the feature is enabled
+      if (seenByUrl && mappedEntry.url) {
         const existingEntry = seenByUrl.get(mappedEntry.url)
         if (existingEntry) {
           existingEntry.dupe = true

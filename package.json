@@ -1,31 +1,30 @@
 {
   "name": "search-bookmarks-history-and-tabs",
-  "version": "1.17.0",
+  "version": "1.17.1",
   "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.",
   "main": "index.js",
   "type": "module",
   "dependencies": {
     "@leeoniya/ufuzzy": "^1.0.19",
-    "@yaireo/tagify": "^4.35.4",
+    "@yaireo/tagify": "^4.35.5",
     "js-yaml": "^4.1.0",
     "mark.js": "^8.11.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.2",
+    "@biomejs/biome": "^2.3.4",
     "@jest/globals": "^30.2.0",
     "@playwright/test": "^1.56.1",
     "archiver": "^7.0.1",
     "chokidar": "^4.0.3",
-    "esbuild": "^0.25.11",
+    "esbuild": "^0.25.12",
     "fs-extra": "^11.3.2",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
-    "lint-staged": "^16.2.6",
-    "serve": "^14.2.5",
-    "simple-git-hooks": "^2.13.1"
+    "lefthook": "^2.0.2",
+    "serve": "^14.2.5"
   },
   "scripts": {
-    "prepare": "simple-git-hooks",
+    "prepare": "lefthook install",
     "clean": "node bin/clean.js",
     "build": "npm run clean && npm run build:update-libs && npm run build:bundle && npm run build:update-manifests && npm run build:create-dist && npm run size",
     "build:bundle": "node bin/bundle.js",
@@ -46,7 +45,6 @@
     "test:ci": "npm run lint && npm run test:unit && npm run test:e2e",
     "lint": "biome check --error-on-warnings .",
     "lint:fix": "biome check --write .",
-    "lint:staged": "lint-staged",
     "format": "biome format . --write",
     "format:check": "biome format .",
     "start": "serve -p 8080 ./popup/",
@@ -74,16 +72,5 @@
   "bugs": {
     "url": "https://github.com/Fannon/search-tabs-bookmarks-and-history/issues"
   },
-  "homepage": "https://github.com/Fannon/search-tabs-bookmarks-and-history#readme",
-  "simple-git-hooks": {
-    "pre-commit": "npm run lint:staged"
-  },
-  "lint-staged": {
-    "*.{js,mjs}": [
-      "biome check --write --unsafe --files-ignore-unknown=true"
-    ],
-    "*.{css,html,json,md}": [
-      "biome format --write --files-ignore-unknown=true"
-    ]
-  }
+  "homepage": "https://github.com/Fannon/search-tabs-bookmarks-and-history#readme"
 }

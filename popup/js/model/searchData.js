@@ -58,11 +58,16 @@ function mergeHistoryLazily(items, historyMap, mergedUrls) {
 
 /**
  * Annotate bookmark entries that have a currently open browser tab.
+ * Only runs if detectBookmarksWithOpenTabs option is enabled.
  *
  * @param {Array} bookmarks - Bookmark search items.
  * @param {Array} tabs - Tab search items.
  */
 function flagBookmarksWithOpenTabs(bookmarks, tabs) {
+  if (!ext.opts.detectBookmarksWithOpenTabs) {
+    return
+  }
+
   if (!bookmarks.length || !tabs.length) {
     return
   }
@@ -111,19 +116,22 @@ export async function getSearchData() {
       console.warn('Could not load example mock data', err)
     }
   } else {
-    if (browserApi.tabs && ext.opts.enableTabs) {
-      const browserTabs = await getBrowserTabs()
-      result.tabs = convertBrowserTabs(browserTabs)
-    }
-    if (browserApi.bookmarks && ext.opts.enableBookmarks) {
-      const browserBookmarks = await getBrowserBookmarks()
-      result.bookmarks = convertBrowserBookmarks(browserBookmarks)
-    }
-    if (browserApi.history && ext.opts.enableHistory) {
-      const startTime = Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
-      const browserHistory = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
-      result.history = convertBrowserHistory(browserHistory)
+    // Fetch all browser data sources in parallel for faster startup
+    const [browserTabs, browserBookmarks, browserHistory] = await Promise.all([
+      browserApi.tabs && ext.opts.enableTabs ? getBrowserTabs() : Promise.resolve([]),
+      browserApi.bookmarks && ext.opts.enableBookmarks ? getBrowserBookmarks() : Promise.resolve([]),
+      browserApi.history && ext.opts.enableHistory
+        ? getBrowserHistory(Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo, ext.opts.historyMaxItems)
+        : Promise.resolve([]),
+    ])
 
+    // Convert browser data to internal format
+    result.tabs = convertBrowserTabs(browserTabs)
+    result.bookmarks = convertBrowserBookmarks(browserBookmarks)
+    result.history = convertBrowserHistory(browserHistory)
+
+    // Merge history data into bookmarks and tabs if history is enabled
+    if (browserApi.history && ext.opts.enableHistory && result.history.length > 0) {
       // Build maps with URL as key, so we have fast hashmap access
       const historyMap = new Map(result.history.map((item) => [item.originalUrl, item]))
 
@@ -131,10 +139,12 @@ export async function getSearchData() {
 
       result.bookmarks = mergeHistoryLazily(result.bookmarks, historyMap, mergedHistoryUrls)
       result.tabs = mergeHistoryLazily(result.tabs, historyMap, mergedHistoryUrls)
-      flagBookmarksWithOpenTabs(result.bookmarks, result.tabs)
 
       result.history = result.history.filter((item) => !mergedHistoryUrls.has(item.originalUrl))
     }
+
+    // Flag bookmarks with open tabs (if feature is enabled)
+    flagBookmarksWithOpenTabs(result.bookmarks, result.tabs)
   }
   console.debug(
     `Loaded ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${
