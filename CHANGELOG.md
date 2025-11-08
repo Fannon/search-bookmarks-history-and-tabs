@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+## [v1.17.1]
+
 - **IMPROVED**: Startup performance with parallelized browser API calls
 
   - Browser APIs (tabs, bookmarks, history) now load in parallel using `Promise.all()` instead of sequentially
