@@ -2,6 +2,19 @@
 
 ## [unreleased]
 
+- **IMPROVED**: Startup performance with parallelized browser API calls
+
+  - Browser APIs (tabs, bookmarks, history) now load in parallel using `Promise.all()` instead of sequentially
+  - Significantly reduces initial load time, especially when history API is slow
+  - No user configuration required – performance improvement is automatic
+
+- **NEW**: Optional performance features for large collections
+
+  - Added `detectDuplicateBookmarks` option (default: `true`) to optionally disable duplicate bookmark detection
+  - Added `detectBookmarksWithOpenTabs` option (default: `true`) to optionally disable bookmark-tab matching
+  - Users with large bookmark/tab collections who don't need these features can disable them for faster startup
+  - Both options maintain backward compatibility by defaulting to `true`
+
 ## [v1.17.0]
 
 - **NEW**: Duplicate bookmark detection and indication
