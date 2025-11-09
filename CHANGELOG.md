@@ -15,7 +15,6 @@
   - Added `detectDuplicateBookmarks` option (default: `false`) to optionally enable duplicate bookmark detection
   - Added `detectBookmarksWithOpenTabs` option (default: `true`) to optionally disable bookmark-tab matching
   - Users with large bookmark/tab collections who don't need these features can disable them for faster startup
-  - Both options maintain backward compatibility by defaulting to `true`
 
 ## [v1.17.0]
 

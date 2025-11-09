@@ -28,11 +28,14 @@
   "[javascript]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
   "[html]": {
     "editor.defaultFormatter": "vscode.html-language-features"
   },
   "editor.codeActionsOnSave": {
-    "source.fixAll.biome": "explicit"
+    "source.organizeImports.biome": "explicit"
   },
   "jest.nodeEnv": {
     "NODE_OPTIONS": "--experimental-vm-modules",
