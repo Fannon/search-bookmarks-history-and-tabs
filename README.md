@@ -118,6 +118,8 @@ historyIgnoreList:
   - http://127.0.0.1
 colorStripeWidth: 4 # Customize width of search result color stripe
 scoreTabBase: 70 # customize base score for open tabs
+detectBookmarksWithOpenTabs: true
+detectDuplicateBookmarks: true
 searchEngineChoices:
   - name: Google
     urlPrefix: https://google.com/search?q=
