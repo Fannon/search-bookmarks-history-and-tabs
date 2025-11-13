@@ -7,11 +7,11 @@ pre-commit:
     # Lint and fix JavaScript files
     lint-js:
       glob: "*.{js,mjs}"
-      run: biome check --write --unsafe --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      run: npx biome check --write --unsafe --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
       stage_fixed: true
 
     # Format CSS, HTML, JSON files
     format-files:
       glob: "*.{css,html,json}"
-      run: biome format --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      run: npx biome format --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
       stage_fixed: true
