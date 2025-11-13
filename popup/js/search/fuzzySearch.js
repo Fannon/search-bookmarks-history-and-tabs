@@ -108,10 +108,14 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
       options.intraDel = 1 // deletion (omission)
     }
 
+    // Pre-build haystack array more efficiently
+    const haystack = new Array(data.length)
+    for (let i = 0; i < data.length; i++) {
+      haystack[i] = data[i].searchString
+    }
+
     state[searchMode] = {
-      haystack: data.map((el) => {
-        return el.searchString
-      }),
+      haystack,
       uf: new uFuzzy(options),
     }
   }
