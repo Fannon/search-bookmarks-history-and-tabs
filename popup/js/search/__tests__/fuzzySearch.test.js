@@ -212,13 +212,6 @@ describe('fuzzySearch', () => {
     })
     expect(typeof results[0].searchScore).toBe('number')
     expect(results[0].searchScore).toBeGreaterThan(0)
-    // Real uFuzzy may not provide the same highlighting format as our mock
-    if (results[0].titleHighlighted) {
-      expect(typeof results[0].titleHighlighted).toBe('string')
-    }
-    if (results[0].urlHighlighted) {
-      expect(typeof results[0].urlHighlighted).toBe('string')
-    }
   })
 
   it('aggregates tab and history entries when searching in history mode', async () => {
@@ -487,7 +480,7 @@ describe('fuzzySearch', () => {
     expect(tabResults[0].id).toBe('tab-1')
   })
 
-  it('does not mutate cached entries when adding highlight strings', async () => {
+  it('does not mutate cached entries when creating results', async () => {
     ext.model.bookmarks = [
       {
         id: 'bookmark-highlight',
@@ -501,15 +494,16 @@ describe('fuzzySearch', () => {
 
     expect(firstResults).toHaveLength(1)
     const firstResult = firstResults[0]
+    // Verify fuzzy search creates a copy of the entry, not mutating the original
     expect(firstResult).not.toBe(ext.model.bookmarks[0])
-    expect(firstResult.titleHighlighted || '').toContain('<mark>')
-    expect(ext.model.bookmarks[0].titleHighlighted).toBeUndefined()
-    expect(ext.model.bookmarks[0].urlHighlighted).toBeUndefined()
+    expect(firstResult.searchScore).toBeDefined()
+    expect(firstResult.searchApproach).toBe('fuzzy')
 
     const secondResults = await fuzzySearch('bookmarks', 'highlight')
 
+    // Verify original model entry remains unchanged
     expect(secondResults[0]).not.toBe(ext.model.bookmarks[0])
-    expect(ext.model.bookmarks[0].titleHighlighted).toBeUndefined()
-    expect(ext.model.bookmarks[0].urlHighlighted).toBeUndefined()
+    expect(ext.model.bookmarks[0].searchScore).toBeUndefined()
+    expect(ext.model.bookmarks[0].searchApproach).toBeUndefined()
   })
 })

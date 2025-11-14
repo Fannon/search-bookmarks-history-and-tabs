@@ -18,7 +18,6 @@ function createResults() {
       originalUrl: 'https://bookmark.test',
       url: 'bookmark.test',
       title: 'Bookmark Title',
-      titleHighlighted: 'Bookmark <mark>Title</mark>',
       tagsArray: ['alpha', 'beta'],
       folderArray: ['Work', 'Docs'],
       lastVisitSecondsAgo: 3600,
@@ -32,7 +31,6 @@ function createResults() {
       originalUrl: 'https://tab.test',
       url: 'tab.test',
       title: 'Tab Title',
-      urlHighlighted: 'tab.<mark>test</mark>',
       score: 8.4,
     },
   ]
@@ -168,13 +166,15 @@ describe('searchView renderSearchResults', () => {
     const tabItem = listItems[1]
     expect(tabItem.className).toBe('tab')
     expect(tabItem.querySelector('.close-button')).not.toBeNull()
-    expect(tabItem.querySelector('.url').innerHTML).toBe('tab.<mark>test</mark>')
 
     expect(document.getElementById('selected-result')).toBe(bookmarkItem)
     expect(ext.model.currentItem).toBe(0)
-    // Mark.js is not called when search algorithm provides highlights (optimization)
-    // Both results have highlights provided by fuzzy search, so Mark.js is skipped
-    expect(window.Mark).toHaveBeenCalledTimes(0)
+    // Mark.js is called for all results to provide consistent highlighting
+    expect(window.Mark).toHaveBeenCalledTimes(2)
+    const firstMarkInstance = window.Mark.mock.results[0].value
+    expect(firstMarkInstance.mark).toHaveBeenCalledWith('query', {
+      exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
+    })
   })
 
   it('escapes HTML content coming from bookmarks and metadata', async () => {

@@ -116,19 +116,9 @@ export async function renderSearchResults() {
 
       const badgesHTML = badges.join('')
 
-      const highlightCandidate =
-        resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
-      const titleContent =
-        shouldHighlight && searchTerm && searchTerm.trim()
-          ? // escape everything first, then allow only the `<mark>` tags that the highlighter inserts
-            escapeHtml(highlightCandidate).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
-          : escapeHtml(resultEntry.title || resultEntry.url || '')
-
-      const urlContent =
-        shouldHighlight && searchTerm && searchTerm.trim() && resultEntry.urlHighlighted
-          ? // same approach for the URL snippet – keep highlight markup, escape everything else
-            escapeHtml(resultEntry.urlHighlighted).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
-          : escapeHtml(resultEntry.url || '')
+      // Escape HTML for title and URL content (mark.js will add highlights later)
+      const titleContent = escapeHtml(resultEntry.title || resultEntry.url || '')
+      const urlContent = escapeHtml(resultEntry.url || '')
 
       const typeClass = escapeHtml(resultEntry.type || '')
       const originalUrlAttr = resultEntry.originalUrl ? ` x-open-url="${escapeHtml(resultEntry.originalUrl)}"` : ''
@@ -159,15 +149,12 @@ export async function renderSearchResults() {
       tempDiv.innerHTML = itemHTML
       const resultListItem = tempDiv.firstElementChild
 
-      // Only use Mark.js when search algorithm didn't provide highlights (e.g., precise search)
-      // Fuzzy search already provides titleHighlighted/urlHighlighted
+      // Apply mark.js highlighting to the result item
       if (shouldHighlight && searchTerm && searchTerm.trim() && window.Mark) {
-        if (!resultEntry.titleHighlighted && !resultEntry.urlHighlighted) {
-          const mark = new window.Mark(resultListItem)
-          mark.mark(searchTerm, {
-            exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
-          })
-        }
+        const mark = new window.Mark(resultListItem)
+        mark.mark(searchTerm, {
+          exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
+        })
       }
 
       fragment.appendChild(resultListItem)
