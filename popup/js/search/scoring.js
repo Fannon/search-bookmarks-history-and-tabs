@@ -4,6 +4,10 @@
  * For a detailed explanation of the scoring process, see the `calculateFinalScore` function documentation.
  */
 
+// Pre-compiled regexes for performance
+const TAXONOMY_PREFIX_REGEX = /^[#~]+/
+const WHITESPACE_REGEX = /\s+/g
+
 /**
  * Calculates the final search item score for each result
  *
@@ -47,12 +51,13 @@
 export function calculateFinalScore(results, searchTerm) {
   const hasSearchTerm = Boolean(ext.model.searchTerm)
 
-  // Normalize query once for all downstream checks to keep comparisons consistent and cheap.
+  // Normalize and split search term once for all downstream checks
   const normalizedSearchTerm = hasSearchTerm ? searchTerm.toLowerCase().trim() : ''
   const rawSearchTermParts = hasSearchTerm ? normalizedSearchTerm.split(/\s+/).filter(Boolean) : []
   const hyphenatedSearchTerm = rawSearchTermParts.join('-')
-  const tagTerms = hasSearchTerm ? normalizedSearchTerm.split('#').join(' ').split(/\s+/).filter(Boolean) : []
-  const folderTerms = hasSearchTerm ? normalizedSearchTerm.split('~').join(' ').split(/\s+/).filter(Boolean) : []
+  // Extract tag and folder terms by replacing markers with spaces, then split once
+  const tagTerms = hasSearchTerm ? normalizedSearchTerm.replace(/#/g, ' ').split(/\s+/).filter(Boolean) : []
+  const folderTerms = hasSearchTerm ? normalizedSearchTerm.replace(/~/g, ' ').split(/\s+/).filter(Boolean) : []
 
   // Cache scoring options to avoid repeated property lookups
   const opts = ext.opts
@@ -79,7 +84,7 @@ export function calculateFinalScore(results, searchTerm) {
   } = opts
 
   const includeTerms = rawSearchTermParts
-    .map((token) => token.replace(/^[#~]+/, ''))
+    .map((token) => token.replace(TAXONOMY_PREFIX_REGEX, ''))
     .map((token) => token.trim())
     .filter((token) => {
       if (!token) {
@@ -114,35 +119,35 @@ export function calculateFinalScore(results, searchTerm) {
     score = score * searchScoreMultiplier
 
     if (hasSearchTerm) {
-      // Pre-compute normalized field values for case-insensitive matching
-      const lowerTitle = el.title ? el.title.toLowerCase().trim() : null
-      const lowerUrl = el.url ? el.url.toLowerCase() : null
-      const lowerTags = el.tags ? el.tags.toLowerCase() : null
-      const lowerFolder = el.folder ? el.folder.toLowerCase() : null
-
-      // Pre-compute normalized arrays for exact tag/folder matching
-      const lowerTagValues = el.tagsArray ? el.tagsArray.map((tag) => tag.toLowerCase()) : []
-      const lowerFolderValues = el.folderArray ? el.folderArray.map((folder) => folder.toLowerCase()) : []
+      // Pre-compute all normalized field values once for case-insensitive matching
+      const normalized = {
+        title: el.title?.toLowerCase().trim() || null,
+        url: el.url?.toLowerCase() || null,
+        tags: el.tags?.toLowerCase() || null,
+        folder: el.folder?.toLowerCase() || null,
+        tagValues: el.tagsArray?.map((tag) => tag.toLowerCase()) || [],
+        folderValues: el.folderArray?.map((folder) => folder.toLowerCase()) || [],
+      }
 
       // STEP 3A: Exact match bonuses
       // Award bonus if title/URL starts with the exact search term
       if (scoreExactStartsWithBonus) {
-        if (lowerTitle?.startsWith(normalizedSearchTerm)) {
+        if (normalized.title?.startsWith(normalizedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreTitleWeight
-        } else if (lowerUrl?.startsWith(hyphenatedSearchTerm)) {
+        } else if (normalized.url?.startsWith(hyphenatedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreUrlWeight
         }
       }
 
       // Award bonus if title exactly equals the search term
-      if (scoreExactEqualsBonus && lowerTitle && lowerTitle === normalizedSearchTerm) {
+      if (scoreExactEqualsBonus && normalized.title === normalizedSearchTerm) {
         score += scoreExactEqualsBonus * scoreTitleWeight
       }
 
       // Award bonus for each exact tag name match
       // Example: searching "react hooks" matches tags "#react" and "#hooks"
       if (scoreExactTagMatchBonus && el.tags && tagTerms.length) {
-        const tagSet = new Set(lowerTagValues)
+        const tagSet = new Set(normalized.tagValues)
         for (const searchTag of tagTerms) {
           if (searchTag && tagSet.has(searchTag)) {
             score += scoreExactTagMatchBonus
@@ -153,7 +158,7 @@ export function calculateFinalScore(results, searchTerm) {
       // Award bonus for each exact folder name match
       // Example: searching "work projects" matches folders "~Work" and "~Projects"
       if (scoreExactFolderMatchBonus && el.folder && folderTerms.length) {
-        const folderSet = new Set(lowerFolderValues)
+        const folderSet = new Set(normalized.folderValues)
         for (const searchFolder of folderTerms) {
           if (searchFolder && folderSet.has(searchFolder)) {
             score += scoreExactFolderMatchBonus
@@ -173,19 +178,19 @@ export function calculateFinalScore(results, searchTerm) {
           }
 
           // URLs use hyphens instead of spaces, so normalize for matching
-          const normalizedUrlTerm = term.replace(/\s+/g, '-')
+          const normalizedUrlTerm = term.replace(WHITESPACE_REGEX, '-')
 
           // Check fields in priority order - first match wins
-          if (lowerTitle?.includes(term)) {
+          if (normalized.title?.includes(term)) {
             score += scoreExactIncludesBonus * scoreTitleWeight
             includesBonusesAwarded++
-          } else if (lowerUrl?.includes(normalizedUrlTerm)) {
+          } else if (normalized.url?.includes(normalizedUrlTerm)) {
             score += scoreExactIncludesBonus * scoreUrlWeight
             includesBonusesAwarded++
-          } else if (lowerTags?.includes(term)) {
+          } else if (normalized.tags?.includes(term)) {
             score += scoreExactIncludesBonus * scoreTagWeight
             includesBonusesAwarded++
-          } else if (lowerFolder?.includes(term)) {
+          } else if (normalized.folder?.includes(term)) {
             score += scoreExactIncludesBonus * scoreFolderWeight
             includesBonusesAwarded++
           }
@@ -195,11 +200,11 @@ export function calculateFinalScore(results, searchTerm) {
       // Award bonus for full phrase match (multi-word searches only)
       // Single-word searches already get includes/exact bonuses, so phrase bonus is redundant
       if (rawSearchTermParts.length > 1) {
-        if (scoreExactPhraseTitleBonus && lowerTitle && lowerTitle.includes(normalizedSearchTerm)) {
+        if (scoreExactPhraseTitleBonus && normalized.title?.includes(normalizedSearchTerm)) {
           score += scoreExactPhraseTitleBonus
         }
 
-        if (scoreExactPhraseUrlBonus && lowerUrl && lowerUrl.includes(hyphenatedSearchTerm)) {
+        if (scoreExactPhraseUrlBonus && normalized.url?.includes(hyphenatedSearchTerm)) {
           score += scoreExactPhraseUrlBonus
         }
       }

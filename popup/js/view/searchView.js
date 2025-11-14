@@ -159,8 +159,10 @@ export async function renderSearchResults() {
       tempDiv.innerHTML = itemHTML
       const resultListItem = tempDiv.firstElementChild
 
+      // Only use Mark.js when search algorithm didn't provide highlights (e.g., precise search)
+      // Fuzzy search already provides titleHighlighted/urlHighlighted
       if (shouldHighlight && searchTerm && searchTerm.trim() && window.Mark) {
-        if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
+        if (!resultEntry.titleHighlighted && !resultEntry.urlHighlighted) {
           const mark = new window.Mark(resultListItem)
           mark.mark(searchTerm, {
             exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],

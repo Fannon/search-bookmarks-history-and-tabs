@@ -172,11 +172,9 @@ describe('searchView renderSearchResults', () => {
 
     expect(document.getElementById('selected-result')).toBe(bookmarkItem)
     expect(ext.model.currentItem).toBe(0)
-    expect(window.Mark).toHaveBeenCalledTimes(2)
-    const firstMarkInstance = window.Mark.mock.results[0].value
-    expect(firstMarkInstance.mark).toHaveBeenCalledWith('query', {
-      exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
-    })
+    // Mark.js is not called when search algorithm provides highlights (optimization)
+    // Both results have highlights provided by fuzzy search, so Mark.js is skipped
+    expect(window.Mark).toHaveBeenCalledTimes(0)
   })
 
   it('escapes HTML content coming from bookmarks and metadata', async () => {
@@ -315,7 +313,18 @@ describe('searchView renderSearchResults', () => {
 
 describe('✅ FIXED: Mouse Hover State Fragility', () => {
   it('now re-enables mouse hover even if rendering throws error', async () => {
-    const { module } = await setupSearchView()
+    // Use results without highlights so Mark.js will be called
+    const resultsWithoutHighlights = [
+      {
+        type: 'bookmark',
+        originalId: 'bm-1',
+        originalUrl: 'https://bookmark.test',
+        url: 'bookmark.test',
+        title: 'Bookmark Title',
+        score: 41.8,
+      },
+    ]
+    const { module } = await setupSearchView({ results: resultsWithoutHighlights })
 
     // Verify initial state
     expect(ext.model.mouseHoverEnabled).toBe(true)
@@ -339,7 +348,18 @@ describe('✅ FIXED: Mouse Hover State Fragility', () => {
 
 describe('✅ FIXED: Error Boundary Added', () => {
   it('now handles rendering errors gracefully with proper error boundary', async () => {
-    const { module } = await setupSearchView()
+    // Use results without highlights so Mark.js will be called
+    const resultsWithoutHighlights = [
+      {
+        type: 'bookmark',
+        originalId: 'bm-1',
+        originalUrl: 'https://bookmark.test',
+        url: 'bookmark.test',
+        title: 'Bookmark Title',
+        score: 41.8,
+      },
+    ]
+    const { module } = await setupSearchView({ results: resultsWithoutHighlights })
 
     // Mock a failure during rendering
     window.Mark = jest.fn(() => {
