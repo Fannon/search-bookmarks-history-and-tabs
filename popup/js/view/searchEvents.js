@@ -227,6 +227,15 @@ export function setupResultItemsEvents() {
     return
   }
 
+  // Track actual mouse movement to prevent spurious hover selection on popup open
+  ext.dom.resultList.addEventListener(
+    'mousemove',
+    () => {
+      ext.model.mouseMoved = true
+    },
+    true,
+  )
+
   // Handle mouse enter events for hover effects
   ext.dom.resultList.addEventListener(
     'mouseenter',

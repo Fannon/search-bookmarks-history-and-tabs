@@ -75,7 +75,7 @@ async function setupSearchNavigation({ results = createResults(), opts = {} } = 
       result: copiedResults,
       tabs: tabEntries,
       searchTerm: 'query',
-      mouseHoverEnabled: true,
+      mouseMoved: false,
       currentItem: 0,
     },
     opts: {
@@ -144,16 +144,24 @@ describe('searchNavigation selection helpers', () => {
     })
   })
 
-  it('hoverResultItem delays activation until rendering completes, then selects index', async () => {
+  it('hoverResultItem only selects after mouse has actually moved', async () => {
     const { module, viewModule, elements } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
     const firstItem = elements.resultList.children[0]
     const secondItem = elements.resultList.children[1]
 
-    module.hoverResultItem({ target: firstItem })
-    expect(ext.model.mouseHoverEnabled).toBe(true)
-    expect(ext.model.currentItem).toBe(0)
+    // Initially, mouseMoved is false (set by renderSearchResults)
+    expect(ext.model.mouseMoved).toBe(false)
 
+    // Hovering should not change selection when mouse hasn't moved
+    module.hoverResultItem({ target: secondItem })
+    expect(ext.model.currentItem).toBe(0)
+    expect(document.getElementById('selected-result')).toBe(firstItem)
+
+    // Simulate actual mouse movement
+    ext.model.mouseMoved = true
+
+    // Now hovering should update selection
     module.hoverResultItem({ target: secondItem })
     expect(ext.model.currentItem).toBe('1')
     expect(document.getElementById('selected-result')).toBe(secondItem)

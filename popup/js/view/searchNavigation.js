@@ -4,7 +4,7 @@
  * Responsibilities:
  * - Handle keyboard navigation with arrow keys and vim-style keybindings (Ctrl+P/Ctrl+N, Ctrl+K/Ctrl+J).
  * - Manage visual selection state of result items with scrolling support.
- * - Handle mouse hover events to update selection with rendering protection.
+ * - Handle mouse hover events to update selection only after actual mouse movement.
  * - Coordinate with search result rendering to maintain proper selection state.
  */
 
@@ -91,15 +91,15 @@ export function clearSelection() {
 
 /**
  * Handle mouse hover events on result items to update selection
- * Includes protection against spurious hover events during rendering
+ * Only allows selection after the user has actually moved their mouse,
+ * preventing spurious selection when popup opens with cursor over results
  */
 export function hoverResultItem(event) {
   const target = event.target ? event.target : event.srcElement
   const index = target.getAttribute('x-index')
 
-  // Prevent hover events during the initial render phase
-  if (!ext.model.mouseHoverEnabled) {
-    ext.model.mouseHoverEnabled = true
+  // Only allow hover selection after mouse has actually moved
+  if (!ext.model.mouseMoved) {
     return
   }
 
