@@ -26,7 +26,7 @@
   "scripts": {
     "prepare": "lefthook install",
     "clean": "node bin/clean.js",
-    "build": "npm run clean && npm run build:update-libs && npm run build:bundle && npm run build:update-manifests && npm run build:create-dist && npm run size",
+    "build": "npm run clean && npm run build:update-libs && npm run build:bundle && npm run build:update-manifests && npm run build:create-dist && npm run format && npm run size",
     "build:bundle": "node bin/bundle.js",
     "build:update-libs": "node bin/updateLibs.js",
     "build:create-dist": "node bin/createDist.js",
