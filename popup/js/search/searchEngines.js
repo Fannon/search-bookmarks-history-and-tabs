@@ -32,12 +32,10 @@ import { cleanUpUrl, generateRandomId } from '../helper/utils.js'
 export function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlank, custom) {
   let url
   let title = `${name}: "${searchTerm}"`
-  let titleHighlighted = `${name}: "<mark>${searchTerm}</mark>"`
 
   if (urlBlank && !searchTerm.trim()) {
     url = urlBlank
     title = name
-    titleHighlighted = name
   } else if (urlPrefix.includes('$s')) {
     url = urlPrefix.replace('$s', encodeURIComponent(searchTerm))
   } else {
@@ -47,9 +45,7 @@ export function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlan
   return {
     type: custom ? 'customSearch' : 'search',
     title: title,
-    titleHighlighted: titleHighlighted,
     url: cleanUpUrl(url),
-    urlHighlighted: cleanUpUrl(url),
     originalUrl: url,
     originalId: generateRandomId(),
     searchScore: 1,

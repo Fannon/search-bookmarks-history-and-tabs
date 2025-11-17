@@ -162,9 +162,7 @@ function addDirectUrlIfApplicable(searchTerm, results) {
     results.push({
       type: 'direct',
       title: `Direct: "${cleanUpUrl(url)}"`,
-      titleHighlighted: `Direct: "<mark>${cleanUpUrl(url)}</mark>"`,
       url: cleanUpUrl(url),
-      urlHighlighted: cleanUpUrl(url),
       originalUrl: url,
       originalId: generateRandomId(),
       searchScore: 1,

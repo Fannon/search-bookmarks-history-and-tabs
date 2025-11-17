@@ -19,7 +19,6 @@ function createResults() {
       originalUrl: 'https://bookmark.test',
       url: 'bookmark.test',
       title: 'Bookmark Title',
-      titleHighlighted: 'Bookmark <mark>Title</mark>',
       tagsArray: ['alpha', 'beta'],
       folderArray: ['Work', 'Docs'],
       lastVisitSecondsAgo: 3600,
@@ -33,7 +32,6 @@ function createResults() {
       originalUrl: 'https://tab.test',
       url: 'tab.test',
       title: 'Tab Title',
-      urlHighlighted: 'tab.<mark>test</mark>',
       score: 8.4,
     },
   ]

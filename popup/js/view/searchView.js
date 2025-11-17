@@ -56,71 +56,69 @@ export async function renderSearchResults() {
         continue
       }
 
-      let badgesHTML = ''
+      // Use array for badge HTML generation (more efficient than string concatenation)
+      const badges = []
 
       if (resultEntry.type === 'bookmark' && resultEntry.tab) {
-        badgesHTML += '<span class="badge source-tab" title="Open Tab">T</span>'
+        badges.push('<span class="badge source-tab" title="Open Tab">T</span>')
       }
       if (resultEntry.dupe) {
-        badgesHTML += '<span class="badge duplicate" title="Duplicate Bookmark">Duplicate</span>'
+        badges.push('<span class="badge duplicate" title="Duplicate Bookmark">Duplicate</span>')
       }
 
       if (opts.displayTags && resultEntry.tagsArray) {
         for (const tag of resultEntry.tagsArray) {
           const safeTag = escapeHtml(tag)
-          badgesHTML += `<span class="badge tags" x-link="#search/#${safeTag}" title="Bookmark Tags">#${safeTag}</span>`
+          badges.push(`<span class="badge tags" x-link="#search/#${safeTag}" title="Bookmark Tags">#${safeTag}</span>`)
         }
       }
 
       if (opts.displayFolderName && resultEntry.folderArray) {
         const trail = []
+        const bookmarkColorStyle = `background-color: ${escapeHtml(String(opts.bookmarkColor || 'none'))}`
         for (const folderName of resultEntry.folderArray) {
           trail.push(folderName)
           const folderLink = `#search/~${trail.join(' ~')}`
           const safeLink = escapeHtml(folderLink)
           const label = `~${folderName}`
-          badgesHTML += `<span class="badge folder" x-link="${safeLink}" title="Bookmark Folder" style="background-color: ${escapeHtml(
-            String(opts.bookmarkColor || 'none'),
-          )}">${escapeHtml(label)}</span>`
+          badges.push(
+            `<span class="badge folder" x-link="${safeLink}" title="Bookmark Folder" style="${bookmarkColorStyle}">${escapeHtml(
+              label,
+            )}</span>`,
+          )
         }
       }
 
       if (opts.displayLastVisit && resultEntry.lastVisitSecondsAgo != null) {
         const lastVisit = timeSince(new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000))
-        badgesHTML += `<span class="badge last-visited" title="Last Visited">-${escapeHtml(lastVisit)}</span>`
+        badges.push(`<span class="badge last-visited" title="Last Visited">-${escapeHtml(lastVisit)}</span>`)
       }
 
       if (opts.displayVisitCounter && resultEntry.visitCount !== undefined) {
-        badgesHTML += `<span class="badge visit-counter" title="Visited Counter">${escapeHtml(
-          String(resultEntry.visitCount),
-        )}</span>`
+        badges.push(
+          `<span class="badge visit-counter" title="Visited Counter">${escapeHtml(String(resultEntry.visitCount))}</span>`,
+        )
       }
 
       if (opts.displayDateAdded && resultEntry.dateAdded) {
-        badgesHTML += `<span class="badge date-added" title="Date Added">${escapeHtml(
-          new Date(resultEntry.dateAdded).toISOString().split('T')[0],
-        )}</span>`
+        badges.push(
+          `<span class="badge date-added" title="Date Added">${escapeHtml(
+            new Date(resultEntry.dateAdded).toISOString().split('T')[0],
+          )}</span>`,
+        )
       }
 
       if (opts.displayScore && resultEntry.score) {
-        badgesHTML += `<span class="badge score" title="Score">${escapeHtml(
-          String(Math.round(resultEntry.score)),
-        )}</span>`
+        badges.push(
+          `<span class="badge score" title="Score">${escapeHtml(String(Math.round(resultEntry.score)))}</span>`,
+        )
       }
 
-      const highlightCandidate =
-        resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url || ''
-      const titleContent =
-        shouldHighlight && searchTerm && searchTerm.trim()
-          ? // escape everything first, then allow only the `<mark>` tags that the highlighter inserts
-            escapeHtml(highlightCandidate).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
-          : escapeHtml(resultEntry.title || resultEntry.url || '')
+      const badgesHTML = badges.join('')
 
-      const urlContent =
-        shouldHighlight && searchTerm && searchTerm.trim() && resultEntry.urlHighlighted
-          ? // same approach for the URL snippet – keep highlight markup, escape everything else
-            escapeHtml(resultEntry.urlHighlighted).replace(/&lt;(\/?)mark&gt;/gi, '<$1mark>')
-          : escapeHtml(resultEntry.url || '')
+      // Escape HTML for title and URL content (mark.js will add highlights later)
+      const titleContent = escapeHtml(resultEntry.title || resultEntry.url || '')
+      const urlContent = escapeHtml(resultEntry.url || '')
 
       const typeClass = escapeHtml(resultEntry.type || '')
       const originalUrlAttr = resultEntry.originalUrl ? ` x-open-url="${escapeHtml(resultEntry.originalUrl)}"` : ''
@@ -151,13 +149,12 @@ export async function renderSearchResults() {
       tempDiv.innerHTML = itemHTML
       const resultListItem = tempDiv.firstElementChild
 
+      // Apply mark.js highlighting to the result item
       if (shouldHighlight && searchTerm && searchTerm.trim() && window.Mark) {
-        if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
-          const mark = new window.Mark(resultListItem)
-          mark.mark(searchTerm, {
-            exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
-          })
-        }
+        const mark = new window.Mark(resultListItem)
+        mark.mark(searchTerm, {
+          exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
+        })
       }
 
       fragment.appendChild(resultListItem)

@@ -50,7 +50,6 @@ describe('getCustomSearchEngineResult', () => {
     expect(result).toMatchObject({
       type: 'search',
       title: 'Google: "javascript"',
-      titleHighlighted: 'Google: "<mark>javascript</mark>"',
       originalUrl: 'https://www.google.com/search?q=javascript',
       searchScore: 1,
     })
@@ -90,7 +89,6 @@ describe('getCustomSearchEngineResult', () => {
 
     expect(result).toMatchObject({
       title: 'YouTube',
-      titleHighlighted: 'YouTube',
       originalUrl: 'https://youtube.com',
     })
   })

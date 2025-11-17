@@ -70,7 +70,7 @@ export async function fuzzySearch(searchMode, searchTerm) {
  *
  * @param {string} searchTerm - Query string.
  * @param {string} searchMode - Dataset key inside `ext.model`.
- * @returns {Array<Object>} Highlighted fuzzy matches.
+ * @returns {Array<Object>} Fuzzy search matches with scores.
  */
 function fuzzySearchWithScoring(searchTerm, searchMode) {
   const data = ext.model[searchMode]
@@ -108,10 +108,14 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
       options.intraDel = 1 // deletion (omission)
     }
 
+    // Pre-build haystack array more efficiently
+    const haystack = new Array(data.length)
+    for (let i = 0; i < data.length; i++) {
+      haystack[i] = data[i].searchString
+    }
+
     state[searchMode] = {
-      haystack: data.map((el) => {
-        return el.searchString
-      }),
+      haystack,
       uf: new uFuzzy(options),
     }
   }
@@ -139,26 +143,8 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
       for (let i = 0; i < info.idx.length; i++) {
         const result = data[idxs[i]]
 
-        // Apply highlighting, but only on last iteration
-        const highlight = uFuzzy.highlight(result.searchString, info.ranges[i])
-        // Split highlighted string back into its original multiple properties
-        const highlightArray = highlight.split('¦')
-        const highlightedResult = {
-          ...result,
-        }
-        if (highlightArray[0]?.includes('<mark>')) {
-          highlightedResult.titleHighlighted = highlightArray[0]
-        } else {
-          delete highlightedResult.titleHighlighted
-        }
-        if (highlightArray[1]?.includes('<mark>')) {
-          highlightedResult.urlHighlighted = highlightArray[1]
-        } else {
-          delete highlightedResult.urlHighlighted
-        }
-
         localResults.push({
-          ...highlightedResult,
+          ...result,
           // 0 intra chars are perfect score, 5 and more are 0 score.
           searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
           searchApproach: 'fuzzy',
