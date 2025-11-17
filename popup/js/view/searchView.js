@@ -29,8 +29,8 @@ export async function renderSearchResults() {
       return
     }
 
-    // Prepare for rendering - disable hover until results are fully rendered
-    ext.model.mouseHoverEnabled = false
+    // Prepare for rendering - reset mouse movement tracking
+    ext.model.mouseMoved = false
 
     // Cache configuration values for this render cycle
     const opts = ext.opts
@@ -174,8 +174,8 @@ export async function renderSearchResults() {
     // Set up event delegation for better performance (one-time setup)
     setupResultItemsEvents()
   } catch (err) {
-    // Re-enable mouse hover even if rendering fails to prevent permanent UI breakage
-    ext.model.mouseHoverEnabled = true
+    // Reset mouse movement tracking even if rendering fails to prevent permanent UI breakage
+    ext.model.mouseMoved = false
     printError(err, 'Failed to render search results')
     // Re-throw to allow caller to handle if needed
     throw err

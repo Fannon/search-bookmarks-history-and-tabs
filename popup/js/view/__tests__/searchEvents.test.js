@@ -96,7 +96,7 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
       result: copiedResults,
       tabs: tabEntries,
       searchTerm: 'query',
-      mouseHoverEnabled: true,
+      mouseMoved: false,
       currentItem: 0,
     },
     opts: {

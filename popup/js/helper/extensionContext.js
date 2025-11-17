@@ -40,6 +40,8 @@ export function createExtensionContext() {
       result: [],
       /** Tracks an in-flight search promise so navigation can await completion */
       activeSearchPromise: null,
+      /** Tracks whether the mouse has moved (prevents spurious hover selection on popup open) */
+      mouseMoved: false,
     },
     /** Search indexes (e.g., taxonomy for tags and folders) */
     index: {

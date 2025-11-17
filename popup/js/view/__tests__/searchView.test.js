@@ -77,7 +77,7 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
       result: copiedResults,
       tabs: tabEntries,
       searchTerm: 'query',
-      mouseHoverEnabled: true,
+      mouseMoved: false,
       currentItem: 0,
     },
     opts: {
@@ -312,7 +312,7 @@ describe('searchView renderSearchResults', () => {
 })
 
 describe('✅ FIXED: Mouse Hover State Fragility', () => {
-  it('now re-enables mouse hover even if rendering throws error', async () => {
+  it('now resets mouseMoved even if rendering throws error', async () => {
     // Use results without highlights so Mark.js will be called
     const resultsWithoutHighlights = [
       {
@@ -327,22 +327,25 @@ describe('✅ FIXED: Mouse Hover State Fragility', () => {
     const { module } = await setupSearchView({ results: resultsWithoutHighlights })
 
     // Verify initial state
-    expect(ext.model.mouseHoverEnabled).toBe(true)
+    expect(ext.model.mouseMoved).toBe(false)
+
+    // Set mouseMoved to true to simulate user interaction
+    ext.model.mouseMoved = true
 
     // Mock Mark to throw an error during rendering
     window.Mark = jest.fn(() => {
       throw new Error('Mark.js failed to load')
     })
 
-    // FIXED: Error handling now re-enables mouseHoverEnabled
+    // FIXED: Error handling now resets mouseMoved
     try {
       await module.renderSearchResults()
     } catch {
       // Error is expected
     }
 
-    // FIXED: mouseHoverEnabled is re-enabled in the error handler
-    expect(ext.model.mouseHoverEnabled).toBe(true)
+    // FIXED: mouseMoved is reset in the error handler
+    expect(ext.model.mouseMoved).toBe(false)
   })
 })
 
@@ -361,17 +364,20 @@ describe('✅ FIXED: Error Boundary Added', () => {
     ]
     const { module } = await setupSearchView({ results: resultsWithoutHighlights })
 
+    // Set mouseMoved to true to simulate user interaction
+    ext.model.mouseMoved = true
+
     // Mock a failure during rendering
     window.Mark = jest.fn(() => {
       throw new Error('Rendering catastrophe')
     })
 
-    // FIXED: Error handling now catches errors and re-enables mouseHover
+    // FIXED: Error handling now catches errors and resets mouseMoved
     // The error is still thrown to allow caller to handle, but state is restored
     await expect(module.renderSearchResults()).rejects.toThrow('Rendering catastrophe')
 
-    // FIXED: mouseHoverEnabled is properly restored even on error
-    expect(ext.model.mouseHoverEnabled).toBe(true)
+    // FIXED: mouseMoved is properly reset even on error
+    expect(ext.model.mouseMoved).toBe(false)
   })
 })
 
