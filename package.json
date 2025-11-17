@@ -7,7 +7,7 @@
   "dependencies": {
     "@leeoniya/ufuzzy": "^1.0.19",
     "@yaireo/tagify": "^4.35.5",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.1.1",
     "mark.js": "^8.11.1"
   },
   "devDependencies": {
