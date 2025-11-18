@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+## [v1.17.2]
+
 - **FIXED**: Hover selection no longer triggers when popup opens with cursor already over a result item
   - Previously, if the mouse cursor happened to be positioned where a result item would render when opening the popup, that item would be incorrectly selected instead of the top result
   - Now tracks actual mouse movement and only allows hover selection after the user moves their cursor
