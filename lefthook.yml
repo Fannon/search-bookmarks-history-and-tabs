@@ -2,8 +2,16 @@
 # https://github.com/evilmartians/lefthook
 
 pre-commit:
-  parallel: true
+  parallel: false
   commands:
+    # Prevent commits to main branch
+    no-main-commits:
+      run: |
+        if [ "$(git rev-parse --abbrev-ref HEAD)" = "main" ]; then
+          echo "❌ Direct commits to 'main' branch are not allowed!"
+          exit 1
+        fi
+
     # Lint and fix JavaScript files
     lint-js:
       glob: "*.{js,mjs}"
