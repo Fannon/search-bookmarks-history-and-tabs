@@ -153,7 +153,7 @@ export async function renderSearchResults() {
       if (shouldHighlight && searchTerm && searchTerm.trim() && window.Mark) {
         const mark = new window.Mark(resultListItem)
         mark.mark(searchTerm, {
-          exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
+          exclude: ['.last-visited', '.score', '.visit-counter', '.date-added', '.source-tab'],
         })
       }
 

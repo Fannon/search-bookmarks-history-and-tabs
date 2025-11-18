@@ -173,7 +173,7 @@ describe('searchView renderSearchResults', () => {
     expect(window.Mark).toHaveBeenCalledTimes(2)
     const firstMarkInstance = window.Mark.mock.results[0].value
     expect(firstMarkInstance.mark).toHaveBeenCalledWith('query', {
-      exclude: ['.last-visited', '.score', '.visit-counter', '.date-added'],
+      exclude: ['.last-visited', '.score', '.visit-counter', '.date-added', '.source-tab'],
     })
   })
 
