@@ -134,7 +134,7 @@ describe('searchWithAlgorithm', () => {
   test('returns empty list when below minimum length', async () => {
     ext.opts.searchMinMatchCharLength = 5
 
-    const results = await searchWithAlgorithm('precise', 'abc')
+    const results = await searchWithAlgorithm('precise', 'abc', 'all', ext.model, ext.opts)
 
     expect(results).toEqual([])
   })
@@ -149,7 +149,7 @@ describe('searchWithAlgorithm', () => {
       },
     ]
 
-    const results = await searchWithAlgorithm('precise', 'news', 'bookmarks')
+    const results = await searchWithAlgorithm('precise', 'news', 'bookmarks', ext.model, ext.opts)
 
     expect(results).toEqual([
       expect.objectContaining({
@@ -162,14 +162,16 @@ describe('searchWithAlgorithm', () => {
 
   test('delegates to fuzzy search', async () => {
     mockLoadScript.mockClear()
-    const results = await searchWithAlgorithm('fuzzy', 'tabs', 'tabs')
+    const results = await searchWithAlgorithm('fuzzy', 'tabs', 'tabs', ext.model, ext.opts)
 
     expect(results).toEqual([])
     expect(mockLoadScript).toHaveBeenCalledWith('./lib/uFuzzy.iife.min.js')
   })
 
   test('throws when search approach unsupported', async () => {
-    await expect(searchWithAlgorithm('unknown', 'test')).rejects.toThrow('Unknown search approach: unknown')
+    await expect(searchWithAlgorithm('unknown', 'test', 'all', ext.model, ext.opts)).rejects.toThrow(
+      'Unknown search approach: unknown',
+    )
   })
 })
 

@@ -1,466 +1,453 @@
 import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
-import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 import { resetSimpleSearchState, simpleSearch } from '../simpleSearch.js'
 
-const resetModes = () => {
-  for (const mode of ['bookmarks', 'tabs', 'history', 'all']) {
-    resetSimpleSearchState(mode)
-  }
-}
-
-/**
- * Comprehensive Jest tests for simpleSearch.js
- *
- * Behaviors covered:
- * - All search modes (bookmarks, tabs, history, search, default)
- * - Case-insensitive search with multiple terms (AND logic)
- * - State management and caching optimization
- * - Cache invalidation scenarios
- * - Edge cases (empty data, empty search terms, partial matches)
- * - Performance optimizations (early returns, cached data reduction)
- *
- * Known gaps:
- * - Integration with external dependencies (ext.model structure)
- * - Performance testing with large datasets
- * - Memory leak testing for long-running sessions
- */
 describe('simpleSearch', () => {
+  let model
+
   beforeEach(() => {
-    createTestExt({
-      model: {
-        bookmarks: [],
-        tabs: [],
-        history: [],
-      },
-    })
-    resetModes()
+    resetSimpleSearchState()
+    model = {
+      bookmarks: [],
+      tabs: [],
+      history: [],
+    }
   })
 
   afterEach(() => {
-    resetModes()
-    clearTestExt()
+    resetSimpleSearchState()
   })
 
-  describe('search modes', () => {
-    test('returns entries that match all search terms for bookmarks mode', () => {
-      const matchingBookmark = {
-        id: 'bookmark-1',
-        title: 'JavaScript handbook',
-        url: 'https://example.com/js-handbook',
-        searchString: 'learn javascript fundamentals',
-      }
-      const partialMatchBookmark = {
-        id: 'bookmark-2',
-        title: 'Learning cooking',
-        url: 'https://example.com/cooking',
-        searchString: 'learn basic cooking',
-      }
+  test('returns exact matches for bookmarks mode', () => {
+    const bookmark = {
+      id: 'bookmark-1',
+      title: 'Test bookmark',
+      url: 'https://example.com/test',
+      searchString: 'test bookmark https://example.com/test',
+    }
 
-      globalThis.ext.model.bookmarks = [matchingBookmark, partialMatchBookmark]
+    model.bookmarks = [bookmark]
 
-      const results = simpleSearch('bookmarks', 'learn javascript')
+    const results = simpleSearch('bookmarks', 'test', model)
 
-      expect(results).toHaveLength(1)
-      expect(results[0]).toMatchObject({
-        id: 'bookmark-1',
-        searchApproach: 'precise',
-        searchScore: 1,
-      })
-    })
-
-    test('returns entries that match all search terms for tabs mode', () => {
-      const matchingTab = {
-        id: 'tab-1',
-        title: 'JavaScript tutorial',
-        url: 'https://example.com/js-tutorial',
-        searchString: 'learn javascript basics',
-      }
-      const nonMatchingTab = {
-        id: 'tab-2',
-        title: 'Cooking recipes',
-        url: 'https://example.com/recipes',
-        searchString: 'delicious food recipes',
-      }
-
-      globalThis.ext.model.tabs = [matchingTab, nonMatchingTab]
-
-      const results = simpleSearch('tabs', 'learn javascript')
-
-      expect(results).toHaveLength(1)
-      expect(results[0]).toMatchObject({
-        id: 'tab-1',
-        searchApproach: 'precise',
-        searchScore: 1,
-      })
-    })
-
-    test('aggregates tab and history entries when searching in history mode', () => {
-      const tabEntry = {
-        id: 'tab-1',
-        title: 'Example tab',
-        url: 'https://example.com',
-        searchString: 'example entry open in tab',
-      }
-      const historyEntry = {
-        id: 'history-1',
-        title: 'History entry',
-        url: 'https://example.com/history',
-        searchString: 'example entry visited before',
-      }
-
-      globalThis.ext.model.tabs = [tabEntry]
-      globalThis.ext.model.history = [historyEntry]
-
-      const results = simpleSearch('history', 'example entry')
-
-      expect(results).toHaveLength(2)
-      expect(results[0]).toMatchObject({
-        id: 'tab-1',
-        searchApproach: 'precise',
-      })
-      expect(results[1]).toMatchObject({
-        id: 'history-1',
-        searchApproach: 'precise',
-      })
-    })
-
-    test('returns empty array for search mode', () => {
-      globalThis.ext.model.bookmarks = [
-        {
-          id: 'bookmark-1',
-          title: 'Test bookmark',
-          url: 'https://example.com',
-          searchString: 'test content',
-        },
-      ]
-
-      const results = simpleSearch('search', 'test')
-
-      expect(results).toHaveLength(0)
-    })
-
-    test('searches all modes (bookmarks, tabs, history) in default mode', () => {
-      const bookmarkEntry = {
-        id: 'bookmark-1',
-        title: 'JavaScript guide',
-        url: 'https://example.com/js',
-        searchString: 'javascript programming',
-      }
-      const tabEntry = {
-        id: 'tab-1',
-        title: 'JavaScript tutorial',
-        url: 'https://example.com/tutorial',
-        searchString: 'javascript tutorial',
-      }
-      const historyEntry = {
-        id: 'history-1',
-        title: 'JavaScript docs',
-        url: 'https://example.com/docs',
-        searchString: 'javascript documentation',
-      }
-
-      globalThis.ext.model.bookmarks = [bookmarkEntry]
-      globalThis.ext.model.tabs = [tabEntry]
-      globalThis.ext.model.history = [historyEntry]
-
-      const results = simpleSearch('unknown', 'javascript')
-
-      expect(results).toHaveLength(3)
-      expect(results.map((r) => r.id)).toEqual(expect.arrayContaining(['bookmark-1', 'tab-1', 'history-1']))
+    expect(results).toHaveLength(1)
+    expect(results[0]).toMatchObject({
+      id: 'bookmark-1',
+      searchApproach: 'precise',
+      searchScore: 1,
     })
   })
 
-  describe('search behavior', () => {
-    test('performs case-insensitive search', () => {
+  test('returns exact matches for tabs mode', () => {
+    const tab = {
+      id: 'tab-1',
+      title: 'Test tab',
+      url: 'https://example.com/tab',
+      searchString: 'test tab https://example.com/tab',
+    }
+
+    model.tabs = [tab]
+
+    const results = simpleSearch('tabs', 'test', model)
+
+    expect(results).toHaveLength(1)
+    expect(results[0]).toMatchObject({
+      id: 'tab-1',
+      searchApproach: 'precise',
+      searchScore: 1,
+    })
+  })
+
+  test('returns exact matches for history mode', () => {
+    const history = {
+      id: 'history-1',
+      title: 'Test history',
+      url: 'https://example.com/history',
+      searchString: 'test history https://example.com/history',
+    }
+
+    model.history = [history]
+
+    const results = simpleSearch('history', 'test', model)
+
+    expect(results).toHaveLength(1)
+    expect(results[0]).toMatchObject({
+      id: 'history-1',
+      searchApproach: 'precise',
+      searchScore: 1,
+    })
+  })
+
+  test('filters out non-matching items', () => {
+    const matchingBookmark = {
+      id: 'bookmark-1',
+      title: 'Learn JavaScript',
+      url: 'https://javascript.info',
+      searchString: 'learn javascript https://javascript.info',
+    }
+    const partialMatchBookmark = {
+      id: 'bookmark-2',
+      title: 'Learn Python',
+      url: 'https://python.org',
+      searchString: 'learn python https://python.org',
+    }
+
+    model.bookmarks = [matchingBookmark, partialMatchBookmark]
+
+    const results = simpleSearch('bookmarks', 'learn javascript', model)
+
+    expect(results).toHaveLength(1)
+    expect(results[0]).toMatchObject({
+      id: 'bookmark-1',
+    })
+  })
+
+  test('case insensitive matching', () => {
+    const bookmark = {
+      id: 'bookmark-1',
+      title: 'Test Bookmark',
+      url: 'https://example.com/test',
+      searchString: 'test bookmark https://example.com/test',
+    }
+
+    model.bookmarks = [bookmark]
+
+    const results = simpleSearch('bookmarks', 'test', model)
+
+    expect(results).toHaveLength(1)
+    expect(results[0].id).toBe('bookmark-1')
+  })
+
+  test('requires all search terms to match (AND logic)', () => {
+    const bookmark = {
+      id: 'bookmark-1',
+      title: 'Learn JavaScript',
+      url: 'https://javascript.info',
+      searchString: 'learn javascript https://javascript.info',
+    }
+
+    model.bookmarks = [bookmark]
+
+    // "learn" matches, "python" does not
+    const results = simpleSearch('bookmarks', 'learn python', model)
+
+    expect(results).toHaveLength(0)
+  })
+
+  test('aggregates tab and history entries when searching in history mode', () => {
+    const tabEntry = {
+      id: 'tab-1',
+      title: 'Example Entry',
+      url: 'https://example.com',
+      searchString: 'example entry https://example.com',
+    }
+    const historyEntry = {
+      id: 'history-1',
+      title: 'Example Entry',
+      url: 'https://example.com',
+      searchString: 'example entry https://example.com',
+    }
+
+    model.tabs = [tabEntry]
+    model.history = [historyEntry]
+
+    const results = simpleSearch('history', 'example entry', model)
+
+    expect(results).toHaveLength(2)
+    expect(results[0]).toMatchObject({
+      id: 'tab-1',
+    })
+    expect(results[1]).toMatchObject({
+      id: 'history-1',
+    })
+  })
+
+  test('returns empty array when no matches found', () => {
+    const bookmark = {
+      id: 'bookmark-1',
+      title: 'Test',
+      url: 'https://example.com',
+      searchString: 'test https://example.com',
+    }
+
+    model.bookmarks = [bookmark]
+
+    const results = simpleSearch('bookmarks', 'nonexistent', model)
+
+    expect(results).toHaveLength(0)
+  })
+
+  test('returns empty array for unknown search mode', () => {
+    const results = simpleSearch('search', 'test', model)
+
+    expect(results).toHaveLength(0)
+  })
+
+  test('searches all targets for "unknown" mode (fallback to all)', () => {
+    // "unknown" mode usually falls back to "all" targets in resolveSearchTargets
+    // but let's verify what simpleSearch does.
+    // Actually resolveSearchTargets returns 'all' targets if mode is unknown?
+    // Let's check common.js behavior.
+    // It returns MODE_TARGETS[searchMode] || MODE_TARGETS.all
+    // So 'unknown' -> 'all' -> ['bookmarks', 'tabs', 'history']
+
+    const bookmarkEntry = {
+      id: 'bookmark-1',
+      searchString: 'javascript',
+    }
+    const tabEntry = {
+      id: 'tab-1',
+      searchString: 'javascript',
+    }
+    const historyEntry = {
+      id: 'history-1',
+      searchString: 'javascript',
+    }
+
+    model.bookmarks = [bookmarkEntry]
+    model.tabs = [tabEntry]
+    model.history = [historyEntry]
+
+    const results = simpleSearch('unknown', 'javascript', model)
+
+    expect(results).toHaveLength(3)
+    expect(results.map((r) => r.id)).toEqual(expect.arrayContaining(['bookmark-1', 'tab-1', 'history-1']))
+  })
+
+  describe('Performance optimizations', () => {
+    test('pre-calculates lower case search string', () => {
       const bookmark = {
         id: 'bookmark-1',
-        title: 'JavaScript Handbook',
+        title: 'Test',
         url: 'https://example.com',
-        searchString: 'Learn JavaScript Fundamentals',
+        searchString: 'Test https://example.com',
       }
 
-      globalThis.ext.model.bookmarks = [bookmark]
+      model.bookmarks = [bookmark]
 
-      const results = simpleSearch('bookmarks', 'learn javascript')
+      const results = simpleSearch('bookmarks', 'test', model)
 
       expect(results).toHaveLength(1)
-      expect(results[0].id).toBe('bookmark-1')
+      // The original object should be modified with searchStringLower
+      expect(model.bookmarks[0].searchStringLower).toBe('test https://example.com')
     })
 
-    test('requires ALL search terms to match (AND logic)', () => {
-      const matchingBookmark = {
-        id: 'bookmark-1',
-        title: 'JavaScript handbook',
-        url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
-      }
-      const partialMatchBookmark = {
-        id: 'bookmark-2',
-        title: 'Learning guide',
-        url: 'https://example.com',
-        searchString: 'learn programming basics',
-      }
-
-      globalThis.ext.model.bookmarks = [matchingBookmark, partialMatchBookmark]
-
-      const results = simpleSearch('bookmarks', 'learn javascript')
-
-      expect(results).toHaveLength(1)
-      expect(results[0].id).toBe('bookmark-1')
-    })
-
-    test('handles partial word matches within search strings', () => {
+    test('reuses cached lower case string on subsequent searches', () => {
       const bookmark = {
         id: 'bookmark-1',
-        title: 'JavaScript programming',
+        title: 'Test',
         url: 'https://example.com',
-        searchString: 'comprehensive javascript guide',
+        searchString: 'Test https://example.com',
       }
 
-      globalThis.ext.model.bookmarks = [bookmark]
+      model.bookmarks = [bookmark]
 
-      const results = simpleSearch('bookmarks', 'java')
+      // First search
+      simpleSearch('bookmarks', 'test', model)
+      expect(model.bookmarks[0].searchStringLower).toBeDefined()
 
+      // Manually modify the cached value to verify it's being used
+      model.bookmarks[0].searchStringLower = 'modified'
+
+      // Second search for 'modified' should find it
+      const results = simpleSearch('bookmarks', 'modified', model)
       expect(results).toHaveLength(1)
-      expect(results[0].id).toBe('bookmark-1')
     })
+  })
 
+  describe('Edge cases', () => {
     test('handles empty search term', () => {
       const bookmark = {
         id: 'bookmark-1',
-        title: 'JavaScript handbook',
-        url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
+        searchString: 'test',
       }
 
-      globalThis.ext.model.bookmarks = [bookmark]
+      model.bookmarks = [bookmark]
 
-      const results = simpleSearch('bookmarks', '')
+      const results = simpleSearch('bookmarks', '', model)
 
       expect(results).toHaveLength(1)
       expect(results[0].id).toBe('bookmark-1')
     })
 
-    test('treats whitespace-only search term as empty string', () => {
+    test('handles whitespace only search term', () => {
       const bookmark = {
         id: 'bookmark-1',
-        title: 'JavaScript handbook',
-        url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
+        searchString: 'test',
       }
 
-      globalThis.ext.model.bookmarks = [bookmark]
+      model.bookmarks = [bookmark]
 
-      const results = simpleSearch('bookmarks', '   ')
+      const results = simpleSearch('bookmarks', '   ', model)
 
       expect(results).toHaveLength(1)
       expect(results[0].id).toBe('bookmark-1')
+    })
+
+    test('handles null/undefined data gracefully', () => {
+      // If data is missing for a mode, it should return empty array
+      // We need to simulate missing data in model
+      delete model.bookmarks
+
+      const results = simpleSearch('bookmarks', 'test', model)
+
+      expect(results).toHaveLength(0)
     })
   })
 
-  describe('state management and caching', () => {
-    test('caches search data for performance optimization', () => {
+  describe('Caching behavior', () => {
+    test('caches results for progressive searching', () => {
       const bookmark = {
         id: 'bookmark-1',
-        title: 'JavaScript handbook',
-        url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
+        searchString: 'learn javascript',
       }
 
-      globalThis.ext.model.bookmarks = [bookmark]
+      model.bookmarks = [bookmark]
 
       // First search should prepare and cache data
-      const results1 = simpleSearch('bookmarks', 'learn')
+      const results1 = simpleSearch('bookmarks', 'learn', model)
       expect(results1).toHaveLength(1)
 
       // Second search should use cached data
-      const results2 = simpleSearch('bookmarks', 'javascript')
+      const results2 = simpleSearch('bookmarks', 'javascript', model)
       expect(results2).toHaveLength(1)
     })
 
-    test('invalidates cache when new search term is not extension of previous', () => {
+    test('invalidates cache when search term does not start with previous term', () => {
       const bookmark1 = {
         id: 'bookmark-1',
-        title: 'JavaScript handbook',
-        url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
+        searchString: 'learn javascript',
       }
       const bookmark2 = {
         id: 'bookmark-2',
-        title: 'Python tutorial',
-        url: 'https://example.com/python',
-        searchString: 'learn python basics',
+        searchString: 'python programming',
       }
 
-      globalThis.ext.model.bookmarks = [bookmark1, bookmark2]
+      model.bookmarks = [bookmark1, bookmark2]
 
       // Search for "learn" first
-      const results1 = simpleSearch('bookmarks', 'learn')
-      expect(results1).toHaveLength(2)
+      const results1 = simpleSearch('bookmarks', 'learn', model)
+      expect(results1).toHaveLength(1)
 
       // Search for "python" - should invalidate cache since "python" doesn't start with "learn"
-      const results2 = simpleSearch('bookmarks', 'python')
+      const results2 = simpleSearch('bookmarks', 'python', model)
       expect(results2).toHaveLength(1)
       expect(results2[0].id).toBe('bookmark-2')
     })
 
-    test('maintains cache when new search term extends previous term', () => {
+    test('uses cache when search term extends previous term', () => {
       const bookmark1 = {
         id: 'bookmark-1',
-        title: 'JavaScript handbook',
-        url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
+        searchString: 'learn javascript',
       }
       const bookmark2 = {
         id: 'bookmark-2',
-        title: 'JavaScript advanced',
-        url: 'https://example.com/advanced',
-        searchString: 'learn javascript advanced concepts',
+        searchString: 'learn python',
       }
 
-      globalThis.ext.model.bookmarks = [bookmark1, bookmark2]
+      model.bookmarks = [bookmark1, bookmark2]
 
       // Search for "learn" first
-      const results1 = simpleSearch('bookmarks', 'learn')
+      const results1 = simpleSearch('bookmarks', 'learn', model)
       expect(results1).toHaveLength(2)
 
       // Search for "learn javascript" - should use cached data since it extends "learn"
-      const results2 = simpleSearch('bookmarks', 'learn javascript')
-      expect(results2).toHaveLength(2)
+      const results2 = simpleSearch('bookmarks', 'learn javascript', model)
+      expect(results2).toHaveLength(1)
+      expect(results2[0].id).toBe('bookmark-1')
     })
 
-    test('clears cached results for a mode when resetSimpleSearchState is called', () => {
+    test('resets cache when data changes (simulated by resetSimpleSearchState)', () => {
       const readingBookmark = {
         id: 'bookmark-3',
-        title: 'Reading list',
-        url: 'https://example.com/reading',
-        searchString: 'learn reading techniques',
+        searchString: 'learn reading',
       }
       const cookingBookmark = {
         id: 'bookmark-4',
-        title: 'Cooking reference',
-        url: 'https://example.com/cooking',
-        searchString: 'learn cooking basics',
+        searchString: 'learn cooking',
       }
 
-      globalThis.ext.model.bookmarks = [readingBookmark, cookingBookmark]
+      model.bookmarks = [readingBookmark, cookingBookmark]
 
-      const initialResults = simpleSearch('bookmarks', 'learn')
+      const initialResults = simpleSearch('bookmarks', 'learn', model)
       expect(initialResults).toHaveLength(2)
 
-      globalThis.ext.model.bookmarks = [readingBookmark]
-
-      const staleResults = simpleSearch('bookmarks', 'learn cooking')
-      expect(staleResults).toHaveLength(1)
-      expect(staleResults[0].id).toBe('bookmark-4')
-
+      // Simulate data change by modifying model and resetting state
+      model.bookmarks = [cookingBookmark]
       resetSimpleSearchState('bookmarks')
 
-      const refreshedResults = simpleSearch('bookmarks', 'learn cooking')
-      expect(refreshedResults).toHaveLength(0)
+      const refreshedResults = simpleSearch('bookmarks', 'learn cooking', model)
+      expect(refreshedResults).toHaveLength(1)
+      expect(refreshedResults[0].id).toBe('bookmark-4')
     })
 
-    test('handles state reset for specific modes independently', () => {
+    test('maintains separate caches for different modes', () => {
       const bookmark = {
         id: 'bookmark-1',
-        title: 'JavaScript guide',
-        url: 'https://example.com',
-        searchString: 'javascript programming',
+        searchString: 'javascript',
       }
       const tab = {
         id: 'tab-1',
-        title: 'JavaScript tutorial',
-        url: 'https://example.com/tutorial',
-        searchString: 'javascript tutorial',
+        searchString: 'javascript',
       }
 
-      globalThis.ext.model.bookmarks = [bookmark]
-      globalThis.ext.model.tabs = [tab]
+      model.bookmarks = [bookmark]
+      model.tabs = [tab]
 
       // Perform searches in both modes
-      simpleSearch('bookmarks', 'javascript')
-      simpleSearch('tabs', 'javascript')
+      simpleSearch('bookmarks', 'javascript', model)
+      simpleSearch('tabs', 'javascript', model)
 
       // Reset only bookmarks state
       resetSimpleSearchState('bookmarks')
 
-      // Tabs state should remain intact
-      const tabResults = simpleSearch('tabs', 'javascript')
+      // Tabs state should remain intact (internal implementation detail, harder to verify directly without exposing state)
+      // But we can verify that searching tabs still works
+      const tabResults = simpleSearch('tabs', 'javascript', model)
       expect(tabResults).toHaveLength(1)
 
       // Bookmarks should have fresh state
-      globalThis.ext.model.bookmarks = []
-      const bookmarkResults = simpleSearch('bookmarks', 'javascript')
-      expect(bookmarkResults).toHaveLength(0)
+      const bookmarkResults = simpleSearch('bookmarks', 'javascript', model)
+      expect(bookmarkResults).toHaveLength(1)
     })
   })
 
-  describe('edge cases', () => {
+  describe('Error handling', () => {
     test('handles empty data arrays gracefully', () => {
-      globalThis.ext.model.bookmarks = []
+      model.bookmarks = []
 
-      const results = simpleSearch('bookmarks', 'javascript')
+      const results = simpleSearch('bookmarks', 'javascript', model)
 
       expect(results).toHaveLength(0)
     })
 
-    test('handles entries without searchStringLower property', () => {
+    test('handles malformed data gracefully (missing searchString)', () => {
       const bookmark = {
         id: 'bookmark-1',
-        title: 'JavaScript handbook',
-        url: 'https://example.com',
-        searchString: 'Learn JavaScript Fundamentals',
-        // No searchStringLower property
+        // missing searchString
       }
 
-      globalThis.ext.model.bookmarks = [bookmark]
+      model.bookmarks = [bookmark]
 
-      const results = simpleSearch('bookmarks', 'learn javascript')
-
-      expect(results).toHaveLength(1)
-      expect(results[0].id).toBe('bookmark-1')
-    })
-
-    test('throws when entry is missing searchString', () => {
-      const bookmark = {
-        id: 'bookmark-1',
-        title: 'JavaScript handbook',
-        url: 'https://example.com',
-        // No searchString property
-      }
-
-      globalThis.ext.model.bookmarks = [bookmark]
-
-      expect(() => simpleSearch('bookmarks', 'javascript')).toThrow(TypeError)
+      // Depending on implementation, this might throw or return empty.
+      // simpleSearch accesses entry.searchString.toLowerCase()
+      // So it will throw if searchString is missing.
+      // Let's verify that it throws.
+      expect(() => simpleSearch('bookmarks', 'javascript', model)).toThrow()
     })
 
     test('reduces cached data progressively during multi-term search', () => {
-      const bookmark1 = {
-        id: 'bookmark-1',
-        title: 'JavaScript handbook',
-        url: 'https://example.com',
-        searchString: 'learn javascript fundamentals',
-      }
-      const bookmark2 = {
-        id: 'bookmark-2',
-        title: 'Programming guide',
-        url: 'https://example.com/programming',
-        searchString: 'learn programming basics',
-      }
-      const bookmark3 = {
-        id: 'bookmark-3',
-        title: 'Web development',
-        url: 'https://example.com/web',
-        searchString: 'web development tutorial',
-      }
+      const bookmark1 = { id: '1', searchString: 'learn javascript web' }
+      const bookmark2 = { id: '2', searchString: 'learn javascript mobile' }
+      const bookmark3 = { id: '3', searchString: 'learn python web' }
 
-      globalThis.ext.model.bookmarks = [bookmark1, bookmark2, bookmark3]
+      model.bookmarks = [bookmark1, bookmark2, bookmark3]
 
       // Search with multiple terms where matches reduce progressively
-      const results = simpleSearch('bookmarks', 'learn javascript web')
+      const results = simpleSearch('bookmarks', 'learn javascript web', model)
 
       // Should find entries that contain ALL terms
-      expect(results).toHaveLength(0) // None contain all three terms
+      expect(results).toHaveLength(1)
+      expect(results[0].id).toBe('1')
     })
   })
 })

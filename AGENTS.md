@@ -14,6 +14,7 @@
 - **Test**:
   - **Unit**: `npm run test` (runs all).
     - Single file: `npm run test path/to/file.test.js`
+    - Coverage report: `npm run test:unit:coverage`
   - **E2E**: `npm run test:e2e` (runs all).
     - Single file: `npm run test:e2e -- tests/spec.js`
 - **Quality**: `npm run lint` (Biome lint/format), `npm run size` (bundle size report).

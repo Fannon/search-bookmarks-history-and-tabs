@@ -43,7 +43,7 @@ export function resetFuzzySearchState(searchMode) {
  * @param {string} searchTerm - Query string.
  * @returns {Promise<Array<Object>>} Matching entries with fuzzy scores.
  */
-export async function fuzzySearch(searchMode, searchTerm) {
+export async function fuzzySearch(searchMode, searchTerm, data, options) {
   // Lazy load the uFuzzy library if not there already
   if (!window.uFuzzy) {
     try {
@@ -60,7 +60,7 @@ export async function fuzzySearch(searchMode, searchTerm) {
 
   const results = []
   for (const target of targets) {
-    results.push(...fuzzySearchWithScoring(searchTerm, target))
+    results.push(...fuzzySearchWithScoring(searchTerm, target, data[target], options))
   }
   return results
 }
@@ -72,10 +72,8 @@ export async function fuzzySearch(searchMode, searchTerm) {
  * @param {string} searchMode - Dataset key inside `ext.model`.
  * @returns {Array<Object>} Fuzzy search matches with scores.
  */
-function fuzzySearchWithScoring(searchTerm, searchMode) {
-  const data = ext.model[searchMode]
-
-  if (!data.length) {
+function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
+  if (!data || !data.length) {
     return [] // early return
   }
 
@@ -85,7 +83,6 @@ function fuzzySearchWithScoring(searchTerm, searchMode) {
 
   if (!state[searchMode]) {
     // Cache option values to avoid repeated property access
-    const opts = ext.opts
     const searchFuzzyness = opts.searchFuzzyness
 
     const options = {

@@ -30,6 +30,10 @@ const state = {}
 export function resetSimpleSearchState(searchMode) {
   if (searchMode) {
     state[searchMode] = undefined
+  } else {
+    for (const key in state) {
+      delete state[key]
+    }
   }
 }
 
@@ -55,19 +59,19 @@ function prepareSearchData(data) {
  * @param {string} searchTerm - Query string.
  * @returns {Array<Object>} Matching entries with `searchScore`.
  */
-export function simpleSearch(searchMode, searchTerm) {
+export function simpleSearch(searchMode, searchTerm, data) {
   const targets = resolveSearchTargets(searchMode)
   if (!targets.length) {
     return [] // nothing, because search will be added later
   }
 
   if (targets.length === 1) {
-    return simpleSearchWithScoring(searchTerm, targets[0])
+    return simpleSearchWithScoring(searchTerm, targets[0], data[targets[0]])
   }
 
   const results = []
   for (const target of targets) {
-    results.push(...simpleSearchWithScoring(searchTerm, target))
+    results.push(...simpleSearchWithScoring(searchTerm, target, data[target]))
   }
   return results
 }
@@ -77,11 +81,11 @@ export function simpleSearch(searchMode, searchTerm) {
  *
  * @param {string} searchTerm - Query string.
  * @param {string} searchMode - Dataset key inside `ext.model`.
+ * @param {Array<Object>} data - The dataset to search.
  * @returns {Array<Object>} Filtered entries with `searchScore: 1`.
  */
-function simpleSearchWithScoring(searchTerm, searchMode) {
-  const data = ext.model[searchMode]
-  if (!data.length) {
+function simpleSearchWithScoring(searchTerm, searchMode, data) {
+  if (!data || !data.length) {
     return [] // early return -> no data to search
   }
 
