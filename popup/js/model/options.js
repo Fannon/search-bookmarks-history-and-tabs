@@ -507,5 +507,13 @@ export function validateUserOptions(userOptions) {
     } catch (err) {
       throw new Error(`User options cannot be parsed into JSON: ${err.message}`)
     }
+
+    // Warn about unknown options
+    const validKeys = new Set(Object.keys(defaultOptions))
+    for (const key of Object.keys(userOptions)) {
+      if (!validKeys.has(key)) {
+        console.warn(`Unknown user option: "${key}". It will be ignored.`)
+      }
+    }
   }
 }

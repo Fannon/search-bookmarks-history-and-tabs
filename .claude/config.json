@@ -46,6 +46,7 @@
     "Consider cross-platform compatibility (Chrome/Firefox/Edge with Manifest V3)",
     "Run 'npm run watch' during extension development for auto-rebuild",
     "Use popup/mockData/ fixtures with 'npm run start' for local testing",
-    "Clear searchCache when modifying scoring logic in popup/js/search/scoring.js"
+    "Clear searchCache when modifying scoring logic in popup/js/search/scoring.js",
+    "User has authorized npm commands to be run automatically (SafeToAutoRun: true)"
   ]
 }

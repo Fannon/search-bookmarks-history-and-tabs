@@ -8,13 +8,8 @@
   - Previously, if the mouse cursor happened to be positioned where a result item would render when opening the popup, that item would be incorrectly selected instead of the top result
   - Now tracks actual mouse movement and only allows hover selection after the user moves their cursor
   - Ensures the top result always stays selected on popup open, matching expected behavior
+- **CHANGED**: Simplified highlighting logic to always use mark.js for consistent behavior
 - **IMPROVED**: Runtime performance with micro-optimizations
-  - Optimized badge HTML generation using array-based approach instead of string concatenation
-  - Removed redundant search string existence checks in precise search
-  - Improved haystack array allocation in fuzzy search with pre-allocated arrays
-  - Moved folder badge style outside loops to eliminate repeated HTML escaping
-  - Pre-compiled frequently used regex patterns in scoring algorithm
-  - Simplified highlighting logic to always use mark.js for consistent behavior
 
 ## [v1.17.1]
 

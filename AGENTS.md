@@ -63,9 +63,11 @@
 - Reference related issues, include context, and attach screenshots or GIFs for visual changes.
 - Run lint, Jest, and Playwright locally before opening or updating a PR.
 - Always run `npm run lint` and `npm run test:unit` before committing code.
+- Use the `gh` CLI to view and create pull requests: `gh pr create`. It is already authenticated.
 
 ## Security & Configuration Tips
 
 - Use Node.js 18 LTS or newer; the build system depends on modern ESM support.
 - Review `bin/` scripts before running them; many assume a Unix-like shell environment.
 - Keep manifests up to date via `npm run build:update-manifests` to avoid browser permission drift.
+- **Approved Commands**: The user has explicitly authorized `npm` commands to be run automatically (SafeToAutoRun: true) when appropriate (e.g. tests, builds, linting).
