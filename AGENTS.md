@@ -1,8 +1,11 @@
 # Repository Guidelines
 
 ## Structure
-- `popup/`: Source (`js/`, `css/`, `img/`). Entry points: `init*.js`. Shared: `helper/`, `model/`, `search/`, `view/`.
-- `dist/`: Build artifacts. `bin/`: Automation scripts.
+- `popup/`: Source root.
+  - `lib/`: **Vendored third-party scripts** (checked in).
+  - `mockData/`: Reusable fixtures.
+  - `js/`: Logic. Entry: `init*.js`. Shared: `helper/`, `model/`, `search/`, `view/`.
+- `dist/`: Build artifacts. `bin/`: Automation scripts. `images/`: Marketing assets.
 - `playwright/`: E2E tests. `__tests__/`: Unit tests (co-located).
 
 ## Commands
