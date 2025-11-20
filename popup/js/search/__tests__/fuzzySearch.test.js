@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
-import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 import { fuzzySearch, resetFuzzySearchState } from '../fuzzySearch.js'
 
 const delimiter = '\u00A6'
@@ -112,6 +111,9 @@ const resetModes = () => {
 }
 
 describe('fuzzySearch', () => {
+  let model
+  let opts
+
   beforeEach(async () => {
     // Set up DOM environment for tests
     if (typeof document === 'undefined') {
@@ -164,17 +166,15 @@ describe('fuzzySearch', () => {
     resetModes()
     TrackedUFuzzy.reset()
 
-    createTestExt({
-      model: {
-        bookmarks: [],
-        tabs: [],
-        history: [],
-      },
-      opts: {
-        searchFuzzyness: 0.3,
-        uFuzzyOptions: null,
-      },
-    })
+    model = {
+      bookmarks: [],
+      tabs: [],
+      history: [],
+    }
+    opts = {
+      searchFuzzyness: 0.3,
+      uFuzzyOptions: null,
+    }
 
     window.uFuzzy = TrackedUFuzzy
     globalThis.uFuzzy = TrackedUFuzzy
@@ -185,16 +185,10 @@ describe('fuzzySearch', () => {
     TrackedUFuzzy.reset()
     window.uFuzzy = originalUFuzzy
     globalThis.uFuzzy = originalUFuzzy
-    clearTestExt()
   })
 
   it('returns fuzzy results for bookmarks mode and populates highlight and score', async () => {
-    // Reset all model data to ensure clean state
-    ext.model.bookmarks = []
-    ext.model.tabs = []
-    ext.model.history = []
-
-    ext.model.bookmarks = [
+    model.bookmarks = [
       {
         id: 'bookmark-1',
         title: 'Term bookmark',
@@ -203,7 +197,7 @@ describe('fuzzySearch', () => {
       },
     ]
 
-    const results = await fuzzySearch('bookmarks', 'term')
+    const results = await fuzzySearch('bookmarks', 'term', model, opts)
 
     expect(results).toHaveLength(1)
     expect(results[0]).toMatchObject({
@@ -215,16 +209,7 @@ describe('fuzzySearch', () => {
   })
 
   it('aggregates tab and history entries when searching in history mode', async () => {
-    // Complete reset of all state before this test
-    resetModes()
-    TrackedUFuzzy.reset()
-
-    // Reset all model data to ensure clean state
-    ext.model.bookmarks = []
-    ext.model.tabs = []
-    ext.model.history = []
-
-    ext.model.tabs = [
+    model.tabs = [
       {
         id: 'tab-1',
         title: 'Term tab',
@@ -232,7 +217,7 @@ describe('fuzzySearch', () => {
         searchString: `term tab entry${delimiter}https://example.com/term-tab`,
       },
     ]
-    ext.model.history = [
+    model.history = [
       {
         id: 'history-1',
         title: 'Term history',
@@ -241,7 +226,7 @@ describe('fuzzySearch', () => {
       },
     ]
 
-    const results = await fuzzySearch('history', 'term')
+    const results = await fuzzySearch('history', 'term', model, opts)
 
     expect(results).toHaveLength(2)
     expect(results[0].id).toBe('tab-1')
@@ -250,7 +235,7 @@ describe('fuzzySearch', () => {
   })
 
   it('reuses cached state until resetFuzzySearchState is called', async () => {
-    ext.model.bookmarks = [
+    model.bookmarks = [
       {
         id: 'bookmark-cache',
         title: 'Cached term',
@@ -259,28 +244,28 @@ describe('fuzzySearch', () => {
       },
     ]
 
-    await fuzzySearch('bookmarks', 'cached')
+    await fuzzySearch('bookmarks', 'cached', model, opts)
     const initialInstances = TrackedUFuzzy.getInstances().length
     expect(initialInstances).toBeGreaterThan(0)
 
-    await fuzzySearch('bookmarks', 'cached term')
+    await fuzzySearch('bookmarks', 'cached term', model, opts)
     // Should reuse cached state, but real uFuzzy may create additional instances
     const afterSecondCall = TrackedUFuzzy.getInstances().length
     expect(afterSecondCall).toBeGreaterThanOrEqual(initialInstances)
 
     resetFuzzySearchState('bookmarks')
 
-    await fuzzySearch('bookmarks', 'cached term')
+    await fuzzySearch('bookmarks', 'cached term', model, opts)
     // After reset, should create new instances
     const afterReset = TrackedUFuzzy.getInstances().length
     expect(afterReset).toBeGreaterThan(afterSecondCall)
   })
 
   it('applies non-ASCII specific options when fuzzyness is high', async () => {
-    ext.opts.searchFuzzyness = 0.85
-    ext.opts.uFuzzyOptions = { extra: 'option' }
+    opts.searchFuzzyness = 0.85
+    opts.uFuzzyOptions = { extra: 'option' }
 
-    ext.model.bookmarks = [
+    model.bookmarks = [
       {
         id: 'bookmark-warm',
         title: 'Warm entry',
@@ -289,7 +274,7 @@ describe('fuzzySearch', () => {
       },
     ]
 
-    await fuzzySearch('bookmarks', 'warm')
+    await fuzzySearch('bookmarks', 'warm', model, opts)
     const instancesAfterWarm = TrackedUFuzzy.getInstances()
     expect(instancesAfterWarm.length).toBeGreaterThan(0)
 
@@ -302,7 +287,7 @@ describe('fuzzySearch', () => {
     })
     expect(topLevelInstance.options.interSplit).toBeUndefined()
 
-    ext.model.bookmarks = [
+    model.bookmarks = [
       {
         id: 'bookmark-cjk',
         title: `${cjkTerm} entry`,
@@ -311,7 +296,7 @@ describe('fuzzySearch', () => {
       },
     ]
 
-    await fuzzySearch('bookmarks', cjkTerm)
+    await fuzzySearch('bookmarks', cjkTerm, model, opts)
 
     const instancesAfterCJK = TrackedUFuzzy.getInstances()
     // Real uFuzzy may reuse instances, so just check that we have instances
@@ -334,7 +319,7 @@ describe('fuzzySearch', () => {
   })
 
   it('handles empty search results gracefully', async () => {
-    ext.model.bookmarks = [
+    model.bookmarks = [
       {
         id: 'bookmark-1',
         title: 'Different title',
@@ -343,15 +328,15 @@ describe('fuzzySearch', () => {
       },
     ]
 
-    const results = await fuzzySearch('bookmarks', 'nonexistent')
+    const results = await fuzzySearch('bookmarks', 'nonexistent', model, opts)
 
     expect(results).toHaveLength(0)
   })
 
   it('handles empty data arrays gracefully', async () => {
-    ext.model.bookmarks = []
+    model.bookmarks = []
 
-    const results = await fuzzySearch('bookmarks', 'term')
+    const results = await fuzzySearch('bookmarks', 'term', model, opts)
 
     expect(results).toHaveLength(0)
   })
@@ -368,7 +353,7 @@ describe('fuzzySearch', () => {
       writable: true,
     })
 
-    ext.model.bookmarks = [
+    model.bookmarks = [
       {
         id: 'bookmark-malformed',
         title: 'Valid title',
@@ -378,14 +363,14 @@ describe('fuzzySearch', () => {
     ]
 
     // Should not throw an error even with malformed data
-    const results = await fuzzySearch('bookmarks', 'valid')
+    const results = await fuzzySearch('bookmarks', 'valid', model, opts)
 
     expect(Array.isArray(results)).toBe(true)
     expect(results.length).toBeGreaterThanOrEqual(0)
   })
 
   it('handles empty search terms gracefully', async () => {
-    ext.model.bookmarks = [
+    model.bookmarks = [
       {
         id: 'bookmark-1',
         title: 'Test bookmark',
@@ -394,13 +379,13 @@ describe('fuzzySearch', () => {
       },
     ]
 
-    const results = await fuzzySearch('bookmarks', '')
+    const results = await fuzzySearch('bookmarks', '', model, opts)
 
     expect(results).toHaveLength(0)
   })
 
   it('handles whitespace-only search terms gracefully', async () => {
-    ext.model.bookmarks = [
+    model.bookmarks = [
       {
         id: 'bookmark-1',
         title: 'Test bookmark',
@@ -409,13 +394,13 @@ describe('fuzzySearch', () => {
       },
     ]
 
-    const results = await fuzzySearch('bookmarks', '   ')
+    const results = await fuzzySearch('bookmarks', '   ', model, opts)
 
     expect(results).toHaveLength(0)
   })
 
   it('handles special characters in search terms', async () => {
-    ext.model.bookmarks = [
+    model.bookmarks = [
       {
         id: 'bookmark-special',
         title: 'GitHub repo',
@@ -424,14 +409,14 @@ describe('fuzzySearch', () => {
       },
     ]
 
-    const results = await fuzzySearch('bookmarks', 'github.com')
+    const results = await fuzzySearch('bookmarks', 'github.com', model, opts)
 
     expect(results).toHaveLength(1)
     expect(results[0].id).toBe('bookmark-special')
   })
 
   it('handles multiple search terms correctly', async () => {
-    ext.model.bookmarks = [
+    model.bookmarks = [
       {
         id: 'bookmark-1',
         title: 'JavaScript framework',
@@ -446,7 +431,7 @@ describe('fuzzySearch', () => {
       },
     ]
 
-    const results = await fuzzySearch('bookmarks', 'javascript python')
+    const results = await fuzzySearch('bookmarks', 'javascript python', model, opts)
 
     // Should handle multiple terms (implementation detail, but tests the interface)
     expect(Array.isArray(results)).toBe(true)
@@ -454,7 +439,7 @@ describe('fuzzySearch', () => {
   })
 
   it('handles search mode switching correctly', async () => {
-    ext.model.bookmarks = [
+    model.bookmarks = [
       {
         id: 'bookmark-1',
         title: 'Test bookmark',
@@ -462,7 +447,7 @@ describe('fuzzySearch', () => {
         searchString: `test bookmark${delimiter}https://example.com/bookmark`,
       },
     ]
-    ext.model.tabs = [
+    model.tabs = [
       {
         id: 'tab-1',
         title: 'Test tab',
@@ -471,8 +456,8 @@ describe('fuzzySearch', () => {
       },
     ]
 
-    const bookmarkResults = await fuzzySearch('bookmarks', 'test')
-    const tabResults = await fuzzySearch('tabs', 'test')
+    const bookmarkResults = await fuzzySearch('bookmarks', 'test', model, opts)
+    const tabResults = await fuzzySearch('tabs', 'test', model, opts)
 
     expect(bookmarkResults).toHaveLength(1)
     expect(bookmarkResults[0].id).toBe('bookmark-1')
@@ -481,7 +466,7 @@ describe('fuzzySearch', () => {
   })
 
   it('does not mutate cached entries when creating results', async () => {
-    ext.model.bookmarks = [
+    model.bookmarks = [
       {
         id: 'bookmark-highlight',
         title: 'Highlight persistence test',
@@ -490,20 +475,20 @@ describe('fuzzySearch', () => {
       },
     ]
 
-    const firstResults = await fuzzySearch('bookmarks', 'highlight')
+    const firstResults = await fuzzySearch('bookmarks', 'highlight', model, opts)
 
     expect(firstResults).toHaveLength(1)
     const firstResult = firstResults[0]
     // Verify fuzzy search creates a copy of the entry, not mutating the original
-    expect(firstResult).not.toBe(ext.model.bookmarks[0])
+    expect(firstResult).not.toBe(model.bookmarks[0])
     expect(firstResult.searchScore).toBeDefined()
     expect(firstResult.searchApproach).toBe('fuzzy')
 
-    const secondResults = await fuzzySearch('bookmarks', 'highlight')
+    const secondResults = await fuzzySearch('bookmarks', 'highlight', model, opts)
 
     // Verify original model entry remains unchanged
-    expect(secondResults[0]).not.toBe(ext.model.bookmarks[0])
-    expect(ext.model.bookmarks[0].searchScore).toBeUndefined()
-    expect(ext.model.bookmarks[0].searchApproach).toBeUndefined()
+    expect(secondResults[0]).not.toBe(model.bookmarks[0])
+    expect(model.bookmarks[0].searchScore).toBeUndefined()
+    expect(model.bookmarks[0].searchApproach).toBeUndefined()
   })
 })

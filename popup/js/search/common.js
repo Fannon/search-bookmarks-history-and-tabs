@@ -130,21 +130,21 @@ async function handleEmptySearch() {
  * @param {string} searchMode - Active search mode.
  * @returns {Promise<Array>} Search results.
  */
-async function executeSearch(searchTerm, searchMode) {
+export async function executeSearch(searchTerm, searchMode, data, options) {
   const results = []
 
   if (searchMode === 'tags') {
-    return searchTaxonomy(searchTerm, 'tags', ext.model.bookmarks)
+    return searchTaxonomy(searchTerm, 'tags', data.bookmarks)
   } else if (searchMode === 'folders') {
-    return searchTaxonomy(searchTerm, 'folder', ext.model.bookmarks)
-  } else if (ext.opts.searchStrategy === 'fuzzy') {
-    results.push(...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode)))
-  } else if (ext.opts.searchStrategy === 'precise') {
-    results.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
+    return searchTaxonomy(searchTerm, 'folder', data.bookmarks)
+  } else if (options.searchStrategy === 'fuzzy') {
+    results.push(...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode, data, options)))
+  } else if (options.searchStrategy === 'precise') {
+    results.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode, data, options)))
   } else {
-    console.error(`Unsupported option "search.approach" value: "${ext.opts.searchStrategy}"`)
+    console.error(`Unsupported option "search.approach" value: "${options.searchStrategy}"`)
     // Fall back to use precise search instead of crashing entirely
-    results.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode)))
+    results.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode, data, options)))
   }
 
   return results
@@ -279,7 +279,7 @@ export async function search(event) {
       // Execute search if we have a search term after mode prefix is stripped
       // Note: searchTerm can become empty after resolveSearchMode() strips mode prefix (e.g., "t ", "b ")
       if (searchTerm) {
-        results.push(...(await executeSearch(searchTerm, searchMode)))
+        results.push(...(await executeSearch(searchTerm, searchMode, ext.model, ext.opts)))
         addDirectUrlIfApplicable(searchTerm, results)
 
         // Add search engine result items
@@ -331,17 +331,17 @@ export async function search(event) {
  * @param {string} [searchMode='all'] - Active search mode.
  * @returns {Promise<Array>} Matching entries across requested datasets.
  */
-export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode = 'all') {
+export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode = 'all', data, options) {
   let results = []
   // If the search term is below minMatchCharLength, no point in starting search
-  if (searchTerm.length < ext.opts.searchMinMatchCharLength) {
+  if (searchTerm.length < options.searchMinMatchCharLength) {
     return results
   }
 
   if (searchApproach === 'precise') {
-    results = simpleSearch(searchMode, searchTerm)
+    results = simpleSearch(searchMode, searchTerm, data)
   } else if (searchApproach === 'fuzzy') {
-    results = await fuzzySearch(searchMode, searchTerm)
+    results = await fuzzySearch(searchMode, searchTerm, data, options)
   } else {
     throw new Error(`Unknown search approach: ${searchApproach}`)
   }
