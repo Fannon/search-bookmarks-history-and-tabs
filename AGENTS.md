@@ -64,6 +64,7 @@
 - Run lint, Jest, and Playwright locally before opening or updating a PR.
 - Always run `npm run lint` and `npm run test:unit` before committing code.
 - Use the `gh` CLI to view and create pull requests: `gh pr create`. It is already authenticated.
+- **NEVER push directly to `main`**. Always create an appropriately named feature branch before committing changes.
 
 ## Security & Configuration Tips
 
