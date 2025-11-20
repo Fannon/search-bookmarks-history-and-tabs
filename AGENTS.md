@@ -8,12 +8,18 @@
 ## Commands
 - **Build**: `npm run build` (prod), `npm run watch` (dev), `npm run clean`.
 - **Run**: `npm run start` (mock UI), `npm run start:dist` (preview built extension).
+- **Test**:
+  - **Unit**: `npm run test` (runs all).
+    - Single file: `npm run test path/to/file.test.js`
+  - **E2E**: `npm run test:e2e` (runs all).
+    - Single file: `npm run test:e2e -- tests/spec.js`
+- **Quality**: `npm run lint` (Biome lint/format), `npm run size` (bundle size report).
 
 ## Standards
 - **Code**: Modern ESM, "vanilla JS" style. Follow `biome.json` (2 spaces, single quotes).
 - **Naming**: Feature-based (`searchResultsView.js`).
 - **Docs**: `@file` header for modules. JSDoc for exports. Concise inline comments.
-- **Security**: Node 24+. Update manifests via `npm run build:update-manifests`.
+- **Security**: Node 24+.
 
 ## Security & Configuration Tips
 
