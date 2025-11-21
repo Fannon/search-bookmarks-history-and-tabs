@@ -17,7 +17,7 @@ export const browserApi = window.chrome || window.browser || {}
  * Retrieve browser tabs with optional query filters while respecting user options.
  *
  * @param {Object} [queryOptions={}] - Filters passed to the tabs API.
- * @returns {Promise<Array>} Tab objects, excluding extension URLs.
+ * @returns {Promise<Array>} Tab objects, including all valid URLs.
  */
 export async function getBrowserTabs(queryOptions = {}) {
   if (ext.opts.tabsOnlyCurrentWindow) {
@@ -26,10 +26,7 @@ export async function getBrowserTabs(queryOptions = {}) {
   if (browserApi.tabs) {
     return (await browserApi.tabs.query(queryOptions)).filter((el) => {
       const url = typeof el?.url === 'string' ? el.url : ''
-      if (!url.trim()) {
-        return false
-      }
-      return !url.includes('extension://')
+      return !!url.trim()
     })
   } else {
     console.warn(`No browser tab API found. Returning no results.`)
