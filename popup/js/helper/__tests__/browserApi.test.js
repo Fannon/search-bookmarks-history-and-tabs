@@ -28,12 +28,13 @@ afterEach(() => {
 })
 
 describe('getBrowserTabs', () => {
-  it('filters out extension URLs and entries missing a usable url', async () => {
+  it('filters out entries missing a usable url but includes all other URLs including extension URLs', async () => {
     const queryMock = jest.fn().mockResolvedValue([
       { id: 1, title: 'Internal tab' },
       { id: 2, url: '', title: 'Empty url' },
       { id: 3, url: 'chrome-extension://abcdef', title: 'Extension page' },
       { id: 4, url: 'https://example.com', title: 'Example' },
+      { id: 5, url: 'moz-extension://xyz', title: 'Firefox extension' },
     ])
 
     browserApi.tabs = { query: queryMock }
@@ -41,8 +42,10 @@ describe('getBrowserTabs', () => {
     const result = await getBrowserTabs()
 
     expect(queryMock).toHaveBeenCalledWith({})
-    expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject({ id: 4, url: 'https://example.com' })
+    expect(result).toHaveLength(3)
+    expect(result[0]).toMatchObject({ id: 3, url: 'chrome-extension://abcdef' })
+    expect(result[1]).toMatchObject({ id: 4, url: 'https://example.com' })
+    expect(result[2]).toMatchObject({ id: 5, url: 'moz-extension://xyz' })
   })
 })
 
