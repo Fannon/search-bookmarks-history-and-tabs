@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+- **CHANGED**: The tab search now also includes tabs owned by browser extensions
+
 ## [v1.17.2]
 
 - **FIXED**: Hover selection no longer triggers when popup opens with cursor already over a result item
