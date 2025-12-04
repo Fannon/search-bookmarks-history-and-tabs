@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { createWriteStream } from 'node:fs'
 import { join } from 'node:path'
+import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 import archiver from 'archiver'
 /**
  * @file Builds the Chrome-ready distribution directory and archive.
@@ -42,7 +44,7 @@ export async function createDist(clean = true) {
   await modifyHtmlFile('dist/chrome/popup/editBookmark.html')
 
   // Remove mock data and test artifacts
-  await fs.remove('dist/chrome/popup/mockData')
+  await fs.rm('dist/chrome/popup/mockData', { recursive: true, force: true })
 
   await removeBundledJs('dist/chrome/popup/js')
   await removeBundledCss('dist/chrome/popup/css')
@@ -69,11 +71,13 @@ export async function createDist(clean = true) {
   })
 }
 
-createDist().catch((error) => {
-  console.error('Failed to create distribution')
-  console.error(error)
-  process.exit(1)
-})
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  createDist().catch((error) => {
+    console.error('Failed to create distribution')
+    console.error(error)
+    process.exit(1)
+  })
+}
 
 /**
  * Recursively delete non-bundled JavaScript files beneath a directory.
