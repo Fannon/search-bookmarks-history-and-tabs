@@ -9,6 +9,7 @@
  */
 
 import { dirname, resolve } from 'node:path'
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { build } from 'esbuild'
 
@@ -115,8 +116,10 @@ export async function bundleAll() {
   }
 }
 
-bundleAll().catch((error) => {
-  console.error('Failed to bundle popup entrypoints')
-  console.error(error)
-  process.exit(1)
-})
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  bundleAll().catch((error) => {
+    console.error('Failed to bundle popup entrypoints')
+    console.error(error)
+    process.exit(1)
+  })
+}
