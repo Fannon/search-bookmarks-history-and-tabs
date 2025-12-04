@@ -119,37 +119,29 @@ export function calculateFinalScore(results, searchTerm) {
     score = score * searchScoreMultiplier
 
     if (hasSearchTerm) {
-      // Pre-compute all normalized field values once for case-insensitive matching
-      const normalized = {
-        title: el.title?.toLowerCase().trim() || null,
-        url: el.url?.toLowerCase() || null,
-        tags: el.tags?.toLowerCase() || null,
-        folder: el.folder?.toLowerCase() || null,
-        tagValues: el.tagsArray?.map((tag) => tag.toLowerCase()) || [],
-        folderValues: el.folderArray?.map((folder) => folder.toLowerCase()) || [],
-      }
-
       // STEP 3A: Exact match bonuses
       // Award bonus if title/URL starts with the exact search term
+      const normalizedTitle = el.title?.toLowerCase().trim()
+      const normalizedUrl = el.url?.toLowerCase()
+
       if (scoreExactStartsWithBonus) {
-        if (normalized.title?.startsWith(normalizedSearchTerm)) {
+        if (normalizedTitle?.startsWith(normalizedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreTitleWeight
-        } else if (normalized.url?.startsWith(hyphenatedSearchTerm)) {
+        } else if (normalizedUrl?.startsWith(hyphenatedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreUrlWeight
         }
       }
 
       // Award bonus if title exactly equals the search term
-      if (scoreExactEqualsBonus && normalized.title === normalizedSearchTerm) {
+      if (scoreExactEqualsBonus && normalizedTitle === normalizedSearchTerm) {
         score += scoreExactEqualsBonus * scoreTitleWeight
       }
 
       // Award bonus for each exact tag name match
       // Example: searching "react hooks" matches tags "#react" and "#hooks"
       if (scoreExactTagMatchBonus && el.tags && tagTerms.length) {
-        const tagSet = new Set(normalized.tagValues)
         for (const searchTag of tagTerms) {
-          if (searchTag && tagSet.has(searchTag)) {
+          if (searchTag && el.tagsArray?.some((tag) => tag.toLowerCase() === searchTag)) {
             score += scoreExactTagMatchBonus
           }
         }
@@ -158,9 +150,8 @@ export function calculateFinalScore(results, searchTerm) {
       // Award bonus for each exact folder name match
       // Example: searching "work projects" matches folders "~Work" and "~Projects"
       if (scoreExactFolderMatchBonus && el.folder && folderTerms.length) {
-        const folderSet = new Set(normalized.folderValues)
         for (const searchFolder of folderTerms) {
-          if (searchFolder && folderSet.has(searchFolder)) {
+          if (searchFolder && el.folderArray?.some((folder) => folder.toLowerCase() === searchFolder)) {
             score += scoreExactFolderMatchBonus
           }
         }
@@ -172,6 +163,10 @@ export function calculateFinalScore(results, searchTerm) {
       if (canCheckIncludes) {
         let includesBonusesAwarded = 0
 
+        // Lazy compute these only if needed for includes check
+        const normalizedTags = el.tags?.toLowerCase()
+        const normalizedFolder = el.folder?.toLowerCase()
+
         for (const term of includeTerms) {
           if (includesBonusesAwarded >= includesBonusCap) {
             break
@@ -181,16 +176,16 @@ export function calculateFinalScore(results, searchTerm) {
           const normalizedUrlTerm = term.replace(WHITESPACE_REGEX, '-')
 
           // Check fields in priority order - first match wins
-          if (normalized.title?.includes(term)) {
+          if (normalizedTitle?.includes(term)) {
             score += scoreExactIncludesBonus * scoreTitleWeight
             includesBonusesAwarded++
-          } else if (normalized.url?.includes(normalizedUrlTerm)) {
+          } else if (normalizedUrl?.includes(normalizedUrlTerm)) {
             score += scoreExactIncludesBonus * scoreUrlWeight
             includesBonusesAwarded++
-          } else if (normalized.tags?.includes(term)) {
+          } else if (normalizedTags?.includes(term)) {
             score += scoreExactIncludesBonus * scoreTagWeight
             includesBonusesAwarded++
-          } else if (normalized.folder?.includes(term)) {
+          } else if (normalizedFolder?.includes(term)) {
             score += scoreExactIncludesBonus * scoreFolderWeight
             includesBonusesAwarded++
           }
@@ -200,11 +195,11 @@ export function calculateFinalScore(results, searchTerm) {
       // Award bonus for full phrase match (multi-word searches only)
       // Single-word searches already get includes/exact bonuses, so phrase bonus is redundant
       if (rawSearchTermParts.length > 1) {
-        if (scoreExactPhraseTitleBonus && normalized.title?.includes(normalizedSearchTerm)) {
+        if (scoreExactPhraseTitleBonus && normalizedTitle?.includes(normalizedSearchTerm)) {
           score += scoreExactPhraseTitleBonus
         }
 
-        if (scoreExactPhraseUrlBonus && normalized.url?.includes(hyphenatedSearchTerm)) {
+        if (scoreExactPhraseUrlBonus && normalizedUrl?.includes(hyphenatedSearchTerm)) {
           score += scoreExactPhraseUrlBonus
         }
       }
