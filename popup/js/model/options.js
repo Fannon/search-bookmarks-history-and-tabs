@@ -35,7 +35,7 @@ export const defaultOptions = {
    *
    * * 'precise': Simple search approach that will only find precise matches.
    *              It provides best init performance and provides good search performance.
-   *              The 'fuzziness' option will be ignored
+   *              The 'fuzzyness' option will be ignored
    *
    * * 'fuzzy':   Search approach that implements a fuzzy (approximate) search.
    *              This search approach will find more results, even if there are no perfect matches.
