@@ -242,9 +242,17 @@ export function convertBrowserHistory(history) {
   if (historyIgnoreList?.length) {
     if (!ext.state) ext.state = {}
     if (!ext.state.historyIgnoreRegex) {
-      // Escape special characters and join into a single OR regex for a single-pass check
-      const pattern = historyIgnoreList.map((str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
-      ext.state.historyIgnoreRegex = new RegExp(pattern, 'i')
+      // Filter out empty strings and escape special characters
+      const cleanPatterns = historyIgnoreList
+        .filter(Boolean)
+        .map((str) => String(str).replace(/[.*+?^${}()|[\]/-]/g, '\\$&'))
+
+      if (cleanPatterns.length > 0) {
+        ext.state.historyIgnoreRegex = new RegExp(cleanPatterns.join('|'), 'i')
+      } else {
+        // Fallback to a regex that matches nothing
+        ext.state.historyIgnoreRegex = /$.^/
+      }
     }
     const ignoreRegex = ext.state.historyIgnoreRegex
 
