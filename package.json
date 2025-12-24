@@ -55,14 +55,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Fannon/search-tabs-bookmarks-and-history.git"
+    "url": "git+https://github.com/Fannon/search-bookmarks-history-and-tabs.git"
   },
   "keywords": [
     "chrome",
     "extension",
     "search",
     "fuzzy",
-    "search",
     "history",
     "bookmarks",
     "tabs"

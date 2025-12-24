@@ -36,7 +36,7 @@ The extension is very customizable (see [user options](#user-configuration)) and
 - **Search Strategies**: Switch between precise and fuzzy approach by clicking on the FUZZY or PRECISE button in the search bar (top right).
 - **Keyboard Shortcut**: Trigger the extension via keyboard.
   - The default is `CTRL` + `Shift` + `.`, but you can customize this (I personally use `Ctrl+J`).
-- **Open selected results**: By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
+- **Open selected results**: By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target URL.
   - Hold `Shift` or `Alt` to open the result in the current tab.
   - Hold `Ctrl` to open the result without closing the popup.
   - Right-click to copy URL to clipboard.
@@ -143,7 +143,7 @@ customSearchEngines:
     blank: https://www.npmjs.com
 ```
 
-In case of making multilingual searching (CJK) correctly, you may need to tweak [uFuzzy](https://github.com/leeoniya/uFuzzy) options via option `ufuzzyOptions`, for example:
+In case of making multilingual search (CJK) correctly, you may need to tweak [uFuzzy](https://github.com/leeoniya/uFuzzy) options via option `ufuzzyOptions`, for example:
 
 ```yaml
 # make CJK chars work for fuzzy search

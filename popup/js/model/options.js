@@ -210,7 +210,7 @@ export const defaultOptions = {
    */
   historyMaxItems: 1024,
   /**
-   * All history items that where the URL includes the given strings will be skipped
+   * All history items where the URL includes the given strings will be skipped
    */
   historyIgnoreList: ['extension://'],
 
@@ -305,7 +305,7 @@ export const defaultOptions = {
   scoreTitleWeight: 1,
   /** Weight for a tag match*/
   scoreTagWeight: 0.7,
-  /** Weight for an url match*/
+  /** Weight for a URL match*/
   scoreUrlWeight: 0.6,
   /** Weight for a folder match*/
   scoreFolderWeight: 0.5,
