@@ -2,13 +2,15 @@
 
 ## [unreleased]
 
-- **IMPROVED**: Significant search and ranking performance through data pre-normalization.
-  - Normalized fields are now pre-calculated during ingestion, avoiding redundant computations during search and scoring.
-- **IMPROVED**: UI responsiveness and rendering speed.
-  - Implemented batch DOM updates and single-pass highlighting (mark.js) to minimize layout shifts and CPU usage.
-- **IMPROVED**: History filtering performance with an optimized single-pass Regex engine.
+- **IMPROVED**: Significant search and ranking performance through data pre-normalization
+  - Normalized fields are now pre-calculated during ingestion, avoiding redundant computations during search and scoring
+- **IMPROVED**: UI responsiveness and rendering speed
+  - Implemented batch DOM updates and single-pass highlighting (mark.js) to minimize layout shifts and CPU usage
+- **IMPROVED**: History filtering performance with an optimized single-pass Regex engine
+- **IMPROVED**: General codebase cleanup, including documentation fixes and metadata normalization
 - **CHANGED**: The tab search now also includes tabs owned by browser extensions
 - **CHANGED**: By default only 24 search results are shown to improve performance, this can be adjusted via `searchMaxResults` in the options
+- **FIXED**: Bookmark titles now correctly respect the `titleLengthRestrictionForUrls` user option
 
 ## [v1.17.2]
 
@@ -188,14 +190,14 @@
 
 ## [v1.9.0]
 
-- **FIXED**: Fuzzy search now also works with non-ASCII characters like CKJ chars by default
+- **FIXED**: Fuzzy search now also works with non-ASCII characters like CJK chars by default
 - **FIXED**: Option `bookmarkColor` now also applies to the bookmark folder badge in the search results
 - **REMOVED**: Removed hybrid search as the benefits / differences against new fuzzy search are negligible.
 
 ## [v1.8.7]
 
 - **NEW**: New option `uFuzzyOptions` that allows to configure the fuzzy search library used by this extension
-  - This can be used, e.g. that fuzzy search supports CKJ characters (see README)
+  - This can be used, e.g. that fuzzy search supports CJK characters (see README)
 
 ## [v1.8.5]
 

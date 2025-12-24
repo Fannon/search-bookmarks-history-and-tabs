@@ -8,7 +8,7 @@ Please review the guidelines below before submitting changes.
 
 - **Read the [README.md](./README.md)** for project overview, setup instructions, and usage details.
 - **Review [AGENTS.md](./AGENTS.md)** for architecture, data flow, and coding conventions.
-- **Use Node.js 18 LTS or newer.** The build scripts rely on ESM and modern language features.
+- **Use Node.js 22 LTS or newer.** The build scripts rely on ESM and modern language features.
 
 ## Local Development
 
@@ -17,7 +17,7 @@ Please review the guidelines below before submitting changes.
 - Prerequisite: [Node.js](https://nodejs.org/en/) and a bash-compatible shell.
 - Install dependencies with `npm install`.
 - Build bundles with `npm run build`. This generates the minified output in `dist/`
-- The locally built extension can be installed / side-loaded into browsers either on the root level (for local development state) or on the `/dist/chrome` level (for minified production build)
+- The locally built extension can be installed / side-loaded into browsers either on the root level (for local development state) or on the `/dist/chrome` level (for minified production build).
 - For iterative changes, run `npm run watch` to rebuild bundles automatically on source edits.
 - Serve the popup source directly via `npm run start` or preview the dist build with `npm run start:dist`.
 - Use `npm run clean` to reset build artifacts if you encounter inconsistent bundles.
