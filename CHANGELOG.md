@@ -2,7 +2,13 @@
 
 ## [unreleased]
 
+- **IMPROVED**: Significant search and ranking performance through data pre-normalization.
+  - Normalized fields are now pre-calculated during ingestion, avoiding redundant computations during search and scoring.
+- **IMPROVED**: UI responsiveness and rendering speed.
+  - Implemented batch DOM updates and single-pass highlighting (mark.js) to minimize layout shifts and CPU usage.
+- **IMPROVED**: History filtering performance with an optimized single-pass Regex engine.
 - **CHANGED**: The tab search now also includes tabs owned by browser extensions
+- **CHANGED**: By default only 24 search results are shown to improve performance, this can be adjusted via `searchMaxResults` in the options
 
 ## [v1.17.2]
 

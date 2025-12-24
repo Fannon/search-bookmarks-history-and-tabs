@@ -320,6 +320,13 @@ describe('convertBrowserBookmarks', () => {
 })
 
 describe('convertBrowserHistory', () => {
+  beforeEach(() => {
+    // Clear the memoized regex state before each test
+    if (globalThis.ext) {
+      ext.state = {}
+    }
+  })
+
   it('filters ignored urls and normalizes history entries', () => {
     jest.spyOn(Date, 'now').mockReturnValue(10_000)
     ext.opts.historyIgnoreList = ['ignore.example.com']
@@ -357,5 +364,63 @@ describe('convertBrowserHistory', () => {
       searchString: 'Keep¦keep.example.com/page',
       searchStringLower: 'keep¦keep.example.com/page',
     })
+  })
+
+  it('handles multiple ignore patterns and case sensitivity', () => {
+    ext.opts.historyIgnoreList = ['GOOG.LE', 'test.com']
+
+    const history = [
+      { id: '1', url: 'https://goog.le/search', title: 'Google' },
+      { id: '2', url: 'https://TEST.COM/path', title: 'Test' },
+      { id: '3', url: 'https://example.com', title: 'KeepMe' },
+    ]
+
+    const result = convertBrowserHistory(history)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('KeepMe')
+  })
+
+  it('correctly escapes regex special characters in patterns', () => {
+    // Patterns with dots, pluses, parentheses, etc.
+    ext.opts.historyIgnoreList = ['example.com/a+b', 'site(dot)com', 'bank.com?id=']
+
+    const history = [
+      { id: '1', url: 'https://example.com/a+b', title: 'Match Plus' },
+      { id: '2', url: 'https://site(dot)com/page', title: 'Match Parens' },
+      { id: '3', url: 'https://bank.com?id=123', title: 'Match QMark' },
+      { id: '4', url: 'https://example.com/ab', title: 'No Match Plus' },
+      { id: '5', url: 'https://sitedot.com', title: 'No Match Parens' },
+    ]
+
+    const result = convertBrowserHistory(history)
+    expect(result).toHaveLength(2)
+    expect(result.map((r) => r.title)).toContain('No Match Plus')
+    expect(result.map((r) => r.title)).toContain('No Match Parens')
+  })
+
+  it('handles empty, null, or whitespace patterns without matching everything', () => {
+    ext.opts.historyIgnoreList = ['', null, '   ', 'valid.com']
+
+    const history = [
+      { id: '1', url: 'https://valid.com/page', title: 'Ignored' },
+      { id: '2', url: 'https://anything.else', title: 'Kept' },
+    ]
+
+    const result = convertBrowserHistory(history)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Kept')
+  })
+
+  it('handles complex URL characters like slashes and hyphens in ignore patterns', () => {
+    ext.opts.historyIgnoreList = ['my-site.com/sub-path/']
+
+    const history = [
+      { id: '1', url: 'https://my-site.com/sub-path/page', title: 'Ignored' },
+      { id: '2', url: 'https://my-site.com/other', title: 'Kept' },
+    ]
+
+    const result = convertBrowserHistory(history)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Kept')
   })
 })

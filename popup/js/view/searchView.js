@@ -45,8 +45,8 @@ export async function renderSearchResults() {
       document.hasContextMenuListener = true
     }
 
-    // Use DocumentFragment to batch DOM updates for smoother rendering
-    const fragment = document.createDocumentFragment()
+    // Use an array to accumulate HTML strings for all result items
+    const itemsHTML = []
     const searchTermSuffix = `/search/${encodeURIComponent(searchTerm || '')}`
 
     for (let i = 0; i < result.length; i++) {
@@ -126,7 +126,7 @@ export async function renderSearchResults() {
         resultEntry.originalId !== undefined ? ` x-original-id="${escapeHtml(String(resultEntry.originalId))}"` : ''
       const colorValue = escapeHtml(String(opts[`${resultEntry.type}Color`]))
 
-      const itemHTML = `
+      itemsHTML.push(`
         <li class="${typeClass}"${originalUrlAttr} x-index="${i}"${originalIdAttr}
             style="border-left: ${opts.colorStripeWidth}px solid ${colorValue}">
           ${
@@ -143,25 +143,19 @@ export async function renderSearchResults() {
           </div>
           <div class="url" title="${escapeHtml(resultEntry.url || '')}">${urlContent}</div>
         </li>
-      `
-
-      const tempDiv = document.createElement('div')
-      tempDiv.innerHTML = itemHTML
-      const resultListItem = tempDiv.firstElementChild
-
-      // Apply mark.js highlighting to the result item
-      if (shouldHighlight && searchTerm && searchTerm.trim() && window.Mark) {
-        const mark = new window.Mark(resultListItem)
-        mark.mark(searchTerm, {
-          exclude: ['.last-visited', '.score', '.visit-counter', '.date-added', '.source-tab'],
-        })
-      }
-
-      fragment.appendChild(resultListItem)
+      `)
     }
 
-    // Update the DOM with all new result items at once
-    ext.dom.resultList.replaceChildren(fragment)
+    // Update the DOM with all new result items at once using innerHTML (faster for large updates)
+    ext.dom.resultList.innerHTML = itemsHTML.join('')
+
+    // Apply mark.js highlighting to the entire result list once (much faster than per-item)
+    if (shouldHighlight && searchTerm && searchTerm.trim() && window.Mark) {
+      const mark = new window.Mark(ext.dom.resultList)
+      mark.mark(searchTerm, {
+        exclude: ['.last-visited', '.score', '.visit-counter', '.date-added', '.source-tab'],
+      })
+    }
 
     // Update result counter
     if (ext.dom.resultCounter) {
