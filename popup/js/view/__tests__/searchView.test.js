@@ -169,8 +169,8 @@ describe('searchView renderSearchResults', () => {
 
     expect(document.getElementById('selected-result')).toBe(bookmarkItem)
     expect(ext.model.currentItem).toBe(0)
-    // Mark.js is called for all results to provide consistent highlighting
-    expect(window.Mark).toHaveBeenCalledTimes(2)
+    // Mark.js is called once for the entire result list to provide consistent highlighting
+    expect(window.Mark).toHaveBeenCalledTimes(1)
     const firstMarkInstance = window.Mark.mock.results[0].value
     expect(firstMarkInstance.mark).toHaveBeenCalledWith('query', {
       exclude: ['.last-visited', '.score', '.visit-counter', '.date-added', '.source-tab'],

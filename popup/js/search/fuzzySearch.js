@@ -77,49 +77,43 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
     return [] // early return
   }
 
-  if (containsNonASCII(searchTerm)) {
-    state[searchMode] = undefined
+  if (!state[searchMode]) {
+    state[searchMode] = {
+      haystack: new Array(data.length),
+    }
+    for (let i = 0; i < data.length; i++) {
+      state[searchMode].haystack[i] = data[i].searchString
+    }
   }
 
-  if (!state[searchMode]) {
-    // Cache option values to avoid repeated property access
-    const searchFuzzyness = opts.searchFuzzyness
+  const s = state[searchMode]
 
+  // (Re-)create uFuzzy instance if needed
+  const isNonASCII = containsNonASCII(searchTerm)
+  if (!s.uf || s.isNonASCII !== isNonASCII) {
+    const searchFuzzyness = opts.searchFuzzyness
     const options = {
-      // How many characters "in between" are allowed -> increased fuzzyness
       intraIns: Math.round(searchFuzzyness * 4.2),
       ...(opts.uFuzzyOptions || {}),
     }
 
-    if (containsNonASCII(searchTerm)) {
+    if (isNonASCII) {
       options.interSplit = '(p{Unified_Ideograph=yes})+'
     }
 
-    // When searchFuzzyness is set to 0.8 or higher:
-    // allows for a single error in each term of the search phrase
-    // @see https://github.com/leeoniya/uFuzzy#how-it-works
     if (searchFuzzyness >= 0.8) {
       options.intraMode = 1
-      options.intraSub = 1 // substitution (replacement)
-      options.intraTrn = 1 // transposition (swap), insertion (addition)
-      options.intraDel = 1 // deletion (omission)
+      options.intraSub = 1
+      options.intraTrn = 1
+      options.intraDel = 1
     }
 
-    // Pre-build haystack array more efficiently
-    const haystack = new Array(data.length)
-    for (let i = 0; i < data.length; i++) {
-      haystack[i] = data[i].searchString
-    }
-
-    state[searchMode] = {
-      haystack,
-      uf: new uFuzzy(options),
-    }
+    s.uf = new uFuzzy(options)
+    s.isNonASCII = isNonASCII
   }
 
   /** Search results */
   let results = []
-  const s = state[searchMode]
 
   // Invalidate s.idxs cache if the new search term is not just an extension of the last one
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {

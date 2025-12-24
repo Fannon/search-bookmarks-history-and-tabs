@@ -101,6 +101,9 @@ export function calculateFinalScore(results, searchTerm) {
   // Only check includes bonus if configured and there are tokens that qualify
   const canCheckIncludes = hasSearchTerm && scoreExactIncludesBonus && includeTerms.length > 0
 
+  // Pre-calculate URL-normalized terms for the includes check
+  const normalizedUrlTerms = canCheckIncludes ? includeTerms.map((term) => term.replace(WHITESPACE_REGEX, '-')) : []
+
   const includesBonusCap = Number.isFinite(scoreExactIncludesMaxBonuses) ? scoreExactIncludesMaxBonuses : Infinity
 
   for (let i = 0; i < results.length; i++) {
@@ -121,11 +124,11 @@ export function calculateFinalScore(results, searchTerm) {
     if (hasSearchTerm) {
       // STEP 3A: Exact match bonuses
       // Award bonus if title/URL starts with the exact search term
-      const normalizedTitle = el.title?.toLowerCase().trim()
-      const normalizedUrl = el.url?.toLowerCase()
+      const normalizedUrl = el.url?.toLowerCase() // use el.url directly as it should be cleaned, but lowercase just in case
+      const titleLower = el.titleLower ?? el.title?.toLowerCase().trim()
 
       if (scoreExactStartsWithBonus) {
-        if (normalizedTitle?.startsWith(normalizedSearchTerm)) {
+        if (titleLower?.startsWith(normalizedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreTitleWeight
         } else if (normalizedUrl?.startsWith(hyphenatedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreUrlWeight
@@ -133,7 +136,7 @@ export function calculateFinalScore(results, searchTerm) {
       }
 
       // Award bonus if title exactly equals the search term
-      if (scoreExactEqualsBonus && normalizedTitle === normalizedSearchTerm) {
+      if (scoreExactEqualsBonus && titleLower === normalizedSearchTerm) {
         score += scoreExactEqualsBonus * scoreTitleWeight
       }
 
@@ -167,16 +170,16 @@ export function calculateFinalScore(results, searchTerm) {
         const normalizedTags = el.tags?.toLowerCase()
         const normalizedFolder = el.folder?.toLowerCase()
 
-        for (const term of includeTerms) {
+        for (let j = 0; j < includeTerms.length; j++) {
           if (includesBonusesAwarded >= includesBonusCap) {
             break
           }
 
-          // URLs use hyphens instead of spaces, so normalize for matching
-          const normalizedUrlTerm = term.replace(WHITESPACE_REGEX, '-')
+          const term = includeTerms[j]
+          const normalizedUrlTerm = normalizedUrlTerms[j]
 
           // Check fields in priority order - first match wins
-          if (normalizedTitle?.includes(term)) {
+          if (titleLower?.includes(term)) {
             score += scoreExactIncludesBonus * scoreTitleWeight
             includesBonusesAwarded++
           } else if (normalizedUrl?.includes(normalizedUrlTerm)) {
@@ -195,7 +198,7 @@ export function calculateFinalScore(results, searchTerm) {
       // Award bonus for full phrase match (multi-word searches only)
       // Single-word searches already get includes/exact bonuses, so phrase bonus is redundant
       if (rawSearchTermParts.length > 1) {
-        if (scoreExactPhraseTitleBonus && normalizedTitle?.includes(normalizedSearchTerm)) {
+        if (scoreExactPhraseTitleBonus && titleLower?.includes(normalizedSearchTerm)) {
           score += scoreExactPhraseTitleBonus
         }
 

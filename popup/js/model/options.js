@@ -48,7 +48,7 @@ export const defaultOptions = {
    * Max search results. Reduce for better performance.
    * Does not apply for tag and folder search
    */
-  searchMaxResults: 32,
+  searchMaxResults: 24,
   /**
    * Minimum string characters of the search term to consider a match
    */

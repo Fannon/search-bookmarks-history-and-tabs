@@ -44,14 +44,15 @@ export function convertBrowserTabs(chromeTabs) {
   return chromeTabs
     .filter((el) => typeof el?.url === 'string' && el.url.trim())
     .map((el) => {
-      const rawUrl = el.url
-      const cleanUrl = cleanUpUrl(rawUrl)
+      const cleanUrl = cleanUpUrl(el.url)
       const searchString = createSearchString(el.title, cleanUrl)
+      const title = getTitle(el.title, cleanUrl)
       return {
         type: 'tab',
-        title: getTitle(el.title, cleanUrl),
+        title,
+        titleLower: title.toLowerCase().trim(),
         url: cleanUrl,
-        originalUrl: rawUrl.replace(/\/$/, ''),
+        originalUrl: el.url.replace(/\/$/, ''),
         originalId: el.id,
         active: el.active,
         windowId: el.windowId,
@@ -103,8 +104,13 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
     }
 
     // Filter out bookmarks by ignored folder
-    if (ext.opts.bookmarksIgnoreFolderList) {
-      if (folderTrail.some((el) => ext.opts.bookmarksIgnoreFolderList.includes(el))) {
+    const ignoreList = ext.opts.bookmarksIgnoreFolderList
+    if (ignoreList && ignoreList.length > 0) {
+      if (!ext.state) ext.state = {}
+      if (!ext.state.bookmarksIgnoreFolderSet) {
+        ext.state.bookmarksIgnoreFolderSet = new Set(ignoreList)
+      }
+      if (folderTrail.some((el) => ext.state.bookmarksIgnoreFolderSet.has(el))) {
         continue
       }
     }
@@ -157,7 +163,9 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
         tagsText = tagsText.slice(0, -1)
       }
 
-      mappedEntry.title = getTitle(title, mappedEntry.url)
+      const finalTitle = getTitle(title, mappedEntry.url)
+      mappedEntry.title = finalTitle
+      mappedEntry.titleLower = finalTitle.toLowerCase().trim()
       mappedEntry.tags = tagsText
       mappedEntry.tagsArray = tagsArray
 
@@ -234,10 +242,17 @@ export async function getBrowserHistory(startTime, maxResults) {
  * @returns {Array<Object>} Normalized history items.
  */
 export function convertBrowserHistory(history) {
-  if (ext.opts.historyIgnoreList?.length) {
+  const historyIgnoreList = ext.opts.historyIgnoreList
+  if (historyIgnoreList?.length) {
+    if (!ext.state) ext.state = {}
+    if (!ext.state.historyIgnoreSet) {
+      ext.state.historyIgnoreSet = new Set(historyIgnoreList)
+    }
+    const ignoreSet = ext.state.historyIgnoreSet
+
     let ignoredHistoryCounter = 0
     history = history.filter((el) => {
-      for (const ignoreUrl of ext.opts.historyIgnoreList) {
+      for (const ignoreUrl of ignoreSet) {
         if (el.url.includes(ignoreUrl)) {
           ignoredHistoryCounter += 1
           return false
@@ -252,9 +267,11 @@ export function convertBrowserHistory(history) {
   return history.map((el) => {
     const cleanUrl = cleanUpUrl(el.url)
     const searchString = createSearchString(el.title, cleanUrl)
+    const title = getTitle(el.title, cleanUrl)
     return {
       type: 'history',
-      title: getTitle(el.title, cleanUrl),
+      title,
+      titleLower: title.toLowerCase().trim(),
       originalUrl: el.url.replace(/\/$/, ''),
       url: cleanUrl,
       visitCount: el.visitCount,
