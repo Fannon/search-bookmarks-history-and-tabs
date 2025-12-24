@@ -105,12 +105,8 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
 
     // Filter out bookmarks by ignored folder
     const ignoreList = ext.opts.bookmarksIgnoreFolderList
-    if (ignoreList && ignoreList.length > 0) {
-      if (!ext.state) ext.state = {}
-      if (!ext.state.bookmarksIgnoreFolderSet) {
-        ext.state.bookmarksIgnoreFolderSet = new Set(ignoreList)
-      }
-      if (folderTrail.some((el) => ext.state.bookmarksIgnoreFolderSet.has(el))) {
+    if (ignoreList?.length > 0) {
+      if (folderTrail.some((el) => ignoreList.includes(el))) {
         continue
       }
     }
@@ -245,18 +241,18 @@ export function convertBrowserHistory(history) {
   const historyIgnoreList = ext.opts.historyIgnoreList
   if (historyIgnoreList?.length) {
     if (!ext.state) ext.state = {}
-    if (!ext.state.historyIgnoreSet) {
-      ext.state.historyIgnoreSet = new Set(historyIgnoreList)
+    if (!ext.state.historyIgnoreRegex) {
+      // Escape special characters and join into a single OR regex for a single-pass check
+      const pattern = historyIgnoreList.map((str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
+      ext.state.historyIgnoreRegex = new RegExp(pattern, 'i')
     }
-    const ignoreSet = ext.state.historyIgnoreSet
+    const ignoreRegex = ext.state.historyIgnoreRegex
 
     let ignoredHistoryCounter = 0
     history = history.filter((el) => {
-      for (const ignoreUrl of ignoreSet) {
-        if (el.url.includes(ignoreUrl)) {
-          ignoredHistoryCounter += 1
-          return false
-        }
+      if (ignoreRegex.test(el.url)) {
+        ignoredHistoryCounter += 1
+        return false
       }
       return true
     })
