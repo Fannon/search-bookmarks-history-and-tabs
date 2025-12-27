@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+## [v1.17.3]
+
 - **IMPROVED**: Significant search and ranking performance through data pre-normalization
   - Normalized fields are now pre-calculated during ingestion, avoiding redundant computations during search and scoring
 - **IMPROVED**: UI responsiveness and rendering speed
