@@ -198,7 +198,6 @@ This extension makes use of the following helpful open-source projects (thanks!)
 
 - https://github.com/leeoniya/uFuzzy for the fuzzy search algorithm
 - https://github.com/yairEO/tagify for the tag autocomplete widget
-- https://markjs.io/ for highlighting search matches
 - https://www.npmjs.com/package/js-yaml for the user options parsing
 - https://github.com/tabler/tabler-icons for icons
 - https://www.joshwcomeau.com/css/custom-css-reset/
