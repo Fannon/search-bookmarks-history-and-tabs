@@ -59,7 +59,6 @@ const sharedBuildOptions = {
   legalComments: 'none',
   target: ['chrome109', 'firefox115'],
   format: 'iife',
-  external: ['../lib/mark.es6.min.js', './lib/mark.es6.min.js'],
   logLevel: 'info',
 }
 
