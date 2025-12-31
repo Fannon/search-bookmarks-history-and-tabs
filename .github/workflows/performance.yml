@@ -5,7 +5,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '22.x'
+  NODE_VERSION: '24.x'
 
 on:
   push:
@@ -31,8 +31,24 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(npm ls @playwright/test --json | jq -r '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
       - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install chromium --with-deps
+
+      - name: Install Playwright deps (if cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Run Performance Benchmarks
         id: perf
@@ -49,3 +65,4 @@ jobs:
             reports/jest_output.txt
             reports/playwright_output.txt
           retention-days: 7
+
