@@ -229,7 +229,7 @@ export function calculateFinalScore(results, searchTerm) {
       }
     }
 
-    if (hasBookmarkOpenTabBonus && el.tab) {
+    if (hasBookmarkOpenTabBonus && el.type === 'bookmark' && el.tab) {
       score += scoreBookmarkOpenTabBonus
     }
 

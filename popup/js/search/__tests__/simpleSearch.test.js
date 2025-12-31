@@ -478,5 +478,77 @@ describe('simpleSearch', () => {
       expect(results2).toHaveLength(1)
       expect(results1).not.toBe(results2)
     })
+
+    test('incremental single-character appending uses cached indices', () => {
+      model.bookmarks = createBookmarksTestData([
+        { id: '1', title: 'resource manager', url: 'u1' },
+        { id: '2', title: 'resume builder', url: 'u2' },
+        { id: '3', title: 'react tutorial', url: 'u3' },
+      ])
+
+      // Type "res" -> matches 2 items
+      const res1 = simpleSearch('bookmarks', 'res', model)
+      expect(res1).toHaveLength(2)
+
+      // Type "reso" -> should filter from previous 2 items, not all 3
+      const res2 = simpleSearch('bookmarks', 'reso', model)
+      expect(res2).toHaveLength(1)
+      expect(res2[0].originalId).toBe('1')
+
+      // Type "resou" -> should filter from previous 1 item
+      const res3 = simpleSearch('bookmarks', 'resou', model)
+      expect(res3).toHaveLength(1)
+      expect(res3[0].originalId).toBe('1')
+    })
+
+    test('incremental two-character appending uses cached indices', () => {
+      model.bookmarks = createBookmarksTestData([
+        { id: '1', title: 'resource manager', url: 'u1' },
+        { id: '2', title: 'resume builder', url: 'u2' },
+        { id: '3', title: 'react tutorial', url: 'u3' },
+      ])
+
+      // Type "r" -> matches all 3
+      const res1 = simpleSearch('bookmarks', 'r', model)
+      expect(res1).toHaveLength(3)
+
+      // Type "res" (appending 2 chars) -> should filter down to 2
+      const res2 = simpleSearch('bookmarks', 'res', model)
+      expect(res2).toHaveLength(2)
+    })
+
+    test('cache invalidation when character is removed (backspace)', () => {
+      model.bookmarks = createBookmarksTestData([
+        { id: '1', title: 'resource manager', url: 'u1' },
+        { id: '2', title: 'resume builder', url: 'u2' },
+        { id: '3', title: 'react tutorial', url: 'u3' },
+      ])
+
+      // Type "reso" -> matches 1 item
+      const res1 = simpleSearch('bookmarks', 'reso', model)
+      expect(res1).toHaveLength(1)
+      expect(res1[0].originalId).toBe('1')
+
+      // Backspace to "res" -> cache must be invalidated, should match 2 items
+      const res2 = simpleSearch('bookmarks', 'res', model)
+      expect(res2).toHaveLength(2)
+    })
+
+    test('cache invalidation when character is changed', () => {
+      model.bookmarks = createBookmarksTestData([
+        { id: '1', title: 'resource manager', url: 'u1' },
+        { id: '2', title: 'resume builder', url: 'u2' },
+        { id: '3', title: 'react tutorial', url: 'u3' },
+      ])
+
+      // Type "res" -> matches 2 items
+      const res1 = simpleSearch('bookmarks', 'res', model)
+      expect(res1).toHaveLength(2)
+
+      // Change to "rea" -> cache invalidated (not a prefix extension)
+      const res2 = simpleSearch('bookmarks', 'rea', model)
+      expect(res2).toHaveLength(1)
+      expect(res2[0].originalId).toBe('3')
+    })
   })
 })

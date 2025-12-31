@@ -69,7 +69,6 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
       haystack: haystack,
       idxs: null, // null means "all indices" - avoids array allocation
       searchTerm: '',
-      terms: [], // Keep track of filtered terms
     }
   }
 
@@ -79,26 +78,26 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
   }
 
   const haystack = s.haystack
-  const terms = searchTerm.split(' ').filter(Boolean)
-  const termLen = terms.length
 
   // Determine if we can use incremental search from previous indices
-  const isIncremental = s.searchTerm && searchTerm.startsWith(s.searchTerm) && s.idxs !== null
-  if (!isIncremental) {
-    s.idxs = null
-  }
+  // An incremental search is valid when:
+  // 1. We have a previous search term
+  // 2. The new search term starts with the previous search term
+  // 3. We have cached indices from the previous search
+  const prevSearchTerm = s.searchTerm
+  const isIncremental = prevSearchTerm && searchTerm.startsWith(prevSearchTerm) && s.idxs !== null
 
-  let idxs = s.idxs
-  const prevTerms = s.terms
+  let idxs = isIncremental ? s.idxs : null
 
-  // Filtering (AND-logic)
+  // For incremental search, we only need to filter by the NEW characters added
+  // For non-incremental, we filter by all terms
+  const terms = searchTerm.split(' ')
+  const termLen = terms.length
+
+  // Start filtering
   for (let t = 0; t < termLen; t++) {
     const term = terms[t]
-
-    // Skip terms already satisfied if we are doing incremental search
-    if (isIncremental && prevTerms[t] === term) {
-      continue
-    }
+    if (!term) continue // Skip empty terms
 
     const nextIdxs = []
 
@@ -110,7 +109,7 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
         }
       }
     } else {
-      // Subsequent passes or incremental search: filter existing indices
+      // Subsequent passes: filter existing indices
       const currentIdxLen = idxs.length
       for (let i = 0; i < currentIdxLen; i++) {
         const idx = idxs[i]
@@ -127,7 +126,6 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
   // Update cached state
   s.idxs = idxs
   s.searchTerm = searchTerm
-  s.terms = terms
 
   // If idxs is still null (no terms provided) or empty, return no results
   if (!idxs || idxs.length === 0) {

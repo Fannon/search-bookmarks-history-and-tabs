@@ -84,20 +84,18 @@ export async function getBrowserBookmarks() {
  * @param {Array<string>} [folderTrail] - Accumulated folder hierarchy.
  * @param {number} [depth] - Current traversal depth.
  * @param {Map<string, Object>} [seenByUrl] - Map to track duplicate URLs (only if duplicate detection is enabled).
+ * @param {string} [folderText] - Pre-calculated folder string for search.
  * @returns {Array<Object>} Flattened bookmark entries.
  */
-/**
- * Recursive function to return bookmarks in our internal, flat array format
- *
- * @param {Array<Object>} bookmarks - Raw bookmark tree nodes.
- * @param {Array<string>} [folderTrail] - Accumulated folder hierarchy.
- * @param {number} [depth] - Current traversal depth.
- * @param {Map<string, Object>} [seenByUrl] - Map to track duplicate URLs (only if duplicate detection is enabled).
- * @param {string} [folderText=""] - Pre-calculated folder string for search.
- * @returns {Array<Object>} Flattened bookmark entries.
- */
-export function convertBrowserBookmarks(bookmarks, folderTrail = [], depth = 1, seenByUrl, folderText = '') {
+export function convertBrowserBookmarks(bookmarks, folderTrail = [], depth = 1, seenByUrl, folderText) {
   const result = []
+
+  // Build folderText from folderTrail if not provided
+  if (folderText === undefined && folderTrail.length > 0) {
+    folderText = folderTrail.map((f) => `~${f}`).join(' ')
+  } else if (folderText === undefined) {
+    folderText = ''
+  }
 
   // Only initialize seenByUrl Map if duplicate detection is enabled
   if (seenByUrl === undefined && ext.opts.detectDuplicateBookmarks) {
@@ -177,6 +175,9 @@ export function convertBrowserBookmarks(bookmarks, folderTrail = [], depth = 1, 
         if (existingEntry) {
           existingEntry.dupe = true
           mappedEntry.dupe = true
+          console.warn(
+            `Duplicate bookmark detected for ${mappedEntry.originalUrl} in folder: ${mappedEntry.folderArray.join(' > ') || '/'}`,
+          )
         } else {
           seenByUrl.set(mappedEntry.url, mappedEntry)
         }
@@ -298,22 +299,14 @@ export function convertBrowserHistory(history) {
  */
 export function createSearchString(title, url, tags, folder) {
   const separator = '¦'
-  // Avoid expensive check if title is missing or redundant
-  if (!title || title === url) {
-    let s = url
-    if (tags) s += separator + tags
-    if (folder) s += separator + folder
-    return s
-  }
+  const parts = []
 
-  let searchString = title + separator + url
-  if (tags) {
-    searchString += separator + tags
-  }
-  if (folder) {
-    searchString += separator + folder
-  }
-  return searchString
+  if (title && title !== url) parts.push(title)
+  if (url) parts.push(url)
+  if (tags) parts.push(tags)
+  if (folder) parts.push(folder)
+
+  return parts.join(separator)
 }
 
 /**

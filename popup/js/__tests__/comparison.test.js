@@ -138,27 +138,29 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
       steps.push(phrase.substring(0, i))
     }
 
-    // Precise
+    // Precise - reset state between iterations to measure cold incremental
+    ext.opts.searchStrategy = 'precise'
     let totalP = 0
     for (let i = 0; i < iterations; i++) {
+      resetSimpleSearchState()
       ext.searchCache = new Map()
       const start = performance.now()
       for (const step of steps) {
         ext.dom.searchInput.value = step
-        // Trigger search - note that search() reads from ext.dom.searchInput.value
         await search()
       }
       totalP += performance.now() - start
     }
     const avgP = totalP / iterations
 
-    // Fuzzy
+    // Fuzzy - reset state between iterations to measure cold incremental
+    ext.opts.searchStrategy = 'fuzzy'
     let totalF = 0
     for (let i = 0; i < iterations; i++) {
+      resetFuzzySearchState()
       ext.searchCache = new Map()
       const start = performance.now()
       for (const step of steps) {
-        ext.opts.searchStrategy = 'fuzzy'
         ext.dom.searchInput.value = step
         await search()
       }
