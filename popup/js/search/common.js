@@ -109,7 +109,6 @@ function useCachedResultsIfAvailable(searchTerm) {
 
   const cacheKey = `${searchTerm}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
   if (ext.searchCache.has(cacheKey)) {
-    console.debug(`Using cached results for key "${cacheKey}"`)
     ext.model.searchTerm = searchTerm
     ext.model.result = ext.searchCache.get(cacheKey)
     renderSearchResults()
@@ -326,7 +325,7 @@ export async function search(event) {
       }
 
       // Simple timing for debugging (only if debug is enabled)
-      console.debug(`Search completed in ${Date.now() - startTime}ms`)
+      console.debug(`Search took ${Date.now() - startTime}ms`)
     } catch (err) {
       printError(err)
     }

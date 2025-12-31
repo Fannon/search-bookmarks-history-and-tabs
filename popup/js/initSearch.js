@@ -73,7 +73,7 @@ export async function initExtension() {
     document.getElementById('results-loading').remove()
   }
 
-  console.debug(`Extension initialized in ${Date.now() - startTime}ms`)
+  console.debug(`Init in ${Date.now() - startTime}ms`)
 }
 
 //////////////////////////////////////////
