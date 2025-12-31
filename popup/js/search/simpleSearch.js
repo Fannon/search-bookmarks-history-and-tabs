@@ -8,14 +8,19 @@
  *
  * Scoring pipeline:
  * - Every match carries a `searchScore` of 1 before flowing into `scoring.js` for final ranking.
- * - Prepares highlight metadata for the view without additional processing overhead.
+ *
+ * Zero-DOM Highlighting:
+ * - Highlights are pre-computed during the search phase (not after rendering).
+ * - The shared `highlightMatches` utility escapes HTML first, then applies `<mark>` tags.
+ * - This eliminates the need for mark.js and secondary DOM traversals.
+ * - Results include `highlightedTitle` and `highlightedUrl` fields for direct rendering.
  *
  * Memoisation:
  * - Cache pre-lowered haystacks per mode (bookmarks, tabs, history) for reuse across repeated queries.
  * - Reset caches when the search dataset or active mode changes to avoid stale results.
  */
 
-import { escapeHtml } from '../helper/utils.js'
+import { highlightMatches } from '../helper/utils.js'
 import { resolveSearchTargets } from './common.js'
 
 /**
@@ -80,10 +85,13 @@ export function simpleSearch(searchMode, searchTerm, data) {
 /**
  * Run an AND-based substring search within a single dataset and assign scores.
  *
+ * Highlights are pre-computed during this search phase using Zero-DOM highlighting.
+ * Results are returned as new objects to preserve cache immutability.
+ *
  * @param {string} searchTerm - Query string.
  * @param {string} searchMode - Dataset key inside `ext.model`.
  * @param {Array<Object>} data - The dataset to search.
- * @returns {Array<Object>} Filtered entries with `searchScore: 1`.
+ * @returns {Array<Object>} Filtered entries with `searchScore: 1` and highlight metadata.
  */
 function simpleSearchWithScoring(searchTerm, searchMode, data) {
   if (!data || !data.length) {
@@ -128,21 +136,17 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
 
   s.searchTerm = searchTerm
 
-  // Add highlighting after final filtering to only process the actual results
+  // Pre-compute highlights using Zero-DOM approach (no mark.js, no secondary DOM pass)
+  // Terms are filtered and used directly by highlightMatches utility
   const filteredTerms = searchTermArray.filter(Boolean)
-  if (filteredTerms.length > 0) {
-    // Escape terms and sort by length descending to match longest terms first
-    const escapedTerms = filteredTerms
-      .map((t) => escapeHtml(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-      .sort((a, b) => b.length - a.length)
-    const highlightRegex = new RegExp(`(${escapedTerms.join('|')})`, 'gi')
 
-    for (const entry of s.cachedData) {
-      const parts = entry.searchString.split('¦')
-      entry.highlightedTitle = escapeHtml(parts[0]).replace(highlightRegex, '<mark>$1</mark>')
-      entry.highlightedUrl = parts[1] ? escapeHtml(parts[1]).replace(highlightRegex, '<mark>$1</mark>') : ''
+  // Return fresh result objects with highlights to preserve cache immutability
+  return s.cachedData.map((entry) => {
+    const parts = entry.searchString.split('¦')
+    return {
+      ...entry,
+      highlightedTitle: highlightMatches(parts[0] || '', filteredTerms),
+      highlightedUrl: parts[1] ? highlightMatches(parts[1], filteredTerms) : '',
     }
-  }
-
-  return s.cachedData
+  })
 }

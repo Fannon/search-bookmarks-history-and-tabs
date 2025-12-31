@@ -450,4 +450,139 @@ describe('simpleSearch', () => {
       expect(results[0].id).toBe('1')
     })
   })
+
+  describe('Zero-DOM Highlighting', () => {
+    test('generates highlighted title and URL for matching terms', () => {
+      const bookmark = {
+        id: 'bm-1',
+        searchString: 'React Tutorial¦https://reactjs.org/tutorial',
+      }
+
+      model.bookmarks = [bookmark]
+
+      const results = simpleSearch('bookmarks', 'react', model)
+
+      expect(results).toHaveLength(1)
+      expect(results[0].highlightedTitle).toBeDefined()
+      expect(results[0].highlightedUrl).toBeDefined()
+      expect(results[0].highlightedTitle).toContain('<mark>')
+      expect(results[0].highlightedTitle).toContain('</mark>')
+    })
+
+    test('highlights all matching terms in title', () => {
+      const bookmark = {
+        id: 'bm-1',
+        searchString: 'React Hooks Deep Dive¦https://example.com/react-hooks',
+      }
+
+      model.bookmarks = [bookmark]
+
+      const results = simpleSearch('bookmarks', 'react hooks', model)
+
+      expect(results).toHaveLength(1)
+      const result = results[0]
+
+      // Both 'react' and 'hooks' should be highlighted
+      expect(result.highlightedTitle).toContain('<mark>')
+      // Count mark tags - should have at least 2 pairs (for react and hooks)
+      const markMatches = result.highlightedTitle.match(/<mark>/g)
+      expect(markMatches.length).toBeGreaterThanOrEqual(2)
+    })
+
+    test('highlights terms in URL as well', () => {
+      const bookmark = {
+        id: 'bm-1',
+        searchString: 'React Tutorial¦https://reactjs.org/tutorial',
+      }
+
+      model.bookmarks = [bookmark]
+
+      const results = simpleSearch('bookmarks', 'reactjs', model)
+
+      expect(results).toHaveLength(1)
+      expect(results[0].highlightedUrl).toContain('<mark>')
+    })
+
+    test('escapes HTML in title before highlighting to prevent XSS', () => {
+      const maliciousBookmark = {
+        id: 'bm-xss',
+        searchString: 'Test <script>alert(1)</script>¦https://example.com/test',
+      }
+
+      model.bookmarks = [maliciousBookmark]
+
+      const results = simpleSearch('bookmarks', 'test', model)
+
+      expect(results).toHaveLength(1)
+      expect(results[0].highlightedTitle).not.toContain('<script>')
+      expect(results[0].highlightedTitle).toContain('&lt;script&gt;')
+      expect(results[0].highlightedTitle).toContain('<mark>Test</mark>')
+    })
+
+    test('handles empty URL gracefully', () => {
+      const bookmark = {
+        id: 'bm-empty-url',
+        searchString: 'Title Only',
+      }
+
+      model.bookmarks = [bookmark]
+
+      const results = simpleSearch('bookmarks', 'title', model)
+
+      expect(results).toHaveLength(1)
+      expect(results[0].highlightedTitle).toContain('<mark>')
+      expect(results[0].highlightedUrl).toBe('')
+    })
+
+    test('returns highlighted content even with empty search terms (no highlights)', () => {
+      const bookmark = {
+        id: 'bm-1',
+        searchString: 'Some Title¦https://example.com',
+      }
+
+      model.bookmarks = [bookmark]
+
+      const results = simpleSearch('bookmarks', '', model)
+
+      expect(results).toHaveLength(1)
+      // With empty search term, title should be escaped but not highlighted
+      expect(results[0].highlightedTitle).toBe('Some Title')
+      expect(results[0].highlightedUrl).toBe('https://example.com')
+    })
+  })
+
+  describe('Result immutability', () => {
+    test('does not mutate original data entries when adding highlights', () => {
+      const originalBookmark = {
+        id: 'bm-1',
+        title: 'React Tutorial',
+        url: 'https://reactjs.org',
+        searchString: 'React Tutorial¦https://reactjs.org',
+      }
+
+      model.bookmarks = [originalBookmark]
+
+      simpleSearch('bookmarks', 'react', model)
+
+      // Original entry should NOT have highlighting fields
+      expect(model.bookmarks[0].highlightedTitle).toBeUndefined()
+      expect(model.bookmarks[0].highlightedUrl).toBeUndefined()
+    })
+
+    test('returns new result objects, not references to originals', () => {
+      const bookmark = {
+        id: 'bm-1',
+        searchString: 'React Tutorial¦https://reactjs.org',
+      }
+
+      model.bookmarks = [bookmark]
+
+      const results = simpleSearch('bookmarks', 'react', model)
+
+      expect(results[0]).not.toBe(model.bookmarks[0])
+      // Modifying the result should not affect the original
+      results[0].customField = 'test'
+      expect(model.bookmarks[0].customField).toBeUndefined()
+    })
+  })
 })

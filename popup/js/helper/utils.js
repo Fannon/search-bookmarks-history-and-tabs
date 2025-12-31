@@ -41,6 +41,57 @@ export function escapeHtml(value) {
   return String(value).replace(HTML_ESCAPE_REGEX, (match) => HTML_ESCAPE_MAP[match])
 }
 
+// Regex special characters that need escaping for literal matching
+const REGEX_ESCAPE_REGEX = /[.*+?^${}()|[\]\\]/g
+
+/**
+ * Escape special regex characters for literal matching.
+ *
+ * @param {string} str - String to escape.
+ * @returns {string} Escaped string safe for RegExp constructor.
+ */
+export function escapeRegex(str) {
+  return str.replace(REGEX_ESCAPE_REGEX, '\\$&')
+}
+
+/**
+ * Highlight matching terms in text by wrapping them with <mark> tags.
+ *
+ * This is a shared utility for pre-computing search result highlights during
+ * the search phase (Zero-DOM highlighting approach). The text is HTML-escaped
+ * first to prevent XSS, then <mark> tags are applied for matching terms.
+ *
+ * @param {string} text - Text to highlight (will be HTML-escaped).
+ * @param {string[]} terms - Search terms to highlight (should be non-empty strings).
+ * @returns {string} HTML-safe string with <mark> tags around matching terms.
+ *
+ * @example
+ * highlightMatches('Hello World', ['world']) // => 'Hello <mark>World</mark>'
+ */
+export function highlightMatches(text, terms) {
+  if (!text || !terms || terms.length === 0) {
+    return escapeHtml(text)
+  }
+
+  // Filter out empty terms and sort by length descending (match longest first)
+  const validTerms = terms.filter((t) => t && t.length > 0)
+  if (validTerms.length === 0) {
+    return escapeHtml(text)
+  }
+
+  // Escape HTML first to prevent XSS
+  const escapedText = escapeHtml(text)
+
+  // Escape terms for regex and sort by length descending to match longest first
+  const escapedTerms = validTerms
+    .map((t) => escapeHtml(t)) // Escape HTML chars in terms too (they'll appear escaped in text)
+    .map((t) => escapeRegex(t))
+    .sort((a, b) => b.length - a.length)
+
+  const highlightRegex = new RegExp(`(${escapedTerms.join('|')})`, 'gi')
+  return escapedText.replace(highlightRegex, '<mark>$1</mark>')
+}
+
 /**
  * Converts a date to a compact "time since" string.
  *

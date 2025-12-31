@@ -14,6 +14,13 @@
  * 4. Apply scoring and sorting to rank results.
  * 5. Filter by minimum score and max results.
  * 6. Render results via view layer.
+ *
+ * Zero-DOM Highlighting:
+ * - Highlights are pre-computed during the search phase by simpleSearch.js and fuzzySearch.js.
+ * - Each result includes `highlightedTitle` and `highlightedUrl` with inline `<mark>` tags.
+ * - The view layer (searchView.js) renders these pre-computed highlights directly.
+ * - This eliminates the need for mark.js and secondary DOM traversals after rendering.
+ * - See `highlightMatches()` in utils.js for the shared highlighting utility.
  */
 
 import { cleanUpUrl, generateRandomId } from '../helper/utils.js'
