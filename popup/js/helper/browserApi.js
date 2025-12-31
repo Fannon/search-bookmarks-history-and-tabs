@@ -84,119 +84,99 @@ export async function getBrowserBookmarks() {
  * @param {Array<string>} [folderTrail] - Accumulated folder hierarchy.
  * @param {number} [depth] - Current traversal depth.
  * @param {Map<string, Object>} [seenByUrl] - Map to track duplicate URLs (only if duplicate detection is enabled).
+ * @param {string} [folderText] - Pre-calculated folder string for search.
  * @returns {Array<Object>} Flattened bookmark entries.
  */
-export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl) {
-  depth = depth || 1
-  let result = []
-  folderTrail = folderTrail || []
+export function convertBrowserBookmarks(bookmarks, folderTrail = [], depth = 1, seenByUrl, folderText) {
+  const result = []
+
+  // Build folderText from folderTrail if not provided
+  if (folderText === undefined && folderTrail.length > 0) {
+    folderText = folderTrail.map((f) => `~${f}`).join(' ')
+  } else if (folderText === undefined) {
+    folderText = ''
+  }
+
   // Only initialize seenByUrl Map if duplicate detection is enabled
   if (seenByUrl === undefined && ext.opts.detectDuplicateBookmarks) {
     seenByUrl = new Map()
   }
 
-  for (const entry of bookmarks) {
-    let newFolderTrail = folderTrail.slice() // clone
-    // Only consider bookmark folders that have a title and have
-    // at least a depth of 2, so we skip the default chrome "system" folders
-    if (depth > 2) {
-      newFolderTrail = folderTrail.concat(entry.title)
-    }
+  const ignoreList = ext.opts.bookmarksIgnoreFolderList
+  const hasIgnoreList = ignoreList?.length > 0
 
-    // Filter out bookmarks by ignored folder
-    const ignoreList = ext.opts.bookmarksIgnoreFolderList
-    if (ignoreList?.length > 0) {
-      if (folderTrail.some((el) => ignoreList.includes(el))) {
-        continue
-      }
-    }
+  for (let i = 0; i < bookmarks.length; i++) {
+    const entry = bookmarks[i]
 
     if (entry.url) {
-      let title = entry.title
+      let title = entry.title || ''
       let customBonusScore = 0
 
-      const regex = /[ ][+]([0-9]+)/
-      const match = title.match(regex)
-      if (match && match.length > 0) {
-        title = title.replace(match[0], '')
-        if (match.length !== 2) {
-          console.error(`Unexpected custom bonus score match length`, match, entry)
-        } else {
+      // Simple check for custom bonus score "+20"
+      if (title.includes(' +')) {
+        const match = title.match(/[ ][+]([0-9]+)/)
+        if (match) {
+          title = title.replace(match[0], '')
           customBonusScore = parseInt(match[1], 10)
         }
       }
 
-      const mappedEntry = {
-        type: 'bookmark',
-        originalId: entry.id,
-        title: title,
-        originalUrl: entry.url.replace(/\/$/, ''),
-        url: cleanUpUrl(entry.url),
-        dateAdded: entry.dateAdded,
-        customBonusScore,
-      }
+      const url = entry.url.replace(/\/$/, '')
+      const cleanedUrl = cleanUpUrl(url)
 
       // Parse out tags from bookmark title (starting with " #")
       let tagsText = ''
-      let tagsArray = []
-      if (title) {
-        const tagSplit = title.split(' #').map((el) => el.trim())
-        title = tagSplit.shift()
+      const tagsArray = []
+      if (title.includes(' #')) {
+        const tagSplit = title.split(' #')
+        title = tagSplit[0]
 
-        tagsArray = tagSplit.filter((el) => {
-          if (el.match(/^\d/)) {
-            title += ` #${el}`
-            return false
-          } else if (!el.trim()) {
-            return false
+        for (let j = 1; j < tagSplit.length; j++) {
+          const tag = tagSplit[j].trim()
+          if (!tag) continue
+          if (/^\d/.test(tag)) {
+            // If tag starts with a digit, it's probably not a tag (e.g. "C# 11")
+            title += ` #${tag}`
           } else {
-            return el
+            tagsArray.push(tag)
+            tagsText += `#${tag} `
           }
-        })
-        for (const tag of tagsArray) {
-          tagsText += `#${tag.trim()} `
         }
-        tagsText = tagsText.slice(0, -1)
+        tagsText = tagsText.trim()
       }
 
-      const finalTitle = getTitle(title, mappedEntry.url)
-      mappedEntry.title = finalTitle
-      mappedEntry.titleLower = finalTitle.toLowerCase().trim()
-      mappedEntry.tags = tagsText
-      mappedEntry.tagsLower = tagsText.toLowerCase()
-      mappedEntry.tagsArray = tagsArray
-      mappedEntry.tagsArrayLower = tagsArray.map((tag) => tag.toLowerCase())
-
-      // Consider the folder names / structure of bookmarks
-      let folderText = ''
-      for (const folder of folderTrail) {
-        folderText += `~${folder} `
+      const finalTitle = getTitle(title, cleanedUrl)
+      const mappedEntry = {
+        type: 'bookmark',
+        originalId: entry.id,
+        title: finalTitle,
+        titleLower: finalTitle.toLowerCase().trim(),
+        originalUrl: url,
+        url: cleanedUrl,
+        dateAdded: entry.dateAdded,
+        customBonusScore,
+        tags: tagsText,
+        tagsLower: tagsText.toLowerCase(),
+        tagsArray: tagsArray,
+        tagsArrayLower: tagsArray.map((tag) => tag.toLowerCase()),
+        folder: folderText,
+        folderLower: folderText.toLowerCase(),
+        folderArray: folderTrail,
+        folderArrayLower: folderTrail.map((folder) => folder.toLowerCase()),
       }
-      folderText = folderText.slice(0, -1)
 
-      mappedEntry.folder = folderText
-      mappedEntry.folderLower = folderText.toLowerCase()
-      mappedEntry.folderArray = folderTrail
-      mappedEntry.folderArrayLower = folderTrail.map((folder) => folder.toLowerCase())
-
-      mappedEntry.searchString = createSearchString(
-        mappedEntry.title,
-        mappedEntry.url,
-        mappedEntry.tags,
-        mappedEntry.folder,
-      )
-      mappedEntry.searchStringLower = mappedEntry.searchString.toLowerCase()
+      const searchString = createSearchString(mappedEntry.title, mappedEntry.url, tagsText, folderText)
+      mappedEntry.searchString = searchString
+      mappedEntry.searchStringLower = searchString.toLowerCase()
 
       // Only detect duplicates if the feature is enabled
-      if (seenByUrl && mappedEntry.url) {
+      if (seenByUrl) {
         const existingEntry = seenByUrl.get(mappedEntry.url)
         if (existingEntry) {
           existingEntry.dupe = true
           mappedEntry.dupe = true
           console.warn(
-            `Duplicate bookmark detected for ${mappedEntry.originalUrl} in folder: ${
-              mappedEntry.folderArray.join(' > ') || '/'
-            }`,
+            `Duplicate bookmark detected for ${mappedEntry.originalUrl} in folder: ${mappedEntry.folderArray.join(' > ') || '/'}`,
           )
         } else {
           seenByUrl.set(mappedEntry.url, mappedEntry)
@@ -204,10 +184,27 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
       }
 
       result.push(mappedEntry)
-    }
+    } else if (entry.children) {
+      // It's a folder
+      const folderTitle = entry.title
+      let newFolderTrail = folderTrail
+      let nextFolderText = folderText
 
-    if (entry.children) {
-      result = result.concat(convertBrowserBookmarks(entry.children, newFolderTrail, depth + 1, seenByUrl))
+      // Skip default chrome "system" folders at depth 1/2
+      if (depth > 2 && folderTitle) {
+        newFolderTrail = folderTrail.concat(folderTitle)
+        nextFolderText = `${folderText ? `${folderText} ` : ''}~${folderTitle}`
+      }
+
+      // Check ignore list
+      if (hasIgnoreList && folderTitle && ignoreList.includes(folderTitle)) {
+        continue
+      }
+
+      const children = convertBrowserBookmarks(entry.children, newFolderTrail, depth + 1, seenByUrl, nextFolderText)
+      if (children.length > 0) {
+        result.push(...children)
+      }
     }
   }
 
@@ -302,31 +299,14 @@ export function convertBrowserHistory(history) {
  */
 export function createSearchString(title, url, tags, folder) {
   const separator = '¦'
-  let searchString = ''
-  if (!url) {
-    console.error('createSearchString: No URL given', {
-      title,
-      url,
-      tags,
-      folder,
-    })
-    return searchString
-  }
-  // Keep the original casing intact. Fuzzy search relies on searchString
-  // to generate highlighted snippets for the UI, so we compute
-  // searchStringLower separately when building the data model.
-  if (title && !title.toLowerCase().includes(url.toLowerCase())) {
-    searchString += title + separator + url
-  } else {
-    searchString += url
-  }
-  if (tags) {
-    searchString += separator + tags
-  }
-  if (folder) {
-    searchString += separator + folder
-  }
-  return searchString
+  const parts = []
+
+  if (title && title !== url) parts.push(title)
+  if (url) parts.push(url)
+  if (tags) parts.push(tags)
+  if (folder) parts.push(folder)
+
+  return parts.join(separator)
 }
 
 /**

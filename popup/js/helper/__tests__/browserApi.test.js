@@ -115,13 +115,9 @@ describe('createSearchString', () => {
     expect(result).toBe('example.com')
   })
 
-  it('returns an empty string when no url is provided', () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  it('returns a search string from available data when no url is provided', () => {
     const result = createSearchString('Title', '', '#tag', undefined)
-
-    expect(result).toBe('')
-    expect(errorSpy).toHaveBeenCalledTimes(1)
-    expect(errorSpy.mock.calls[0][0]).toBe('createSearchString: No URL given')
+    expect(result).toBe('Title¦#tag')
   })
 })
 

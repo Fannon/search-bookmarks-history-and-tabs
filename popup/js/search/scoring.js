@@ -53,11 +53,7 @@ export function calculateFinalScore(results, searchTerm) {
 
   // searchTerm is already lowercased from normalizeSearchTerm() in common.js
   const normalizedSearchTerm = hasSearchTerm ? searchTerm.trim() : ''
-  const rawSearchTermParts = hasSearchTerm ? normalizedSearchTerm.split(/\s+/).filter(Boolean) : []
-  const hyphenatedSearchTerm = rawSearchTermParts.join('-')
-  // Extract tag and folder terms by replacing markers with spaces, then split once
-  const tagTerms = hasSearchTerm ? normalizedSearchTerm.replace(/#/g, ' ').split(/\s+/).filter(Boolean) : []
-  const folderTerms = hasSearchTerm ? normalizedSearchTerm.replace(/~/g, ' ').split(/\s+/).filter(Boolean) : []
+  const rawSearchTermParts = hasSearchTerm ? normalizedSearchTerm.split(' ') : []
 
   // Cache scoring options to avoid repeated property lookups
   const opts = ext.opts
@@ -83,20 +79,30 @@ export function calculateFinalScore(results, searchTerm) {
     scoreBookmarkOpenTabBonus,
   } = opts
 
-  const includeTerms = rawSearchTermParts
-    .map((token) => token.replace(TAXONOMY_PREFIX_REGEX, ''))
-    .map((token) => token.trim())
-    .filter((token) => {
-      if (!token) {
-        return false
-      }
+  // Build all term arrays in a single pass
+  const tagTerms = []
+  const folderTerms = []
+  const includeTerms = []
 
-      if (token.length < scoreExactIncludesBonusMinChars && !/^\d+$/.test(token)) {
-        return false
-      }
+  for (let i = 0; i < rawSearchTermParts.length; i++) {
+    const part = rawSearchTermParts[i]
+    if (!part) continue
 
-      return true
-    })
+    // Clean taxonomy prefixes
+    const cleanedPart = part.replace(TAXONOMY_PREFIX_REGEX, '').trim()
+    if (!cleanedPart) continue
+
+    // Add to tag/folder terms (these include # and ~ prefixed terms)
+    tagTerms.push(cleanedPart)
+    folderTerms.push(cleanedPart)
+
+    // Add to includeTerms if meets min length or is numeric
+    if (cleanedPart.length >= scoreExactIncludesBonusMinChars || /^\d+$/.test(cleanedPart)) {
+      includeTerms.push(cleanedPart)
+    }
+  }
+
+  const hyphenatedSearchTerm = rawSearchTermParts.filter(Boolean).join('-')
 
   // Only check includes bonus if configured and there are tokens that qualify
   const canCheckIncludes = hasSearchTerm && scoreExactIncludesBonus && includeTerms.length > 0
@@ -105,6 +111,21 @@ export function calculateFinalScore(results, searchTerm) {
   const normalizedUrlTerms = canCheckIncludes ? includeTerms.map((term) => term.replace(WHITESPACE_REGEX, '-')) : []
 
   const includesBonusCap = Number.isFinite(scoreExactIncludesMaxBonuses) ? scoreExactIncludesMaxBonuses : Infinity
+  const maxRecentSeconds = historyDaysAgo * 24 * 60 * 60
+  const hasExactStartsWithBonus = Boolean(scoreExactStartsWithBonus)
+  const hasExactEqualsBonus = Boolean(scoreExactEqualsBonus)
+  const hasExactTagMatchBonus = Boolean(scoreExactTagMatchBonus)
+  const hasExactFolderMatchBonus = Boolean(scoreExactFolderMatchBonus)
+  const hasExactPhraseTitleBonus = Boolean(scoreExactPhraseTitleBonus)
+  const hasExactPhraseUrlBonus = Boolean(scoreExactPhraseUrlBonus)
+  const hasVisitedBonus = Boolean(scoreVisitedBonusScore)
+  const hasRecentBonus = Boolean(scoreRecentBonusScoreMaximum)
+  const hasCustomBonus = Boolean(scoreCustomBonusScore)
+  const hasBookmarkOpenTabBonus = Boolean(scoreBookmarkOpenTabBonus)
+
+  const tagTermsLen = tagTerms.length
+  const folderTermsLen = folderTerms.length
+  const includeTermsLen = includeTerms.length
 
   for (let i = 0; i < results.length; i++) {
     const el = results[i]
@@ -118,16 +139,15 @@ export function calculateFinalScore(results, searchTerm) {
 
     // STEP 2: Multiply by search quality score (0-1 from fuzzy/precise search)
     // This reduces score if the match quality is poor
-    const searchScoreMultiplier = el.searchScore != null ? el.searchScore : scoreTitleWeight
+    const searchScoreMultiplier = el.searchScore ?? scoreTitleWeight
     score = score * searchScoreMultiplier
 
     if (hasSearchTerm) {
       // STEP 3A: Exact match bonuses
-      // Award bonus if title/URL starts with the exact search term
       const normalizedUrl = el.url
       const titleLower = el.titleLower
 
-      if (scoreExactStartsWithBonus) {
+      if (hasExactStartsWithBonus) {
         if (titleLower?.startsWith(normalizedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreTitleWeight
         } else if (normalizedUrl?.startsWith(hyphenatedSearchTerm)) {
@@ -136,40 +156,37 @@ export function calculateFinalScore(results, searchTerm) {
       }
 
       // Award bonus if title exactly equals the search term
-      if (scoreExactEqualsBonus && titleLower === normalizedSearchTerm) {
+      if (hasExactEqualsBonus && titleLower === normalizedSearchTerm) {
         score += scoreExactEqualsBonus * scoreTitleWeight
       }
 
       // Award bonus for each exact tag name match
-      // Example: searching "react hooks" matches tags "#react" and "#hooks"
-      if (scoreExactTagMatchBonus && el.tags && tagTerms.length) {
-        for (const searchTag of tagTerms) {
-          if (searchTag && el.tagsArrayLower?.includes(searchTag)) {
+      if (hasExactTagMatchBonus && tagTermsLen > 0 && el.tags) {
+        const tags = el.tagsArrayLower
+        for (let j = 0; j < tagTermsLen; j++) {
+          if (tags.includes(tagTerms[j])) {
             score += scoreExactTagMatchBonus
           }
         }
       }
 
       // Award bonus for each exact folder name match
-      // Example: searching "work projects" matches folders "~Work" and "~Projects"
-      if (scoreExactFolderMatchBonus && el.folder && folderTerms.length) {
-        for (const searchFolder of folderTerms) {
-          if (searchFolder && el.folderArrayLower?.includes(searchFolder)) {
+      if (hasExactFolderMatchBonus && folderTermsLen > 0 && el.folder) {
+        const folders = el.folderArrayLower
+        for (let j = 0; j < folderTermsLen; j++) {
+          if (folders.includes(folderTerms[j])) {
             score += scoreExactFolderMatchBonus
           }
         }
       }
 
       // STEP 3B: Includes bonuses (substring matching)
-      // Check each word in the search query for matches in title/url/tags/folder
-      // Priority order: title > url > tags > folder (only first match counts per term)
       if (canCheckIncludes) {
         let includesBonusesAwarded = 0
-
         const normalizedTags = el.tagsLower
         const normalizedFolder = el.folderLower
 
-        for (let j = 0; j < includeTerms.length; j++) {
+        for (let j = 0; j < includeTermsLen; j++) {
           if (includesBonusesAwarded >= includesBonusCap) {
             break
           }
@@ -195,52 +212,38 @@ export function calculateFinalScore(results, searchTerm) {
       }
 
       // Award bonus for full phrase match (multi-word searches only)
-      // Single-word searches already get includes/exact bonuses, so phrase bonus is redundant
       if (rawSearchTermParts.length > 1) {
-        if (scoreExactPhraseTitleBonus && titleLower?.includes(normalizedSearchTerm)) {
+        if (hasExactPhraseTitleBonus && titleLower?.includes(normalizedSearchTerm)) {
           score += scoreExactPhraseTitleBonus
         }
-
-        if (scoreExactPhraseUrlBonus && normalizedUrl?.includes(hyphenatedSearchTerm)) {
+        if (hasExactPhraseUrlBonus && normalizedUrl?.includes(hyphenatedSearchTerm)) {
           score += scoreExactPhraseUrlBonus
         }
       }
     }
 
-    // STEP 4: Behavioral bonuses (usage patterns)
-
-    // Award bonus based on visit frequency (more visits = higher score, up to cap)
-    // Example: visited 50 times with 0.5 points per visit = +20 (capped at scoreVisitedBonusScoreMaximum)
-    if (scoreVisitedBonusScore && el.visitCount) {
+    // STEP 4: Behavioral bonuses
+    if (hasVisitedBonus && el.visitCount) {
       score += Math.min(scoreVisitedBonusScoreMaximum, el.visitCount * scoreVisitedBonusScore)
     }
 
-    // Award bonus based on recency of last visit (linear decay)
-    // Recently visited items get max bonus, older items get less, oldest items get 0
-    // Example: visited 1 hour ago within 7-day window = high bonus
-    if (scoreRecentBonusScoreMaximum && el.lastVisitSecondsAgo != null) {
-      const maxSeconds = historyDaysAgo * 24 * 60 * 60
-      if (maxSeconds > 0 && el.lastVisitSecondsAgo >= 0) {
-        // Calculate proportional bonus: 0 s ago = full bonus, maxSeconds ago = 0 bonus
-        score += Math.max(0, (1 - el.lastVisitSecondsAgo / maxSeconds) * scoreRecentBonusScoreMaximum)
+    if (hasRecentBonus && el.lastVisitSecondsAgo != null) {
+      if (maxRecentSeconds > 0 && el.lastVisitSecondsAgo > 0) {
+        score += Math.max(0, (1 - el.lastVisitSecondsAgo / maxRecentSeconds) * scoreRecentBonusScoreMaximum)
       } else if (el.lastVisitSecondsAgo === 0) {
-        // Special case: visited in this exact moment gets maximum bonus
         score += scoreRecentBonusScoreMaximum
       }
     }
 
-    // Award bonus when bookmark already has a matching open tab (prevents duplicate opens)
-    if (scoreBookmarkOpenTabBonus && el.type === 'bookmark' && el.tab) {
+    if (hasBookmarkOpenTabBonus && el.type === 'bookmark' && el.tab) {
       score += scoreBookmarkOpenTabBonus
     }
 
-    // STEP 5: Add custom user-defined bonus score (e.g., "Title +20 #tag")
-    // This allows users to manually prioritize specific bookmarks
-    if (scoreCustomBonusScore && el.customBonusScore) {
+    // STEP 5: Custom bonus
+    if (hasCustomBonus && el.customBonusScore) {
       score += el.customBonusScore
     }
 
-    // Set final calculated score on the result object
     el.score = score
   }
 

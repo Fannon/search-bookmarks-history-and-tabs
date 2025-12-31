@@ -23,7 +23,7 @@
  * - See `highlightResults()` for the implementation.
  */
 
-import { cleanUpUrl, generateRandomId, highlightMatches } from '../helper/utils.js'
+import { cleanUpUrl, escapeHtml, escapeRegex, generateRandomId, highlightMatches } from '../helper/utils.js'
 import { closeErrors, printError } from '../view/errorView.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultResults.js'
@@ -204,18 +204,23 @@ function applyScoring(results, searchTerm, searchMode) {
  * @returns {Array} Filtered results.
  */
 function filterResults(results, searchMode) {
-  // Filter out all search results below a certain score
-  let filtered = results.filter((el) => el.score >= ext.opts.scoreMinScore)
+  const minScore = ext.opts.scoreMinScore
+  const maxResults = ext.opts.searchMaxResults
+  const shouldLimit = searchMode !== 'tags' && searchMode !== 'folders' && searchMode !== 'tabs'
 
-  // Only render maxResults if given (to improve render performance)
-  // Not applied on tabs, tag and folder search
-  if (
-    searchMode !== 'tags' &&
-    searchMode !== 'folders' &&
-    searchMode !== 'tabs' &&
-    filtered.length > ext.opts.searchMaxResults
-  ) {
-    filtered = filtered.slice(0, ext.opts.searchMaxResults)
+  // Fast path: no filtering needed
+  if (minScore <= 0 && (!shouldLimit || results.length <= maxResults)) {
+    return shouldLimit ? results.slice(0, maxResults) : results
+  }
+
+  // Single-pass filter and limit
+  const filtered = []
+  const limit = shouldLimit ? maxResults : results.length
+
+  for (let i = 0; i < results.length && filtered.length < limit; i++) {
+    if (results[i].score >= minScore) {
+      filtered.push(results[i])
+    }
   }
 
   return filtered
@@ -406,24 +411,30 @@ function highlightResults(results, searchTerm) {
     return results
   }
 
-  const terms = searchTerm ? searchTerm.split(' ') : []
-  const filteredTerms = terms.filter(Boolean)
-
-  if (filteredTerms.length === 0) {
+  const terms = searchTerm.split(' ').filter(Boolean)
+  if (terms.length === 0) {
     return results
   }
+
+  // Pre-compile the regex once for all results
+  const escapedTerms = terms
+    .map((t) => escapeHtml(t))
+    .map((t) => escapeRegex(t))
+    .sort((a, b) => b.length - a.length)
+
+  const highlightRegex = new RegExp(`(${escapedTerms.join('|')})`, 'gi')
 
   for (let i = 0; i < results.length; i++) {
     const entry = results[i]
 
-    entry.highlightedTitle = highlightMatches(entry.title || entry.url, filteredTerms)
-    entry.highlightedUrl = highlightMatches(entry.url, filteredTerms)
+    entry.highlightedTitle = highlightMatches(entry.title || entry.url, highlightRegex)
+    entry.highlightedUrl = highlightMatches(entry.url, highlightRegex)
 
     if (entry.tagsArray) {
-      entry.highlightedTagsArray = entry.tagsArray.map((tag) => highlightMatches(`#${tag}`, filteredTerms))
+      entry.highlightedTagsArray = entry.tagsArray.map((tag) => highlightMatches(`#${tag}`, highlightRegex))
     }
     if (entry.folderArray) {
-      entry.highlightedFolderArray = entry.folderArray.map((folder) => highlightMatches(`~${folder}`, filteredTerms))
+      entry.highlightedFolderArray = entry.folderArray.map((folder) => highlightMatches(`~${folder}`, highlightRegex))
     }
   }
 
