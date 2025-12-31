@@ -7,7 +7,7 @@
  * and generates a formatted Markdown summary.
  */
 
-import fs from 'node:fs'
+import fs from 'fs-extra'
 
 const jestLog = 'reports/jest_output.txt'
 const playwrightLog = 'reports/playwright_output.txt'
@@ -18,6 +18,8 @@ function generateSummary() {
 
   lines.push('# Performance Benchmark Summary')
   lines.push('')
+
+  fs.ensureDirSync('./reports')
 
   // 1. Comparison Matrix (from Jest)
   if (fs.existsSync(jestLog)) {

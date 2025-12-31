@@ -30,28 +30,6 @@ export function resetSimpleSearchState(searchMode) {
 }
 
 /**
- * Prepare search data with pre-computed lowercase strings and pre-escaped parts.
- *
- * @param {Array<Object>} data - Items to prepare.
- * @returns {Object} Prepared data structure.
- */
-function prepareSearchData(data) {
-  const len = data.length
-  const haystack = new Array(len)
-
-  for (let i = 0; i < len; i++) {
-    const entry = data[i]
-    // Cache lowercase version for matching
-    haystack[i] = entry.searchStringLower || entry.searchString.toLowerCase()
-  }
-
-  return {
-    data,
-    haystack,
-  }
-}
-
-/**
  * Execute a precise search across the datasets associated with a mode.
  */
 export function simpleSearch(searchMode, searchTerm, data) {
@@ -80,34 +58,26 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
   }
 
   // Initialize or retrieve cached state
+  // No haystack duplication - we use data[i].searchStringLower directly
   if (!state[searchMode]) {
     state[searchMode] = {
-      prepared: prepareSearchData(data),
-      idxs: null,
+      data: data,
+      idxs: null, // null means "all indices" - avoids array allocation
       searchTerm: '',
     }
   }
   const s = state[searchMode]
 
-  // Only reset filtering state, keep prepared strings
+  // Only reset filtering state if search term changed direction
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
     s.idxs = null
   }
 
-  const { data: originalData, haystack } = s.prepared
+  const originalData = s.data
+  const dataLen = originalData.length
 
-  // Initialize indices if needed
+  // Use existing indices or iterate all (null = all)
   let idxs = s.idxs
-  if (!idxs) {
-    idxs = []
-    for (let i = 0; i < haystack.length; i++) {
-      idxs.push(i)
-    }
-  }
-
-  if (idxs.length === 0) {
-    return []
-  }
 
   const terms = searchTerm.toLowerCase().split(' ')
 
@@ -117,12 +87,24 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
     if (!term) continue
 
     const nextIdxs = []
-    for (let i = 0; i < idxs.length; i++) {
-      const idx = idxs[i]
-      if (haystack[idx].indexOf(term) !== -1) {
-        nextIdxs.push(idx)
+
+    if (idxs === null) {
+      // First pass: iterate all data directly (no index array allocation)
+      for (let i = 0; i < dataLen; i++) {
+        if (originalData[i].searchStringLower.indexOf(term) !== -1) {
+          nextIdxs.push(i)
+        }
+      }
+    } else {
+      // Subsequent passes: filter existing indices
+      for (let i = 0; i < idxs.length; i++) {
+        const idx = idxs[i]
+        if (originalData[idx].searchStringLower.indexOf(term) !== -1) {
+          nextIdxs.push(idx)
+        }
       }
     }
+
     idxs = nextIdxs
     if (idxs.length === 0) break
   }
@@ -138,11 +120,11 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
   const results = new Array(idxs.length)
   for (let i = 0; i < idxs.length; i++) {
     const idx = idxs[i]
-    results[i] = {
-      ...originalData[idx],
-      searchScore: 1,
-      searchApproach: 'precise',
-    }
+    // Use Object.create for fast prototype-based shallow clone
+    const result = Object.create(originalData[idx])
+    result.searchScore = 1
+    result.searchApproach = 'precise'
+    results[i] = result
   }
 
   return results
