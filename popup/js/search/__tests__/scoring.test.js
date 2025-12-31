@@ -63,8 +63,14 @@ function scoreFor({ searchTerm = 'query', opts = {}, result = {} }) {
   if (normalizedResult.tags && !normalizedResult.tagsLower) {
     normalizedResult.tagsLower = normalizedResult.tags.toLowerCase()
   }
+  if (normalizedResult.tagsArray && !normalizedResult.tagsArrayLower) {
+    normalizedResult.tagsArrayLower = normalizedResult.tagsArray.map((t) => t.toLowerCase())
+  }
   if (normalizedResult.folder && !normalizedResult.folderLower) {
     normalizedResult.folderLower = normalizedResult.folder.toLowerCase()
+  }
+  if (normalizedResult.folderArray && !normalizedResult.folderArrayLower) {
+    normalizedResult.folderArrayLower = normalizedResult.folderArray.map((f) => f.toLowerCase())
   }
   if (normalizedResult.url) {
     normalizedResult.url = normalizedResult.url.toLowerCase()
@@ -852,8 +858,14 @@ describe('scoring', () => {
       if (normalizedResult.tags && !normalizedResult.tagsLower) {
         normalizedResult.tagsLower = normalizedResult.tags.toLowerCase()
       }
+      if (normalizedResult.tagsArray && !normalizedResult.tagsArrayLower) {
+        normalizedResult.tagsArrayLower = normalizedResult.tagsArray.map((t) => t.toLowerCase())
+      }
       if (normalizedResult.folder && !normalizedResult.folderLower) {
         normalizedResult.folderLower = normalizedResult.folder.toLowerCase()
+      }
+      if (normalizedResult.folderArray && !normalizedResult.folderArrayLower) {
+        normalizedResult.folderArrayLower = normalizedResult.folderArray.map((f) => f.toLowerCase())
       }
       if (normalizedResult.url) {
         normalizedResult.url = normalizedResult.url.toLowerCase()

@@ -1,10 +1,10 @@
 import { jest } from '@jest/globals'
-import { createTestExt, generateMockBookmarks, generateMockHistory, generateMockTabs } from './testUtils.js'
+import { createTestExt, generateRawBookmarks, generateRawHistory, generateRawTabs } from './testUtils.js'
 
 // Mock chrome before imports
-const mockBookmarks = generateMockBookmarks(5000)
-const mockHistory = generateMockHistory(2000)
-const mockTabs = generateMockTabs(100)
+const mockBookmarks = generateRawBookmarks(5000)
+const mockHistory = generateRawHistory(2000)
+const mockTabs = generateRawTabs(100)
 
 const mockChrome = {
   tabs: {

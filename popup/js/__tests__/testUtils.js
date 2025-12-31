@@ -102,9 +102,9 @@ function withExt(fn) {
 }
 
 /**
- * Creates mock bookmarks (optionally converted)
+ * Creates raw mock bookmarks (browser format)
  */
-export function generateMockBookmarks(count, converted = true) {
+export function generateRawBookmarks(count) {
   const bookmarks = []
   const now = Date.now()
   const oneDay = 24 * 60 * 60 * 1000
@@ -122,14 +122,13 @@ export function generateMockBookmarks(count, converted = true) {
     })
   }
 
-  const raw = [{ title: 'Root', children: [{ title: 'Folder A', children: bookmarks }] }]
-  return converted ? createBookmarksTestData(raw) : raw
+  return [{ title: 'Root', children: [{ title: 'Folder A', children: bookmarks }] }]
 }
 
 /**
- * Creates mock history items (optionally converted)
+ * Creates raw mock history items (browser format)
  */
-export function generateMockHistory(count, converted = true) {
+export function generateRawHistory(count) {
   const history = []
   const now = Date.now()
   const oneDay = 24 * 60 * 60 * 1000
@@ -146,13 +145,13 @@ export function generateMockHistory(count, converted = true) {
       visitCount: Math.floor(Math.random() * 50),
     })
   }
-  return converted ? createHistoryTestData(history) : history
+  return history
 }
 
 /**
- * Creates mock tabs (optionally converted)
+ * Creates raw mock tabs (browser format)
  */
-export function generateMockTabs(count, converted = true) {
+export function generateRawTabs(count) {
   const tabs = []
   const now = Date.now()
 
@@ -168,15 +167,16 @@ export function generateMockTabs(count, converted = true) {
       lastAccessed,
     })
   }
-  return converted ? createTabsTestData(tabs) : tabs
+  return tabs
 }
 
 /**
- * Standard data generation helpers for benchmarks
+ * Standalone mock data generation (converts to internal format)
+ * Use these for benchmarks or when you just need 'some data' in ext.model.
  */
-export const generateBookmarksTestData = (count) => generateMockBookmarks(count, true)
-export const generateHistoryTestData = (count) => generateMockHistory(count, true)
-export const generateTabsTestData = (count) => generateMockTabs(count, true)
+export const generateBookmarksTestData = (count) => createBookmarksTestData(generateRawBookmarks(count))
+export const generateHistoryTestData = (count) => createHistoryTestData(generateRawHistory(count))
+export const generateTabsTestData = (count) => createTabsTestData(generateRawTabs(count))
 
 /**
  * Conversion helpers for manual mock data
