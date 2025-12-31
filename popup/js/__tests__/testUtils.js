@@ -87,18 +87,29 @@ export function clearTestExt() {
 }
 
 /**
- * Generate a large set of mock bookmarks for performance testing.
- *
- * @param {number} count - Number of bookmarks to generate.
- * @returns {Array<Object>} Generated bookmarks.
+ * Internal: Wraps browser API conversion calls with basic ext setup
  */
-export function generateMockBookmarks(count) {
+function withExt(fn) {
+  const originalExt = global.ext
+  if (!global.ext || !global.ext.opts) {
+    global.ext = { opts: { ...defaultOptions, detectDuplicateBookmarks: false } }
+  }
+  try {
+    return fn()
+  } finally {
+    if (originalExt) global.ext = originalExt
+  }
+}
+
+/**
+ * Creates mock bookmarks (optionally converted)
+ */
+export function generateMockBookmarks(count, converted = true) {
   const bookmarks = []
   const now = Date.now()
   const oneDay = 24 * 60 * 60 * 1000
 
   for (let i = 0; i < count; i++) {
-    // Distribute bookmarks over the last 30 days
     const dateAdded = now - Math.floor(Math.random() * 30 * oneDay)
     const title = `Bookmark ${i}: ${['Article about', 'Documentation for', 'GitHub Repo', 'Video Tutorial'][i % 4]} ${['React', 'JavaScript', 'Performance', 'Browsers', 'Testing'][i % 5]}`
     const domain = ['google.com', 'github.com', 'stackoverflow.com', 'developer.mozilla.org'][i % 4]
@@ -108,26 +119,22 @@ export function generateMockBookmarks(count) {
       title,
       url: `https://${domain}/path/to/resource-${i}`,
       dateAdded,
-      // Useful for debugging in tests
-      _dateAddedISO: new Date(dateAdded).toISOString(),
     })
   }
-  return [{ title: 'Root', children: [{ title: 'Folder A', children: bookmarks }] }]
+
+  const raw = [{ title: 'Root', children: [{ title: 'Folder A', children: bookmarks }] }]
+  return converted ? createBookmarksTestData(raw) : raw
 }
 
 /**
- * Generate a large set of mock history items for performance testing.
- *
- * @param {number} count - Number of items to generate.
- * @returns {Array<Object>} Generated history items.
+ * Creates mock history items (optionally converted)
  */
-export function generateMockHistory(count) {
+export function generateMockHistory(count, converted = true) {
   const history = []
   const now = Date.now()
   const oneDay = 24 * 60 * 60 * 1000
 
   for (let i = 0; i < count; i++) {
-    // Distribute history over the last 14 days
     const lastVisitTime = now - Math.floor(Math.random() * 14 * oneDay)
     const title = `Historic Page ${i}: ${['Search results for', 'User profile on', 'Blog post about'][i % 3]} ${['Testing', 'Debugging', 'Web Development'][i % 3]}`
 
@@ -137,24 +144,19 @@ export function generateMockHistory(count) {
       url: `https://history.example.org/v${i}`,
       lastVisitTime,
       visitCount: Math.floor(Math.random() * 50),
-      _lastVisitISO: new Date(lastVisitTime).toISOString(),
     })
   }
-  return history
+  return converted ? createHistoryTestData(history) : history
 }
 
 /**
- * Generate a large set of mock tabs for performance testing.
- *
- * @param {number} count - Number of tabs to generate.
- * @returns {Array<Object>} Generated tabs.
+ * Creates mock tabs (optionally converted)
  */
-export function generateMockTabs(count) {
+export function generateMockTabs(count, converted = true) {
   const tabs = []
   const now = Date.now()
 
   for (let i = 0; i < count; i++) {
-    // Tabs were accessed in the last few hours
     const lastAccessed = now - Math.floor(Math.random() * 3 * 60 * 60 * 1000)
 
     tabs.push({
@@ -164,104 +166,40 @@ export function generateMockTabs(count) {
       active: i === 0,
       windowId: 1,
       lastAccessed,
-      _lastAccessedISO: new Date(lastAccessed).toISOString(),
     })
   }
-  return tabs
+  return converted ? createTabsTestData(tabs) : tabs
 }
 
 /**
- * Helper to create mock bookmarks data and convert it like the real code does
- * @param {Array} rawData - Array of raw browser bookmarks
- * @returns {Array} Converted data
+ * Standard data generation helpers for benchmarks
+ */
+export const generateBookmarksTestData = (count) => generateMockBookmarks(count, true)
+export const generateHistoryTestData = (count) => generateMockHistory(count, true)
+export const generateTabsTestData = (count) => generateMockTabs(count, true)
+
+/**
+ * Conversion helpers for manual mock data
  */
 export function createBookmarksTestData(rawData) {
-  const originalExt = global.ext
-  if (!global.ext || !global.ext.opts) {
-    global.ext = { opts: { detectDuplicateBookmarks: false } }
-  }
-  try {
+  return withExt(() => {
     const tree = rawData.length === 1 && rawData[0].children ? rawData[0] : { title: 'Root', children: rawData }
     return convertBrowserBookmarks([tree])
-  } finally {
-    if (originalExt) global.ext = originalExt
-  }
+  })
 }
 
-/**
- * Helper to create mock tabs data and convert it like the real code does
- * @param {Array} rawData - Array of raw browser tabs
- * @returns {Array} Converted data
- */
 export function createTabsTestData(rawData) {
-  const originalExt = global.ext
-  if (!global.ext || !global.ext.opts) {
-    global.ext = { opts: { detectDuplicateBookmarks: false } }
-  }
-  try {
-    return convertBrowserTabs(rawData)
-  } finally {
-    if (originalExt) global.ext = originalExt
-  }
+  return withExt(() => convertBrowserTabs(rawData))
 }
 
-/**
- * Helper to create mock history data and convert it like the real code does
- * @param {Array} rawData - Array of raw browser history items
- * @returns {Array} Converted data
- */
 export function createHistoryTestData(rawData) {
-  const originalExt = global.ext
-  if (!global.ext || !global.ext.opts) {
-    global.ext = { opts: { detectDuplicateBookmarks: false } }
-  }
-  try {
-    return convertBrowserHistory(rawData)
-  } finally {
-    if (originalExt) global.ext = originalExt
-  }
+  return withExt(() => convertBrowserHistory(rawData))
 }
 
 /**
- * Helper to create mock browser API data and convert it like the real code does
- * @deprecated Use createBookmarksTestData, createTabsTestData, or createHistoryTestData instead.
+ * @deprecated Use create*TestData instead.
  */
 export function createTestData(type, rawData) {
-  switch (type) {
-    case 'bookmarks':
-      return createBookmarksTestData(rawData)
-    case 'tabs':
-      return createTabsTestData(rawData)
-    case 'history':
-      return createHistoryTestData(rawData)
-    default:
-      throw new Error(`Unknown type: ${type}`)
-  }
-}
-
-/**
- * Generate a set of converted mock bookmarks.
- * @param {number} count
- * @returns {Array} Converted bookmarks
- */
-export function generateBookmarksTestData(count) {
-  return createBookmarksTestData(generateMockBookmarks(count))
-}
-
-/**
- * Generate a set of converted mock history items.
- * @param {number} count
- * @returns {Array} Converted history
- */
-export function generateHistoryTestData(count) {
-  return createHistoryTestData(generateMockHistory(count))
-}
-
-/**
- * Generate a set of converted mock tabs.
- * @param {number} count
- * @returns {Array} Converted tabs
- */
-export function generateTabsTestData(count) {
-  return createTabsTestData(generateMockTabs(count))
+  const map = { bookmarks: createBookmarksTestData, tabs: createTabsTestData, history: createHistoryTestData }
+  return map[type](rawData)
 }
