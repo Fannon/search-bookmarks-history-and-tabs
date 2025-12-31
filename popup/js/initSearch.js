@@ -6,7 +6,6 @@
  * - Load options plus bookmarks, tabs, and history data before wiring up search handlers.
  * - Bind navigation listeners, search input handling, and strategy toggles for simple/fuzzy/taxonomy flows.
  * - Maintain hash-based routing (`#search/<term>`) and restore cached results to keep navigation snappy.
- * - Lazy-load mark.js highlighting so first paint stays lightweight while results still highlight matches.
  */
 
 import { createExtensionContext } from './helper/extensionContext.js'

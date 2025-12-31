@@ -43,5 +43,3 @@ temp/
 # Built files
 popup/js/*.min.js*
 popup/css/*.min.css*
-jest_output.txt
-playwright_output.txt

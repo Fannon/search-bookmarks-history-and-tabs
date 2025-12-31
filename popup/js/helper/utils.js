@@ -4,7 +4,7 @@
  * Provides:
  * - Relative time formatting (`timeSince`) for surfacing history/recency metadata.
  * - URL cleanup helpers to normalize and compare bookmark addresses reliably.
- * - Lazy script loading with deduplication for libraries like mark.js and uFuzzy.
+ * - Lazy script loading with deduplication for libraries like uFuzzy.
  * - HTML escaping helpers (`escapeHtml`) to keep rendered content safe.
  */
 
@@ -114,7 +114,7 @@ const loadedScripts = new Set()
  * Dynamically loads a script file and caches the result
  *
  * Prevents loading the same script multiple times by tracking loaded URLs.
- * Used for lazy-loading large libraries (uFuzzy, mark.js) that are only
+ * Used for lazy-loading large libraries (uFuzzy) that are only
  * needed when specific features are used.
  *
  * @param {string} url - Script URL to load

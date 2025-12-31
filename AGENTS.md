@@ -29,7 +29,7 @@ When optimizing code, follow this workflow to ensure measurable improvements:
 1. **Establish Baseline**: Run benchmarks on the current `main` or base branch. Note the "Search completed in Xms" and "Search & Render took Yms" outputs.
 2. **Implement & Iterate**: Apply changes and run the same benchmarks.
 3. **Verify Regression**: Ensure that "Big" datasets (5,000+ items) still stay under the 16ms (60fps) threshold for search and render.
-4. **Zero-DOM Rule**: Avoid adding any post-render DOM manipulation steps (like `mark.js` passes). Highlights must be computed during the search phase.
+4. **Zero-DOM Rule**: Avoid adding any post-render DOM manipulation steps (like `mark.js` passes which used to be used here). Highlights must be computed during the search phase.
 
 ## Standards
 - **Code**: Modern ESM, "vanilla JS" style. Follow `biome.json` (2 spaces, single quotes).

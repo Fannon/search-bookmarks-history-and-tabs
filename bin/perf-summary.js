@@ -9,8 +9,8 @@
 
 import fs from 'node:fs'
 
-const jestLog = 'jest_output.txt'
-const playwrightLog = 'playwright_output.txt'
+const jestLog = 'reports/jest_output.txt'
+const playwrightLog = 'reports/playwright_output.txt'
 const summaryFile = 'reports/perf-summary.md'
 
 function generateSummary() {
