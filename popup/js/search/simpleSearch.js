@@ -57,22 +57,33 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
   const dataLen = data.length
 
   // Initialize or retrieve cached state
-  // No haystack duplication - we use data[i].searchStringLower directly
   if (!state[searchMode]) {
+    // Optimization: Create a flat haystack array of strings.
+    // Iterating over a flat array of strings is significantly faster than
+    // accessing properties on an array of objects in many JS engines.
+    const haystack = new Array(dataLen)
+    for (let i = 0; i < dataLen; i++) {
+      haystack[i] = data[i].searchStringLower
+    }
     state[searchMode] = {
       data: data,
+      haystack: haystack,
       idxs: null, // null means "all indices" - avoids array allocation
       searchTerm: '',
     }
   }
   const s = state[searchMode]
+  const haystack = s.haystack
+
+  // Optimization: If search term is exactly the same, return cached results (as new objects)
+  if (s.searchTerm === searchTerm && s.idxs !== null) {
+    return createResultObjects(s.data, s.idxs)
+  }
 
   // Only reset filtering state if search term changed direction
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
     s.idxs = null
   }
-
-  const originalData = s.data
 
   // Use existing indices or iterate all (null = all)
   let idxs = s.idxs
@@ -85,12 +96,19 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
     const term = terms[t]
     if (!term) continue
 
+    // Optimization: If this is the first term of an extended search ("abc" -> "abc def"),
+    // and s.idxs already contains results for the first part, we can skip the first pass.
+    if (t === 0 && idxs !== null && s.searchTerm.split(' ')[0] === term) {
+      continue
+    }
+
     const nextIdxs = []
 
     if (idxs === null) {
       // First pass: iterate all data directly (no index array allocation)
       for (let i = 0; i < dataLen; i++) {
-        if (originalData[i].searchStringLower.indexOf(term) !== -1) {
+        // .includes() is often slightly more optimized than .indexOf() !== -1 for boolean checks
+        if (haystack[i].includes(term)) {
           nextIdxs.push(i)
         }
       }
@@ -98,7 +116,7 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
       // Subsequent passes: filter existing indices
       for (let i = 0; i < idxs.length; i++) {
         const idx = idxs[i]
-        if (originalData[idx].searchStringLower.indexOf(term) !== -1) {
+        if (haystack[idx].includes(term)) {
           nextIdxs.push(idx)
         }
       }
@@ -117,18 +135,26 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
     return []
   }
 
-  // Inline object creation instead of Object.create for better performance
-  const results = new Array(idxs.length)
-  for (let i = 0; i < idxs.length; i++) {
+  return createResultObjects(s.data, idxs)
+}
+
+/**
+ * Creates the result objects for the matched indices.
+ * Separated from search logic for clarity and potential future reuse.
+ */
+function createResultObjects(data, idxs) {
+  const count = idxs.length
+  const results = new Array(count)
+  for (let i = 0; i < count; i++) {
     const idx = idxs[i]
-    const source = originalData[idx]
-    // Direct object creation with spread is faster than Object.create for this use case
+    const source = data[idx]
+    // Direct object creation with spread is faster for subsequent property access
+    // even if slightly slower for creation of large numbers of objects.
     results[i] = {
       ...source,
       searchScore: 1,
       searchApproach: 'precise',
     }
   }
-
   return results
 }

@@ -409,5 +409,74 @@ describe('simpleSearch', () => {
       results[0].customField = 'test'
       expect(model.bookmarks[0].customField).toBeUndefined()
     })
+
+    test('returns new objects even on cache hits', () => {
+      model.bookmarks = createBookmarksTestData([{ id: '1', title: 'test', url: 'https://test.com' }])
+
+      const results1 = simpleSearch('bookmarks', 'test', model)
+      const results2 = simpleSearch('bookmarks', 'test', model)
+
+      expect(results1).not.toBe(results2)
+      expect(results1[0]).not.toBe(results2[0])
+      expect(results1[0]).not.toBe(model.bookmarks[0])
+      expect(results2[0]).not.toBe(model.bookmarks[0])
+    })
+  })
+
+  describe('Optimization edge cases', () => {
+    test('progressive search from "abc" to "abc def" works correctly', () => {
+      model.bookmarks = createBookmarksTestData([
+        { id: '1', title: 'abc def ghi', url: 'url1' },
+        { id: '2', title: 'abc xyz', url: 'url2' },
+      ])
+
+      // Step 1: "abc"
+      const results1 = simpleSearch('bookmarks', 'abc', model)
+      expect(results1).toHaveLength(2)
+
+      // Step 2: "abc def" - should use optimized path and only return 1
+      const results2 = simpleSearch('bookmarks', 'abc def', model)
+      expect(results2).toHaveLength(1)
+      expect(results2[0].originalId).toBe('1')
+    })
+
+    test('backtracking search from "abc def" to "abc" works correctly', () => {
+      model.bookmarks = createBookmarksTestData([
+        { id: '1', title: 'abc def ghi', url: 'url1' },
+        { id: '2', title: 'abc xyz', url: 'url2' },
+      ])
+
+      simpleSearch('bookmarks', 'abc def', model)
+      const results = simpleSearch('bookmarks', 'abc', model)
+
+      expect(results).toHaveLength(2)
+      expect(results.map((r) => r.originalId)).toContain('1')
+      expect(results.map((r) => r.originalId)).toContain('2')
+    })
+
+    test('backtracking from "abcd" to "abc" handles idxs correctly', () => {
+      model.bookmarks = createBookmarksTestData([
+        { id: '1', title: 'abcd', url: 'u1' },
+        { id: '2', title: 'abc', url: 'u2' },
+      ])
+
+      simpleSearch('bookmarks', 'abcd', model)
+      const results = simpleSearch('bookmarks', 'abc', model)
+
+      expect(results).toHaveLength(2)
+    })
+
+    test('handling identical searches with different spaces', () => {
+      model.bookmarks = createBookmarksTestData([{ id: '1', title: 'abc def', url: 'u1' }])
+
+      // Note: common.js normalizeSearchTerm handles the spaces before simpleSearch is called
+      // But if someone called simpleSearch directly with multiple spaces:
+      const results1 = simpleSearch('bookmarks', 'abc  def', model)
+      const results2 = simpleSearch('bookmarks', 'abc def', model)
+
+      expect(results1).toHaveLength(1)
+      expect(results2).toHaveLength(1)
+      expect(results1).not.toBe(results2)
+    })
   })
 })

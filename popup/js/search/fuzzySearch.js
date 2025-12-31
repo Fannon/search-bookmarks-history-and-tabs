@@ -113,7 +113,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
   }
 
   /** Search results */
-  let results = []
+  const results = []
 
   // Invalidate s.idxs cache if the new search term is not just an extension of the last one
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
@@ -125,30 +125,28 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
   for (const term of searchTermArray) {
     if (!term) continue // Skip empty terms
 
-    const localResults = []
-
     try {
       const idxs = s.uf.filter(s.haystack, term, s.idxs)
-
-      for (let i = 0; i < idxs.length; i++) {
-        const result = data[idxs[i]]
-
-        localResults.push({
-          ...result,
-          searchScore: 1, // uFuzzy score is not used here if we don't call info, just use 1
-          searchApproach: 'fuzzy',
-        })
-      }
-
       s.idxs = idxs // Save idxs cache to state
     } catch (err) {
       err.message = 'Fuzzy search could not handle search term. Please try precise search instead.'
       printError(err)
     }
 
-    results = localResults // keep and return the last iteration of local results
-    if (!results.length) {
+    if (!s.idxs?.length) {
       break // Early termination if no matches found
+    }
+  }
+
+  // Final step: create result objects for the matched indices
+  if (s.idxs && s.idxs.length > 0) {
+    for (let i = 0; i < s.idxs.length; i++) {
+      const result = data[s.idxs[i]]
+      results.push({
+        ...result,
+        searchScore: 1, // uFuzzy score is not used here if we don't call info, just use 1
+        searchApproach: 'fuzzy',
+      })
     }
   }
 
