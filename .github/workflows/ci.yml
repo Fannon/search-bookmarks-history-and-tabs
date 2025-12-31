@@ -36,9 +36,9 @@ jobs:
         continue-on-error: true
         run: npm list
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -47,7 +47,7 @@ jobs:
       - name: Build
         run: npm run build
       - name: Save build folder
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: popup
           path: popup
@@ -59,9 +59,9 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -69,7 +69,7 @@ jobs:
         run: npm set cache ~/.npm && npm ci
       - name: Run Unit Tests
         run: npm run test:unit:coverage
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: unit-test-report
@@ -82,14 +82,14 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Download the build folder
         uses: actions/download-artifact@v4
         with:
           name: popup
           path: popup
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -107,7 +107,7 @@ jobs:
         run: npm run test:e2e:firefox
       # - name: Test Edge
       #   run: npm run test:e2e:edge
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: playwright-report
@@ -135,8 +135,8 @@ jobs:
   #     image: mcr.microsoft.com/playwright:v${{ needs['resolve-playwright-version'].outputs.version }}-noble
   #     options: --user 1001
   #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
+  #     - uses: actions/checkout@v5
+  #     - uses: actions/setup-node@v6
   #       with:
   #         node-version: ${{ env.NODE_VERSION }}
   #     - name: Install dependencies
