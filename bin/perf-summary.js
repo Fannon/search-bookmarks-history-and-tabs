@@ -59,14 +59,29 @@ function generateSummary() {
     // 2. Focused Logic Timings
     const logicTimings = content.split('\n').filter((l) => l.includes('took:'))
     if (logicTimings.length > 0) {
-      lines.push('### Core Logic Latency')
-      lines.push('')
-      lines.push('```text')
+      const rows = []
       for (const l of logicTimings) {
-        lines.push(l.trim())
+        // Parse "Precise Search ("resource-123") took: 9.28ms" format
+        const match = l.trim().match(/^(.+)\s+took:\s*(.+)$/)
+        if (match) {
+          rows.push([match[1].trim(), match[2].trim()])
+        }
       }
-      lines.push('```')
-      lines.push('')
+
+      if (rows.length > 0) {
+        const headers = ['Test', 'Time']
+        const colWidths = headers.map((h, i) => Math.max(h.length, ...rows.map((r) => r[i].length)))
+        const pad = (str, width) => ` ${str.padEnd(width, ' ')} `
+
+        lines.push('### Core Logic Latency')
+        lines.push('')
+        lines.push(`|${pad(headers[0], colWidths[0])}|${pad(headers[1], colWidths[1])}|`)
+        lines.push(`|${'-'.repeat(colWidths[0] + 2)}|${'-'.repeat(colWidths[1] + 2)}|`)
+        for (const row of rows) {
+          lines.push(`|${pad(row[0], colWidths[0])}|${pad(row[1], colWidths[1])}|`)
+        }
+        lines.push('')
+      }
     }
   }
 
@@ -76,14 +91,30 @@ function generateSummary() {
     const renderTimings = content.split('\n').filter((l) => l.includes('Playwright:'))
 
     if (renderTimings.length > 0) {
-      lines.push('## Rendering & Interaction (Playwright)')
-      lines.push('')
-      lines.push('```text')
+      const rows = []
       for (const l of renderTimings) {
-        lines.push(l.trim().replace(/^·/, '')) // Clean up playwright dots
+        // Parse "Playwright: Worst-case Rendering (1000 items with all badges) took: 2.00ms" format
+        const cleaned = l.trim().replace(/^·+/, '') // Remove all leading dots
+        const match = cleaned.match(/^Playwright:\s*(.+)\s+took:\s*(.+)$/)
+        if (match) {
+          rows.push([match[1].trim(), match[2].trim()])
+        }
       }
-      lines.push('```')
-      lines.push('')
+
+      if (rows.length > 0) {
+        const headers = ['Test', 'Time']
+        const colWidths = headers.map((h, i) => Math.max(h.length, ...rows.map((r) => r[i].length)))
+        const pad = (str, width) => ` ${str.padEnd(width, ' ')} `
+
+        lines.push('## Rendering & Interaction (Playwright)')
+        lines.push('')
+        lines.push(`|${pad(headers[0], colWidths[0])}|${pad(headers[1], colWidths[1])}|`)
+        lines.push(`|${'-'.repeat(colWidths[0] + 2)}|${'-'.repeat(colWidths[1] + 2)}|`)
+        for (const row of rows) {
+          lines.push(`|${pad(row[0], colWidths[0])}|${pad(row[1], colWidths[1])}|`)
+        }
+        lines.push('')
+      }
     }
   }
 

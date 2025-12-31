@@ -554,6 +554,30 @@ describe('simpleSearch', () => {
       expect(results[0].highlightedTitle).toBe('Some Title')
       expect(results[0].highlightedUrl).toBe('https://example.com')
     })
+
+    test('correctly extracts URL from searchString with tags and folders', () => {
+      // Regression test: URL should not include tags or folders
+      // searchString format: title¦url¦tags¦folder
+      const bookmark = {
+        id: 'bm-full-format',
+        searchString: 'Elektronauts Forum¦elektronauts.com/latest¦#music¦~Sites ~Forums',
+      }
+
+      model.bookmarks = [bookmark]
+
+      let results = simpleSearch('bookmarks', 'elektronauts', model)
+      results = highlightSimpleSearch(results, 'elektronauts')
+
+      expect(results).toHaveLength(1)
+      // URL must NOT contain tag (#music) or folder (~Sites ~Forums) separators
+      expect(results[0].highlightedUrl).not.toContain('¦')
+      expect(results[0].highlightedUrl).not.toContain('#music')
+      expect(results[0].highlightedUrl).not.toContain('~Sites')
+      expect(results[0].highlightedUrl).not.toContain('~Forums')
+      // URL should only be the clean URL with highlighting applied
+      expect(results[0].highlightedUrl).toContain('<mark>')
+      expect(results[0].highlightedUrl).toContain('.com/latest')
+    })
   })
 
   describe('Result immutability', () => {

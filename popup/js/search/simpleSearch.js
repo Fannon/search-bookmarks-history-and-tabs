@@ -177,17 +177,11 @@ export function highlightSimpleSearch(results, searchTerm) {
   for (let i = 0; i < results.length; i++) {
     const entry = results[i]
     const searchStr = entry.searchString
-    const splitIndex = searchStr.indexOf('¦')
-
-    let title = ''
-    let url = ''
-
-    if (splitIndex !== -1) {
-      title = searchStr.substring(0, splitIndex)
-      url = searchStr.substring(splitIndex + 1)
-    } else {
-      title = searchStr
-    }
+    // Split on '¦' to separate title¦url¦tags¦folder format
+    // Only take first two parts (title and url), ignoring tags and folders
+    const parts = searchStr.split('¦')
+    const title = parts[0] || ''
+    const url = parts[1] || ''
 
     const escapedTitle = escapeHtml(title)
     const escapedUrl = url ? escapeHtml(url) : ''
