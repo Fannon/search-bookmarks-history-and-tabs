@@ -19,8 +19,58 @@ createTestExt({
 
 const { convertBrowserBookmarks, convertBrowserHistory, convertBrowserTabs } = await import('../helper/browserApi.js')
 const { search } = await import('../search/common.js')
+const { resetSimpleSearchState } = await import('../search/simpleSearch.js')
+const { resetFuzzySearchState } = await import('../search/fuzzySearch.js')
 
 describe('REAL Fuzzy vs Precise Search Benchmark', () => {
+  /**
+   * Run a cold-start benchmark - no pre-warming, measures first-run performance
+   */
+  const runColdStartBenchmark = async (count) => {
+    // Reset all caches to simulate cold start
+    resetSimpleSearchState()
+    resetFuzzySearchState()
+
+    const rawBookmarks = generateMockBookmarks(count)
+    const rawHistory = generateMockHistory(count)
+    const rawTabs = generateMockTabs(Math.floor(count / 10))
+
+    ext.model.bookmarks = convertBrowserBookmarks(rawBookmarks)
+    ext.model.history = convertBrowserHistory(rawHistory)
+    ext.model.tabs = convertBrowserTabs(rawTabs)
+    ext.initialized = true
+
+    const totalItems = ext.model.bookmarks.length + ext.model.history.length + ext.model.tabs.length
+
+    // Cold Precise - first run ever
+    ext.searchCache = new Map()
+    ext.opts.searchStrategy = 'precise'
+    ext.dom.searchInput.value = 'resource'
+    const startP = performance.now()
+    await search()
+    const coldP = performance.now() - startP
+
+    // Reset for fair cold-start of fuzzy
+    resetSimpleSearchState()
+    resetFuzzySearchState()
+    ext.model.bookmarks = convertBrowserBookmarks(rawBookmarks)
+    ext.model.history = convertBrowserHistory(rawHistory)
+    ext.model.tabs = convertBrowserTabs(rawTabs)
+
+    // Cold Fuzzy - first run ever
+    ext.searchCache = new Map()
+    ext.opts.searchStrategy = 'fuzzy'
+    ext.dom.searchInput.value = 'resourc'
+    const startF = performance.now()
+    await search()
+    const coldF = performance.now() - startF
+
+    console.log(`| Cold Start (${totalItems} items) | ${coldP.toFixed(2)}ms | ${coldF.toFixed(2)}ms |`)
+  }
+
+  /**
+   * Run a warmed-up benchmark with multiple iterations
+   */
   const runBenchmark = async (sizeName, count, iterations = 10) => {
     const rawBookmarks = generateMockBookmarks(count)
     const rawHistory = generateMockHistory(count)
@@ -32,6 +82,18 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     ext.initialized = true
 
     const totalItems = ext.model.bookmarks.length + ext.model.history.length + ext.model.tabs.length
+
+    // Pre-warmup: run both strategies once to ensure JIT compilation and cache init
+    // This prevents the first-measured strategy from paying cold-start costs
+    ext.searchCache = new Map()
+    ext.opts.searchStrategy = 'precise'
+    ext.dom.searchInput.value = 'warmup'
+    await search()
+
+    ext.searchCache = new Map()
+    ext.opts.searchStrategy = 'fuzzy'
+    ext.dom.searchInput.value = 'warmup'
+    await search()
 
     // Precise
     let totalP = 0
@@ -65,9 +127,11 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     console.log('\n| Data Set Size | Precise Search (Avg) | Fuzzy Search (Avg) |')
     console.log('|---|---|---|')
 
-    // Warmup
-    await runBenchmark('Warmup', 100, 5)
+    // Cold start benchmark - runs first before any warming
+    await runColdStartBenchmark(200)
 
+    // Warmed benchmarks
+    await runBenchmark('Tiny', 100, 5)
     await runBenchmark('Small', 200)
     await runBenchmark('Medium', 2000)
     await runBenchmark('Big', 10000)
