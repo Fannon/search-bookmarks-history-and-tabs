@@ -11,7 +11,7 @@ import fs from 'node:fs'
 
 const jestLog = 'jest_output.txt'
 const playwrightLog = 'playwright_output.txt'
-const summaryFile = 'perf_summary.md'
+const summaryFile = 'reports/perf-summary.md'
 
 function generateSummary() {
   const lines = []
@@ -80,7 +80,7 @@ function generateSummary() {
       lines.push('')
       lines.push('```text')
       for (const l of renderTimings) {
-        lines.push(l.trim().replace(/^··/, '')) // Clean up playwright dots
+        lines.push(l.trim().replace(/^·/, '')) // Clean up playwright dots
       }
       lines.push('```')
       lines.push('')
@@ -90,9 +90,9 @@ function generateSummary() {
   const finalSummary = lines.join('\n')
 
   // Output to console for local visibility
-  console.log(`\n${'🚀 '.repeat(20)}`)
+  console.log(`\n${'-'.repeat(80)}\n`)
   console.log(finalSummary)
-  console.log(`${'🚀 '.repeat(20)}\n`)
+  console.log(`${'-'.repeat(80)}\n`)
 
   // Save to file for CI
   fs.writeFileSync(summaryFile, finalSummary)

@@ -38,7 +38,7 @@ jobs:
         id: perf
         run: |
           npm run test:perf
-          cat perf_summary.md >> $GITHUB_STEP_SUMMARY
+          cat reports/perf-summary.md >> $GITHUB_STEP_SUMMARY
 
       - uses: actions/upload-artifact@v4
         if: always()

@@ -66,6 +66,9 @@ function scoreFor({ searchTerm = 'query', opts = {}, result = {} }) {
   if (normalizedResult.folder && !normalizedResult.folderLower) {
     normalizedResult.folderLower = normalizedResult.folder.toLowerCase()
   }
+  if (normalizedResult.url) {
+    normalizedResult.url = normalizedResult.url.toLowerCase()
+  }
 
   const [scored] = calculateFinalScore([normalizedResult], searchTerm)
   const score = scored.score
@@ -841,7 +844,22 @@ describe('scoring', () => {
         opts: defaultOptions, // Use actual defaults!
       })
 
-      const [scored] = calculateFinalScore([result], searchTerm)
+      // Ensure normalized fields are present
+      const normalizedResult = { ...result }
+      if (normalizedResult.title && !normalizedResult.titleLower) {
+        normalizedResult.titleLower = normalizedResult.title.toLowerCase().trim()
+      }
+      if (normalizedResult.tags && !normalizedResult.tagsLower) {
+        normalizedResult.tagsLower = normalizedResult.tags.toLowerCase()
+      }
+      if (normalizedResult.folder && !normalizedResult.folderLower) {
+        normalizedResult.folderLower = normalizedResult.folder.toLowerCase()
+      }
+      if (normalizedResult.url) {
+        normalizedResult.url = normalizedResult.url.toLowerCase()
+      }
+
+      const [scored] = calculateFinalScore([normalizedResult], searchTerm)
       const score = scored.score
 
       clearTestExt()

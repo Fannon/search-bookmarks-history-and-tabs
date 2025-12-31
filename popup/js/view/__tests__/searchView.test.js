@@ -37,11 +37,37 @@ function createResults() {
 }
 
 async function setupSearchView({ results = createResults(), opts = {} } = {}) {
-  jest.resetModules()
-  delete document.hasContextMenuListener
   window.location.hash = '#search/query'
 
-  // Import modules - no need to mock since they have no side effects
+  const mockNav = {
+    selectListItem: jest.fn((index) => {
+      const list = document.getElementById('result-list')
+      const current = document.getElementById('selected-result')
+      if (current) current.id = ''
+      if (list?.children[index]) {
+        list.children[index].id = 'selected-result'
+      }
+      if (global.ext?.model) {
+        global.ext.model.currentItem = index
+      }
+    }),
+    clearSelection: jest.fn(),
+    hoverResultItem: jest.fn(),
+    navigationKeyListener: jest.fn(),
+  }
+
+  // Global control for the mock
+  global._mockNav = mockNav
+
+  await jest.unstable_mockModule('../searchNavigation.js', () => ({
+    __esModule: true,
+    selectListItem: (index, scroll) => global._mockNav.selectListItem(index, scroll),
+    clearSelection: () => global._mockNav.clearSelection(),
+    hoverResultItem: (e) => global._mockNav.hoverResultItem(e),
+    navigationKeyListener: (e) => global._mockNav.navigationKeyListener(e),
+  }))
+
+  // Import modules - NO need to mock since they have no side effects
   const searchViewModule = await import('../searchView.js')
 
   document.body.innerHTML = `
@@ -318,24 +344,11 @@ describe('searchView renderSearchResults', () => {
 })
 
 describe('✅ FIXED: Error Handling Robustness', () => {
-  let originalSelect
-
-  beforeEach(async () => {
-    const navModule = await import('../searchNavigation.js')
-    originalSelect = navModule.selectListItem
-  })
-
-  afterEach(async () => {
-    const navModule = await import('../searchNavigation.js')
-    navModule.selectListItem = originalSelect
-  })
-
   it('now resets mouseMoved even if rendering throws error', async () => {
     const { module } = await setupSearchView()
 
-    // Import and mock selectListItem to throw
-    const navModule = await import('../searchNavigation.js')
-    navModule.selectListItem = jest.fn(() => {
+    // Configure the mock to throw once via the global control
+    global._mockNav.selectListItem.mockImplementationOnce(() => {
       throw new Error('Immediate failure')
     })
 
@@ -355,9 +368,7 @@ describe('✅ FIXED: Error Handling Robustness', () => {
   it('now handles rendering errors gracefully with proper error boundary', async () => {
     const { module } = await setupSearchView()
 
-    // Import and mock selectListItem to throw
-    const navModule = await import('../searchNavigation.js')
-    navModule.selectListItem = jest.fn(() => {
+    global._mockNav.selectListItem.mockImplementationOnce(() => {
       throw new Error('Rendering catastrophe')
     })
 
