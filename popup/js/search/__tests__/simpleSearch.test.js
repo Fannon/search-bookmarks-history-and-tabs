@@ -1,6 +1,23 @@
 import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
 import { highlightSimpleSearch, resetSimpleSearchState, simpleSearch } from '../simpleSearch.js'
 
+/**
+ * Helper to create test entries with proper lowercase fields
+ */
+function createTestEntry(props) {
+  const entry = { ...props }
+  if (props.searchString && !props.searchStringLower) {
+    entry.searchStringLower = props.searchString.toLowerCase()
+  }
+  if (props.tagsArray && !props.tagsArrayLower) {
+    entry.tagsArrayLower = props.tagsArray.map((t) => t.toLowerCase())
+  }
+  if (props.folderArray && !props.folderArrayLower) {
+    entry.folderArrayLower = props.folderArray.map((f) => f.toLowerCase())
+  }
+  return entry
+}
+
 describe('simpleSearch', () => {
   let model
 
@@ -18,12 +35,12 @@ describe('simpleSearch', () => {
   })
 
   test('returns exact matches for bookmarks mode', () => {
-    const bookmark = {
+    const bookmark = createTestEntry({
       id: 'bookmark-1',
       title: 'Test bookmark',
       url: 'https://example.com/test',
       searchString: 'test bookmark https://example.com/test',
-    }
+    })
 
     model.bookmarks = [bookmark]
 

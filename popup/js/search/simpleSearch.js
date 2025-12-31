@@ -57,6 +57,8 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
     return []
   }
 
+  const dataLen = data.length
+
   // Initialize or retrieve cached state
   // No haystack duplication - we use data[i].searchStringLower directly
   if (!state[searchMode]) {
@@ -74,12 +76,12 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
   }
 
   const originalData = s.data
-  const dataLen = originalData.length
 
   // Use existing indices or iterate all (null = all)
   let idxs = s.idxs
 
-  const terms = searchTerm.toLowerCase().split(' ')
+  // Split once and reuse - searchTerm is already lowercase from normalizeSearchTerm
+  const terms = searchTerm.split(' ')
 
   // Filtering (AND-logic)
   for (let t = 0; t < terms.length; t++) {
@@ -113,18 +115,21 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
   s.idxs = idxs
   s.searchTerm = searchTerm
 
-  if (idxs.length === 0) {
+  if (idxs === null || idxs.length === 0) {
     return []
   }
 
+  // Inline object creation instead of Object.create for better performance
   const results = new Array(idxs.length)
   for (let i = 0; i < idxs.length; i++) {
     const idx = idxs[i]
-    // Use Object.create for fast prototype-based shallow clone
-    const result = Object.create(originalData[idx])
-    result.searchScore = 1
-    result.searchApproach = 'precise'
-    results[i] = result
+    const source = originalData[idx]
+    // Direct object creation with spread is faster than Object.create for this use case
+    results[i] = {
+      ...source,
+      searchScore: 1,
+      searchApproach: 'precise',
+    }
   }
 
   return results
@@ -143,7 +148,8 @@ export function highlightSimpleSearch(results, searchTerm) {
     return results
   }
 
-  const terms = searchTerm ? searchTerm.toLowerCase().split(' ') : []
+  // searchTerm is already lowercased from normalizeSearchTerm() in common.js
+  const terms = searchTerm ? searchTerm.split(' ') : []
   const filteredTerms = terms.filter(Boolean)
   let highlightRegex = null
 

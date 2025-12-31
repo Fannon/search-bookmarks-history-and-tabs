@@ -51,8 +51,8 @@ const WHITESPACE_REGEX = /\s+/g
 export function calculateFinalScore(results, searchTerm) {
   const hasSearchTerm = Boolean(ext.model.searchTerm)
 
-  // Normalize and split search term once for all downstream checks
-  const normalizedSearchTerm = hasSearchTerm ? searchTerm.toLowerCase().trim() : ''
+  // searchTerm is already lowercased from normalizeSearchTerm() in common.js
+  const normalizedSearchTerm = hasSearchTerm ? searchTerm.trim() : ''
   const rawSearchTermParts = hasSearchTerm ? normalizedSearchTerm.split(/\s+/).filter(Boolean) : []
   const hyphenatedSearchTerm = rawSearchTermParts.join('-')
   // Extract tag and folder terms by replacing markers with spaces, then split once
@@ -144,7 +144,7 @@ export function calculateFinalScore(results, searchTerm) {
       // Example: searching "react hooks" matches tags "#react" and "#hooks"
       if (scoreExactTagMatchBonus && el.tags && tagTerms.length) {
         for (const searchTag of tagTerms) {
-          if (searchTag && el.tagsArray?.some((tag) => tag.toLowerCase() === searchTag)) {
+          if (searchTag && el.tagsArrayLower?.includes(searchTag)) {
             score += scoreExactTagMatchBonus
           }
         }
@@ -154,7 +154,7 @@ export function calculateFinalScore(results, searchTerm) {
       // Example: searching "work projects" matches folders "~Work" and "~Projects"
       if (scoreExactFolderMatchBonus && el.folder && folderTerms.length) {
         for (const searchFolder of folderTerms) {
-          if (searchFolder && el.folderArray?.some((folder) => folder.toLowerCase() === searchFolder)) {
+          if (searchFolder && el.folderArrayLower?.includes(searchFolder)) {
             score += scoreExactFolderMatchBonus
           }
         }

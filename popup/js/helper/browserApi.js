@@ -165,6 +165,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
       mappedEntry.tags = tagsText
       mappedEntry.tagsLower = tagsText.toLowerCase()
       mappedEntry.tagsArray = tagsArray
+      mappedEntry.tagsArrayLower = tagsArray.map((tag) => tag.toLowerCase())
 
       // Consider the folder names / structure of bookmarks
       let folderText = ''
@@ -176,6 +177,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
       mappedEntry.folder = folderText
       mappedEntry.folderLower = folderText.toLowerCase()
       mappedEntry.folderArray = folderTrail
+      mappedEntry.folderArrayLower = folderTrail.map((folder) => folder.toLowerCase())
 
       mappedEntry.searchString = createSearchString(
         mappedEntry.title,
