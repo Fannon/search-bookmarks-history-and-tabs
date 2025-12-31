@@ -73,9 +73,9 @@ export async function renderSearchResults() {
         for (let j = 0; j < resultEntry.tagsArray.length; j++) {
           const tag = resultEntry.tagsArray[j]
           const highlightedTag = resultEntry.highlightedTagsArray?.[j]
-          const content = shouldHighlight && highlightedTag ? highlightedTag : escapeHtml(tag)
+          const content = shouldHighlight && highlightedTag ? highlightedTag : `#${escapeHtml(tag)}`
           badges.push(
-            `<span class="badge tags" x-link="#search/#${escapeHtml(tag)}" title="Bookmark Tags">#${content}</span>`,
+            `<span class="badge tags" x-link="#search/#${escapeHtml(tag)}" title="Bookmark Tags">${content}</span>`,
           )
         }
       }
@@ -89,9 +89,9 @@ export async function renderSearchResults() {
           trail.push(folderName)
           const folderLink = `#search/~${trail.join(' ~')}`
           const safeLink = escapeHtml(folderLink)
-          const content = shouldHighlight && highlightedFolder ? highlightedFolder : escapeHtml(folderName)
+          const content = shouldHighlight && highlightedFolder ? highlightedFolder : `~${escapeHtml(folderName)}`
           badges.push(
-            `<span class="badge folder" x-link="${safeLink}" title="Bookmark Folder" style="${bookmarkColorStyle}">~${content}</span>`,
+            `<span class="badge folder" x-link="${safeLink}" title="Bookmark Folder" style="${bookmarkColorStyle}">${content}</span>`,
           )
         }
       }

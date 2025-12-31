@@ -257,6 +257,7 @@ export async function search(event) {
 
       // Get and clean up original search query
       let searchTerm = normalizeSearchTerm(ext.dom.searchInput.value)
+      const originalSearchTerm = searchTerm
 
       // Check cache first for better performance (only for actual searches, not default results)
       if (useCachedResultsIfAvailable(searchTerm)) return
@@ -308,7 +309,9 @@ export async function search(event) {
       results = filterResults(results, searchMode)
 
       // Apply highlighting only to the truncated result set (better performance)
-      results = highlightResults(results, searchTerm)
+      // For tags/folders, use the original term to include the marker (# or ~) in highlighting
+      const highlightTerm = searchMode === 'tags' || searchMode === 'folders' ? originalSearchTerm : searchTerm
+      results = highlightResults(results, highlightTerm)
 
       ext.model.result = results
 
@@ -417,10 +420,10 @@ function highlightResults(results, searchTerm) {
     entry.highlightedUrl = highlightMatches(entry.url, filteredTerms)
 
     if (entry.tagsArray) {
-      entry.highlightedTagsArray = entry.tagsArray.map((tag) => highlightMatches(tag, filteredTerms))
+      entry.highlightedTagsArray = entry.tagsArray.map((tag) => highlightMatches(`#${tag}`, filteredTerms))
     }
     if (entry.folderArray) {
-      entry.highlightedFolderArray = entry.folderArray.map((folder) => highlightMatches(folder, filteredTerms))
+      entry.highlightedFolderArray = entry.folderArray.map((folder) => highlightMatches(`~${folder}`, filteredTerms))
     }
   }
 
