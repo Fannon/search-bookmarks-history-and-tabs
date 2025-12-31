@@ -41,16 +41,21 @@ export async function getBrowserTabs(queryOptions = {}) {
  * @returns {Array<Object>} Standardized tab entries.
  */
 export function convertBrowserTabs(chromeTabs) {
-  return chromeTabs
-    .filter((el) => typeof el?.url === 'string' && el.url.trim())
-    .map((el) => {
+  const result = []
+  const count = chromeTabs.length
+
+  for (let i = 0; i < count; i++) {
+    const el = chromeTabs[i]
+    if (typeof el?.url === 'string' && el.url.trim()) {
       const cleanUrl = cleanUpUrl(el.url)
-      const searchString = createSearchString(el.title, cleanUrl)
       const title = getTitle(el.title, cleanUrl)
-      return {
+      const titleLower = title.toLowerCase().trim()
+      const searchString = createSearchString(title, cleanUrl)
+
+      result.push({
         type: 'tab',
         title,
-        titleLower: title.toLowerCase().trim(),
+        titleLower: titleLower,
         url: cleanUrl,
         originalUrl: el.url.replace(/\/$/, ''),
         originalId: el.id,
@@ -59,8 +64,11 @@ export function convertBrowserTabs(chromeTabs) {
         searchString,
         searchStringLower: searchString.toLowerCase(),
         lastVisitSecondsAgo: el.lastAccessed ? (Date.now() - el.lastAccessed) / 1000 : undefined,
-      }
-    })
+      })
+    }
+  }
+
+  return result
 }
 
 /**
@@ -87,14 +95,25 @@ export async function getBrowserBookmarks() {
  * @param {string} [folderText] - Pre-calculated folder string for search.
  * @returns {Array<Object>} Flattened bookmark entries.
  */
-export function convertBrowserBookmarks(bookmarks, folderTrail = [], depth = 1, seenByUrl, folderText) {
-  const result = []
-
-  // Build folderText from folderTrail if not provided
+export function convertBrowserBookmarks(
+  bookmarks,
+  folderTrail = [],
+  depth = 1,
+  seenByUrl,
+  folderText,
+  result = [],
+  folderLower = '',
+  folderArrayLower = [],
+) {
+  // Build folderText and folderLower if not provided (first call)
   if (folderText === undefined && folderTrail.length > 0) {
     folderText = folderTrail.map((f) => `~${f}`).join(' ')
+    folderLower = folderText.toLowerCase()
+    folderArrayLower = folderTrail.map((f) => f.toLowerCase())
   } else if (folderText === undefined) {
     folderText = ''
+    folderLower = ''
+    folderArrayLower = []
   }
 
   // Only initialize seenByUrl Map if duplicate detection is enabled
@@ -138,36 +157,38 @@ export function convertBrowserBookmarks(bookmarks, folderTrail = [], depth = 1, 
             // If tag starts with a digit, it's probably not a tag (e.g. "C# 11")
             title += ` #${tag}`
           } else {
-            tagsArray.push(tag)
-            tagsText += `#${tag} `
+            const tagLower = tag.toLowerCase()
+            tagsArray.push(tagLower)
+            tagsText += `#${tagLower} `
           }
         }
         tagsText = tagsText.trim()
       }
 
       const finalTitle = getTitle(title, cleanedUrl)
+      const titleLower = finalTitle.toLowerCase().trim()
+      const searchString = createSearchString(finalTitle, cleanedUrl, tagsText, folderText)
+
       const mappedEntry = {
         type: 'bookmark',
         originalId: entry.id,
         title: finalTitle,
-        titleLower: finalTitle.toLowerCase().trim(),
+        titleLower: titleLower,
         originalUrl: url,
         url: cleanedUrl,
         dateAdded: entry.dateAdded,
         customBonusScore,
         tags: tagsText,
-        tagsLower: tagsText.toLowerCase(),
+        tagsLower: tagsText, // Already lowercased during parsing
         tagsArray: tagsArray,
-        tagsArrayLower: tagsArray.map((tag) => tag.toLowerCase()),
+        tagsArrayLower: tagsArray, // Already lowercased during parsing
         folder: folderText,
-        folderLower: folderText.toLowerCase(),
+        folderLower: folderLower,
         folderArray: folderTrail,
-        folderArrayLower: folderTrail.map((folder) => folder.toLowerCase()),
+        folderArrayLower: folderArrayLower,
+        searchString: searchString,
+        searchStringLower: searchString.toLowerCase(),
       }
-
-      const searchString = createSearchString(mappedEntry.title, mappedEntry.url, tagsText, folderText)
-      mappedEntry.searchString = searchString
-      mappedEntry.searchStringLower = searchString.toLowerCase()
 
       // Only detect duplicates if the feature is enabled
       if (seenByUrl) {
@@ -189,11 +210,16 @@ export function convertBrowserBookmarks(bookmarks, folderTrail = [], depth = 1, 
       const folderTitle = entry.title
       let newFolderTrail = folderTrail
       let nextFolderText = folderText
+      let nextFolderLower = folderLower
+      let nextFolderArrayLower = folderArrayLower
 
       // Skip default chrome "system" folders at depth 1/2
       if (depth > 2 && folderTitle) {
         newFolderTrail = folderTrail.concat(folderTitle)
+        const folderTitleLower = folderTitle.toLowerCase()
         nextFolderText = `${folderText ? `${folderText} ` : ''}~${folderTitle}`
+        nextFolderLower = `${folderLower ? `${folderLower} ` : ''}~${folderTitleLower}`
+        nextFolderArrayLower = folderArrayLower.concat(folderTitleLower)
       }
 
       // Check ignore list
@@ -201,10 +227,16 @@ export function convertBrowserBookmarks(bookmarks, folderTrail = [], depth = 1, 
         continue
       }
 
-      const children = convertBrowserBookmarks(entry.children, newFolderTrail, depth + 1, seenByUrl, nextFolderText)
-      if (children.length > 0) {
-        result.push(...children)
-      }
+      convertBrowserBookmarks(
+        entry.children,
+        newFolderTrail,
+        depth + 1,
+        seenByUrl,
+        nextFolderText,
+        result,
+        nextFolderLower,
+        nextFolderArrayLower,
+      )
     }
   }
 
@@ -232,14 +264,9 @@ export async function getBrowserHistory(startTime, maxResults) {
   }
 }
 
-/**
- * Convert chrome history into our internal, flat array format
- *
- * @param {Array<Object>} history - Raw history entries.
- * @returns {Array<Object>} Normalized history items.
- */
 export function convertBrowserHistory(history) {
   const historyIgnoreList = ext.opts.historyIgnoreList
+  let ignoreRegex = null
   if (historyIgnoreList?.length) {
     if (!ext.state) ext.state = {}
     if (!ext.state.historyIgnoreRegex) {
@@ -255,28 +282,30 @@ export function convertBrowserHistory(history) {
         ext.state.historyIgnoreRegex = /$.^/
       }
     }
-    const ignoreRegex = ext.state.historyIgnoreRegex
-
-    let ignoredHistoryCounter = 0
-    history = history.filter((el) => {
-      if (ignoreRegex.test(el.url)) {
-        ignoredHistoryCounter += 1
-        return false
-      }
-      return true
-    })
-    console.debug(`Ignored ${ignoredHistoryCounter} history items due to ignore list`)
+    ignoreRegex = ext.state.historyIgnoreRegex
   }
 
+  const result = []
+  const count = history.length
   const now = Date.now()
-  return history.map((el) => {
+  let ignoredHistoryCounter = 0
+
+  for (let i = 0; i < count; i++) {
+    const el = history[i]
+    if (ignoreRegex?.test(el.url)) {
+      ignoredHistoryCounter += 1
+      continue
+    }
+
     const cleanUrl = cleanUpUrl(el.url)
-    const searchString = createSearchString(el.title, cleanUrl)
     const title = getTitle(el.title, cleanUrl)
-    return {
+    const titleLower = title.toLowerCase().trim()
+    const searchString = createSearchString(title, cleanUrl)
+
+    result.push({
       type: 'history',
       title,
-      titleLower: title.toLowerCase().trim(),
+      titleLower: titleLower,
       originalUrl: el.url.replace(/\/$/, ''),
       url: cleanUrl,
       visitCount: el.visitCount,
@@ -284,8 +313,14 @@ export function convertBrowserHistory(history) {
       originalId: el.id,
       searchString,
       searchStringLower: searchString.toLowerCase(),
-    }
-  })
+    })
+  }
+
+  if (ignoredHistoryCounter > 0) {
+    console.debug(`Ignored ${ignoredHistoryCounter} history items due to ignore list`)
+  }
+
+  return result
 }
 
 /**
@@ -298,15 +333,20 @@ export function convertBrowserHistory(history) {
  * @returns {string} Combined search string.
  */
 export function createSearchString(title, url, tags, folder) {
-  const separator = '¦'
-  const parts = []
-
-  if (title && title !== url) parts.push(title)
-  if (url) parts.push(url)
-  if (tags) parts.push(tags)
-  if (folder) parts.push(folder)
-
-  return parts.join(separator)
+  let result = ''
+  if (title && title !== url) {
+    result += title
+  }
+  if (url) {
+    result += (result ? '¦' : '') + url
+  }
+  if (tags) {
+    result += (result ? '¦' : '') + tags
+  }
+  if (folder) {
+    result += (result ? '¦' : '') + folder
+  }
+  return result
 }
 
 /**

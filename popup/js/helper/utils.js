@@ -149,14 +149,29 @@ export function timeSince(date) {
  * @see https://stackoverflow.com/a/57698415
  */
 export function cleanUpUrl(url) {
-  if (!url) {
-    return ''
+  if (typeof url !== 'string') {
+    if (!url) return ''
+    url = String(url)
   }
 
-  return String(url)
-    .replace(/^(?:https?:\/\/)?(?:www\.)?/i, '')
-    .replace(/\/$/, '')
-    .toLowerCase()
+  if (url.length === 0) return ''
+
+  // Convert to lowercase early to simplify prefix checks and regex
+  let clean = url.toLowerCase()
+
+  // Protocol / www removal
+  if (clean.startsWith('h')) {
+    clean = clean.replace(/^(?:https?:\/\/)?(?:www\.)?/, '')
+  } else if (clean.startsWith('w')) {
+    clean = clean.replace(/^www\./, '')
+  }
+
+  // Trailing slash removal
+  if (clean.endsWith('/')) {
+    clean = clean.slice(0, -1)
+  }
+
+  return clean
 }
 
 // Cache for loaded scripts to avoid duplicate loading and network requests
