@@ -11,7 +11,7 @@ import { resolveSearchTargets } from './common.js'
 /**
  * Memoize some state to avoid re-creating haystack and search instances.
  */
-const state = {}
+let state = {}
 
 /**
  * Reset cached simple search state when datasets or mode change.
@@ -22,9 +22,7 @@ export function resetSimpleSearchState(searchMode) {
   if (searchMode) {
     state[searchMode] = undefined
   } else {
-    for (const key in state) {
-      delete state[key]
-    }
+    state = {}
   }
 }
 

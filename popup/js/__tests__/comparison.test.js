@@ -66,7 +66,7 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
   /**
    * Run a warmed-up benchmark with multiple iterations
    */
-  const runBenchmark = async (sizeName, count, iterations = 10) => {
+  const runBenchmark = async (sizeName, count, iterations = 50, silent = false) => {
     // Reset state before each benchmark size to ensure we use the correct data size
     resetSimpleSearchState()
     resetFuzzySearchState()
@@ -81,12 +81,12 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     // Pre-warmup: run both strategies once to ensure JIT compilation and cache init
     ext.searchCache = new Map()
     ext.opts.searchStrategy = 'precise'
-    ext.dom.searchInput.value = 'warmup'
+    ext.dom.searchInput.value = 'resource'
     await search()
 
     ext.searchCache = new Map()
     ext.opts.searchStrategy = 'fuzzy'
-    ext.dom.searchInput.value = 'warmup'
+    ext.dom.searchInput.value = 'resourc'
     await search()
 
     // Precise
@@ -113,20 +113,25 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     }
     const avgF = totalF / iterations
 
-    console.log(`| ${sizeName} (${totalItems} items) | ${avgP.toFixed(2)}ms | ${avgF.toFixed(2)}ms |`)
+    if (!silent) {
+      console.log(`| ${sizeName} (${totalItems} items) | ${avgP.toFixed(2)}ms | ${avgF.toFixed(2)}ms |`)
+    }
   }
 
   test('Benchmark Matrix', async () => {
+    // Cold start benchmark - runs first before any warming
+    await runColdStartBenchmark(1000)
+
+    // Warmed benchmarks
+    // Pre-warm the JIT with a significant run before recording
+    await runBenchmark('Warmup', 1000, 50, true)
+
     console.log('\n| Data Set Size | Precise Search (Avg) | Fuzzy Search (Avg) |')
     console.log('|---|---|---|')
 
-    // Cold start benchmark - runs first before any warming
-    await runColdStartBenchmark(200)
-
-    // Warmed benchmarks
-    await runBenchmark('Tiny', 100, 5)
-    await runBenchmark('Small', 200)
-    await runBenchmark('Medium', 2000)
-    await runBenchmark('Big', 10000)
+    await runBenchmark('Tiny', 100)
+    await runBenchmark('Small', 1000)
+    await runBenchmark('Medium', 3000)
+    await runBenchmark('Huge', 25000)
   })
 })
