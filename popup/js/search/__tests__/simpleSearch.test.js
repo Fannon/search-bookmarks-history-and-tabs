@@ -1,22 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
+import { createTestData } from '../../__tests__/testUtils.js'
 import { highlightSimpleSearch, resetSimpleSearchState, simpleSearch } from '../simpleSearch.js'
-
-/**
- * Helper to create test entries with proper lowercase fields
- */
-function createTestEntry(props) {
-  const entry = { ...props }
-  if (props.searchString && !props.searchStringLower) {
-    entry.searchStringLower = props.searchString.toLowerCase()
-  }
-  if (props.tagsArray && !props.tagsArrayLower) {
-    entry.tagsArrayLower = props.tagsArray.map((t) => t.toLowerCase())
-  }
-  if (props.folderArray && !props.folderArrayLower) {
-    entry.folderArrayLower = props.folderArray.map((f) => f.toLowerCase())
-  }
-  return entry
-}
 
 describe('simpleSearch', () => {
   let model
@@ -35,14 +19,13 @@ describe('simpleSearch', () => {
   })
 
   test('returns exact matches for bookmarks mode', () => {
-    const bookmark = createTestEntry({
+    const rawBookmark = {
       id: 'bookmark-1',
       title: 'Test bookmark',
       url: 'https://example.com/test',
-      searchString: 'test bookmark https://example.com/test',
-    })
-
-    model.bookmarks = [bookmark]
+    }
+    const bookmarks = createTestData('bookmarks', [rawBookmark])
+    model.bookmarks = bookmarks
 
     const results = simpleSearch('bookmarks', 'test', model)
 
@@ -55,14 +38,13 @@ describe('simpleSearch', () => {
   })
 
   test('returns exact matches for tabs mode', () => {
-    const tab = {
+    const rawTab = {
       id: 'tab-1',
       title: 'Test tab',
       url: 'https://example.com/tab',
-      searchString: 'test tab https://example.com/tab',
     }
-
-    model.tabs = [tab]
+    const tabs = createTestData('tabs', [rawTab])
+    model.tabs = tabs
 
     const results = simpleSearch('tabs', 'test', model)
 
@@ -75,14 +57,13 @@ describe('simpleSearch', () => {
   })
 
   test('returns exact matches for history mode', () => {
-    const history = {
+    const rawHistory = {
       id: 'history-1',
       title: 'Test history',
       url: 'https://example.com/history',
-      searchString: 'test history https://example.com/history',
     }
-
-    model.history = [history]
+    const historyItems = createTestData('history', [rawHistory])
+    model.history = historyItems
 
     const results = simpleSearch('history', 'test', model)
 
@@ -95,20 +76,18 @@ describe('simpleSearch', () => {
   })
 
   test('filters out non-matching items', () => {
-    const matchingBookmark = {
+    const rawBookmark1 = {
       id: 'bookmark-1',
       title: 'Learn JavaScript',
       url: 'https://javascript.info',
-      searchString: 'learn javascript https://javascript.info',
     }
-    const partialMatchBookmark = {
+    const rawBookmark2 = {
       id: 'bookmark-2',
       title: 'Learn Python',
       url: 'https://python.org',
-      searchString: 'learn python https://python.org',
     }
-
-    model.bookmarks = [matchingBookmark, partialMatchBookmark]
+    const bookmarks = createTestData('bookmarks', [rawBookmark1, rawBookmark2])
+    model.bookmarks = bookmarks
 
     const results = simpleSearch('bookmarks', 'learn javascript', model)
 
@@ -119,14 +98,13 @@ describe('simpleSearch', () => {
   })
 
   test('case insensitive matching', () => {
-    const bookmark = {
+    const rawBookmark = {
       id: 'bookmark-1',
       title: 'Test Bookmark',
       url: 'https://example.com/test',
-      searchString: 'test bookmark https://example.com/test',
     }
-
-    model.bookmarks = [bookmark]
+    const bookmarks = createTestData('bookmarks', [rawBookmark])
+    model.bookmarks = bookmarks
 
     const results = simpleSearch('bookmarks', 'test', model)
 
@@ -135,14 +113,13 @@ describe('simpleSearch', () => {
   })
 
   test('requires all search terms to match (AND logic)', () => {
-    const bookmark = {
+    const rawBookmark = {
       id: 'bookmark-1',
       title: 'Learn JavaScript',
       url: 'https://javascript.info',
-      searchString: 'learn javascript https://javascript.info',
     }
-
-    model.bookmarks = [bookmark]
+    const bookmarks = createTestData('bookmarks', [rawBookmark])
+    model.bookmarks = bookmarks
 
     // "learn" matches, "python" does not
     const results = simpleSearch('bookmarks', 'learn python', model)
@@ -151,21 +128,22 @@ describe('simpleSearch', () => {
   })
 
   test('aggregates tab and history entries when searching in history mode', () => {
-    const tabEntry = {
+    const rawTab = {
       id: 'tab-1',
       title: 'Example Entry',
       url: 'https://example.com',
-      searchString: 'example entry https://example.com',
     }
-    const historyEntry = {
+    const rawHistory = {
       id: 'history-1',
       title: 'Example Entry',
       url: 'https://example.com',
-      searchString: 'example entry https://example.com',
     }
 
-    model.tabs = [tabEntry]
-    model.history = [historyEntry]
+    const tabs = createTestData('tabs', [rawTab])
+    const historyItems = createTestData('history', [rawHistory])
+
+    model.tabs = tabs
+    model.history = historyItems
 
     const results = simpleSearch('history', 'example entry', model)
 
@@ -179,14 +157,13 @@ describe('simpleSearch', () => {
   })
 
   test('returns empty array when no matches found', () => {
-    const bookmark = {
+    const rawBookmark = {
       id: 'bookmark-1',
       title: 'Test',
       url: 'https://example.com',
-      searchString: 'test https://example.com',
     }
-
-    model.bookmarks = [bookmark]
+    const bookmarks = createTestData('bookmarks', [rawBookmark])
+    model.bookmarks = bookmarks
 
     const results = simpleSearch('bookmarks', 'nonexistent', model)
 
@@ -207,22 +184,26 @@ describe('simpleSearch', () => {
     // It returns MODE_TARGETS[searchMode] || MODE_TARGETS.all
     // So 'unknown' -> 'all' -> ['bookmarks', 'tabs', 'history']
 
-    const bookmarkEntry = {
+    const rawBookmark = {
       id: 'bookmark-1',
-      searchString: 'javascript',
+      title: 'javascript',
     }
-    const tabEntry = {
+    const rawTab = {
       id: 'tab-1',
-      searchString: 'javascript',
+      title: 'javascript',
     }
-    const historyEntry = {
+    const rawHistory = {
       id: 'history-1',
-      searchString: 'javascript',
+      title: 'javascript',
     }
 
-    model.bookmarks = [bookmarkEntry]
-    model.tabs = [tabEntry]
-    model.history = [historyEntry]
+    const bookmarks = createTestData('bookmarks', [rawBookmark])
+    const tabs = createTestData('tabs', [rawTab])
+    const historyItems = createTestData('history', [rawHistory])
+
+    model.bookmarks = bookmarks
+    model.tabs = tabs
+    model.history = historyItems
 
     const results = simpleSearch('unknown', 'javascript', model)
 

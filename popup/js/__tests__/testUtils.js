@@ -1,3 +1,4 @@
+import { convertBrowserBookmarks, convertBrowserHistory, convertBrowserTabs } from '../helper/browserApi.js'
 import { defaultOptions } from '../model/options.js'
 
 export function flushPromises() {
@@ -167,4 +168,27 @@ export function generateMockTabs(count) {
     })
   }
   return tabs
+}
+
+/**
+ * Helper to create mock browser API data and convert it like the real code does
+ * This ensures test data has all precomputed fields (searchStringLower, tagsArrayLower, etc.)
+ * @param {'bookmarks'|'tabs'|'history'} type - The type of data to create
+ * @param {Array} rawData - Array of raw browser API objects
+ * @returns {Array} Converted data with all precomputed fields
+ */
+export function createTestData(type, rawData) {
+  switch (type) {
+    case 'bookmarks': {
+      // Convert expects a tree structure, wrap single items
+      const tree = rawData.length === 1 && rawData[0].children ? rawData[0] : { title: 'Root', children: rawData }
+      return convertBrowserBookmarks([tree])
+    }
+    case 'tabs':
+      return convertBrowserTabs(rawData)
+    case 'history':
+      return convertBrowserHistory(rawData)
+    default:
+      throw new Error(`Unknown type: ${type}`)
+  }
 }
