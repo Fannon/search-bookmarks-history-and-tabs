@@ -8,6 +8,9 @@
 - **OPTIMIZED**: Results rendering speed with Zero-DOM highlighting.
   - Replaced `mark.js` with high-performance pre-computed highlighting during the search phase.
   - Results now render with highlights already applied, eliminating secondary DOM passes.
+- **OPTIMIZED**: Search performance with deferred highlighting.
+  - Highlighting is now only applied to the final set of displayed results, not every match.
+  - This significantly speeds up searches in large collections where many items match but few are shown.
 - **OPTIMIZED**: Search and scoring hot-path.
   - Optimized the scoring loop to utilize pre-normalized fields, reducing per-item overhead significantly.
 - **ADDED**: Performance Monitoring & Regression Testing.

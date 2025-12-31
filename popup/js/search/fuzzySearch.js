@@ -139,6 +139,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
           // 0 intra chars are perfect score, 5 and more are 0 score.
           searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
           searchApproach: 'fuzzy',
+          fuzzyRanges: info.ranges[i], // Store ranges for deferred highlighting
         })
       }
 
@@ -160,42 +161,33 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
 
 /**
  * Highlighting stage for fuzzy search matches.
- * Should be called after results are ranked and truncated for performance.
+ * Uses the pre-calculated ranges from the search phase.
  *
  * @param {Array<Object>} results - The subset of results to highlight.
- * @param {string} searchTerm - The query terms used for matching.
- * @returns {Promise<Array<Object>>} Results with `highlightedTitle` and `highlightedUrl`.
+ * @returns {Array<Object>} Results with `highlightedTitle` and `highlightedUrl`.
  */
-export async function highlightFuzzySearch(results, searchTerm, options) {
-  if (!results.length || !searchTerm || !window.uFuzzy) {
+export function highlightFuzzySearch(results) {
+  if (!results.length) {
     return results
   }
 
-  // We need to re-run uFuzzy info on the truncated results to get ranges for highlighting.
-  // This is efficient because results.length is small (maxResults).
-  const searchFuzzyness = options.searchFuzzyness
-  const uFuzzyOptions = {
-    intraIns: Math.round(searchFuzzyness * 4.2),
-    ...(options.uFuzzyOptions || {}),
-  }
-  const uf = new uFuzzy(uFuzzyOptions)
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i]
+    if (!r.fuzzyRanges) {
+      r.highlightedTitle = escapeHtml(r.title || r.url || '')
+      r.highlightedUrl = escapeHtml(r.url || '')
+      continue
+    }
 
-  const haystack = results.map((r) => r.searchString)
-  const idxs = Array.from(results.keys())
-  const info = uf.info(idxs, haystack, searchTerm)
-
-  for (let i = 0; i < info.idx.length; i++) {
-    const resultIndex = info.idx[i]
-    const result = results[resultIndex]
-
-    const highlightedHaystack = uFuzzy.highlight(haystack[resultIndex], info.ranges[i], (part, matched) =>
+    // Use uFuzzy.highlight with the ranges we carried from the search phase
+    const highlightedHaystack = uFuzzy.highlight(r.searchString, r.fuzzyRanges, (part, matched) =>
       matched ? `«${part}»` : part,
     )
     const safeHighlighted = escapeHtml(highlightedHaystack).replaceAll('«', '<mark>').replaceAll('»', '</mark>')
     const [highlightedTitle, highlightedUrl] = safeHighlighted.split('¦')
 
-    result.highlightedTitle = highlightedTitle
-    result.highlightedUrl = highlightedUrl || ''
+    r.highlightedTitle = highlightedTitle
+    r.highlightedUrl = highlightedUrl || ''
   }
 
   return results

@@ -16,11 +16,11 @@
  * 6. Render results via view layer.
  *
  * Zero-DOM Highlighting:
- * - Highlights are pre-computed during the search phase by simpleSearch.js and fuzzySearch.js.
+ * - Highlights are computed after ranking and truncating results for performance.
  * - Each result includes `highlightedTitle` and `highlightedUrl` with inline `<mark>` tags.
  * - The view layer (searchView.js) renders these pre-computed highlights directly.
  * - This eliminates the need for mark.js and secondary DOM traversals after rendering.
- * - See `highlightMatches()` in utils.js for the shared highlighting utility.
+ * - See `highlightSimpleSearch()` and `highlightFuzzySearch()` for the implementations.
  */
 
 import { cleanUpUrl, generateRandomId } from '../helper/utils.js'
@@ -309,7 +309,7 @@ export async function search(event) {
       results = filterResults(results, searchMode)
 
       // Apply highlighting only to the truncated result set (better performance)
-      results = await highlightResults(results, searchTerm, ext.opts)
+      results = highlightResults(results, searchTerm)
 
       ext.model.result = results
 
@@ -397,10 +397,9 @@ export function sortResults(results, sortMode) {
  *
  * @param {Array<Object>} results - Search results.
  * @param {string} searchTerm - Query string.
- * @param {Object} options - Extension options.
- * @returns {Promise<Array<Object>>} Highlighted results.
+ * @returns {Array<Object>} Highlighted results.
  */
-async function highlightResults(results, searchTerm, options) {
+function highlightResults(results, searchTerm) {
   if (!results.length || !searchTerm) {
     return results
   }
@@ -423,7 +422,7 @@ async function highlightResults(results, searchTerm, options) {
   }
 
   if (fuzzyMatches.length > 0) {
-    await highlightFuzzySearch(fuzzyMatches, searchTerm, options)
+    highlightFuzzySearch(fuzzyMatches)
   }
 
   return results

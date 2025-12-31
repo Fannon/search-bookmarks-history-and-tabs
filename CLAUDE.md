@@ -221,7 +221,7 @@ Build scripts in `bin/` are small Node.js programs:
 - **Lazy history merging**: History data is only merged when matches exist
 - **Search debouncing**: `searchDebounceMs` prevents excessive search calls
 - **Result caching**: Cache key includes search term, strategy, and mode
-- **Zero-DOM Highlighting**: Highlights are pre-calculated during the search phase to avoid layout shifts.
+- **Zero-DOM Highlighting**: Highlights are computed after ranking and truncation, only for the displayed results.
 
 ## Related Documentation
 
