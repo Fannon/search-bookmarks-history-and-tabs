@@ -62,29 +62,30 @@ export function escapeRegex(str) {
  * first to prevent XSS, then <mark> tags are applied for matching terms.
  *
  * @param {string} text - Text to highlight (will be HTML-escaped).
- * @param {string[]} terms - Search terms to highlight (should be non-empty strings).
+ * @param {string[]|RegExp} termsOrRegex - Search terms to highlight or a pre-compiled RegExp.
  * @returns {string} HTML-safe string with <mark> tags around matching terms.
- *
- * @example
- * highlightMatches('Hello World', ['world']) // => 'Hello <mark>World</mark>'
  */
-export function highlightMatches(text, terms) {
-  if (!text || !terms || terms.length === 0) {
-    return escapeHtml(text)
-  }
-
-  // Filter out empty terms and sort by length descending (match longest first)
-  const validTerms = terms.filter((t) => t && t.length > 0)
-  if (validTerms.length === 0) {
+export function highlightMatches(text, termsOrRegex) {
+  if (!text || !termsOrRegex) {
     return escapeHtml(text)
   }
 
   // Escape HTML first to prevent XSS
   const escapedText = escapeHtml(text)
 
+  if (termsOrRegex instanceof RegExp) {
+    return escapedText.replace(termsOrRegex, '<mark>$1</mark>')
+  }
+
+  // Filter out empty terms and sort by length descending (match longest first)
+  const validTerms = termsOrRegex.filter((t) => t && t.length > 0)
+  if (validTerms.length === 0) {
+    return escapedText
+  }
+
   // Escape terms for regex and sort by length descending to match longest first
   const escapedTerms = validTerms
-    .map((t) => escapeHtml(t)) // Escape HTML chars in terms too (they'll appear escaped in text)
+    .map((t) => escapeHtml(t)) // Escape HTML chars in terms too
     .map((t) => escapeRegex(t))
     .sort((a, b) => b.length - a.length)
 

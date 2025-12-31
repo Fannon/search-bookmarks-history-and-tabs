@@ -118,6 +118,57 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     }
   }
 
+  /**
+   * Run a realistic incremental typing benchmark
+   * Simulates a user typing a phrase character by character
+   */
+  const runIncrementalBenchmark = async (count, iterations = 5) => {
+    // Reset all caches
+    resetSimpleSearchState()
+    resetFuzzySearchState()
+
+    ext.model.bookmarks = generateBookmarksTestData(count)
+    ext.model.history = generateHistoryTestData(count)
+    ext.model.tabs = generateTabsTestData(Math.floor(count / 10))
+    ext.initialized = true
+
+    const phrase = 'resource google '
+    const steps = []
+    for (let i = 1; i <= phrase.length; i++) {
+      steps.push(phrase.substring(0, i))
+    }
+
+    // Precise
+    let totalP = 0
+    for (let i = 0; i < iterations; i++) {
+      ext.searchCache = new Map()
+      const start = performance.now()
+      for (const step of steps) {
+        ext.dom.searchInput.value = step
+        // Trigger search - note that search() reads from ext.dom.searchInput.value
+        await search()
+      }
+      totalP += performance.now() - start
+    }
+    const avgP = totalP / iterations
+
+    // Fuzzy
+    let totalF = 0
+    for (let i = 0; i < iterations; i++) {
+      ext.searchCache = new Map()
+      const start = performance.now()
+      for (const step of steps) {
+        ext.opts.searchStrategy = 'fuzzy'
+        ext.dom.searchInput.value = step
+        await search()
+      }
+      totalF += performance.now() - start
+    }
+    const avgF = totalF / iterations
+
+    console.log(`| Incremental Typing ("${phrase}") | ${avgP.toFixed(2)}ms | ${avgF.toFixed(2)}ms |`)
+  }
+
   test('Benchmark Matrix', async () => {
     // Cold start benchmark - runs first before any warming
     await runColdStartBenchmark(1000)
@@ -133,5 +184,10 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     await runBenchmark('Small', 1000)
     await runBenchmark('Medium', 3000)
     await runBenchmark('Huge', 25000)
+
+    console.log('\n### Realistic Interaction Patterns')
+    console.log('\n| Scenario | Precise (Total) | Fuzzy (Total) |')
+    console.log('|---|---|---|')
+    await runIncrementalBenchmark(5000)
   })
 })

@@ -57,56 +57,62 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
   const dataLen = data.length
 
   // Initialize or retrieve cached state
-  if (!state[searchMode]) {
+  let s = state[searchMode]
+  if (!s) {
+    // Projecting the haystack once saves property lookups in the hot loop
     const haystack = new Array(dataLen)
     for (let i = 0; i < dataLen; i++) {
       haystack[i] = data[i].searchStringLower
     }
-    state[searchMode] = {
+    s = state[searchMode] = {
       data: data,
       haystack: haystack,
       idxs: null, // null means "all indices" - avoids array allocation
       searchTerm: '',
+      terms: [], // Keep track of filtered terms
     }
   }
-  const s = state[searchMode]
-  const haystack = s.haystack
 
   // Return cached results if search term is identical
   if (s.searchTerm === searchTerm && s.idxs !== null) {
     return createResultObjects(s.data, s.idxs)
   }
 
-  // Invalidate cache if search term changed direction
-  if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
+  const haystack = s.haystack
+  const terms = searchTerm.split(' ').filter(Boolean)
+  const termLen = terms.length
+
+  // Determine if we can use incremental search from previous indices
+  const isIncremental = s.searchTerm && searchTerm.startsWith(s.searchTerm) && s.idxs !== null
+  if (!isIncremental) {
     s.idxs = null
   }
-  // Use existing indices or iterate all (null = all)
-  let idxs = s.idxs
 
-  const terms = searchTerm.split(' ')
-  const sTerms = s.searchTerm ? s.searchTerm.split(' ') : []
+  let idxs = s.idxs
+  const prevTerms = s.terms
 
   // Filtering (AND-logic)
-  for (let t = 0; t < terms.length; t++) {
+  for (let t = 0; t < termLen; t++) {
     const term = terms[t]
-    if (!term) continue
 
-    // Skip terms already satisfied by current idxs
-    if (idxs !== null && sTerms[t] === term) {
+    // Skip terms already satisfied if we are doing incremental search
+    if (isIncremental && prevTerms[t] === term) {
       continue
     }
 
     const nextIdxs = []
 
     if (idxs === null) {
+      // First-pass: search everything
       for (let i = 0; i < dataLen; i++) {
         if (haystack[i].includes(term)) {
           nextIdxs.push(i)
         }
       }
     } else {
-      for (let i = 0; i < idxs.length; i++) {
+      // Subsequent passes or incremental search: filter existing indices
+      const currentIdxLen = idxs.length
+      for (let i = 0; i < currentIdxLen; i++) {
         const idx = idxs[i]
         if (haystack[idx].includes(term)) {
           nextIdxs.push(idx)
@@ -118,11 +124,13 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
     if (idxs.length === 0) break
   }
 
+  // Update cached state
   s.idxs = idxs
   s.searchTerm = searchTerm
+  s.terms = terms
 
-  // If idxs is still null, it means no valid search terms were provided (e.g. empty string)
-  if (idxs === null || idxs.length === 0) {
+  // If idxs is still null (no terms provided) or empty, return no results
+  if (!idxs || idxs.length === 0) {
     return []
   }
 
@@ -136,12 +144,10 @@ function createResultObjects(data, idxs) {
   const count = idxs.length
   const results = new Array(count)
   for (let i = 0; i < count; i++) {
-    const idx = idxs[i]
-    const source = data[idx]
-    // Direct object creation with spread is faster for subsequent property access
-    // even if slightly slower for creation of large numbers of objects.
+    // Spread is currently the fastest way in V8 to clone and extend objects
+    // for subsequent property access (which scoring and rendering do heavily).
     results[i] = {
-      ...source,
+      ...data[idxs[i]],
       searchScore: 1,
       searchApproach: 'precise',
     }
