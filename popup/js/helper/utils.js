@@ -54,8 +54,11 @@ export function escapeHtml(value) {
  * @see https://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
  */
 export function timeSince(date) {
-  const timestamp = new Date(date).getTime()
-  if (!date || Number.isNaN(timestamp)) {
+  if (!date) {
+    return 'Invalid date'
+  }
+  const timestamp = typeof date === 'number' ? date : new Date(date).getTime()
+  if (Number.isNaN(timestamp)) {
     return 'Invalid date'
   }
 

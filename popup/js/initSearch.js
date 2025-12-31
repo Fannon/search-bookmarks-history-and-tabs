@@ -10,7 +10,6 @@
  */
 
 import { createExtensionContext } from './helper/extensionContext.js'
-import { loadScript } from './helper/utils.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { addDefaultEntries, search } from './search/common.js'
@@ -76,9 +75,6 @@ export async function initExtension() {
   }
 
   console.debug(`Extension initialized in ${Date.now() - startTime}ms`)
-
-  // Lazy load mark.js for highlighting search results after init phase
-  await loadScript('./lib/mark.es6.min.js')
 }
 
 //////////////////////////////////////////

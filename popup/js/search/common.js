@@ -245,6 +245,7 @@ export async function search(event) {
       }
 
       const startTime = Date.now()
+      performance.mark('search-start')
 
       // Get and clean up original search query
       let searchTerm = normalizeSearchTerm(ext.dom.searchInput.value)
@@ -304,6 +305,9 @@ export async function search(event) {
       cacheResults(searchTerm, results)
 
       renderSearchResults()
+
+      performance.mark('search-end')
+      performance.measure('search-total', 'search-start', 'search-end')
 
       // Simple timing for debugging (only if debug is enabled)
       console.debug(`Search completed in ${Date.now() - startTime}ms`)

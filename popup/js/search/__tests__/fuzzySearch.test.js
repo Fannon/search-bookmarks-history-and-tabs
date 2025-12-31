@@ -68,7 +68,7 @@ class TrackedUFuzzy {
     }
   }
 
-  static highlight(searchString, ranges) {
+  static highlight(searchString, ranges, mapper) {
     uFuzzyCallHistory.push({
       method: 'highlight',
       args: { searchString, ranges },
@@ -76,7 +76,7 @@ class TrackedUFuzzy {
 
     // Use real uFuzzy highlight if available
     if (originalUFuzzy?.highlight) {
-      return originalUFuzzy.highlight(searchString, ranges)
+      return originalUFuzzy.highlight(searchString, ranges, mapper)
     }
 
     // Fallback highlighting implementation

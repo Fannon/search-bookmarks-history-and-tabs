@@ -1,0 +1,9 @@
+
+Running 4 tests using 4 workers
+Playwright: Worst-case Rendering (1000 items with all badges) took: 3.20ms
+·Browser reported: Extension initialized in 15ms
+Playwright: Search & Render for 5000 items took: 2.60ms
+Performance measures: [ { name: [32m'render-results'[39m, duration: [33m0.20000000018626451[39m } ]
+··Playwright: Fuzzy Search & Render for 2000 items took: 20.00ms
+·
+  4 passed (1.5s)

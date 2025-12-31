@@ -12,7 +12,7 @@
  * - Highlight data is preserved for the view to underline matched substrings once results render.
  */
 
-import { loadScript } from '../helper/utils.js'
+import { escapeHtml, loadScript } from '../helper/utils.js'
 import { printError } from '../view/errorView.js'
 import { resolveSearchTargets } from './common.js'
 
@@ -134,11 +134,22 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
       for (let i = 0; i < info.idx.length; i++) {
         const result = data[idxs[i]]
 
+        // Use custom placeholders for highlighting that are safe from escapeHtml
+        // Then escape the whole string and replace placeholders with <mark> tags
+        const highlightedHaystack = uFuzzy.highlight(s.haystack[idxs[i]], info.ranges[i], (part, matched) =>
+          matched ? `«${part}»` : part,
+        )
+        const safeHighlighted = escapeHtml(highlightedHaystack).replaceAll('«', '<mark>').replaceAll('»', '</mark>')
+
+        const [highlightedTitle, highlightedUrl] = safeHighlighted.split('¦')
+
         localResults.push({
           ...result,
           // 0 intra chars are perfect score, 5 and more are 0 score.
           searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
           searchApproach: 'fuzzy',
+          highlightedTitle,
+          highlightedUrl,
         })
       }
 

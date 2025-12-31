@@ -15,6 +15,7 @@
  * - Reset caches when the search dataset or active mode changes to avoid stale results.
  */
 
+import { escapeHtml } from '../helper/utils.js'
 import { resolveSearchTargets } from './common.js'
 
 /**
@@ -126,5 +127,22 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
   }
 
   s.searchTerm = searchTerm
+
+  // Add highlighting after final filtering to only process the actual results
+  const filteredTerms = searchTermArray.filter(Boolean)
+  if (filteredTerms.length > 0) {
+    // Escape terms and sort by length descending to match longest terms first
+    const escapedTerms = filteredTerms
+      .map((t) => escapeHtml(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .sort((a, b) => b.length - a.length)
+    const highlightRegex = new RegExp(`(${escapedTerms.join('|')})`, 'gi')
+
+    for (const entry of s.cachedData) {
+      const parts = entry.searchString.split('¦')
+      entry.highlightedTitle = escapeHtml(parts[0]).replace(highlightRegex, '<mark>$1</mark>')
+      entry.highlightedUrl = parts[1] ? escapeHtml(parts[1]).replace(highlightRegex, '<mark>$1</mark>') : ''
+    }
+  }
+
   return s.cachedData
 }

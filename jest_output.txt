@@ -1,0 +1,447 @@
+
+> search-bookmarks-history-and-tabs@1.17.3 test:unit
+> node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js popup/js/__tests__/performance.test.js popup/js/__tests__/comparison.test.js
+
+PASS popup/js/__tests__/comparison.test.js
+  ● Console
+
+    console.log
+      
+      | Data Set Size | Precise Search (Avg) | Fuzzy Search (Avg) |
+
+      at Object.<anonymous> (popup/js/__tests__/comparison.test.js:66:13)
+
+    console.log
+      |---|---|---|
+
+      at Object.<anonymous> (popup/js/__tests__/comparison.test.js:67:13)
+
+    console.debug
+      Ignored 0 history items due to ignore list
+
+      at convertBrowserHistory (popup/js/helper/browserApi.js:269:13)
+
+    console.debug
+      Search completed in 36ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 18ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 15ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 16ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 8ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 17ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 7ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 7ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 7ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 7ms
+
+      at popup/js/search/common.js:313:15
+
+    console.log
+      | Warmup (210 items) | 18.91ms | 9.26ms |
+
+      at runBenchmark (popup/js/__tests__/comparison.test.js:62:13)
+
+    console.debug
+      Ignored 0 history items due to ignore list
+
+      at convertBrowserHistory (popup/js/helper/browserApi.js:269:13)
+
+    console.debug
+      Search completed in 7ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 6ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 7ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 6ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 6ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 6ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 12ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 6ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 6ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 7ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 10ms
+
+      at popup/js/search/common.js:313:15
+
+    console.log
+      | Small (420 items) | 5.76ms | 6.79ms |
+
+      at runBenchmark (popup/js/__tests__/comparison.test.js:62:13)
+
+    console.debug
+      Ignored 0 history items due to ignore list
+
+      at convertBrowserHistory (popup/js/helper/browserApi.js:269:13)
+
+    console.debug
+      Search completed in 9ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 9ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 9ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 11ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 6ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 8ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 9ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 9ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 9ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 8ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 8ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 10ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 4ms
+
+      at popup/js/search/common.js:313:15
+
+    console.log
+      | Medium (4200 items) | 6.96ms | 7.53ms |
+
+      at runBenchmark (popup/js/__tests__/comparison.test.js:62:13)
+
+    console.debug
+      Ignored 0 history items due to ignore list
+
+      at convertBrowserHistory (popup/js/helper/browserApi.js:269:13)
+
+    console.debug
+      Search completed in 14ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 10ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 7ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 6ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 6ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 6ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 6ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 6ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 8ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 6ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 4ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.debug
+      Search completed in 5ms
+
+      at popup/js/search/common.js:313:15
+
+    console.log
+      | Big (21000 items) | 6.96ms | 5.55ms |
+
+      at runBenchmark (popup/js/__tests__/comparison.test.js:62:13)
+
+PASS popup/js/__tests__/performance.test.js
+  ● Console
+
+    console.debug
+      Ignored 0 history items due to ignore list
+
+      at convertBrowserHistory (popup/js/helper/browserApi.js:269:13)
+
+    console.debug
+      Loaded 100 tabs, 5000 bookmarks and 2000 history items in 18ms.
+
+      at getSearchData (popup/js/model/searchData.js:149:11)
+
+    console.debug
+      Search completed in 9ms
+
+      at popup/js/search/common.js:313:15
+
+    console.log
+      Precise Search ("resource-123") took: 8.78ms
+
+      at Object.<anonymous> (popup/js/__tests__/performance.test.js:82:13)
+
+    console.debug
+      Search completed in 30ms
+
+      at popup/js/search/common.js:313:15
+
+    console.log
+      Fuzzy Search ("resrc 123") took: 30.35ms
+
+      at Object.<anonymous> (popup/js/__tests__/performance.test.js:112:13)
+
+
+Test Suites: 2 passed, 2 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        1.227 s
+Ran all test suites matching popup/js/__tests__/performance.test.js|popup/js/__tests__/comparison.test.js.

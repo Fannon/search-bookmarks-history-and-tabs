@@ -14,10 +14,22 @@
 - **Test**:
   - **Unit**: `npm run test` (runs all).
     - Single file: `npm run test path/to/file.test.js`
-    - Coverage report: `npm run test:unit:coverage`
+    - Coverage: `npm run test:unit:coverage`
   - **E2E**: `npm run test:e2e` (runs all).
-    - Single file: `npm run test:e2e -- tests/spec.js`
+    - Single: `npm run test:e2e -- tests/spec.js`
+- **Performance**:
+  - **All**: `npm run test:perf` (runs all performance benchmarks)
+  - **Micro**: `npm run test:unit -- popup/js/__tests__/performance.test.js` (Logic & Search speed)
+  - **E2E/Render**: `npx playwright test playwright/tests/performance.spec.js` (Paint & Interaction)
+  - **Comparison**: `npm run test:unit -- popup/js/__tests__/comparison.test.js` (Fuzzy vs Precise)
 - **Quality**: `npm run lint` (Biome lint/format), `npm run size` (bundle size report).
+
+## Performance Guidelines & Verification
+When optimizing code, follow this workflow to ensure measurable improvements:
+1. **Establish Baseline**: Run benchmarks on the current `main` or base branch. Note the "Search completed in Xms" and "Search & Render took Yms" outputs.
+2. **Implement & Iterate**: Apply changes and run the same benchmarks.
+3. **Verify Regression**: Ensure that "Big" datasets (5,000+ items) still stay under the 16ms (60fps) threshold for search and render.
+4. **Zero-DOM Rule**: Avoid adding any post-render DOM manipulation steps (like `mark.js` passes). Highlights must be computed during the search phase.
 
 ## Standards
 - **Code**: Modern ESM, "vanilla JS" style. Follow `biome.json` (2 spaces, single quotes).

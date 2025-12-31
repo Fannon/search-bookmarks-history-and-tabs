@@ -163,6 +163,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
       mappedEntry.title = finalTitle
       mappedEntry.titleLower = finalTitle.toLowerCase().trim()
       mappedEntry.tags = tagsText
+      mappedEntry.tagsLower = tagsText.toLowerCase()
       mappedEntry.tagsArray = tagsArray
 
       // Consider the folder names / structure of bookmarks
@@ -173,6 +174,7 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth, seenByUrl
       folderText = folderText.slice(0, -1)
 
       mappedEntry.folder = folderText
+      mappedEntry.folderLower = folderText.toLowerCase()
       mappedEntry.folderArray = folderTrail
 
       mappedEntry.searchString = createSearchString(

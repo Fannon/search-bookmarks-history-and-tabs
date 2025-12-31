@@ -124,8 +124,8 @@ export function calculateFinalScore(results, searchTerm) {
     if (hasSearchTerm) {
       // STEP 3A: Exact match bonuses
       // Award bonus if title/URL starts with the exact search term
-      const normalizedUrl = el.url?.toLowerCase() // use el.url directly as it should be cleaned, but lowercase just in case
-      const titleLower = el.titleLower ?? el.title?.toLowerCase().trim()
+      const normalizedUrl = el.url
+      const titleLower = el.titleLower
 
       if (scoreExactStartsWithBonus) {
         if (titleLower?.startsWith(normalizedSearchTerm)) {
@@ -166,9 +166,8 @@ export function calculateFinalScore(results, searchTerm) {
       if (canCheckIncludes) {
         let includesBonusesAwarded = 0
 
-        // Lazy compute these only if needed for includes check
-        const normalizedTags = el.tags?.toLowerCase()
-        const normalizedFolder = el.folder?.toLowerCase()
+        const normalizedTags = el.tagsLower
+        const normalizedFolder = el.folderLower
 
         for (let j = 0; j < includeTerms.length; j++) {
           if (includesBonusesAwarded >= includesBonusCap) {

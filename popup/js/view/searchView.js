@@ -17,6 +17,7 @@ import { selectListItem } from './searchNavigation.js'
  * Always uses ext.model.result as the source of truth.
  */
 export async function renderSearchResults() {
+  performance.mark('render-start')
   try {
     const result = ext.model.result
 
@@ -116,9 +117,12 @@ export async function renderSearchResults() {
 
       const badgesHTML = badges.join('')
 
-      // Escape HTML for title and URL content (mark.js will add highlights later)
-      const titleContent = escapeHtml(resultEntry.title || resultEntry.url || '')
-      const urlContent = escapeHtml(resultEntry.url || '')
+      const titleContent =
+        shouldHighlight && resultEntry.highlightedTitle
+          ? resultEntry.highlightedTitle
+          : escapeHtml(resultEntry.title || resultEntry.url || '')
+      const urlContent =
+        shouldHighlight && resultEntry.highlightedUrl ? resultEntry.highlightedUrl : escapeHtml(resultEntry.url || '')
 
       const typeClass = escapeHtml(resultEntry.type || '')
       const originalUrlAttr = resultEntry.originalUrl ? ` x-open-url="${escapeHtml(resultEntry.originalUrl)}"` : ''
@@ -149,14 +153,6 @@ export async function renderSearchResults() {
     // Update the DOM with all new result items at once using innerHTML (faster for large updates)
     ext.dom.resultList.innerHTML = itemsHTML.join('')
 
-    // Apply mark.js highlighting to the entire result list once (much faster than per-item)
-    if (shouldHighlight && searchTerm && searchTerm.trim() && window.Mark) {
-      const mark = new window.Mark(ext.dom.resultList)
-      mark.mark(searchTerm, {
-        exclude: ['.last-visited', '.score', '.visit-counter', '.date-added', '.source-tab'],
-      })
-    }
-
     // Update result counter
     if (ext.dom.resultCounter) {
       ext.dom.resultCounter.innerText = `(${result.length})`
@@ -164,6 +160,9 @@ export async function renderSearchResults() {
 
     // Highlight the first result as the current selection
     selectListItem(0)
+
+    performance.mark('render-end')
+    performance.measure('render-results', 'render-start', 'render-end')
 
     // Set up event delegation for better performance (one-time setup)
     setupResultItemsEvents()

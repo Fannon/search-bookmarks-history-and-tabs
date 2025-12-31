@@ -42,6 +42,7 @@
     "test:unit": "node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js",
     "test:unit:watch": "node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js --watch",
     "test:unit:coverage": "node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js --coverage",
+    "test:perf": "npm run test:unit -- popup/js/__tests__/performance.test.js popup/js/__tests__/comparison.test.js > jest_output.txt 2>&1 && npx playwright test playwright/tests/performance.spec.js --project=chromium > playwright_output.txt 2>&1; node bin/perf-summary.js",
     "test:ci": "npm run lint && npm run test:unit && npm run test:e2e",
     "lint": "biome check --error-on-warnings .",
     "lint:fix": "biome check --write .",
