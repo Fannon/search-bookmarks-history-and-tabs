@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
+import { createBookmarksTestData, createHistoryTestData, createTabsTestData } from '../../__tests__/testUtils.js'
 import { fuzzySearch, resetFuzzySearchState } from '../fuzzySearch.js'
 
-const delimiter = '\u00A6'
 const cjkTerm = '\u6f22\u5b57'
 
 // Use real uFuzzy library with tracking capabilities
@@ -188,20 +188,19 @@ describe('fuzzySearch', () => {
   })
 
   it('returns fuzzy results for bookmarks mode and populates highlight and score', async () => {
-    model.bookmarks = [
+    model.bookmarks = createBookmarksTestData([
       {
         id: 'bookmark-1',
         title: 'Term bookmark',
         url: 'https://example.com/term',
-        searchString: `term bookmark${delimiter}https://example.com/term`,
       },
-    ]
+    ])
 
     const results = await fuzzySearch('bookmarks', 'term', model, opts)
 
     expect(results).toHaveLength(1)
     expect(results[0]).toMatchObject({
-      id: 'bookmark-1',
+      originalId: 'bookmark-1',
       searchApproach: 'fuzzy',
     })
     expect(typeof results[0].searchScore).toBe('number')
@@ -209,40 +208,37 @@ describe('fuzzySearch', () => {
   })
 
   it('aggregates tab and history entries when searching in history mode', async () => {
-    model.tabs = [
+    model.tabs = createTabsTestData([
       {
         id: 'tab-1',
         title: 'Term tab',
         url: 'https://example.com/term-tab',
-        searchString: `term tab entry${delimiter}https://example.com/term-tab`,
       },
-    ]
-    model.history = [
+    ])
+    model.history = createHistoryTestData([
       {
         id: 'history-1',
         title: 'Term history',
         url: 'https://example.com/term-history',
-        searchString: `term history entry${delimiter}https://example.com/term-history`,
       },
-    ]
+    ])
 
     const results = await fuzzySearch('history', 'term', model, opts)
 
     expect(results).toHaveLength(2)
-    expect(results[0].id).toBe('tab-1')
-    expect(results[1].id).toBe('history-1')
+    expect(results[0].originalId).toBe('tab-1')
+    expect(results[1].originalId).toBe('history-1')
     expect(results.every((result) => result.searchApproach === 'fuzzy')).toBe(true)
   })
 
   it('reuses cached state until resetFuzzySearchState is called', async () => {
-    model.bookmarks = [
+    model.bookmarks = createBookmarksTestData([
       {
         id: 'bookmark-cache',
         title: 'Cached term',
         url: 'https://example.com/cached-term',
-        searchString: `cached term entry${delimiter}https://example.com/cached-term`,
       },
-    ]
+    ])
 
     await fuzzySearch('bookmarks', 'cached', model, opts)
     const initialInstances = TrackedUFuzzy.getInstances().length
@@ -265,14 +261,13 @@ describe('fuzzySearch', () => {
     opts.searchFuzzyness = 0.85
     opts.uFuzzyOptions = { extra: 'option' }
 
-    model.bookmarks = [
+    model.bookmarks = createBookmarksTestData([
       {
         id: 'bookmark-warm',
         title: 'Warm entry',
         url: 'https://example.com/warm',
-        searchString: `warm bookmark${delimiter}https://example.com/warm`,
       },
-    ]
+    ])
 
     await fuzzySearch('bookmarks', 'warm', model, opts)
     const instancesAfterWarm = TrackedUFuzzy.getInstances()
@@ -287,14 +282,13 @@ describe('fuzzySearch', () => {
     })
     expect(topLevelInstance.options.interSplit).toBeUndefined()
 
-    model.bookmarks = [
+    model.bookmarks = createBookmarksTestData([
       {
         id: 'bookmark-cjk',
         title: `${cjkTerm} entry`,
         url: 'https://example.com/kanji',
-        searchString: `${cjkTerm} bookmark${delimiter}https://example.com/${cjkTerm}`,
       },
-    ]
+    ])
 
     await fuzzySearch('bookmarks', cjkTerm, model, opts)
 
@@ -319,14 +313,13 @@ describe('fuzzySearch', () => {
   })
 
   it('handles empty search results gracefully', async () => {
-    model.bookmarks = [
+    model.bookmarks = createBookmarksTestData([
       {
         id: 'bookmark-1',
         title: 'Different title',
         url: 'https://example.com/different',
-        searchString: `different title${delimiter}https://example.com/different`,
       },
-    ]
+    ])
 
     const results = await fuzzySearch('bookmarks', 'nonexistent', model, opts)
 
@@ -370,14 +363,13 @@ describe('fuzzySearch', () => {
   })
 
   it('handles empty search terms gracefully', async () => {
-    model.bookmarks = [
+    model.bookmarks = createBookmarksTestData([
       {
         id: 'bookmark-1',
         title: 'Test bookmark',
         url: 'https://example.com/test',
-        searchString: `test bookmark${delimiter}https://example.com/test`,
       },
-    ]
+    ])
 
     const results = await fuzzySearch('bookmarks', '', model, opts)
 
@@ -385,14 +377,13 @@ describe('fuzzySearch', () => {
   })
 
   it('handles whitespace-only search terms gracefully', async () => {
-    model.bookmarks = [
+    model.bookmarks = createBookmarksTestData([
       {
         id: 'bookmark-1',
         title: 'Test bookmark',
         url: 'https://example.com/test',
-        searchString: `test bookmark${delimiter}https://example.com/test`,
       },
-    ]
+    ])
 
     const results = await fuzzySearch('bookmarks', '   ', model, opts)
 
@@ -400,36 +391,25 @@ describe('fuzzySearch', () => {
   })
 
   it('handles special characters in search terms', async () => {
-    model.bookmarks = [
+    model.bookmarks = createBookmarksTestData([
       {
         id: 'bookmark-special',
         title: 'GitHub repo',
         url: 'https://github.com/user/repo',
-        searchString: `github repo${delimiter}https://github.com/user/repo`,
       },
-    ]
+    ])
 
     const results = await fuzzySearch('bookmarks', 'github.com', model, opts)
 
     expect(results).toHaveLength(1)
-    expect(results[0].id).toBe('bookmark-special')
+    expect(results[0].originalId).toBe('bookmark-special')
   })
 
   it('handles multiple search terms correctly', async () => {
-    model.bookmarks = [
-      {
-        id: 'bookmark-1',
-        title: 'JavaScript framework',
-        url: 'https://reactjs.org',
-        searchString: `javascript framework${delimiter}https://reactjs.org`,
-      },
-      {
-        id: 'bookmark-2',
-        title: 'Python library',
-        url: 'https://pypi.org/project/requests',
-        searchString: `python library${delimiter}https://pypi.org/project/requests`,
-      },
-    ]
+    model.bookmarks = createBookmarksTestData([
+      { id: 'bookmark-1', title: 'JavaScript framework', url: 'https://reactjs.org' },
+      { id: 'bookmark-2', title: 'Python library', url: 'https://pypi.org/project/requests' },
+    ])
 
     const results = await fuzzySearch('bookmarks', 'javascript python', model, opts)
 
@@ -439,41 +419,38 @@ describe('fuzzySearch', () => {
   })
 
   it('handles search mode switching correctly', async () => {
-    model.bookmarks = [
+    model.bookmarks = createBookmarksTestData([
       {
         id: 'bookmark-1',
         title: 'Test bookmark',
         url: 'https://example.com/bookmark',
-        searchString: `test bookmark${delimiter}https://example.com/bookmark`,
       },
-    ]
-    model.tabs = [
+    ])
+    model.tabs = createTabsTestData([
       {
         id: 'tab-1',
         title: 'Test tab',
         url: 'https://example.com/tab',
-        searchString: `test tab${delimiter}https://example.com/tab`,
       },
-    ]
+    ])
 
     const bookmarkResults = await fuzzySearch('bookmarks', 'test', model, opts)
     const tabResults = await fuzzySearch('tabs', 'test', model, opts)
 
     expect(bookmarkResults).toHaveLength(1)
-    expect(bookmarkResults[0].id).toBe('bookmark-1')
+    expect(bookmarkResults[0].originalId).toBe('bookmark-1')
     expect(tabResults).toHaveLength(1)
-    expect(tabResults[0].id).toBe('tab-1')
+    expect(tabResults[0].originalId).toBe('tab-1')
   })
 
   it('does not mutate cached entries when creating results', async () => {
-    model.bookmarks = [
+    model.bookmarks = createBookmarksTestData([
       {
         id: 'bookmark-highlight',
         title: 'Highlight persistence test',
         url: 'https://example.com/highlight',
-        searchString: `highlight persistence test${delimiter}https://example.com/highlight`,
       },
-    ]
+    ])
 
     const firstResults = await fuzzySearch('bookmarks', 'highlight', model, opts)
 

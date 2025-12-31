@@ -1,13 +1,5 @@
 import uFuzzy from '@leeoniya/ufuzzy'
-import {
-  createBookmarksTestData,
-  createHistoryTestData,
-  createTabsTestData,
-  createTestExt,
-  generateMockBookmarks,
-  generateMockHistory,
-  generateMockTabs,
-} from './testUtils.js'
+import { createTestExt, generateBookmarksTestData, generateHistoryTestData, generateTabsTestData } from './testUtils.js'
 
 // Assign to global so the extension code picks it up
 global.uFuzzy = uFuzzy
@@ -38,13 +30,9 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     resetSimpleSearchState()
     resetFuzzySearchState()
 
-    const rawBookmarks = generateMockBookmarks(count)
-    const rawHistory = generateMockHistory(count)
-    const rawTabs = generateMockTabs(Math.floor(count / 10))
-
-    ext.model.bookmarks = createBookmarksTestData(rawBookmarks)
-    ext.model.history = createHistoryTestData(rawHistory)
-    ext.model.tabs = createTabsTestData(rawTabs)
+    ext.model.bookmarks = generateBookmarksTestData(count)
+    ext.model.history = generateHistoryTestData(count)
+    ext.model.tabs = generateTabsTestData(Math.floor(count / 10))
     ext.initialized = true
 
     const totalItems = ext.model.bookmarks.length + ext.model.history.length + ext.model.tabs.length
@@ -60,9 +48,9 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     // Reset for fair cold-start of fuzzy
     resetSimpleSearchState()
     resetFuzzySearchState()
-    ext.model.bookmarks = createBookmarksTestData(rawBookmarks)
-    ext.model.history = createHistoryTestData(rawHistory)
-    ext.model.tabs = createTabsTestData(rawTabs)
+    ext.model.bookmarks = generateBookmarksTestData(count)
+    ext.model.history = generateHistoryTestData(count)
+    ext.model.tabs = generateTabsTestData(Math.floor(count / 10))
 
     // Cold Fuzzy - first run ever
     ext.searchCache = new Map()
@@ -79,19 +67,14 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
    * Run a warmed-up benchmark with multiple iterations
    */
   const runBenchmark = async (sizeName, count, iterations = 10) => {
-    const rawBookmarks = generateMockBookmarks(count)
-    const rawHistory = generateMockHistory(count)
-    const rawTabs = generateMockTabs(Math.floor(count / 10))
-
-    ext.model.bookmarks = createBookmarksTestData(rawBookmarks)
-    ext.model.history = createHistoryTestData(rawHistory)
-    ext.model.tabs = createTabsTestData(rawTabs)
+    ext.model.bookmarks = generateBookmarksTestData(count)
+    ext.model.history = generateHistoryTestData(count)
+    ext.model.tabs = generateTabsTestData(Math.floor(count / 10))
     ext.initialized = true
 
     const totalItems = ext.model.bookmarks.length + ext.model.history.length + ext.model.tabs.length
 
     // Pre-warmup: run both strategies once to ensure JIT compilation and cache init
-    // This prevents the first-measured strategy from paying cold-start costs
     ext.searchCache = new Map()
     ext.opts.searchStrategy = 'precise'
     ext.dom.searchInput.value = 'warmup'
@@ -107,7 +90,6 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     for (let i = 0; i < iterations; i++) {
       ext.searchCache = new Map()
       ext.opts.searchStrategy = 'precise'
-      // Use different search terms to avoid any hidden engine-level path optimizations
       ext.dom.searchInput.value = 'resource'
       const start = performance.now()
       await search()
@@ -120,7 +102,7 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     for (let i = 0; i < iterations; i++) {
       ext.searchCache = new Map()
       ext.opts.searchStrategy = 'fuzzy'
-      ext.dom.searchInput.value = 'resourc' // fuzzy should handle this
+      ext.dom.searchInput.value = 'resourc'
       const start = performance.now()
       await search()
       totalF += performance.now() - start

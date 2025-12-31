@@ -238,3 +238,30 @@ export function createTestData(type, rawData) {
       throw new Error(`Unknown type: ${type}`)
   }
 }
+
+/**
+ * Generate a set of converted mock bookmarks.
+ * @param {number} count
+ * @returns {Array} Converted bookmarks
+ */
+export function generateBookmarksTestData(count) {
+  return createBookmarksTestData(generateMockBookmarks(count))
+}
+
+/**
+ * Generate a set of converted mock history items.
+ * @param {number} count
+ * @returns {Array} Converted history
+ */
+export function generateHistoryTestData(count) {
+  return createHistoryTestData(generateMockHistory(count))
+}
+
+/**
+ * Generate a set of converted mock tabs.
+ * @param {number} count
+ * @returns {Array} Converted tabs
+ */
+export function generateTabsTestData(count) {
+  return createTabsTestData(generateMockTabs(count))
+}
