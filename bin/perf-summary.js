@@ -87,54 +87,109 @@ function generateSummary() {
 
   fs.ensureDirSync('./reports')
 
-  // 1. Comparison Matrix (from Jest)
+  // 1. Parse Jest output into sections
   if (fs.existsSync(jestLog)) {
     const content = fs.readFileSync(jestLog, 'utf-8')
-    const tableLines = content.split('\n').filter((l) => l.includes('|') && l.includes('ms'))
+    const contentLines = content.split('\n')
 
-    if (tableLines.length > 0) {
-      const rows = []
-      // Parse rows - be flexible with whitespace
-      for (const l of tableLines) {
-        const parts = l
+    // Parse sections based on headers
+    const sections = {
+      dataLoading: { header: 'Data Loading/Conversion Performance', rows: [], cols: 2 },
+      scoring: { header: 'Scoring Algorithm Performance', rows: [], cols: 2 },
+      singleQuery: { header: 'Single-Query Search Performance', rows: [], cols: 3 },
+      incremental: { header: 'Incremental Typing Performance', rows: [], cols: 3 },
+      coldStart: { header: 'Cold Start', rows: [], cols: 3 },
+    }
+
+    let currentSection = null
+
+    for (const line of contentLines) {
+      // Check for section headers
+      if (line.includes('Data Loading')) {
+        currentSection = 'dataLoading'
+      } else if (line.includes('Scoring Algorithm')) {
+        currentSection = 'scoring'
+      } else if (line.includes('Single-Query Search')) {
+        currentSection = 'singleQuery'
+      } else if (line.includes('Incremental Typing')) {
+        currentSection = 'incremental'
+      } else if (line.includes('Cold Start') && line.includes('|') && line.includes('ms')) {
+        // Cold start is a single row, parse it directly
+        const parts = line
           .split('|')
           .map((p) => p.trim())
           .filter((p) => p !== '')
         if (parts.length === 3) {
-          rows.push(parts)
+          sections.coldStart.rows.push(parts)
+          const preciseMs = parseMs(parts[1])
+          const fuzzyMs = parseMs(parts[2])
+          if (preciseMs != null) jestResults[`${parts[0]} Precise`] = preciseMs
+          if (fuzzyMs != null) jestResults[`${parts[0]} Fuzzy`] = fuzzyMs
+        }
+      } else if (currentSection && line.includes('|') && line.includes('ms')) {
+        // Parse table row
+        const parts = line
+          .split('|')
+          .map((p) => p.trim())
+          .filter((p) => p !== '')
+
+        if (parts.length >= sections[currentSection].cols) {
+          sections[currentSection].rows.push(parts)
 
           // Extract timing for regression check
           const scenario = parts[0]
-          const preciseMs = parseMs(parts[1])
-          const fuzzyMs = parseMs(parts[2])
-
-          if (scenario.includes('Cold Start')) {
-            if (preciseMs != null) jestResults[`${scenario} Precise`] = preciseMs
-            if (fuzzyMs != null) jestResults[`${scenario} Fuzzy`] = fuzzyMs
-          } else {
+          if (parts.length === 2) {
+            const ms = parseMs(parts[1])
+            if (ms != null) jestResults[`${currentSection} ${scenario}`] = ms
+          } else if (parts.length === 3) {
+            const preciseMs = parseMs(parts[1])
+            const fuzzyMs = parseMs(parts[2])
             if (preciseMs != null) jestResults[`${scenario} Precise`] = preciseMs
             if (fuzzyMs != null) jestResults[`${scenario} Fuzzy`] = fuzzyMs
           }
         }
       }
+    }
 
-      if (rows.length > 0) {
-        const headers = ['Scenario', 'Precise (Avg)', 'Fuzzy (Avg)']
-        const colWidths = headers.map((h, i) => Math.max(h.length, ...rows.map((r) => r[i].length)))
-        const pad = (str, width) => ` ${str.padEnd(width, ' ')} `
+    // Helper to render a table
+    const renderTable = (title, headers, rows) => {
+      if (rows.length === 0) return
+      const colWidths = headers.map((h, i) => Math.max(h.length, ...rows.map((r) => (r[i] || '').length)))
+      const pad = (str, width) => ` ${(str || '').padEnd(width, ' ')} `
 
-        lines.push('## Strategy Comparison (Micro-benchmarks)')
-        lines.push('')
-        lines.push(
-          `|${pad(headers[0], colWidths[0])}|${pad(headers[1], colWidths[1])}|${pad(headers[2], colWidths[2])}|`,
-        )
-        lines.push(`|${'-'.repeat(colWidths[0] + 2)}|${'-'.repeat(colWidths[1] + 2)}|${'-'.repeat(colWidths[2] + 2)}|`)
-
-        for (const row of rows) {
-          lines.push(`|${pad(row[0], colWidths[0])}|${pad(row[1], colWidths[1])}|${pad(row[2], colWidths[2])}|`)
-        }
-        lines.push('')
+      lines.push(`### ${title}`)
+      lines.push('')
+      lines.push(`|${headers.map((h, i) => pad(h, colWidths[i])).join('|')}|`)
+      lines.push(`|${colWidths.map((w) => '-'.repeat(w + 2)).join('|')}|`)
+      for (const row of rows) {
+        lines.push(`|${headers.map((_, i) => pad(row[i], colWidths[i])).join('|')}|`)
       }
+      lines.push('')
+    }
+
+    // Render Data Loading section
+    if (sections.dataLoading.rows.length > 0) {
+      renderTable('Data Loading Performance', ['Dataset Size', 'Time (Avg)'], sections.dataLoading.rows)
+    }
+
+    // Render Scoring section
+    if (sections.scoring.rows.length > 0) {
+      renderTable('Scoring Algorithm Performance', ['Result Count', 'Time (Avg)'], sections.scoring.rows)
+    }
+
+    // Render Cold Start + Single-Query in combined strategy table
+    const strategyRows = [...sections.coldStart.rows, ...sections.singleQuery.rows]
+    if (strategyRows.length > 0) {
+      renderTable('Search Performance', ['Scenario', 'Precise (Avg)', 'Fuzzy (Avg)'], strategyRows)
+    }
+
+    // Render Incremental Typing as separate table
+    if (sections.incremental.rows.length > 0) {
+      renderTable(
+        'Incremental Typing Performance',
+        ['Dataset Size', 'Precise (Total)', 'Fuzzy (Total)'],
+        sections.incremental.rows,
+      )
     }
 
     // 2. Focused Logic Timings

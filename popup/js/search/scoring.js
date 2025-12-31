@@ -53,11 +53,7 @@ export function calculateFinalScore(results, searchTerm) {
 
   // searchTerm is already lowercased from normalizeSearchTerm() in common.js
   const normalizedSearchTerm = hasSearchTerm ? searchTerm.trim() : ''
-  const rawSearchTermParts = hasSearchTerm ? normalizedSearchTerm.split(/\s+/).filter(Boolean) : []
-  const hyphenatedSearchTerm = rawSearchTermParts.join('-')
-  // Extract tag and folder terms by replacing markers with spaces, then split once
-  const tagTerms = hasSearchTerm ? normalizedSearchTerm.replace(/#/g, ' ').split(/\s+/).filter(Boolean) : []
-  const folderTerms = hasSearchTerm ? normalizedSearchTerm.replace(/~/g, ' ').split(/\s+/).filter(Boolean) : []
+  const rawSearchTermParts = hasSearchTerm ? normalizedSearchTerm.split(' ') : []
 
   // Cache scoring options to avoid repeated property lookups
   const opts = ext.opts
@@ -83,20 +79,30 @@ export function calculateFinalScore(results, searchTerm) {
     scoreBookmarkOpenTabBonus,
   } = opts
 
-  const includeTerms = rawSearchTermParts
-    .map((token) => token.replace(TAXONOMY_PREFIX_REGEX, ''))
-    .map((token) => token.trim())
-    .filter((token) => {
-      if (!token) {
-        return false
-      }
+  // Build all term arrays in a single pass
+  const tagTerms = []
+  const folderTerms = []
+  const includeTerms = []
 
-      if (token.length < scoreExactIncludesBonusMinChars && !/^\d+$/.test(token)) {
-        return false
-      }
+  for (let i = 0; i < rawSearchTermParts.length; i++) {
+    const part = rawSearchTermParts[i]
+    if (!part) continue
 
-      return true
-    })
+    // Clean taxonomy prefixes
+    const cleanedPart = part.replace(TAXONOMY_PREFIX_REGEX, '').trim()
+    if (!cleanedPart) continue
+
+    // Add to tag/folder terms (these include # and ~ prefixed terms)
+    tagTerms.push(cleanedPart)
+    folderTerms.push(cleanedPart)
+
+    // Add to includeTerms if meets min length or is numeric
+    if (cleanedPart.length >= scoreExactIncludesBonusMinChars || /^\d+$/.test(cleanedPart)) {
+      includeTerms.push(cleanedPart)
+    }
+  }
+
+  const hyphenatedSearchTerm = rawSearchTermParts.filter(Boolean).join('-')
 
   // Only check includes bonus if configured and there are tokens that qualify
   const canCheckIncludes = hasSearchTerm && scoreExactIncludesBonus && includeTerms.length > 0

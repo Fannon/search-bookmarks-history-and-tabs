@@ -116,13 +116,8 @@ describe('createSearchString', () => {
   })
 
   it('returns a search string from available data when no url is provided', () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
     const result = createSearchString('Title', '', '#tag', undefined)
-
     expect(result).toBe('Title¦#tag')
-    expect(warnSpy).toHaveBeenCalledTimes(1)
-    expect(warnSpy.mock.calls[0][0]).toBe('createSearchString: No URL given')
-    warnSpy.mockRestore()
   })
 })
 

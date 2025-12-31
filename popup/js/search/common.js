@@ -204,18 +204,23 @@ function applyScoring(results, searchTerm, searchMode) {
  * @returns {Array} Filtered results.
  */
 function filterResults(results, searchMode) {
-  // Filter out all search results below a certain score
-  let filtered = results.filter((el) => el.score >= ext.opts.scoreMinScore)
+  const minScore = ext.opts.scoreMinScore
+  const maxResults = ext.opts.searchMaxResults
+  const shouldLimit = searchMode !== 'tags' && searchMode !== 'folders' && searchMode !== 'tabs'
 
-  // Only render maxResults if given (to improve render performance)
-  // Not applied on tabs, tag and folder search
-  if (
-    searchMode !== 'tags' &&
-    searchMode !== 'folders' &&
-    searchMode !== 'tabs' &&
-    filtered.length > ext.opts.searchMaxResults
-  ) {
-    filtered = filtered.slice(0, ext.opts.searchMaxResults)
+  // Fast path: no filtering needed
+  if (minScore <= 0 && (!shouldLimit || results.length <= maxResults)) {
+    return shouldLimit ? results.slice(0, maxResults) : results
+  }
+
+  // Single-pass filter and limit
+  const filtered = []
+  const limit = shouldLimit ? maxResults : results.length
+
+  for (let i = 0; i < results.length && filtered.length < limit; i++) {
+    if (results[i].score >= minScore) {
+      filtered.push(results[i])
+    }
   }
 
   return filtered
