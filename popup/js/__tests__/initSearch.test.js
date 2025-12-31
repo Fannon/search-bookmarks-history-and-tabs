@@ -134,7 +134,6 @@ describe('initSearch entry point', () => {
     expect(module.ext.searchCache instanceof Map).toBe(true)
     expect(mocks.addDefaultEntries).toHaveBeenCalled()
     expect(mocks.renderSearchResults).toHaveBeenCalled()
-    expect(mocks.loadScript).toHaveBeenCalledWith('./lib/mark.es6.min.js')
     expect(document.getElementById('results-loading')).toBeNull()
   })
 

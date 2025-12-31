@@ -17,7 +17,9 @@ import { selectListItem } from './searchNavigation.js'
  * Always uses ext.model.result as the source of truth.
  */
 export async function renderSearchResults() {
-  performance.mark('render-start')
+  if (typeof performance !== 'undefined' && typeof performance.mark === 'function') {
+    performance.mark('render-start')
+  }
   try {
     const result = ext.model.result
 
@@ -161,8 +163,12 @@ export async function renderSearchResults() {
     // Highlight the first result as the current selection
     selectListItem(0)
 
-    performance.mark('render-end')
-    performance.measure('render-results', 'render-start', 'render-end')
+    if (typeof performance !== 'undefined' && typeof performance.mark === 'function') {
+      performance.mark('render-end')
+      if (typeof performance.measure === 'function') {
+        performance.measure('render-results', 'render-start', 'render-end')
+      }
+    }
 
     // Set up event delegation for better performance (one-time setup)
     setupResultItemsEvents()

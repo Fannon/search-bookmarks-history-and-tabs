@@ -52,7 +52,22 @@ function scoreFor({ searchTerm = 'query', opts = {}, result = {} }) {
     opts: { ...baseOpts, ...opts },
   })
 
-  const [scored] = calculateFinalScore([{ ...baseResult, ...result }], searchTerm)
+  // Ensure normalized fields are present for scoring logic
+  const normalizedResult = {
+    ...baseResult,
+    ...result,
+  }
+  if (normalizedResult.title && !normalizedResult.titleLower) {
+    normalizedResult.titleLower = normalizedResult.title.toLowerCase().trim()
+  }
+  if (normalizedResult.tags && !normalizedResult.tagsLower) {
+    normalizedResult.tagsLower = normalizedResult.tags.toLowerCase()
+  }
+  if (normalizedResult.folder && !normalizedResult.folderLower) {
+    normalizedResult.folderLower = normalizedResult.folder.toLowerCase()
+  }
+
+  const [scored] = calculateFinalScore([normalizedResult], searchTerm)
   const score = scored.score
 
   clearTestExt()
@@ -75,24 +90,33 @@ describe('scoring', () => {
       {
         type: 'bookmark',
         title: 'Bookmark',
+        titleLower: 'bookmark',
         url: 'bookmark.test',
         searchScore: 0.55,
       },
-      { type: 'tab', title: 'Tab', url: 'tab.test', searchScore: 1 },
+      { type: 'tab', title: 'Tab', titleLower: 'tab', url: 'tab.test', searchScore: 1 },
       {
         type: 'history',
         title: 'History',
+        titleLower: 'history',
         url: 'history.test',
         searchScore: 1,
       },
-      { type: 'search', title: 'Search', url: 'search.test', searchScore: 0.5 },
+      {
+        type: 'search',
+        title: 'Search',
+        titleLower: 'search',
+        url: 'search.test',
+        searchScore: 0.5,
+      },
       {
         type: 'customSearch',
         title: 'Custom search',
+        titleLower: 'custom search',
         url: 'custom.test',
         searchScore: 1,
       },
-      { type: 'direct', title: 'Direct', url: 'direct.test', searchScore: 1 },
+      { type: 'direct', title: 'Direct', titleLower: 'direct', url: 'direct.test', searchScore: 1 },
     ]
 
     const scored = calculateFinalScore(results, '')
