@@ -2,6 +2,9 @@
 
 ## [unreleased]
 
+- **CHANGE**: Default entries now exclude the currently active tab from the "recently visited" list (avoiding duplication), while ensuring it remains visible if it is bookmarked. The matching logic now also ignores anchor tags (hashes) for better discovery.
+- **CHANGE**: Reduced default `maxRecentTabsToShow` from 16 to 8 to improve performance on startup.
+
 ## [v1.17.3]
 
 - **IMPROVED**: Significant search and ranking performance through data pre-normalization
