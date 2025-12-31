@@ -16,6 +16,7 @@
   - Integrated `performance.mark` and `performance.measure` into search and render loops.
   - Added Jest-based benchmarks for core algorithms with datasets of 5,000+ items.
   - Added Playwright end-to-end performance tests to verify real-world rendering latency.
+- **FIXED**: Tag (`#`) and folder (`~`) search now correctly highlights the full phrase including the marker (e.g., `#music`), ensuring visual consistency and proper matching.
 
 ## [v1.17.3]
 

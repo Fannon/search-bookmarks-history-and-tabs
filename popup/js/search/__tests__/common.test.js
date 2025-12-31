@@ -394,6 +394,29 @@ describe('search', () => {
     expect(cache.has).toHaveBeenCalledWith('remember_precise_all')
     expect(cache.set).toHaveBeenCalledWith('remember_precise_all', ext.model.result)
   })
+
+  test('highlights full tag phrase including marker in tag search', async () => {
+    ext.dom.searchInput.value = '#music'
+    // Note: Browser API converter extracts tags from title (e.g. "Title #tag")
+    // Use a title where #music is clearly a tag
+    ext.model.bookmarks = createBookmarksTestData([
+      {
+        title: 'My Playlist #music',
+        url: 'https://music.test',
+      },
+    ])
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+
+    await search({ key: 'c' })
+
+    const result = ext.model.result[0]
+    expect(result).toBeDefined()
+    // The title will be "My Playlist", and "music" is extracted as a tag
+    // The tag in the UI is displayed with # prefix, so we check highlightedTagsArray
+    // Expect the tag "#music" to be highlighted
+    expect(result.highlightedTagsArray[0]).toContain('<mark>#music</mark>')
+  })
 })
 
 describe('Cache Behavior: Ephemeral Session Cache', () => {
