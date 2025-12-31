@@ -84,21 +84,20 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
     s.idxs = null
   }
-
   // Use existing indices or iterate all (null = all)
   let idxs = s.idxs
 
   // Split once and reuse - searchTerm is already lowercase from normalizeSearchTerm
   const terms = searchTerm.split(' ')
+  const sTerms = s.searchTerm ? s.searchTerm.split(' ') : []
 
   // Filtering (AND-logic)
   for (let t = 0; t < terms.length; t++) {
     const term = terms[t]
     if (!term) continue
 
-    // Optimization: If this is the first term of an extended search ("abc" -> "abc def"),
-    // and s.idxs already contains results for the first part, we can skip the first pass.
-    if (t === 0 && idxs !== null && s.searchTerm.split(' ')[0] === term) {
+    // Optimization: Skip terms that are already satisfied by the current s.idxs
+    if (idxs !== null && sTerms[t] === term) {
       continue
     }
 

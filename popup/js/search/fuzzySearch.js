@@ -112,8 +112,10 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
     s.isNonASCII = isNonASCII
   }
 
-  /** Search results */
-  const results = []
+  // Optimization: If search term is exactly the same, return cached results (as new objects)
+  if (s.searchTerm === searchTerm && s.idxs !== null) {
+    return createResultObjects(data, s.idxs)
+  }
 
   // Invalidate s.idxs cache if the new search term is not just an extension of the last one
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
@@ -121,9 +123,16 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
   }
 
   const searchTermArray = searchTerm.split(' ')
+  const sTerms = s.searchTerm ? s.searchTerm.split(' ') : []
 
-  for (const term of searchTermArray) {
+  for (let t = 0; t < searchTermArray.length; t++) {
+    const term = searchTermArray[t]
     if (!term) continue // Skip empty terms
+
+    // Optimization: Skip terms that are already satisfied by the current s.idxs
+    if (s.idxs && sTerms[t] === term) {
+      continue
+    }
 
     try {
       const idxs = s.uf.filter(s.haystack, term, s.idxs)
@@ -139,16 +148,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
   }
 
   // Final step: create result objects for the matched indices
-  if (s.idxs && s.idxs.length > 0) {
-    for (let i = 0; i < s.idxs.length; i++) {
-      const result = data[s.idxs[i]]
-      results.push({
-        ...result,
-        searchScore: 1, // uFuzzy score is not used here if we don't call info, just use 1
-        searchApproach: 'fuzzy',
-      })
-    }
-  }
+  const results = createResultObjects(data, s.idxs)
 
   s.searchTerm = searchTerm // Remember last search term, to know when to invalidate idxx cache
   return results
@@ -162,4 +162,22 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
  */
 function containsNonASCII(str) {
   return nonASCIIRegex.test(str)
+}
+
+/**
+ * Creates the result objects for the matched indices.
+ */
+function createResultObjects(data, idxs) {
+  const results = []
+  if (idxs && idxs.length > 0) {
+    for (let i = 0; i < idxs.length; i++) {
+      const result = data[idxs[i]]
+      results.push({
+        ...result,
+        searchScore: 1, // uFuzzy score is not used here if we don't call info, just use 1
+        searchApproach: 'fuzzy',
+      })
+    }
+  }
+  return results
 }
