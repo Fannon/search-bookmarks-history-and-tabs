@@ -157,9 +157,8 @@ export function convertBrowserBookmarks(
             // If tag starts with a digit, it's probably not a tag (e.g. "C# 11")
             title += ` #${tag}`
           } else {
-            const tagLower = tag.toLowerCase()
-            tagsArray.push(tagLower)
-            tagsText += `#${tagLower} `
+            tagsArray.push(tag)
+            tagsText += `#${tag} `
           }
         }
         tagsText = tagsText.trim()
@@ -179,9 +178,9 @@ export function convertBrowserBookmarks(
         dateAdded: entry.dateAdded,
         customBonusScore,
         tags: tagsText,
-        tagsLower: tagsText, // Already lowercased during parsing
+        tagsLower: tagsText.toLowerCase(),
         tagsArray: tagsArray,
-        tagsArrayLower: tagsArray, // Already lowercased during parsing
+        tagsArrayLower: tagsArray.map((t) => t.toLowerCase()),
         folder: folderText,
         folderLower: folderLower,
         folderArray: folderTrail,
