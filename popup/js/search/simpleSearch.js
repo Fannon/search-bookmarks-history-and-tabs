@@ -58,9 +58,6 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
 
   // Initialize or retrieve cached state
   if (!state[searchMode]) {
-    // Optimization: Create a flat haystack array of strings.
-    // Iterating over a flat array of strings is significantly faster than
-    // accessing properties on an array of objects in many JS engines.
     const haystack = new Array(dataLen)
     for (let i = 0; i < dataLen; i++) {
       haystack[i] = data[i].searchStringLower
@@ -75,19 +72,18 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
   const s = state[searchMode]
   const haystack = s.haystack
 
-  // Optimization: If search term is exactly the same, return cached results (as new objects)
+  // Return cached results if search term is identical
   if (s.searchTerm === searchTerm && s.idxs !== null) {
     return createResultObjects(s.data, s.idxs)
   }
 
-  // Only reset filtering state if search term changed direction
+  // Invalidate cache if search term changed direction
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
     s.idxs = null
   }
   // Use existing indices or iterate all (null = all)
   let idxs = s.idxs
 
-  // Split once and reuse - searchTerm is already lowercase from normalizeSearchTerm
   const terms = searchTerm.split(' ')
   const sTerms = s.searchTerm ? s.searchTerm.split(' ') : []
 
@@ -96,7 +92,7 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
     const term = terms[t]
     if (!term) continue
 
-    // Optimization: Skip terms that are already satisfied by the current s.idxs
+    // Skip terms already satisfied by current idxs
     if (idxs !== null && sTerms[t] === term) {
       continue
     }
@@ -104,15 +100,12 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
     const nextIdxs = []
 
     if (idxs === null) {
-      // First pass: iterate all data directly (no index array allocation)
       for (let i = 0; i < dataLen; i++) {
-        // .includes() is often slightly more optimized than .indexOf() !== -1 for boolean checks
         if (haystack[i].includes(term)) {
           nextIdxs.push(i)
         }
       }
     } else {
-      // Subsequent passes: filter existing indices
       for (let i = 0; i < idxs.length; i++) {
         const idx = idxs[i]
         if (haystack[idx].includes(term)) {
@@ -125,7 +118,6 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
     if (idxs.length === 0) break
   }
 
-  // Cache filtered state
   s.idxs = idxs
   s.searchTerm = searchTerm
 
@@ -138,8 +130,7 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
 }
 
 /**
- * Creates the result objects for the matched indices.
- * Separated from search logic for clarity and potential future reuse.
+ * Creates result objects for matched indices.
  */
 function createResultObjects(data, idxs) {
   const count = idxs.length

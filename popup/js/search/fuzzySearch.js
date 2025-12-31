@@ -112,12 +112,12 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
     s.isNonASCII = isNonASCII
   }
 
-  // Optimization: If search term is exactly the same, return cached results (as new objects)
+  // Return cached results if search term is identical
   if (s.searchTerm === searchTerm && s.idxs !== null) {
     return createResultObjects(data, s.idxs)
   }
 
-  // Invalidate s.idxs cache if the new search term is not just an extension of the last one
+  // Invalidate cache if search term changed direction
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
     s.idxs = undefined
   }
@@ -129,7 +129,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
     const term = searchTermArray[t]
     if (!term) continue // Skip empty terms
 
-    // Optimization: Skip terms that are already satisfied by the current s.idxs
+    // Skip terms already satisfied by current idxs
     if (s.idxs && sTerms[t] === term) {
       continue
     }
@@ -147,25 +147,19 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
     }
   }
 
-  // Final step: create result objects for the matched indices
-  const results = createResultObjects(data, s.idxs)
-
-  s.searchTerm = searchTerm // Remember last search term, to know when to invalidate idxx cache
-  return results
+  s.searchTerm = searchTerm
+  return createResultObjects(data, s.idxs)
 }
 
 /**
- * Detect whether a string contains non-ASCII characters that require special fuzzy handling.
- *
- * @param {string} str - Value to inspect.
- * @returns {boolean} True when non-ASCII characters are present.
+ * Detect whether a string contains non-ASCII characters.
  */
 function containsNonASCII(str) {
   return nonASCIIRegex.test(str)
 }
 
 /**
- * Creates the result objects for the matched indices.
+ * Creates result objects for matched indices.
  */
 function createResultObjects(data, idxs) {
   const results = []
