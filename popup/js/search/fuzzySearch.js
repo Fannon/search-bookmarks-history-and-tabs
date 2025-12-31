@@ -6,10 +6,10 @@
  * - Build memoized haystacks per mode (bookmarks, tabs, history) for quick repeated searches.
  * - Handle typo tolerance, loose word boundaries, and non-ASCII fallbacks better than the simple strategy.
  *
- * Scoring pipeline:
- * - uFuzzy returns a searchScore between 0 and 1 representing match quality.
- * - Higher searchScore values indicate closer matches; `scoring.js` multiplies base weights by this factor.
- * - Highlight data is preserved for the view to underline matched substrings once results render.
+ * Scoring and Highlighting:
+ * - uFuzzy's internal scoring (info call) and highlighting are disabled to save CPU.
+ * - All fuzzy matches return a base searchScore of 1.
+ * - Final scoring and highlighting are handled by common.js and scoring.js.
  */
 
 import { loadScript } from '../helper/utils.js'
@@ -112,58 +112,66 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
     s.isNonASCII = isNonASCII
   }
 
-  /** Search results */
-  let results = []
+  // Return cached results if search term is identical
+  if (s.searchTerm === searchTerm && s.idxs !== null) {
+    return createResultObjects(data, s.idxs)
+  }
 
-  // Invalidate s.idxs cache if the new search term is not just an extension of the last one
+  // Invalidate cache if search term changed direction
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
     s.idxs = undefined
   }
 
   const searchTermArray = searchTerm.split(' ')
+  const sTerms = s.searchTerm ? s.searchTerm.split(' ') : []
 
-  for (const term of searchTermArray) {
+  for (let t = 0; t < searchTermArray.length; t++) {
+    const term = searchTermArray[t]
     if (!term) continue // Skip empty terms
 
-    const localResults = []
+    // Skip terms already satisfied by current idxs
+    if (s.idxs && sTerms[t] === term) {
+      continue
+    }
 
     try {
       const idxs = s.uf.filter(s.haystack, term, s.idxs)
-      const info = s.uf.info(idxs, s.haystack, term)
-
-      for (let i = 0; i < info.idx.length; i++) {
-        const result = data[idxs[i]]
-
-        localResults.push({
-          ...result,
-          // 0 intra chars are perfect score, 5 and more are 0 score.
-          searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
-          searchApproach: 'fuzzy',
-        })
-      }
-
       s.idxs = idxs // Save idxs cache to state
     } catch (err) {
       err.message = 'Fuzzy search could not handle search term. Please try precise search instead.'
       printError(err)
     }
 
-    results = localResults // keep and return the last iteration of local results
-    if (!results.length) {
+    if (!s.idxs?.length) {
       break // Early termination if no matches found
     }
   }
 
-  s.searchTerm = searchTerm // Remember last search term, to know when to invalidate idxx cache
-  return results
+  s.searchTerm = searchTerm
+  return createResultObjects(data, s.idxs)
 }
 
 /**
- * Detect whether a string contains non-ASCII characters that require special fuzzy handling.
- *
- * @param {string} str - Value to inspect.
- * @returns {boolean} True when non-ASCII characters are present.
+ * Detect whether a string contains non-ASCII characters.
  */
 function containsNonASCII(str) {
   return nonASCIIRegex.test(str)
+}
+
+/**
+ * Creates result objects for matched indices.
+ */
+function createResultObjects(data, idxs) {
+  const results = []
+  if (idxs && idxs.length > 0) {
+    for (let i = 0; i < idxs.length; i++) {
+      const result = data[idxs[i]]
+      results.push({
+        ...result,
+        searchScore: 1, // uFuzzy score is not used here if we don't call info, just use 1
+        searchApproach: 'fuzzy',
+      })
+    }
+  }
+  return results
 }

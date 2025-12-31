@@ -17,6 +17,9 @@ import { selectListItem } from './searchNavigation.js'
  * Always uses ext.model.result as the source of truth.
  */
 export async function renderSearchResults() {
+  if (typeof performance !== 'undefined' && typeof performance.mark === 'function') {
+    performance.mark('render-start')
+  }
   try {
     const result = ext.model.result
 
@@ -67,24 +70,28 @@ export async function renderSearchResults() {
       }
 
       if (opts.displayTags && resultEntry.tagsArray) {
-        for (const tag of resultEntry.tagsArray) {
-          const safeTag = escapeHtml(tag)
-          badges.push(`<span class="badge tags" x-link="#search/#${safeTag}" title="Bookmark Tags">#${safeTag}</span>`)
+        for (let j = 0; j < resultEntry.tagsArray.length; j++) {
+          const tag = resultEntry.tagsArray[j]
+          const highlightedTag = resultEntry.highlightedTagsArray?.[j]
+          const content = shouldHighlight && highlightedTag ? highlightedTag : escapeHtml(tag)
+          badges.push(
+            `<span class="badge tags" x-link="#search/#${escapeHtml(tag)}" title="Bookmark Tags">#${content}</span>`,
+          )
         }
       }
 
       if (opts.displayFolderName && resultEntry.folderArray) {
         const trail = []
         const bookmarkColorStyle = `background-color: ${escapeHtml(String(opts.bookmarkColor || 'none'))}`
-        for (const folderName of resultEntry.folderArray) {
+        for (let j = 0; j < resultEntry.folderArray.length; j++) {
+          const folderName = resultEntry.folderArray[j]
+          const highlightedFolder = resultEntry.highlightedFolderArray?.[j]
           trail.push(folderName)
           const folderLink = `#search/~${trail.join(' ~')}`
           const safeLink = escapeHtml(folderLink)
-          const label = `~${folderName}`
+          const content = shouldHighlight && highlightedFolder ? highlightedFolder : escapeHtml(folderName)
           badges.push(
-            `<span class="badge folder" x-link="${safeLink}" title="Bookmark Folder" style="${bookmarkColorStyle}">${escapeHtml(
-              label,
-            )}</span>`,
+            `<span class="badge folder" x-link="${safeLink}" title="Bookmark Folder" style="${bookmarkColorStyle}">~${content}</span>`,
           )
         }
       }
@@ -116,9 +123,12 @@ export async function renderSearchResults() {
 
       const badgesHTML = badges.join('')
 
-      // Escape HTML for title and URL content (mark.js will add highlights later)
-      const titleContent = escapeHtml(resultEntry.title || resultEntry.url || '')
-      const urlContent = escapeHtml(resultEntry.url || '')
+      const titleContent =
+        shouldHighlight && resultEntry.highlightedTitle
+          ? resultEntry.highlightedTitle
+          : escapeHtml(resultEntry.title || resultEntry.url || '')
+      const urlContent =
+        shouldHighlight && resultEntry.highlightedUrl ? resultEntry.highlightedUrl : escapeHtml(resultEntry.url || '')
 
       const typeClass = escapeHtml(resultEntry.type || '')
       const originalUrlAttr = resultEntry.originalUrl ? ` x-open-url="${escapeHtml(resultEntry.originalUrl)}"` : ''
@@ -149,14 +159,6 @@ export async function renderSearchResults() {
     // Update the DOM with all new result items at once using innerHTML (faster for large updates)
     ext.dom.resultList.innerHTML = itemsHTML.join('')
 
-    // Apply mark.js highlighting to the entire result list once (much faster than per-item)
-    if (shouldHighlight && searchTerm && searchTerm.trim() && window.Mark) {
-      const mark = new window.Mark(ext.dom.resultList)
-      mark.mark(searchTerm, {
-        exclude: ['.last-visited', '.score', '.visit-counter', '.date-added', '.source-tab'],
-      })
-    }
-
     // Update result counter
     if (ext.dom.resultCounter) {
       ext.dom.resultCounter.innerText = `(${result.length})`
@@ -164,6 +166,13 @@ export async function renderSearchResults() {
 
     // Highlight the first result as the current selection
     selectListItem(0)
+
+    if (typeof performance !== 'undefined' && typeof performance.mark === 'function') {
+      performance.mark('render-end')
+      if (typeof performance.measure === 'function') {
+        performance.measure('render-results', 'render-start', 'render-end')
+      }
+    }
 
     // Set up event delegation for better performance (one-time setup)
     setupResultItemsEvents()

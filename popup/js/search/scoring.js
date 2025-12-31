@@ -51,8 +51,8 @@ const WHITESPACE_REGEX = /\s+/g
 export function calculateFinalScore(results, searchTerm) {
   const hasSearchTerm = Boolean(ext.model.searchTerm)
 
-  // Normalize and split search term once for all downstream checks
-  const normalizedSearchTerm = hasSearchTerm ? searchTerm.toLowerCase().trim() : ''
+  // searchTerm is already lowercased from normalizeSearchTerm() in common.js
+  const normalizedSearchTerm = hasSearchTerm ? searchTerm.trim() : ''
   const rawSearchTermParts = hasSearchTerm ? normalizedSearchTerm.split(/\s+/).filter(Boolean) : []
   const hyphenatedSearchTerm = rawSearchTermParts.join('-')
   // Extract tag and folder terms by replacing markers with spaces, then split once
@@ -124,8 +124,8 @@ export function calculateFinalScore(results, searchTerm) {
     if (hasSearchTerm) {
       // STEP 3A: Exact match bonuses
       // Award bonus if title/URL starts with the exact search term
-      const normalizedUrl = el.url?.toLowerCase() // use el.url directly as it should be cleaned, but lowercase just in case
-      const titleLower = el.titleLower ?? el.title?.toLowerCase().trim()
+      const normalizedUrl = el.url
+      const titleLower = el.titleLower
 
       if (scoreExactStartsWithBonus) {
         if (titleLower?.startsWith(normalizedSearchTerm)) {
@@ -144,7 +144,7 @@ export function calculateFinalScore(results, searchTerm) {
       // Example: searching "react hooks" matches tags "#react" and "#hooks"
       if (scoreExactTagMatchBonus && el.tags && tagTerms.length) {
         for (const searchTag of tagTerms) {
-          if (searchTag && el.tagsArray?.some((tag) => tag.toLowerCase() === searchTag)) {
+          if (searchTag && el.tagsArrayLower?.includes(searchTag)) {
             score += scoreExactTagMatchBonus
           }
         }
@@ -154,7 +154,7 @@ export function calculateFinalScore(results, searchTerm) {
       // Example: searching "work projects" matches folders "~Work" and "~Projects"
       if (scoreExactFolderMatchBonus && el.folder && folderTerms.length) {
         for (const searchFolder of folderTerms) {
-          if (searchFolder && el.folderArray?.some((folder) => folder.toLowerCase() === searchFolder)) {
+          if (searchFolder && el.folderArrayLower?.includes(searchFolder)) {
             score += scoreExactFolderMatchBonus
           }
         }
@@ -166,9 +166,8 @@ export function calculateFinalScore(results, searchTerm) {
       if (canCheckIncludes) {
         let includesBonusesAwarded = 0
 
-        // Lazy compute these only if needed for includes check
-        const normalizedTags = el.tags?.toLowerCase()
-        const normalizedFolder = el.folder?.toLowerCase()
+        const normalizedTags = el.tagsLower
+        const normalizedFolder = el.folderLower
 
         for (let j = 0; j < includeTerms.length; j++) {
           if (includesBonusesAwarded >= includesBonusCap) {

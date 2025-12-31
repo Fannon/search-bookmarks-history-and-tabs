@@ -4,7 +4,14 @@
  */
 
 import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
-import { clearTestExt, createTestExt } from './testUtils.js'
+import {
+  clearTestExt,
+  createBookmarksTestData,
+  createHistoryTestData,
+  createTabsTestData,
+  createTestExt,
+  generateBookmarksTestData,
+} from './testUtils.js'
 
 describe('Extension Integration Tests', () => {
   beforeEach(() => {
@@ -18,47 +25,33 @@ describe('Extension Integration Tests', () => {
         maxRecentTabsToShow: 5,
       },
       model: {
-        bookmarks: [
+        bookmarks: createBookmarksTestData([
           {
-            type: 'bookmark',
-            id: 'bookmark-1',
             title: 'JavaScript Guide',
             url: 'https://example.com/js',
-            searchString: 'javascript guide¦https://example.com/js',
-            tags: '#javascript #web',
-            folder: '~Work ~Programming',
           },
           {
-            type: 'bookmark',
-            id: 'bookmark-2',
             title: 'React Documentation',
             url: 'https://reactjs.org',
-            searchString: 'react documentation¦https://reactjs.org',
-            tags: '#react #javascript #frontend',
-            folder: '~Work ~Frontend',
           },
-        ],
-        tabs: [
+        ]),
+        tabs: createTabsTestData([
           {
-            type: 'tab',
             id: 'tab-1',
             title: 'JavaScript Tutorial',
             url: 'https://example.com/tutorial',
-            searchString: 'javascript tutorial¦https://example.com/tutorial',
-            lastVisitSecondsAgo: 300,
+            lastAccessed: Date.now() - 300000,
           },
-        ],
-        history: [
+        ]),
+        history: createHistoryTestData([
           {
-            type: 'history',
             id: 'history-1',
             title: 'MDN Web Docs',
             url: 'https://developer.mozilla.org',
-            searchString: 'mdn web docs¦https://developer.mozilla.org',
-            lastVisitSecondsAgo: 3600,
+            lastVisitTime: Date.now() - 3600000,
             visitCount: 5,
           },
-        ],
+        ]),
       },
     })
 
@@ -89,19 +82,7 @@ describe('Extension Integration Tests', () => {
   })
 
   test('performance with large datasets', async () => {
-    // Create large dataset
-    const largeBookmarks = []
-    for (let i = 0; i < 1000; i++) {
-      largeBookmarks.push({
-        id: `bookmark-${i}`,
-        title: `Bookmark ${i}`,
-        url: `https://example.com/${i}`,
-        searchString: `bookmark ${i}¦https://example.com/${i}`,
-        type: 'bookmark',
-      })
-    }
-
-    ext.model.bookmarks = largeBookmarks
+    ext.model.bookmarks = generateBookmarksTestData(1000)
 
     const { search } = await import('../search/common.js')
 
@@ -136,15 +117,11 @@ describe('Extension Integration Tests', () => {
     expect(ext.model.result.length).toBeGreaterThan(0)
   })
 
-  test('bookmark editing workflow updates search data and refreshes results', async () => {
-    // Test that bookmark data can be updated correctly
+  test('bookmark data structure contains expected fields after conversion', async () => {
     const bookmark = ext.model.bookmarks[0]
-    bookmark.title = 'Updated JavaScript Guide'
-    bookmark.searchString = 'updated javascript guide¦https://example.com/js'
-
-    // Verify the bookmark was updated
-    expect(bookmark.title).toBe('Updated JavaScript Guide')
-    expect(bookmark.searchString).toContain('updated javascript guide')
+    expect(bookmark.title).toBe('JavaScript Guide')
+    expect(bookmark.searchStringLower).toContain('javascript guide')
+    expect(bookmark.type).toBe('bookmark')
   })
 
   test('error handling across multiple components', async () => {
@@ -153,6 +130,7 @@ describe('Extension Integration Tests', () => {
       simpleSearch: () => {
         throw new Error('Simple search failure')
       },
+      highlightSimpleSearch: jest.fn((r) => r),
       resetSimpleSearchState: jest.fn(),
     }))
 
@@ -179,12 +157,14 @@ describe('Extension Integration Tests', () => {
         url: 'https://example.com',
         searchScore: 1,
         score: 100,
+        searchApproach: 'precise',
       },
     ])
 
     await jest.unstable_mockModule('../search/simpleSearch.js', () => ({
       __esModule: true,
       simpleSearch: mockSimpleSearch,
+      highlightSimpleSearch: jest.fn((r) => r),
       resetSimpleSearchState: jest.fn(),
     }))
 

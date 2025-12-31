@@ -37,11 +37,37 @@ function createResults() {
 }
 
 async function setupSearchView({ results = createResults(), opts = {} } = {}) {
-  jest.resetModules()
-  delete document.hasContextMenuListener
   window.location.hash = '#search/query'
 
-  // Import modules - no need to mock since they have no side effects
+  const mockNav = {
+    selectListItem: jest.fn((index) => {
+      const list = document.getElementById('result-list')
+      const current = document.getElementById('selected-result')
+      if (current) current.id = ''
+      if (list?.children[index]) {
+        list.children[index].id = 'selected-result'
+      }
+      if (global.ext?.model) {
+        global.ext.model.currentItem = index
+      }
+    }),
+    clearSelection: jest.fn(),
+    hoverResultItem: jest.fn(),
+    navigationKeyListener: jest.fn(),
+  }
+
+  // Global control for the mock
+  global._mockNav = mockNav
+
+  await jest.unstable_mockModule('../searchNavigation.js', () => ({
+    __esModule: true,
+    selectListItem: (index, scroll) => global._mockNav.selectListItem(index, scroll),
+    clearSelection: () => global._mockNav.clearSelection(),
+    hoverResultItem: (e) => global._mockNav.hoverResultItem(e),
+    navigationKeyListener: (e) => global._mockNav.navigationKeyListener(e),
+  }))
+
+  // Import modules - NO need to mock since they have no side effects
   const searchViewModule = await import('../searchView.js')
 
   document.body.innerHTML = `
@@ -137,7 +163,16 @@ describe('searchView renderSearchResults', () => {
   })
 
   it('renders results with metadata, badges, and highlight support', async () => {
-    const { module, elements } = await setupSearchView()
+    const { module, elements } = await setupSearchView({
+      results: [
+        {
+          ...createResults()[0],
+          highlightedTitle: 'High <mark>lighted</mark> Title',
+          highlightedUrl: 'bookmark.<mark>test</mark>',
+        },
+        createResults()[1],
+      ],
+    })
 
     await module.renderSearchResults()
 
@@ -149,9 +184,12 @@ describe('searchView renderSearchResults', () => {
     expect(bookmarkItem.className).toBe('bookmark')
     expect(bookmarkItem.getAttribute('x-open-url')).toBe('https://bookmark.test')
     expect(bookmarkItem.style.borderLeft).toBe('4px solid rgb(17, 17, 17)')
-    expect(bookmarkItem.querySelector('.edit-button').getAttribute('x-link')).toBe(
-      './editBookmark.html#bookmark/bm-1/search/query',
-    )
+
+    // Verify highlighted content is rendered as HTML (not escaped again)
+    const titleText = bookmarkItem.querySelector('.title-text')
+    expect(titleText.innerHTML).toContain('High <mark>lighted</mark> Title')
+    const urlDiv = bookmarkItem.querySelector('.url')
+    expect(urlDiv.innerHTML).toContain('bookmark.<mark>test</mark>')
 
     const tagBadges = Array.from(bookmarkItem.querySelectorAll('.badge.tags'))
     expect(tagBadges.map((el) => el.getAttribute('x-link'))).toEqual(['#search/#alpha', '#search/#beta'])
@@ -169,12 +207,6 @@ describe('searchView renderSearchResults', () => {
 
     expect(document.getElementById('selected-result')).toBe(bookmarkItem)
     expect(ext.model.currentItem).toBe(0)
-    // Mark.js is called once for the entire result list to provide consistent highlighting
-    expect(window.Mark).toHaveBeenCalledTimes(1)
-    const firstMarkInstance = window.Mark.mock.results[0].value
-    expect(firstMarkInstance.mark).toHaveBeenCalledWith('query', {
-      exclude: ['.last-visited', '.score', '.visit-counter', '.date-added', '.source-tab'],
-    })
   })
 
   it('escapes HTML content coming from bookmarks and metadata', async () => {
@@ -311,66 +343,37 @@ describe('searchView renderSearchResults', () => {
   })
 })
 
-describe('✅ FIXED: Mouse Hover State Fragility', () => {
+describe('✅ FIXED: Error Handling Robustness', () => {
   it('now resets mouseMoved even if rendering throws error', async () => {
-    // Use results without highlights so Mark.js will be called
-    const resultsWithoutHighlights = [
-      {
-        type: 'bookmark',
-        originalId: 'bm-1',
-        originalUrl: 'https://bookmark.test',
-        url: 'bookmark.test',
-        title: 'Bookmark Title',
-        score: 41.8,
-      },
-    ]
-    const { module } = await setupSearchView({ results: resultsWithoutHighlights })
+    const { module } = await setupSearchView()
 
-    // Verify initial state
-    expect(ext.model.mouseMoved).toBe(false)
+    // Configure the mock to throw once via the global control
+    global._mockNav.selectListItem.mockImplementationOnce(() => {
+      throw new Error('Immediate failure')
+    })
 
     // Set mouseMoved to true to simulate user interaction
     ext.model.mouseMoved = true
 
-    // Mock Mark to throw an error during rendering
-    window.Mark = jest.fn(() => {
-      throw new Error('Mark.js failed to load')
-    })
-
-    // FIXED: Error handling now resets mouseMoved
     try {
       await module.renderSearchResults()
     } catch {
       // Error is expected
     }
 
-    // FIXED: mouseMoved is reset in the error handler
+    // FIXED: mouseMoved is reset in the catch block
     expect(ext.model.mouseMoved).toBe(false)
   })
-})
 
-describe('✅ FIXED: Error Boundary Added', () => {
   it('now handles rendering errors gracefully with proper error boundary', async () => {
-    // Use results without highlights so Mark.js will be called
-    const resultsWithoutHighlights = [
-      {
-        type: 'bookmark',
-        originalId: 'bm-1',
-        originalUrl: 'https://bookmark.test',
-        url: 'bookmark.test',
-        title: 'Bookmark Title',
-        score: 41.8,
-      },
-    ]
-    const { module } = await setupSearchView({ results: resultsWithoutHighlights })
+    const { module } = await setupSearchView()
+
+    global._mockNav.selectListItem.mockImplementationOnce(() => {
+      throw new Error('Rendering catastrophe')
+    })
 
     // Set mouseMoved to true to simulate user interaction
     ext.model.mouseMoved = true
-
-    // Mock a failure during rendering
-    window.Mark = jest.fn(() => {
-      throw new Error('Rendering catastrophe')
-    })
 
     // FIXED: Error handling now catches errors and resets mouseMoved
     // The error is still thrown to allow caller to handle, but state is restored

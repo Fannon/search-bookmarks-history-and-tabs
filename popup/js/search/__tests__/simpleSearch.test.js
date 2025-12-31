@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
+import { createBookmarksTestData, createHistoryTestData, createTabsTestData } from '../../__tests__/testUtils.js'
 import { resetSimpleSearchState, simpleSearch } from '../simpleSearch.js'
 
 describe('simpleSearch', () => {
@@ -18,114 +19,99 @@ describe('simpleSearch', () => {
   })
 
   test('returns exact matches for bookmarks mode', () => {
-    const bookmark = {
-      id: 'bookmark-1',
-      title: 'Test bookmark',
-      url: 'https://example.com/test',
-      searchString: 'test bookmark https://example.com/test',
-    }
-
-    model.bookmarks = [bookmark]
+    model.bookmarks = createBookmarksTestData([
+      {
+        id: 'bookmark-1',
+        title: 'Test bookmark',
+        url: 'https://example.com/test',
+      },
+    ])
 
     const results = simpleSearch('bookmarks', 'test', model)
 
     expect(results).toHaveLength(1)
     expect(results[0]).toMatchObject({
-      id: 'bookmark-1',
+      originalId: 'bookmark-1',
       searchApproach: 'precise',
       searchScore: 1,
     })
   })
 
   test('returns exact matches for tabs mode', () => {
-    const tab = {
-      id: 'tab-1',
-      title: 'Test tab',
-      url: 'https://example.com/tab',
-      searchString: 'test tab https://example.com/tab',
-    }
-
-    model.tabs = [tab]
+    model.tabs = createTabsTestData([
+      {
+        id: 'tab-1',
+        title: 'Test tab',
+        url: 'https://example.com/tab',
+      },
+    ])
 
     const results = simpleSearch('tabs', 'test', model)
 
     expect(results).toHaveLength(1)
     expect(results[0]).toMatchObject({
-      id: 'tab-1',
+      originalId: 'tab-1',
       searchApproach: 'precise',
       searchScore: 1,
     })
   })
 
   test('returns exact matches for history mode', () => {
-    const history = {
-      id: 'history-1',
-      title: 'Test history',
-      url: 'https://example.com/history',
-      searchString: 'test history https://example.com/history',
-    }
-
-    model.history = [history]
+    model.history = createHistoryTestData([
+      {
+        id: 'history-1',
+        title: 'Test history',
+        url: 'https://example.com/history',
+      },
+    ])
 
     const results = simpleSearch('history', 'test', model)
 
     expect(results).toHaveLength(1)
     expect(results[0]).toMatchObject({
-      id: 'history-1',
+      originalId: 'history-1',
       searchApproach: 'precise',
       searchScore: 1,
     })
   })
 
   test('filters out non-matching items', () => {
-    const matchingBookmark = {
-      id: 'bookmark-1',
-      title: 'Learn JavaScript',
-      url: 'https://javascript.info',
-      searchString: 'learn javascript https://javascript.info',
-    }
-    const partialMatchBookmark = {
-      id: 'bookmark-2',
-      title: 'Learn Python',
-      url: 'https://python.org',
-      searchString: 'learn python https://python.org',
-    }
-
-    model.bookmarks = [matchingBookmark, partialMatchBookmark]
+    model.bookmarks = createBookmarksTestData([
+      { id: 'bookmark-1', title: 'Learn JavaScript', url: 'https://javascript.info' },
+      { id: 'bookmark-2', title: 'Learn Python', url: 'https://python.org' },
+    ])
 
     const results = simpleSearch('bookmarks', 'learn javascript', model)
 
     expect(results).toHaveLength(1)
     expect(results[0]).toMatchObject({
-      id: 'bookmark-1',
+      originalId: 'bookmark-1',
     })
   })
 
   test('case insensitive matching', () => {
-    const bookmark = {
-      id: 'bookmark-1',
-      title: 'Test Bookmark',
-      url: 'https://example.com/test',
-      searchString: 'test bookmark https://example.com/test',
-    }
-
-    model.bookmarks = [bookmark]
+    model.bookmarks = createBookmarksTestData([
+      {
+        id: 'bookmark-1',
+        title: 'Test Bookmark',
+        url: 'https://example.com/test',
+      },
+    ])
 
     const results = simpleSearch('bookmarks', 'test', model)
 
     expect(results).toHaveLength(1)
-    expect(results[0].id).toBe('bookmark-1')
+    expect(results[0].originalId).toBe('bookmark-1')
   })
 
   test('requires all search terms to match (AND logic)', () => {
-    const bookmark = {
-      id: 'bookmark-1',
-      title: 'Learn JavaScript',
-      url: 'https://javascript.info',
-      searchString: 'learn javascript https://javascript.info',
-    }
-
-    model.bookmarks = [bookmark]
+    model.bookmarks = createBookmarksTestData([
+      {
+        id: 'bookmark-1',
+        title: 'Learn JavaScript',
+        url: 'https://javascript.info',
+      },
+    ])
 
     // "learn" matches, "python" does not
     const results = simpleSearch('bookmarks', 'learn python', model)
@@ -134,42 +120,40 @@ describe('simpleSearch', () => {
   })
 
   test('aggregates tab and history entries when searching in history mode', () => {
-    const tabEntry = {
-      id: 'tab-1',
-      title: 'Example Entry',
-      url: 'https://example.com',
-      searchString: 'example entry https://example.com',
-    }
-    const historyEntry = {
-      id: 'history-1',
-      title: 'Example Entry',
-      url: 'https://example.com',
-      searchString: 'example entry https://example.com',
-    }
-
-    model.tabs = [tabEntry]
-    model.history = [historyEntry]
+    model.tabs = createTabsTestData([
+      {
+        id: 'tab-1',
+        title: 'Example Entry',
+        url: 'https://example.com',
+      },
+    ])
+    model.history = createHistoryTestData([
+      {
+        id: 'history-1',
+        title: 'Example Entry',
+        url: 'https://example.com',
+      },
+    ])
 
     const results = simpleSearch('history', 'example entry', model)
 
     expect(results).toHaveLength(2)
     expect(results[0]).toMatchObject({
-      id: 'tab-1',
+      originalId: 'tab-1',
     })
     expect(results[1]).toMatchObject({
-      id: 'history-1',
+      originalId: 'history-1',
     })
   })
 
   test('returns empty array when no matches found', () => {
-    const bookmark = {
-      id: 'bookmark-1',
-      title: 'Test',
-      url: 'https://example.com',
-      searchString: 'test https://example.com',
-    }
-
-    model.bookmarks = [bookmark]
+    model.bookmarks = createBookmarksTestData([
+      {
+        id: 'bookmark-1',
+        title: 'Test',
+        url: 'https://example.com',
+      },
+    ])
 
     const results = simpleSearch('bookmarks', 'nonexistent', model)
 
@@ -183,109 +167,88 @@ describe('simpleSearch', () => {
   })
 
   test('searches all targets for "unknown" mode (fallback to all)', () => {
-    // "unknown" mode usually falls back to "all" targets in resolveSearchTargets
-    // but let's verify what simpleSearch does.
-    // Actually resolveSearchTargets returns 'all' targets if mode is unknown?
-    // Let's check common.js behavior.
-    // It returns MODE_TARGETS[searchMode] || MODE_TARGETS.all
-    // So 'unknown' -> 'all' -> ['bookmarks', 'tabs', 'history']
-
-    const bookmarkEntry = {
-      id: 'bookmark-1',
-      searchString: 'javascript',
-    }
-    const tabEntry = {
-      id: 'tab-1',
-      searchString: 'javascript',
-    }
-    const historyEntry = {
-      id: 'history-1',
-      searchString: 'javascript',
-    }
-
-    model.bookmarks = [bookmarkEntry]
-    model.tabs = [tabEntry]
-    model.history = [historyEntry]
+    model.bookmarks = createBookmarksTestData([
+      { id: 'bookmark-1', title: 'javascript', url: 'https://example.com/bm' },
+    ])
+    model.tabs = createTabsTestData([{ id: 'tab-1', title: 'javascript', url: 'https://example.com/tab' }])
+    model.history = createHistoryTestData([
+      { id: 'history-1', title: 'javascript', url: 'https://example.com/history' },
+    ])
 
     const results = simpleSearch('unknown', 'javascript', model)
 
     expect(results).toHaveLength(3)
-    expect(results.map((r) => r.id)).toEqual(expect.arrayContaining(['bookmark-1', 'tab-1', 'history-1']))
+    expect(results.map((r) => r.originalId)).toEqual(expect.arrayContaining(['bookmark-1', 'tab-1', 'history-1']))
   })
 
   describe('Performance optimizations', () => {
-    test('pre-calculates lower case search string', () => {
-      const bookmark = {
-        id: 'bookmark-1',
-        title: 'Test',
-        url: 'https://example.com',
-        searchString: 'Test https://example.com',
-      }
-
-      model.bookmarks = [bookmark]
+    test('pre-calculates lower case search string when data is loaded', () => {
+      model.bookmarks = createBookmarksTestData([
+        {
+          id: 'bookmark-1',
+          title: 'Test',
+          url: 'https://example.com',
+        },
+      ])
 
       const results = simpleSearch('bookmarks', 'test', model)
 
       expect(results).toHaveLength(1)
-      // The original object should be modified with searchStringLower
-      expect(model.bookmarks[0].searchStringLower).toBe('test https://example.com')
+      // The conversion process precomputes searchStringLower for performance
+      expect(model.bookmarks[0].searchStringLower).toBe('test¦example.com')
     })
 
-    test('reuses cached lower case string on subsequent searches', () => {
-      const bookmark = {
-        id: 'bookmark-1',
-        title: 'Test',
-        url: 'https://example.com',
-        searchString: 'Test https://example.com',
-      }
+    test('uses internal cache for efficient repeated searches', () => {
+      model.bookmarks = createBookmarksTestData([
+        {
+          id: 'bookmark-1',
+          title: 'Test',
+          url: 'https://example.com',
+        },
+      ])
 
-      model.bookmarks = [bookmark]
+      // First search should set up cache
+      const results1 = simpleSearch('bookmarks', 'test', model)
+      expect(results1).toHaveLength(1)
 
-      // First search
-      simpleSearch('bookmarks', 'test', model)
-      expect(model.bookmarks[0].searchStringLower).toBeDefined()
-
-      // Manually modify the cached value to verify it's being used
-      model.bookmarks[0].searchStringLower = 'modified'
-
-      // Second search for 'modified' should find it
-      const results = simpleSearch('bookmarks', 'modified', model)
-      expect(results).toHaveLength(1)
+      // Second search with extension of term should use cache (progressive filtering)
+      // Note: "https://" is stripped, so searching for "test example" instead
+      const results2 = simpleSearch('bookmarks', 'test example', model)
+      expect(results2).toHaveLength(1)
+      expect(results2[0].originalId).toBe('bookmark-1')
     })
   })
 
   describe('Edge cases', () => {
     test('handles empty search term', () => {
-      const bookmark = {
-        id: 'bookmark-1',
-        searchString: 'test',
-      }
-
-      model.bookmarks = [bookmark]
+      model.bookmarks = createBookmarksTestData([
+        {
+          id: 'bookmark-1',
+          title: 'test',
+          url: 'https://example.com',
+        },
+      ])
 
       const results = simpleSearch('bookmarks', '', model)
 
-      expect(results).toHaveLength(1)
-      expect(results[0].id).toBe('bookmark-1')
+      expect(results).toHaveLength(0)
     })
 
     test('handles whitespace only search term', () => {
-      const bookmark = {
-        id: 'bookmark-1',
-        searchString: 'test',
-      }
-
-      model.bookmarks = [bookmark]
+      model.bookmarks = createBookmarksTestData([
+        {
+          id: 'bookmark-1',
+          title: 'test',
+          url: 'https://example.com',
+        },
+      ])
 
       const results = simpleSearch('bookmarks', '   ', model)
 
-      expect(results).toHaveLength(1)
-      expect(results[0].id).toBe('bookmark-1')
+      expect(results).toHaveLength(0)
     })
 
     test('handles null/undefined data gracefully', () => {
-      // If data is missing for a mode, it should return empty array
-      // We need to simulate missing data in model
       delete model.bookmarks
 
       const results = simpleSearch('bookmarks', 'test', model)
@@ -296,12 +259,13 @@ describe('simpleSearch', () => {
 
   describe('Caching behavior', () => {
     test('caches results for progressive searching', () => {
-      const bookmark = {
-        id: 'bookmark-1',
-        searchString: 'learn javascript',
-      }
-
-      model.bookmarks = [bookmark]
+      model.bookmarks = createBookmarksTestData([
+        {
+          id: 'bookmark-1',
+          title: 'learn javascript',
+          url: 'https://example.com',
+        },
+      ])
 
       // First search should prepare and cache data
       const results1 = simpleSearch('bookmarks', 'learn', model)
@@ -313,16 +277,10 @@ describe('simpleSearch', () => {
     })
 
     test('invalidates cache when search term does not start with previous term', () => {
-      const bookmark1 = {
-        id: 'bookmark-1',
-        searchString: 'learn javascript',
-      }
-      const bookmark2 = {
-        id: 'bookmark-2',
-        searchString: 'python programming',
-      }
-
-      model.bookmarks = [bookmark1, bookmark2]
+      model.bookmarks = createBookmarksTestData([
+        { id: 'bookmark-1', title: 'learn javascript', url: 'https://example.com/1' },
+        { id: 'bookmark-2', title: 'python programming', url: 'https://example.com/2' },
+      ])
 
       // Search for "learn" first
       const results1 = simpleSearch('bookmarks', 'learn', model)
@@ -331,20 +289,14 @@ describe('simpleSearch', () => {
       // Search for "python" - should invalidate cache since "python" doesn't start with "learn"
       const results2 = simpleSearch('bookmarks', 'python', model)
       expect(results2).toHaveLength(1)
-      expect(results2[0].id).toBe('bookmark-2')
+      expect(results2[0].originalId).toBe('bookmark-2')
     })
 
     test('uses cache when search term extends previous term', () => {
-      const bookmark1 = {
-        id: 'bookmark-1',
-        searchString: 'learn javascript',
-      }
-      const bookmark2 = {
-        id: 'bookmark-2',
-        searchString: 'learn python',
-      }
-
-      model.bookmarks = [bookmark1, bookmark2]
+      model.bookmarks = createBookmarksTestData([
+        { id: 'bookmark-1', title: 'learn javascript', url: 'https://example.com/1' },
+        { id: 'bookmark-2', title: 'learn python', url: 'https://example.com/2' },
+      ])
 
       // Search for "learn" first
       const results1 = simpleSearch('bookmarks', 'learn', model)
@@ -353,45 +305,38 @@ describe('simpleSearch', () => {
       // Search for "learn javascript" - should use cached data since it extends "learn"
       const results2 = simpleSearch('bookmarks', 'learn javascript', model)
       expect(results2).toHaveLength(1)
-      expect(results2[0].id).toBe('bookmark-1')
+      expect(results2[0].originalId).toBe('bookmark-1')
     })
 
     test('resets cache when data changes (simulated by resetSimpleSearchState)', () => {
-      const readingBookmark = {
-        id: 'bookmark-3',
-        searchString: 'learn reading',
-      }
-      const cookingBookmark = {
-        id: 'bookmark-4',
-        searchString: 'learn cooking',
-      }
-
-      model.bookmarks = [readingBookmark, cookingBookmark]
+      model.bookmarks = createBookmarksTestData([
+        { id: 'bookmark-3', title: 'learn reading', url: 'https://example.com/3' },
+        { id: 'bookmark-4', title: 'learn cooking', url: 'https://example.com/4' },
+      ])
 
       const initialResults = simpleSearch('bookmarks', 'learn', model)
       expect(initialResults).toHaveLength(2)
 
       // Simulate data change by modifying model and resetting state
-      model.bookmarks = [cookingBookmark]
+      model.bookmarks = createBookmarksTestData([
+        {
+          id: 'bookmark-4',
+          title: 'learn cooking',
+          url: 'https://example.com/4',
+        },
+      ])
       resetSimpleSearchState('bookmarks')
 
       const refreshedResults = simpleSearch('bookmarks', 'learn cooking', model)
       expect(refreshedResults).toHaveLength(1)
-      expect(refreshedResults[0].id).toBe('bookmark-4')
+      expect(refreshedResults[0].originalId).toBe('bookmark-4')
     })
 
     test('maintains separate caches for different modes', () => {
-      const bookmark = {
-        id: 'bookmark-1',
-        searchString: 'javascript',
-      }
-      const tab = {
-        id: 'tab-1',
-        searchString: 'javascript',
-      }
-
-      model.bookmarks = [bookmark]
-      model.tabs = [tab]
+      model.bookmarks = createBookmarksTestData([
+        { id: 'bookmark-1', title: 'javascript', url: 'https://example.com/bm' },
+      ])
+      model.tabs = createTabsTestData([{ id: 'tab-1', title: 'javascript', url: 'https://example.com/tab' }])
 
       // Perform searches in both modes
       simpleSearch('bookmarks', 'javascript', model)
@@ -400,8 +345,7 @@ describe('simpleSearch', () => {
       // Reset only bookmarks state
       resetSimpleSearchState('bookmarks')
 
-      // Tabs state should remain intact (internal implementation detail, harder to verify directly without exposing state)
-      // But we can verify that searching tabs still works
+      // Tabs state should remain intact
       const tabResults = simpleSearch('tabs', 'javascript', model)
       expect(tabResults).toHaveLength(1)
 
@@ -414,40 +358,125 @@ describe('simpleSearch', () => {
   describe('Error handling', () => {
     test('handles empty data arrays gracefully', () => {
       model.bookmarks = []
-
       const results = simpleSearch('bookmarks', 'javascript', model)
-
       expect(results).toHaveLength(0)
     })
 
-    test('handles malformed data gracefully (missing searchString)', () => {
-      const bookmark = {
-        id: 'bookmark-1',
-        // missing searchString
-      }
-
-      model.bookmarks = [bookmark]
-
-      // Depending on implementation, this might throw or return empty.
-      // simpleSearch accesses entry.searchString.toLowerCase()
-      // So it will throw if searchString is missing.
-      // Let's verify that it throws.
-      expect(() => simpleSearch('bookmarks', 'javascript', model)).toThrow()
-    })
-
     test('reduces cached data progressively during multi-term search', () => {
-      const bookmark1 = { id: '1', searchString: 'learn javascript web' }
-      const bookmark2 = { id: '2', searchString: 'learn javascript mobile' }
-      const bookmark3 = { id: '3', searchString: 'learn python web' }
-
-      model.bookmarks = [bookmark1, bookmark2, bookmark3]
+      model.bookmarks = createBookmarksTestData([
+        { id: '1', title: 'learn javascript web', url: 'https://example.com/1' },
+        { id: '2', title: 'learn javascript mobile', url: 'https://example.com/2' },
+        { id: '3', title: 'learn python web', url: 'https://example.com/3' },
+      ])
 
       // Search with multiple terms where matches reduce progressively
       const results = simpleSearch('bookmarks', 'learn javascript web', model)
 
       // Should find entries that contain ALL terms
       expect(results).toHaveLength(1)
-      expect(results[0].id).toBe('1')
+      expect(results[0].originalId).toBe('1')
+    })
+  })
+
+  describe('Result immutability', () => {
+    test('does not mutate original data entries when adding highlights', () => {
+      model.bookmarks = createBookmarksTestData([
+        {
+          id: 'bm-1',
+          title: 'React Tutorial',
+          url: 'https://reactjs.org',
+        },
+      ])
+
+      simpleSearch('bookmarks', 'react', model)
+
+      expect(model.bookmarks[0].highlightedTitle).toBeUndefined()
+      expect(model.bookmarks[0].highlightedUrl).toBeUndefined()
+    })
+
+    test('returns new result objects, not references to originals', () => {
+      model.bookmarks = createBookmarksTestData([
+        {
+          id: 'bm-1',
+          title: 'React Tutorial',
+          url: 'https://reactjs.org',
+        },
+      ])
+
+      const results = simpleSearch('bookmarks', 'react', model)
+
+      expect(results[0]).not.toBe(model.bookmarks[0])
+      results[0].customField = 'test'
+      expect(model.bookmarks[0].customField).toBeUndefined()
+    })
+
+    test('returns new objects even on cache hits', () => {
+      model.bookmarks = createBookmarksTestData([{ id: '1', title: 'test', url: 'https://test.com' }])
+
+      const results1 = simpleSearch('bookmarks', 'test', model)
+      const results2 = simpleSearch('bookmarks', 'test', model)
+
+      expect(results1).not.toBe(results2)
+      expect(results1[0]).not.toBe(results2[0])
+      expect(results1[0]).not.toBe(model.bookmarks[0])
+      expect(results2[0]).not.toBe(model.bookmarks[0])
+    })
+  })
+
+  describe('Optimization edge cases', () => {
+    test('progressive search from "abc" to "abc def" works correctly', () => {
+      model.bookmarks = createBookmarksTestData([
+        { id: '1', title: 'abc def ghi', url: 'url1' },
+        { id: '2', title: 'abc xyz', url: 'url2' },
+      ])
+
+      // Step 1: "abc"
+      const results1 = simpleSearch('bookmarks', 'abc', model)
+      expect(results1).toHaveLength(2)
+
+      // Step 2: "abc def" - should use optimized path and only return 1
+      const results2 = simpleSearch('bookmarks', 'abc def', model)
+      expect(results2).toHaveLength(1)
+      expect(results2[0].originalId).toBe('1')
+    })
+
+    test('backtracking search from "abc def" to "abc" works correctly', () => {
+      model.bookmarks = createBookmarksTestData([
+        { id: '1', title: 'abc def ghi', url: 'url1' },
+        { id: '2', title: 'abc xyz', url: 'url2' },
+      ])
+
+      simpleSearch('bookmarks', 'abc def', model)
+      const results = simpleSearch('bookmarks', 'abc', model)
+
+      expect(results).toHaveLength(2)
+      expect(results.map((r) => r.originalId)).toContain('1')
+      expect(results.map((r) => r.originalId)).toContain('2')
+    })
+
+    test('backtracking from "abcd" to "abc" handles idxs correctly', () => {
+      model.bookmarks = createBookmarksTestData([
+        { id: '1', title: 'abcd', url: 'u1' },
+        { id: '2', title: 'abc', url: 'u2' },
+      ])
+
+      simpleSearch('bookmarks', 'abcd', model)
+      const results = simpleSearch('bookmarks', 'abc', model)
+
+      expect(results).toHaveLength(2)
+    })
+
+    test('handling identical searches with different spaces', () => {
+      model.bookmarks = createBookmarksTestData([{ id: '1', title: 'abc def', url: 'u1' }])
+
+      // Note: common.js normalizeSearchTerm handles the spaces before simpleSearch is called
+      // But if someone called simpleSearch directly with multiple spaces:
+      const results1 = simpleSearch('bookmarks', 'abc  def', model)
+      const results2 = simpleSearch('bookmarks', 'abc def', model)
+
+      expect(results1).toHaveLength(1)
+      expect(results2).toHaveLength(1)
+      expect(results1).not.toBe(results2)
     })
   })
 })

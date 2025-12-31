@@ -14,9 +14,16 @@
  * 4. Apply scoring and sorting to rank results.
  * 5. Filter by minimum score and max results.
  * 6. Render results via view layer.
+ *
+ * Zero-DOM Highlighting:
+ * - Highlights are computed after ranking and truncating results for performance.
+ * - Each result includes `highlightedTitle` and `highlightedUrl` with inline `<mark>` tags.
+ * - The view layer (searchView.js) renders these pre-computed highlights directly.
+ * - This eliminates the need for mark.js and secondary DOM traversals after rendering.
+ * - See `highlightResults()` for the implementation.
  */
 
-import { cleanUpUrl, generateRandomId } from '../helper/utils.js'
+import { cleanUpUrl, generateRandomId, highlightMatches } from '../helper/utils.js'
 import { closeErrors, printError } from '../view/errorView.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultResults.js'
@@ -102,7 +109,6 @@ function useCachedResultsIfAvailable(searchTerm) {
 
   const cacheKey = `${searchTerm}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
   if (ext.searchCache.has(cacheKey)) {
-    console.debug(`Using cached results for key "${cacheKey}"`)
     ext.model.searchTerm = searchTerm
     ext.model.result = ext.searchCache.get(cacheKey)
     renderSearchResults()
@@ -245,6 +251,9 @@ export async function search(event) {
       }
 
       const startTime = Date.now()
+      if (typeof performance !== 'undefined' && typeof performance.mark === 'function') {
+        performance.mark('search-start')
+      }
 
       // Get and clean up original search query
       let searchTerm = normalizeSearchTerm(ext.dom.searchInput.value)
@@ -298,6 +307,9 @@ export async function search(event) {
       // Filter by score and max results
       results = filterResults(results, searchMode)
 
+      // Apply highlighting only to the truncated result set (better performance)
+      results = highlightResults(results, searchTerm)
+
       ext.model.result = results
 
       // Cache the results for better performance (only for actual searches)
@@ -305,8 +317,15 @@ export async function search(event) {
 
       renderSearchResults()
 
+      if (typeof performance !== 'undefined' && typeof performance.mark === 'function') {
+        performance.mark('search-end')
+        if (typeof performance.measure === 'function') {
+          performance.measure('search-total', 'search-start', 'search-end')
+        }
+      }
+
       // Simple timing for debugging (only if debug is enabled)
-      console.debug(`Search completed in ${Date.now() - startTime}ms`)
+      console.debug(`Search took ${Date.now() - startTime}ms`)
     } catch (err) {
       printError(err)
     }
@@ -367,6 +386,42 @@ export function sortResults(results, sortMode) {
     })
   } else {
     throw new Error(`Unknown sortMode="${sortMode}"`)
+  }
+
+  return results
+}
+
+/**
+ * Apply highlighting to search results based on their search approach.
+ *
+ * @param {Array<Object>} results - Search results.
+ * @param {string} searchTerm - Query string.
+ * @returns {Array<Object>} Highlighted results.
+ */
+function highlightResults(results, searchTerm) {
+  if (!results.length || !searchTerm) {
+    return results
+  }
+
+  const terms = searchTerm ? searchTerm.split(' ') : []
+  const filteredTerms = terms.filter(Boolean)
+
+  if (filteredTerms.length === 0) {
+    return results
+  }
+
+  for (let i = 0; i < results.length; i++) {
+    const entry = results[i]
+
+    entry.highlightedTitle = highlightMatches(entry.title || entry.url, filteredTerms)
+    entry.highlightedUrl = highlightMatches(entry.url, filteredTerms)
+
+    if (entry.tagsArray) {
+      entry.highlightedTagsArray = entry.tagsArray.map((tag) => highlightMatches(tag, filteredTerms))
+    }
+    if (entry.folderArray) {
+      entry.highlightedFolderArray = entry.folderArray.map((folder) => highlightMatches(folder, filteredTerms))
+    }
   }
 
   return results

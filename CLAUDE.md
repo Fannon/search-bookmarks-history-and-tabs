@@ -135,7 +135,7 @@ ext.searchCache // Map for caching search results
 5. **Rendering** (`view/searchView.js:renderSearchResults`)
    - Sort by final score
    - Limit to `searchMaxResults`
-   - Highlight matches with mark.js (lazy loaded)
+   - Pre-calculated highlights during search (Zero-DOM)
    - Display color-coded result type indicators
 
 ### Browser API Integration
@@ -221,7 +221,7 @@ Build scripts in `bin/` are small Node.js programs:
 - **Lazy history merging**: History data is only merged when matches exist
 - **Search debouncing**: `searchDebounceMs` prevents excessive search calls
 - **Result caching**: Cache key includes search term, strategy, and mode
-- **Highlight on demand**: mark.js is lazy-loaded after initialization
+- **Zero-DOM Highlighting**: Highlights are computed after ranking and truncation, only for the displayed results.
 
 ## Related Documentation
 

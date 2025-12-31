@@ -6,11 +6,9 @@
  * - Load options plus bookmarks, tabs, and history data before wiring up search handlers.
  * - Bind navigation listeners, search input handling, and strategy toggles for simple/fuzzy/taxonomy flows.
  * - Maintain hash-based routing (`#search/<term>`) and restore cached results to keep navigation snappy.
- * - Lazy-load mark.js highlighting so first paint stays lightweight while results still highlight matches.
  */
 
 import { createExtensionContext } from './helper/extensionContext.js'
-import { loadScript } from './helper/utils.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { addDefaultEntries, search } from './search/common.js'
@@ -75,10 +73,7 @@ export async function initExtension() {
     document.getElementById('results-loading').remove()
   }
 
-  console.debug(`Extension initialized in ${Date.now() - startTime}ms`)
-
-  // Lazy load mark.js for highlighting search results after init phase
-  await loadScript('./lib/mark.es6.min.js')
+  console.debug(`Init in ${Date.now() - startTime}ms`)
 }
 
 //////////////////////////////////////////

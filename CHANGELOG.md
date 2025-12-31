@@ -4,6 +4,18 @@
 
 - **CHANGE**: Default entries now exclude the currently active tab from the "recently visited" list (avoiding duplication), while ensuring it remains visible if it is bookmarked. The matching logic now also ignores anchor tags (hashes) for better discovery.
 - **CHANGE**: Reduced default `maxRecentTabsToShow` from 16 to 8 to improve performance on startup.
+- **OPTIMIZED**: Results rendering speed with Zero-DOM highlighting.
+  - Replaced `mark.js` with high-performance inline `<mark>` tags computed after filtering and sorting.
+  - Results now render with highlights already applied, eliminating secondary DOM passes.
+- **OPTIMIZED**: Search performance with deferred highlighting.
+  - Highlighting is only applied to the final filtered and sorted results that will be displayed, not during the search phase.
+  - This significantly speeds up searches in large collections where many items match but few are shown.
+- **OPTIMIZED**: Search and scoring hot-path.
+  - Optimized the scoring loop to utilize pre-normalized fields, reducing per-item overhead significantly.
+- **ADDED**: Performance Monitoring & Regression Testing.
+  - Integrated `performance.mark` and `performance.measure` into search and render loops.
+  - Added Jest-based benchmarks for core algorithms with datasets of 5,000+ items.
+  - Added Playwright end-to-end performance tests to verify real-world rendering latency.
 
 ## [v1.17.3]
 
