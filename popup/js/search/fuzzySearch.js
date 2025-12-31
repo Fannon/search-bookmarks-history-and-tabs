@@ -6,13 +6,13 @@
  * - Build memoized haystacks per mode (bookmarks, tabs, history) for quick repeated searches.
  * - Handle typo tolerance, loose word boundaries, and non-ASCII fallbacks better than the simple strategy.
  *
- * Scoring pipeline:
- * - uFuzzy returns a searchScore between 0 and 1 representing match quality.
- * - Higher searchScore values indicate closer matches; `scoring.js` multiplies base weights by this factor.
- * - Highlight data is preserved for the view to underline matched substrings once results render.
+ * Scoring and Highlighting:
+ * - uFuzzy's internal scoring (info call) and highlighting are disabled to save CPU.
+ * - All fuzzy matches return a base searchScore of 1.
+ * - Final scoring and highlighting are handled by common.js and scoring.js.
  */
 
-import { escapeHtml, loadScript } from '../helper/utils.js'
+import { loadScript } from '../helper/utils.js'
 import { printError } from '../view/errorView.js'
 import { resolveSearchTargets } from './common.js'
 
@@ -129,17 +129,14 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
 
     try {
       const idxs = s.uf.filter(s.haystack, term, s.idxs)
-      const info = s.uf.info(idxs, s.haystack, term)
 
-      for (let i = 0; i < info.idx.length; i++) {
+      for (let i = 0; i < idxs.length; i++) {
         const result = data[idxs[i]]
 
         localResults.push({
           ...result,
-          // 0 intra chars are perfect score, 5 and more are 0 score.
-          searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
+          searchScore: 1, // uFuzzy score is not used here if we don't call info, just use 1
           searchApproach: 'fuzzy',
-          fuzzyRanges: info.ranges[i], // Store ranges for deferred highlighting
         })
       }
 
@@ -156,40 +153,6 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
   }
 
   s.searchTerm = searchTerm // Remember last search term, to know when to invalidate idxx cache
-  return results
-}
-
-/**
- * Highlighting stage for fuzzy search matches.
- * Uses the pre-calculated ranges from the search phase.
- *
- * @param {Array<Object>} results - The subset of results to highlight.
- * @returns {Array<Object>} Results with `highlightedTitle` and `highlightedUrl`.
- */
-export function highlightFuzzySearch(results) {
-  if (!results.length) {
-    return results
-  }
-
-  for (let i = 0; i < results.length; i++) {
-    const r = results[i]
-    if (!r.fuzzyRanges) {
-      r.highlightedTitle = escapeHtml(r.title || r.url || '')
-      r.highlightedUrl = escapeHtml(r.url || '')
-      continue
-    }
-
-    // Use uFuzzy.highlight with the ranges we carried from the search phase
-    const highlightedHaystack = uFuzzy.highlight(r.searchString, r.fuzzyRanges, (part, matched) =>
-      matched ? `«${part}»` : part,
-    )
-    const safeHighlighted = escapeHtml(highlightedHaystack).replaceAll('«', '<mark>').replaceAll('»', '</mark>')
-    const [highlightedTitle, highlightedUrl] = safeHighlighted.split('¦')
-
-    r.highlightedTitle = highlightedTitle
-    r.highlightedUrl = highlightedUrl || ''
-  }
-
   return results
 }
 

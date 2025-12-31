@@ -67,6 +67,10 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
    * Run a warmed-up benchmark with multiple iterations
    */
   const runBenchmark = async (sizeName, count, iterations = 10) => {
+    // Reset state before each benchmark size to ensure we use the correct data size
+    resetSimpleSearchState()
+    resetFuzzySearchState()
+
     ext.model.bookmarks = generateBookmarksTestData(count)
     ext.model.history = generateHistoryTestData(count)
     ext.model.tabs = generateTabsTestData(Math.floor(count / 10))

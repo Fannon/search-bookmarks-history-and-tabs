@@ -6,7 +6,6 @@
  * - Require all tokens to match (AND semantics) to keep results tightly focused.
  */
 
-import { escapeHtml, escapeRegex } from '../helper/utils.js'
 import { resolveSearchTargets } from './common.js'
 
 /**
@@ -131,52 +130,6 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
       searchScore: 1,
       searchApproach: 'precise',
     }
-  }
-
-  return results
-}
-
-/**
- * Highlighting stage for precise search matches.
- * Should be called after results are ranked and truncated for performance.
- *
- * @param {Array<Object>} results - The subset of results to highlight.
- * @param {string} searchTerm - The query terms used for matching.
- * @returns {Array<Object>} Results with `highlightedTitle` and `highlightedUrl`.
- */
-export function highlightSimpleSearch(results, searchTerm) {
-  if (!results.length) {
-    return results
-  }
-
-  // searchTerm is already lowercased from normalizeSearchTerm() in common.js
-  const terms = searchTerm ? searchTerm.split(' ') : []
-  const filteredTerms = terms.filter(Boolean)
-  let highlightRegex = null
-
-  if (filteredTerms.length > 0) {
-    const escapedTerms = []
-    for (let i = 0; i < filteredTerms.length; i++) {
-      escapedTerms.push(escapeRegex(escapeHtml(filteredTerms[i])))
-    }
-    escapedTerms.sort((a, b) => b.length - a.length)
-    highlightRegex = new RegExp(`(${escapedTerms.join('|')})`, 'gi')
-  }
-
-  for (let i = 0; i < results.length; i++) {
-    const entry = results[i]
-    const searchStr = entry.searchString
-    // Split on '¦' to separate title¦url¦tags¦folder format
-    // Only take first two parts (title and url), ignoring tags and folders
-    const parts = searchStr.split('¦')
-    const title = parts[0] || ''
-    const url = parts[1] || ''
-
-    const escapedTitle = escapeHtml(title)
-    const escapedUrl = url ? escapeHtml(url) : ''
-
-    entry.highlightedTitle = highlightRegex ? escapedTitle.replace(highlightRegex, '<mark>$1</mark>') : escapedTitle
-    entry.highlightedUrl = highlightRegex ? escapedUrl.replace(highlightRegex, '<mark>$1</mark>') : escapedUrl
   }
 
   return results

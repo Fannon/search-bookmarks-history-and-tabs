@@ -70,24 +70,28 @@ export async function renderSearchResults() {
       }
 
       if (opts.displayTags && resultEntry.tagsArray) {
-        for (const tag of resultEntry.tagsArray) {
-          const safeTag = escapeHtml(tag)
-          badges.push(`<span class="badge tags" x-link="#search/#${safeTag}" title="Bookmark Tags">#${safeTag}</span>`)
+        for (let j = 0; j < resultEntry.tagsArray.length; j++) {
+          const tag = resultEntry.tagsArray[j]
+          const highlightedTag = resultEntry.highlightedTagsArray?.[j]
+          const content = shouldHighlight && highlightedTag ? highlightedTag : escapeHtml(tag)
+          badges.push(
+            `<span class="badge tags" x-link="#search/#${escapeHtml(tag)}" title="Bookmark Tags">#${content}</span>`,
+          )
         }
       }
 
       if (opts.displayFolderName && resultEntry.folderArray) {
         const trail = []
         const bookmarkColorStyle = `background-color: ${escapeHtml(String(opts.bookmarkColor || 'none'))}`
-        for (const folderName of resultEntry.folderArray) {
+        for (let j = 0; j < resultEntry.folderArray.length; j++) {
+          const folderName = resultEntry.folderArray[j]
+          const highlightedFolder = resultEntry.highlightedFolderArray?.[j]
           trail.push(folderName)
           const folderLink = `#search/~${trail.join(' ~')}`
           const safeLink = escapeHtml(folderLink)
-          const label = `~${folderName}`
+          const content = shouldHighlight && highlightedFolder ? highlightedFolder : escapeHtml(folderName)
           badges.push(
-            `<span class="badge folder" x-link="${safeLink}" title="Bookmark Folder" style="${bookmarkColorStyle}">${escapeHtml(
-              label,
-            )}</span>`,
+            `<span class="badge folder" x-link="${safeLink}" title="Bookmark Folder" style="${bookmarkColorStyle}">~${content}</span>`,
           )
         }
       }

@@ -20,18 +20,18 @@
  * - Each result includes `highlightedTitle` and `highlightedUrl` with inline `<mark>` tags.
  * - The view layer (searchView.js) renders these pre-computed highlights directly.
  * - This eliminates the need for mark.js and secondary DOM traversals after rendering.
- * - See `highlightSimpleSearch()` and `highlightFuzzySearch()` for the implementations.
+ * - See `highlightResults()` for the implementation.
  */
 
-import { cleanUpUrl, generateRandomId } from '../helper/utils.js'
+import { cleanUpUrl, generateRandomId, highlightMatches } from '../helper/utils.js'
 import { closeErrors, printError } from '../view/errorView.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultResults.js'
-import { fuzzySearch, highlightFuzzySearch } from './fuzzySearch.js'
+import { fuzzySearch } from './fuzzySearch.js'
 import { resolveSearchMode } from './queryParser.js'
 import { calculateFinalScore } from './scoring.js'
 import { addSearchEngines, collectCustomSearchAliasResults } from './searchEngines.js'
-import { highlightSimpleSearch, simpleSearch } from './simpleSearch.js'
+import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
 
 // Re-export scoring function for backward compatibility
@@ -404,25 +404,25 @@ function highlightResults(results, searchTerm) {
     return results
   }
 
-  // Group results by approach and highlight them accordingly
-  const preciseMatches = []
-  const fuzzyMatches = []
+  const terms = searchTerm ? searchTerm.split(' ') : []
+  const filteredTerms = terms.filter(Boolean)
+
+  if (filteredTerms.length === 0) {
+    return results
+  }
 
   for (let i = 0; i < results.length; i++) {
-    const r = results[i]
-    if (r.searchApproach === 'precise') {
-      preciseMatches.push(r)
-    } else if (r.searchApproach === 'fuzzy') {
-      fuzzyMatches.push(r)
+    const entry = results[i]
+
+    entry.highlightedTitle = highlightMatches(entry.title || entry.url, filteredTerms)
+    entry.highlightedUrl = highlightMatches(entry.url, filteredTerms)
+
+    if (entry.tagsArray) {
+      entry.highlightedTagsArray = entry.tagsArray.map((tag) => highlightMatches(tag, filteredTerms))
     }
-  }
-
-  if (preciseMatches.length > 0) {
-    highlightSimpleSearch(preciseMatches, searchTerm)
-  }
-
-  if (fuzzyMatches.length > 0) {
-    highlightFuzzySearch(fuzzyMatches)
+    if (entry.folderArray) {
+      entry.highlightedFolderArray = entry.folderArray.map((folder) => highlightMatches(folder, filteredTerms))
+    }
   }
 
   return results
