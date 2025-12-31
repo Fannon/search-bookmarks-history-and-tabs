@@ -1,5 +1,13 @@
 import uFuzzy from '@leeoniya/ufuzzy'
-import { createTestExt, generateMockBookmarks, generateMockHistory, generateMockTabs } from './testUtils.js'
+import {
+  createBookmarksTestData,
+  createHistoryTestData,
+  createTabsTestData,
+  createTestExt,
+  generateMockBookmarks,
+  generateMockHistory,
+  generateMockTabs,
+} from './testUtils.js'
 
 // Assign to global so the extension code picks it up
 global.uFuzzy = uFuzzy
@@ -17,7 +25,6 @@ createTestExt({
   },
 })
 
-const { convertBrowserBookmarks, convertBrowserHistory, convertBrowserTabs } = await import('../helper/browserApi.js')
 const { search } = await import('../search/common.js')
 const { resetSimpleSearchState } = await import('../search/simpleSearch.js')
 const { resetFuzzySearchState } = await import('../search/fuzzySearch.js')
@@ -35,9 +42,9 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     const rawHistory = generateMockHistory(count)
     const rawTabs = generateMockTabs(Math.floor(count / 10))
 
-    ext.model.bookmarks = convertBrowserBookmarks(rawBookmarks)
-    ext.model.history = convertBrowserHistory(rawHistory)
-    ext.model.tabs = convertBrowserTabs(rawTabs)
+    ext.model.bookmarks = createBookmarksTestData(rawBookmarks)
+    ext.model.history = createHistoryTestData(rawHistory)
+    ext.model.tabs = createTabsTestData(rawTabs)
     ext.initialized = true
 
     const totalItems = ext.model.bookmarks.length + ext.model.history.length + ext.model.tabs.length
@@ -53,9 +60,9 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     // Reset for fair cold-start of fuzzy
     resetSimpleSearchState()
     resetFuzzySearchState()
-    ext.model.bookmarks = convertBrowserBookmarks(rawBookmarks)
-    ext.model.history = convertBrowserHistory(rawHistory)
-    ext.model.tabs = convertBrowserTabs(rawTabs)
+    ext.model.bookmarks = createBookmarksTestData(rawBookmarks)
+    ext.model.history = createHistoryTestData(rawHistory)
+    ext.model.tabs = createTabsTestData(rawTabs)
 
     // Cold Fuzzy - first run ever
     ext.searchCache = new Map()
@@ -76,9 +83,9 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     const rawHistory = generateMockHistory(count)
     const rawTabs = generateMockTabs(Math.floor(count / 10))
 
-    ext.model.bookmarks = convertBrowserBookmarks(rawBookmarks)
-    ext.model.history = convertBrowserHistory(rawHistory)
-    ext.model.tabs = convertBrowserTabs(rawTabs)
+    ext.model.bookmarks = createBookmarksTestData(rawBookmarks)
+    ext.model.history = createHistoryTestData(rawHistory)
+    ext.model.tabs = createTabsTestData(rawTabs)
     ext.initialized = true
 
     const totalItems = ext.model.bookmarks.length + ext.model.history.length + ext.model.tabs.length

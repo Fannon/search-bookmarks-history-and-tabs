@@ -171,23 +171,69 @@ export function generateMockTabs(count) {
 }
 
 /**
+ * Helper to create mock bookmarks data and convert it like the real code does
+ * @param {Array} rawData - Array of raw browser bookmarks
+ * @returns {Array} Converted data
+ */
+export function createBookmarksTestData(rawData) {
+  const originalExt = global.ext
+  if (!global.ext || !global.ext.opts) {
+    global.ext = { opts: { detectDuplicateBookmarks: false } }
+  }
+  try {
+    const tree = rawData.length === 1 && rawData[0].children ? rawData[0] : { title: 'Root', children: rawData }
+    return convertBrowserBookmarks([tree])
+  } finally {
+    if (originalExt) global.ext = originalExt
+  }
+}
+
+/**
+ * Helper to create mock tabs data and convert it like the real code does
+ * @param {Array} rawData - Array of raw browser tabs
+ * @returns {Array} Converted data
+ */
+export function createTabsTestData(rawData) {
+  const originalExt = global.ext
+  if (!global.ext || !global.ext.opts) {
+    global.ext = { opts: { detectDuplicateBookmarks: false } }
+  }
+  try {
+    return convertBrowserTabs(rawData)
+  } finally {
+    if (originalExt) global.ext = originalExt
+  }
+}
+
+/**
+ * Helper to create mock history data and convert it like the real code does
+ * @param {Array} rawData - Array of raw browser history items
+ * @returns {Array} Converted data
+ */
+export function createHistoryTestData(rawData) {
+  const originalExt = global.ext
+  if (!global.ext || !global.ext.opts) {
+    global.ext = { opts: { detectDuplicateBookmarks: false } }
+  }
+  try {
+    return convertBrowserHistory(rawData)
+  } finally {
+    if (originalExt) global.ext = originalExt
+  }
+}
+
+/**
  * Helper to create mock browser API data and convert it like the real code does
- * This ensures test data has all precomputed fields (searchStringLower, tagsArrayLower, etc.)
- * @param {'bookmarks'|'tabs'|'history'} type - The type of data to create
- * @param {Array} rawData - Array of raw browser API objects
- * @returns {Array} Converted data with all precomputed fields
+ * @deprecated Use createBookmarksTestData, createTabsTestData, or createHistoryTestData instead.
  */
 export function createTestData(type, rawData) {
   switch (type) {
-    case 'bookmarks': {
-      // Convert expects a tree structure, wrap single items
-      const tree = rawData.length === 1 && rawData[0].children ? rawData[0] : { title: 'Root', children: rawData }
-      return convertBrowserBookmarks([tree])
-    }
+    case 'bookmarks':
+      return createBookmarksTestData(rawData)
     case 'tabs':
-      return convertBrowserTabs(rawData)
+      return createTabsTestData(rawData)
     case 'history':
-      return convertBrowserHistory(rawData)
+      return createHistoryTestData(rawData)
     default:
       throw new Error(`Unknown type: ${type}`)
   }

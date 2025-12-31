@@ -115,6 +115,7 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
   s.idxs = idxs
   s.searchTerm = searchTerm
 
+  // If idxs is still null, it means no valid search terms were provided (e.g. empty string)
   if (idxs === null || idxs.length === 0) {
     return []
   }
