@@ -90,7 +90,7 @@ An exemplary user config can look like the following example:
 searchStrategy: fuzzy
 displayVisitCounter: true
 historyMaxItems: 2048 # Increase max number of browser history items to load
-maxRecentTabsToShow: 32 # Limit number of recent tabs shown (default: 16)
+maxRecentTabsToShow: 32 # Limit number of recent tabs shown (default: 8)
 ```
 
 If you have **troubles with performance**, here are a few options that might help. Feel free to pick & choose and tune the values to your situation. In particular `historyMaxItems` and how many bookmarks you have will impact init and search performance.
@@ -103,7 +103,7 @@ searchMinMatchCharLength: 2 # Start searching only when at least 2 characters ar
 displaySearchMatchHighlight: false # Not highlighting search matches improves render performance.
 searchMaxResults: 20 # Number of search results can be further limited
 historyMaxItems: 512 # Number of browser history items can be further reduced
-maxRecentTabsToShow: 8 # Reduce number of recent tabs for better performance
+maxRecentTabsToShow: 4 # Reduce number of recent tabs for better performance
 detectDuplicateBookmarks: false # Disable duplicate detection for faster startup (if you don't have duplicates)
 detectBookmarksWithOpenTabs: false # Disable bookmark-tab matching for faster startup (if you don't need the feature)
 ```
@@ -122,6 +122,7 @@ colorStripeWidth: 4 # Customize width of search result color stripe
 scoreTabBase: 70 # customize base score for open tabs
 detectBookmarksWithOpenTabs: true
 detectDuplicateBookmarks: true
+maxRecentTabsToShow: 4
 searchEngineChoices:
   - name: Google
     urlPrefix: https://google.com/search?q=

@@ -60,7 +60,7 @@ You can customize these options in the extension settings using YAML or JSON for
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `tabsOnlyCurrentWindow` | boolean | `false` | If true, only the current browser window is considered for tab indexing. |
-| `maxRecentTabsToShow` | number | `16` | Number of recent tabs to show when popup is opened without search term. 0 to disable. |
+| `maxRecentTabsToShow` | number | `8` | Number of recent tabs to show when popup is opened without search term. 0 to disable. |
 
 ## History Options
 
