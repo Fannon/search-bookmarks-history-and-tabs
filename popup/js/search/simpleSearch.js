@@ -4,27 +4,13 @@
  * Strategy:
  * - Perform case-insensitive substring matching across the precomputed `searchString` field.
  * - Require all tokens to match (AND semantics) to keep results tightly focused.
- * - Skip fuzzy tolerances or extra scoring logic so exact phrases stay lightning fast.
- *
- * Scoring pipeline:
- * - Every match carries a `searchScore` of 1 before flowing into `scoring.js` for final ranking.
- *
- * Zero-DOM Highlighting:
- * - Highlights are pre-computed during the search phase (not after rendering).
- * - The shared `highlightMatches` utility escapes HTML first, then applies `<mark>` tags.
- * - This eliminates the need for mark.js and secondary DOM traversals.
- * - Results include `highlightedTitle` and `highlightedUrl` fields for direct rendering.
- *
- * Memoisation:
- * - Cache pre-lowered haystacks per mode (bookmarks, tabs, history) for reuse across repeated queries.
- * - Reset caches when the search dataset or active mode changes to avoid stale results.
  */
 
-import { highlightMatches } from '../helper/utils.js'
+import { escapeHtml, escapeRegex } from '../helper/utils.js'
 import { resolveSearchTargets } from './common.js'
 
 /**
- * Memoize some state, to avoid re-creating haystack and fuzzy search instances.
+ * Memoize some state to avoid re-creating haystack and search instances.
  */
 const state = {}
 
@@ -44,31 +30,34 @@ export function resetSimpleSearchState(searchMode) {
 }
 
 /**
- * Ensure each search entry caches a lower-cased search string.
+ * Prepare search data with pre-computed lowercase strings and pre-escaped parts.
  *
  * @param {Array<Object>} data - Items to prepare.
- * @returns {Array<Object>} Normalised entries.
+ * @returns {Object} Prepared data structure.
  */
 function prepareSearchData(data) {
-  return data.map((entry) => {
-    if (!entry.searchStringLower) {
-      entry.searchStringLower = entry.searchString.toLowerCase()
-    }
-    return entry
-  })
+  const len = data.length
+  const haystack = new Array(len)
+
+  for (let i = 0; i < len; i++) {
+    const entry = data[i]
+    // Cache lowercase version for matching
+    haystack[i] = entry.searchStringLower || entry.searchString.toLowerCase()
+  }
+
+  return {
+    data,
+    haystack,
+  }
 }
 
 /**
  * Execute a precise search across the datasets associated with a mode.
- *
- * @param {string} searchMode - Active search mode.
- * @param {string} searchTerm - Query string.
- * @returns {Array<Object>} Matching entries with `searchScore`.
  */
 export function simpleSearch(searchMode, searchTerm, data) {
   const targets = resolveSearchTargets(searchMode)
   if (!targets.length) {
-    return [] // nothing, because search will be added later
+    return []
   }
 
   if (targets.length === 1) {
@@ -76,77 +65,136 @@ export function simpleSearch(searchMode, searchTerm, data) {
   }
 
   const results = []
-  for (const target of targets) {
-    results.push(...simpleSearchWithScoring(searchTerm, target, data[target]))
+  for (let i = 0; i < targets.length; i++) {
+    results.push(...simpleSearchWithScoring(searchTerm, targets[i], data[targets[i]]))
   }
   return results
 }
 
 /**
  * Run an AND-based substring search within a single dataset and assign scores.
- *
- * Highlights are pre-computed during this search phase using Zero-DOM highlighting.
- * Results are returned as new objects to preserve cache immutability.
- *
- * @param {string} searchTerm - Query string.
- * @param {string} searchMode - Dataset key inside `ext.model`.
- * @param {Array<Object>} data - The dataset to search.
- * @returns {Array<Object>} Filtered entries with `searchScore: 1` and highlight metadata.
  */
 function simpleSearchWithScoring(searchTerm, searchMode, data) {
   if (!data || !data.length) {
-    return [] // early return -> no data to search
+    return []
   }
 
+  // Initialize or retrieve cached state
   if (!state[searchMode]) {
     state[searchMode] = {
-      cachedData: prepareSearchData(data),
+      prepared: prepareSearchData(data),
+      idxs: null,
+      searchTerm: '',
     }
   }
   const s = state[searchMode]
 
-  // Invalidate s.cachedData if the new search term is not just an extension of the last one
+  // Only reset filtering state, keep prepared strings
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
-    s.cachedData = prepareSearchData(data)
+    s.idxs = null
   }
 
-  if (!s.cachedData.length) {
-    return [] // early return -> no data left to search
+  const { data: originalData, haystack } = s.prepared
+
+  // Initialize indices if needed
+  let idxs = s.idxs
+  if (!idxs) {
+    idxs = []
+    for (let i = 0; i < haystack.length; i++) {
+      idxs.push(i)
+    }
   }
 
-  const searchTermArray = searchTerm.split(' ')
+  if (idxs.length === 0) {
+    return []
+  }
 
-  for (const term of searchTermArray) {
-    const localResults = []
-    for (const entry of s.cachedData) {
-      // searchStringLower is always pre-computed during prepareSearchData
-      if (entry.searchStringLower.includes(term)) {
-        localResults.push({
-          ...entry,
-          searchScore: 1,
-          searchApproach: 'precise',
-        })
+  const terms = searchTerm.toLowerCase().split(' ')
+
+  // Filtering (AND-logic)
+  for (let t = 0; t < terms.length; t++) {
+    const term = terms[t]
+    if (!term) continue
+
+    const nextIdxs = []
+    for (let i = 0; i < idxs.length; i++) {
+      const idx = idxs[i]
+      if (haystack[idx].indexOf(term) !== -1) {
+        nextIdxs.push(idx)
       }
     }
-    s.cachedData = localResults // reduce cachedData set -> improves performance
-    if (!s.cachedData.length) {
-      break
+    idxs = nextIdxs
+    if (idxs.length === 0) break
+  }
+
+  // Cache filtered state
+  s.idxs = idxs
+  s.searchTerm = searchTerm
+
+  if (idxs.length === 0) {
+    return []
+  }
+
+  const results = new Array(idxs.length)
+  for (let i = 0; i < idxs.length; i++) {
+    const idx = idxs[i]
+    results[i] = {
+      ...originalData[idx],
+      searchScore: 1,
+      searchApproach: 'precise',
     }
   }
 
-  s.searchTerm = searchTerm
+  return results
+}
 
-  // Pre-compute highlights using Zero-DOM approach (no mark.js, no secondary DOM pass)
-  // Terms are filtered and used directly by highlightMatches utility
-  const filteredTerms = searchTermArray.filter(Boolean)
+/**
+ * Highlighting stage for precise search matches.
+ * Should be called after results are ranked and truncated for performance.
+ *
+ * @param {Array<Object>} results - The subset of results to highlight.
+ * @param {string} searchTerm - The query terms used for matching.
+ * @returns {Array<Object>} Results with `highlightedTitle` and `highlightedUrl`.
+ */
+export function highlightSimpleSearch(results, searchTerm) {
+  if (!results.length) {
+    return results
+  }
 
-  // Return fresh result objects with highlights to preserve cache immutability
-  return s.cachedData.map((entry) => {
-    const parts = entry.searchString.split('¦')
-    return {
-      ...entry,
-      highlightedTitle: highlightMatches(parts[0] || '', filteredTerms),
-      highlightedUrl: parts[1] ? highlightMatches(parts[1], filteredTerms) : '',
+  const terms = searchTerm ? searchTerm.toLowerCase().split(' ') : []
+  const filteredTerms = terms.filter(Boolean)
+  let highlightRegex = null
+
+  if (filteredTerms.length > 0) {
+    const escapedTerms = []
+    for (let i = 0; i < filteredTerms.length; i++) {
+      escapedTerms.push(escapeRegex(escapeHtml(filteredTerms[i])))
     }
-  })
+    escapedTerms.sort((a, b) => b.length - a.length)
+    highlightRegex = new RegExp(`(${escapedTerms.join('|')})`, 'gi')
+  }
+
+  for (let i = 0; i < results.length; i++) {
+    const entry = results[i]
+    const searchStr = entry.searchString
+    const splitIndex = searchStr.indexOf('¦')
+
+    let title = ''
+    let url = ''
+
+    if (splitIndex !== -1) {
+      title = searchStr.substring(0, splitIndex)
+      url = searchStr.substring(splitIndex + 1)
+    } else {
+      title = searchStr
+    }
+
+    const escapedTitle = escapeHtml(title)
+    const escapedUrl = url ? escapeHtml(url) : ''
+
+    entry.highlightedTitle = highlightRegex ? escapedTitle.replace(highlightRegex, '<mark>$1</mark>') : escapedTitle
+    entry.highlightedUrl = highlightRegex ? escapedUrl.replace(highlightRegex, '<mark>$1</mark>') : escapedUrl
+  }
+
+  return results
 }

@@ -134,22 +134,11 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
       for (let i = 0; i < info.idx.length; i++) {
         const result = data[idxs[i]]
 
-        // Use custom placeholders for highlighting that are safe from escapeHtml
-        // Then escape the whole string and replace placeholders with <mark> tags
-        const highlightedHaystack = uFuzzy.highlight(s.haystack[idxs[i]], info.ranges[i], (part, matched) =>
-          matched ? `«${part}»` : part,
-        )
-        const safeHighlighted = escapeHtml(highlightedHaystack).replaceAll('«', '<mark>').replaceAll('»', '</mark>')
-
-        const [highlightedTitle, highlightedUrl] = safeHighlighted.split('¦')
-
         localResults.push({
           ...result,
           // 0 intra chars are perfect score, 5 and more are 0 score.
           searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
           searchApproach: 'fuzzy',
-          highlightedTitle,
-          highlightedUrl,
         })
       }
 
@@ -166,6 +155,49 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
   }
 
   s.searchTerm = searchTerm // Remember last search term, to know when to invalidate idxx cache
+  return results
+}
+
+/**
+ * Highlighting stage for fuzzy search matches.
+ * Should be called after results are ranked and truncated for performance.
+ *
+ * @param {Array<Object>} results - The subset of results to highlight.
+ * @param {string} searchTerm - The query terms used for matching.
+ * @returns {Promise<Array<Object>>} Results with `highlightedTitle` and `highlightedUrl`.
+ */
+export async function highlightFuzzySearch(results, searchTerm, options) {
+  if (!results.length || !searchTerm || !window.uFuzzy) {
+    return results
+  }
+
+  // We need to re-run uFuzzy info on the truncated results to get ranges for highlighting.
+  // This is efficient because results.length is small (maxResults).
+  const searchFuzzyness = options.searchFuzzyness
+  const uFuzzyOptions = {
+    intraIns: Math.round(searchFuzzyness * 4.2),
+    ...(options.uFuzzyOptions || {}),
+  }
+  const uf = new uFuzzy(uFuzzyOptions)
+
+  const haystack = results.map((r) => r.searchString)
+  const idxs = Array.from(results.keys())
+  const info = uf.info(idxs, haystack, searchTerm)
+
+  for (let i = 0; i < info.idx.length; i++) {
+    const resultIndex = info.idx[i]
+    const result = results[resultIndex]
+
+    const highlightedHaystack = uFuzzy.highlight(haystack[resultIndex], info.ranges[i], (part, matched) =>
+      matched ? `«${part}»` : part,
+    )
+    const safeHighlighted = escapeHtml(highlightedHaystack).replaceAll('«', '<mark>').replaceAll('»', '</mark>')
+    const [highlightedTitle, highlightedUrl] = safeHighlighted.split('¦')
+
+    result.highlightedTitle = highlightedTitle
+    result.highlightedUrl = highlightedUrl || ''
+  }
+
   return results
 }
 

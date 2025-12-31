@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
-import { resetSimpleSearchState, simpleSearch } from '../simpleSearch.js'
+import { highlightSimpleSearch, resetSimpleSearchState, simpleSearch } from '../simpleSearch.js'
 
 describe('simpleSearch', () => {
   let model
@@ -214,7 +214,7 @@ describe('simpleSearch', () => {
   })
 
   describe('Performance optimizations', () => {
-    test('pre-calculates lower case search string', () => {
+    test('pre-calculates lower case search string internally (not on original data)', () => {
       const bookmark = {
         id: 'bookmark-1',
         title: 'Test',
@@ -227,11 +227,12 @@ describe('simpleSearch', () => {
       const results = simpleSearch('bookmarks', 'test', model)
 
       expect(results).toHaveLength(1)
-      // The original object should be modified with searchStringLower
-      expect(model.bookmarks[0].searchStringLower).toBe('test https://example.com')
+      // The new implementation stores lowercase in internal haystack array, NOT on original
+      // This improves immutability - original data should NOT be mutated
+      expect(model.bookmarks[0].searchStringLower).toBeUndefined()
     })
 
-    test('reuses cached lower case string on subsequent searches', () => {
+    test('uses internal cache for efficient repeated searches', () => {
       const bookmark = {
         id: 'bookmark-1',
         title: 'Test',
@@ -241,16 +242,14 @@ describe('simpleSearch', () => {
 
       model.bookmarks = [bookmark]
 
-      // First search
-      simpleSearch('bookmarks', 'test', model)
-      expect(model.bookmarks[0].searchStringLower).toBeDefined()
+      // First search should set up cache
+      const results1 = simpleSearch('bookmarks', 'test', model)
+      expect(results1).toHaveLength(1)
 
-      // Manually modify the cached value to verify it's being used
-      model.bookmarks[0].searchStringLower = 'modified'
-
-      // Second search for 'modified' should find it
-      const results = simpleSearch('bookmarks', 'modified', model)
-      expect(results).toHaveLength(1)
+      // Second search with extension of term should use cache (progressive filtering)
+      const results2 = simpleSearch('bookmarks', 'test https', model)
+      expect(results2).toHaveLength(1)
+      expect(results2[0].id).toBe('bookmark-1')
     })
   })
 
@@ -460,7 +459,8 @@ describe('simpleSearch', () => {
 
       model.bookmarks = [bookmark]
 
-      const results = simpleSearch('bookmarks', 'react', model)
+      let results = simpleSearch('bookmarks', 'react', model)
+      results = highlightSimpleSearch(results, 'react')
 
       expect(results).toHaveLength(1)
       expect(results[0].highlightedTitle).toBeDefined()
@@ -477,7 +477,8 @@ describe('simpleSearch', () => {
 
       model.bookmarks = [bookmark]
 
-      const results = simpleSearch('bookmarks', 'react hooks', model)
+      let results = simpleSearch('bookmarks', 'react hooks', model)
+      results = highlightSimpleSearch(results, 'react hooks')
 
       expect(results).toHaveLength(1)
       const result = results[0]
@@ -497,7 +498,8 @@ describe('simpleSearch', () => {
 
       model.bookmarks = [bookmark]
 
-      const results = simpleSearch('bookmarks', 'reactjs', model)
+      let results = simpleSearch('bookmarks', 'reactjs', model)
+      results = highlightSimpleSearch(results, 'reactjs')
 
       expect(results).toHaveLength(1)
       expect(results[0].highlightedUrl).toContain('<mark>')
@@ -511,7 +513,8 @@ describe('simpleSearch', () => {
 
       model.bookmarks = [maliciousBookmark]
 
-      const results = simpleSearch('bookmarks', 'test', model)
+      let results = simpleSearch('bookmarks', 'test', model)
+      results = highlightSimpleSearch(results, 'test')
 
       expect(results).toHaveLength(1)
       expect(results[0].highlightedTitle).not.toContain('<script>')
@@ -527,7 +530,8 @@ describe('simpleSearch', () => {
 
       model.bookmarks = [bookmark]
 
-      const results = simpleSearch('bookmarks', 'title', model)
+      let results = simpleSearch('bookmarks', 'title', model)
+      results = highlightSimpleSearch(results, 'title')
 
       expect(results).toHaveLength(1)
       expect(results[0].highlightedTitle).toContain('<mark>')
@@ -542,7 +546,8 @@ describe('simpleSearch', () => {
 
       model.bookmarks = [bookmark]
 
-      const results = simpleSearch('bookmarks', '', model)
+      let results = simpleSearch('bookmarks', '', model)
+      results = highlightSimpleSearch(results, '')
 
       expect(results).toHaveLength(1)
       // With empty search term, title should be escaped but not highlighted

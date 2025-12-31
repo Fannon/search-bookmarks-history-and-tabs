@@ -153,6 +153,7 @@ describe('Extension Integration Tests', () => {
       simpleSearch: () => {
         throw new Error('Simple search failure')
       },
+      highlightSimpleSearch: jest.fn((r) => r),
       resetSimpleSearchState: jest.fn(),
     }))
 
@@ -179,12 +180,14 @@ describe('Extension Integration Tests', () => {
         url: 'https://example.com',
         searchScore: 1,
         score: 100,
+        searchApproach: 'precise',
       },
     ])
 
     await jest.unstable_mockModule('../search/simpleSearch.js', () => ({
       __esModule: true,
       simpleSearch: mockSimpleSearch,
+      highlightSimpleSearch: jest.fn((r) => r),
       resetSimpleSearchState: jest.fn(),
     }))
 

@@ -27,11 +27,11 @@ import { cleanUpUrl, generateRandomId } from '../helper/utils.js'
 import { closeErrors, printError } from '../view/errorView.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultResults.js'
-import { fuzzySearch } from './fuzzySearch.js'
+import { fuzzySearch, highlightFuzzySearch } from './fuzzySearch.js'
 import { resolveSearchMode } from './queryParser.js'
 import { calculateFinalScore } from './scoring.js'
 import { addSearchEngines, collectCustomSearchAliasResults } from './searchEngines.js'
-import { simpleSearch } from './simpleSearch.js'
+import { highlightSimpleSearch, simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
 
 // Re-export scoring function for backward compatibility
@@ -308,6 +308,9 @@ export async function search(event) {
       // Filter by score and max results
       results = filterResults(results, searchMode)
 
+      // Apply highlighting only to the truncated result set (better performance)
+      results = await highlightResults(results, searchTerm, ext.opts)
+
       ext.model.result = results
 
       // Cache the results for better performance (only for actual searches)
@@ -384,6 +387,43 @@ export function sortResults(results, sortMode) {
     })
   } else {
     throw new Error(`Unknown sortMode="${sortMode}"`)
+  }
+
+  return results
+}
+
+/**
+ * Apply highlighting to search results based on their search approach.
+ *
+ * @param {Array<Object>} results - Search results.
+ * @param {string} searchTerm - Query string.
+ * @param {Object} options - Extension options.
+ * @returns {Promise<Array<Object>>} Highlighted results.
+ */
+async function highlightResults(results, searchTerm, options) {
+  if (!results.length || !searchTerm) {
+    return results
+  }
+
+  // Group results by approach and highlight them accordingly
+  const preciseMatches = []
+  const fuzzyMatches = []
+
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i]
+    if (r.searchApproach === 'precise') {
+      preciseMatches.push(r)
+    } else if (r.searchApproach === 'fuzzy') {
+      fuzzyMatches.push(r)
+    }
+  }
+
+  if (preciseMatches.length > 0) {
+    highlightSimpleSearch(preciseMatches, searchTerm)
+  }
+
+  if (fuzzyMatches.length > 0) {
+    await highlightFuzzySearch(fuzzyMatches, searchTerm, options)
   }
 
   return results

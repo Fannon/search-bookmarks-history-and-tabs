@@ -11,6 +11,7 @@
  * - searchEngines.test.js: Search engine result generation
  * - defaultResults.test.js: Default entry sourcing
  */
+
 import { afterEach, beforeAll, beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
@@ -24,6 +25,8 @@ let search
 let searchWithAlgorithm
 let calculateFinalScore
 let sortResults
+let resetSimpleSearchState
+let resetFuzzySearchState
 
 beforeAll(async () => {
   await jest.unstable_mockModule('../../helper/browserApi.js', () => ({
@@ -51,12 +54,19 @@ beforeAll(async () => {
   searchWithAlgorithm = commonModule.searchWithAlgorithm
   calculateFinalScore = commonModule.calculateFinalScore
   sortResults = commonModule.sortResults
+
+  const simpleSearchModule = await import('../simpleSearch.js')
+  resetSimpleSearchState = simpleSearchModule.resetSimpleSearchState
+  const fuzzySearchModule = await import('../fuzzySearch.js')
+  resetFuzzySearchState = fuzzySearchModule.resetFuzzySearchState
 })
 
 beforeEach(() => {
   jest.clearAllMocks()
   mockGetBrowserTabs.mockResolvedValue([])
   mockLoadScript.mockResolvedValue(undefined)
+  resetSimpleSearchState()
+  resetFuzzySearchState()
   setupExt()
 })
 
