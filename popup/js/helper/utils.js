@@ -131,6 +131,9 @@ export function timeSince(date) {
   return `${seconds} s`
 }
 
+const URL_CLEANUP_PREFIX_REGEX = /^(?:https?:\/\/)?(?:www\.)?/
+const URL_CLEANUP_SUFFIX_REGEX = /\/$/
+
 /**
  * Normalizes URLs by removing protocol, www, and trailing slashes
  *
@@ -150,10 +153,7 @@ export function timeSince(date) {
  */
 export function cleanUpUrl(url) {
   if (!url) return ''
-  return String(url)
-    .toLowerCase()
-    .replace(/^(?:https?:\/\/)?(?:www\.)?/, '')
-    .replace(/\/$/, '')
+  return String(url).toLowerCase().replace(URL_CLEANUP_PREFIX_REGEX, '').replace(URL_CLEANUP_SUFFIX_REGEX, '')
 }
 
 // Cache for loaded scripts to avoid duplicate loading and network requests

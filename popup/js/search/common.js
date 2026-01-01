@@ -75,6 +75,8 @@ function shouldSkipSearch(event) {
   )
 }
 
+const DUPLICATE_SPACE_REGEX = / +(?= )/g
+
 /**
  * Normalize the search term by trimming and removing duplicate spaces.
  *
@@ -84,7 +86,7 @@ function shouldSkipSearch(event) {
 function normalizeSearchTerm(term) {
   let normalized = term || ''
   normalized = normalized.trimStart().toLowerCase()
-  normalized = normalized.replace(/ +(?= )/g, '') // Remove duplicate spaces
+  normalized = normalized.replace(DUPLICATE_SPACE_REGEX, '') // Remove duplicate spaces
   return normalized
 }
 

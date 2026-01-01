@@ -1,3 +1,8 @@
+const BONUS_SCORE_REGEX = /[ ][+]([0-9]+)/
+const TAG_NUMERIC_CHECK_REGEX = /^\d/
+const URL_ROOT_CLEANUP_REGEX = /\/$/
+const REGEX_SPECIAL_CHARS_REGEX = /[.*+?^${}()|[\]/-]/g
+
 /**
  * @file Normalizes browser APIs for bookmarks, tabs, and history sources.
  *
@@ -57,7 +62,7 @@ export function convertBrowserTabs(chromeTabs) {
         title,
         titleLower: titleLower,
         url: cleanUrl,
-        originalUrl: el.url.replace(/\/$/, ''),
+        originalUrl: el.url.replace(URL_ROOT_CLEANUP_REGEX, ''),
         originalId: el.id,
         active: el.active,
         windowId: el.windowId,
@@ -133,14 +138,14 @@ export function convertBrowserBookmarks(
 
       // Simple check for custom bonus score "+20"
       if (title.includes(' +')) {
-        const match = title.match(/[ ][+]([0-9]+)/)
+        const match = title.match(BONUS_SCORE_REGEX)
         if (match) {
           title = title.replace(match[0], '')
           customBonusScore = parseInt(match[1], 10)
         }
       }
 
-      const url = entry.url.replace(/\/$/, '')
+      const url = entry.url.replace(URL_ROOT_CLEANUP_REGEX, '')
       const cleanedUrl = cleanUpUrl(url)
 
       // Parse out tags from bookmark title (starting with " #")
@@ -153,7 +158,7 @@ export function convertBrowserBookmarks(
         for (let j = 1; j < tagSplit.length; j++) {
           const tag = tagSplit[j].trim()
           if (!tag) continue
-          if (/^\d/.test(tag)) {
+          if (TAG_NUMERIC_CHECK_REGEX.test(tag)) {
             // If tag starts with a digit, it's probably not a tag (e.g. "C# 11")
             title += ` #${tag}`
           } else {
@@ -272,7 +277,7 @@ export function convertBrowserHistory(history) {
       // Filter out empty strings and escape special characters
       const cleanPatterns = historyIgnoreList
         .filter(Boolean)
-        .map((str) => String(str).replace(/[.*+?^${}()|[\]/-]/g, '\\$&'))
+        .map((str) => String(str).replace(REGEX_SPECIAL_CHARS_REGEX, '\\$&'))
 
       if (cleanPatterns.length > 0) {
         ext.state.historyIgnoreRegex = new RegExp(cleanPatterns.join('|'), 'i')
@@ -305,7 +310,7 @@ export function convertBrowserHistory(history) {
       type: 'history',
       title,
       titleLower: titleLower,
-      originalUrl: el.url.replace(/\/$/, ''),
+      originalUrl: el.url.replace(URL_ROOT_CLEANUP_REGEX, ''),
       url: cleanUrl,
       visitCount: el.visitCount,
       lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,

@@ -7,6 +7,7 @@
 // Pre-compiled regexes for performance
 const TAXONOMY_PREFIX_REGEX = /^[#~]+/
 const WHITESPACE_REGEX = /\s+/g
+const NUMERIC_TERM_REGEX = /^\d+$/
 
 /**
  * Calculates the final search item score for each result
@@ -98,7 +99,7 @@ export function calculateFinalScore(results, searchTerm) {
     folderTerms.push(cleanedPart)
 
     // Add to includeTerms if meets min length or is numeric
-    if (cleanedPart.length >= scoreExactIncludesBonusMinChars || /^\d+$/.test(cleanedPart)) {
+    if (cleanedPart.length >= scoreExactIncludesBonusMinChars || NUMERIC_TERM_REGEX.test(cleanedPart)) {
       includeTerms.push(cleanedPart)
     }
   }
