@@ -20,24 +20,24 @@ Context and guidelines for AI agents working on this codebase.
 
 ### Architecture Overview
 
-```text
+```bash
 popup/
 ├─ js/
-│  ├─ init*.js             # Entry points
-│  ├─ helper/              # Pure utilities
-│  ├─ model/               # Data/Config
-│  ├─ search/              # Search logic
-│  │  ├─ common.js         # Coordinator
-│  │  ├─ simpleSearch.js   # Exact match search
-│  │  ├─ fuzzySearch.js    # uFuzzy search
-│  │  ├─ taxonomySearch.js # Tag/Folder
-│  │  ├─ queryParser.js    # Mode detection
-│  │  ├─ scoring.js        # Ranking algorithm
-│  │  ├─ searchEngines.js  # Engine results
-│  │  └─ defaultResults.js # Fallback results
-│  └─ view/                # UI rendering
-├─ css/                    # Styles
-└─ lib/                    # Vendored libs
+│  ├─ init*.js             # Entry points: Initializers for search and options pages
+│  ├─ helper/              # Pure utilities: DOM helpers and browser API wrappers
+│  ├─ model/               # Data & Config: Options management and data normalization
+│  ├─ search/              # Core Logic: All search algorithms and orchestration
+│  │  ├─ common.js         # Coordinator: Orchestrates the search flow and caching
+│  │  ├─ simpleSearch.js   # Exact Match: Fast substring-based search strategy
+│  │  ├─ fuzzySearch.js    # uFuzzy: Approximate matching using uFuzzy library
+│  │  ├─ taxonomySearch.js # Taxonomy: Filtering by tags (#) and folders (~)
+│  │  ├─ queryParser.js    # Parser: Detects search modes, tags, and commands
+│  │  ├─ scoring.js        # Ranking: Algorithm for sorting and scoring results
+│  │  ├─ searchEngines.js  # Engines: Fallback search engine result generation
+│  │  └─ defaultResults.js # Defaults: Results shown when the query is empty
+│  └─ view/                # UI Rendering: DOM manipulation and result display
+├─ css/                    # Styling: CSS files for popup and options UI
+└─ lib/                    # Dependencies: Vendored libs (uFuzzy, Tagify, js-yaml)
 ```
 
 ## Commands
