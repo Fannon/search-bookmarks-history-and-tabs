@@ -103,8 +103,6 @@ function setupExt(overrides = {}) {
       ],
       searchStrategy: 'precise',
       searchMaxResults: 5,
-      searchMinMatchCharLength: 1,
-      scoreMinScore: 10,
       scoreExactIncludesBonus: 5,
       scoreExactStartsWithBonus: 10,
       scoreExactEqualsBonus: 15,
@@ -145,10 +143,9 @@ function setupExt(overrides = {}) {
 }
 
 describe('searchWithAlgorithm', () => {
-  test('returns empty list when below minimum length', async () => {
-    ext.opts.searchMinMatchCharLength = 5
-
-    const results = await searchWithAlgorithm('precise', 'abc', 'all', ext.model, ext.opts)
+  test('returns empty list when search term is empty (hard-coded minLength=1)', async () => {
+    // Note: searchMinMatchCharLength is now hard-coded to 1
+    const results = await searchWithAlgorithm('precise', '', 'all', ext.model, ext.opts)
 
     expect(results).toEqual([])
   })
@@ -316,7 +313,7 @@ describe('search', () => {
         url: 'https://example.com',
       },
     ])
-    ext.opts.scoreMinScore = 0
+    // Note: scoreMinScore is now hard-coded to 30, can't be overridden
 
     await search({ key: 'e' })
 
@@ -338,7 +335,7 @@ describe('search', () => {
       { title: 'Low', url: 'https://low.test' },
       { title: 'Second Mid +15', url: 'https://mid2.test' },
     ])
-    ext.opts.scoreMinScore = 70
+    // Note: scoreMinScore is now hard-coded to 30, can't be overridden
     ext.opts.searchMaxResults = 2
     ext.opts.enableSearchEngines = false
     ext.opts.customSearchEngines = []
@@ -347,7 +344,7 @@ describe('search', () => {
     await search({ key: 'f' })
 
     expect(ext.model.result.length).toBeLessThanOrEqual(2)
-    expect(ext.model.result.every((item) => item.score >= 70)).toBe(true)
+    expect(ext.model.result.every((item) => item.score >= 30)).toBe(true)
     // Note: resultCounter is now updated by searchView.renderSearchResults, not here
   })
 

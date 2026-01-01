@@ -9,7 +9,6 @@ You can customize these options in the extension settings using YAML or JSON for
 | :--- | :--- | :--- | :--- |
 | `searchStrategy` | string | `'precise'` | Search approach to use. `'precise'` (faster, exact matches) or `'fuzzy'` (slower, approximate matches). |
 | `searchMaxResults` | number | `32` | Max search results. Reduce for better performance. |
-| `searchMinMatchCharLength` | number | `1` | Minimum characters of the search term to consider a match. |
 | `searchFuzzyness` | number | `0.6` | Fuzzy search threshold (0-1). 0 is no fuzzyness, 1 is full fuzzyness. Only applies to `'fuzzy'` strategy. |
 
 ## Colors and Style
@@ -50,7 +49,7 @@ You can customize these options in the extension settings using YAML or JSON for
 
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `bookmarksIgnoreFolderList` | array | `[]` | Ignores all bookmarks within listed folders (and subfolders). |
+| `bookmarksIgnoreFolderList` | array | `[]` | Ignores all bookmarks within listed folders (and sub-folders). |
 | `detectDuplicateBookmarks` | boolean | `false` | Detect and mark duplicate bookmarks. Disabling improves startup performance. |
 | `detectBookmarksWithOpenTabs` | boolean | `true` | Detect and mark bookmarks that have a currently open browser tab. |
 
@@ -80,7 +79,6 @@ You can customize these options in the extension settings using YAML or JSON for
 
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `scoreMinScore` | number | `30` | Filter out all search results below this minimum score. |
 | `scoreBookmarkBase` | number | `100` | Base score for bookmark results. |
 | `scoreTabBase` | number | `70` | Base score for tab results. |
 | `scoreHistoryBase` | number | `45` | Base score for history results. |

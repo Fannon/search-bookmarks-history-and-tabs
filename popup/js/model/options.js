@@ -50,10 +50,6 @@ export const defaultOptions = {
    */
   searchMaxResults: 24,
   /**
-   * Minimum string characters of the search term to consider a match
-   */
-  searchMinMatchCharLength: 1,
-  /**
    * Fuzzy search threshold (0 - 1)
    * 0 is no fuzzyness, 1 is full fuzzyness
    *
@@ -258,11 +254,6 @@ export const defaultOptions = {
   //////////////////////////////////////////
   // SCORE CALCULATION OPTIONS            //
   //////////////////////////////////////////
-
-  /**
-   * Filter out all search results below this minimum score
-   */
-  scoreMinScore: 30,
 
   // RESULT TYPE BASE SCORES
   // Depending on the type of result, they start with a base score

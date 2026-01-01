@@ -210,7 +210,6 @@ describe('options model', () => {
       const requiredCategories = [
         'searchStrategy',
         'searchMaxResults',
-        'searchMinMatchCharLength',
         'bookmarkColor',
         'tabColor',
         'historyColor',
@@ -221,7 +220,6 @@ describe('options model', () => {
         'displayTags',
         'displayFolderName',
         'displaySearchMatchHighlight',
-        'scoreMinScore',
         'scoreBookmarkBase',
         'scoreTabBase',
       ]

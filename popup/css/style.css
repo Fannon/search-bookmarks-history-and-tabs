@@ -247,7 +247,7 @@ code {
   border-radius: 3px;
   overflow: hidden;
   cursor: pointer;
-  border-left-width: 5px;
+  border-left-width: 4px;
   border-left-style: solid;
 }
 #error-list li {

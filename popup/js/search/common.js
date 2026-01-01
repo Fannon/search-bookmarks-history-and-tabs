@@ -204,7 +204,8 @@ function applyScoring(results, searchTerm, searchMode) {
  * @returns {Array} Filtered results.
  */
 function filterResults(results, searchMode) {
-  const minScore = ext.opts.scoreMinScore
+  // Hard-coded minimum score threshold (implementation detail)
+  const minScore = 30
   const maxResults = ext.opts.searchMaxResults
   const shouldLimit = searchMode !== 'tags' && searchMode !== 'folders' && searchMode !== 'tabs'
 
@@ -360,8 +361,9 @@ export async function search(event) {
  */
 export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode = 'all', data, options) {
   let results = []
-  // If the search term is below minMatchCharLength, no point in starting search
-  if (searchTerm.length < options.searchMinMatchCharLength) {
+  // Hard-coded minimum character length (implementation detail)
+  const minMatchCharLength = 1
+  if (searchTerm.length < minMatchCharLength) {
     return results
   }
 

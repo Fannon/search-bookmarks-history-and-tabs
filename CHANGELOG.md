@@ -19,11 +19,13 @@
 - **FIXED**: Tag (`#`) and folder (`~`) search now correctly highlights the full phrase including the marker (e.g., `#music`), ensuring visual consistency and proper matching.
 - **OPTIMIZED**: Major data loading / conversion performance improvements which positively impacts startup performance.
 - **REMOVED**: Low-value configuration options that are now hard-coded with sensible defaults:
-  - `colorStripeWidth` → now fixed at 5px via CSS
+  - `colorStripeWidth` → now fixed at 4px via CSS
   - `titleLengthRestrictionForUrls` → now fixed at 80 characters
   - `scoreTitleWeight` → now fixed at 1 (other field weights remain configurable)
   - `scoreExactIncludesMaxBonuses` → now fixed at 3
   - `scoreExactIncludesBonusMinChars` → now fixed at 3
+  - `searchMinMatchCharLength` → now fixed at 1 character
+  - `scoreMinScore` → now fixed at 30 points
 
 ## [v1.17.3]
 

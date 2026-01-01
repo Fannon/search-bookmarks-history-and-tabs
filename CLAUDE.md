@@ -155,8 +155,8 @@ User options are defined in `popup/js/model/options.js` (`defaultOptions` object
 
 - **Search behavior**: `searchStrategy` (precise/fuzzy), `searchMaxResults`, `searchFuzzyness`
 - **Data sources**: `enableBookmarks`, `enableTabs`, `enableHistory`, `historyMaxItems`
-- **Performance**: `searchDebounceMs`, `displaySearchMatchHighlight`, `searchMinMatchCharLength`
-- **Scoring**: `scoreBookmarkBase`, `scoreTitleWeight`, `exactStartsWithBonus`, etc.
+- **Performance**: `searchDebounceMs`, `displaySearchMatchHighlight`
+- **Scoring**: `scoreBookmarkBase`, `scoreTagWeight`, `scoreExactStartsWithBonus`, etc.
 - **Custom search engines**: `customSearchEngines` array with alias/URL patterns
 
 ### Bookmark Tagging System

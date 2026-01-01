@@ -99,7 +99,6 @@ Here is a suggestion for low-performance machines:
 
 ```yaml
 searchStrategy: precise # Precise search is faster than fuzzy search.
-searchMinMatchCharLength: 2 # Start searching only when at least 2 characters are entered
 displaySearchMatchHighlight: false # Not highlighting search matches improves render performance.
 searchMaxResults: 20 # Number of search results can be further limited
 historyMaxItems: 512 # Number of browser history items can be further reduced

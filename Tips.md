@@ -44,7 +44,6 @@ Start your search query with a search mode prefix:
   - Reduce history size (see below)
 - Improve search performance:
   - Switch to precise search strategy instead of fuzzy
-  - Set option: `searchMinMatchCharLength: 2` (or more) to start searching only when the search string is at least 2 characters long
   - Reduce option `searchMaxResults` from 32 to something lower
 
 <hr/>
