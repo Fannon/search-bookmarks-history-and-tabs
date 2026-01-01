@@ -93,6 +93,15 @@ export function highlightMatches(text, termsOrRegex) {
   return escapedText.replace(highlightRegex, '<mark>$1</mark>')
 }
 
+// Pre-calculate time units for performance
+const TIME_UNITS = [
+  [31536000, 'year'],
+  [2592000, 'month'],
+  [86400, 'd'],
+  [3600, 'h'],
+  [60, 'm'],
+]
+
 /**
  * Converts a date to a compact "time since" string.
  *
@@ -115,16 +124,12 @@ export function timeSince(date) {
   }
 
   const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000))
-  for (const [unitSeconds, label] of [
-    [31536000, 'year'],
-    [2592000, 'month'],
-    [86400, 'd'],
-    [3600, 'h'],
-    [60, 'm'],
-  ]) {
+  for (let i = 0; i < TIME_UNITS.length; i++) {
+    const unit = TIME_UNITS[i]
+    const unitSeconds = unit[0]
     const count = Math.floor(seconds / unitSeconds)
     if (count >= 1) {
-      return `${count} ${label}`
+      return `${count} ${unit[1]}`
     }
   }
 

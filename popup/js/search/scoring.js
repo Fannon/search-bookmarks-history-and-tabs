@@ -130,6 +130,8 @@ export function calculateFinalScore(results, searchTerm) {
 
   const includesBonusCap = Number.isFinite(scoreExactIncludesMaxBonuses) ? scoreExactIncludesMaxBonuses : 999
   const maxRecentSeconds = historyDaysAgo * 24 * 60 * 60
+  const recentBonusFactor = maxRecentSeconds > 0 ? scoreRecentBonusScoreMaximum / maxRecentSeconds : 0
+
   const hasExactStartsWithBonus = Boolean(scoreExactStartsWithBonus)
   const hasExactEqualsBonus = Boolean(scoreExactEqualsBonus)
   const hasExactTagMatchBonus = Boolean(scoreExactTagMatchBonus)
@@ -247,8 +249,8 @@ export function calculateFinalScore(results, searchTerm) {
 
     if (hasRecentBonus && el.lastVisitSecondsAgo != null) {
       const lastVisitSecondsAgo = el.lastVisitSecondsAgo
-      if (maxRecentSeconds > 0 && lastVisitSecondsAgo > 0) {
-        const recentBonus = (1 - lastVisitSecondsAgo / maxRecentSeconds) * scoreRecentBonusScoreMaximum
+      if (recentBonusFactor > 0 && lastVisitSecondsAgo > 0) {
+        const recentBonus = scoreRecentBonusScoreMaximum - lastVisitSecondsAgo * recentBonusFactor
         if (recentBonus > 0) {
           score += recentBonus
         }

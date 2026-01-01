@@ -390,8 +390,9 @@ function highlightResults(results, searchTerm) {
 
     const tagsArray = entry.tagsArray
     if (tagsArray) {
-      const highlightedTags = new Array(tagsArray.length)
-      for (let j = 0; j < tagsArray.length; j++) {
+      const tagCount = tagsArray.length
+      const highlightedTags = new Array(tagCount)
+      for (let j = 0; j < tagCount; j++) {
         highlightedTags[j] = highlightMatches(`#${tagsArray[j]}`, highlightRegex)
       }
       entry.highlightedTagsArray = highlightedTags
@@ -399,8 +400,9 @@ function highlightResults(results, searchTerm) {
 
     const folderArray = entry.folderArray
     if (folderArray) {
-      const highlightedFolders = new Array(folderArray.length)
-      for (let j = 0; j < folderArray.length; j++) {
+      const folderCount = folderArray.length
+      const highlightedFolders = new Array(folderCount)
+      for (let j = 0; j < folderCount; j++) {
         highlightedFolders[j] = highlightMatches(`~${folderArray[j]}`, highlightRegex)
       }
       entry.highlightedFolderArray = highlightedFolders
