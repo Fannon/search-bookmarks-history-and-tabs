@@ -5,6 +5,8 @@ const { calculateFinalScore } = await import('../scoring.js')
 const { defaultOptions } = await import('../../model/options.js')
 
 // Baseline options for isolated unit tests (all bonuses off, weights = 1.0 for simplicity)
+// Note: scoreTitleWeight (1), scoreExactIncludesBonusMinChars (3), and scoreExactIncludesMaxBonuses (3)
+// are now hard-coded constants in scoring.js and cannot be overridden via options.
 const baseOpts = {
   scoreBookmarkBase: 100,
   scoreTabBase: 70,
@@ -12,14 +14,11 @@ const baseOpts = {
   scoreSearchEngineBase: 30,
   scoreCustomSearchEngineBase: 400,
   scoreDirectUrlScore: 500,
-  scoreTitleWeight: 1,
   scoreTagWeight: 1,
   scoreUrlWeight: 1,
   scoreFolderWeight: 1,
   scoreBookmarkOpenTabBonus: 0,
   scoreExactIncludesBonus: 0,
-  scoreExactIncludesBonusMinChars: 1,
-  scoreExactIncludesMaxBonuses: Infinity,
   scoreExactStartsWithBonus: 0,
   scoreExactEqualsBonus: 0,
   scoreExactTagMatchBonus: 0,
@@ -228,10 +227,11 @@ describe('scoring', () => {
     expect(score).toBeCloseTo(110)
   })
 
-  it('allows numeric tokens shorter than the min character threshold', () => {
+  it('allows numeric tokens shorter than the min character threshold (3 chars)', () => {
+    // Note: scoreExactIncludesBonusMinChars is now hard-coded to 3
     const score = scoreFor({
       searchTerm: '42',
-      opts: { scoreExactIncludesBonus: 5, scoreExactIncludesBonusMinChars: 3 },
+      opts: { scoreExactIncludesBonus: 5 },
       result: { title: 'version 42 release' },
     })
 
@@ -258,14 +258,17 @@ describe('scoring', () => {
     expect(score).toBeCloseTo(70)
   })
 
-  it('limits substring bonuses when max cap is configured', () => {
+  it('limits substring bonuses to max cap of 3 (hard-coded)', () => {
+    // Note: scoreExactIncludesMaxBonuses is now hard-coded to 3
+    // Use 4 terms to verify the cap is applied
     const score = scoreFor({
-      searchTerm: 'alpha beta',
-      opts: { scoreExactIncludesBonus: 5, scoreExactIncludesMaxBonuses: 1 },
-      result: { url: 'https://example.test/alpha-beta' },
+      searchTerm: 'alpha beta gamma delta',
+      opts: { scoreExactIncludesBonus: 5 },
+      result: { url: 'https://example.test/alpha-beta-gamma-delta' },
     })
 
-    expect(score).toBeCloseTo(105)
+    // Only 3 bonuses should be applied (capped), not 4: 100 + (5 * 3) = 115
+    expect(score).toBeCloseTo(115)
   })
 
   it('adds phrase bonus when the entire query appears in the title', () => {
@@ -629,14 +632,15 @@ describe('scoring', () => {
   })
 
   it('applies includes bonuses in priority order (title > url > tags > folder)', () => {
+    // Note: scoreTitleWeight is now hard-coded to 1, but we can still verify
+    // that title match takes priority over other fields
     const scoreWith = scoreFor({
       searchTerm: 'priority',
       opts: {
         scoreExactIncludesBonus: 5,
-        scoreTitleWeight: 2,
-        scoreUrlWeight: 1,
-        scoreTagWeight: 1,
-        scoreFolderWeight: 1,
+        scoreUrlWeight: 0.6,
+        scoreTagWeight: 0.7,
+        scoreFolderWeight: 0.5,
       },
       result: {
         title: 'priority test',
@@ -646,8 +650,8 @@ describe('scoring', () => {
       },
     })
 
-    // Should apply title weight bonus (5 * 2 = 10 added)
-    expect(scoreWith).toBeCloseTo(110)
+    // Should apply title weight bonus (5 * 1 = 5 added) since title takes priority
+    expect(scoreWith).toBeCloseTo(105)
   })
 
   describe('Tag scoring scenarios (real-world use cases)', () => {
@@ -678,7 +682,7 @@ describe('scoring', () => {
         opts: {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 10,
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {
@@ -700,7 +704,7 @@ describe('scoring', () => {
         opts: {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 10,
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {
@@ -716,7 +720,7 @@ describe('scoring', () => {
         opts: {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 10,
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {
@@ -762,9 +766,9 @@ describe('scoring', () => {
         searchTerm: 'tutorial',
         opts: {
           scoreExactIncludesBonus: 10,
-          scoreExactIncludesBonusMinChars: 3,
+
           scoreExactTagMatchBonus: 10,
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {
@@ -779,9 +783,9 @@ describe('scoring', () => {
         searchTerm: 'tutorial',
         opts: {
           scoreExactIncludesBonus: 10,
-          scoreExactIncludesBonusMinChars: 3,
+
           scoreExactTagMatchBonus: 10,
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {
@@ -807,7 +811,7 @@ describe('scoring', () => {
         opts: {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 0, // disabled
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {
@@ -823,7 +827,7 @@ describe('scoring', () => {
         opts: {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 0,
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {

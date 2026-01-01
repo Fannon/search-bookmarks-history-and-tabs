@@ -138,7 +138,7 @@ export async function renderSearchResults() {
 
       itemsHTML.push(`
         <li class="${typeClass}"${originalUrlAttr} x-index="${i}"${originalIdAttr}
-            style="border-left: ${opts.colorStripeWidth}px solid ${colorValue}">
+            style="border-left-color: ${colorValue}">
           ${
             resultEntry.type === 'bookmark'
               ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(

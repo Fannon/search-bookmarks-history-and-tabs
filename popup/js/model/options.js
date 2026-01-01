@@ -64,11 +64,6 @@ export const defaultOptions = {
   //////////////////////////////////////////
   // COLORS AND STYLE                     //
   //////////////////////////////////////////
-
-  /**
-   * Width of the left color marker in search results in pixels
-   */
-  colorStripeWidth: 5,
   /**
    * Color for bookmark results, expressed as CSS color
    */
@@ -301,8 +296,6 @@ export const defaultOptions = {
   // FIELD WEIGHTS
   // Depending on in which field the search match was found,
   // the match gets a multiplier applied on how important the match is.
-  /** Weight for a title match*/
-  scoreTitleWeight: 1,
   /** Weight for a tag match*/
   scoreTagWeight: 0.7,
   /** Weight for a URL match*/
@@ -323,14 +316,7 @@ export const defaultOptions = {
    * For each exact "includes" match we add some bonus points
    */
   scoreExactIncludesBonus: 5,
-  /**
-   * Maximum number of substring bonuses per result (prevents noisy documents from stacking).
-   */
-  scoreExactIncludesMaxBonuses: 3,
-  /**
-   * The minimum characters a search term needs to have to consider a exact includes match
-   */
-  scoreExactIncludesBonusMinChars: 3,
+
   /**
    * Additional score points if title or url starts exactly with the search text.
    * This comes on top of an include bonus.
@@ -394,12 +380,6 @@ export const defaultOptions = {
 
   // Those are only meant for power users who know what they're doing
   // And those options may also not be long-time stable
-
-  /**
-   * If the extension detects that the title is just the URL of the link,
-   * it gets shortened so the result entries are not swamped by long URL patterns
-   */
-  titleLengthRestrictionForUrls: 80,
 
   /**
    * Customized options for the fuzzy search library uFuzzy ('@leeoniya/ufuzzy')

@@ -80,7 +80,6 @@ async function setupSearchNavigation({ results = createResults(), opts = {} } = 
     },
     opts: {
       displaySearchMatchHighlight: true,
-      colorStripeWidth: 4,
       bookmarkColor: '#111',
       tabColor: '#222',
       displayTags: true,

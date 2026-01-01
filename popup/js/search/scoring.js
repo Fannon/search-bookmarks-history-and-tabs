@@ -63,8 +63,6 @@ export function calculateFinalScore(results, searchTerm) {
     scoreExactTagMatchBonus,
     scoreExactFolderMatchBonus,
     scoreExactIncludesBonus,
-    scoreExactIncludesBonusMinChars,
-    scoreExactIncludesMaxBonuses,
     scoreExactPhraseTitleBonus,
     scoreExactPhraseUrlBonus,
     scoreVisitedBonusScore,
@@ -72,12 +70,16 @@ export function calculateFinalScore(results, searchTerm) {
     scoreRecentBonusScoreMaximum,
     historyDaysAgo,
     scoreCustomBonusScore,
-    scoreTitleWeight,
     scoreUrlWeight,
     scoreTagWeight,
     scoreFolderWeight,
     scoreBookmarkOpenTabBonus,
   } = opts
+
+  // Hard-coded scoring constants (not user-configurable)
+  const scoreTitleWeight = 1
+  const scoreExactIncludesBonusMinChars = 3
+  const scoreExactIncludesMaxBonuses = 3
 
   // Build all term arrays in a single pass
   const tagTerms = []

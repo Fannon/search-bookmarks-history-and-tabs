@@ -16,7 +16,6 @@ You can customize these options in the extension settings using YAML or JSON for
 
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `colorStripeWidth` | number | `5` | Width of the left color marker in search results in pixels. |
 | `bookmarkColor` | string | `'#3c8d8d'` | Color for bookmark results (CSS color). |
 | `tabColor` | string | `'#b89aff'` | Color for tab results (CSS color). |
 | `historyColor` | string | `'#9ece2f'` | Color for history results (CSS color). |
@@ -88,14 +87,11 @@ You can customize these options in the extension settings using YAML or JSON for
 | `scoreSearchEngineBase` | number | `30` | Base score for search engine choices. |
 | `scoreCustomSearchEngineBase` | number | `400` | Base score for custom search engine choices. |
 | `scoreDirectUrlScore` | number | `500` | Base score for direct URL results. |
-| `scoreTitleWeight` | number | `1` | Weight for a title match. |
 | `scoreTagWeight` | number | `0.7` | Weight for a tag match. |
 | `scoreUrlWeight` | number | `0.6` | Weight for a URL match. |
 | `scoreFolderWeight` | number | `0.5` | Weight for a folder match. |
 | `scoreCustomBonusScore` | boolean | `true` | Enable custom bonus scores in bookmark titles (e.g., `Title +20`). |
 | `scoreExactIncludesBonus` | number | `5` | Bonus points for each exact "includes" match. |
-| `scoreExactIncludesMaxBonuses` | number | `3` | Max number of substring bonuses per result. |
-| `scoreExactIncludesBonusMinChars` | number | `3` | Min characters for exact includes match. |
 | `scoreExactStartsWithBonus` | number | `10` | Bonus if title/URL starts exactly with search text. |
 | `scoreExactEqualsBonus` | number | `20` | Bonus if title matches exactly with search text. |
 | `scoreExactTagMatchBonus` | number | `15` | Bonus for exact match of a search term tag. |
@@ -111,7 +107,6 @@ You can customize these options in the extension settings using YAML or JSON for
 
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `titleLengthRestrictionForUrls` | number | `80` | Shorten title if it's just the URL. |
 | `uFuzzyOptions` | object | `{}` | Customized options for uFuzzy library. |
 
 ---
