@@ -385,19 +385,8 @@ function highlightResults(results, searchTerm) {
   for (let i = 0; i < resultsLen; i++) {
     const entry = results[i]
 
-    const title = entry.title
-    const url = entry.url
-    const escapedUrl = escapeHtml(url)
-
-    // Optimization: avoid redundant highlighting if title and URL are the same
-    if (!title || title === url) {
-      const highlighted = escapedUrl.replace(highlightRegex, '<mark>$1</mark>')
-      entry.highlightedTitle = highlighted
-      entry.highlightedUrl = highlighted
-    } else {
-      entry.highlightedTitle = highlightMatches(title, highlightRegex)
-      entry.highlightedUrl = escapedUrl.replace(highlightRegex, '<mark>$1</mark>')
-    }
+    entry.highlightedTitle = highlightMatches(entry.title || entry.url, highlightRegex)
+    entry.highlightedUrl = highlightMatches(entry.url, highlightRegex)
 
     const tagsArray = entry.tagsArray
     if (tagsArray) {
