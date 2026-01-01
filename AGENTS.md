@@ -1,155 +1,103 @@
 # Agent Guidelines
 
-This document provides context and guidelines for AI coding agents working on this codebase.
+Context and guidelines for AI agents working on this codebase.
 
 ## Project Context
 
-**This is a browser extension** that provides (fuzzy) search across bookmarks, browser history, and open tabs.
+**Browser extension** for (fuzzy) search across bookmarks, history, and tabs.
 
-### Key Characteristics
-
-- **Stateless**: The extension stores nothing except user options. Every time the popup opens, it starts fresh from the init phase, loading all data from browser APIs.
-- **No background process**: There is no persistent background script. The extension only runs when the user explicitly opens the popup.
-- **Privacy-focused**: No external network requests, no telemetry, no data collection.
-- **Performance-critical**: Users type search queries character-by-character. The search must feel instant (<16ms for 60fps). Large bookmark/history collections (5,000+ items) are common.
+- **Stateless**: No storage except user options. Loads fresh on every popup open.
+- **No Background Process**: Runs only when popup is open.
+- **Privacy**: No network, telemetry, or data collection.
+- **Performance**: Instant search (<16ms) for 10k+ items.
 
 ### Execution Flow
 
-1. **Init Phase** (`initSearch.js`): Load user options → fetch bookmarks/tabs/history from browser APIs → pre-normalize data for fast searching
-2. **Idle Phase**: Show recent tabs and bookmarks matching current page URL
-3. **Search Phase**: User types → debounced search triggered → results scored/sorted → rendered
-4. **Action Phase**: User selects result → navigate to URL or switch to tab
+1. **Init**: Load options → fetch data → pre-normalize.
+2. **Idle**: Show recent tags/bookmarks.
+3. **Search**: Debounced search → score/sort → render.
+4. **Action**: Selection → switch to tab or navigate.
 
 ### Architecture Overview
 
-```
+```text
 popup/
-├── js/
-│   ├── init*.js          # Entry points (one per HTML page)
-│   ├── helper/           # Pure utilities (DOM, browser API wrappers, formatting)
-│   ├── model/            # Data structures and configuration (options.js, searchData.js)
-│   ├── search/           # Search algorithms and orchestration
-│   │   ├── common.js         # Main search coordinator
-│   │   ├── simpleSearch.js   # Precise (exact-match) search
-│   │   ├── fuzzySearch.js    # Fuzzy (approximate) search using uFuzzy
-│   │   ├── taxonomySearch.js # Tag (#) and folder (~) filtering
-│   │   ├── queryParser.js    # Search mode detection
-│   │   ├── scoring.js        # Result ranking algorithm
-│   │   ├── searchEngines.js  # Search engine result generation
-│   │   └── defaultResults.js # Default results when no search term
-│   └── view/             # UI rendering and DOM updates
-├── css/                  # Stylesheets
-└── lib/                  # Vendored third-party libraries (uFuzzy, Tagify, js-yaml)
+├─ js/
+│  ├─ init*.js             # Entry points
+│  ├─ helper/              # Pure utilities
+│  ├─ model/               # Data/Config
+│  ├─ search/              # Search logic
+│  │  ├─ common.js         # Coordinator
+│  │  ├─ simpleSearch.js   # Exact match search
+│  │  ├─ fuzzySearch.js    # uFuzzy search
+│  │  ├─ taxonomySearch.js # Tag/Folder
+│  │  ├─ queryParser.js    # Mode detection
+│  │  ├─ scoring.js        # Ranking algorithm
+│  │  ├─ searchEngines.js  # Engine results
+│  │  └─ defaultResults.js # Fallback results
+│  └─ view/                # UI rendering
+├─ css/                    # Styles
+└─ lib/                    # Vendored libs
 ```
 
 ## Commands
 
-| Category | Command | Description |
-|----------|---------|-------------|
-| **Build** | `npm run build` | Full production build (clean → libs → bundle → manifests → dist → format → size) |
-| | `npm run watch` | Auto-rebuild on changes (development) |
-| | `npm run clean` | Remove build artifacts |
-| | `npm run build:bundle` | Bundle JS/CSS only |
-| **Run** | `npm run start` | Serve popup with mock data at localhost:8080 |
-| | `npm run start:dist` | Serve production build |
-| **Test** | `npm run lint` | Biome lint and format check |
-| | `npm run lint:fix` | Auto-fix lint and format issues |
-| | `npm run test` | Run all Jest unit tests |
-| | `npm run test <file>` | Run specific test file |
-| | `npm run test:watch` | Run tests in watch mode |
-| | `npm run test:unit:coverage` | Run tests with coverage report |
-| | `npm run test:e2e` | Run Playwright E2E tests (chromium) |
-| | `npm run test:e2e:firefox` | Run E2E tests on Firefox |
-| **Perf** | `npm run test:perf` | Run all performance benchmarks with summary |
-| **Analysis** | `npm run size` | Report bundle sizes |
-| | `npm run analyze` | Code analysis and diagnostics |
+- **Build**:
+  - `npm run build`: Full build (libs, bundle, manifests, dist, format)
+  - `npm run watch`: Dev mode (auto-rebuild)
+  - `npm run clean`: Remove build artifacts
+  - `npm run build:bundle`: JS/CSS bundle only
+- **Run**:
+  - `npm run start`: Mock data (localhost:8080)
+  - `npm run start:dist`: Serve production build
+- **Test**:
+  - `npm run lint`: Biome lint/format check (`:fix` to auto-fix)
+  - `npm run test`: All unit tests (`npm run test <file>` for specific)
+  - `npm run test:watch`: Jest watch mode
+  - `npm run test:unit:coverage`: Coverage report
+  - `npm run test:e2e`: Playwright E2E (chromium/firefox)
+- **Perf**:
+  - `npm run test:perf`: All benchmarks + summary
+- **Analysis**:
+  - `npm run size`: Bundle size report
+  - `npm run analyze`: Code diagnostics
 
 ## Verify Loops
 
-Before committing changes, run the appropriate verify loop based on what you changed.
-
-### Standard Verify Loop (most changes)
-
-```bash
-npm run lint                    # 1. Fix any lint/format issues first
-npm run test <changed-file>     # 2. Run unit tests for affected modules
-npm run test:e2e                # 3. Run E2E tests if UI/behavior changed
-```
-
-### Performance Verify Loop (search, scoring, rendering changes)
-
-```bash
-npm run lint                    # 1. Fix lint issues
-npm run test <changed-file>     # 2. Unit tests pass
-npm run test:perf               # 3. Performance benchmarks pass
-
-# Verify no regression:
-# - Search: <5ms for 1,000 items, <20ms for 5,000 items
-# - Render: <16ms for 24 results (60fps threshold)
-```
-
-### Full Verify Loop (before PR)
-
-```bash
-npm run lint                    # 1. Lint passes
-npm run test                    # 2. All unit tests pass
-npm run test:e2e                # 3. All E2E tests pass
-npm run test:perf               # 4. No performance regression
-npm run build                   # 5. Production build succeeds
-```
+- **Standard**: `lint` → `test <file>` → `test:e2e` (UI/behavior)
+- **Performance**: `lint` → `test <file>` → `test:perf`
+  - *Targets*: Search <20ms (5k items), Render <16ms (60fps)
+- **Full**: `lint` → `test` → `test:e2e` → `test:perf` → `build`
 
 ## Performance Guidelines
 
-Performance is critical for this extension. Follow these rules:
+Search must feel instant (<16ms). 5k+ item collections are common.
 
-### Hot Path Rules
+- **Zero-DOM Highlighting**: Pre-compute `<mark>` tags as strings (no DOM ops during search).
+- **Pre-normalization**: Lowercase and prepare search strings during `init`.
+- **Avoid Object Spread**: Use direct property assignment in hot loops.
+- **Regex Caching**: Compile patterns once, reuse across iterations.
+- **Compact Templates**: Minimize whitespace in HTML templates for faster `innerHTML`.
+- **Early Limiting**: Filter and slice before expensive operations.
 
-1. **No DOM manipulation during search** — Use Zero-DOM highlighting (pre-compute `<mark>` tags as strings)
-2. **Pre-normalize data at init** — Create lowercase versions, search strings, etc. during data loading
-3. **Avoid object spread in loops** — Use direct property assignment for cloning in hot paths
-4. **Cache regex patterns** — Compile once, reuse across iterations
-5. **Minimize template whitespace** — Keep HTML template literals compact to improve `innerHTML` performance
-6. **Limit results early** — Filter and slice before expensive operations
-
-### Measuring Performance
-
-```bash
-# Run micro-benchmarks (search algorithm speed)
-npm run test -- popup/js/__tests__/performance.test.js
-
-# Run comparison benchmarks (fuzzy vs precise)
-npm run test -- popup/js/__tests__/comparison.test.js
-
-# Run E2E performance tests (real browser timing)
-npm run test:e2e -- playwright/tests/performance.spec.js
-```
-
-### Performance Verification Workflow
-
-When making changes that could affect performance:
-
-1. **Establish baseline** — Run `npm run test:perf` on `main` branch before changes
-2. **Note key metrics** — Record "Search completed in Xms" and "Render took Yms" outputs
-3. **Apply changes** — Implement your modifications
-4. **Compare results** — Run `npm run test:perf` again and compare against baseline
-5. **Verify no regression** — Ensure metrics are not significantly worse (ideally same or better)
+### Measuring & Workflow
+- **Micro**: `npm run test -- performance.test.js`
+- **Algorithm**: `npm run test -- comparison.test.js`
+- **E2E**: `npm run test:e2e -- performance.spec.js`
+- **Workflow**: Establish baseline (`main`) → Apply → Compare (`test:perf`).
 
 ## Coding Standards
 
-- **ESM modules**: All source uses ES modules
-- **No TypeScript**: Vanilla JavaScript throughout
-- **Biome config**: 2 spaces, single quotes, no trailing semicolons
-- **JSDoc comments**: Document exports with `@param` and `@returns`
-- **File headers**: Each module starts with `@file` describing its purpose
+- **Tech**: ESM, Vanilla JS (No TS).
+- **Style**: Biome (2 spaces, single quotes, no semicolons).
+- **Docs**: JSDoc `@param`/`@returns` for exports; `@file` header for modules.
 
 ### Module Responsibilities
 
-| Directory | Purpose | Example |
-|-----------|---------|---------|
-| `helper/` | Pure utility functions, no side effects | `escapeHtml()`, `cleanUpUrl()` |
-| `model/` | Data loading and configuration | `getEffectiveOptions()` |
-| `search/` | Search algorithms and orchestration | `simpleSearch()`, `calculateFinalScore()` |
-| `view/` | DOM updates and UI rendering | `renderSearchResults()` |
+- `helper/`: Pure utilities, no side effects (e.g., `escapeHtml`, `cleanUpUrl`)
+- `model/`: Data loading/config (e.g., `getEffectiveOptions`)
+- `search/`: Algorithms/orchestration (e.g., `fuzzySearch`, `scoring`)
+- `view/`: DOM updates/rendering (e.g., `renderSearchResults`)
 
 ## Common Pitfalls
 
