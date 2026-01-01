@@ -81,6 +81,22 @@ export function calculateFinalScore(results, searchTerm) {
   const scoreExactIncludesBonusMinChars = 3
   const scoreExactIncludesMaxBonuses = 3
 
+  // Pre-calculate base scores for each type to avoid repeated lookups
+  const baseScores = {
+    bookmark: opts.scoreBookmarkBase || 0,
+    tab: opts.scoreTabBase || 0,
+    history: opts.scoreHistoryBase || 0,
+    search: opts.scoreSearchEngineBase || 0,
+    customSearch: opts.scoreCustomSearchEngineBase || 0,
+    direct: opts.scoreDirectUrlScore || 0,
+  }
+
+  // Pre-calculate weighted bonuses
+  const startsWithUrlBonus = scoreExactStartsWithBonus * scoreUrlWeight
+  const includesUrlBonus = scoreExactIncludesBonus * scoreUrlWeight
+  const includesTagBonus = scoreExactIncludesBonus * scoreTagWeight
+  const includesFolderBonus = scoreExactIncludesBonus * scoreFolderWeight
+
   // Build all term arrays in a single pass
   const tagTerms = []
   const folderTerms = []
@@ -112,7 +128,7 @@ export function calculateFinalScore(results, searchTerm) {
   // Pre-calculate URL-normalized terms for the includes check
   const normalizedUrlTerms = canCheckIncludes ? includeTerms.map((term) => term.replace(WHITESPACE_REGEX, '-')) : []
 
-  const includesBonusCap = Number.isFinite(scoreExactIncludesMaxBonuses) ? scoreExactIncludesMaxBonuses : Infinity
+  const includesBonusCap = Number.isFinite(scoreExactIncludesMaxBonuses) ? scoreExactIncludesMaxBonuses : 999
   const maxRecentSeconds = historyDaysAgo * 24 * 60 * 60
   const hasExactStartsWithBonus = Boolean(scoreExactStartsWithBonus)
   const hasExactEqualsBonus = Boolean(scoreExactEqualsBonus)
@@ -131,13 +147,13 @@ export function calculateFinalScore(results, searchTerm) {
 
   for (let i = 0; i < results.length; i++) {
     const el = results[i]
-    const baseKey = BASE_SCORE_KEYS[el.type]
-    if (!baseKey) {
-      throw new Error(`Search result type "${el.type}" not supported`)
-    }
+    const type = el.type
 
     // STEP 1: Start with base score (bookmark=100, tab=70, history=45, etc.)
-    let score = opts[baseKey]
+    let score = baseScores[type]
+    if (score === undefined) {
+      throw new Error(`Search result type "${type}" not supported`)
+    }
 
     if (hasSearchTerm) {
       // STEP 3A: Exact match bonuses
@@ -148,7 +164,7 @@ export function calculateFinalScore(results, searchTerm) {
         if (titleLower?.startsWith(normalizedSearchTerm)) {
           score += scoreExactStartsWithBonus
         } else if (normalizedUrl?.startsWith(hyphenatedSearchTerm)) {
-          score += scoreExactStartsWithBonus * scoreUrlWeight
+          score += startsWithUrlBonus
         }
       }
 
@@ -160,9 +176,11 @@ export function calculateFinalScore(results, searchTerm) {
       // Award bonus for each exact tag name match
       if (hasExactTagMatchBonus && tagTermsLen > 0 && el.tags) {
         const tags = el.tagsArrayLower
-        for (let j = 0; j < tagTermsLen; j++) {
-          if (tags.includes(tagTerms[j])) {
-            score += scoreExactTagMatchBonus
+        if (tags) {
+          for (let j = 0; j < tagTermsLen; j++) {
+            if (tags.includes(tagTerms[j])) {
+              score += scoreExactTagMatchBonus
+            }
           }
         }
       }
@@ -170,9 +188,11 @@ export function calculateFinalScore(results, searchTerm) {
       // Award bonus for each exact folder name match
       if (hasExactFolderMatchBonus && folderTermsLen > 0 && el.folder) {
         const folders = el.folderArrayLower
-        for (let j = 0; j < folderTermsLen; j++) {
-          if (folders.includes(folderTerms[j])) {
-            score += scoreExactFolderMatchBonus
+        if (folders) {
+          for (let j = 0; j < folderTermsLen; j++) {
+            if (folders.includes(folderTerms[j])) {
+              score += scoreExactFolderMatchBonus
+            }
           }
         }
       }
@@ -196,13 +216,13 @@ export function calculateFinalScore(results, searchTerm) {
             score += scoreExactIncludesBonus
             includesBonusesAwarded++
           } else if (normalizedUrl?.includes(normalizedUrlTerm)) {
-            score += scoreExactIncludesBonus * scoreUrlWeight
+            score += includesUrlBonus
             includesBonusesAwarded++
           } else if (normalizedTags?.includes(term)) {
-            score += scoreExactIncludesBonus * scoreTagWeight
+            score += includesTagBonus
             includesBonusesAwarded++
           } else if (normalizedFolder?.includes(term)) {
-            score += scoreExactIncludesBonus * scoreFolderWeight
+            score += includesFolderBonus
             includesBonusesAwarded++
           }
         }
@@ -210,10 +230,10 @@ export function calculateFinalScore(results, searchTerm) {
 
       // Award bonus for full phrase match (multi-word searches only)
       if (rawSearchTermParts.length > 1) {
-        if (hasExactPhraseTitleBonus && titleLower?.includes(normalizedSearchTerm)) {
+        if (hasExactPhraseTitleBonus && titleLower && titleLower.includes(normalizedSearchTerm)) {
           score += scoreExactPhraseTitleBonus
         }
-        if (hasExactPhraseUrlBonus && normalizedUrl?.includes(hyphenatedSearchTerm)) {
+        if (hasExactPhraseUrlBonus && normalizedUrl && normalizedUrl.includes(hyphenatedSearchTerm)) {
           score += scoreExactPhraseUrlBonus
         }
       }
@@ -221,18 +241,23 @@ export function calculateFinalScore(results, searchTerm) {
 
     // STEP 4: Behavioral bonuses
     if (hasVisitedBonus && el.visitCount) {
-      score += Math.min(scoreVisitedBonusScoreMaximum, el.visitCount * scoreVisitedBonusScore)
+      const visitBonus = el.visitCount * scoreVisitedBonusScore
+      score += visitBonus > scoreVisitedBonusScoreMaximum ? scoreVisitedBonusScoreMaximum : visitBonus
     }
 
     if (hasRecentBonus && el.lastVisitSecondsAgo != null) {
-      if (maxRecentSeconds > 0 && el.lastVisitSecondsAgo > 0) {
-        score += Math.max(0, (1 - el.lastVisitSecondsAgo / maxRecentSeconds) * scoreRecentBonusScoreMaximum)
-      } else if (el.lastVisitSecondsAgo === 0) {
+      const lastVisitSecondsAgo = el.lastVisitSecondsAgo
+      if (maxRecentSeconds > 0 && lastVisitSecondsAgo > 0) {
+        const recentBonus = (1 - lastVisitSecondsAgo / maxRecentSeconds) * scoreRecentBonusScoreMaximum
+        if (recentBonus > 0) {
+          score += recentBonus
+        }
+      } else if (lastVisitSecondsAgo === 0) {
         score += scoreRecentBonusScoreMaximum
       }
     }
 
-    if (hasBookmarkOpenTabBonus && el.type === 'bookmark' && el.tab) {
+    if (hasBookmarkOpenTabBonus && type === 'bookmark' && el.tab) {
       score += scoreBookmarkOpenTabBonus
     }
 

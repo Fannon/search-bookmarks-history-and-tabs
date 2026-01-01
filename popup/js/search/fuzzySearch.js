@@ -162,14 +162,15 @@ function containsNonASCII(str) {
  * Creates result objects for matched indices.
  */
 function createResultObjects(data, idxs) {
-  const results = []
-  if (idxs && idxs.length > 0) {
-    for (let i = 0; i < idxs.length; i++) {
-      const result = data[idxs[i]]
-      results.push({
-        ...result,
-        searchApproach: 'fuzzy',
-      })
+  if (!idxs || idxs.length === 0) {
+    return []
+  }
+  const count = idxs.length
+  const results = new Array(count)
+  for (let i = 0; i < count; i++) {
+    results[i] = {
+      ...data[idxs[i]],
+      searchApproach: 'fuzzy',
     }
   }
   return results
