@@ -44,7 +44,7 @@ The extension is very customizable (see [user options](#user-configuration)) and
   - Start your query with `#`: only **bookmarks with the tag** will be returned (exact "starts with" search)
     - Supports AND search, e.g. search for `#github #pr` to only get results which have both tags
   - Start your query with `~`: only **bookmarks within the folder** will be returned (exact "starts with" search)
-    - Supports AND search, e.g. search for `~Sites ~Blogs` to only get results which have both tags
+    - Supports AND search, e.g. search for `~Sites ~Blogs` to only get results in both folders
   - Start your query with `b ` (including space): only **bookmarks** will be searched.
   - Start your query with `h ` (including space): only **history** and **open tabs** will be searched.
   - Start your query with `t ` (including space): only **open tabs** will be searched.
@@ -55,8 +55,8 @@ The extension is very customizable (see [user options](#user-configuration)) and
     - Default: Start your query with `d ` (including space): Do a dict.cc search.
   - A search term that can be interpreted as URL (e.g. `example.com`) can be navigated to directly.
 - **Emacs / Vim Navigation**:
-  - `Ctrl+J` and `Ctrl+N` to navigate search results up
-  - `Ctrl+K` and `Ctrl+P` to navigate search results down
+  - `Ctrl+N` and `Ctrl+J` to navigate search results down
+  - `Ctrl+K` and `Ctrl+P` to navigate search results up
 - **Special Browser Pages**: You can add special browser pages to your bookmarks, like `chrome://downloads`.
 - **Custom Scores**: Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
   - Examples: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`
@@ -74,10 +74,9 @@ Finding and setting options is a bit technical, though.
 
 The user options are written in [YAML](https://en.wikipedia.org/wiki/YAML) or [JSON](https://en.wikipedia.org/wiki/JSON) notation.
 
-For now, there is no nice options overview, so you have to find them in the [popup/js/model/options.js](popup/js/model/options.js) file in the `defaultOptions` object.
-From there you can see the available options, their names, default values and descriptions.
-
 > 📘 **See [OPTIONS.md](./OPTIONS.md) for a comprehensive list of all available options.**
+>
+> You can also browse the source in [options.js](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/model/options.js) for inline documentation.
 
 When defining your custom config, you only need to define the options that you want to overwrite from the defaults.
 
@@ -99,7 +98,6 @@ Here is a suggestion for low-performance machines:
 
 ```yaml
 searchStrategy: precise # Precise search is faster than fuzzy search.
-searchMinMatchCharLength: 2 # Start searching only when at least 2 characters are entered
 displaySearchMatchHighlight: false # Not highlighting search matches improves render performance.
 searchMaxResults: 20 # Number of search results can be further limited
 historyMaxItems: 512 # Number of browser history items can be further reduced
@@ -118,7 +116,6 @@ historyIgnoreList:
   - extension://
   - http://localhost
   - http://127.0.0.1
-colorStripeWidth: 4 # Customize width of search result color stripe
 scoreTabBase: 70 # customize base score for open tabs
 detectBookmarksWithOpenTabs: true
 detectDuplicateBookmarks: true
@@ -144,7 +141,7 @@ customSearchEngines:
     blank: https://www.npmjs.com
 ```
 
-In case of making multilingual search (CJK) correctly, you may need to tweak [uFuzzy](https://github.com/leeoniya/uFuzzy) options via option `ufuzzyOptions`, for example:
+In case of making multilingual search (CJK) correctly, you may need to tweak [uFuzzy](https://github.com/leeoniya/uFuzzy) options via option `uFuzzyOptions`, for example:
 
 ```yaml
 # make CJK chars work for fuzzy search
@@ -156,20 +153,29 @@ uFuzzyOptions:
 
 The scoring system calculates a relevance score for each search result using a 5-step process:
 
-1. **Base Score** - Each result type (bookmark, tab, history, search engine) starts with a different base score (e.g. `scoreBookmarkBase: 100`, `scoreTabBase: 70`)
-2. **Search Quality Multiplier** - The base score is multiplied by the search library score (0-1), which reflects how good the match is. Fuzzy/precise search algorithms return this quality score.
-3. **Field-Specific Bonuses** - Additional points are awarded based on:
-   - Exact matches: `scoreExactStartsWithBonus`, `scoreExactEqualsBonus` if title/URL starts with or equals the search term
-   - Exact tag/folder matches: `scoreExactTagMatchBonus`, `scoreExactFolderMatchBonus` for direct tag/folder matches
-   - Substring matches: `scoreExactIncludesBonus` weighted by field importance (title=1.0, tag=0.7, url=0.6, folder=0.5)
-4. **Behavioral Bonuses** - Additional points based on usage patterns:
-   - `scoreVisitedBonusScore` - Points per visit (up to `scoreVisitedBonusScoreMaximum`)
-   - `scoreRecentBonusScoreMaximum` - Bonus for recently visited items
-5. **Custom Bonus** - User-defined bonus via `+<number>` notation in bookmark titles (if `scoreCustomBonusScore` is enabled)
+1. **Base Score** — Each result type starts with a different base score:
+   - Bookmark: `100`, Tab: `70`, History: `45`, Search Engine: `30`
+   - Custom search aliases and direct URLs score higher (`400`, `500`) to appear at the top
+
+2. **Search Quality Multiplier** — The base score is multiplied by the search algorithm's match quality (0–1). Poor fuzzy matches get reduced scores.
+
+3. **Match Bonuses** — Additional points for how the search term matches:
+   - **Starts-with bonus**: Title or URL begins with the search term (`scoreExactStartsWithBonus`)
+   - **Equals bonus**: Title exactly matches the search term (`scoreExactEqualsBonus`)
+   - **Tag/folder match**: Search term matches a tag or folder name exactly (`scoreExactTagMatchBonus`, `scoreExactFolderMatchBonus`)
+   - **Substring match**: Each search word found in title/url/tag/folder adds points (`scoreExactIncludesBonus`), weighted by field (title=1.0 > url=0.6 > tag=0.7 > folder=0.5), capped at 3 bonuses per result
+   - **Phrase match**: Multi-word searches get bonus when the full phrase appears in title or URL (`scoreExactPhraseTitleBonus`, `scoreExactPhraseUrlBonus`)
+
+4. **Usage Signals** — Points based on browsing behavior:
+   - **Visit count**: Points per visit from history (`scoreVisitedBonusScore`, up to `scoreVisitedBonusScoreMaximum`)
+   - **Recency**: Recently visited items get higher scores, scaling linearly from max to 0 over `historyDaysAgo`
+   - **Open tab**: Bookmarks that are currently open in a tab get a bonus (`scoreBookmarkOpenTabBonus`)
+
+5. **Custom Bonus** — User-defined boost via `+<number>` in bookmark titles (e.g., `Important Site +50 #work`)
 
 For detailed implementation and all scoring configuration options, see:
-- **[popup/js/search/scoring.js](popup/js/search/scoring.js)** - Core scoring algorithm with comprehensive documentation
-- **[popup/js/model/options.js](popup/js/model/options.js)** - Complete list of scoring configuration options
+- **[scoring.js](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/search/scoring.js)** — Core scoring algorithm with comprehensive documentation
+- **[OPTIONS.md](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/OPTIONS.md)** — Complete list of scoring configuration options
 
 ## Privacy / Data Protection
 

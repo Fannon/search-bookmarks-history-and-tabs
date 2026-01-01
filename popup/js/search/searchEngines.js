@@ -48,7 +48,6 @@ export function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlan
     url: cleanUpUrl(url),
     originalUrl: url,
     originalId: generateRandomId(),
-    searchScore: 1,
   }
 }
 

@@ -51,7 +51,6 @@ describe('getCustomSearchEngineResult', () => {
       type: 'search',
       title: 'Google: "javascript"',
       originalUrl: 'https://www.google.com/search?q=javascript',
-      searchScore: 1,
     })
     expect(result.originalId).toBeDefined()
   })
@@ -63,7 +62,6 @@ describe('getCustomSearchEngineResult', () => {
       type: 'search',
       title: 'SearchEngine: "test query"',
       originalUrl: 'https://example.com/search?q=test%20query',
-      searchScore: 1,
     })
   })
 

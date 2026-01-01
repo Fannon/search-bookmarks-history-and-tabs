@@ -7,6 +7,7 @@
 // Pre-compiled regexes for performance
 const TAXONOMY_PREFIX_REGEX = /^[#~]+/
 const WHITESPACE_REGEX = /\s+/g
+const NUMERIC_TERM_REGEX = /^\d+$/
 
 /**
  * Calculates the final search item score for each result
@@ -63,8 +64,6 @@ export function calculateFinalScore(results, searchTerm) {
     scoreExactTagMatchBonus,
     scoreExactFolderMatchBonus,
     scoreExactIncludesBonus,
-    scoreExactIncludesBonusMinChars,
-    scoreExactIncludesMaxBonuses,
     scoreExactPhraseTitleBonus,
     scoreExactPhraseUrlBonus,
     scoreVisitedBonusScore,
@@ -72,12 +71,15 @@ export function calculateFinalScore(results, searchTerm) {
     scoreRecentBonusScoreMaximum,
     historyDaysAgo,
     scoreCustomBonusScore,
-    scoreTitleWeight,
     scoreUrlWeight,
     scoreTagWeight,
     scoreFolderWeight,
     scoreBookmarkOpenTabBonus,
   } = opts
+
+  // Hard-coded scoring constants (not user-configurable)
+  const scoreExactIncludesBonusMinChars = 3
+  const scoreExactIncludesMaxBonuses = 3
 
   // Build all term arrays in a single pass
   const tagTerms = []
@@ -97,7 +99,7 @@ export function calculateFinalScore(results, searchTerm) {
     folderTerms.push(cleanedPart)
 
     // Add to includeTerms if meets min length or is numeric
-    if (cleanedPart.length >= scoreExactIncludesBonusMinChars || /^\d+$/.test(cleanedPart)) {
+    if (cleanedPart.length >= scoreExactIncludesBonusMinChars || NUMERIC_TERM_REGEX.test(cleanedPart)) {
       includeTerms.push(cleanedPart)
     }
   }
@@ -135,12 +137,7 @@ export function calculateFinalScore(results, searchTerm) {
     }
 
     // STEP 1: Start with base score (bookmark=100, tab=70, history=45, etc.)
-    let score = getBaseScoreForType(opts, baseKey)
-
-    // STEP 2: Multiply by search quality score (0-1 from fuzzy/precise search)
-    // This reduces score if the match quality is poor
-    const searchScoreMultiplier = el.searchScore ?? scoreTitleWeight
-    score = score * searchScoreMultiplier
+    let score = opts[baseKey]
 
     if (hasSearchTerm) {
       // STEP 3A: Exact match bonuses
@@ -149,7 +146,7 @@ export function calculateFinalScore(results, searchTerm) {
 
       if (hasExactStartsWithBonus) {
         if (titleLower?.startsWith(normalizedSearchTerm)) {
-          score += scoreExactStartsWithBonus * scoreTitleWeight
+          score += scoreExactStartsWithBonus
         } else if (normalizedUrl?.startsWith(hyphenatedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreUrlWeight
         }
@@ -157,7 +154,7 @@ export function calculateFinalScore(results, searchTerm) {
 
       // Award bonus if title exactly equals the search term
       if (hasExactEqualsBonus && titleLower === normalizedSearchTerm) {
-        score += scoreExactEqualsBonus * scoreTitleWeight
+        score += scoreExactEqualsBonus
       }
 
       // Award bonus for each exact tag name match
@@ -196,7 +193,7 @@ export function calculateFinalScore(results, searchTerm) {
 
           // Check fields in priority order - first match wins
           if (titleLower?.includes(term)) {
-            score += scoreExactIncludesBonus * scoreTitleWeight
+            score += scoreExactIncludesBonus
             includesBonusesAwarded++
           } else if (normalizedUrl?.includes(normalizedUrlTerm)) {
             score += scoreExactIncludesBonus * scoreUrlWeight
@@ -260,15 +257,4 @@ export const BASE_SCORE_KEYS = {
   search: 'scoreSearchEngineBase',
   customSearch: 'scoreCustomSearchEngineBase',
   direct: 'scoreDirectUrlScore',
-}
-
-/**
- * Resolves the base score for a given result type.
- *
- * @param {Record<string, number>} opts - Effective extension options.
- * @param {string} baseKey - The canonical base score option key.
- * @returns {number}
- */
-function getBaseScoreForType(opts, baseKey) {
-  return opts[baseKey]
 }

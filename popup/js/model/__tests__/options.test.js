@@ -210,7 +210,6 @@ describe('options model', () => {
       const requiredCategories = [
         'searchStrategy',
         'searchMaxResults',
-        'searchMinMatchCharLength',
         'bookmarkColor',
         'tabColor',
         'historyColor',
@@ -221,7 +220,6 @@ describe('options model', () => {
         'displayTags',
         'displayFolderName',
         'displaySearchMatchHighlight',
-        'scoreMinScore',
         'scoreBookmarkBase',
         'scoreTabBase',
       ]
@@ -240,17 +238,17 @@ describe('options model', () => {
       // Set user options
       await optionsModule.setUserOptions({
         searchMaxResults: 20,
-        colorStripeWidth: 5,
+        historyMaxItems: 2048,
       })
 
       // Get user options
       const userOptions = await optionsModule.getUserOptions()
-      expect(userOptions).toEqual({ searchMaxResults: 20, colorStripeWidth: 5 })
+      expect(userOptions).toEqual({ searchMaxResults: 20, historyMaxItems: 2048 })
 
       // Get effective options (should merge with defaults)
       const effectiveOptions = await optionsModule.getEffectiveOptions()
       expect(effectiveOptions.searchMaxResults).toBe(20)
-      expect(effectiveOptions.colorStripeWidth).toBe(5)
+      expect(effectiveOptions.historyMaxItems).toBe(2048)
       expect(effectiveOptions.bookmarkColor).toBe(optionsModule.defaultOptions.bookmarkColor)
 
       expect(mockPrintError).not.toHaveBeenCalled()

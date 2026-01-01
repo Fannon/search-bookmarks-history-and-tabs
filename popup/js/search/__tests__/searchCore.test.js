@@ -14,18 +14,13 @@ describe('executeSearch (Pure)', () => {
 
   const mockOptions = {
     searchStrategy: 'precise',
-    searchMinMatchCharLength: 2,
+    // Note: searchMinMatchCharLength is now hard-coded to 1
   }
 
   test('returns precise matches', async () => {
     const results = await executeSearch('react', 'bookmarks', mockData, mockOptions)
     expect(results).toHaveLength(1)
     expect(results[0].title).toBe('React Docs')
-  })
-
-  test('returns empty when below min char length', async () => {
-    const results = await executeSearch('r', 'bookmarks', mockData, mockOptions)
-    expect(results).toHaveLength(0)
   })
 
   test('handles taxonomy search for tags', async () => {

@@ -6,15 +6,16 @@ Please review the guidelines below before submitting changes.
 
 ## Getting Started
 
-- **Read the [README.md](./README.md)** for project overview, setup instructions, and usage details.
-- **Review [AGENTS.md](./AGENTS.md)** for architecture, data flow, and coding conventions.
+- **Read the [README.md](./README.md)** for project overview, features, and user configuration.
+- **Review [AGENTS.md](./AGENTS.md)** for architecture, commands, performance guidelines, and coding standards.
+- **See [OPTIONS.md](./OPTIONS.md)** for all available configuration options.
 - **Use Node.js 22 LTS or newer.** The build scripts rely on ESM and modern language features.
 
 ## Local Development
 
 ### Install and Build
 
-- Prerequisite: [Node.js](https://nodejs.org/en/) and a bash-compatible shell.
+- Prerequisite: [Node.js](https://nodejs.org/en/) v22 or newer and a bash-compatible shell.
 - Install dependencies with `npm install`.
 - Build bundles with `npm run build`. This generates the minified output in `dist/`
 - The locally built extension can be installed / side-loaded into browsers either on the root level (for local development state) or on the `/dist/chrome` level (for minified production build).
@@ -32,7 +33,7 @@ Please review the guidelines below before submitting changes.
   - `popup/js/**/__tests__/` groups Jest unit tests alongside their modules.
 - `playwright/tests/` stores end-to-end scenarios.
 - `images/` includes static assets referenced by the popup.
-- `dist/` contains minified product build outputs per browser (currently only `dist/chrome/`).
+- `dist/` contains the minified production build (`dist/chrome/`). Firefox now uses the same Chrome manifest.
 
 ### Developer Installation
 
@@ -58,7 +59,7 @@ Please review the guidelines below before submitting changes.
 - `npm run analyze` - Run code analysis helper (`bin/analyze-code.js`).
 - `npm run size` - Report bundle sizes after a build.
 
-See also: [Repository Guidelines](./AGENTS.md) and [LLM Agent Docs](./.github/copilot-instructions.md).
+See also: [AGENTS.md](./AGENTS.md) for architecture overview, verify loops, and performance guidelines.
 
 ## How to Contribute
 
@@ -92,13 +93,14 @@ npm install
 
 6. **Adding Features:**
 
-- For new search modes, update query parsing in `popup/js/search/common.js` and relevant search files.
-- Document changes in `README.md` and `popup/js/model/options.js` if user-configurable.
+- For new search modes, update query parsing in `popup/js/search/queryParser.js` and relevant search files.
+- Document changes in `README.md` and `OPTIONS.md` if user-configurable.
 
 7. **Pull Requests:**
 
 - Ensure your code is tested, linted, and documented.
-- Run `npm run lint`, `npm run test:unit`, and (when applicable) `npm run test:e2e` before opening a PR.
+- Run `npm run lint`, `npm run test`, and (when applicable) `npm run test:e2e` before opening a PR.
+- For search or rendering changes, also run `npm run test:perf` to check for performance regressions.
 - Reference related issues in your PR description.
 - Keep PRs focused and concise.
 

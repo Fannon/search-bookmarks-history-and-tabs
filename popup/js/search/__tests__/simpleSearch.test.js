@@ -33,7 +33,6 @@ describe('simpleSearch', () => {
     expect(results[0]).toMatchObject({
       originalId: 'bookmark-1',
       searchApproach: 'precise',
-      searchScore: 1,
     })
   })
 
@@ -52,7 +51,6 @@ describe('simpleSearch', () => {
     expect(results[0]).toMatchObject({
       originalId: 'tab-1',
       searchApproach: 'precise',
-      searchScore: 1,
     })
   })
 
@@ -71,7 +69,6 @@ describe('simpleSearch', () => {
     expect(results[0]).toMatchObject({
       originalId: 'history-1',
       searchApproach: 'precise',
-      searchScore: 1,
     })
   })
 

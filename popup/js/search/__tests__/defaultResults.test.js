@@ -54,8 +54,8 @@ describe('addDefaultEntries', () => {
       const results = await addDefaultEntries()
 
       expect(results).toEqual([
-        { id: 1, title: 'History 1', url: 'https://one.test', searchScore: 1 },
-        { id: 2, title: 'History 2', url: 'https://two.test', searchScore: 1 },
+        { id: 1, title: 'History 1', url: 'https://one.test' },
+        { id: 2, title: 'History 2', url: 'https://two.test' },
       ])
       expect(ext.model.result).toBe(results)
     })
@@ -75,7 +75,6 @@ describe('addDefaultEntries', () => {
       expect(results.map((r) => r.id)).toEqual([2, 3, 1])
       expect(results[0]).toMatchObject({
         id: 2,
-        searchScore: 1,
       })
     })
   })
@@ -91,8 +90,8 @@ describe('addDefaultEntries', () => {
       const results = await addDefaultEntries()
 
       expect(results).toEqual([
-        { id: 1, title: 'Bookmark 1', searchScore: 1 },
-        { id: 2, title: 'Bookmark 2', searchScore: 1 },
+        { id: 1, title: 'Bookmark 1' },
+        { id: 2, title: 'Bookmark 2' },
       ])
     })
   })
@@ -108,7 +107,7 @@ describe('addDefaultEntries', () => {
 
       const results = await addDefaultEntries()
 
-      expect(results).toEqual([expect.objectContaining({ id: 1, title: 'Example', searchScore: 1 })])
+      expect(results).toEqual([expect.objectContaining({ id: 1, title: 'Example' })])
     })
 
     test('shows all bookmarks if multiple match current tab URL', async () => {

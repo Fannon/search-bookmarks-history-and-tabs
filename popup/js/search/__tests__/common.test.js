@@ -28,7 +28,7 @@ const mockLoadScript = jest.fn(() => Promise.resolve())
 
 let commonModule
 let search
-let searchWithAlgorithm
+let executeSearch
 let calculateFinalScore
 let sortResults
 let resetSimpleSearchState
@@ -57,7 +57,7 @@ beforeAll(async () => {
 
   commonModule = await import('../common.js')
   search = commonModule.search
-  searchWithAlgorithm = commonModule.searchWithAlgorithm
+  executeSearch = commonModule.executeSearch
   calculateFinalScore = commonModule.calculateFinalScore
   sortResults = commonModule.sortResults
 
@@ -103,10 +103,7 @@ function setupExt(overrides = {}) {
       ],
       searchStrategy: 'precise',
       searchMaxResults: 5,
-      searchMinMatchCharLength: 1,
-      scoreMinScore: 10,
       scoreExactIncludesBonus: 5,
-      scoreExactIncludesBonusMinChars: 3,
       scoreExactStartsWithBonus: 10,
       scoreExactEqualsBonus: 15,
       scoreExactTagMatchBonus: 10,
@@ -121,7 +118,6 @@ function setupExt(overrides = {}) {
       scoreSearchEngineBase: 30,
       scoreCustomSearchEngineBase: 400,
       scoreDirectUrlScore: 500,
-      scoreTitleWeight: 1,
       scoreTagWeight: 0.7,
       scoreUrlWeight: 0.6,
       scoreFolderWeight: 0.5,
@@ -146,46 +142,26 @@ function setupExt(overrides = {}) {
   })
 }
 
-describe('searchWithAlgorithm', () => {
-  test('returns empty list when below minimum length', async () => {
-    ext.opts.searchMinMatchCharLength = 5
-
-    const results = await searchWithAlgorithm('precise', 'abc', 'all', ext.model, ext.opts)
-
-    expect(results).toEqual([])
+describe('executeSearch', () => {
+  test('returns results for tags mode', async () => {
+    ext.model.bookmarks = createBookmarksTestData([{ title: 'Bookmark #tag', url: 'https://test.com' }])
+    const results = await executeSearch('tag', 'tags', ext.model, ext.opts)
+    expect(results.length).toBe(1)
+    expect(results[0].title).toBe('Bookmark')
   })
 
   test('delegates to precise search', async () => {
-    ext.model.bookmarks = createBookmarksTestData([
-      {
-        title: 'Daily News Digest',
-        url: 'https://news.test',
-      },
-    ])
-
-    const results = await searchWithAlgorithm('precise', 'news', 'bookmarks', ext.model, ext.opts)
-
-    expect(results).toEqual([
-      expect.objectContaining({
-        title: 'Daily News Digest',
-        searchApproach: 'precise',
-        type: 'bookmark',
-      }),
-    ])
+    ext.model.bookmarks = createBookmarksTestData([{ title: 'News', url: 'https://news.test' }])
+    ext.opts.searchStrategy = 'precise'
+    const results = await executeSearch('news', 'bookmarks', ext.model, ext.opts)
+    expect(results[0].searchApproach).toBe('precise')
   })
 
   test('delegates to fuzzy search', async () => {
     mockLoadScript.mockClear()
-    const results = await searchWithAlgorithm('fuzzy', 'tabs', 'tabs', ext.model, ext.opts)
-
-    expect(results).toEqual([])
+    ext.opts.searchStrategy = 'fuzzy'
+    await executeSearch('tabs', 'tabs', ext.model, ext.opts)
     expect(mockLoadScript).toHaveBeenCalledWith('./lib/uFuzzy.iife.min.js')
-  })
-
-  test('throws when search approach unsupported', async () => {
-    await expect(searchWithAlgorithm('unknown', 'test', 'all', ext.model, ext.opts)).rejects.toThrow(
-      'Unknown search approach: unknown',
-    )
   })
 })
 
@@ -268,13 +244,11 @@ describe('search', () => {
         originalId: 1,
         title: 'Recent history',
         url: 'recent.test',
-        searchScore: 1,
       },
       {
         originalId: 2,
         title: 'Older history',
         url: 'older.test',
-        searchScore: 1,
       },
     ])
     expect(mockRenderSearchResults).toHaveBeenCalledWith()
@@ -318,7 +292,7 @@ describe('search', () => {
         url: 'https://example.com',
       },
     ])
-    ext.opts.scoreMinScore = 0
+    // Note: scoreMinScore is now hard-coded to 30, can't be overridden
 
     await search({ key: 'e' })
 
@@ -340,7 +314,7 @@ describe('search', () => {
       { title: 'Low', url: 'https://low.test' },
       { title: 'Second Mid +15', url: 'https://mid2.test' },
     ])
-    ext.opts.scoreMinScore = 70
+    // Note: scoreMinScore is now hard-coded to 30, can't be overridden
     ext.opts.searchMaxResults = 2
     ext.opts.enableSearchEngines = false
     ext.opts.customSearchEngines = []
@@ -349,7 +323,7 @@ describe('search', () => {
     await search({ key: 'f' })
 
     expect(ext.model.result.length).toBeLessThanOrEqual(2)
-    expect(ext.model.result.every((item) => item.score >= 70)).toBe(true)
+    expect(ext.model.result.every((item) => item.score >= 30)).toBe(true)
     // Note: resultCounter is now updated by searchView.renderSearchResults, not here
   })
 
@@ -382,7 +356,7 @@ describe('search', () => {
       },
     ])
     const cache = {
-      has: jest.fn(() => false),
+      get: jest.fn(() => false),
       set: jest.fn(),
     }
     ext.searchCache = cache
@@ -391,7 +365,7 @@ describe('search', () => {
 
     await search({ key: 'r' })
 
-    expect(cache.has).toHaveBeenCalledWith('remember_precise_all')
+    expect(cache.get).toHaveBeenCalledWith('remember_precise_all')
     expect(cache.set).toHaveBeenCalledWith('remember_precise_all', ext.model.result)
   })
 

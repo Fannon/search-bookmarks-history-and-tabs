@@ -52,108 +52,72 @@ export async function renderSearchResults() {
     const itemsHTML = []
     const searchTermSuffix = `/search/${encodeURIComponent(searchTerm || '')}`
 
+    const createBadge = (content, title, extraClass = '', extraLink = '', extraStyle = '') => {
+      const classAttr = `badge ${extraClass}`.trim()
+      const titleAttr = title ? ` title="${escapeHtml(title)}"` : ''
+      const linkAttr = extraLink ? ` x-link="${escapeHtml(extraLink)}"` : ''
+      const styleAttr = extraStyle ? ` style="${extraStyle}"` : ''
+      return `<span class="${classAttr}"${titleAttr}${linkAttr}${styleAttr}>${content}</span>`
+    }
+
     for (let i = 0; i < result.length; i++) {
-      const resultEntry = result[i]
+      const entry = result[i]
+      if (!entry) continue
 
-      if (!resultEntry) {
-        continue
-      }
-
-      // Use array for badge HTML generation (more efficient than string concatenation)
       const badges = []
+      if (entry.type === 'bookmark' && entry.tab) badges.push(createBadge('T', 'Open Tab', 'source-tab'))
+      if (entry.dupe) badges.push(createBadge('Duplicate', 'Duplicate Bookmark', 'duplicate'))
 
-      if (resultEntry.type === 'bookmark' && resultEntry.tab) {
-        badges.push('<span class="badge source-tab" title="Open Tab">T</span>')
-      }
-      if (resultEntry.dupe) {
-        badges.push('<span class="badge duplicate" title="Duplicate Bookmark">Duplicate</span>')
-      }
-
-      if (opts.displayTags && resultEntry.tagsArray) {
-        for (let j = 0; j < resultEntry.tagsArray.length; j++) {
-          const tag = resultEntry.tagsArray[j]
-          const highlightedTag = resultEntry.highlightedTagsArray?.[j]
-          const content = shouldHighlight && highlightedTag ? highlightedTag : `#${escapeHtml(tag)}`
-          badges.push(
-            `<span class="badge tags" x-link="#search/#${escapeHtml(tag)}" title="Bookmark Tags">${content}</span>`,
-          )
-        }
+      if (opts.displayTags && entry.tagsArray) {
+        entry.tagsArray.forEach((tag, j) => {
+          const content =
+            shouldHighlight && entry.highlightedTagsArray?.[j] ? entry.highlightedTagsArray[j] : `#${escapeHtml(tag)}`
+          badges.push(createBadge(content, 'Bookmark Tags', 'tags', `#search/#${escapeHtml(tag)}`))
+        })
       }
 
-      if (opts.displayFolderName && resultEntry.folderArray) {
+      if (opts.displayFolderName && entry.folderArray) {
         const trail = []
-        const bookmarkColorStyle = `background-color: ${escapeHtml(String(opts.bookmarkColor || 'none'))}`
-        for (let j = 0; j < resultEntry.folderArray.length; j++) {
-          const folderName = resultEntry.folderArray[j]
-          const highlightedFolder = resultEntry.highlightedFolderArray?.[j]
-          trail.push(folderName)
-          const folderLink = `#search/~${trail.join(' ~')}`
-          const safeLink = escapeHtml(folderLink)
-          const content = shouldHighlight && highlightedFolder ? highlightedFolder : `~${escapeHtml(folderName)}`
-          badges.push(
-            `<span class="badge folder" x-link="${safeLink}" title="Bookmark Folder" style="${bookmarkColorStyle}">${content}</span>`,
-          )
-        }
+        const colorStyle = `background-color: ${escapeHtml(String(opts.bookmarkColor || 'none'))}`
+        entry.folderArray.forEach((folder, j) => {
+          trail.push(folder)
+          const content =
+            shouldHighlight && entry.highlightedFolderArray?.[j]
+              ? entry.highlightedFolderArray[j]
+              : `~${escapeHtml(folder)}`
+          badges.push(createBadge(content, 'Bookmark Folder', 'folder', `#search/~${trail.join(' ~')}`, colorStyle))
+        })
       }
 
-      if (opts.displayLastVisit && resultEntry.lastVisitSecondsAgo != null) {
-        const lastVisit = timeSince(new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000))
-        badges.push(`<span class="badge last-visited" title="Last Visited">-${escapeHtml(lastVisit)}</span>`)
-      }
-
-      if (opts.displayVisitCounter && resultEntry.visitCount !== undefined) {
+      if (opts.displayLastVisit && entry.lastVisitSecondsAgo != null) {
         badges.push(
-          `<span class="badge visit-counter" title="Visited Counter">${escapeHtml(String(resultEntry.visitCount))}</span>`,
+          createBadge(
+            `-${escapeHtml(timeSince(new Date(Date.now() - entry.lastVisitSecondsAgo * 1000)))}`,
+            'Last Visited',
+            'last-visited',
+          ),
         )
       }
-
-      if (opts.displayDateAdded && resultEntry.dateAdded) {
+      if (opts.displayVisitCounter && entry.visitCount !== undefined) {
+        badges.push(createBadge(escapeHtml(String(entry.visitCount)), 'Visited Counter', 'visit-counter'))
+      }
+      if (opts.displayDateAdded && entry.dateAdded) {
         badges.push(
-          `<span class="badge date-added" title="Date Added">${escapeHtml(
-            new Date(resultEntry.dateAdded).toISOString().split('T')[0],
-          )}</span>`,
+          createBadge(escapeHtml(new Date(entry.dateAdded).toISOString().split('T')[0]), 'Date Added', 'date-added'),
         )
       }
-
-      if (opts.displayScore && resultEntry.score) {
-        badges.push(
-          `<span class="badge score" title="Score">${escapeHtml(String(Math.round(resultEntry.score)))}</span>`,
-        )
+      if (opts.displayScore && entry.score) {
+        badges.push(createBadge(escapeHtml(String(Math.round(entry.score))), 'Score', 'score'))
       }
 
-      const badgesHTML = badges.join('')
+      const title =
+        shouldHighlight && entry.highlightedTitle ? entry.highlightedTitle : escapeHtml(entry.title || entry.url || '')
+      const url = shouldHighlight && entry.highlightedUrl ? entry.highlightedUrl : escapeHtml(entry.url || '')
+      const colorStyle = `border-left-color: ${escapeHtml(String(opts[`${entry.type}Color`]))}`
 
-      const titleContent =
-        shouldHighlight && resultEntry.highlightedTitle
-          ? resultEntry.highlightedTitle
-          : escapeHtml(resultEntry.title || resultEntry.url || '')
-      const urlContent =
-        shouldHighlight && resultEntry.highlightedUrl ? resultEntry.highlightedUrl : escapeHtml(resultEntry.url || '')
-
-      const typeClass = escapeHtml(resultEntry.type || '')
-      const originalUrlAttr = resultEntry.originalUrl ? ` x-open-url="${escapeHtml(resultEntry.originalUrl)}"` : ''
-      const originalIdAttr =
-        resultEntry.originalId !== undefined ? ` x-original-id="${escapeHtml(String(resultEntry.originalId))}"` : ''
-      const colorValue = escapeHtml(String(opts[`${resultEntry.type}Color`]))
-
-      itemsHTML.push(`
-        <li class="${typeClass}"${originalUrlAttr} x-index="${i}"${originalIdAttr}
-            style="border-left: ${opts.colorStripeWidth}px solid ${colorValue}">
-          ${
-            resultEntry.type === 'bookmark'
-              ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(
-                  resultEntry.originalId,
-                )}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">`
-              : ''
-          }
-          ${resultEntry.type === 'tab' ? '<img class="close-button" title="Close Tab" src="./img/x.svg">' : ''}
-          <div class="title">
-            <span class="title-text">${titleContent} </span>
-            ${badgesHTML}
-          </div>
-          <div class="url" title="${escapeHtml(resultEntry.url || '')}">${urlContent}</div>
-        </li>
-      `)
+      itemsHTML.push(
+        `<li class="${escapeHtml(entry.type || '')}"${entry.originalUrl ? ` x-open-url="${escapeHtml(entry.originalUrl)}"` : ''} x-index="${i}"${entry.originalId !== undefined ? ` x-original-id="${escapeHtml(String(entry.originalId))}"` : ''} style="${colorStyle}">${entry.type === 'bookmark' ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(entry.originalId)}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">` : ''}${entry.type === 'tab' ? '<img class="close-button" title="Close Tab" src="./img/x.svg">' : ''}<div class="title"><span class="title-text">${title} </span>${badges.join('')}</div><div class="url" title="${escapeHtml(entry.url || '')}">${url}</div></li>`,
+      )
     }
 
     // Update the DOM with all new result items at once using innerHTML (faster for large updates)

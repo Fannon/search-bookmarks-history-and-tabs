@@ -132,9 +132,10 @@ describe('getTitle', () => {
 })
 
 describe('shortenTitle', () => {
-  it('truncates titles longer than the url length restriction', () => {
+  it('truncates titles longer than the url length restriction (hard-coded to 80)', () => {
     const longTitle = 'a'.repeat(90)
-    expect(shortenTitle(longTitle)).toBe(`${'a'.repeat(82)}...`)
+    // Hard-coded limit is 80, so it truncates to 77 characters + '...'
+    expect(shortenTitle(longTitle)).toBe(`${'a'.repeat(77)}...`)
   })
 
   it('returns the title unchanged when it is under the limit', () => {

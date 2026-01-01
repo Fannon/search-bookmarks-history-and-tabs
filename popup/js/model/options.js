@@ -50,10 +50,6 @@ export const defaultOptions = {
    */
   searchMaxResults: 24,
   /**
-   * Minimum string characters of the search term to consider a match
-   */
-  searchMinMatchCharLength: 1,
-  /**
    * Fuzzy search threshold (0 - 1)
    * 0 is no fuzzyness, 1 is full fuzzyness
    *
@@ -64,11 +60,6 @@ export const defaultOptions = {
   //////////////////////////////////////////
   // COLORS AND STYLE                     //
   //////////////////////////////////////////
-
-  /**
-   * Width of the left color marker in search results in pixels
-   */
-  colorStripeWidth: 5,
   /**
    * Color for bookmark results, expressed as CSS color
    */
@@ -131,13 +122,14 @@ export const defaultOptions = {
   //////////////////////////////////////////
 
   /**
-   * Extract tags from title and display it as a badge with different search priority
-   * Disabling this will also disable the tag overview and the tag search mode.
+   * Extract tags from bookmark titles and display them as clickable badges.
+   * Tags are text prefixed with `#` in bookmark titles (e.g., `Bookmark Title #work #dev`).
+   * Setting to false hides tag badges but does NOT disable tag search mode (`#tag`).
    */
   displayTags: true,
   /**
-   * Display and search the folder names of bookmarks.
-   * Disabling this will also disable the folder overview and the folder search mode.
+   * Display bookmark folder names as clickable badges showing the folder hierarchy.
+   * Setting to false hides folder badges but does NOT disable folder search mode (`~folder`).
    */
   displayFolderName: true,
   /**
@@ -264,11 +256,6 @@ export const defaultOptions = {
   // SCORE CALCULATION OPTIONS            //
   //////////////////////////////////////////
 
-  /**
-   * Filter out all search results below this minimum score
-   */
-  scoreMinScore: 30,
-
   // RESULT TYPE BASE SCORES
   // Depending on the type of result, they start with a base score
   // Please make sure that this is not below the minScore :)
@@ -301,8 +288,6 @@ export const defaultOptions = {
   // FIELD WEIGHTS
   // Depending on in which field the search match was found,
   // the match gets a multiplier applied on how important the match is.
-  /** Weight for a title match*/
-  scoreTitleWeight: 1,
   /** Weight for a tag match*/
   scoreTagWeight: 0.7,
   /** Weight for a URL match*/
@@ -323,14 +308,7 @@ export const defaultOptions = {
    * For each exact "includes" match we add some bonus points
    */
   scoreExactIncludesBonus: 5,
-  /**
-   * Maximum number of substring bonuses per result (prevents noisy documents from stacking).
-   */
-  scoreExactIncludesMaxBonuses: 3,
-  /**
-   * The minimum characters a search term needs to have to consider a exact includes match
-   */
-  scoreExactIncludesBonusMinChars: 3,
+
   /**
    * Additional score points if title or url starts exactly with the search text.
    * This comes on top of an include bonus.
@@ -394,12 +372,6 @@ export const defaultOptions = {
 
   // Those are only meant for power users who know what they're doing
   // And those options may also not be long-time stable
-
-  /**
-   * If the extension detects that the title is just the URL of the link,
-   * it gets shortened so the result entries are not swamped by long URL patterns
-   */
-  titleLengthRestrictionForUrls: 80,
 
   /**
    * Customized options for the fuzzy search library uFuzzy ('@leeoniya/ufuzzy')

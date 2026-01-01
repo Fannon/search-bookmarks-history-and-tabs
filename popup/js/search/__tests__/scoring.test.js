@@ -5,6 +5,8 @@ const { calculateFinalScore } = await import('../scoring.js')
 const { defaultOptions } = await import('../../model/options.js')
 
 // Baseline options for isolated unit tests (all bonuses off, weights = 1.0 for simplicity)
+// Note: scoreTitleWeight (1), scoreExactIncludesBonusMinChars (3), and scoreExactIncludesMaxBonuses (3)
+// are now hard-coded constants in scoring.js and cannot be overridden via options.
 const baseOpts = {
   scoreBookmarkBase: 100,
   scoreTabBase: 70,
@@ -12,14 +14,11 @@ const baseOpts = {
   scoreSearchEngineBase: 30,
   scoreCustomSearchEngineBase: 400,
   scoreDirectUrlScore: 500,
-  scoreTitleWeight: 1,
   scoreTagWeight: 1,
   scoreUrlWeight: 1,
   scoreFolderWeight: 1,
   scoreBookmarkOpenTabBonus: 0,
   scoreExactIncludesBonus: 0,
-  scoreExactIncludesBonusMinChars: 1,
-  scoreExactIncludesMaxBonuses: Infinity,
   scoreExactStartsWithBonus: 0,
   scoreExactEqualsBonus: 0,
   scoreExactTagMatchBonus: 0,
@@ -31,7 +30,6 @@ const baseOpts = {
   scoreRecentBonusScoreMaximum: 0,
   historyDaysAgo: 7,
   scoreCustomBonusScore: false,
-  scoreWeakMatchPenalty: 0,
 }
 
 const baseResult = {
@@ -42,7 +40,6 @@ const baseResult = {
   tagsArray: [],
   folder: '',
   folderArray: [],
-  searchScore: 1,
   customBonusScore: 0,
 }
 
@@ -139,10 +136,10 @@ describe('scoring', () => {
       customSearch: expect.any(Number),
       direct: expect.any(Number),
     })
-    expect(scoreByType.bookmark).toBeCloseTo(55)
+    expect(scoreByType.bookmark).toBeCloseTo(100)
     expect(scoreByType.tab).toBeCloseTo(70)
     expect(scoreByType.history).toBeCloseTo(45)
-    expect(scoreByType.search).toBeCloseTo(15)
+    expect(scoreByType.search).toBeCloseTo(30)
     expect(scoreByType.customSearch).toBeCloseTo(400)
     expect(scoreByType.direct).toBeCloseTo(500)
   })
@@ -160,21 +157,11 @@ describe('scoring', () => {
             type: 'unsupported',
             title: 'X',
             url: 'https://x.test',
-            searchScore: 1,
           },
         ],
         'test',
       ),
     ).toThrow('Search result type "unsupported" not supported')
-  })
-
-  it('scales the base score by the searchScore multiplier', () => {
-    const score = scoreFor({
-      searchTerm: 'alpha',
-      result: { searchScore: 0.5 },
-    })
-
-    expect(score).toBeCloseTo(50)
   })
 
   it('applies includes bonus for title matches', () => {
@@ -228,10 +215,11 @@ describe('scoring', () => {
     expect(score).toBeCloseTo(110)
   })
 
-  it('allows numeric tokens shorter than the min character threshold', () => {
+  it('allows numeric tokens shorter than the min character threshold (3 chars)', () => {
+    // Note: scoreExactIncludesBonusMinChars is now hard-coded to 3
     const score = scoreFor({
       searchTerm: '42',
-      opts: { scoreExactIncludesBonus: 5, scoreExactIncludesBonusMinChars: 3 },
+      opts: { scoreExactIncludesBonus: 5 },
       result: { title: 'version 42 release' },
     })
 
@@ -252,20 +240,23 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: '',
       opts: { scoreBookmarkOpenTabBonus: 25 },
-      result: { type: 'tab', tab: true, searchScore: 1 },
+      result: { type: 'tab', tab: true },
     })
 
     expect(score).toBeCloseTo(70)
   })
 
-  it('limits substring bonuses when max cap is configured', () => {
+  it('limits substring bonuses to max cap of 3 (hard-coded)', () => {
+    // Note: scoreExactIncludesMaxBonuses is now hard-coded to 3
+    // Use 4 terms to verify the cap is applied
     const score = scoreFor({
-      searchTerm: 'alpha beta',
-      opts: { scoreExactIncludesBonus: 5, scoreExactIncludesMaxBonuses: 1 },
-      result: { url: 'https://example.test/alpha-beta' },
+      searchTerm: 'alpha beta gamma delta',
+      opts: { scoreExactIncludesBonus: 5 },
+      result: { url: 'https://example.test/alpha-beta-gamma-delta' },
     })
 
-    expect(score).toBeCloseTo(105)
+    // Only 3 bonuses should be applied (capped), not 4: 100 + (5 * 3) = 115
+    expect(score).toBeCloseTo(115)
   })
 
   it('adds phrase bonus when the entire query appears in the title', () => {
@@ -567,34 +558,6 @@ describe('scoring', () => {
     expect(score).toBeCloseTo(110)
   })
 
-  it('IMPROVEMENT: weak fuzzy matches get penalized (when penalty option enabled)', () => {
-    const weakMatchScore = scoreFor({
-      searchTerm: 'xyz',
-      opts: { scoreWeakMatchPenalty: 0.3 },
-      result: { searchScore: 0.3 },
-    })
-
-    const strongMatchScore = scoreFor({
-      searchTerm: 'xyz',
-      opts: { scoreWeakMatchPenalty: 0.3 },
-      result: { searchScore: 0.8 },
-    })
-
-    // Weak match should score significantly lower than strong match
-    expect(weakMatchScore).toBeLessThan(strongMatchScore * 0.7)
-  })
-
-  it('IMPROVEMENT: weak match penalty does not apply to very weak matches (< 0.1)', () => {
-    const score = scoreFor({
-      searchTerm: 'xyz',
-      opts: { scoreWeakMatchPenalty: 0.5 },
-      result: { searchScore: 0.05 },
-    })
-
-    // Should be base score * 0.05, no additional penalty
-    expect(score).toBeCloseTo(5)
-  })
-
   it('does not apply bonus multiple times when same search term appears in different fields', () => {
     const score = scoreFor({
       searchTerm: 'test',
@@ -610,33 +573,25 @@ describe('scoring', () => {
     expect(score).toBeCloseTo(105)
   })
 
-  it('handles empty and null search scores gracefully', () => {
-    const scoreNoSearchScore = scoreFor({
-      searchTerm: 'test',
-      result: { searchScore: undefined },
+  it('handles empty results gracefully', () => {
+    const scoreNoSearchTerm = scoreFor({
+      searchTerm: '',
+      result: {},
     })
 
-    const scoreZeroSearchScore = scoreFor({
-      searchTerm: 'test',
-      result: { searchScore: 0 },
-    })
-
-    // undefined searchScore should use title weight (1) as fallback
-    expect(scoreNoSearchScore).toBeCloseTo(100)
-    // Zero searchScore is now correctly treated as a valid score (not falsy)
-    // BUG FIX: searchScore: 0 should multiply base score by 0, resulting in 0
-    expect(scoreZeroSearchScore).toBeCloseTo(0)
+    expect(scoreNoSearchTerm).toBeCloseTo(100)
   })
 
   it('applies includes bonuses in priority order (title > url > tags > folder)', () => {
+    // Note: scoreTitleWeight is now hard-coded to 1, but we can still verify
+    // that title match takes priority over other fields
     const scoreWith = scoreFor({
       searchTerm: 'priority',
       opts: {
         scoreExactIncludesBonus: 5,
-        scoreTitleWeight: 2,
-        scoreUrlWeight: 1,
-        scoreTagWeight: 1,
-        scoreFolderWeight: 1,
+        scoreUrlWeight: 0.6,
+        scoreTagWeight: 0.7,
+        scoreFolderWeight: 0.5,
       },
       result: {
         title: 'priority test',
@@ -646,8 +601,8 @@ describe('scoring', () => {
       },
     })
 
-    // Should apply title weight bonus (5 * 2 = 10 added)
-    expect(scoreWith).toBeCloseTo(110)
+    // Should apply title weight bonus (5 * 1 = 5 added) since title takes priority
+    expect(scoreWith).toBeCloseTo(105)
   })
 
   describe('Tag scoring scenarios (real-world use cases)', () => {
@@ -678,7 +633,7 @@ describe('scoring', () => {
         opts: {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 10,
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {
@@ -700,7 +655,7 @@ describe('scoring', () => {
         opts: {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 10,
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {
@@ -716,7 +671,7 @@ describe('scoring', () => {
         opts: {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 10,
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {
@@ -762,9 +717,9 @@ describe('scoring', () => {
         searchTerm: 'tutorial',
         opts: {
           scoreExactIncludesBonus: 10,
-          scoreExactIncludesBonusMinChars: 3,
+
           scoreExactTagMatchBonus: 10,
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {
@@ -779,9 +734,9 @@ describe('scoring', () => {
         searchTerm: 'tutorial',
         opts: {
           scoreExactIncludesBonus: 10,
-          scoreExactIncludesBonusMinChars: 3,
+
           scoreExactTagMatchBonus: 10,
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {
@@ -807,7 +762,7 @@ describe('scoring', () => {
         opts: {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 0, // disabled
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {
@@ -823,7 +778,7 @@ describe('scoring', () => {
         opts: {
           scoreExactIncludesBonus: 5,
           scoreExactTagMatchBonus: 0,
-          scoreTitleWeight: 1,
+
           scoreTagWeight: 0.7,
         },
         result: {

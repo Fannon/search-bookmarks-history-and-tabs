@@ -108,7 +108,6 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
     },
     opts: {
       displaySearchMatchHighlight: true,
-      colorStripeWidth: 4,
       bookmarkColor: '#111',
       tabColor: '#222',
       displayTags: true,
@@ -183,7 +182,7 @@ describe('searchView renderSearchResults', () => {
     const bookmarkItem = listItems[0]
     expect(bookmarkItem.className).toBe('bookmark')
     expect(bookmarkItem.getAttribute('x-open-url')).toBe('https://bookmark.test')
-    expect(bookmarkItem.style.borderLeft).toBe('4px solid rgb(17, 17, 17)')
+    expect(bookmarkItem.style.borderLeftColor).toBe('rgb(17, 17, 17)')
 
     // Verify highlighted content is rendered as HTML (not escaped again)
     const titleText = bookmarkItem.querySelector('.title-text')

@@ -18,7 +18,6 @@ describe('Extension Integration Tests', () => {
     createTestExt({
       opts: {
         searchStrategy: 'precise',
-        searchMinMatchCharLength: 1,
         enableTabs: true,
         enableBookmarks: true,
         enableHistory: true,
