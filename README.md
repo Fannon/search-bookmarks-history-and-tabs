@@ -55,8 +55,8 @@ The extension is very customizable (see [user options](#user-configuration)) and
     - Default: Start your query with `d ` (including space): Do a dict.cc search.
   - A search term that can be interpreted as URL (e.g. `example.com`) can be navigated to directly.
 - **Emacs / Vim Navigation**:
-  - `Ctrl+J` and `Ctrl+N` to navigate search results up
-  - `Ctrl+K` and `Ctrl+P` to navigate search results down
+  - `Ctrl+N` and `Ctrl+J` to navigate search results down
+  - `Ctrl+K` and `Ctrl+P` to navigate search results up
 - **Special Browser Pages**: You can add special browser pages to your bookmarks, like `chrome://downloads`.
 - **Custom Scores**: Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
   - Examples: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`
@@ -74,7 +74,7 @@ Finding and setting options is a bit technical, though.
 
 The user options are written in [YAML](https://en.wikipedia.org/wiki/YAML) or [JSON](https://en.wikipedia.org/wiki/JSON) notation.
 
-For now, there is no nice options overview, so you have to find them in the [popup/js/model/options.js](popup/js/model/options.js) file in the `defaultOptions` object.
+For now, there is no nice options overview, so you have to find them in the [options.js](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/model/options.js) file in the `defaultOptions` object.
 From there you can see the available options, their names, default values and descriptions.
 
 > 📘 **See [OPTIONS.md](./OPTIONS.md) for a comprehensive list of all available options.**
@@ -142,7 +142,7 @@ customSearchEngines:
     blank: https://www.npmjs.com
 ```
 
-In case of making multilingual search (CJK) correctly, you may need to tweak [uFuzzy](https://github.com/leeoniya/uFuzzy) options via option `ufuzzyOptions`, for example:
+In case of making multilingual search (CJK) correctly, you may need to tweak [uFuzzy](https://github.com/leeoniya/uFuzzy) options via option `uFuzzyOptions`, for example:
 
 ```yaml
 # make CJK chars work for fuzzy search

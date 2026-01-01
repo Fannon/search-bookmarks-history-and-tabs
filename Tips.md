@@ -32,8 +32,8 @@ Start your search query with a search mode prefix:
 
 **Keyboard Navigation**: You can navigate result entries also in Emacs / Vim style:
 
-- `Ctrl+N` and `Ctrl+J` to navigate search results up.
-- `Ctrl+P`and`Ctrl+K` to navigate search results down.
+- `Ctrl+N` and `Ctrl+J` to navigate search results down.
+- `Ctrl+P` and `Ctrl+K` to navigate search results up.
 
 <hr/>
 
@@ -44,7 +44,7 @@ Start your search query with a search mode prefix:
   - Reduce history size (see below)
 - Improve search performance:
   - Switch to precise search strategy instead of fuzzy
-  - Reduce option `searchMaxResults` from 32 to something lower
+  - Reduce option `searchMaxResults` from the default 24 to something lower
 
 <hr/>
 

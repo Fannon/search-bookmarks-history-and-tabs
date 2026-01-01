@@ -5,6 +5,7 @@
 - **CHANGE**: Default entries now exclude the currently active tab from the "recently visited" list (avoiding duplication), while ensuring it remains visible if it is bookmarked. The matching logic now also ignores anchor tags (hashes) for better discovery.
 - **CHANGE**: Reduced default `maxRecentTabsToShow` from 16 to 8 to improve performance on startup.
 - **FIXED**: Tag (`#`) and folder (`~`) search now correctly highlights the full phrase including the marker (e.g., `#music`), ensuring visual consistency and proper matching.
+- **IMPROVED**: Documentation for configuration options (`OPTIONS.md` and `README.md`).
 - **REMOVED**: Low-value configuration options that are now hard-coded with sensible defaults:
   - `colorStripeWidth` → now fixed at 4px via CSS
   - `titleLengthRestrictionForUrls` → now fixed at 80 characters
@@ -26,7 +27,6 @@
   - Integrated `performance.mark` and `performance.measure` into search and render loops.
   - Added Jest-based benchmarks for core algorithms with datasets of 5,000+ items.
   - Added Playwright end-to-end performance tests to verify real-world rendering latency.
-- **IMPROVED**: Documentation for configuration options (`OPTIONS.md` and `README.md`).
 
 ## [v1.17.3]
 

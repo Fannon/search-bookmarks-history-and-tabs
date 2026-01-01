@@ -113,7 +113,7 @@ The scoring system uses a **5-step process**:
 4. **Usage Signals** — Add points based on visit count and recency
 5. **Custom Bonus** — Add user-defined bonus from bookmark titles (e.g., `+20`)
 
-For a detailed explanation, see the [Scoring System section in README.md](README.md#scoring-system).
+For a detailed explanation, see the [Scoring System section in README.md](https://github.com/Fannon/search-bookmarks-history-and-tabs#scoring-system).
 
 ### Base Scores (by result type)
 
