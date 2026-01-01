@@ -154,20 +154,29 @@ uFuzzyOptions:
 
 The scoring system calculates a relevance score for each search result using a 5-step process:
 
-1. **Base Score** - Each result type (bookmark, tab, history, search engine) starts with a different base score (e.g. `scoreBookmarkBase: 100`, `scoreTabBase: 70`)
-2. **Search Quality Multiplier** - The base score is multiplied by the search library score (0-1), which reflects how good the match is. Fuzzy/precise search algorithms return this quality score.
-3. **Field-Specific Bonuses** - Additional points are awarded based on:
-   - Exact matches: `scoreExactStartsWithBonus`, `scoreExactEqualsBonus` if title/URL starts with or equals the search term
-   - Exact tag/folder matches: `scoreExactTagMatchBonus`, `scoreExactFolderMatchBonus` for direct tag/folder matches
-   - Substring matches: `scoreExactIncludesBonus` weighted by field importance (title=1.0, tag=0.7, url=0.6, folder=0.5)
-4. **Behavioral Bonuses** - Additional points based on usage patterns:
-   - `scoreVisitedBonusScore` - Points per visit (up to `scoreVisitedBonusScoreMaximum`)
-   - `scoreRecentBonusScoreMaximum` - Bonus for recently visited items
-5. **Custom Bonus** - User-defined bonus via `+<number>` notation in bookmark titles (if `scoreCustomBonusScore` is enabled)
+1. **Base Score** — Each result type starts with a different base score:
+   - Bookmark: `100`, Tab: `70`, History: `45`, Search Engine: `30`
+   - Custom search aliases and direct URLs score higher (`400`, `500`) to appear at the top
+
+2. **Search Quality Multiplier** — The base score is multiplied by the search algorithm's match quality (0–1). Poor fuzzy matches get reduced scores.
+
+3. **Match Bonuses** — Additional points for how the search term matches:
+   - **Starts-with bonus**: Title or URL begins with the search term (`scoreExactStartsWithBonus`)
+   - **Equals bonus**: Title exactly matches the search term (`scoreExactEqualsBonus`)
+   - **Tag/folder match**: Search term matches a tag or folder name exactly (`scoreExactTagMatchBonus`, `scoreExactFolderMatchBonus`)
+   - **Substring match**: Each search word found in title/url/tag/folder adds points (`scoreExactIncludesBonus`), weighted by field (title=1.0 > url=0.6 > tag=0.7 > folder=0.5), capped at 3 bonuses per result
+   - **Phrase match**: Multi-word searches get bonus when the full phrase appears in title or URL (`scoreExactPhraseTitleBonus`, `scoreExactPhraseUrlBonus`)
+
+4. **Usage Signals** — Points based on browsing behavior:
+   - **Visit count**: Points per visit from history (`scoreVisitedBonusScore`, up to `scoreVisitedBonusScoreMaximum`)
+   - **Recency**: Recently visited items get higher scores, scaling linearly from max to 0 over `historyDaysAgo`
+   - **Open tab**: Bookmarks that are currently open in a tab get a bonus (`scoreBookmarkOpenTabBonus`)
+
+5. **Custom Bonus** — User-defined boost via `+<number>` in bookmark titles (e.g., `Important Site +50 #work`)
 
 For detailed implementation and all scoring configuration options, see:
-- **[popup/js/search/scoring.js](popup/js/search/scoring.js)** - Core scoring algorithm with comprehensive documentation
-- **[popup/js/model/options.js](popup/js/model/options.js)** - Complete list of scoring configuration options
+- **[scoring.js](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/search/scoring.js)** — Core scoring algorithm with comprehensive documentation
+- **[OPTIONS.md](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/OPTIONS.md)** — Complete list of scoring configuration options
 
 ## Privacy / Data Protection
 

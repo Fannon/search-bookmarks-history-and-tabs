@@ -122,13 +122,14 @@ export const defaultOptions = {
   //////////////////////////////////////////
 
   /**
-   * Extract tags from title and display it as a badge with different search priority
-   * Disabling this will also disable the tag overview and the tag search mode.
+   * Extract tags from bookmark titles and display them as clickable badges.
+   * Tags are text prefixed with `#` in bookmark titles (e.g., `Bookmark Title #work #dev`).
+   * Setting to false hides tag badges but does NOT disable tag search mode (`#tag`).
    */
   displayTags: true,
   /**
-   * Display and search the folder names of bookmarks.
-   * Disabling this will also disable the folder overview and the folder search mode.
+   * Display bookmark folder names as clickable badges showing the folder hierarchy.
+   * Setting to false hides folder badges but does NOT disable folder search mode (`~folder`).
    */
   displayFolderName: true,
   /**
