@@ -44,7 +44,7 @@ The extension is very customizable (see [user options](#user-configuration)) and
   - Start your query with `#`: only **bookmarks with the tag** will be returned (exact "starts with" search)
     - Supports AND search, e.g. search for `#github #pr` to only get results which have both tags
   - Start your query with `~`: only **bookmarks within the folder** will be returned (exact "starts with" search)
-    - Supports AND search, e.g. search for `~Sites ~Blogs` to only get results which have both tags
+    - Supports AND search, e.g. search for `~Sites ~Blogs` to only get results in both folders
   - Start your query with `b ` (including space): only **bookmarks** will be searched.
   - Start your query with `h ` (including space): only **history** and **open tabs** will be searched.
   - Start your query with `t ` (including space): only **open tabs** will be searched.
@@ -74,10 +74,9 @@ Finding and setting options is a bit technical, though.
 
 The user options are written in [YAML](https://en.wikipedia.org/wiki/YAML) or [JSON](https://en.wikipedia.org/wiki/JSON) notation.
 
-For now, there is no nice options overview, so you have to find them in the [options.js](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/model/options.js) file in the `defaultOptions` object.
-From there you can see the available options, their names, default values and descriptions.
-
 > 📘 **See [OPTIONS.md](./OPTIONS.md) for a comprehensive list of all available options.**
+>
+> You can also browse the source in [options.js](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/model/options.js) for inline documentation.
 
 When defining your custom config, you only need to define the options that you want to overwrite from the defaults.
 
