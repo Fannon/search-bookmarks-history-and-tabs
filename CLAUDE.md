@@ -225,7 +225,6 @@ Build scripts in `bin/` are small Node.js programs:
 
 ## Related Documentation
 
-- **AGENTS.md** - Detailed coding conventions, commit guidelines, testing protocols
+- **AGENTS.md** - Detailed project context, architecture, performance and verify loops (start here)
 - **CONTRIBUTING.md** - Local development setup, PR workflow
 - **README.md** - User documentation, feature overview, privacy policy
-- **.github/copilot-instructions.md** - Quick orientation for AI agents
