@@ -14,17 +14,6 @@
 import { getBrowserTabs } from '../helper/browserApi.js'
 
 /**
- * Attach a default `searchScore` of 1 to a result entry.
- *
- * @param {Object} entry - Result entry to enrich.
- * @returns {Object} Entry with searchScore property.
- */
-const withDefaultScore = (entry) => ({
-  searchScore: 1,
-  ...entry,
-})
-
-/**
  * Build default result sets when no explicit search term is provided.
  *
  * The default results vary by search mode:
@@ -38,22 +27,24 @@ const withDefaultScore = (entry) => ({
  * @example
  * // In history mode with ext.model.history populated
  * await addDefaultEntries()
- * // Returns: [{ ...historyItem1, searchScore: 1 }, { ...historyItem2, searchScore: 1 }]
+ * // Returns: [{ ...historyItem1 }, { ...historyItem2 }]
  */
 export async function addDefaultEntries() {
   let results = []
 
   if (ext.model.searchMode === 'history' && ext.model.history) {
     // Display recent history by default
-    results = ext.model.history.map(withDefaultScore)
+    results = ext.model.history
   } else if (ext.model.searchMode === 'tabs' && ext.model.tabs) {
     // Display last opened tabs by default
-    results = ext.model.tabs.map(withDefaultScore).sort((a, b) => {
-      return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo
-    })
+    results = ext.model.tabs
+      .map((el) => ({ ...el }))
+      .sort((a, b) => {
+        return a.lastVisitSecondsAgo - b.lastVisitSecondsAgo
+      })
   } else if (ext.model.searchMode === 'bookmarks' && ext.model.bookmarks) {
     // Display all bookmarks by default
-    results = ext.model.bookmarks.map(withDefaultScore)
+    results = ext.model.bookmarks
   } else {
     // Default: Find bookmarks that match current page URL
     let activeTab
@@ -77,7 +68,7 @@ export async function addDefaultEntries() {
         })
 
         if (matchingBookmarks.length > 0) {
-          results.push(...matchingBookmarks.map(withDefaultScore))
+          results.push(...matchingBookmarks)
         }
       }
     } catch (err) {
@@ -92,7 +83,7 @@ export async function addDefaultEntries() {
           const isCurrentTab = activeTab && activeTab.id !== undefined && tab.originalId === activeTab.id
           return tab?.url && !isCurrentTab && !tab.url.startsWith('chrome://') && !tab.url.startsWith('about:')
         })
-        .map(withDefaultScore)
+        .map((el) => ({ ...el }))
         .sort((a, b) => {
           // Sort by last accessed time (most recent first)
           // Handle cases where last accessed might be undefined

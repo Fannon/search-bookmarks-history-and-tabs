@@ -203,8 +203,6 @@ describe('fuzzySearch', () => {
       originalId: 'bookmark-1',
       searchApproach: 'fuzzy',
     })
-    expect(typeof results[0].searchScore).toBe('number')
-    expect(results[0].searchScore).toBeGreaterThan(0)
   })
 
   it('aggregates tab and history entries when searching in history mode', async () => {
@@ -458,7 +456,6 @@ describe('fuzzySearch', () => {
     const firstResult = firstResults[0]
     // Verify fuzzy search creates a copy of the entry, not mutating the original
     expect(firstResult).not.toBe(model.bookmarks[0])
-    expect(firstResult.searchScore).toBeDefined()
     expect(firstResult.searchApproach).toBe('fuzzy')
 
     const secondResults = await fuzzySearch('bookmarks', 'highlight', model, opts)

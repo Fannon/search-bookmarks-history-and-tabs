@@ -146,7 +146,6 @@ function createResultObjects(data, idxs) {
     // for subsequent property access (which scoring and rendering do heavily).
     results[i] = {
       ...data[idxs[i]],
-      searchScore: 1,
       searchApproach: 'precise',
     }
   }

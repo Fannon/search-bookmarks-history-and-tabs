@@ -168,7 +168,6 @@ function createResultObjects(data, idxs) {
       const result = data[idxs[i]]
       results.push({
         ...result,
-        searchScore: 1, // uFuzzy score is not used here if we don't call info, just use 1
         searchApproach: 'fuzzy',
       })
     }

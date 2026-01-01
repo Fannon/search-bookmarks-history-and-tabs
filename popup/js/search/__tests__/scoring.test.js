@@ -30,7 +30,6 @@ const baseOpts = {
   scoreRecentBonusScoreMaximum: 0,
   historyDaysAgo: 7,
   scoreCustomBonusScore: false,
-  scoreWeakMatchPenalty: 0,
 }
 
 const baseResult = {
@@ -41,7 +40,6 @@ const baseResult = {
   tagsArray: [],
   folder: '',
   folderArray: [],
-  searchScore: 1,
   customBonusScore: 0,
 }
 
@@ -138,10 +136,10 @@ describe('scoring', () => {
       customSearch: expect.any(Number),
       direct: expect.any(Number),
     })
-    expect(scoreByType.bookmark).toBeCloseTo(55)
+    expect(scoreByType.bookmark).toBeCloseTo(100)
     expect(scoreByType.tab).toBeCloseTo(70)
     expect(scoreByType.history).toBeCloseTo(45)
-    expect(scoreByType.search).toBeCloseTo(15)
+    expect(scoreByType.search).toBeCloseTo(30)
     expect(scoreByType.customSearch).toBeCloseTo(400)
     expect(scoreByType.direct).toBeCloseTo(500)
   })
@@ -159,21 +157,11 @@ describe('scoring', () => {
             type: 'unsupported',
             title: 'X',
             url: 'https://x.test',
-            searchScore: 1,
           },
         ],
         'test',
       ),
     ).toThrow('Search result type "unsupported" not supported')
-  })
-
-  it('scales the base score by the searchScore multiplier', () => {
-    const score = scoreFor({
-      searchTerm: 'alpha',
-      result: { searchScore: 0.5 },
-    })
-
-    expect(score).toBeCloseTo(50)
   })
 
   it('applies includes bonus for title matches', () => {
@@ -252,7 +240,7 @@ describe('scoring', () => {
     const score = scoreFor({
       searchTerm: '',
       opts: { scoreBookmarkOpenTabBonus: 25 },
-      result: { type: 'tab', tab: true, searchScore: 1 },
+      result: { type: 'tab', tab: true },
     })
 
     expect(score).toBeCloseTo(70)
@@ -570,34 +558,6 @@ describe('scoring', () => {
     expect(score).toBeCloseTo(110)
   })
 
-  it('IMPROVEMENT: weak fuzzy matches get penalized (when penalty option enabled)', () => {
-    const weakMatchScore = scoreFor({
-      searchTerm: 'xyz',
-      opts: { scoreWeakMatchPenalty: 0.3 },
-      result: { searchScore: 0.3 },
-    })
-
-    const strongMatchScore = scoreFor({
-      searchTerm: 'xyz',
-      opts: { scoreWeakMatchPenalty: 0.3 },
-      result: { searchScore: 0.8 },
-    })
-
-    // Weak match should score significantly lower than strong match
-    expect(weakMatchScore).toBeLessThan(strongMatchScore * 0.7)
-  })
-
-  it('IMPROVEMENT: weak match penalty does not apply to very weak matches (< 0.1)', () => {
-    const score = scoreFor({
-      searchTerm: 'xyz',
-      opts: { scoreWeakMatchPenalty: 0.5 },
-      result: { searchScore: 0.05 },
-    })
-
-    // Should be base score * 0.05, no additional penalty
-    expect(score).toBeCloseTo(5)
-  })
-
   it('does not apply bonus multiple times when same search term appears in different fields', () => {
     const score = scoreFor({
       searchTerm: 'test',
@@ -613,22 +573,13 @@ describe('scoring', () => {
     expect(score).toBeCloseTo(105)
   })
 
-  it('handles empty and null search scores gracefully', () => {
-    const scoreNoSearchScore = scoreFor({
-      searchTerm: 'test',
-      result: { searchScore: undefined },
+  it('handles empty results gracefully', () => {
+    const scoreNoSearchTerm = scoreFor({
+      searchTerm: '',
+      result: {},
     })
 
-    const scoreZeroSearchScore = scoreFor({
-      searchTerm: 'test',
-      result: { searchScore: 0 },
-    })
-
-    // undefined searchScore should use title weight (1) as fallback
-    expect(scoreNoSearchScore).toBeCloseTo(100)
-    // Zero searchScore is now correctly treated as a valid score (not falsy)
-    // BUG FIX: searchScore: 0 should multiply base score by 0, resulting in 0
-    expect(scoreZeroSearchScore).toBeCloseTo(0)
+    expect(scoreNoSearchTerm).toBeCloseTo(100)
   })
 
   it('applies includes bonuses in priority order (title > url > tags > folder)', () => {

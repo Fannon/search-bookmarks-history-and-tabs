@@ -108,7 +108,8 @@ Performance is critical for this extension. Follow these rules:
 2. **Pre-normalize data at init** — Create lowercase versions, search strings, etc. during data loading
 3. **Avoid object spread in loops** — Use direct property assignment for cloning in hot paths
 4. **Cache regex patterns** — Compile once, reuse across iterations
-5. **Limit results early** — Filter and slice before expensive operations
+5. **Minimize template whitespace** — Keep HTML template literals compact to improve `innerHTML` performance
+6. **Limit results early** — Filter and slice before expensive operations
 
 ### Measuring Performance
 

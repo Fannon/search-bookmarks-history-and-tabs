@@ -41,7 +41,6 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
       if (searchTermMatches === searchTermArray.length) {
         results.push({
           ...entry,
-          searchScore: 1,
           searchApproach: 'taxonomy',
         })
       }

@@ -34,8 +34,8 @@ import { addSearchEngines, collectCustomSearchAliasResults } from './searchEngin
 import { simpleSearch } from './simpleSearch.js'
 import { searchTaxonomy } from './taxonomySearch.js'
 
-// Re-export scoring function for backward compatibility
-export { calculateFinalScore }
+// Export scoring function for other modules
+export { calculateFinalScore } from './scoring.js'
 
 const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 const protocolRegex = /^[a-zA-Z]+:\/\//
@@ -69,18 +69,10 @@ export function resolveSearchTargets(searchMode) {
  * @returns {boolean} True if search should be skipped.
  */
 function shouldSkipSearch(event) {
-  if (!event) return false
-
-  // Don't execute search on navigation keys
-  if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter' || event.key === 'Escape') {
-    return true
-  }
-  // Don't execute search on modifier keys
-  if (event.key === 'Control' || event.ctrlKey || event.key === 'Alt' || event.altKey || event.key === 'Shift') {
-    return true
-  }
-
-  return false
+  return (
+    event &&
+    (['ArrowUp', 'ArrowDown', 'Enter', 'Escape'].includes(event.key) || event.ctrlKey || event.altKey || event.shiftKey)
+  )
 }
 
 /**
@@ -102,19 +94,19 @@ function normalizeSearchTerm(term) {
  * @param {string} searchTerm - The search term to check.
  * @returns {boolean} True if cached results were used.
  */
-function useCachedResultsIfAvailable(searchTerm) {
-  if (!searchTerm.trim() || !ext.searchCache) {
-    return false
-  }
+function getCacheKey(term) {
+  return `${term}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
+}
 
-  const cacheKey = `${searchTerm}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
-  if (ext.searchCache.has(cacheKey)) {
+function useCachedResultsIfAvailable(searchTerm) {
+  if (!searchTerm.trim() || !ext.searchCache) return false
+  const results = ext.searchCache.get(getCacheKey(searchTerm))
+  if (results) {
     ext.model.searchTerm = searchTerm
-    ext.model.result = ext.searchCache.get(cacheKey)
+    ext.model.result = results
     renderSearchResults()
     return true
   }
-
   return false
 }
 
@@ -137,23 +129,14 @@ async function handleEmptySearch() {
  * @returns {Promise<Array>} Search results.
  */
 export async function executeSearch(searchTerm, searchMode, data, options) {
-  const results = []
+  if (searchMode === 'tags') return searchTaxonomy(searchTerm, 'tags', data.bookmarks)
+  if (searchMode === 'folders') return searchTaxonomy(searchTerm, 'folder', data.bookmarks)
 
-  if (searchMode === 'tags') {
-    return searchTaxonomy(searchTerm, 'tags', data.bookmarks)
-  } else if (searchMode === 'folders') {
-    return searchTaxonomy(searchTerm, 'folder', data.bookmarks)
-  } else if (options.searchStrategy === 'fuzzy') {
-    results.push(...(await searchWithAlgorithm('fuzzy', searchTerm, searchMode, data, options)))
-  } else if (options.searchStrategy === 'precise') {
-    results.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode, data, options)))
-  } else {
+  if (options.searchStrategy === 'fuzzy') return fuzzySearch(searchMode, searchTerm, data, options)
+  if (options.searchStrategy !== 'precise') {
     console.error(`Unsupported option "search.approach" value: "${options.searchStrategy}"`)
-    // Fall back to use precise search instead of crashing entirely
-    results.push(...(await searchWithAlgorithm('precise', searchTerm, searchMode, data, options)))
   }
-
-  return results
+  return simpleSearch(searchMode, searchTerm, data)
 }
 
 /**
@@ -235,8 +218,7 @@ function filterResults(results, searchMode) {
  */
 function cacheResults(searchTerm, results) {
   if (searchTerm.trim() && ext.searchCache) {
-    const cacheKey = `${searchTerm}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
-    ext.searchCache.set(cacheKey, results)
+    ext.searchCache.set(getCacheKey(searchTerm), results)
   }
 }
 
@@ -352,33 +334,6 @@ export async function search(event) {
 }
 
 /**
- * Run the configured search algorithm and normalize the results.
- *
- * @param {'precise'|'fuzzy'} searchApproach - Algorithm to execute.
- * @param {string} searchTerm - Query string.
- * @param {string} [searchMode='all'] - Active search mode.
- * @returns {Promise<Array>} Matching entries across requested datasets.
- */
-export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode = 'all', data, options) {
-  let results = []
-  // Hard-coded minimum character length (implementation detail)
-  const minMatchCharLength = 1
-  if (searchTerm.length < minMatchCharLength) {
-    return results
-  }
-
-  if (searchApproach === 'precise') {
-    results = simpleSearch(searchMode, searchTerm, data)
-  } else if (searchApproach === 'fuzzy') {
-    results = await fuzzySearch(searchMode, searchTerm, data, options)
-  } else {
-    throw new Error(`Unknown search approach: ${searchApproach}`)
-  }
-
-  return results
-}
-
-/**
  * Sorts the results according to some modes
  *
  * @param {Array} results - Search results to sort
@@ -386,19 +341,10 @@ export async function searchWithAlgorithm(searchApproach, searchTerm, searchMode
  * @returns {Array} Sorted results
  */
 export function sortResults(results, sortMode) {
-  if (sortMode === 'score') {
-    results = results.sort((a, b) => {
-      return b.score - a.score
-    })
-  } else if (sortMode === 'lastVisited') {
-    results = results.sort((a, b) => {
-      return (a.lastVisitSecondsAgo || 99999999) - (b.lastVisitSecondsAgo || 99999999)
-    })
-  } else {
-    throw new Error(`Unknown sortMode="${sortMode}"`)
-  }
-
-  return results
+  if (sortMode === 'score') return results.sort((a, b) => b.score - a.score)
+  if (sortMode === 'lastVisited')
+    return results.sort((a, b) => (a.lastVisitSecondsAgo || 99999999) - (b.lastVisitSecondsAgo || 99999999))
+  throw new Error(`Unknown sortMode="${sortMode}"`)
 }
 
 /**

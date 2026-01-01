@@ -77,7 +77,6 @@ export function calculateFinalScore(results, searchTerm) {
   } = opts
 
   // Hard-coded scoring constants (not user-configurable)
-  const scoreTitleWeight = 1
   const scoreExactIncludesBonusMinChars = 3
   const scoreExactIncludesMaxBonuses = 3
 
@@ -137,12 +136,7 @@ export function calculateFinalScore(results, searchTerm) {
     }
 
     // STEP 1: Start with base score (bookmark=100, tab=70, history=45, etc.)
-    let score = getBaseScoreForType(opts, baseKey)
-
-    // STEP 2: Multiply by search quality score (0-1 from fuzzy/precise search)
-    // This reduces score if the match quality is poor
-    const searchScoreMultiplier = el.searchScore ?? scoreTitleWeight
-    score = score * searchScoreMultiplier
+    let score = opts[baseKey]
 
     if (hasSearchTerm) {
       // STEP 3A: Exact match bonuses
@@ -151,7 +145,7 @@ export function calculateFinalScore(results, searchTerm) {
 
       if (hasExactStartsWithBonus) {
         if (titleLower?.startsWith(normalizedSearchTerm)) {
-          score += scoreExactStartsWithBonus * scoreTitleWeight
+          score += scoreExactStartsWithBonus
         } else if (normalizedUrl?.startsWith(hyphenatedSearchTerm)) {
           score += scoreExactStartsWithBonus * scoreUrlWeight
         }
@@ -159,7 +153,7 @@ export function calculateFinalScore(results, searchTerm) {
 
       // Award bonus if title exactly equals the search term
       if (hasExactEqualsBonus && titleLower === normalizedSearchTerm) {
-        score += scoreExactEqualsBonus * scoreTitleWeight
+        score += scoreExactEqualsBonus
       }
 
       // Award bonus for each exact tag name match
@@ -198,7 +192,7 @@ export function calculateFinalScore(results, searchTerm) {
 
           // Check fields in priority order - first match wins
           if (titleLower?.includes(term)) {
-            score += scoreExactIncludesBonus * scoreTitleWeight
+            score += scoreExactIncludesBonus
             includesBonusesAwarded++
           } else if (normalizedUrl?.includes(normalizedUrlTerm)) {
             score += scoreExactIncludesBonus * scoreUrlWeight
@@ -262,15 +256,4 @@ export const BASE_SCORE_KEYS = {
   search: 'scoreSearchEngineBase',
   customSearch: 'scoreCustomSearchEngineBase',
   direct: 'scoreDirectUrlScore',
-}
-
-/**
- * Resolves the base score for a given result type.
- *
- * @param {Record<string, number>} opts - Effective extension options.
- * @param {string} baseKey - The canonical base score option key.
- * @returns {number}
- */
-function getBaseScoreForType(opts, baseKey) {
-  return opts[baseKey]
 }

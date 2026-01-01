@@ -40,7 +40,6 @@ describe('taxonomy search', () => {
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject({
       originalId: '1',
-      searchScore: 1,
       searchApproach: 'taxonomy',
     })
   })
