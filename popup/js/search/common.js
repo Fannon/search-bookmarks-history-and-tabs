@@ -385,13 +385,25 @@ function highlightResults(results, searchTerm) {
   for (let i = 0; i < resultsLen; i++) {
     const entry = results[i]
 
-    entry.highlightedTitle = highlightMatches(entry.title || entry.url, highlightRegex)
-    entry.highlightedUrl = highlightMatches(entry.url, highlightRegex)
+    const title = entry.title
+    const url = entry.url
+    const escapedUrl = escapeHtml(url)
+
+    // Optimization: avoid redundant highlighting if title and URL are the same
+    if (!title || title === url) {
+      const highlighted = escapedUrl.replace(highlightRegex, '<mark>$1</mark>')
+      entry.highlightedTitle = highlighted
+      entry.highlightedUrl = highlighted
+    } else {
+      entry.highlightedTitle = highlightMatches(title, highlightRegex)
+      entry.highlightedUrl = escapedUrl.replace(highlightRegex, '<mark>$1</mark>')
+    }
 
     const tagsArray = entry.tagsArray
     if (tagsArray) {
-      const highlightedTags = new Array(tagsArray.length)
-      for (let j = 0; j < tagsArray.length; j++) {
+      const tagCount = tagsArray.length
+      const highlightedTags = new Array(tagCount)
+      for (let j = 0; j < tagCount; j++) {
         highlightedTags[j] = highlightMatches(`#${tagsArray[j]}`, highlightRegex)
       }
       entry.highlightedTagsArray = highlightedTags
@@ -399,8 +411,9 @@ function highlightResults(results, searchTerm) {
 
     const folderArray = entry.folderArray
     if (folderArray) {
-      const highlightedFolders = new Array(folderArray.length)
-      for (let j = 0; j < folderArray.length; j++) {
+      const folderCount = folderArray.length
+      const highlightedFolders = new Array(folderCount)
+      for (let j = 0; j < folderCount; j++) {
         highlightedFolders[j] = highlightMatches(`~${folderArray[j]}`, highlightRegex)
       }
       entry.highlightedFolderArray = highlightedFolders

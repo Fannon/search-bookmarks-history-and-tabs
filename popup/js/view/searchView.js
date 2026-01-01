@@ -52,47 +52,66 @@ export async function renderSearchResults() {
     const itemsHTML = []
     const searchTermSuffix = `/search/${encodeURIComponent(searchTerm || '')}`
 
-    const createBadge = (content, title, extraClass = '', extraLink = '', extraStyle = '') => {
-      const classAttr = `badge ${extraClass}`.trim()
-      const titleAttr = title ? ` title="${escapeHtml(title)}"` : ''
-      const linkAttr = extraLink ? ` x-link="${escapeHtml(extraLink)}"` : ''
-      const styleAttr = extraStyle ? ` style="${extraStyle}"` : ''
-      return `<span class="${classAttr}"${titleAttr}${linkAttr}${styleAttr}>${content}</span>`
+    // Pre-calculate type-based colors once
+    const typeColors = {
+      bookmark: escapeHtml(String(opts.bookmarkColor || '')),
+      tab: escapeHtml(String(opts.tabColor || '')),
+      history: escapeHtml(String(opts.historyColor || '')),
+      search: escapeHtml(String(opts.searchColor || '')),
+      customSearch: escapeHtml(String(opts.customSearchColor || '')),
+      direct: escapeHtml(String(opts.directColor || '')),
     }
 
-    for (let i = 0; i < result.length; i++) {
+    const createBadge = (content, title, extraClass = '', extraLink = '', extraStyle = '') => {
+      let badge = `<span class="badge ${extraClass}"`
+      if (title) badge += ` title="${escapeHtml(title)}"`
+      if (extraLink) badge += ` x-link="${escapeHtml(extraLink)}"`
+      if (extraStyle) badge += ` style="${extraStyle}"`
+      badge += `>${content}</span>`
+      return badge
+    }
+
+    // Pre-render static badges
+    const BADGE_SOURCE_TAB = createBadge('T', 'Open Tab', 'source-tab')
+    const BADGE_DUPLICATE = createBadge('Duplicate', 'Duplicate Bookmark', 'duplicate')
+    const bookmarkBaseColorStyle = opts.bookmarkColor ? `background-color: ${typeColors.bookmark}` : ''
+
+    const resultLen = result.length
+    for (let i = 0; i < resultLen; i++) {
       const entry = result[i]
       if (!entry) continue
 
       const badges = []
-      if (entry.type === 'bookmark' && entry.tab) badges.push(createBadge('T', 'Open Tab', 'source-tab'))
-      if (entry.dupe) badges.push(createBadge('Duplicate', 'Duplicate Bookmark', 'duplicate'))
+      const type = entry.type || ''
+      if (type === 'bookmark' && entry.tab) badges.push(BADGE_SOURCE_TAB)
+      if (entry.dupe) badges.push(BADGE_DUPLICATE)
 
-      if (opts.displayTags && entry.tagsArray) {
-        entry.tagsArray.forEach((tag, j) => {
-          const content =
-            shouldHighlight && entry.highlightedTagsArray?.[j] ? entry.highlightedTagsArray[j] : `#${escapeHtml(tag)}`
+      const tagsArray = entry.tagsArray
+      if (opts.displayTags && tagsArray) {
+        const highlightedTags = entry.highlightedTagsArray
+        for (let j = 0; j < tagsArray.length; j++) {
+          const tag = tagsArray[j]
+          const content = shouldHighlight && highlightedTags?.[j] ? highlightedTags[j] : `#${escapeHtml(tag)}`
           badges.push(createBadge(content, 'Bookmark Tags', 'tags', `#search/#${escapeHtml(tag)}`))
-        })
+        }
       }
 
-      if (opts.displayFolderName && entry.folderArray) {
-        const trail = []
-        const colorStyle = `background-color: ${escapeHtml(String(opts.bookmarkColor || 'none'))}`
-        entry.folderArray.forEach((folder, j) => {
-          trail.push(folder)
-          const content =
-            shouldHighlight && entry.highlightedFolderArray?.[j]
-              ? entry.highlightedFolderArray[j]
-              : `~${escapeHtml(folder)}`
-          badges.push(createBadge(content, 'Bookmark Folder', 'folder', `#search/~${trail.join(' ~')}`, colorStyle))
-        })
+      const folderArray = entry.folderArray
+      if (opts.displayFolderName && folderArray) {
+        const highlightedFolders = entry.highlightedFolderArray
+        let trail = ''
+        for (let j = 0; j < folderArray.length; j++) {
+          const folder = folderArray[j]
+          trail += (j === 0 ? '' : ' ~') + folder
+          const content = shouldHighlight && highlightedFolders?.[j] ? highlightedFolders[j] : `~${escapeHtml(folder)}`
+          badges.push(createBadge(content, 'Bookmark Folder', 'folder', `#search/~${trail}`, bookmarkBaseColorStyle))
+        }
       }
 
       if (opts.displayLastVisit && entry.lastVisitSecondsAgo != null) {
         badges.push(
           createBadge(
-            `-${escapeHtml(timeSince(new Date(Date.now() - entry.lastVisitSecondsAgo * 1000)))}`,
+            `-${escapeHtml(timeSince(Date.now() - entry.lastVisitSecondsAgo * 1000))}`,
             'Last Visited',
             'last-visited',
           ),
@@ -102,9 +121,8 @@ export async function renderSearchResults() {
         badges.push(createBadge(escapeHtml(String(entry.visitCount)), 'Visited Counter', 'visit-counter'))
       }
       if (opts.displayDateAdded && entry.dateAdded) {
-        badges.push(
-          createBadge(escapeHtml(new Date(entry.dateAdded).toISOString().split('T')[0]), 'Date Added', 'date-added'),
-        )
+        const dateStr = new Date(entry.dateAdded).toISOString().substring(0, 10)
+        badges.push(createBadge(escapeHtml(dateStr), 'Date Added', 'date-added'))
       }
       if (opts.displayScore && entry.score) {
         badges.push(createBadge(escapeHtml(String(Math.round(entry.score))), 'Score', 'score'))
@@ -113,10 +131,14 @@ export async function renderSearchResults() {
       const title =
         shouldHighlight && entry.highlightedTitle ? entry.highlightedTitle : escapeHtml(entry.title || entry.url || '')
       const url = shouldHighlight && entry.highlightedUrl ? entry.highlightedUrl : escapeHtml(entry.url || '')
-      const colorStyle = `border-left-color: ${escapeHtml(String(opts[`${entry.type}Color`]))}`
+      const colorStyle = `border-left-color: ${typeColors[type] || ''}`
+
+      const originalUrl = entry.originalUrl ? ` x-open-url="${escapeHtml(entry.originalUrl)}"` : ''
+      const originalId =
+        entry.originalId !== undefined ? ` x-original-id="${escapeHtml(String(entry.originalId))}"` : ''
 
       itemsHTML.push(
-        `<li class="${escapeHtml(entry.type || '')}"${entry.originalUrl ? ` x-open-url="${escapeHtml(entry.originalUrl)}"` : ''} x-index="${i}"${entry.originalId !== undefined ? ` x-original-id="${escapeHtml(String(entry.originalId))}"` : ''} style="${colorStyle}">${entry.type === 'bookmark' ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(entry.originalId)}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">` : ''}${entry.type === 'tab' ? '<img class="close-button" title="Close Tab" src="./img/x.svg">' : ''}<div class="title"><span class="title-text">${title} </span>${badges.join('')}</div><div class="url" title="${escapeHtml(entry.url || '')}">${url}</div></li>`,
+        `<li class="${escapeHtml(type)}"${originalUrl} x-index="${i}"${originalId} style="${colorStyle}">${type === 'bookmark' ? `<img class="edit-button" x-link="./editBookmark.html#bookmark/${encodeURIComponent(entry.originalId)}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">` : ''}${type === 'tab' ? '<img class="close-button" title="Close Tab" src="./img/x.svg">' : ''}<div class="title"><span class="title-text">${title} </span>${badges.join('')}</div><div class="url" title="${escapeHtml(entry.url || '')}">${url}</div></li>`,
       )
     }
 
