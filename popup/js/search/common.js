@@ -170,12 +170,23 @@ function addDirectUrlIfApplicable(searchTerm, results) {
  * @returns {Array} Scored and sorted results.
  */
 function applyScoring(results, searchTerm, searchMode) {
-  let scoredResults = calculateFinalScore(results, searchTerm)
+  const scoredResults = calculateFinalScore(results, searchTerm)
 
   if (searchTerm) {
-    scoredResults = sortResults(scoredResults, 'score')
-  } else if (searchMode === 'history' || searchMode === 'tabs') {
-    scoredResults = sortResults(scoredResults, 'lastVisited')
+    // Optimization: Filter by minimum score BEFORE sorting.
+    // This significantly reduces the time spent in sort() for large result sets.
+    const minScore = 30
+    const filtered = []
+    for (let i = 0; i < scoredResults.length; i++) {
+      if (scoredResults[i].score >= minScore) {
+        filtered.push(scoredResults[i])
+      }
+    }
+    return sortResults(filtered, 'score')
+  }
+
+  if (searchMode === 'history' || searchMode === 'tabs') {
+    return sortResults(scoredResults, 'lastVisited')
   }
 
   return scoredResults
@@ -189,27 +200,16 @@ function applyScoring(results, searchTerm, searchMode) {
  * @returns {Array} Filtered results.
  */
 function filterResults(results, searchMode) {
-  // Hard-coded minimum score threshold (implementation detail)
-  const minScore = 30
   const maxResults = ext.opts.searchMaxResults
   const shouldLimit = searchMode !== 'tags' && searchMode !== 'folders' && searchMode !== 'tabs'
 
-  // Fast path: no filtering needed
-  if (minScore <= 0 && (!shouldLimit || results.length <= maxResults)) {
-    return shouldLimit ? results.slice(0, maxResults) : results
+  // If we don't need to limit, or we're already under the limit, return as is.
+  // Note: minScore filtering is now handled in applyScoring for the search path.
+  if (!shouldLimit || results.length <= maxResults) {
+    return results
   }
 
-  // Single-pass filter and limit
-  const filtered = []
-  const limit = shouldLimit ? maxResults : results.length
-
-  for (let i = 0; i < results.length && filtered.length < limit; i++) {
-    if (results[i].score >= minScore) {
-      filtered.push(results[i])
-    }
-  }
-
-  return filtered
+  return results.slice(0, maxResults)
 }
 
 /**
@@ -357,11 +357,19 @@ export function sortResults(results, sortMode) {
  * @returns {Array<Object>} Highlighted results.
  */
 function highlightResults(results, searchTerm) {
-  if (!results.length || !searchTerm) {
+  const resultsLen = results.length
+  if (resultsLen === 0 || !searchTerm) {
     return results
   }
 
-  const terms = searchTerm.split(' ').filter(Boolean)
+  // Extract and clean terms once
+  const rawTerms = searchTerm.split(' ')
+  const terms = []
+  for (let i = 0; i < rawTerms.length; i++) {
+    const t = rawTerms[i]
+    if (t) terms.push(t)
+  }
+
   if (terms.length === 0) {
     return results
   }
@@ -374,17 +382,28 @@ function highlightResults(results, searchTerm) {
 
   const highlightRegex = new RegExp(`(${escapedTerms.join('|')})`, 'gi')
 
-  for (let i = 0; i < results.length; i++) {
+  for (let i = 0; i < resultsLen; i++) {
     const entry = results[i]
 
     entry.highlightedTitle = highlightMatches(entry.title || entry.url, highlightRegex)
     entry.highlightedUrl = highlightMatches(entry.url, highlightRegex)
 
-    if (entry.tagsArray) {
-      entry.highlightedTagsArray = entry.tagsArray.map((tag) => highlightMatches(`#${tag}`, highlightRegex))
+    const tagsArray = entry.tagsArray
+    if (tagsArray) {
+      const highlightedTags = new Array(tagsArray.length)
+      for (let j = 0; j < tagsArray.length; j++) {
+        highlightedTags[j] = highlightMatches(`#${tagsArray[j]}`, highlightRegex)
+      }
+      entry.highlightedTagsArray = highlightedTags
     }
-    if (entry.folderArray) {
-      entry.highlightedFolderArray = entry.folderArray.map((folder) => highlightMatches(`~${folder}`, highlightRegex))
+
+    const folderArray = entry.folderArray
+    if (folderArray) {
+      const highlightedFolders = new Array(folderArray.length)
+      for (let j = 0; j < folderArray.length; j++) {
+        highlightedFolders[j] = highlightMatches(`~${folderArray[j]}`, highlightRegex)
+      }
+      entry.highlightedFolderArray = highlightedFolders
     }
   }
 
