@@ -2,6 +2,10 @@
 
 ## [unreleased]
 
+## [v1.18.0]
+
+This release is mostly about performance improvements, partially due to simplification of the codebase and potential config options.
+
 - **CHANGE**: Default entries now exclude the currently active tab from the "recently visited" list (avoiding duplication), while ensuring it remains visible if it is bookmarked. The matching logic now also ignores anchor tags (hashes) for better discovery.
 - **CHANGE**: Reduced default `maxRecentTabsToShow` from 16 to 8 to improve performance on startup.
 - **FIXED**: Tag (`#`) and folder (`~`) search now correctly highlights the full phrase including the marker (e.g., `#music`), ensuring visual consistency and proper matching.
