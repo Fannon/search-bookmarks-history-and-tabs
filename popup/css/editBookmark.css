@@ -20,16 +20,13 @@
 /* Action Buttons */
 #bm-del {
   background: #ee4343;
-  color: #fff;
   float: left;
 }
 #bm-cancel {
   background: #929292;
-  color: #fff;
 }
 #bm-save {
   background: #5fc944;
-  color: #fff;
 }
 
 /* Form Fields */

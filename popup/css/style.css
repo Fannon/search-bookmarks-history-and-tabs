@@ -26,29 +26,6 @@
   --badge-folder: #3c8d8d;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #222;
-    --a: #f1f1f1;
-    --mark: #6b92c0;
-    --code-bg: #404040;
-    --code-fg: #9d9d9d;
-    --input-bg: #000;
-    --input-border: #444;
-    --input-fg: #ddd;
-    --li-bg: #111;
-    --li-sel: #333;
-    --li-title: #e7e7e7;
-    --footer-bg: #1a1a1a;
-    --footer-border: #333;
-    --nav-fg: #adb5bd;
-    --nav-hover: #2d2d2d;
-    --nav-active-fg: #4dabf7;
-    --nav-active-bg: #3c3d40;
-    --counter: #666;
-  }
-}
-
 /* Reset */
 *,
 *::before,
@@ -163,14 +140,6 @@ code {
 #toggle.precise {
   color: #9dcd1b;
 }
-@media (prefers-color-scheme: dark) {
-  #toggle.fuzzy {
-    color: #d593ea;
-  }
-  #toggle.precise {
-    color: #b1d354;
-  }
-}
 
 /* Badges */
 .badge {
@@ -241,7 +210,7 @@ code {
   height: 501px;
   overflow-x: hidden;
   overflow-y: scroll;
-  z-index: 9999;
+  z-index: 10;
   list-style: none;
 }
 #errors {
@@ -288,10 +257,7 @@ li.error {
   line-height: 1.4;
   overflow-wrap: break-word;
 }
-.title-text {
-  line-break: auto;
-  text-wrap: auto;
-}
+
 .url {
   display: block;
   font-size: 13px;
@@ -392,11 +358,6 @@ li.error {
 .heading {
   margin: 0 0 4px;
 }
-@media (prefers-color-scheme: dark) {
-  .heading {
-    color: #777;
-  }
-}
 
 /* Scrollbar */
 ::-webkit-scrollbar {
@@ -408,7 +369,38 @@ li.error {
 ::-webkit-scrollbar-thumb {
   background: #999;
 }
+
+/* Dark Mode */
 @media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #222;
+    --a: #f1f1f1;
+    --mark: #6b92c0;
+    --code-bg: #404040;
+    --code-fg: #9d9d9d;
+    --input-bg: #000;
+    --input-border: #444;
+    --input-fg: #ddd;
+    --li-bg: #111;
+    --li-sel: #333;
+    --li-title: #e7e7e7;
+    --footer-bg: #1a1a1a;
+    --footer-border: #333;
+    --nav-fg: #adb5bd;
+    --nav-hover: #2d2d2d;
+    --nav-active-fg: #4dabf7;
+    --nav-active-bg: #3c3d40;
+    --counter: #666;
+  }
+  #toggle.fuzzy {
+    color: #d593ea;
+  }
+  #toggle.precise {
+    color: #b1d354;
+  }
+  .heading {
+    color: #777;
+  }
   ::-webkit-scrollbar-track {
     background: #414141;
   }
