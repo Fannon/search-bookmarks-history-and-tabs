@@ -138,27 +138,16 @@ async function removeTestArtifacts(dir) {
  */
 async function modifyHtmlFile(filePath) {
   const content = await fs.readFile(filePath, 'utf8')
-  let modified = content
-    .replace(
-      '<script defer type="module" src="./js/initOptions.js"></script>',
-      '<script defer src="./js/initOptions.bundle.min.js"></script>',
-    )
-    .replace(
-      '<script defer type="module" src="./js/initSearch.js"></script>',
-      '<script defer src="./js/initSearch.bundle.min.js"></script>',
-    )
-    .replace(
-      '<script defer type="module" src="./js/initTags.js"></script>',
-      '<script defer src="./js/initTags.bundle.min.js"></script>',
-    )
-    .replace(
-      '<script defer type="module" src="./js/initFolders.js"></script>',
-      '<script defer src="./js/initFolders.bundle.min.js"></script>',
-    )
-    .replace(
-      '<script defer type="module" src="./js/initEditBookmark.js"></script>',
-      '<script defer src="./js/initEditBookmark.bundle.min.js"></script>',
-    )
+
+  // Robustly replace init scripts with their bundled versions
+  // This regex matches <script> tags pointing to ./js/init*.js and replaces them with the bundled .min.js version
+  // It handles variations in attributes (like defer, type="module"), quotes, and optional ./ prefix
+  let modified = content.replace(
+    /<script\b[^>]*src=["']((\.\/)?js\/init[^"']+)\.js["'][^>]*>\s*<\/script>/gi,
+    (_match, src) => {
+      return `<script defer src="${src}.bundle.min.js"></script>`
+    },
+  )
 
   modified = replaceStylesheetReferences(modified)
 
@@ -171,34 +160,20 @@ async function modifyHtmlFile(filePath) {
  * @returns {string}
  */
 function replaceStylesheetReferences(htmlContent) {
-  const replacements = [
-    {
-      source: '<link rel="stylesheet" href="./css/style.css" type="text/css" />',
-      target: '<link rel="stylesheet" href="./css/style.min.css" type="text/css" />',
+  // Robustly replace CSS references with their .min.css versions
+  // This regex matches <link rel="stylesheet"> tags pointing to ./css/*.css and replaces them with the .min.css version
+  // It handles variations in attributes, quotes, and optional ./ prefix.
+  // It only replaces files that are tracked in CSS_BUNDLED_FILENAMES.
+  return htmlContent.replace(
+    /<link\b[^>]*href=["']((\.\/)?css\/([^"']+))\.css["'][^>]*\/?>/gi,
+    (match, fullPath, _prefix, fileName) => {
+      // Check if this CSS file is one that we minify/bundle
+      if (CSS_BUNDLED_FILENAMES.has(`${fileName}.css`)) {
+        return `<link rel="stylesheet" href="${fullPath}.min.css" />`
+      }
+      return match
     },
-    {
-      source: '<link rel="stylesheet" href="./css/style.css" />',
-      target: '<link rel="stylesheet" href="./css/style.min.css" />',
-    },
-    {
-      source: '<link rel="stylesheet" href="./css/options.css" />',
-      target: '<link rel="stylesheet" href="./css/options.min.css" />',
-    },
-    {
-      source: '<link rel="stylesheet" href="./css/taxonomy.css" type="text/css" />',
-      target: '<link rel="stylesheet" href="./css/taxonomy.min.css" type="text/css" />',
-    },
-    {
-      source: '<link rel="stylesheet" href="./css/editBookmark.css" type="text/css" />',
-      target: '<link rel="stylesheet" href="./css/editBookmark.min.css" type="text/css" />',
-    },
-    {
-      source: '<link rel="stylesheet" href="./css/editBookmark.css" />',
-      target: '<link rel="stylesheet" href="./css/editBookmark.min.css" />',
-    },
-  ]
-
-  return replacements.reduce((result, { source, target }) => result.replace(source, target), htmlContent)
+  )
 }
 
 /**

@@ -5,25 +5,26 @@
   <title>Search Bookmarks, History and Tabs</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./css/style.css" type="text/css" />
+  <link rel="stylesheet" href="./css/style.css" />
   <link rel="icon" type="image/png" href="../images/logo-32.png" />
 </head>
 
-<body style="width: 515px; height: 600px;">
+<body>
   <div id="container">
     <div id="search">
       <input id="q" class="input" type="search" placeholder="Search tabs, bookmarks and history" spellcheck="false"
-        autocomplete="off" autofocus />
-      <div id="toggle" class="fuzzy" title="Toggle Search Approach"></div>
+        autocomplete="off" autofocus aria-label="Search tabs, bookmarks and history" />
+      <div id="toggle" class="fuzzy" title="Toggle Search Approach" role="button" tabindex="0"
+        aria-label="Toggle Search Strategy"></div>
       <ul id="results">
         <li id="results-load">Loading...</li>
       </ul>
     </div>
     <footer id="links">
-      <a href="#search/" class="nav active">
+      <a href="#search/" class="nav active" aria-current="page">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-          class="icon-tabler-search">
+          class="icon-tabler-search" aria-hidden="true">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
           <path d="M21 21l-6 -6" />
@@ -35,7 +36,8 @@
       </a>
       <a href="./tags.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-tag">
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-tag"
+          aria-hidden="true">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <path d="M7.5 7.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
           <path
@@ -46,7 +48,7 @@
       <a href="./folders.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-          class="icon-tabler-folder">
+          class="icon-tabler-folder" aria-hidden="true">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />
         </svg>
@@ -55,7 +57,7 @@
       <a href="./options.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-          class="icon-tabler-settings">
+          class="icon-tabler-settings" aria-hidden="true">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <path
             d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37a1.724 1.724 0 0 0 2.572 -1.065z" />
@@ -63,10 +65,10 @@
         </svg>
         <span>Options</span>
       </a>
-      <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab" class="nav">
+      <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_blank" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-          class="icon-tabler-help">
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-help"
+          aria-hidden="true">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
           <path d="M12 17l0 .01" />

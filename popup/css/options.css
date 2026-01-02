@@ -31,19 +31,15 @@
 
 /* Action Buttons */
 #opt-help {
-  background: #4494c9 !important;
-  color: #fff !important;
+  background: #4494c9;
   float: left;
 }
 #opt-cancel {
   background: #929292;
-  color: #fff;
 }
 #opt-reset {
   background: #ee4343;
-  color: #fff;
 }
 #opt-save {
   background: #5fc944;
-  color: #fff;
 }
