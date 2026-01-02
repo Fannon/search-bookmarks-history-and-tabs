@@ -41,11 +41,11 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
 
   const mockNav = {
     selectListItem: jest.fn((index) => {
-      const list = document.getElementById('result-list')
-      const current = document.getElementById('selected-result')
+      const list = document.getElementById('results')
+      const current = document.getElementById('sel')
       if (current) current.id = ''
       if (list?.children[index]) {
-        list.children[index].id = 'selected-result'
+        list.children[index].id = 'sel'
       }
       if (global.ext?.model) {
         global.ext.model.currentItem = index
@@ -71,14 +71,14 @@ async function setupSearchView({ results = createResults(), opts = {} } = {}) {
   const searchViewModule = await import('../searchView.js')
 
   document.body.innerHTML = `
-    <input id="search-input" />
-    <ul id="result-list"></ul>
-    <button id="search-approach-toggle"></button>
+    <input id="q" />
+    <ul id="results"></ul>
+    <button id="toggle"></button>
   `
 
-  const resultList = document.getElementById('result-list')
-  const searchInput = document.getElementById('search-input')
-  const searchApproachToggle = document.getElementById('search-approach-toggle')
+  const resultList = document.getElementById('results')
+  const searchInput = document.getElementById('q')
+  const searchApproachToggle = document.getElementById('toggle')
 
   const copiedResults = results.map((entry) => ({ ...entry }))
   const tabEntries = copiedResults
@@ -202,9 +202,9 @@ describe('searchView renderSearchResults', () => {
 
     const tabItem = listItems[1]
     expect(tabItem.className).toBe('tab')
-    expect(tabItem.querySelector('.close-button')).not.toBeNull()
+    expect(tabItem.querySelector('.close')).not.toBeNull()
 
-    expect(document.getElementById('selected-result')).toBe(bookmarkItem)
+    expect(document.getElementById('sel')).toBe(bookmarkItem)
     expect(ext.model.currentItem).toBe(0)
   })
 
@@ -306,7 +306,7 @@ describe('searchView renderSearchResults', () => {
     await module.renderSearchResults()
 
     const listItem = elements.resultList.querySelector('li')
-    const editButton = listItem.querySelector('.edit-button')
+    const editButton = listItem.querySelector('.edit')
     const link = editButton.getAttribute('x-link')
 
     expect(link).toContain('bookmark%2Fwith%2Fslashes')

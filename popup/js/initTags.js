@@ -22,10 +22,10 @@ window.ext = ext
  * @returns {Promise<void>}
  */
 export async function initTagsPage() {
-  const loadingIndicator = document.getElementById('tags-loading')
+  const loadingIndicator = document.getElementById('tags-load')
 
   try {
-    ext.dom.tagsOverview = document.getElementById('tags-overview')
+    ext.dom.tagsOverview = document.getElementById('tags-view')
     ext.dom.tagsList = document.getElementById('tags-list')
 
     ext.opts = await getEffectiveOptions()

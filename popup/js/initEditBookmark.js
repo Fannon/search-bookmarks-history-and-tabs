@@ -27,15 +27,15 @@ const LEGACY_BOOKMARK_HASH_PREFIX = '#id/'
  * @returns {Promise<void>}
  */
 export async function initEditBookmark() {
-  const loadingIndicator = document.getElementById('edit-bookmark-loading')
+  const loadingIndicator = document.getElementById('bm-load')
 
   try {
-    ext.dom.editBookmark = document.getElementById('edit-bookmark')
-    ext.dom.errorList = document.getElementById('error-list')
-    ext.dom.saveButton = document.getElementById('edit-bookmark-save')
-    ext.dom.deleteButton = document.getElementById('edit-bookmark-delete')
-    ext.dom.cancelButton = document.getElementById('edit-bookmark-cancel')
-    ext.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
+    ext.dom.editBookmark = document.getElementById('edit-bm')
+    ext.dom.errorList = document.getElementById('errors')
+    ext.dom.saveButton = document.getElementById('bm-save')
+    ext.dom.deleteButton = document.getElementById('bm-del')
+    ext.dom.cancelButton = document.getElementById('bm-cancel')
+    ext.dom.searchApproachToggle = document.getElementById('toggle')
     ext.opts = await getEffectiveOptions()
 
     const { bookmarkId, returnHash } = parseBookmarkHash(window.location.hash)
@@ -162,9 +162,9 @@ function buildSearchHash(searchTerm) {
  * Register click handlers for bookmark editor actions.
  */
 function setupEventHandlers() {
-  const saveButton = document.getElementById('edit-bookmark-save')
-  const deleteButton = document.getElementById('edit-bookmark-delete')
-  const cancelButton = document.getElementById('edit-bookmark-cancel')
+  const saveButton = document.getElementById('bm-save')
+  const deleteButton = document.getElementById('bm-del')
+  const cancelButton = document.getElementById('bm-cancel')
 
   if (saveButton && !saveButton.dataset.listenerAttached) {
     saveButton.addEventListener('click', (event) => {

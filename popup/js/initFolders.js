@@ -22,10 +22,10 @@ window.ext = ext
  * @returns {Promise<void>}
  */
 export async function initFoldersPage() {
-  const loadingIndicator = document.getElementById('folders-loading')
+  const loadingIndicator = document.getElementById('folders-load')
 
   try {
-    ext.dom.foldersOverview = document.getElementById('folders-overview')
+    ext.dom.foldersOverview = document.getElementById('folders-view')
     ext.dom.foldersList = document.getElementById('folders-list')
 
     ext.opts = await getEffectiveOptions()

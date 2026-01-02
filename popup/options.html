@@ -10,16 +10,14 @@
   <link rel="icon" type="image/png" href="../images/logo-32.png" />
 </head>
 
-<body>
+<body id="opts">
   <div id="container">
-    <!-- Edit User Config -->
     <div id="options">
       <div class="inputs">
-        <div class="section-heading">
-          <span class="badge error-message" id="error-message" style="display: none"></span>
+        <div class="heading">
+          <span class="badge error-message" id="err-msg" style="display: none"></span>
         </div>
-        <textarea id="user-config" title="User Config" class="input" type="text" spellcheck="false"
-          autofocus></textarea>
+        <textarea id="config" title="User Config" class="input" type="text" spellcheck="false" autofocus></textarea>
       </div>
       <div class="help">
         The options are written in
@@ -30,18 +28,17 @@
       </div>
 
       <div class="controls">
-        <a id="edit-options-cancel" class="button" href="./index.html#search/">CANCEL</a>
-        <a id="edit-options-help" class="button"
+        <a id="opt-cancel" class="button" href="./index.html#search/">CANCEL</a>
+        <a id="opt-help" class="button"
           href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration"
           target="_newtab">HELP</a>
-        <a id="edit-options-reset" class="button" href="#reset">RESET</a>
-        <a id="edit-options-save" class="button" href="#save">SAVE</a>
+        <a id="opt-reset" class="button" href="#reset">RESET</a>
+        <a id="opt-save" class="button" href="#save">SAVE</a>
       </div>
     </div>
 
-    <!-- Footer Navigation -->
     <footer id="links">
-      <a href="./index.html#search/" class="nav-item">
+      <a href="./index.html#search/" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-search">
@@ -51,7 +48,7 @@
         </svg>
         <span>Search</span>
       </a>
-      <a href="./tags.html" class="nav-item">
+      <a href="./tags.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-tag">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -61,7 +58,7 @@
         </svg>
         <span>Tags</span>
       </a>
-      <a href="./folders.html" class="nav-item">
+      <a href="./folders.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-folder">
@@ -70,7 +67,7 @@
         </svg>
         <span>Folders</span>
       </a>
-      <a href="#options" class="nav-item active">
+      <a href="#options" class="nav active">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-settings">
@@ -81,7 +78,7 @@
         </svg>
         <span>Options</span>
       </a>
-      <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab" class="nav-item">
+      <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-help">
@@ -93,7 +90,7 @@
         <span>Help</span>
       </a>
     </footer>
-    <ul id="error-list"></ul>
+    <ul id="errors"></ul>
   </div>
   <script src="./lib/js-yaml.min.js"></script>
   <script defer type="module" src="./js/initOptions.js"></script>

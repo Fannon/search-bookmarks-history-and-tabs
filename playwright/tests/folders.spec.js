@@ -7,22 +7,22 @@ test.describe('Folder View', () => {
 
   test.describe('Initializing Phase', () => {
     test('successfully loads', async ({ page }) => {
-      await expect(page.locator('#folders-overview #folders-list')).toBeVisible()
+      await expect(page.locator('#folders-view #folders-list')).toBeVisible()
     })
 
     test('contains a list of folders', async ({ page }) => {
-      await expect(page.locator('#folders-overview #folders-list [x-folder="Tools"]')).toBeVisible()
+      await expect(page.locator('#folders-view #folders-list [x-folder="Tools"]')).toBeVisible()
       await expectNoClientErrors(page)
     })
 
     test('allows navigation via folders', async ({ page }) => {
-      await page.locator('#folders-overview #folders-list [x-folder="Tools"]').click()
+      await page.locator('#folders-view #folders-list [x-folder="Tools"]').click()
       await expect(page).toHaveURL(/#search\/~Tools$/)
 
-      await expect(page.locator('#search-input')).toHaveValue('~Tools')
-      await expect(page.locator('#result-list')).not.toHaveCount(0)
-      await expect(page.locator('#result-list [x-original-id="6"]')).toBeVisible()
-      await expect(page.locator('#result-list li.bookmark')).not.toHaveCount(0)
+      await expect(page.locator('#q')).toHaveValue('~Tools')
+      await expect(page.locator('#results')).not.toHaveCount(0)
+      await expect(page.locator('#results [x-original-id="6"]')).toBeVisible()
+      await expect(page.locator('#results li.bookmark')).not.toHaveCount(0)
 
       await expectNoClientErrors(page)
     })

@@ -3,15 +3,15 @@ import { clearTestExt, flushPromises } from './testUtils.js'
 
 function setupDom() {
   document.body.innerHTML = `
-    <div id="edit-bookmark"></div>
-    <textarea id="bookmark-title"></textarea>
-    <textarea id="bookmark-url"></textarea>
-    <textarea id="bookmark-tags"></textarea>
-    <a id="edit-bookmark-save" href="#"></a>
-    <a id="edit-bookmark-delete" href="#"></a>
-    <a id="edit-bookmark-cancel" href="#"></a>
-    <div id="edit-bookmark-loading">Loading...</div>
-    <ul id="error-list"></ul>
+    <div id="edit-bm"></div>
+    <textarea id="bm-title"></textarea>
+    <textarea id="bm-url"></textarea>
+    <textarea id="bm-tags"></textarea>
+    <a id="bm-save" href="#"></a>
+    <a id="bm-del" href="#"></a>
+    <a id="bm-cancel" href="#"></a>
+    <div id="bm-load">Loading...</div>
+    <ul id="errors"></ul>
   `
 }
 
@@ -73,13 +73,13 @@ describe('initEditBookmark entry point', () => {
     expect(editBookmark).toHaveBeenCalledWith('bookmark-1')
     expect(getEffectiveOptions).toHaveBeenCalled()
     expect(getSearchData).toHaveBeenCalled()
-    expect(document.getElementById('edit-bookmark-loading')).toBeNull()
-    expect(document.getElementById('edit-bookmark-cancel').getAttribute('href')).toBe('./index.html#search/foo')
+    expect(document.getElementById('bm-load')).toBeNull()
+    expect(document.getElementById('bm-cancel').getAttribute('href')).toBe('./index.html#search/foo')
 
-    document.getElementById('edit-bookmark-save').dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    document.getElementById('bm-save').dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(updateBookmark).toHaveBeenCalledWith('bookmark-1')
 
-    document.getElementById('edit-bookmark-delete').dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    document.getElementById('bm-del').dispatchEvent(new MouseEvent('click', { bubbles: true }))
     await flushPromises()
     expect(deleteBookmark).toHaveBeenCalledWith('bookmark-1')
   })

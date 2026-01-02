@@ -19,7 +19,7 @@ import { renderSearchResults } from './searchView.js'
  * Provides multiple ways to interact with search results (open, close tabs, navigate to tags/folders, etc.)
  */
 export function openResultItem(event) {
-  const resultEntry = document.getElementById('selected-result')
+  const resultEntry = document.getElementById('sel')
 
   if (event) {
     event.stopPropagation()
@@ -40,7 +40,7 @@ export function openResultItem(event) {
 
     // Handle close button clicks on tab entries
     // For close buttons, ALWAYS read from DOM to match the visually clicked item
-    if (target?.className.includes('close-button')) {
+    if (target?.className.includes('close')) {
       // Find the parent list item to get the correct originalId
       let listItem = target.parentElement
       while (listItem && listItem.nodeName !== 'LI') {
@@ -54,7 +54,7 @@ export function openResultItem(event) {
       ext.browserApi.tabs.remove(targetId)
 
       // Remove the item from the UI - use targetId to ensure we have a valid value
-      const domElement = document.querySelector(`#result-list > li[x-original-id="${targetId}"]`)
+      const domElement = document.querySelector(`#results > li[x-original-id="${targetId}"]`)
       if (domElement) {
         domElement.remove()
       }
@@ -259,7 +259,7 @@ export function setupResultItemsEvents() {
       if (listItem) {
         // Update selection for this item
         clearSelection()
-        listItem.id = 'selected-result'
+        listItem.id = 'sel'
         openResultItem({
           target: event.target,
           srcElement: event.target,

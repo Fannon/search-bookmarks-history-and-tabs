@@ -33,11 +33,11 @@ global.window.chrome = mockChrome
 /** setup DOM */
 document.body.innerHTML = `
   <div id="container">
-    <input id="search-input" value="" />
-    <ul id="result-list"></ul>
-    <div id="result-counter"></div>
-    <ul id="error-list"></ul>
-    <div id="search-approach-toggle"></div>
+    <input id="q" value="" />
+    <ul id="results"></ul>
+    <div id="counter"></div>
+    <ul id="errors"></ul>
+    <div id="toggle"></div>
   </div>
 `
 
@@ -50,9 +50,9 @@ createTestExt({
     historyMaxItems: 2000,
   },
   dom: {
-    searchInput: document.getElementById('search-input'),
-    resultList: document.getElementById('result-list'),
-    resultCounter: document.getElementById('result-counter'),
+    searchInput: document.getElementById('q'),
+    resultList: document.getElementById('results'),
+    resultCounter: document.getElementById('counter'),
   },
   browserApi: mockChrome,
   initialized: true,

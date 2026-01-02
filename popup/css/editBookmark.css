@@ -1,45 +1,52 @@
-#edit-bookmark {
+/* Edit Bookmark Page */
+
+#edit-bm {
   padding: 0;
   overflow: hidden;
   width: 515px;
-  height: 556px; /* 600 - 44 */
-  background: #eee;
+  height: 556px;
+  background: var(--bg);
   position: relative;
 }
-#edit-bookmark .section-heading {
-  margin: 4px 8px 4px 8px;
+
+#edit-bm .heading {
+  margin: 4px 8px;
 }
-#edit-bookmark-delete {
+#bm-load {
+  padding: 12px;
+  font-size: 16px;
+}
+
+/* Action Buttons */
+#bm-del {
   background: #ee4343;
   color: #fff;
   float: left;
 }
-
-#edit-bookmark-cancel {
+#bm-cancel {
   background: #929292;
   color: #fff;
 }
-
-#edit-bookmark-save {
+#bm-save {
   background: #5fc944;
   color: #fff;
 }
 
-#bookmark-title {
+/* Form Fields */
+#bm-title {
   height: 114px;
   resize: none;
   font-size: 1em;
   margin-top: 8px;
 }
-
-#bookmark-url {
+#bm-url {
   height: 76px;
   resize: none;
   font-size: 0.85em;
 }
 
-#bookmark-tags,
-#edit-bookmark .tagify {
+#bm-tags,
+#edit-bm .tagify {
   height: 85px;
   font-size: 18px;
   border: none;
@@ -47,12 +54,7 @@
   overflow-x: hidden;
 }
 
-#edit-bookmark-loading {
-  padding: 12px;
-  font-size: 16px;
-}
-
-/** CUSTOMIZE TAGIFY STYLE */
+/* Tagify Library Overrides */
 .tagify {
   height: 90px;
   border: none;
@@ -62,16 +64,19 @@
   --tag-text-color: #fff;
   --tag-text-color--edit: #111;
   --tag-remove-bg: var(--tag-hover);
-  --tag-pad: 2px 8px 4px 8px;
+  --tag-pad: 2px 8px 4px;
   --tag-inset-shadow-size: 1.35em;
   --tag-remove-btn-bg--hover: #000;
 }
+
 .tagify__tag {
   margin: 6px 0 5px 6px;
 }
 .tagify__tag > div {
   font-size: 15px;
 }
+
+/* Dropdown */
 .tagify__dropdown {
   max-height: 217px;
   border: none;
@@ -87,19 +92,13 @@
   background: #557292 !important;
 }
 
-@media screen and (prefers-color-scheme: dark) {
-  #edit-bookmark {
-    background: #222;
+@media (prefers-color-scheme: dark) {
+  #edit-bm a:hover {
+    color: var(--a);
   }
-
-  #edit-bookmark a:hover {
-    color: #f1f1f1;
+  #edit-bm mark {
+    color: var(--mark);
   }
-
-  #edit-bookmark mark {
-    color: #6b92c0;
-  }
-  /** CUSTOMIZE TAGIFY STYLE */
   .tagify__dropdown__wrapper {
     background: #111;
   }

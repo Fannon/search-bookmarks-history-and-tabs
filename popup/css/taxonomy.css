@@ -1,18 +1,20 @@
-#tags-overview,
-#folders-overview {
+/* Tags & Folders Overview Pages */
+
+#tags-view,
+#folders-view {
   position: fixed;
   top: 0;
   left: 0;
   width: 515px;
-  height: 556px; /* 600 - 44 */
-  background: #eee;
+  height: 556px;
+  background: var(--bg);
   padding: 8px;
-  overflow-x: hidden;
   overflow-y: scroll;
 }
 
-body.tags-page #error-list,
-body.folders-page #error-list {
+/* Error List Position Override */
+#tags #errors,
+#folders #errors {
   top: 0;
 }
 
@@ -20,39 +22,20 @@ body.folders-page #error-list {
 #folders-list {
   width: 100%;
 }
-
 #tags-list a,
-#folders-list a,
-#tags-list a:hover,
-#folders-list a:hover {
+#folders-list a {
   color: #fff;
   font-size: 15px;
   margin: 4px 4px 0 0;
 }
 
-@media screen and (prefers-color-scheme: dark) {
-  body.tags-page,
-  body.folders-page,
-  body.tags-page #tags-overview,
-  body.folders-page #folders-overview {
-    background: #222;
+@media (prefers-color-scheme: dark) {
+  #tags a,
+  #folders a {
+    color: var(--a);
   }
-
-  body.tags-page a,
-  body.tags-page a:visited,
-  body.tags-page a:hover,
-  body.tags-page #tags-overview a:hover,
-  body.folders-page a,
-  body.folders-page a:visited,
-  body.folders-page a:hover,
-  body.folders-page #folders-overview a:hover {
-    color: #f1f1f1;
-  }
-
-  body.tags-page mark,
-  body.folders-page mark,
-  body.tags-page #tags-overview mark,
-  body.folders-page #folders-overview mark {
-    color: #6b92c0;
+  #tags mark,
+  #folders mark {
+    color: var(--mark);
   }
 }

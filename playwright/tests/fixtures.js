@@ -9,5 +9,5 @@ export const test = base.extend({
 export { expect }
 
 export const expectNoClientErrors = async (page) => {
-  await expect(page.locator('#error-list')).toHaveText('')
+  await expect(page.locator('#errors')).toHaveText('')
 }

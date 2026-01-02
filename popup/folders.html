@@ -10,15 +10,15 @@
   <link rel="icon" type="image/png" href="../images/logo-32.png" />
 </head>
 
-<body class="folders-page">
+<body id="folders">
   <div id="container">
-    <div id="folders-overview">
+    <div id="folders-view">
       <div id="folders-list">
-        <div id="folders-loading" class="section-heading">Loading...</div>
+        <div id="folders-load" class="heading">Loading...</div>
       </div>
     </div>
     <footer id="links">
-      <a href="./index.html#search/" class="nav-item">
+      <a href="./index.html#search/" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-search">
@@ -28,7 +28,7 @@
         </svg>
         <span>Search</span>
       </a>
-      <a href="./tags.html" class="nav-item">
+      <a href="./tags.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-tag">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -38,7 +38,7 @@
         </svg>
         <span>Tags</span>
       </a>
-      <a href="./folders.html" class="nav-item active">
+      <a href="./folders.html" class="nav active">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-folder">
@@ -47,7 +47,7 @@
         </svg>
         <span>Folders</span>
       </a>
-      <a href="./options.html" class="nav-item">
+      <a href="./options.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-settings">
@@ -58,7 +58,7 @@
         </svg>
         <span>Options</span>
       </a>
-      <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab" class="nav-item">
+      <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-help">
@@ -70,7 +70,7 @@
         <span>Help</span>
       </a>
     </footer>
-    <ul id="error-list"></ul>
+    <ul id="errors"></ul>
   </div>
   <script defer type="module" src="./js/initFolders.js"></script>
 </body>
