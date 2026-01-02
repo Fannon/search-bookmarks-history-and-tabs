@@ -4,7 +4,7 @@
   top: 0;
   left: 0;
   width: 500px;
-  height: 578px;
+  height: 556px; /* 600 - 44 */
   background: #eee;
   padding: 4px 8px;
   overflow-x: hidden;

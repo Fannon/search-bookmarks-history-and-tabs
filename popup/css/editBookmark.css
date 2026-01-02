@@ -2,7 +2,7 @@
   padding: 0;
   overflow: hidden;
   width: 500px;
-  height: 578px;
+  height: 556px; /* 600 - 44 */
   background: #eee;
   position: relative;
 }

@@ -1,14 +1,14 @@
 /** EDIT Options */
 #options {
   width: 500px;
-  height: 578px;
+  height: 556px; /* 600 - 44 */
   position: relative;
 }
 #options .section-heading {
   margin: 4px 8px 4px 8px;
 }
 #options textarea {
-  height: 442px;
+  height: 420px; /* 442 - (44 - 22) */
   font-size: 18px;
   font-family: Consolas, monospace;
   resize: none;
