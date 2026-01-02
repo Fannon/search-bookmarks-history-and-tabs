@@ -2,6 +2,11 @@
 
 ## [unreleased]
 
+- **IMPROVED**: Major redesign of the bottom navigation bar.
+  - Replaced plain text links with a modern "segmented control" toolbar at the bottom.
+  - Used Tabler Icons for Search, Tags, Folders, Options, and Help.
+  - Search result counter is part of the Search navigation item.
+- **IMPROVED**: Streamlined UI by removing redundant section titles across all views, maximizing the visible area for the actual content.
 - **CHANGED**: Smaller layout / CSS adjustments to allow for more textarea size when editing bookmark titles and URLs.
 - **FIXED**: Potential fix (to be confirmed) for zoom level issues on some systems, not showing controls at the bottom of the popup.
 
