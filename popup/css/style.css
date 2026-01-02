@@ -54,7 +54,8 @@ html,
 body,
 #container,
 #search {
-  width: 500px;
+  width: 515px;
+  min-width: 515px;
   height: 600px;
   overflow: hidden;
 }
@@ -84,8 +85,7 @@ textarea {
 .input:active,
 .input:focus {
   width: 100%;
-  max-width: 500px;
-  min-width: 500px;
+  max-width: 515px;
   height: 55px;
   padding: 4px 8px;
   font-size: 24px;
@@ -96,8 +96,8 @@ textarea {
   border-bottom: 1px solid #ccc;
 }
 #search-input {
-  width: 474px;
-  min-width: 474px;
+  width: 489px;
+  min-width: 489px;
 }
 #search-approach-toggle {
   float: right;
@@ -237,7 +237,7 @@ code {
   z-index: 9999;
 }
 #error-list {
-  width: 500px;
+  width: 515px;
   top: 0;
 }
 #result-list a,
@@ -283,7 +283,7 @@ li.error {
   filter: brightness(135%);
 }
 .title {
-  font-size: 17.5px;
+  font-size: 18px;
   margin: 0;
   font-weight: 400;
   color: #333;
@@ -293,14 +293,14 @@ li.error {
 }
 #error-list {
   position: fixed;
-  width: 494px;
+  width: 515px;
   top: 55px;
   overflow-y: hidden;
   display: none;
 }
 #links {
   height: 44px;
-  width: 500px;
+  width: 515px;
   position: absolute;
   top: 556px; /* 600 - 44 */
   left: 0;
