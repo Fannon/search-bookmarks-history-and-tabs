@@ -1,17 +1,20 @@
 /** EDIT Options */
 #options {
   width: 500px;
-  height: 580px;
-  position: fixed;
+  height: 578px;
+  position: relative;
 }
 #options .section-heading {
   margin: 4px 8px 4px 8px;
 }
 #options textarea {
-  height: 426px;
+  height: 442px;
   font-size: 18px;
   font-family: Consolas, monospace;
   resize: none;
+}
+#options .controls {
+  bottom: 12px;
 }
 #options .help {
   padding: 2px 6px;
