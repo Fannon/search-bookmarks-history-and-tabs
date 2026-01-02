@@ -2,6 +2,9 @@
 
 ## [unreleased]
 
+- **CHANGED**: Smaller layout / CSS adjustments to allow for more textarea size when editing bookmark titles and URLs.
+- **FIXED**: Potential fix (to be confirmed) for zoom level issues on some systems, not showing controls at the bottom of the popup.
+
 ## [v1.18.0]
 
 This release is mostly about performance improvements, partially due to simplification of the codebase and potential config options.
