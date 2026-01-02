@@ -1,14 +1,27 @@
+/* ============================================
+   Edit Bookmark Page
+   ============================================ */
+
+/* Layout Container */
 #edit-bookmark {
   padding: 0;
   overflow: hidden;
   width: 515px;
-  height: 556px; /* 600 - 44 */
+  height: 556px;
   background: #eee;
   position: relative;
 }
+
 #edit-bookmark .section-heading {
-  margin: 4px 8px 4px 8px;
+  margin: 4px 8px;
 }
+
+#edit-bookmark-loading {
+  padding: 12px;
+  font-size: 16px;
+}
+
+/* Action Buttons */
 #edit-bookmark-delete {
   background: #ee4343;
   color: #fff;
@@ -25,6 +38,7 @@
   color: #fff;
 }
 
+/* Form Fields */
 #bookmark-title {
   height: 114px;
   resize: none;
@@ -47,12 +61,9 @@
   overflow-x: hidden;
 }
 
-#edit-bookmark-loading {
-  padding: 12px;
-  font-size: 16px;
-}
-
-/** CUSTOMIZE TAGIFY STYLE */
+/* ============================================
+   Tagify Library Overrides
+   ============================================ */
 .tagify {
   height: 90px;
   border: none;
@@ -62,32 +73,42 @@
   --tag-text-color: #fff;
   --tag-text-color--edit: #111;
   --tag-remove-bg: var(--tag-hover);
-  --tag-pad: 2px 8px 4px 8px;
+  --tag-pad: 2px 8px 4px;
   --tag-inset-shadow-size: 1.35em;
   --tag-remove-btn-bg--hover: #000;
 }
+
 .tagify__tag {
   margin: 6px 0 5px 6px;
 }
+
 .tagify__tag > div {
   font-size: 15px;
 }
+
+/* Dropdown */
 .tagify__dropdown {
   max-height: 217px;
   border: none;
 }
+
 .tagify__dropdown__wrapper {
   border: none;
 }
+
 .tagify__dropdown__item {
   padding: 3px 8px;
   background: #fff;
 }
+
 .tagify__dropdown__item--active {
   background: #557292 !important;
 }
 
-@media screen and (prefers-color-scheme: dark) {
+/* ============================================
+   Dark Mode
+   ============================================ */
+@media (prefers-color-scheme: dark) {
   #edit-bookmark {
     background: #222;
   }
@@ -99,14 +120,16 @@
   #edit-bookmark mark {
     color: #6b92c0;
   }
-  /** CUSTOMIZE TAGIFY STYLE */
+
   .tagify__dropdown__wrapper {
     background: #111;
   }
+
   .tagify__dropdown__item {
     color: #ccc;
     background: #000;
   }
+
   .tagify__tag > div > [contenteditable] {
     color: #eee;
   }

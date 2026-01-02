@@ -1,58 +1,58 @@
+/* ============================================
+   Tags & Folders Overview Pages
+   ============================================ */
+
+/* Layout Container */
 #tags-overview,
 #folders-overview {
   position: fixed;
   top: 0;
   left: 0;
   width: 515px;
-  height: 556px; /* 600 - 44 */
+  height: 556px;
   background: #eee;
   padding: 8px;
   overflow-x: hidden;
   overflow-y: scroll;
 }
 
-body.tags-page #error-list,
-body.folders-page #error-list {
+/* Error List Position Override */
+.tags-page #error-list,
+.folders-page #error-list {
   top: 0;
 }
 
+/* Tag/Folder Lists */
 #tags-list,
 #folders-list {
   width: 100%;
 }
 
 #tags-list a,
-#folders-list a,
-#tags-list a:hover,
-#folders-list a:hover {
+#folders-list a {
   color: #fff;
   font-size: 15px;
   margin: 4px 4px 0 0;
 }
 
-@media screen and (prefers-color-scheme: dark) {
-  body.tags-page,
-  body.folders-page,
-  body.tags-page #tags-overview,
-  body.folders-page #folders-overview {
+/* ============================================
+   Dark Mode
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .tags-page,
+  .folders-page,
+  #tags-overview,
+  #folders-overview {
     background: #222;
   }
 
-  body.tags-page a,
-  body.tags-page a:visited,
-  body.tags-page a:hover,
-  body.tags-page #tags-overview a:hover,
-  body.folders-page a,
-  body.folders-page a:visited,
-  body.folders-page a:hover,
-  body.folders-page #folders-overview a:hover {
+  .tags-page a,
+  .folders-page a {
     color: #f1f1f1;
   }
 
-  body.tags-page mark,
-  body.folders-page mark,
-  body.tags-page #tags-overview mark,
-  body.folders-page #folders-overview mark {
+  .tags-page mark,
+  .folders-page mark {
     color: #6b92c0;
   }
 }
