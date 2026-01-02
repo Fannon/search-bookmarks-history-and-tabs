@@ -2,7 +2,7 @@
   padding: 0;
   overflow: hidden;
   width: 500px;
-  min-height: 580px;
+  height: 578px;
   background: #eee;
   position: relative;
 }
@@ -72,7 +72,7 @@
   font-size: 15px;
 }
 .tagify__dropdown {
-  max-height: 218px;
+  max-height: 216px;
   border: none;
 }
 .tagify__dropdown__wrapper {

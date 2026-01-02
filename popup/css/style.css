@@ -205,24 +205,28 @@ code {
 .controls {
   text-align: right;
   position: absolute;
-  bottom: 9px;
-  right: 8px;
-  width: 100%;
-  padding-left: 8px;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  padding: 0 4px;
 }
-.controls .button {
+.button {
   height: 28px;
   border-radius: 3px;
   display: inline-block;
-}
-.controls a,
-.controls a:hover {
+  line-height: 22px;
+  padding: 2px 12px 4px 12px;
+  font-size: 16px;
+  text-decoration: none;
+  border: none;
   background: #777;
   color: #fff;
-  margin: 0 0 0 8px;
-  padding: 2px 12px 4px 12px;
-  border: none;
-  font-size: 16px;
+}
+.controls .button {
+  margin: 0 4px;
+}
+.controls a:hover {
+  filter: brightness(110%);
 }
 #result-list,
 #error-list {
