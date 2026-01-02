@@ -78,6 +78,17 @@ h5,
 h6 {
   overflow-wrap: break-word;
 }
+p {
+  text-wrap: pretty;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-wrap: balance;
+}
 
 /* Base */
 html,
@@ -92,6 +103,7 @@ body,
 body {
   background: var(--bg);
   color: var(--fg);
+  padding: 0;
   font-size: 1.1em;
   line-height: 1.5;
   font-family: "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
@@ -230,6 +242,7 @@ code {
   overflow-x: hidden;
   overflow-y: scroll;
   z-index: 9999;
+  list-style: none;
 }
 #errors {
   width: var(--w);
@@ -272,15 +285,19 @@ li.error {
   margin: 0;
   font-weight: 400;
   color: var(--li-title);
+  line-height: 1.4;
+  overflow-wrap: break-word;
 }
-.url,
 .title-text {
-  overflow: hidden;
-  white-space: nowrap;
+  line-break: auto;
+  text-wrap: auto;
 }
 .url {
+  display: block;
   font-size: 13px;
   margin: -3px 0 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
 .edit,
 .close {
@@ -339,6 +356,7 @@ li.error {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding-top: 2px;
   gap: 1px;
   color: var(--nav-fg);
   transition: all 0.2s;
