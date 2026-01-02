@@ -8,10 +8,10 @@ import { jest } from '@jest/globals'
 
 function setupDom() {
   document.body.innerHTML = `
-    <textarea id="user-config"></textarea>
-    <button id="edit-options-save"></button>
-    <button id="edit-options-reset"></button>
-    <div id="error-message" style="display:none"></div>
+    <textarea id="config"></textarea>
+    <button id="opt-save"></button>
+    <button id="opt-reset"></button>
+    <div id="err-msg" style="display:none"></div>
   `
 }
 
@@ -82,7 +82,7 @@ describe('editOptionsView', () => {
 
     expect(mocks.getUserOptions).toHaveBeenCalledTimes(1)
     expect(mocks.dump).toHaveBeenCalledWith({ theme: 'dark' })
-    expect(document.getElementById('user-config').value).toBe('theme: dark')
+    expect(document.getElementById('config').value).toBe('theme: dark')
   })
 
   it('initOptions clears textarea when serialized options equal an empty object', async () => {
@@ -96,7 +96,7 @@ describe('editOptionsView', () => {
     await module.initOptions()
 
     expect(mocks.dump).toHaveBeenCalledWith({})
-    expect(document.getElementById('user-config').value).toBe('')
+    expect(document.getElementById('config').value).toBe('')
   })
 
   it('saveOptions normalizes YAML, persists options, and navigates back to search', async () => {
@@ -113,14 +113,14 @@ describe('editOptionsView', () => {
     })
 
     await module.initOptions()
-    document.getElementById('user-config').value = 'theme: dark'
+    document.getElementById('config').value = 'theme: dark'
 
-    document.getElementById('edit-options-save').dispatchEvent(new MouseEvent('click'))
+    document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
     await Promise.resolve()
 
     expect(mocks.load).toHaveBeenCalledWith('theme: dark')
     expect(mocks.setUserOptions).toHaveBeenCalledWith({ theme: 'dark' })
-    expect(document.getElementById('user-config').value).toBe('normalized: dark')
+    expect(document.getElementById('config').value).toBe('normalized: dark')
   })
 
   it('saveOptions displays an error message when YAML parsing fails', async () => {
@@ -137,12 +137,12 @@ describe('editOptionsView', () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
     await module.initOptions()
-    document.getElementById('user-config').value = 'invalid yaml'
+    document.getElementById('config').value = 'invalid yaml'
 
-    document.getElementById('edit-options-save').dispatchEvent(new MouseEvent('click'))
+    document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
     await Promise.resolve()
 
-    const errorMessageEl = document.getElementById('error-message')
+    const errorMessageEl = document.getElementById('err-msg')
     expect(mocks.setUserOptions).not.toHaveBeenCalled()
     expect(errorMessageEl.getAttribute('style')).toBe('')
     expect(errorMessageEl.innerText).toBe('Invalid bad input')
@@ -159,10 +159,10 @@ describe('editOptionsView', () => {
     })
 
     await module.initOptions()
-    const input = document.getElementById('user-config')
+    const input = document.getElementById('config')
     input.value = 'some config'
 
-    document.getElementById('edit-options-reset').dispatchEvent(new MouseEvent('click'))
+    document.getElementById('opt-reset').dispatchEvent(new MouseEvent('click'))
     await Promise.resolve()
 
     expect(input.value).toBe('')

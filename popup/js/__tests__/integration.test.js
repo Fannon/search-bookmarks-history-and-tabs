@@ -56,22 +56,22 @@ describe('Extension Integration Tests', () => {
 
     // Setup DOM
     document.body.innerHTML = `
-      <input id="search-input" />
-      <ul id="result-list"></ul>
-      <span id="result-counter"></span>
-      <button id="search-approach-toggle"></button>
-      <div id="results-loading"></div>
-      <div id="edit-bookmark"></div>
-      <div id="tags-overview"></div>
-      <div id="folders-overview"></div>
-      <div id="error-list"></div>
+      <input id="q" />
+      <ul id="results"></ul>
+      <span id="counter"></span>
+      <button id="toggle"></button>
+      <div id="results-load"></div>
+      <div id="edit-bm"></div>
+      <div id="tags-view"></div>
+      <div id="folders-view"></div>
+      <div id="errors"></div>
     `
 
-    ext.dom.searchInput = document.getElementById('search-input')
-    ext.dom.resultList = document.getElementById('result-list')
-    ext.dom.resultCounter = document.getElementById('result-counter')
-    ext.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
-    ext.dom.resultsLoading = document.getElementById('results-loading')
+    ext.dom.searchInput = document.getElementById('q')
+    ext.dom.resultList = document.getElementById('results')
+    ext.dom.resultCounter = document.getElementById('counter')
+    ext.dom.searchApproachToggle = document.getElementById('toggle')
+    ext.dom.resultsLoading = document.getElementById('results-load')
   })
 
   afterEach(() => {
@@ -142,7 +142,7 @@ describe('Extension Integration Tests', () => {
 
     await search({ key: 'a' })
 
-    const errorList = document.getElementById('error-list')
+    const errorList = document.getElementById('errors')
     expect(errorList.getAttribute('style')).toBe('display: block;')
     expect(errorList.innerHTML).toContain('Simple search failure')
   })

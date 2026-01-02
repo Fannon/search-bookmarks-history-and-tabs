@@ -13,7 +13,7 @@ import { escapeHtml } from '../helper/utils.js'
  * Hide the global error overlay if present on the current page.
  */
 export function closeErrors() {
-  const element = document.getElementById('error-list')
+  const element = document.getElementById('errors')
   if (element) {
     element.style = 'display: none;'
   }
@@ -26,7 +26,7 @@ export function closeErrors() {
  * @param {string} [text] - Optional context message to prepend.
  */
 export function printError(err, text) {
-  const errorList = document.getElementById('error-list')
+  const errorList = document.getElementById('errors')
 
   if (text) {
     console.error(text)

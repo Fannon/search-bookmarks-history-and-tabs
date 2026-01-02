@@ -12,15 +12,15 @@
 <body style="width: 515px; height: 600px;">
   <div id="container">
     <div id="search">
-      <input id="search-input" class="input" type="search" placeholder="Search tabs, bookmarks and history"
-        spellcheck="false" autocomplete="off" autofocus />
-      <div id="search-approach-toggle" class="fuzzy" title="Toggle Search Approach"></div>
-      <ul id="result-list">
-        <li id="results-loading">Loading...</li>
+      <input id="q" class="input" type="search" placeholder="Search tabs, bookmarks and history" spellcheck="false"
+        autocomplete="off" autofocus />
+      <div id="toggle" class="fuzzy" title="Toggle Search Approach"></div>
+      <ul id="results">
+        <li id="results-load">Loading...</li>
       </ul>
     </div>
     <footer id="links">
-      <a href="#search/" class="nav-item active">
+      <a href="#search/" class="nav active">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-search">
@@ -28,12 +28,12 @@
           <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
           <path d="M21 21l-6 -6" />
         </svg>
-        <div class="nav-label">
+        <div class="label">
           <span>Search</span>
-          <span id="result-counter"></span>
+          <span id="counter"></span>
         </div>
       </a>
-      <a href="./tags.html" class="nav-item">
+      <a href="./tags.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-tag">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -43,7 +43,7 @@
         </svg>
         <span>Tags</span>
       </a>
-      <a href="./folders.html" class="nav-item">
+      <a href="./folders.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-folder">
@@ -52,7 +52,7 @@
         </svg>
         <span>Folders</span>
       </a>
-      <a href="./options.html" class="nav-item">
+      <a href="./options.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-settings">
@@ -63,7 +63,7 @@
         </svg>
         <span>Options</span>
       </a>
-      <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab" class="nav-item">
+      <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-help">
@@ -75,7 +75,7 @@
         <span>Help</span>
       </a>
     </footer>
-    <ul id="error-list"></ul>
+    <ul id="errors"></ul>
   </div>
   <script defer type="module" src="./js/initSearch.js"></script>
 </body>

@@ -1,59 +1,52 @@
-/* ============================================
-   Edit Bookmark Page
-   ============================================ */
+/* Edit Bookmark Page */
 
-/* Layout Container */
-#edit-bookmark {
+#edit-bm {
   padding: 0;
   overflow: hidden;
   width: 515px;
   height: 556px;
-  background: #eee;
+  background: var(--bg);
   position: relative;
 }
 
-#edit-bookmark .section-heading {
+#edit-bm .heading {
   margin: 4px 8px;
 }
-
-#edit-bookmark-loading {
+#bm-load {
   padding: 12px;
   font-size: 16px;
 }
 
 /* Action Buttons */
-#edit-bookmark-delete {
+#bm-del {
   background: #ee4343;
   color: #fff;
   float: left;
 }
-
-#edit-bookmark-cancel {
+#bm-cancel {
   background: #929292;
   color: #fff;
 }
-
-#edit-bookmark-save {
+#bm-save {
   background: #5fc944;
   color: #fff;
 }
 
 /* Form Fields */
-#bookmark-title {
+#bm-title {
   height: 114px;
   resize: none;
   font-size: 1em;
   margin-top: 8px;
 }
-
-#bookmark-url {
+#bm-url {
   height: 76px;
   resize: none;
   font-size: 0.85em;
 }
 
-#bookmark-tags,
-#edit-bookmark .tagify {
+#bm-tags,
+#edit-bm .tagify {
   height: 85px;
   font-size: 18px;
   border: none;
@@ -61,9 +54,7 @@
   overflow-x: hidden;
 }
 
-/* ============================================
-   Tagify Library Overrides
-   ============================================ */
+/* Tagify Library Overrides */
 .tagify {
   height: 90px;
   border: none;
@@ -81,7 +72,6 @@
 .tagify__tag {
   margin: 6px 0 5px 6px;
 }
-
 .tagify__tag > div {
   font-size: 15px;
 }
@@ -91,45 +81,31 @@
   max-height: 217px;
   border: none;
 }
-
 .tagify__dropdown__wrapper {
   border: none;
 }
-
 .tagify__dropdown__item {
   padding: 3px 8px;
   background: #fff;
 }
-
 .tagify__dropdown__item--active {
   background: #557292 !important;
 }
 
-/* ============================================
-   Dark Mode
-   ============================================ */
 @media (prefers-color-scheme: dark) {
-  #edit-bookmark {
-    background: #222;
+  #edit-bm a:hover {
+    color: var(--a);
   }
-
-  #edit-bookmark a:hover {
-    color: #f1f1f1;
+  #edit-bm mark {
+    color: var(--mark);
   }
-
-  #edit-bookmark mark {
-    color: #6b92c0;
-  }
-
   .tagify__dropdown__wrapper {
     background: #111;
   }
-
   .tagify__dropdown__item {
     color: #ccc;
     background: #000;
   }
-
   .tagify__tag > div > [contenteditable] {
     color: #eee;
   }

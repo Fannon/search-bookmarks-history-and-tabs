@@ -43,14 +43,14 @@ async function setupSearchNavigation({ results = createResults(), opts = {} } = 
   const searchEventsModule = await import('../searchEvents.js')
 
   document.body.innerHTML = `
-    <input id="search-input" />
-    <ul id="result-list"></ul>
-    <button id="search-approach-toggle"></button>
+    <input id="q" />
+    <ul id="results"></ul>
+    <button id="toggle"></button>
   `
 
-  const resultList = document.getElementById('result-list')
-  const searchInput = document.getElementById('search-input')
-  const searchApproachToggle = document.getElementById('search-approach-toggle')
+  const resultList = document.getElementById('results')
+  const searchInput = document.getElementById('q')
+  const searchApproachToggle = document.getElementById('toggle')
 
   const copiedResults = results.map((entry) => ({ ...entry }))
   const tabEntries = copiedResults
@@ -136,7 +136,7 @@ describe('searchNavigation selection helpers', () => {
     module.selectListItem(1, true)
 
     expect(ext.model.currentItem).toBe(1)
-    expect(document.getElementById('selected-result')).toBe(secondItem)
+    expect(document.getElementById('sel')).toBe(secondItem)
     expect(secondItem.scrollIntoView).toHaveBeenCalledWith({
       behavior: 'auto',
       block: 'nearest',
@@ -155,7 +155,7 @@ describe('searchNavigation selection helpers', () => {
     // Hovering should not change selection when mouse hasn't moved
     module.hoverResultItem({ target: secondItem })
     expect(ext.model.currentItem).toBe(0)
-    expect(document.getElementById('selected-result')).toBe(firstItem)
+    expect(document.getElementById('sel')).toBe(firstItem)
 
     // Simulate actual mouse movement
     ext.model.mouseMoved = true
@@ -163,7 +163,7 @@ describe('searchNavigation selection helpers', () => {
     // Now hovering should update selection
     module.hoverResultItem({ target: secondItem })
     expect(ext.model.currentItem).toBe('1')
-    expect(document.getElementById('selected-result')).toBe(secondItem)
+    expect(document.getElementById('sel')).toBe(secondItem)
   })
 })
 
@@ -193,7 +193,7 @@ describe('searchNavigation navigationKeyListener', () => {
     })
     expect(preventDefault).toHaveBeenCalledTimes(1)
     expect(ext.model.currentItem).toBe(1)
-    expect(document.getElementById('selected-result')).toBe(elements.resultList.children[1])
+    expect(document.getElementById('sel')).toBe(elements.resultList.children[1])
   })
 
   it('supports vim-style navigation keybindings', async () => {

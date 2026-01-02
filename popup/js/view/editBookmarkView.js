@@ -24,12 +24,12 @@ export async function editBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
   const uniqueTags = getUniqueTags() || {}
   const tags = Object.keys(uniqueTags).sort()
-  const editContainer = document.getElementById('edit-bookmark')
-  const titleInput = document.getElementById('bookmark-title')
-  const urlInput = document.getElementById('bookmark-url')
-  const tagsInput = document.getElementById('bookmark-tags')
-  const saveButton = document.getElementById('edit-bookmark-save')
-  const deleteButton = document.getElementById('edit-bookmark-delete')
+  const editContainer = document.getElementById('edit-bm')
+  const titleInput = document.getElementById('bm-title')
+  const urlInput = document.getElementById('bm-url')
+  const tagsInput = document.getElementById('bm-tags')
+  const saveButton = document.getElementById('bm-save')
+  const deleteButton = document.getElementById('bm-del')
 
   if (bookmark) {
     editContainer.style = ''
@@ -86,8 +86,8 @@ export async function editBookmark(bookmarkId) {
  */
 export function updateBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
-  const titleInput = document.getElementById('bookmark-title').value.trim()
-  const urlInput = document.getElementById('bookmark-url').value.trim()
+  const titleInput = document.getElementById('bm-title').value.trim()
+  const urlInput = document.getElementById('bm-url').value.trim()
   let tagsInput = ''
   if (ext.tagify.value.length) {
     tagsInput = `#${ext.tagify.value.map((el) => el.value.trim()).join(' #')}`

@@ -3,7 +3,7 @@ import { closeErrors, printError } from '../errorView.js'
 
 describe('closeErrors', () => {
   beforeEach(() => {
-    document.body.innerHTML = '<ul id="error-list" style=""></ul>'
+    document.body.innerHTML = '<ul id="errors" style=""></ul>'
   })
 
   afterEach(() => {
@@ -12,7 +12,7 @@ describe('closeErrors', () => {
 
   it('hides the error list when present', () => {
     closeErrors()
-    const element = document.getElementById('error-list')
+    const element = document.getElementById('errors')
     expect(element.style.cssText).toBe('display: none;')
   })
 
@@ -26,7 +26,7 @@ describe('printError', () => {
   let consoleErrorSpy
 
   beforeEach(() => {
-    document.body.innerHTML = '<ul id="error-list"><li>existing</li></ul>'
+    document.body.innerHTML = '<ul id="errors"><li>existing</li></ul>'
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
   })
 
@@ -41,7 +41,7 @@ describe('printError', () => {
 
     printError(err, '<b>bad markup</b>')
 
-    const items = Array.from(document.querySelectorAll('#error-list li'))
+    const items = Array.from(document.querySelectorAll('#errors li'))
     expect(items).toHaveLength(4)
 
     expect(items[0].querySelector('b').textContent).toBe('Error')
@@ -52,7 +52,7 @@ describe('printError', () => {
 
     expect(items[2].querySelector('b').textContent).toBe('Error Stack')
     expect(items[3].textContent).toBe('existing')
-    expect(document.getElementById('error-list').style.display).toBe('block')
+    expect(document.getElementById('errors').style.display).toBe('block')
     expect(consoleErrorSpy).toHaveBeenCalled()
   })
 

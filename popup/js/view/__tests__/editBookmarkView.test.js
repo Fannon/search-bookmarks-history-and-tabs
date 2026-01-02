@@ -12,13 +12,13 @@ let uniqueTagsMockValue = {}
 
 function setupDom() {
   document.body.innerHTML = `
-    <div id="edit-bookmark" style="display:none"></div>
-    <input id="bookmark-title" />
-    <input id="bookmark-url" />
-    <input id="bookmark-tags" />
-    <a id="edit-bookmark-save" href="#"></a>
-    <button id="edit-bookmark-delete"></button>
-    <div id="error-message" style="display:none"></div>
+    <div id="edit-bm" style="display:none"></div>
+    <input id="bm-title" />
+    <input id="bm-url" />
+    <input id="bm-tags" />
+    <a id="bm-save" href="#"></a>
+    <button id="bm-del"></button>
+    <div id="errors" style="display:none"></div>
   `
 }
 
@@ -156,11 +156,11 @@ describe('editBookmarkView', () => {
 
     await module.editBookmark(BOOKMARK_ID)
 
-    expect(document.getElementById('edit-bookmark').getAttribute('style')).toBe('')
-    expect(document.getElementById('bookmark-title').value).toBe('Original Title')
-    expect(document.getElementById('bookmark-url').value).toBe('http://example.com')
-    expect(document.getElementById('edit-bookmark-save').dataset.bookmarkId).toBe(BOOKMARK_ID)
-    expect(document.getElementById('edit-bookmark-delete').dataset.bookmarkId).toBe(BOOKMARK_ID)
+    expect(document.getElementById('edit-bm').getAttribute('style')).toBe('')
+    expect(document.getElementById('bm-title').value).toBe('Original Title')
+    expect(document.getElementById('bm-url').value).toBe('http://example.com')
+    expect(document.getElementById('bm-save').dataset.bookmarkId).toBe(BOOKMARK_ID)
+    expect(document.getElementById('bm-del').dataset.bookmarkId).toBe(BOOKMARK_ID)
     expect(global.ext.currentBookmarkId).toBe(BOOKMARK_ID)
 
     expect(helpers.tagifyInstances).toHaveLength(1)
@@ -223,8 +223,8 @@ describe('editBookmarkView', () => {
     const { module, mocks, helpers } = await loadEditBookmarkView()
     global.ext.returnHash = '#search/foo'
 
-    document.getElementById('bookmark-title').value = 'Updated Title'
-    document.getElementById('bookmark-url').value = 'http://updated.com'
+    document.getElementById('bm-title').value = 'Updated Title'
+    document.getElementById('bm-url').value = 'http://updated.com'
     global.ext.tagify = {
       value: [{ value: 'alpha' }, { value: 'beta' }],
     }
@@ -266,8 +266,8 @@ describe('editBookmarkView', () => {
     global.ext.returnHash = '#search/foo'
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 
-    document.getElementById('bookmark-title').value = 'Updated Title'
-    document.getElementById('bookmark-url').value = 'http://updated.com'
+    document.getElementById('bm-title').value = 'Updated Title'
+    document.getElementById('bm-url').value = 'http://updated.com'
     global.ext.tagify = {
       value: [],
     }

@@ -63,7 +63,7 @@ export function selectListItem(index, scroll = false) {
 
   // Apply new selection if the item exists
   if (ext.dom.resultList.children[index]) {
-    ext.dom.resultList.children[index].id = 'selected-result'
+    ext.dom.resultList.children[index].id = 'sel'
 
     // Smoothly scroll the selected item into view if requested
     if (scroll) {
@@ -82,7 +82,7 @@ export function selectListItem(index, scroll = false) {
  * Clear the currently selected result item
  */
 export function clearSelection() {
-  const currentSelection = document.getElementById('selected-result')
+  const currentSelection = document.getElementById('sel')
   if (currentSelection) {
     currentSelection.id = ''
     currentSelection.removeAttribute('id')

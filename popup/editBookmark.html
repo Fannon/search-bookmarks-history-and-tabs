@@ -6,31 +6,31 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="./css/style.css" type="text/css" />
-  <link rel="stylesheet" href="./lib/tagify.min.css" type="text/css" />
   <link rel="stylesheet" href="./css/editBookmark.css" type="text/css" />
+  <link rel="stylesheet" href="./lib/tagify.min.css" type="text/css" />
   <link rel="icon" type="image/png" href="../images/logo-32.png" />
 </head>
 
 <body>
   <div id="container">
-    <div id="edit-bookmark" style="display: none">
+    <div id="edit-bm" style="display: none">
       <div class="inputs">
-        <textarea id="bookmark-title" title="Bookmark Title" class="input" spellcheck="false" rows="5"></textarea>
-        <textarea id="bookmark-url" title="Bookmark URL" class="input" spellcheck="false" rows="3"></textarea>
-        <textarea id="bookmark-tags" title="Bookmark Tags" class="input" spellcheck="false" rows="4"></textarea>
+        <textarea id="bm-title" title="Bookmark Title" class="input" spellcheck="false" rows="5"></textarea>
+        <textarea id="bm-url" title="Bookmark URL" class="input" spellcheck="false" rows="3"></textarea>
+        <textarea id="bm-tags" title="Bookmark Tags" class="input" spellcheck="false" rows="4"></textarea>
       </div>
 
       <div class="controls">
-        <a id="edit-bookmark-delete" class="button" href="#">DELETE</a>
-        <a id="edit-bookmark-cancel" class="button" href="./index.html#search/">CANCEL</a>
-        <a id="edit-bookmark-save" class="button" href="#">SAVE</a>
+        <a id="bm-del" class="button" href="#">DELETE</a>
+        <a id="bm-cancel" class="button" href="./index.html#search/">CANCEL</a>
+        <a id="bm-save" class="button" href="#">SAVE</a>
       </div>
     </div>
 
-    <div id="edit-bookmark-loading">Loading...</div>
+    <div id="bm-load">Loading...</div>
 
     <footer id="links">
-      <a href="./index.html#search/" class="nav-item">
+      <a href="./index.html#search/" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-search">
@@ -40,7 +40,7 @@
         </svg>
         <span>Search</span>
       </a>
-      <a href="./tags.html" class="nav-item">
+      <a href="./tags.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-tag">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -50,7 +50,7 @@
         </svg>
         <span>Tags</span>
       </a>
-      <a href="./folders.html" class="nav-item">
+      <a href="./folders.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-folder">
@@ -59,7 +59,7 @@
         </svg>
         <span>Folders</span>
       </a>
-      <a href="./options.html" class="nav-item">
+      <a href="./options.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-settings">
@@ -70,7 +70,7 @@
         </svg>
         <span>Options</span>
       </a>
-      <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab" class="nav-item">
+      <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
           class="icon-tabler-help">
@@ -82,7 +82,7 @@
         <span>Help</span>
       </a>
     </footer>
-    <ul id="error-list"></ul>
+    <ul id="errors"></ul>
   </div>
 
   <script src="./lib/tagify.min.js"></script>

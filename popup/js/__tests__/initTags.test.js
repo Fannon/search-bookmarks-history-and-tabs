@@ -9,9 +9,9 @@ beforeEach(async () => {
   jest.resetModules()
 
   document.body.innerHTML = `
-    <div id="tags-overview"></div>
+    <div id="tags-view"></div>
     <div id="tags-list"></div>
-    <div id="tags-loading"></div>
+    <div id="tags-load"></div>
   `
 
   await jest.unstable_mockModule('../view/tagsView.js', () => ({
@@ -68,24 +68,24 @@ describe('initTagsPage', () => {
     mockGetEffectiveOptions.mockResolvedValue({})
     mockGetSearchData.mockResolvedValue({ bookmarks: [] })
 
-    const loadingIndicator = document.getElementById('tags-loading')
+    const loadingIndicator = document.getElementById('tags-load')
     expect(loadingIndicator).toBeTruthy()
 
     const { initTagsPage } = await import('../initTags.js')
     await initTagsPage()
 
-    expect(document.getElementById('tags-loading')).toBeNull()
+    expect(document.getElementById('tags-load')).toBeNull()
   })
 
   test('removes loading indicator even on error', async () => {
     mockGetEffectiveOptions.mockRejectedValue(new Error('Test error'))
 
-    const loadingIndicator = document.getElementById('tags-loading')
+    const loadingIndicator = document.getElementById('tags-load')
     expect(loadingIndicator).toBeTruthy()
 
     const { initTagsPage } = await import('../initTags.js')
     await initTagsPage()
 
-    expect(document.getElementById('tags-loading')).toBeNull()
+    expect(document.getElementById('tags-load')).toBeNull()
   })
 })

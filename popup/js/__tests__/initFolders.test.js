@@ -9,9 +9,9 @@ beforeEach(async () => {
   jest.resetModules()
 
   document.body.innerHTML = `
-    <div id="folders-overview"></div>
+    <div id="folders-view"></div>
     <div id="folders-list"></div>
-    <div id="folders-loading"></div>
+    <div id="folders-load"></div>
   `
 
   await jest.unstable_mockModule('../view/foldersView.js', () => ({
@@ -68,24 +68,24 @@ describe('initFoldersPage', () => {
     mockGetEffectiveOptions.mockResolvedValue({})
     mockGetSearchData.mockResolvedValue({ bookmarks: [] })
 
-    const loadingIndicator = document.getElementById('folders-loading')
+    const loadingIndicator = document.getElementById('folders-load')
     expect(loadingIndicator).toBeTruthy()
 
     const { initFoldersPage } = await import('../initFolders.js')
     await initFoldersPage()
 
-    expect(document.getElementById('folders-loading')).toBeNull()
+    expect(document.getElementById('folders-load')).toBeNull()
   })
 
   test('removes loading indicator even on error', async () => {
     mockGetEffectiveOptions.mockRejectedValue(new Error('Test error'))
 
-    const loadingIndicator = document.getElementById('folders-loading')
+    const loadingIndicator = document.getElementById('folders-load')
     expect(loadingIndicator).toBeTruthy()
 
     const { initFoldersPage } = await import('../initFolders.js')
     await initFoldersPage()
 
-    expect(document.getElementById('folders-loading')).toBeNull()
+    expect(document.getElementById('folders-load')).toBeNull()
   })
 })

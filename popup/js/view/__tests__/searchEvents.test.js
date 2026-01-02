@@ -59,14 +59,14 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
   const searchNavigationModule = await import('../searchNavigation.js')
 
   document.body.innerHTML = `
-    <input id="search-input" />
-    <ul id="result-list"></ul>
-    <button id="search-approach-toggle"></button>
+    <input id="q" />
+    <ul id="results"></ul>
+    <button id="toggle"></button>
   `
 
-  const resultList = document.getElementById('result-list')
-  const searchInput = document.getElementById('search-input')
-  const searchApproachToggle = document.getElementById('search-approach-toggle')
+  const resultList = document.getElementById('results')
+  const searchInput = document.getElementById('q')
+  const searchApproachToggle = document.getElementById('toggle')
 
   const copiedResults = results.map((entry) => ({ ...entry }))
   const tabEntries = copiedResults
@@ -158,7 +158,7 @@ describe('searchEvents openResultItem', () => {
   it('copies URL to clipboard on right click', async () => {
     const { module, viewModule } = await setupSearchEvents()
     await viewModule.renderSearchResults()
-    const selected = document.getElementById('selected-result')
+    const selected = document.getElementById('sel')
 
     module.openResultItem({
       button: 2,
@@ -181,7 +181,7 @@ describe('searchEvents openResultItem', () => {
     const { viewModule, elements } = await setupSearchEvents()
     await viewModule.renderSearchResults()
     const tabItem = elements.resultList.children[1]
-    const closeButton = tabItem.querySelector('.close-button')
+    const closeButton = tabItem.querySelector('.close')
 
     closeButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
 
@@ -232,7 +232,7 @@ describe('searchEvents openResultItem', () => {
     const lastResult = { ...ext.model.result[ext.model.result.length - 1] }
 
     // Mock the selected result to have a non-existent ID
-    const selectedResult = document.getElementById('selected-result')
+    const selectedResult = document.getElementById('sel')
     selectedResult.setAttribute('x-original-id', '999')
 
     // Try to close a tab with an ID that doesn't exist in the model
@@ -244,7 +244,7 @@ describe('searchEvents openResultItem', () => {
       altKey: false,
       target: {
         nodeName: 'BUTTON',
-        className: 'close-button',
+        className: 'close',
         getAttribute: () => null,
       },
       stopPropagation: jest.fn(),
@@ -291,19 +291,19 @@ describe('searchEvents openResultItem', () => {
     await viewModule.renderSearchResults()
 
     // Test closing tab with ID 8
-    const firstTabCloseButton = elements.resultList.children[0].querySelector('.close-button')
+    const firstTabCloseButton = elements.resultList.children[0].querySelector('.close')
     firstTabCloseButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
     expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(8)
 
     // Test closing tab with ID 10
     await viewModule.renderSearchResults()
-    const secondTabCloseButton = elements.resultList.children[0].querySelector('.close-button')
+    const secondTabCloseButton = elements.resultList.children[0].querySelector('.close')
     secondTabCloseButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
     expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(10)
 
     // Test closing tab with ID 100
     await viewModule.renderSearchResults()
-    const thirdTabCloseButton = elements.resultList.children[0].querySelector('.close-button')
+    const thirdTabCloseButton = elements.resultList.children[0].querySelector('.close')
     thirdTabCloseButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
     expect(ext.browserApi.tabs.remove).toHaveBeenCalledWith(100)
   })
@@ -480,7 +480,7 @@ describe('searchEvents openResultItem', () => {
     ext.model.currentItem = 0
 
     // DOM still shows old result (hasn't re-rendered yet)
-    const staleSelectedElement = document.getElementById('selected-result')
+    const staleSelectedElement = document.getElementById('sel')
     expect(staleSelectedElement.getAttribute('x-open-url')).toBe('https://bookmark.test') // Old result
 
     // Call openResultItem - it should use model state, not DOM

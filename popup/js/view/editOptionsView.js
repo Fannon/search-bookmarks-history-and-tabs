@@ -18,12 +18,12 @@ export async function initOptions() {
   const userOptions = await getUserOptions()
   const userOptionsYaml = window.jsyaml.dump(userOptions)
   if (userOptionsYaml.trim() === '{}') {
-    document.getElementById('user-config').value = ''
+    document.getElementById('config').value = ''
   } else {
-    document.getElementById('user-config').value = userOptionsYaml
+    document.getElementById('config').value = userOptionsYaml
   }
-  document.getElementById('edit-options-reset').addEventListener('click', resetOptions)
-  document.getElementById('edit-options-save').addEventListener('click', saveOptions)
+  document.getElementById('opt-reset').addEventListener('click', resetOptions)
+  document.getElementById('opt-save').addEventListener('click', saveOptions)
 }
 
 /**
@@ -32,15 +32,15 @@ export async function initOptions() {
  * @returns {Promise<void>}
  */
 async function saveOptions() {
-  const userOptionsString = document.getElementById('user-config').value
+  const userOptionsString = document.getElementById('config').value
   try {
     const userOptions = window.jsyaml.load(userOptionsString)
-    document.getElementById('user-config').value = window.jsyaml.dump(userOptions)
+    document.getElementById('config').value = window.jsyaml.dump(userOptions)
     await setUserOptions(userOptions)
   } catch (e) {
     console.error(e)
-    document.getElementById('error-message').style = ''
-    document.getElementById('error-message').innerText = `Invalid ${e.message}`
+    document.getElementById('err-msg').style = ''
+    document.getElementById('err-msg').innerText = `Invalid ${e.message}`
     return
   }
 
@@ -55,5 +55,5 @@ async function saveOptions() {
  * Clear user overrides, reverting to defaults on next load.
  */
 async function resetOptions() {
-  document.getElementById('user-config').value = ''
+  document.getElementById('config').value = ''
 }

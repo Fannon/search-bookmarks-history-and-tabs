@@ -40,10 +40,10 @@ export async function initExtension() {
   ext.opts = await getEffectiveOptions()
 
   // HTML Element selectors
-  ext.dom.searchInput = document.getElementById('search-input')
-  ext.dom.resultList = document.getElementById('result-list')
-  ext.dom.resultCounter = document.getElementById('result-counter')
-  ext.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
+  ext.dom.searchInput = document.getElementById('q')
+  ext.dom.resultList = document.getElementById('results')
+  ext.dom.resultCounter = document.getElementById('counter')
+  ext.dom.searchApproachToggle = document.getElementById('toggle')
 
   updateSearchApproachToggle()
 
@@ -69,8 +69,8 @@ export async function initExtension() {
 
   hashRouter()
 
-  if (document.getElementById('results-loading')) {
-    document.getElementById('results-loading').remove()
+  if (document.getElementById('results-load')) {
+    document.getElementById('results-load').remove()
   }
 
   console.debug(`Init in ${Date.now() - startTime}ms`)

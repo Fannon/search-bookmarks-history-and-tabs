@@ -3,14 +3,14 @@ import { clearTestExt, flushPromises } from './testUtils.js'
 
 const setupDom = () => {
   document.body.innerHTML = `
-    <input id="search-input" />
-    <ul id="result-list"></ul>
-    <span id="result-counter"></span>
-    <button id="search-approach-toggle"></button>
-    <div id="results-loading"></div>
-    <div id="tags-overview"></div>
-    <div id="folders-overview"></div>
-    <div id="error-list"></div>
+    <input id="q" />
+    <ul id="results"></ul>
+    <span id="counter"></span>
+    <button id="toggle"></button>
+    <div id="results-load"></div>
+    <div id="tags-view"></div>
+    <div id="folders-view"></div>
+    <div id="errors"></div>
   `
   window.location.hash = ''
 }
@@ -55,7 +55,7 @@ const mockDependencies = async (overrides = {}) => {
   await jest.unstable_mockModule('../view/errorView.js', () => ({
     __esModule: true,
     closeErrors: () => {
-      const element = document.getElementById('error-list')
+      const element = document.getElementById('errors')
       if (element) {
         element.style = 'display: none;'
       }
@@ -134,7 +134,7 @@ describe('initSearch entry point', () => {
     expect(module.ext.searchCache instanceof Map).toBe(true)
     expect(mocks.addDefaultEntries).toHaveBeenCalled()
     expect(mocks.renderSearchResults).toHaveBeenCalled()
-    expect(document.getElementById('results-loading')).toBeNull()
+    expect(document.getElementById('results-load')).toBeNull()
   })
 
   test('hashRouter handles search, bookmark routes, and ignores tags/folders routes', async () => {
@@ -200,14 +200,14 @@ describe('initSearch entry point', () => {
     moduleUnderTest = module
     await flushPromises()
 
-    document.getElementById('error-list').style = ''
-    document.getElementById('tags-overview').style = ''
-    document.getElementById('folders-overview').style = ''
+    document.getElementById('errors').style = ''
+    document.getElementById('tags-view').style = ''
+    document.getElementById('folders-view').style = ''
 
     module.closeErrors()
 
-    expect(document.getElementById('error-list').style.cssText).toBe('display: none;')
-    expect(document.getElementById('tags-overview').style.cssText).toBe('')
-    expect(document.getElementById('folders-overview').style.cssText).toBe('')
+    expect(document.getElementById('errors').style.cssText).toBe('display: none;')
+    expect(document.getElementById('tags-view').style.cssText).toBe('')
+    expect(document.getElementById('folders-view').style.cssText).toBe('')
   })
 })
