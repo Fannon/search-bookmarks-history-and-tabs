@@ -1,8 +1,8 @@
 #edit-bookmark {
   padding: 0;
   overflow: hidden;
-  width: 500px;
-  height: 578px;
+  width: 515px;
+  height: 556px; /* 600 - 44 */
   background: #eee;
   position: relative;
 }
@@ -29,6 +29,7 @@
   height: 114px;
   resize: none;
   font-size: 1em;
+  margin-top: 8px;
 }
 
 #bookmark-url {
@@ -72,7 +73,7 @@
   font-size: 15px;
 }
 .tagify__dropdown {
-  max-height: 216px;
+  max-height: 217px;
   border: none;
 }
 .tagify__dropdown__wrapper {
