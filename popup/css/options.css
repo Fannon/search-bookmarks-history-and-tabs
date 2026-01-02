@@ -8,7 +8,7 @@
   margin: 4px 8px 4px 8px;
 }
 #options textarea {
-  height: 420px; /* 442 - (44 - 22) */
+  height: 450px;
   font-size: 18px;
   font-family: Consolas, monospace;
   resize: none;

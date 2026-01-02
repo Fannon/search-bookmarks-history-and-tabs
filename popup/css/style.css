@@ -248,7 +248,7 @@ code {
 #error-list li {
   background-color: #fff;
   margin: 0 0 4px 0;
-  padding: 2px 0px 4px 6px;
+  padding: 3px 0px 4px 6px;
   border-radius: 3px;
   overflow: hidden;
   cursor: pointer;
@@ -436,8 +436,8 @@ li.error {
   }
   #links .nav-item.active {
     color: #4dabf7;
-    background: #25262b;
-    box-shadow: inset 0 2px 0 0 #4dabf7;
+    background: #3c3d40;
+    box-shadow: inset 0 3px 0 0 #4dabf7;
   }
   #result-counter {
     color: #666;
