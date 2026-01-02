@@ -15,7 +15,7 @@ test.describe('Performance Benchmarks', () => {
     })
 
     await page.reload()
-    await expect(page.locator('#result-list')).toBeVisible()
+    await expect(page.locator('#results')).toBeVisible()
 
     const initLog = consoleLogs.find((l) => l.includes('Extension initialized'))
     console.log('Browser reported:', initLog)
@@ -64,13 +64,13 @@ test.describe('Performance Benchmarks', () => {
     })
 
     // 2. Perform Search
-    const searchInput = page.locator('#search-input')
+    const searchInput = page.locator('#q')
 
     await page.evaluate(() => performance.clearMeasures())
     await searchInput.fill('perf 1234')
 
     // 3. Wait for results to be rendered
-    await expect(page.locator('#result-list li')).not.toHaveCount(0)
+    await expect(page.locator('#results li')).not.toHaveCount(0)
 
     // 4. Extract performance data
     const perfResults = await page.evaluate(() => {
@@ -119,11 +119,11 @@ test.describe('Performance Benchmarks', () => {
       window.ext.searchCache = new Map()
     })
 
-    const searchInput = page.locator('#search-input')
+    const searchInput = page.locator('#q')
     await page.evaluate(() => performance.clearMeasures())
 
     await searchInput.fill('Book 500')
-    await expect(page.locator('#result-list li')).not.toHaveCount(0)
+    await expect(page.locator('#results li')).not.toHaveCount(0)
 
     const perfResults = await page.evaluate(() => {
       const measures = performance.getEntriesByName('search-total')
@@ -138,8 +138,8 @@ test.describe('Performance Benchmarks', () => {
 
   test('Search and Rendering Performance - Fuzzy Strategy', async ({ page }) => {
     // 1. Switch to Fuzzy
-    await page.locator('#search-approach-toggle').click()
-    await expect(page.locator('#search-approach-toggle')).toHaveClass(/fuzzy/)
+    await page.locator('#toggle').click()
+    await expect(page.locator('#toggle')).toHaveClass(/fuzzy/)
 
     // 2. Inject 2000 items (fuzzy is heavier)
     await page.evaluate(() => {
@@ -172,12 +172,12 @@ test.describe('Performance Benchmarks', () => {
       window.ext.searchCache = new Map()
     })
 
-    const searchInput = page.locator('#search-input')
+    const searchInput = page.locator('#q')
     await page.evaluate(() => performance.clearMeasures())
 
     await searchInput.fill('fz test 999')
 
-    await expect(page.locator('#result-list li')).not.toHaveCount(0)
+    await expect(page.locator('#results li')).not.toHaveCount(0)
 
     const perfResults = await page.evaluate(() => {
       const measures = performance.getEntriesByName('search-total')

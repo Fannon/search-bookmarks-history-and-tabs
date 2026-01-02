@@ -206,8 +206,8 @@ test.describe('Edit Bookmark View', () => {
   })
 
   test('prefills bookmark fields and tag list with existing data', async ({ page }) => {
-    await expect(page.locator('#bookmark-title')).toHaveValue('Try pandoc!')
-    await expect(page.locator('#bookmark-url')).toHaveValue('https://pandoc.org/try')
+    await expect(page.locator('#bm-title')).toHaveValue('Try pandoc!')
+    await expect(page.locator('#bm-url')).toHaveValue('https://pandoc.org/try')
 
     const tagValues = await page.evaluate(() => window.ext.tagify.value.map((tag) => tag.value))
     expect(tagValues).toEqual(['md'])
@@ -215,16 +215,16 @@ test.describe('Edit Bookmark View', () => {
   })
 
   test('saves updated bookmark details and renders new tags in search results', async ({ page }) => {
-    await page.locator('#bookmark-title').fill('Pandoc Playground')
-    await page.locator('#bookmark-url').fill('https://pandoc.org/playground')
+    await page.locator('#bm-title').fill('Pandoc Playground')
+    await page.locator('#bm-url').fill('https://pandoc.org/playground')
     await page.evaluate(() => window.ext.tagify.removeAllTags())
     await addTag(page, 'markdown')
     await addTag(page, 'docs')
 
-    await Promise.all([page.waitForURL(/#search\/t$/), page.locator('#edit-bookmark-save').click()])
+    await Promise.all([page.waitForURL(/#search\/t$/), page.locator('#bm-save').click()])
 
-    await page.waitForSelector('#result-list [x-original-id="23"]')
-    const bookmarkRow = page.locator('#result-list [x-original-id="23"]')
+    await page.waitForSelector('#results [x-original-id="23"]')
+    const bookmarkRow = page.locator('#results [x-original-id="23"]')
     await expect(bookmarkRow.locator('.title')).toContainText('Pandoc Playground')
     await expect(bookmarkRow.locator('.url')).toContainText('pandoc.org/playground')
     await expect(bookmarkRow.locator('.badge.tags').nth(0)).toContainText('#markdown')
@@ -242,10 +242,10 @@ test.describe('Edit Bookmark View', () => {
     await addTag(page, 'first-tag')
     await addTag(page, 'second-tag')
 
-    await Promise.all([page.waitForURL(/#search\/reference$/), page.locator('#edit-bookmark-save').click()])
+    await Promise.all([page.waitForURL(/#search\/reference$/), page.locator('#bm-save').click()])
 
-    await page.waitForSelector('#result-list [x-original-id="29"]')
-    const bookmarkRow = page.locator('#result-list [x-original-id="29"]')
+    await page.waitForSelector('#results [x-original-id="29"]')
+    const bookmarkRow = page.locator('#results [x-original-id="29"]')
     await expect(bookmarkRow.locator('.badge.tags').nth(0)).toContainText('#first-tag')
     await expect(bookmarkRow.locator('.badge.tags').nth(1)).toContainText('#second-tag')
     await expectNoClientErrors(page)

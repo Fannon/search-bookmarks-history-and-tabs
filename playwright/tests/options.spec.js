@@ -7,11 +7,11 @@ test.describe('Options View', () => {
 
   test.describe('Initializing Phase', () => {
     test('successfully loads', async ({ page }) => {
-      await expect(page.locator('#options #user-config')).toBeVisible()
+      await expect(page.locator('#options #config')).toBeVisible()
     })
 
     test('loads the default user config', async ({ page }) => {
-      await expect(page.locator('#user-config')).toHaveValue(/searchStrategy/)
+      await expect(page.locator('#config')).toHaveValue(/searchStrategy/)
       await expectNoClientErrors(page)
     })
 
@@ -24,30 +24,30 @@ test.describe('Options View', () => {
         2,
       )
 
-      const userConfig = page.locator('#user-config')
+      const userConfig = page.locator('#config')
       await userConfig.fill('')
       await expect(userConfig).toHaveValue('')
       await userConfig.fill(newConfig)
 
-      await page.locator('#edit-options-save').click()
+      await page.locator('#opt-save').click()
 
       await page.goto('/options.html')
-      await expect(page.locator('#user-config')).toHaveValue(/displayVisitCounter/)
+      await expect(page.locator('#config')).toHaveValue(/displayVisitCounter/)
       await expectNoClientErrors(page)
     })
 
     test('saves a new user config in YAML format', async ({ page }) => {
       const newConfig = 'displayVisitCounter: true\n'
 
-      const userConfig = page.locator('#user-config')
+      const userConfig = page.locator('#config')
       await userConfig.fill('')
       await expect(userConfig).toHaveValue('')
       await userConfig.fill(newConfig)
 
-      await page.locator('#edit-options-save').click()
+      await page.locator('#opt-save').click()
 
       await page.goto('/options.html')
-      await expect(page.locator('#user-config')).toHaveValue(/displayVisitCounter/)
+      await expect(page.locator('#config')).toHaveValue(/displayVisitCounter/)
       await expectNoClientErrors(page)
     })
   })
