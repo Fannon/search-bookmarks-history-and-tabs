@@ -1,74 +1,59 @@
 <!DOCTYPE html>
 <html lang="en-US">
-  <head>
-    <title>Search Bookmarks, History and Tabs: Options</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="./css/style.css" />
-    <link rel="stylesheet" href="./css/options.css" />
-    <link rel="icon" type="image/png" href="../images/logo-32.png" />
-  </head>
 
-  <body>
-    <div id="container">
-      <!-- Edit User Config -->
-      <div id="options">
-        <div class="inputs">
-          <div class="section-heading">
-            USER OPTIONS
-            <span class="badge error-message" id="error-message" style="display: none"></span>
-          </div>
-          <textarea
-            id="user-config"
-            title="User Config"
-            class="input"
-            type="text"
-            spellcheck="false"
-            autofocus
-          ></textarea>
-        </div>
-        <div class="help">
-          The options are written in
-          <a href="https://en.wikipedia.org/wiki/YAML" target="_newtab">YAML</a> notation.<br />
-          Please have a look at the
-          <a
-            class="button help-button"
-            href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration"
-            target="_newtab"
-            >user configuration help</a
-          >
-          what options are available and what they do.
-        </div>
+<head>
+  <title>Search Bookmarks, History and Tabs: Options</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="./css/options.css" />
+  <link rel="icon" type="image/png" href="../images/logo-32.png" />
+</head>
 
-        <div class="controls">
-          <a id="edit-options-cancel" class="button" href="./index.html#search/">CANCEL</a>
-          <a
-            id="edit-options-help"
-            class="button"
-            href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration"
-            target="_newtab"
-            >HELP</a
-          >
-          <a id="edit-options-reset" class="button" href="#reset">RESET</a>
-          <a id="edit-options-save" class="button" href="#save">SAVE</a>
+<body>
+  <div id="container">
+    <!-- Edit User Config -->
+    <div id="options">
+      <div class="inputs">
+        <div class="section-heading">
+          USER OPTIONS
+          <span class="badge error-message" id="error-message" style="display: none"></span>
         </div>
+        <textarea id="user-config" title="User Config" class="input" type="text" spellcheck="false"
+          autofocus></textarea>
+      </div>
+      <div class="help">
+        The options are written in
+        <a href="https://en.wikipedia.org/wiki/YAML" target="_newtab">YAML</a> notation.<br />
+        Please have a look at the
+        <a class="button help-button"
+          href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration" target="_newtab">user
+          configuration help</a>.
       </div>
 
-      <!-- Footer Navigation -->
-      <footer id="links">
-        <a href="./index.html#search/">Search</a> | <a href="./tags.html">Tags</a> |
-        <a href="./folders.html">Folders</a> | <a href="#options">Options</a> |
-        <a href="https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/Tips.md" target="_newtab"
-          >Tips</a
-        >
-        |
-        <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab"
-          >Documentation & Help</a
-        >
-      </footer>
-      <ul id="error-list"></ul>
+      <div class="controls">
+        <a id="edit-options-cancel" class="button" href="./index.html#search/">CANCEL</a>
+        <a id="edit-options-help" class="button"
+          href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration"
+          target="_newtab">HELP</a>
+        <a id="edit-options-reset" class="button" href="#reset">RESET</a>
+        <a id="edit-options-save" class="button" href="#save">SAVE</a>
+      </div>
     </div>
-    <script src="./lib/js-yaml.min.js"></script>
-    <script defer type="module" src="./js/initOptions.js"></script>
-  </body>
+
+    <!-- Footer Navigation -->
+    <footer id="links">
+      <a href="./index.html#search/">Search</a> | <a href="./tags.html">Tags</a> |
+      <a href="./folders.html">Folders</a> | <a href="#options">Options</a> |
+      <a href="https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/Tips.md" target="_newtab">Tips</a>
+      |
+      <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab">Documentation &
+        Help</a>
+    </footer>
+    <ul id="error-list"></ul>
+  </div>
+  <script src="./lib/js-yaml.min.js"></script>
+  <script defer type="module" src="./js/initOptions.js"></script>
+</body>
+
 </html>

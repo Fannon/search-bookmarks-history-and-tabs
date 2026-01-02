@@ -26,13 +26,13 @@
 }
 
 #bookmark-title {
-  height: 112px;
+  height: 114px;
   resize: none;
-  font-size: 1.2em;
+  font-size: 1em;
 }
 
 #bookmark-url {
-  height: 62px;
+  height: 76px;
   resize: none;
   font-size: 0.85em;
 }
@@ -72,7 +72,7 @@
   font-size: 15px;
 }
 .tagify__dropdown {
-  max-height: 235px;
+  max-height: 218px;
   border: none;
 }
 .tagify__dropdown__wrapper {
