@@ -313,16 +313,13 @@ describe('search', () => {
       { title: 'Low', url: 'https://low.test' },
       { title: 'Second Mid +15', url: 'https://mid2.test' },
     ])
-    // No minimum score filtering - all results pass through if they match the search
     ext.opts.searchMaxResults = 2
     ext.opts.enableSearchEngines = false
     ext.opts.customSearchEngines = []
-    ext.opts.scoreBookmarkBase = 60
 
     await search({ key: 'f' })
 
     expect(ext.model.result.length).toBeLessThanOrEqual(2)
-    // Note: resultCounter is now updated by searchView.renderSearchResults, not here
   })
 
   test('falls back to precise search when configured strategy is unsupported', async () => {
