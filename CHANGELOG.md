@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+- **IMPROVED**: Bookmarks with open tabs now also display the tab's group badge (if the tab belongs to a named group).
+
 ## [v2.0.0]
 
 This is a major release with new features, a refreshed UI, and improved search capabilities.
