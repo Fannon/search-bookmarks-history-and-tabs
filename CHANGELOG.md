@@ -2,6 +2,13 @@
 
 ## [unreleased]
 
+- **NEW**: Tab Groups Search Support ([#188](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/188))
+  - Search for tabs by their group name - tabs in named groups will match when you search for the group name.
+  - Use `@` prefix to search tab groups specifically (e.g., `@Work` to find all tabs in the "Work" group).
+  - A purple badge displays the group name on tab results, clickable to filter by that group.
+  - New configuration options: `displayTabGroup` (show/hide badges), `scoreGroupWeight` (match weight), `scoreExactGroupMatchBonus` (exact match bonus).
+  - Adds `tabGroups` permission for Chrome. Firefox does not support this API.
+  - The feature gracefully degrades if feature is unsupported or permission is not given.
 - **IMPROVED**: Major redesign of the bottom navigation bar.
   - Replaced plain text links with a modern "segmented control" toolbar at the bottom.
   - Used Tabler Icons for Search, Tags, Folders, Options, and Help.

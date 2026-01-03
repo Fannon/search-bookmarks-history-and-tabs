@@ -24,13 +24,17 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
   /** Search results */
   const results = []
   /** Marker for taxonomy search mode */
-  const taxonomyMarker = taxonomyType === 'tags' ? '#' : '~'
+  let taxonomyMarker = '#'
+  if (taxonomyType === 'folder') taxonomyMarker = '~'
+  if (taxonomyType === 'group') taxonomyMarker = '@'
 
   const searchTermArray = searchTerm.split(taxonomyMarker)
 
   if (searchTermArray.length) {
     for (const entry of data) {
-      const searchString = `${entry[taxonomyType] || ''}`.toLowerCase()
+      // For groups, prepend @ since entry.group doesn't include the prefix
+      const rawValue = entry[taxonomyType] || ''
+      const searchString = taxonomyType === 'group' ? `@${rawValue}`.toLowerCase() : rawValue.toLowerCase()
       let searchTermMatches = 0
       for (const term of searchTermArray) {
         const trimmedTerm = term.trim()

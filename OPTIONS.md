@@ -47,6 +47,7 @@ Control what information is shown in search result items.
 | `displayTags` | boolean | `true` | Extract and display `#tags` from bookmark titles as clickable badges. Setting to `false` hides badges but does NOT disable tag search mode (`#`). |
 | `displayFolderName` | boolean | `true` | Display bookmark folder paths as clickable badges. Setting to `false` hides badges but does NOT disable folder search mode (`~`). |
 | `displaySearchMatchHighlight` | boolean | `true` | Highlight matching text in results with `<mark>` tags. Disabling slightly improves render performance. |
+| `displayTabGroup` | boolean | `true` | Display tab group names as clickable purple badges (Chrome only). Setting to `false` hides badges but does NOT disable group search mode (`@`). |
 | `displayLastVisit` | boolean | `true` | Show relative time since last visit (e.g., "2h ago"). |
 | `displayVisitCounter` | boolean | `false` | Show total visit count from browsing history. |
 | `displayDateAdded` | boolean | `false` | Show date when bookmark was added. |
@@ -131,6 +132,7 @@ For a detailed explanation, see the [Scoring System section in README.md](https:
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `scoreTagWeight` | number | `0.7` | Multiplier applied when search matches a tag. |
+| `scoreGroupWeight` | number | `0.7` | Multiplier applied when search matches a tab group name (Chrome only). |
 | `scoreUrlWeight` | number | `0.6` | Multiplier applied when search matches the URL. |
 | `scoreFolderWeight` | number | `0.5` | Multiplier applied when search matches a folder name. |
 
@@ -142,6 +144,7 @@ For a detailed explanation, see the [Scoring System section in README.md](https:
 | `scoreExactStartsWithBonus` | number | `10` | Additional bonus when title or URL starts with the search term. |
 | `scoreExactEqualsBonus` | number | `20` | Additional bonus when title exactly matches the search term. |
 | `scoreExactTagMatchBonus` | number | `15` | Bonus when searching `#tag` and a bookmark has that exact tag. |
+| `scoreExactGroupMatchBonus` | number | `15` | Bonus when searching `@group` and a tab is in that exact group (Chrome only). |
 | `scoreExactFolderMatchBonus` | number | `10` | Bonus when searching `~folder` and a bookmark is in that exact folder. |
 | `scoreExactPhraseTitleBonus` | number | `8` | Bonus when the full multi-word phrase appears in the title (e.g., "react hooks" in title). |
 | `scoreExactPhraseUrlBonus` | number | `5` | Bonus when the full multi-word phrase appears in URL (hyphen-normalized: "react hooks" → "react-hooks"). |

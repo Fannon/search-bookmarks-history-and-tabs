@@ -108,6 +108,14 @@ export async function renderSearchResults() {
         }
       }
 
+      const group = entry.group
+      if (opts.displayTabGroup && group) {
+        const content = shouldHighlight && entry.highlightedGroup ? entry.highlightedGroup : `@${escapeHtml(group)}`
+        badges.push(
+          createBadge(content, 'Tab Group', 'group', `#search/@${escapeHtml(group)}`, 'background-color: #6a4fbb'),
+        )
+      }
+
       if (opts.displayLastVisit && entry.lastVisitSecondsAgo != null) {
         badges.push(
           createBadge(
