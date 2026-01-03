@@ -40,35 +40,46 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
       .toLowerCase()
   }
 
-  const searchTermArray = taxonomyQuery.split(taxonomyMarker)
+  const searchTerms = taxonomyQuery
+    .split(taxonomyMarker)
+    .map((term) => term.trim().toLowerCase())
+    .filter((term) => term.length > 0)
 
-  if (searchTermArray.length) {
+  if (searchTerms.length) {
     for (const entry of data) {
       if (!entry) continue
 
       // Content Filter (if active)
       if (contentQuery) {
-        const title = (entry.title || '').toLowerCase()
-        const url = (entry.url || '').toLowerCase()
+        // Use pre-calculated lowercase values if available
+        const title = entry.titleLower || (entry.title || '').toLowerCase()
+        // entry.url is already normalized and lowercased by cleanUpUrl
+        const url = entry.url || ''
         // If neither title nor URL (and optional originalUrl) matches, skip
         if (!title.includes(contentQuery) && !url.includes(contentQuery)) {
           continue
         }
       }
 
-      // For groups, prepend @ since entry.group doesn't include the prefix
-      const rawValue = entry[taxonomyType] || ''
-      const searchString = taxonomyType === 'group' ? `@${rawValue}`.toLowerCase() : rawValue.toLowerCase()
+      // Prepare search string for taxonomy matching
+      let searchString = ''
+      if (taxonomyType === 'group') {
+        // For groups, we prepend @. Use pre-calculated groupLower if available.
+        searchString = entry.groupLower ? `@${entry.groupLower}` : entry.group ? `@${entry.group}`.toLowerCase() : ''
+      } else {
+        // For tags/folders, use pre-calculated lower field (tagsLower, folderLower)
+        searchString = entry[taxonomyType + 'Lower'] || (entry[taxonomyType] || '').toLowerCase()
+      }
+
       let searchTermMatches = 0
-      for (const term of searchTermArray) {
-        const trimmedTerm = term.trim()
-        if (trimmedTerm && searchString.includes(taxonomyMarker + trimmedTerm.toLowerCase())) {
+      for (const term of searchTerms) {
+        if (searchString.includes(taxonomyMarker + term)) {
           searchTermMatches++
         }
       }
 
       // Only include if all taxonomy terms matched (AND logic)
-      if (searchTermMatches === searchTermArray.filter((t) => t.trim()).length && searchTermMatches > 0) {
+      if (searchTermMatches === searchTerms.length) {
         results.push({
           ...entry,
           searchApproach: 'taxonomy',

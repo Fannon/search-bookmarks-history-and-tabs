@@ -31,6 +31,8 @@
 - **NEW**: Search within taxonomy: It is now possible to combine taxonomy filters (Folders `~`, Tags `#`, Groups `@`) with a regular search term.
   - Example: `~Work  project` will search for "project" within the "Work" folder.
   - Note: Use a double space to separate the taxonomy filter from the search term.
+  - Tip: Press `TAB` anywhere in the search input to insert the double space.
+- **OPTIMIZED**: Taxonomy search loop to prevent redundant lowercasing and object creation.
 - **IMPROVED**: Refined styling of resizable textareas in dark mode.
 
 ## [v1.18.0]

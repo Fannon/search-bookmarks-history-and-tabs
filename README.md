@@ -47,9 +47,11 @@ The extension is very customizable (see [user options](#user-configuration)) and
   - Start your query with `#`: only **bookmarks with the tag** will be returned (exact "starts with" search)
     - Supports AND search, e.g. search for `#github #pr` to only get results which have both tags
     - Supports search within tags: Filter by tag and search for text simultaneously (e.g. `#Tag  SearchTerm`).
+      - Tip: Press `TAB` to quickly insert the double-space separator.
   - Start your query with `~`: only **bookmarks within the folder** will be returned (exact "starts with" search)
     - Supports AND search, e.g. search for `~Sites ~Blogs` to only get results in both folders
     - Supports search within folders: Filter by folder and search for text simultaneously (e.g. `~Folder  SearchTerm`).
+      - Tip: Press `TAB` to quickly insert the double-space separator.
   - Start your query with `@`: only **tabs in the named group** will be returned
     - Example: `@Work` to find all tabs in the "Work" tab group
     - Supports search within groups: Filter by group and search for text simultaneously (e.g. `@Group  SearchTerm`).
