@@ -115,3 +115,26 @@ export function resetUniqueFoldersCache() {
     ext.index.taxonomy.folders = undefined
   }
 }
+
+/**
+ * Build a group-to-tab index from the current tab model.
+ *
+ * @returns {Object<string, Array<number>>} Map of group name to tab ids.
+ */
+export function getUniqueGroups() {
+  const groupsDictionary = {}
+  const tabs = ext.model.tabs || []
+
+  for (const el of tabs) {
+    if (el.group) {
+      const groupName = el.group
+      if (!groupsDictionary[groupName]) {
+        groupsDictionary[groupName] = [el.originalId]
+      } else {
+        groupsDictionary[groupName].push(el.originalId)
+      }
+    }
+  }
+
+  return groupsDictionary
+}
