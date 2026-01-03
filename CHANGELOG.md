@@ -54,11 +54,6 @@ This is a major release with new features, a refreshed UI, and improved search c
 
 - Potential fix for zoom level issues on some systems where controls at the bottom were cut off.
 
-### ⚡ Technical
-
-- Optimized taxonomy search loop (reduced redundant lowercasing and object creation).
-- Removed redundant `searchString` in favor of pre-normalized `searchStringLower`.
-
 ## [v1.18.0]
 
 This release is mostly about performance improvements, partially due to simplification of the codebase and potential config options.
