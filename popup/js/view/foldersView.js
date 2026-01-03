@@ -16,7 +16,7 @@ import { getUniqueFolders } from '../search/taxonomySearch.js'
  */
 export function loadFoldersOverview() {
   const folders = getUniqueFolders()
-  const sortedFolders = Object.keys(folders).sort()
+  const sortedFolders = Object.keys(folders).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
 
   const container = document.getElementById('folders-list')
   if (!container) {
