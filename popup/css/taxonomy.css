@@ -9,7 +9,7 @@
   width: 515px;
   height: 556px;
   background: var(--bg);
-  padding: 8px;
+  padding: 8px 10px;
   overflow-y: scroll;
 }
 
@@ -79,4 +79,17 @@
   #groups mark {
     color: var(--mark);
   }
+}
+
+.taxonomy-footer {
+  display: flex;
+  justify-content: flex-start;
+  margin: 16px 0;
+  width: 100%;
+}
+.taxonomy-footer .button {
+  cursor: pointer;
+}
+.taxonomy-footer .button svg {
+  margin-top: 1px;
 }
