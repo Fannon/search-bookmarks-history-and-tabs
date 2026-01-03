@@ -177,4 +177,68 @@ describe('taxonomy search', () => {
     expect(result).toHaveLength(1)
     expect(result[0].originalId).toBe('1')
   })
+
+  test('searchTaxonomy supports hybrid taxonomy + text search with DOUBLE SPACE separator', () => {
+    const { searchTaxonomy } = taxonomyModule
+    const data = [
+      {
+        originalId: '1',
+        group: '@KVR',
+        title: 'Project Alpha Temp',
+        url: 'http://temp.com',
+      },
+      {
+        originalId: '2',
+        group: '@KVR',
+        title: 'Project Beta',
+        url: 'http://beta.com',
+      },
+      {
+        originalId: '3',
+        group: '@Other',
+        title: 'Temp Project',
+        url: 'http://other.com',
+      },
+    ]
+
+    // 1. Double space separator used: "KVR  temp"
+    // Expect: Group matches "KVR" AND (title OR url matches "temp")
+    const result = searchTaxonomy('KVR  temp', 'group', data)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].originalId).toBe('1')
+
+    // 2. Searching for invalid text match
+    const resultNone = searchTaxonomy('KVR  nomatch', 'group', data)
+    expect(resultNone).toHaveLength(0)
+
+    // 3. Searching for taxonomy only (no text part) - trailing double space
+    // This simulates the user just clicking the badge and getting the trailing space
+    const resultOnlyTaxonomy = searchTaxonomy('KVR  ', 'group', data)
+    expect(resultOnlyTaxonomy).toHaveLength(2)
+  })
+
+  test('searchTaxonomy supports hybrid search with folder type (~Blogs martin example)', () => {
+    const { searchTaxonomy } = taxonomyModule
+    const data = [
+      {
+        originalId: '10',
+        folder: '~Blogs',
+        title: 'Martin Fowler',
+        url: 'https://martinfowler.com',
+      },
+      {
+        originalId: '11',
+        folder: '~Blogs',
+        title: 'Another Blog',
+        url: 'https://example.com',
+      },
+    ]
+
+    // User example: "~Blogs  martin" (Input normalized/stripped by caller)
+    const result = searchTaxonomy('Blogs  martin', 'folder', data)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Martin Fowler')
+  })
 })

@@ -52,9 +52,9 @@ describe('foldersView', () => {
     const badges = Array.from(document.querySelectorAll('#folders-list a.badge.folder'))
     expect(badges.map((el) => el.getAttribute('x-folder'))).toEqual(['Archive', 'Personal', 'Work'])
     expect(badges.map((el) => el.getAttribute('href'))).toEqual([
-      './index.html#search/~Archive',
-      './index.html#search/~Personal',
-      './index.html#search/~Work',
+      './index.html#search/~Archive%20%20',
+      './index.html#search/~Personal%20%20',
+      './index.html#search/~Work%20%20',
     ])
     expect(badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())).toEqual([
       '~Archive (1)',
@@ -99,7 +99,7 @@ describe('foldersView', () => {
     // Check that valid folders are still rendered correctly
     const validBadge = badges.find((badge) => badge.getAttribute('x-folder') === 'Valid Folder')
     expect(validBadge).toBeDefined()
-    expect(validBadge.getAttribute('href')).toBe('./index.html#search/~Valid%20Folder')
+    expect(validBadge.getAttribute('href')).toBe('./index.html#search/~Valid%20Folder%20%20')
 
     consoleWarnSpy.mockRestore()
   })
@@ -152,10 +152,10 @@ describe('foldersView', () => {
 
     const hrefs = badges.map((el) => el.getAttribute('href'))
     expect(hrefs).toEqual([
-      './index.html#search/~Folder%20with%20%22quotes%22',
-      './index.html#search/~Personal%2FArchive',
-      './index.html#search/~Test%20(2024)',
-      './index.html#search/~Work%20%26%20Projects',
+      './index.html#search/~Folder%20with%20%22quotes%22%20%20',
+      './index.html#search/~Personal%2FArchive%20%20',
+      './index.html#search/~Test%20(2024)%20%20',
+      './index.html#search/~Work%20%26%20Projects%20%20',
     ])
 
     const labelTexts = badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())

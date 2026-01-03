@@ -60,7 +60,7 @@ export function renderTaxonomy({
     .map((key) => {
       const safeKey = escapeHtml(key)
       const encodedKey = encodeURIComponent(key)
-      return `<a class="badge ${itemClass}" href="./index.html#search/${marker}${encodedKey}" ${attrName}="${safeKey}" ${
+      return `<a class="badge ${itemClass}" href="./index.html#search/${marker}${encodedKey}%20%20" ${attrName}="${safeKey}" ${
         extraStyle ? `style="${extraStyle}"` : ''
       }>${marker}${safeKey} <small>(${items[key].length})</small></a>`
     })

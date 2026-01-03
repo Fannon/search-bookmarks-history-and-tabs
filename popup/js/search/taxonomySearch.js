@@ -28,21 +28,47 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
   if (taxonomyType === 'folder') taxonomyMarker = '~'
   if (taxonomyType === 'group') taxonomyMarker = '@'
 
-  const searchTermArray = searchTerm.split(taxonomyMarker)
+  // Split by double space to separate taxonomy filter from content search
+  let taxonomyQuery = searchTerm
+  let contentQuery = ''
+  const splitIndex = searchTerm.indexOf('  ')
+  if (splitIndex !== -1) {
+    taxonomyQuery = searchTerm.substring(0, splitIndex)
+    contentQuery = searchTerm
+      .substring(splitIndex + 2)
+      .trim()
+      .toLowerCase()
+  }
+
+  const searchTermArray = taxonomyQuery.split(taxonomyMarker)
 
   if (searchTermArray.length) {
     for (const entry of data) {
+      if (!entry) continue
+
+      // Content Filter (if active)
+      if (contentQuery) {
+        const title = (entry.title || '').toLowerCase()
+        const url = (entry.url || '').toLowerCase()
+        // If neither title nor URL (and optional originalUrl) matches, skip
+        if (!title.includes(contentQuery) && !url.includes(contentQuery)) {
+          continue
+        }
+      }
+
       // For groups, prepend @ since entry.group doesn't include the prefix
       const rawValue = entry[taxonomyType] || ''
       const searchString = taxonomyType === 'group' ? `@${rawValue}`.toLowerCase() : rawValue.toLowerCase()
       let searchTermMatches = 0
       for (const term of searchTermArray) {
         const trimmedTerm = term.trim()
-        if (trimmedTerm && searchString.includes(taxonomyMarker + trimmedTerm)) {
+        if (trimmedTerm && searchString.includes(taxonomyMarker + trimmedTerm.toLowerCase())) {
           searchTermMatches++
         }
       }
-      if (searchTermMatches === searchTermArray.length) {
+
+      // Only include if all taxonomy terms matched (AND logic)
+      if (searchTermMatches === searchTermArray.filter((t) => t.trim()).length && searchTermMatches > 0) {
         results.push({
           ...entry,
           searchApproach: 'taxonomy',
