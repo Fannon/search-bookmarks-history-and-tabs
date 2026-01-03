@@ -23,6 +23,20 @@ export function loadFoldersOverview() {
     return
   }
 
+  if (sortedFolders.length === 0) {
+    container.innerHTML = `
+      <div class="empty">
+        <strong>No folders found</strong>
+        <p>You don't have any bookmarks in folders yet. To see folders here:</p>
+        <ol>
+          <li>Organize your bookmarks into folders using your browser's bookmark manager.</li>
+          <li>The folders will automatically appear here as navigable categories.</li>
+        </ol>
+      </div>
+    `
+    return
+  }
+
   const badgesHTML = sortedFolders
     .map((folderName) => {
       const safeName = escapeHtml(folderName)

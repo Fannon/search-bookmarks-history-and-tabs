@@ -24,16 +24,16 @@ export function loadGroupsOverview() {
   // Check if the tabGroups API is available
   if (!browserApi.tabGroups?.query) {
     container.innerHTML = `
-      <div class="empty warning">
-        <strong>Tab Groups permission not available</strong>
+      <div class="empty">
+        <strong><span class="warning-prefix">WARNING:</span> Tab Groups permission not available</strong>
         <p>This feature requires the <code>tabGroups</code> permission which is not currently active.</p>
         <p><strong>To enable:</strong></p>
         <ol>
-          <li>Go to <code>chrome://extensions</code></li>
+          <li>Go to your browser's extension management page (e.g. <code>chrome://extensions</code> or <code>edge://extensions</code>)</li>
           <li>Find this extension and click the reload button (↻)</li>
           <li>Reopen this popup</li>
         </ol>
-        <p><em>Note: This feature is only available in Chrome/Edge. Firefox does not support the Tab Groups API.</em></p>
+        <p><em>Note: This feature is only supported in browsers that implement the Tab Groups API. Firefox does not currently support this API.</em></p>
       </div>
     `
     return
@@ -48,13 +48,13 @@ export function loadGroupsOverview() {
         <strong>No tab groups found</strong>
         <p>You don't have any named tab groups. To use this feature:</p>
         <ol>
-          <li>Right-click on a tab in Chrome</li>
+          <li>Right-click on a tab in your browser</li>
           <li>Select <strong>"Add tab to new group"</strong></li>
           <li>Right-click the group dot and <strong>name your group</strong></li>
         </ol>
         <p>
           <a href="https://support.google.com/chrome/answer/2391819" target="_blank">
-            Learn more about Tab Groups →
+            Learn more about Tab Groups (Chrome) →
           </a>
         </p>
       </div>
