@@ -133,6 +133,7 @@ async function handleEmptySearch() {
 export async function executeSearch(searchTerm, searchMode, data, options) {
   if (searchMode === 'tags') return searchTaxonomy(searchTerm, 'tags', data.bookmarks)
   if (searchMode === 'folders') return searchTaxonomy(searchTerm, 'folder', data.bookmarks)
+  if (searchMode === 'groups') return searchTaxonomy(searchTerm, 'group', data.tabs)
 
   if (options.searchStrategy === 'fuzzy') return fuzzySearch(searchMode, searchTerm, data, options)
   if (options.searchStrategy !== 'precise') {
@@ -201,7 +202,8 @@ function applyScoring(results, searchTerm, searchMode) {
  */
 function filterResults(results, searchMode) {
   const maxResults = ext.opts.searchMaxResults
-  const shouldLimit = searchMode !== 'tags' && searchMode !== 'folders' && searchMode !== 'tabs'
+  const shouldLimit =
+    searchMode !== 'tags' && searchMode !== 'folders' && searchMode !== 'tabs' && searchMode !== 'groups'
 
   // If we don't need to limit, or we're already under the limit, return as is.
   // Note: minScore filtering is now handled in applyScoring for the search path.
@@ -299,8 +301,9 @@ export async function search(event) {
       results = filterResults(results, searchMode)
 
       // Apply highlighting only to the truncated result set (better performance)
-      // For tags/folders, use the original term to include the marker (# or ~) in highlighting
-      const highlightTerm = searchMode === 'tags' || searchMode === 'folders' ? originalSearchTerm : searchTerm
+      // For taxonomy modes, use the original term to include the marker (#, ~, or @) in highlighting
+      const highlightTerm =
+        searchMode === 'tags' || searchMode === 'folders' || searchMode === 'groups' ? originalSearchTerm : searchTerm
       results = highlightResults(results, highlightTerm)
 
       ext.model.result = results
@@ -406,6 +409,10 @@ function highlightResults(results, searchTerm) {
         highlightedFolders[j] = highlightMatches(`~${folderArray[j]}`, highlightRegex)
       }
       entry.highlightedFolderArray = highlightedFolders
+    }
+
+    if (entry.group) {
+      entry.highlightedGroup = highlightMatches(`@${entry.group}`, highlightRegex)
     }
   }
 

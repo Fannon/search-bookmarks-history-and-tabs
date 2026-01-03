@@ -43,9 +43,10 @@ export async function getBrowserTabs(queryOptions = {}) {
  * Normalize browser tab objects into the shared search item shape.
  *
  * @param {Array<Object>} chromeTabs - Raw tab entries from the browser API.
+ * @param {Map<number, Object>} [groupMap] - Map of group ID to group object.
  * @returns {Array<Object>} Standardized tab entries.
  */
-export function convertBrowserTabs(chromeTabs) {
+export function convertBrowserTabs(chromeTabs, groupMap) {
   const result = []
   const count = chromeTabs.length
 
@@ -55,7 +56,11 @@ export function convertBrowserTabs(chromeTabs) {
       const cleanUrl = cleanUpUrl(el.url)
       const title = getTitle(el.title, cleanUrl)
       const titleLower = title.toLowerCase().trim()
-      const searchString = createSearchString(title, cleanUrl)
+      const groupInfo = groupMap && el.groupId != null && el.groupId !== -1 ? groupMap.get(el.groupId) : null
+      const group = groupInfo?.title || ''
+      const groupLower = group.toLowerCase()
+      const groupText = group ? `@${group}` : ''
+      const searchString = createSearchString(title, cleanUrl, undefined, undefined, groupText)
 
       result.push({
         type: 'tab',
@@ -66,6 +71,9 @@ export function convertBrowserTabs(chromeTabs) {
         originalId: el.id,
         active: el.active,
         windowId: el.windowId,
+        groupId: el.groupId,
+        group,
+        groupLower,
         searchString,
         searchStringLower: searchString.toLowerCase(),
         lastVisitSecondsAgo: el.lastAccessed ? (Date.now() - el.lastAccessed) / 1000 : undefined,
@@ -268,6 +276,24 @@ export async function getBrowserHistory(startTime, maxResults) {
   }
 }
 
+/**
+ * Retrieve tab groups from the browser API.
+ *
+ * @returns {Promise<Array>} Tab group objects or empty array when unsupported.
+ */
+export async function getBrowserTabGroups() {
+  if (browserApi.tabGroups?.query) {
+    try {
+      return await browserApi.tabGroups.query({})
+    } catch (err) {
+      console.warn(`Error fetching tab groups: ${err.message}`)
+      return []
+    }
+  } else {
+    return []
+  }
+}
+
 export function convertBrowserHistory(history) {
   const historyIgnoreList = ext.opts.historyIgnoreList
   let ignoreRegex = null
@@ -328,15 +354,16 @@ export function convertBrowserHistory(history) {
 }
 
 /**
- * Combine title/url/tags/folder fields into a single search string.
+ * Combine title/url/tags/folder/group fields into a single search string.
  *
  * @param {string} title - Bookmark title.
  * @param {string} url - Normalized URL.
  * @param {string} [tags] - Tag string.
  * @param {string} [folder] - Folder breadcrumb string.
+ * @param {string} [group] - Tab group string.
  * @returns {string} Combined search string.
  */
-export function createSearchString(title, url, tags, folder) {
+export function createSearchString(title, url, tags, folder, group) {
   let result = ''
   if (title && title !== url) {
     result += title
@@ -349,6 +376,9 @@ export function createSearchString(title, url, tags, folder) {
   }
   if (folder) {
     result += (result ? '¦' : '') + folder
+  }
+  if (group) {
+    result += (result ? '¦' : '') + group
   }
   return result
 }
