@@ -40,7 +40,7 @@ export function loadGroupsOverview() {
   }
 
   const groups = getUniqueGroups()
-  const sortedGroups = Object.keys(groups).sort()
+  const sortedGroups = Object.keys(groups).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
 
   if (sortedGroups.length === 0) {
     container.innerHTML = `

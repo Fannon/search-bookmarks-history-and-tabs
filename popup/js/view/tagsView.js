@@ -15,7 +15,7 @@ import { getUniqueTags } from '../search/taxonomySearch.js'
  */
 export function loadTagsOverview() {
   const tags = getUniqueTags()
-  const sortedTags = Object.keys(tags).sort()
+  const sortedTags = Object.keys(tags).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
 
   const container = document.getElementById('tags-list')
   if (!container) {
