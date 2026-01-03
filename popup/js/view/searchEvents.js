@@ -14,6 +14,11 @@ import { search } from '../search/common.js'
 import { clearSelection, hoverResultItem } from './searchNavigation.js'
 import { renderSearchResults } from './searchView.js'
 
+// Module-level flag to track if event delegation has been set up.
+// Using a module variable instead of a DOM property ensures the state
+// survives any potential DOM replacement and prevents duplicate event listeners.
+let eventDelegationSetup = false
+
 /**
  * Handle click/mouse events on search results with different behaviors based on modifiers and target elements
  * Provides multiple ways to interact with search results (open, close tabs, navigate to tags/folders, etc.)
@@ -228,7 +233,7 @@ export function updateSearchApproachToggle() {
  */
 export function setupResultItemsEvents() {
   // Set up delegated event listeners only once
-  if (ext.dom.resultList.hasEventDelegation) {
+  if (eventDelegationSetup) {
     return
   }
 
@@ -279,5 +284,5 @@ export function setupResultItemsEvents() {
     true,
   )
 
-  ext.dom.resultList.hasEventDelegation = true
+  eventDelegationSetup = true
 }
