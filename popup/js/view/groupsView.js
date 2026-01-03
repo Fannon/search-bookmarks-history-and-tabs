@@ -16,7 +16,7 @@ export async function loadGroupsOverview() {
   const container = document.getElementById('groups-list')
   if (!container) return
 
-  // 1. Permission Check (Chrome only)
+  // 1. Permission Check
   let hasPermission = false
   if (typeof chrome !== 'undefined' && chrome.permissions && chrome.permissions.contains) {
     hasPermission = await new Promise((resolve) => {
@@ -32,11 +32,11 @@ export async function loadGroupsOverview() {
       <div class="empty warning">
         <strong>Permission missing</strong>
         <p>This feature requires the <strong>tabGroups</strong> permission to read group names.</p>
-        <p>Ensure that your browser is based on Chrome (e.g., Google Chrome, Microsoft Edge, Brave) and that you have granted the necessary permissions.</p>
+        <p>Ensure that you have granted the necessary permissions. This feature is supported in Chromium-based browsers (Chrome, Edge, Brave, etc.).</p>
         <p><em>Note: Firefox currently does not support the Tab Groups API.</em></p>
         <p>
           <a href="https://support.google.com/chrome/answer/2391819" target="_blank">
-            Learn more about Tab Groups (Chrome) →
+            Learn more about Tab Groups →
           </a>
         </p>
       </div>
@@ -66,7 +66,7 @@ export async function loadGroupsOverview() {
         </ol>
         <p>
           <a href="https://support.google.com/chrome/answer/2391819" target="_blank">
-            Learn more about Tab Groups (Chrome) →
+            Learn more about Tab Groups →
           </a>
         </p>
       </div>
