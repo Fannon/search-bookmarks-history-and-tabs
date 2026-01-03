@@ -92,7 +92,7 @@ export async function renderSearchResults() {
         for (let j = 0; j < tagsArray.length; j++) {
           const tag = tagsArray[j]
           const content = shouldHighlight && highlightedTags?.[j] ? highlightedTags[j] : `#${escapeHtml(tag)}`
-          badges.push(createBadge(content, 'Bookmark Tags', 'tags', `#search/#${encodeURIComponent(tag)}`))
+          badges.push(createBadge(content, 'Bookmark Tags', 'tags', `#search/#${encodeURIComponent(tag)}%20%20`))
         }
       }
 
@@ -109,7 +109,7 @@ export async function renderSearchResults() {
               content,
               'Bookmark Folder',
               'folder',
-              `#search/~${encodeURIComponent(trail)}`,
+              `#search/~${encodeURIComponent(trail)}%20%20`,
               bookmarkBaseColorStyle,
             ),
           )
@@ -124,7 +124,7 @@ export async function renderSearchResults() {
             content,
             'Tab Group',
             'group',
-            `#search/@${encodeURIComponent(group)}`,
+            `#search/@${encodeURIComponent(group)}%20%20`,
             'background-color: #6a4fbb',
           ),
         )
