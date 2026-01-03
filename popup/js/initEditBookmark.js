@@ -9,9 +9,11 @@
  */
 
 import { createExtensionContext } from './helper/extensionContext.js'
+
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { deleteBookmark, editBookmark, updateBookmark } from './view/editBookmarkView.js'
+
 import { printError } from './view/errorView.js'
 
 export const ext = createExtensionContext()
@@ -39,6 +41,7 @@ export async function initEditBookmark() {
     ext.opts = await getEffectiveOptions()
 
     const { bookmarkId, returnHash } = parseBookmarkHash(window.location.hash)
+
     if (!bookmarkId) {
       throw new Error('Missing bookmark identifier in URL hash.')
     }

@@ -17,6 +17,7 @@ import { getUserOptions, setUserOptions } from '../model/options.js'
 export async function initOptions() {
   const userOptions = await getUserOptions()
   const userOptionsYaml = window.jsyaml.dump(userOptions)
+
   if (userOptionsYaml.trim() === '{}') {
     document.getElementById('config').value = ''
   } else {

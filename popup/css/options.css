@@ -1,8 +1,8 @@
 /* Options Page */
 
 #options {
-  width: 515px;
-  height: 556px;
+  width: var(--w);
+  height: calc(var(--h) - 44px);
   position: relative;
 }
 #options .heading {
