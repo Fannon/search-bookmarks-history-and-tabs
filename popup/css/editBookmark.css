@@ -3,8 +3,8 @@
 #edit-bm {
   padding: 0;
   overflow: hidden;
-  width: 515px;
-  height: 556px;
+  width: var(--w);
+  height: calc(var(--h) - 44px);
   background: var(--bg);
   position: relative;
 }
@@ -31,20 +31,22 @@
 
 /* Form Fields */
 #bm-title {
-  height: 114px;
-  resize: none;
+  height: 142px; /* 5 lines without scrollbar */
+  resize: vertical;
+  min-height: 80px;
   font-size: 1em;
   margin-top: 8px;
 }
 #bm-url {
-  height: 76px;
-  resize: none;
+  height: 76px; /* 3 lines without scrollbar */
+  resize: vertical;
+  min-height: 50px;
   font-size: 0.85em;
 }
 
 #bm-tags,
 #edit-bm .tagify {
-  height: 85px;
+  height: 105px;
   font-size: 18px;
   border: none;
   padding: 4px 2px;
@@ -53,7 +55,7 @@
 
 /* Tagify Library Overrides */
 .tagify {
-  height: 90px;
+  height: 105px;
   border: none;
   --tag-bg: #557292;
   --tag-hover: #5c84af;
@@ -105,5 +107,22 @@
   }
   .tagify__tag > div > [contenteditable] {
     color: #eee;
+  }
+  /* Style for textarea resizer handle in dark mode */
+  textarea::-webkit-resizer {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    background-image: linear-gradient(
+      135deg,
+      transparent 50%,
+      #888 50%,
+      #888 60%,
+      transparent 60%,
+      transparent 80%,
+      #888 80%,
+      #888 90%,
+      transparent 90%
+    );
   }
 }

@@ -8,6 +8,7 @@
  */
 
 import { createExtensionContext } from './helper/extensionContext.js'
+
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { printError } from './view/errorView.js'
@@ -29,7 +30,9 @@ export async function initTagsPage() {
     ext.dom.tagsList = document.getElementById('tags-list')
 
     ext.opts = await getEffectiveOptions()
+
     // Disable features not needed on the page
+
     ext.opts.enableTabs = false
     ext.opts.enableHistory = false
 

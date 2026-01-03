@@ -11,7 +11,9 @@
 import { createExtensionContext } from './helper/extensionContext.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
+
 import { addDefaultEntries, search } from './search/common.js'
+
 import { closeErrors, printError } from './view/errorView.js'
 import { toggleSearchApproach, updateSearchApproachToggle } from './view/searchEvents.js'
 import { navigationKeyListener } from './view/searchNavigation.js'
@@ -40,6 +42,7 @@ export async function initExtension() {
   ext.opts = await getEffectiveOptions()
 
   // HTML Element selectors
+
   ext.dom.searchInput = document.getElementById('q')
   ext.dom.resultList = document.getElementById('results')
   ext.dom.resultCounter = document.getElementById('counter')
