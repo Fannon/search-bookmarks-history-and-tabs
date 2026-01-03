@@ -75,8 +75,6 @@ function shouldSkipSearch(event) {
   )
 }
 
-const DUPLICATE_SPACE_REGEX = / +(?= )/g
-
 /**
  * Normalize the search term by trimming and removing duplicate spaces.
  *
@@ -86,7 +84,7 @@ const DUPLICATE_SPACE_REGEX = / +(?= )/g
 function normalizeSearchTerm(term) {
   let normalized = term || ''
   normalized = normalized.trimStart().toLowerCase()
-  normalized = normalized.replace(DUPLICATE_SPACE_REGEX, '') // Remove duplicate spaces
+  // DUPLICATE_SPACE_REGEX removed to support "  " double-space separator for hybrid taxonomy search (e.g. "@group  search")
   return normalized
 }
 
