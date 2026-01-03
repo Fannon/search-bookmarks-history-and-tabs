@@ -5,7 +5,7 @@
  */
 
 // Pre-compiled regexes for performance
-const TAXONOMY_PREFIX_REGEX = /^[#~]+/
+const TAXONOMY_PREFIX_REGEX = /^[#~@]+/
 const WHITESPACE_REGEX = /\s+/g
 const NUMERIC_TERM_REGEX = /^\d+$/
 
@@ -62,6 +62,7 @@ export function calculateFinalScore(results, searchTerm) {
     scoreExactStartsWithBonus,
     scoreExactEqualsBonus,
     scoreExactTagMatchBonus,
+    scoreExactGroupMatchBonus,
     scoreExactFolderMatchBonus,
     scoreExactIncludesBonus,
     scoreExactPhraseTitleBonus,
@@ -73,6 +74,7 @@ export function calculateFinalScore(results, searchTerm) {
     scoreCustomBonusScore,
     scoreUrlWeight,
     scoreTagWeight,
+    scoreGroupWeight,
     scoreFolderWeight,
     scoreBookmarkOpenTabBonus,
   } = opts
@@ -91,10 +93,10 @@ export function calculateFinalScore(results, searchTerm) {
     direct: opts.scoreDirectUrlScore || 0,
   }
 
-  // Pre-calculate weighted bonuses
   const startsWithUrlBonus = scoreExactStartsWithBonus * scoreUrlWeight
   const includesUrlBonus = scoreExactIncludesBonus * scoreUrlWeight
   const includesTagBonus = scoreExactIncludesBonus * scoreTagWeight
+  const includesGroupBonus = scoreExactIncludesBonus * scoreGroupWeight
   const includesFolderBonus = scoreExactIncludesBonus * scoreFolderWeight
 
   // Build all term arrays in a single pass
@@ -135,6 +137,7 @@ export function calculateFinalScore(results, searchTerm) {
   const hasExactStartsWithBonus = Boolean(scoreExactStartsWithBonus)
   const hasExactEqualsBonus = Boolean(scoreExactEqualsBonus)
   const hasExactTagMatchBonus = Boolean(scoreExactTagMatchBonus)
+  const hasExactGroupMatchBonus = Boolean(scoreExactGroupMatchBonus)
   const hasExactFolderMatchBonus = Boolean(scoreExactFolderMatchBonus)
   const hasExactPhraseTitleBonus = Boolean(scoreExactPhraseTitleBonus)
   const hasExactPhraseUrlBonus = Boolean(scoreExactPhraseUrlBonus)
@@ -199,6 +202,13 @@ export function calculateFinalScore(results, searchTerm) {
         }
       }
 
+      // Award bonus for exact group name match
+      if (hasExactGroupMatchBonus && tagTermsLen > 0 && el.group) {
+        if (tagTerms.includes(el.groupLower)) {
+          score += scoreExactGroupMatchBonus
+        }
+      }
+
       // STEP 3B: Includes bonuses (substring matching)
       if (canCheckIncludes) {
         let includesBonusesAwarded = 0
@@ -222,6 +232,9 @@ export function calculateFinalScore(results, searchTerm) {
             includesBonusesAwarded++
           } else if (normalizedTags?.includes(term)) {
             score += includesTagBonus
+            includesBonusesAwarded++
+          } else if (el.groupLower?.includes(term)) {
+            score += includesGroupBonus
             includesBonusesAwarded++
           } else if (normalizedFolder?.includes(term)) {
             score += includesFolderBonus

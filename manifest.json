@@ -5,7 +5,7 @@
   "homepage_url": "https://github.com/Fannon/search-bookmarks-history-and-tabs",
   "author": "Simon Heimler",
   "version": "1.18.0",
-  "permissions": ["tabs", "bookmarks", "history", "storage"],
+  "permissions": ["tabs", "bookmarks", "history", "storage", "tabGroups"],
   "action": {
     "default_popup": "/popup/index.html",
     "default_icon": {
