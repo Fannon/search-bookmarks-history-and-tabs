@@ -200,6 +200,11 @@ export async function toggleSearchApproach() {
   userOptions.searchStrategy = ext.opts.searchStrategy
   await setUserOptions(userOptions)
 
+  // Clear the search cache to prevent stale results from the previous strategy
+  if (ext.searchCache) {
+    ext.searchCache.clear()
+  }
+
   // Update the UI to reflect the new strategy
   updateSearchApproachToggle()
 

@@ -3,6 +3,7 @@
 ## [unreleased]
 
 - **IMPROVED**: Bookmarks with open tabs now also display the tab's group badge (if the tab belongs to a named group).
+- **FIXED**: Search cache is now properly cleared when toggling between "Precise" and "Fuzzy" search strategies, preventing stale results and memory bloat.
 
 ## [v2.0.0]
 
