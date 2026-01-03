@@ -109,7 +109,7 @@ describe('tagsView', () => {
 
     // Create many tags to test performance
     const tags = {}
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 5000; i++) {
       tags[`tag${i}`] = Array.from({ length: Math.floor(Math.random() * 10) + 1 }, (_, idx) => ({ id: `${i}-${idx}` }))
     }
 
@@ -123,10 +123,10 @@ describe('tagsView', () => {
     expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
-    expect(badges).toHaveLength(100)
+    expect(badges).toHaveLength(5000)
 
-    // Should render within reasonable time (less than 100ms for 100 tags)
-    expect(endTime - startTime).toBeLessThan(100)
+    // Should render within reasonable time (less than 500ms for 5000 tags)
+    expect(endTime - startTime).toBeLessThan(500)
   })
 
   it('handles special characters in tag names', async () => {

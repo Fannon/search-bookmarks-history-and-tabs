@@ -30,7 +30,7 @@
 - **FIXED**: Potential fix (to be confirmed) for zoom level issues on some systems, not showing controls at the bottom of the popup.
 - **NEW**: Search within taxonomy: It is now possible to combine taxonomy filters (Folders `~`, Tags `#`, Groups `@`) with a regular search term.
   - Example: `~Work  project` will search for "project" within the "Work" folder.
-  - Note: Use a double space to separate the taxonomy filter from the search term.
+  - Note: Use a double space to separate the taxonomy filter from the search term (this avoids ambiguity with spaces inside names).
   - Tip: Press `TAB` anywhere in the search input to insert the double space.
 - **OPTIMIZED**: Taxonomy search loop to prevent redundant lowercasing and object creation.
 - **IMPROVED**: Refined styling of resizable textareas in dark mode.
