@@ -27,6 +27,10 @@
 - **CHANGED**: Popup width has been increased from 500px to 515px.
 - **CHANGED**: Smaller layout / CSS adjustments to allow for more textarea size when editing bookmark titles and URLs.
 - **FIXED**: Potential fix (to be confirmed) for zoom level issues on some systems, not showing controls at the bottom of the popup.
+- **NEW**: Search within taxonomy: It is now possible to combine taxonomy filters (Folders `~`, Tags `#`, Groups `@`) with a regular search term.
+  - Example: `~Work  project` will search for "project" within the "Work" folder.
+  - Note: Use a double space to separate the taxonomy filter from the search term.
+- **IMPROVED**: Refined styling of resizable textareas in dark mode.
 
 ## [v1.18.0]
 
