@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+## [v2.0.0]
+
 - **NEW: Tab Groups Overview** ([#188](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/188))
   - Dedicated **Tab Groups** page in the bottom navigation.
   - Lists all named tab groups with their tab counts.
