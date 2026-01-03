@@ -279,7 +279,7 @@ export async function search(event) {
       // Apply scoring and sorting
       results = applyScoring(results, searchTerm, searchMode)
 
-      // Filter by score and max results
+      // Limit to max results
       results = filterResults(results, searchMode)
 
       // Apply highlighting only to the truncated result set (better performance)
