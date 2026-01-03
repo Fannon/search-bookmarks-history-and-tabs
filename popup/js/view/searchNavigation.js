@@ -36,7 +36,7 @@ export async function navigationKeyListener(event) {
       const value = input.value
 
       // Insert two spaces
-      input.value = value.substring(0, start) + '  ' + value.substring(end)
+      input.value = `${value.substring(0, start)}  ${value.substring(end)}`
 
       // Move cursor after the inserted spaces
       input.selectionStart = input.selectionEnd = start + 2

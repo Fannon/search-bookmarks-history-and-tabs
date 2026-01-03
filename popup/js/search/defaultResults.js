@@ -12,6 +12,7 @@
  */
 
 import { getBrowserTabs } from '../helper/browserApi.js'
+import { cleanUpUrl } from '../helper/utils.js'
 
 /**
  * Build default result sets when no explicit search term is provided.
@@ -52,21 +53,8 @@ export async function addDefaultEntries() {
       const [tab] = await getBrowserTabs({ active: true, currentWindow: true })
       activeTab = tab
       if (tab?.url) {
-        // Use the current tab's URL instead of window.location.href for accuracy
-        // Also strip hashes (anchor tags) and trailing slashes for comparison
-        const currentUrl = tab.url.replace(/#.*$/, '').replace(/\/$/, '')
-
-        // Find bookmarks that match current page URL (with some flexibility)
-        const matchingBookmarks = ext.model.bookmarks.filter((el) => {
-          if (!el.originalUrl) return false
-          const bookmarkUrl = el.originalUrl.replace(/#.*$/, '').replace(/\/$/, '')
-          return (
-            bookmarkUrl === currentUrl ||
-            bookmarkUrl === currentUrl.replace(/^https?:\/\//, '') ||
-            currentUrl === bookmarkUrl.replace(/^https?:\/\//, '')
-          )
-        })
-
+        const currentUrl = cleanUpUrl(tab.url)
+        const matchingBookmarks = ext.model.bookmarks.filter((el) => el.url === currentUrl)
         if (matchingBookmarks.length > 0) {
           results.push(...matchingBookmarks)
         }

@@ -416,13 +416,9 @@ export function getTitle(title, url) {
  * @returns {string} Possibly truncated title.
  */
 export function shortenTitle(title) {
-  const urlTitleLengthRestriction = 80
-  const maxLengthRestriction = 512
-  if (title && title.length > urlTitleLengthRestriction) {
-    return `${title.substring(0, urlTitleLengthRestriction - 3)}...`
-  } else if (title && title.length > maxLengthRestriction) {
-    return `${title.substring(0, maxLengthRestriction - 3)}...`
-  } else {
-    return title
+  const limit = 80
+  if (title?.length > limit) {
+    return `${title.substring(0, limit - 3)}...`
   }
+  return title
 }

@@ -134,9 +134,7 @@ export async function executeSearch(searchTerm, searchMode, data, options) {
   if (searchMode === 'groups') return searchTaxonomy(searchTerm, 'group', data.tabs)
 
   if (options.searchStrategy === 'fuzzy') return fuzzySearch(searchMode, searchTerm, data, options)
-  if (options.searchStrategy !== 'precise') {
-    console.error(`Unsupported option "search.approach" value: "${options.searchStrategy}"`)
-  }
+
   return simpleSearch(searchMode, searchTerm, data)
 }
 
@@ -233,14 +231,10 @@ function cacheResults(searchTerm, results) {
 export async function search(event) {
   // Create a promise that we'll track so Enter key can await completion
   const searchPromise = (async () => {
+    const startTime = Date.now()
     try {
       if (shouldSkipSearch(event)) return
-      if (!ext.initialized) {
-        console.warn('Extension not initialized (yet). Skipping search')
-        return
-      }
 
-      const startTime = Date.now()
       if (typeof performance !== 'undefined' && typeof performance.mark === 'function') {
         performance.mark('search-start')
       }
@@ -318,7 +312,7 @@ export async function search(event) {
         }
       }
 
-      // Simple timing for debugging (only if debug is enabled)
+      // Simple timing for debugging
       console.debug(`Search took ${Date.now() - startTime}ms`)
     } catch (err) {
       printError(err)

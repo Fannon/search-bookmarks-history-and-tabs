@@ -53,23 +53,13 @@ export async function renderSearchResults() {
     const searchTermSuffix = `/search/${encodeURIComponent(searchTerm || '')}`
 
     // Pre-calculate type-based colors once
-    const typeColors = {
-      bookmark: escapeHtml(String(opts.bookmarkColor || '')),
-      tab: escapeHtml(String(opts.tabColor || '')),
-      history: escapeHtml(String(opts.historyColor || '')),
-      search: escapeHtml(String(opts.searchColor || '')),
-      customSearch: escapeHtml(String(opts.customSearchColor || '')),
-      direct: escapeHtml(String(opts.directColor || '')),
+    const typeColors = {}
+    for (const t of ['bookmark', 'tab', 'history', 'search', 'customSearch', 'direct']) {
+      typeColors[t] = escapeHtml(String(opts[`${t}Color`] || ''))
     }
 
-    const createBadge = (content, title, extraClass = '', extraLink = '', extraStyle = '') => {
-      let badge = `<span class="badge ${extraClass}"`
-      if (title) badge += ` title="${escapeHtml(title)}"`
-      if (extraLink) badge += ` x-link="${escapeHtml(extraLink)}"`
-      if (extraStyle) badge += ` style="${extraStyle}"`
-      badge += `>${content}</span>`
-      return badge
-    }
+    const createBadge = (content, title, extraClass = '', extraLink = '', extraStyle = '') =>
+      `<span class="badge ${extraClass}"${title ? ` title="${escapeHtml(title)}"` : ''}${extraLink ? ` x-link="${escapeHtml(extraLink)}"` : ''}${extraStyle ? ` style="${extraStyle}"` : ''}>${content}</span>`
 
     // Pre-render static badges
     const BADGE_SOURCE_TAB = createBadge('T', 'Open Tab', 'source-tab')
@@ -101,8 +91,8 @@ export async function renderSearchResults() {
         const highlightedFolders = entry.highlightedFolderArray
         let trail = ''
         for (let j = 0; j < folderArray.length; j++) {
+          trail += (j === 0 ? '' : ' ~') + folderArray[j]
           const folder = folderArray[j]
-          trail += (j === 0 ? '' : ' ~') + folder
           const content = shouldHighlight && highlightedFolders?.[j] ? highlightedFolders[j] : `~${escapeHtml(folder)}`
           badges.push(
             createBadge(
