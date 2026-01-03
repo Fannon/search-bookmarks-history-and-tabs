@@ -41,6 +41,7 @@ export async function createDist(clean = true) {
   await modifyHtmlFile('dist/chrome/popup/index.html')
   await modifyHtmlFile('dist/chrome/popup/tags.html')
   await modifyHtmlFile('dist/chrome/popup/folders.html')
+  await modifyHtmlFile('dist/chrome/popup/groups.html')
   await modifyHtmlFile('dist/chrome/popup/editBookmark.html')
 
   // Remove mock data and test artifacts

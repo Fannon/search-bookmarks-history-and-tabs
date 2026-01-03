@@ -1,7 +1,8 @@
 /* Tags & Folders Overview Pages */
 
 #tags-view,
-#folders-view {
+#folders-view,
+#groups-view {
   position: fixed;
   top: 0;
   left: 0;
@@ -19,23 +20,63 @@
 }
 
 #tags-list,
-#folders-list {
+#folders-list,
+#groups-list {
   width: 100%;
 }
 #tags-list a,
-#folders-list a {
+#folders-list a,
+#groups-list a {
   color: #fff;
   font-size: 15px;
   margin: 4px 4px 0 0;
 }
 
+/* Empty state messages */
+.empty {
+  padding: 16px;
+  line-height: 1.5;
+  color: var(--fg);
+}
+.empty strong {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+.empty p {
+  margin: 8px 0;
+}
+.empty ol {
+  margin: 8px 0 8px 20px;
+  padding: 0;
+}
+.empty li {
+  margin: 4px 0;
+}
+.empty code {
+  background: var(--bg2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.empty a {
+  color: var(--a);
+}
+.empty.warning {
+  background: rgba(255, 193, 7, 0.1);
+  border-left: 4px solid #ffc107;
+  border-radius: 4px;
+}
+
 @media (prefers-color-scheme: dark) {
   #tags a,
-  #folders a {
+  #folders a,
+  #groups a {
     color: var(--a);
   }
   #tags mark,
-  #folders mark {
+  #folders mark,
+  #groups mark {
     color: var(--mark);
   }
 }
