@@ -133,6 +133,8 @@ export async function executeSearch(searchTerm, searchMode, data, options) {
   if (searchMode === 'folders') return searchTaxonomy(searchTerm, 'folder', data.bookmarks)
   if (searchMode === 'groups') return searchTaxonomy(searchTerm, 'group', data.tabs)
   if (options.searchStrategy === 'fuzzy') return fuzzySearch(searchMode, searchTerm, data, options)
+  // By default fall back to simple search. This is better than going with errors.
+  // Changing this is a matter of a click in the UI, anyway.
   return simpleSearch(searchMode, searchTerm, data)
 }
 
