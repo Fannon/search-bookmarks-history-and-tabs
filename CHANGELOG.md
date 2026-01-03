@@ -13,6 +13,7 @@
   - Sorting preference is persisted across sessions in `localStorage`.
   - Sub-sorting: Items with the same count are automatically sub-sorted alphabetically.
   - Intuitive UI with direction-aware icons (arrows + type indicators).
+- **NEW**: Added `Ctrl + F` keyboard shortcut to quickly toggle between "Precise" and "Fuzzy" search modes.
 - **IMPROVED: Unified Button & Icon Design**
   - Modernized all action buttons (**SAVE**, **CANCEL**, **DELETE**, etc.) with Tabler Icons.
   - Consistent layout and alignment across Options, Edit Bookmark, and Taxonomy pages.
