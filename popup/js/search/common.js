@@ -132,9 +132,7 @@ export async function executeSearch(searchTerm, searchMode, data, options) {
   if (searchMode === 'tags') return searchTaxonomy(searchTerm, 'tags', data.bookmarks)
   if (searchMode === 'folders') return searchTaxonomy(searchTerm, 'folder', data.bookmarks)
   if (searchMode === 'groups') return searchTaxonomy(searchTerm, 'group', data.tabs)
-
   if (options.searchStrategy === 'fuzzy') return fuzzySearch(searchMode, searchTerm, data, options)
-
   return simpleSearch(searchMode, searchTerm, data)
 }
 
@@ -233,7 +231,7 @@ export async function search(event) {
   const searchPromise = (async () => {
     const startTime = Date.now()
     try {
-      if (shouldSkipSearch(event)) return
+      if (shouldSkipSearch(event) || !ext.initialized) return
 
       if (typeof performance !== 'undefined' && typeof performance.mark === 'function') {
         performance.mark('search-start')

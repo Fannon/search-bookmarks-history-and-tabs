@@ -99,8 +99,8 @@ describe('addDefaultEntries', () => {
   describe('all mode (default)', () => {
     test('returns bookmarks matching current tab URL', async () => {
       ext.model.bookmarks = [
-        { id: 1, originalUrl: 'https://example.com', title: 'Example' },
-        { id: 2, originalUrl: 'https://other.com', title: 'Other' },
+        { id: 1, url: 'example.com', originalUrl: 'https://example.com', title: 'Example' },
+        { id: 2, url: 'other.com', originalUrl: 'https://other.com', title: 'Other' },
       ]
       ext.model.tabs = []
       mockGetBrowserTabs.mockResolvedValue([{ url: 'https://example.com/' }])
@@ -112,8 +112,8 @@ describe('addDefaultEntries', () => {
 
     test('shows all bookmarks if multiple match current tab URL', async () => {
       ext.model.bookmarks = [
-        { id: 1, originalUrl: 'https://example.com', title: 'Example 1' },
-        { id: 2, originalUrl: 'https://example.com', title: 'Example 2' },
+        { id: 1, url: 'example.com', originalUrl: 'https://example.com', title: 'Example 1' },
+        { id: 2, url: 'example.com', originalUrl: 'https://example.com', title: 'Example 2' },
       ]
       ext.model.tabs = []
       mockGetBrowserTabs.mockResolvedValue([{ url: 'https://example.com' }])
@@ -124,7 +124,7 @@ describe('addDefaultEntries', () => {
     })
 
     test('matches URLs with and without trailing slashes', async () => {
-      ext.model.bookmarks = [{ id: 1, originalUrl: 'https://example.com/', title: 'With Slash' }]
+      ext.model.bookmarks = [{ id: 1, url: 'example.com', originalUrl: 'https://example.com/', title: 'With Slash' }]
       mockGetBrowserTabs.mockResolvedValue([{ url: 'https://example.com' }])
 
       const results = await addDefaultEntries()
@@ -133,7 +133,7 @@ describe('addDefaultEntries', () => {
     })
 
     test('matches URLs with and without protocol', async () => {
-      ext.model.bookmarks = [{ id: 1, originalUrl: 'https://example.com', title: 'Example' }]
+      ext.model.bookmarks = [{ id: 1, url: 'example.com', originalUrl: 'https://example.com', title: 'Example' }]
       mockGetBrowserTabs.mockResolvedValue([{ url: 'example.com' }])
 
       const results = await addDefaultEntries()
@@ -142,7 +142,9 @@ describe('addDefaultEntries', () => {
     })
 
     test('matches URLs ignoring anchor tags', async () => {
-      ext.model.bookmarks = [{ id: 1, originalUrl: 'https://example.com#section1', title: 'Bookmark with Hash' }]
+      ext.model.bookmarks = [
+        { id: 1, url: 'example.com', originalUrl: 'https://example.com#section1', title: 'Bookmark with Hash' },
+      ]
       mockGetBrowserTabs.mockResolvedValue([{ url: 'https://example.com#section2' }])
 
       const results = await addDefaultEntries()
@@ -197,7 +199,9 @@ describe('addDefaultEntries', () => {
 
     test('combines matching bookmarks and excludes active tab from recent list', async () => {
       ext.opts.maxRecentTabsToShow = 2
-      ext.model.bookmarks = [{ id: 1, originalId: 101, originalUrl: 'https://active.test', title: 'Bookmark Match' }]
+      ext.model.bookmarks = [
+        { id: 1, originalId: 101, url: 'active.test', originalUrl: 'https://active.test', title: 'Bookmark Match' },
+      ]
       ext.model.tabs = [
         { id: 2, originalId: 101, url: 'https://active.test', lastVisitSecondsAgo: 0 },
         { id: 3, originalId: 102, url: 'https://other.test', lastVisitSecondsAgo: 10 },
@@ -213,7 +217,7 @@ describe('addDefaultEntries', () => {
     })
 
     test('handles missing tab URL gracefully', async () => {
-      ext.model.bookmarks = [{ id: 1, originalUrl: 'https://example.com', title: 'Example' }]
+      ext.model.bookmarks = [{ id: 1, url: 'example.com', originalUrl: 'https://example.com', title: 'Example' }]
       mockGetBrowserTabs.mockResolvedValue([{ url: null }])
 
       const results = await addDefaultEntries()
