@@ -18,7 +18,7 @@ export async function loadGroupsOverview() {
 
   // 1. Permission Check (Chrome only)
   let hasPermission = false
-  if (typeof chrome !== 'undefined' && chrome.permission && chrome.permissions.contains) {
+  if (typeof chrome !== 'undefined' && chrome.permissions && chrome.permissions.contains) {
     hasPermission = await new Promise((resolve) => {
       chrome.permissions.contains({ permissions: ['tabGroups'] }, resolve)
     })
