@@ -49,6 +49,7 @@ export async function getBrowserTabs(queryOptions = {}) {
 export function convertBrowserTabs(chromeTabs, groupMap) {
   const result = []
   const count = chromeTabs.length
+  const hasGroups = groupMap && groupMap.size > 0
 
   for (let i = 0; i < count; i++) {
     const el = chromeTabs[i]
@@ -56,13 +57,22 @@ export function convertBrowserTabs(chromeTabs, groupMap) {
       const cleanUrl = cleanUpUrl(el.url)
       const title = getTitle(el.title, cleanUrl)
       const titleLower = title.toLowerCase().trim()
-      const groupInfo = groupMap && el.groupId != null && el.groupId !== -1 ? groupMap.get(el.groupId) : null
-      const group = groupInfo?.title || ''
-      const groupLower = group.toLowerCase()
+
+      // Only look up group info if groups are available and tab has a valid groupId
+      let group = ''
+      let groupLower = ''
+      if (hasGroups && el.groupId != null && el.groupId !== -1) {
+        const groupInfo = groupMap.get(el.groupId)
+        if (groupInfo?.title) {
+          group = groupInfo.title
+          groupLower = group.toLowerCase()
+        }
+      }
+
       const groupText = group ? `@${group}` : ''
       const searchString = createSearchString(title, cleanUrl, undefined, undefined, groupText)
 
-      result.push({
+      const tabItem = {
         type: 'tab',
         title,
         titleLower: titleLower,
@@ -71,13 +81,19 @@ export function convertBrowserTabs(chromeTabs, groupMap) {
         originalId: el.id,
         active: el.active,
         windowId: el.windowId,
-        groupId: el.groupId,
-        group,
-        groupLower,
         searchString,
         searchStringLower: searchString.toLowerCase(),
         lastVisitSecondsAgo: el.lastAccessed ? (Date.now() - el.lastAccessed) / 1000 : undefined,
-      })
+      }
+
+      // Only add group properties if the tab actually has a named group
+      if (group) {
+        tabItem.groupId = el.groupId
+        tabItem.group = group
+        tabItem.groupLower = groupLower
+      }
+
+      result.push(tabItem)
     }
   }
 
