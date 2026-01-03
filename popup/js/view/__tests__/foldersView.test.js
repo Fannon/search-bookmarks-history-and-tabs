@@ -99,7 +99,7 @@ describe('foldersView', () => {
     // Check that valid folders are still rendered correctly
     const validBadge = badges.find((badge) => badge.getAttribute('x-folder') === 'Valid Folder')
     expect(validBadge).toBeDefined()
-    expect(validBadge.getAttribute('href')).toBe('./index.html#search/~Valid Folder')
+    expect(validBadge.getAttribute('href')).toBe('./index.html#search/~Valid%20Folder')
 
     consoleWarnSpy.mockRestore()
   })
@@ -152,10 +152,10 @@ describe('foldersView', () => {
 
     const hrefs = badges.map((el) => el.getAttribute('href'))
     expect(hrefs).toEqual([
-      './index.html#search/~Folder with "quotes"',
-      './index.html#search/~Personal/Archive',
-      './index.html#search/~Test (2024)',
-      './index.html#search/~Work & Projects',
+      './index.html#search/~Folder%20with%20%22quotes%22',
+      './index.html#search/~Personal%2FArchive',
+      './index.html#search/~Test%20(2024)',
+      './index.html#search/~Work%20%26%20Projects',
     ])
 
     const labelTexts = badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())

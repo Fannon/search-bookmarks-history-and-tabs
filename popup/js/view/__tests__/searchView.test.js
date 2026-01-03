@@ -193,7 +193,7 @@ describe('searchView renderSearchResults', () => {
     const tagBadges = Array.from(bookmarkItem.querySelectorAll('.badge.tags'))
     expect(tagBadges.map((el) => el.getAttribute('x-link'))).toEqual(['#search/#alpha', '#search/#beta'])
     const folderBadges = Array.from(bookmarkItem.querySelectorAll('.badge.folder'))
-    expect(folderBadges.map((el) => el.getAttribute('x-link'))).toEqual(['#search/~Work', '#search/~Work ~Docs'])
+    expect(folderBadges.map((el) => el.getAttribute('x-link'))).toEqual(['#search/~Work', '#search/~Work%20~Docs'])
     expect(bookmarkItem.querySelector('.badge.last-visited')).not.toBeNull()
     const visitCounterBadge = bookmarkItem.querySelector('.badge.visit-counter')
     expect(visitCounterBadge).not.toBeNull()
