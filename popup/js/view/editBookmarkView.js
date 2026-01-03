@@ -8,7 +8,7 @@
  * - Invalidate search caches and taxonomy indexes so edits reflect immediately in the popup search view.
  */
 
-import { browserApi, createSearchString } from '../helper/browserApi.js'
+import { browserApi, createSearchStringLower } from '../helper/browserApi.js'
 import { cleanUpUrl } from '../helper/utils.js'
 import { resetFuzzySearchState } from '../search/fuzzySearch.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
@@ -98,8 +98,7 @@ export function updateBookmark(bookmarkId) {
   bookmark.originalUrl = urlInput
   bookmark.url = cleanUpUrl(urlInput)
   bookmark.tags = tagsInput
-  bookmark.searchString = createSearchString(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
-  bookmark.searchStringLower = bookmark.searchString.toLowerCase()
+  bookmark.searchStringLower = createSearchStringLower(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
   resetUniqueFoldersCache()

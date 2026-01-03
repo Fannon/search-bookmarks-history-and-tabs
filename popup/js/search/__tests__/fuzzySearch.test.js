@@ -349,7 +349,7 @@ describe('fuzzySearch', () => {
         id: 'bookmark-malformed',
         title: 'Valid title',
         url: 'https://example.com/valid',
-        searchString: null, // Malformed - missing searchString
+        searchStringLower: null, // Malformed - missing searchStringLower
       },
     ]
 
