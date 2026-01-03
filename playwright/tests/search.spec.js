@@ -207,4 +207,31 @@ test.describe('Search View', () => {
       await expectNoClientErrors(page)
     })
   })
+
+  test.describe('Taxonomy Hybrid Search', () => {
+    test('hybrid search filters by taxonomy and text', async ({ page }) => {
+      // 1. Simulate a taxonomy search (e.g. searching for "#json") which auto-appends double space
+      await page.locator('#q').fill('#json  ')
+
+      // 2. Initial state: should show multiple results
+      await expect(page.locator('#results li.bookmark')).not.toHaveCount(0)
+      const initialCount = await page.locator('#results li.bookmark').count()
+
+      // 3. Type a refinement after the double space (e.g. "edit")
+      await page.keyboard.type('edit')
+      await expect(page.locator('#q')).toHaveValue('#json  edit')
+
+      // 4. Verify results are filtered
+      // Using "edit" which is known to return results from other tests ("JSON Edit")
+      await expect(page.locator('#results li.bookmark')).not.toHaveCount(0)
+      const refinedCount = await page.locator('#results li.bookmark').count()
+      // We expect refinement to potentially reduce results, or at least keep the relevant one
+      expect(refinedCount).toBeLessThanOrEqual(initialCount)
+
+      // 5. Verify the specific result is visible
+      await expect(page.locator('#results [x-original-id="7"]')).toBeVisible()
+
+      await expectNoClientErrors(page)
+    })
+  })
 })
