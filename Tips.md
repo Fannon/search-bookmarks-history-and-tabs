@@ -3,6 +3,7 @@
 ### ⌨️ Keyboard Shortcuts
 
 - **Toggle Extension**: Default is <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>.</kbd>. You can customize this in browser extension settings.
+- **Toggle Search Mode**: Press <kbd>Ctrl</kbd> + <kbd>F</kbd> to quickly switch between **Precise** and **Fuzzy** search.
 - **Vim / Emacs Navigation**:
   - <kbd>Ctrl</kbd> + <kbd>N</kbd> or <kbd>Ctrl</kbd> + <kbd>J</kbd> moves selection **down**.
   - <kbd>Ctrl</kbd> + <kbd>P</kbd> or <kbd>Ctrl</kbd> + <kbd>K</kbd> moves selection **up**.
@@ -11,6 +12,7 @@
   - <kbd>Shift</kbd> + <kbd>Enter</kbd> or <kbd>Alt</kbd> + <kbd>Enter</kbd>: Open in **current tab**.
   - <kbd>Ctrl</kbd> + <kbd>Enter</kbd>: Open in background without closing the popup.
 - **Copy URL**: **Right-Click** any result or press a custom shortcut if configured.
+- **Hybrid Search**: Press <kbd>TAB</kbd> to insert a double-space separator for combining taxonomy filters with search terms (e.g., `#tag  query`).
 
 ---
 

@@ -14,7 +14,7 @@
  * User options can be customized via YAML/JSON in the settings page.
  * All options are optional - unspecified options fall back to defaults.
  *
- * @see https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration
+ * @see https://github.com/Fannon/search-bookmarks-history-and-tabs#user-configuration
  */
 
 import { printError } from '../view/errorView.js'
@@ -23,7 +23,7 @@ import { printError } from '../view/errorView.js'
  * The default options
  *
  * They can be selectively overwritten and customized via user options
- * @see https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration
+ * @see https://github.com/Fannon/search-bookmarks-history-and-tabs#user-configuration
  */
 export const defaultOptions = {
   //////////////////////////////////////////

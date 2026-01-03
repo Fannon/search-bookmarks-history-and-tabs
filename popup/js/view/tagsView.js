@@ -31,7 +31,7 @@ export function loadTagsOverview() {
           <li><strong>Inline tags:</strong> Append tags directly to a bookmark's title using the <code>#</code> prefix (e.g., <code>My Bookmark #work #tool</code>).</li>
         </ol>
         <p>
-          <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#tags" target="_blank">
+          <a href="https://github.com/Fannon/search-bookmarks-history-and-tabs#tags" target="_blank">
             Learn more about tagging →
           </a>
         </p>

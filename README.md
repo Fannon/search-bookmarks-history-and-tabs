@@ -225,5 +225,5 @@ This extension makes use of the following helpful open-source projects (thanks!)
 
 ## Feedback and Ideas
 
-> Please create a [GitHub issue](https://github.com/Fannon/search-tabs-bookmarks-and-history/issues) to give your feedback.
+> Please create a [GitHub issue](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues) to give your feedback.
 > All ideas, suggestions or bug reports are welcome.

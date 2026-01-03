@@ -2,38 +2,57 @@
 
 ## [unreleased]
 
-- **NEW: Tab Groups Overview** ([#188](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/188))
-  - Dedicated **Tab Groups** page in the bottom navigation.
+## [v2.0.0]
+
+This is a major release with new features, a refreshed UI, and improved search capabilities.
+
+### ✨ New Features
+
+- **Tab Groups Overview** ([#188](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/188))
+  - New dedicated **Tab Groups** page in the bottom navigation.
   - Lists all named tab groups with their tab counts.
-  - Links directly to filtered search results for each group.
-  - Graceful degradation for unsupported browsers (Firefox) or missing permissions.
-- **NEW: Taxonomy Sorting Preferences**
-  - Added a "Sort" toggle for Tags, Folders, and Tab Groups.
-  - Switch between **Alphabetical** (A-Z) and **By Count** (most used items first) sorting.
-  - Sorting preference is persisted across sessions in `localStorage`.
-  - Sub-sorting: Items with the same count are automatically sub-sorted alphabetically.
-  - Intuitive UI with direction-aware icons (arrows + type indicators).
-- **NEW**: Added `Ctrl + F` keyboard shortcut to quickly toggle between "Precise" and "Fuzzy" search modes.
-- **IMPROVED: Unified Button & Icon Design**
-  - Modernized all action buttons (**SAVE**, **CANCEL**, **DELETE**, etc.) with Tabler Icons.
-  - Consistent layout and alignment across Options, Edit Bookmark, and Taxonomy pages.
-  - Left-aligned footer buttons for better readability and reach.
-- **FIXED**: Improved horizontal alignment of taxonomy items (Tags/Folders/Groups) to match standard 10px page padding.
-- **IMPROVED**: Major redesign of the bottom navigation bar.
-  - Replaced plain text links with a modern "segmented control" toolbar at the bottom.
-  - Used Tabler Icons for Search, Tags, Folders, Options, and Help.
-  - Search result counter is part of the Search navigation item.
-- **IMPROVED**: Streamlined UI by removing redundant section titles across all views, maximizing the visible area for the actual content.
-- **IMPROVED**: Bookmark edit textareas are now vertically resizable, allowing for easier editing of long titles and URLs.
-- **CHANGED**: Popup width has been increased from 500px to 515px.
-- **CHANGED**: Smaller layout / CSS adjustments to allow for more textarea size when editing bookmark titles and URLs.
-- **FIXED**: Potential fix (to be confirmed) for zoom level issues on some systems, not showing controls at the bottom of the popup.
-- **NEW**: Search within taxonomy: It is now possible to combine taxonomy filters (Folders `~`, Tags `#`, Groups `@`) with a regular search term.
-  - Example: `~Work  project` will search for "project" within the "Work" folder.
-  - Note: Use a double space to separate the taxonomy filter from the search term (this avoids ambiguity with spaces inside names).
-  - Tip: Press `TAB` anywhere in the search input to insert the double space.
-- **OPTIMIZED**: Taxonomy search loop to prevent redundant lowercasing and object creation.
-- **IMPROVED**: Refined styling of resizable textareas in dark mode.
+  - Click to filter search results by group.
+  - ⚠️ **New Permission**: Requires `tabGroups` permission to read tab group names (not yet supported by Firefox).
+
+- **Taxonomy Sorting**
+  - Added a **Sort** toggle for Tags, Folders, and Tab Groups pages.
+  - Switch between **Alphabetical** (A-Z) and **By Count** (most used first).
+  - Sorting preference is persisted in `localStorage`.
+
+- **Search Within Taxonomy** ([#104](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/104))
+  - Combine taxonomy filters (`#tag`, `~folder`, `@group`) with a text search.
+  - Example: `~Work  project` searches for "project" within the "Work" folder.
+  - Use **double space** to separate filter from search term.
+  - **Tip**: Press `TAB` to quickly insert the double-space separator.
+
+- **Keyboard Shortcut**: `Ctrl + F` to toggle between "Precise" and "Fuzzy" search modes.
+
+### 🎨 UI Improvements
+
+- **Redesigned Navigation Bar**
+  - Modern "segmented control" toolbar with Tabler Icons.
+  - Result counter integrated into the Search nav item.
+
+- **Unified Button Design**
+  - All action buttons (SAVE, CANCEL, DELETE) now use Tabler Icons.
+  - Consistent styling across all pages.
+
+- **Resizable Textareas**
+  - Bookmark title and URL fields are now vertically resizable.
+  - Improved dark mode styling for resize handles.
+
+- **Streamlined Layout**
+  - Removed redundant section headers to maximize content area.
+  - Improved horizontal alignment of taxonomy items.
+
+### 🔧 Changes
+
+- Popup width increased from 500px to 515px.
+- Layout adjustments for better textarea sizing in bookmark editor.
+
+### 🐛 Fixes
+
+- Potential fix for zoom level issues on some systems where controls at the bottom were cut off.
 
 ## [v1.18.0]
 

@@ -174,7 +174,7 @@ Copy the following prompt and adjust the "What I want" section:
 
 > I want to configure the "Search Bookmarks, History and Tabs" browser extension.
 > Here is the link to the default options file which shows all available options and their defaults:
-> [https://github.com/Fannon/search-tabs-bookmarks-and-history/blob/main/popup/js/model/options.js](https://github.com/Fannon/search-tabs-bookmarks-and-history/blob/main/popup/js/model/options.js)
+> [https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/model/options.js](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/model/options.js)
 >
 > **What I want:**
 > - I want to prioritize open tabs over everything else.
