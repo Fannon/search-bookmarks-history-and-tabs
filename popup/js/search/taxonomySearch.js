@@ -71,15 +71,7 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
         searchString = entry[taxonomyType + 'Lower'] || (entry[taxonomyType] || '').toLowerCase()
       }
 
-      let searchTermMatches = 0
-      for (const term of searchTerms) {
-        if (searchString.includes(taxonomyMarker + term)) {
-          searchTermMatches++
-        }
-      }
-
-      // Only include if all taxonomy terms matched (AND logic)
-      if (searchTermMatches === searchTerms.length) {
+      if (searchTerms.every((term) => searchString.includes(taxonomyMarker + term))) {
         results.push({
           ...entry,
           searchApproach: 'taxonomy',
