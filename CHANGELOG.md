@@ -2,14 +2,22 @@
 
 ## [unreleased]
 
-- **NEW**: Tab Groups Search Support (Chrome only, [#188](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/188))
-  - Search for tabs by their group name - tabs in named groups will match when you search for the group name.
-  - Use `@` prefix to search tab groups specifically (e.g., `@Work` to find all tabs in the "Work" group).
-  - A purple badge displays the group name on tab results, clickable to filter by that group.
-  - New **Groups** page in the navigation bar, listing all tab groups with tab counts (like Tags and Folders).
-  - New configuration options: `displayTabGroup` (show/hide badges), `scoreGroupWeight` (match weight), `scoreExactGroupMatchBonus` (exact match bonus).
-  - Adds `tabGroups` permission for Chrome. Firefox does not support this API.
-  - The feature gracefully degrades if feature is unsupported or permission is not given.
+- **NEW: Tab Groups Overview** (Chrome only, [#188](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/188))
+  - Dedicated **Tab Groups** page in the bottom navigation.
+  - Lists all named tab groups with their tab counts.
+  - Links directly to filtered search results for each group.
+  - Graceful degradation for unsupported browsers (Firefox) or missing permissions.
+- **NEW: Taxonomy Sorting Preferences**
+  - Added a "Sort" toggle for Tags, Folders, and Tab Groups.
+  - Switch between **Alphabetical** (A-Z) and **By Count** (most used items first) sorting.
+  - Sorting preference is persisted across sessions in `localStorage`.
+  - Sub-sorting: Items with the same count are automatically sub-sorted alphabetically.
+  - Intuitive UI with direction-aware icons (arrows + type indicators).
+- **IMPROVED: Unified Button & Icon Design**
+  - Modernized all action buttons (**SAVE**, **CANCEL**, **DELETE**, etc.) with Tabler Icons.
+  - Consistent layout and alignment across Options, Edit Bookmark, and Taxonomy pages.
+  - Left-aligned footer buttons for better readability and reach.
+- **FIXED**: Improved horizontal alignment of taxonomy items (Tags/Folders/Groups) to match standard 10px page padding.
 - **IMPROVED**: Major redesign of the bottom navigation bar.
   - Replaced plain text links with a modern "segmented control" toolbar at the bottom.
   - Used Tabler Icons for Search, Tags, Folders, Options, and Help.
