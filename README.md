@@ -21,6 +21,9 @@ It supports two different search approaches:
 With this extension you can also **tag your bookmarks** including auto completions.
 The tags are considered when searching and can be used for navigation.
 
+**Tab Groups support** (Chrome only): Search for tabs by their group name using the `@` prefix.
+Browse all your tab groups in the dedicated Tab Groups page.
+
 The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). It's also very lightweight (< 150kb JavaScript, including dependencies).
 
 > 💡 Have a look at the [Tips & Tricks](./Tips.md) collection.
