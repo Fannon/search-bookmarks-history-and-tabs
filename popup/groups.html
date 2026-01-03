@@ -2,7 +2,7 @@
 <html lang="en-US">
 
 <head>
-  <title>Search Bookmarks, History and Tabs: Tags</title>
+  <title>Search Bookmarks, History and Tabs: Tab Groups</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="./css/style.css" />
@@ -10,11 +10,11 @@
   <link rel="icon" type="image/png" href="../images/logo-32.png" />
 </head>
 
-<body id="tags">
+<body id="groups">
   <div id="container">
-    <div id="tags-view">
-      <div id="tags-list">
-        <div id="tags-load" class="heading">Loading...</div>
+    <div id="groups-view">
+      <div id="groups-list">
+        <div id="groups-load" class="heading">Loading...</div>
       </div>
     </div>
     <footer id="links">
@@ -28,7 +28,7 @@
         </svg>
         <span>Search</span>
       </a>
-      <a href="./tags.html" class="nav active">
+      <a href="./tags.html" class="nav">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-tag">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -47,10 +47,10 @@
         </svg>
         <span>Folders</span>
       </a>
-      <a href="./groups.html" class="nav">
+      <a href="./groups.html" class="nav active">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-          class="icon-tabler-layout-grid" aria-hidden="true">
+          class="icon-tabler-layout-grid">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <path d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
           <path d="M14 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
@@ -84,7 +84,7 @@
     </footer>
     <ul id="errors"></ul>
   </div>
-  <script defer type="module" src="./js/initTags.js"></script>
+  <script defer type="module" src="./js/initGroups.js"></script>
 </body>
 
 </html>

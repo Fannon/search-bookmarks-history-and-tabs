@@ -3,7 +3,7 @@
  *
  * Responsibilities:
  * - Parse search mode prefixes (`h `, `b `, `t `, `s `) from query strings.
- * - Detect taxonomy markers (`#tag`, `~folder`) for specialized filtering.
+ * - Detect taxonomy markers (`#tag`, `~folder`, `@group`) for specialized filtering.
  * - Normalize search terms by removing prefixes and markers.
  *
  * This module provides a clean separation of query parsing logic from search orchestration,
@@ -28,6 +28,7 @@ const SEARCH_MODE_PREFIXES = [
 const SEARCH_MODE_MARKERS = {
   '#': 'tags',
   '~': 'folders',
+  '@': 'groups',
 }
 
 /**
@@ -35,7 +36,7 @@ const SEARCH_MODE_MARKERS = {
  *
  * This function analyzes the search term to detect:
  * 1. Mode prefixes (h/b/t/s followed by space)
- * 2. Taxonomy markers (# or ~ at the start)
+ * 2. Taxonomy markers (#, ~, or @ at the start)
  * 3. Falls back to 'all' mode if no special prefix/marker detected
  *
  * @param {string} searchTerm - Raw query string.
@@ -59,7 +60,7 @@ export function resolveSearchMode(searchTerm) {
     }
   }
 
-  // Check for taxonomy markers (# or ~) at the start
+  // Check for taxonomy markers (#, ~, or @) at the start
   const marker = SEARCH_MODE_MARKERS[term[0]]
   if (marker) {
     mode = marker
