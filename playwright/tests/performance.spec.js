@@ -51,7 +51,6 @@ test.describe('Performance Benchmarks', () => {
           originalUrl: url,
           dateAdded,
           _dateAddedISO: new Date(dateAdded).toISOString(),
-          searchString: `${title}¦${url}`,
           searchStringLower: `${title}¦${url}`.toLowerCase(),
           score: 100,
         })
@@ -109,7 +108,6 @@ test.describe('Performance Benchmarks', () => {
           folderArray: ['Folder', 'Subfolder', 'Project'],
           lastVisitSecondsAgo: 3600,
           visitCount: 42,
-          searchString: `Book ${i} #tag1 #tag2¦example.com/${i}¦tag1 tag2 tag3¦Folder Subfolder Project`,
           searchStringLower:
             `book ${i} #tag1 #tag2¦example.com/${i}¦tag1 tag2 tag3¦folder subfolder project`.toLowerCase(),
           score: 100,
@@ -163,7 +161,6 @@ test.describe('Performance Benchmarks', () => {
           originalUrl: url,
           dateAdded,
           _dateAddedISO: new Date(dateAdded).toISOString(),
-          searchString: `${title}¦${url}`,
           searchStringLower: `${title}¦${url}`.toLowerCase(),
           score: 100,
         })

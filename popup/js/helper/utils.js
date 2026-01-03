@@ -137,28 +137,26 @@ export function timeSince(date) {
 }
 
 const URL_CLEANUP_PREFIX_REGEX = /^(?:https?:\/\/)?(?:www\.)?/
-const URL_CLEANUP_SUFFIX_REGEX = /\/$/
+const URL_CLEANUP_HASH_REGEX = /#.*$/
+const URL_CLEANUP_TRAILING_SLASH_REGEX = /\/$/
 
 /**
- * Normalizes URLs by removing protocol, www, and trailing slashes
+ * Normalizes URLs by removing protocol, www, trailing slashes and hashes
  *
  * Strips http://, https://, www. prefix and converts to lowercase
  * to enable consistent URL comparison across different URL formats.
  * Used for matching bookmarks/history to current page and for display.
  *
- * Examples:
- * - "https://www.example.com/" → "example.com"
- * - "http://example.com/path" → "example.com/path"
- * - "www.example.com/" → "example.com"
- *
  * @param {string|null} url - URL to normalize
- * @returns {string} Normalized URL (lowercase, no protocol/www/trailing slash)
- *
- * @see https://stackoverflow.com/a/57698415
+ * @returns {string} Normalized URL (lowercase, no protocol/www/trailing slash/hash)
  */
 export function cleanUpUrl(url) {
   if (!url) return ''
-  return String(url).toLowerCase().replace(URL_CLEANUP_PREFIX_REGEX, '').replace(URL_CLEANUP_SUFFIX_REGEX, '')
+  return String(url)
+    .toLowerCase()
+    .replace(URL_CLEANUP_PREFIX_REGEX, '')
+    .replace(URL_CLEANUP_HASH_REGEX, '')
+    .replace(URL_CLEANUP_TRAILING_SLASH_REGEX, '')
 }
 
 // Cache for loaded scripts to avoid duplicate loading and network requests

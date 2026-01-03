@@ -69,8 +69,7 @@ export function convertBrowserTabs(chromeTabs, groupMap) {
         }
       }
 
-      const groupText = group ? `@${group}` : ''
-      const searchString = createSearchString(title, cleanUrl, undefined, undefined, groupText)
+      const searchStringLower = createSearchStringLower(title, cleanUrl, undefined, undefined, group)
 
       const tabItem = {
         type: 'tab',
@@ -81,8 +80,7 @@ export function convertBrowserTabs(chromeTabs, groupMap) {
         originalId: el.id,
         active: el.active,
         windowId: el.windowId,
-        searchString,
-        searchStringLower: searchString.toLowerCase(),
+        searchStringLower,
         lastVisitSecondsAgo: el.lastAccessed ? (Date.now() - el.lastAccessed) / 1000 : undefined,
       }
 
@@ -195,7 +193,7 @@ export function convertBrowserBookmarks(
 
       const finalTitle = getTitle(title, cleanedUrl)
       const titleLower = finalTitle.toLowerCase().trim()
-      const searchString = createSearchString(finalTitle, cleanedUrl, tagsText, folderText)
+      const searchStringLower = createSearchStringLower(finalTitle, cleanedUrl, tagsText, folderText)
 
       const mappedEntry = {
         type: 'bookmark',
@@ -214,8 +212,7 @@ export function convertBrowserBookmarks(
         folderLower: folderLower,
         folderArray: folderTrail,
         folderArrayLower: folderArrayLower,
-        searchString: searchString,
-        searchStringLower: searchString.toLowerCase(),
+        searchStringLower,
       }
 
       // Only detect duplicates if the feature is enabled
@@ -346,7 +343,7 @@ export function convertBrowserHistory(history) {
     const cleanUrl = cleanUpUrl(el.url)
     const title = getTitle(el.title, cleanUrl)
     const titleLower = title.toLowerCase().trim()
-    const searchString = createSearchString(title, cleanUrl)
+    const searchStringLower = createSearchStringLower(title, cleanUrl)
 
     result.push({
       type: 'history',
@@ -357,8 +354,7 @@ export function convertBrowserHistory(history) {
       visitCount: el.visitCount,
       lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
       originalId: el.id,
-      searchString,
-      searchStringLower: searchString.toLowerCase(),
+      searchStringLower,
     })
   }
 
@@ -370,16 +366,16 @@ export function convertBrowserHistory(history) {
 }
 
 /**
- * Combine title/url/tags/folder/group fields into a single search string.
+ * Combine title/url/tags/folder/group fields into a single lowercased search string.
  *
  * @param {string} title - Bookmark title.
  * @param {string} url - Normalized URL.
  * @param {string} [tags] - Tag string.
  * @param {string} [folder] - Folder breadcrumb string.
  * @param {string} [group] - Tab group string.
- * @returns {string} Combined search string.
+ * @returns {string} Combined lowercased search string.
  */
-export function createSearchString(title, url, tags, folder, group) {
+export function createSearchStringLower(title, url, tags, folder, group) {
   let result = ''
   if (title && title !== url) {
     result += title
@@ -396,7 +392,7 @@ export function createSearchString(title, url, tags, folder, group) {
   if (group) {
     result += (result ? '¦' : '') + group
   }
-  return result
+  return result.toLowerCase()
 }
 
 /**
@@ -420,13 +416,9 @@ export function getTitle(title, url) {
  * @returns {string} Possibly truncated title.
  */
 export function shortenTitle(title) {
-  const urlTitleLengthRestriction = 80
-  const maxLengthRestriction = 512
-  if (title && title.length > urlTitleLengthRestriction) {
-    return `${title.substring(0, urlTitleLengthRestriction - 3)}...`
-  } else if (title && title.length > maxLengthRestriction) {
-    return `${title.substring(0, maxLengthRestriction - 3)}...`
-  } else {
-    return title
+  const limit = 80
+  if (title?.length > limit) {
+    return `${title.substring(0, limit - 3)}...`
   }
+  return title
 }

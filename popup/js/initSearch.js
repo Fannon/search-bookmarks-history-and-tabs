@@ -37,7 +37,6 @@ initExtension().catch((err) => {
  */
 export async function initExtension() {
   const startTime = Date.now()
-
   // Load effective options, including user customizations
   ext.opts = await getEffectiveOptions()
 

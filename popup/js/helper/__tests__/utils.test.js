@@ -38,7 +38,7 @@ describe('cleanUpUrl', () => {
   })
 
   it('handles URLs with fragments', () => {
-    expect(cleanUpUrl('https://www.example.com/page#section')).toBe('example.com/page#section')
+    expect(cleanUpUrl('https://www.example.com/page#section')).toBe('example.com/page')
   })
 
   it('handles edge cases gracefully', () => {
@@ -53,7 +53,7 @@ describe('cleanUpUrl', () => {
 
   it('handles complex URLs', () => {
     expect(cleanUpUrl('HTTPS://WWW.SUBDOMAIN.EXAMPLE.CO.UK/PATH/TO/RESOURCE?QUERY=VALUE#FRAGMENT')).toBe(
-      'subdomain.example.co.uk/path/to/resource?query=value#fragment',
+      'subdomain.example.co.uk/path/to/resource?query=value',
     )
   })
 

@@ -2,7 +2,7 @@
  * @file Implements the popup's precise/exact-match search strategy.
  *
  * Strategy:
- * - Perform case-insensitive substring matching across the precomputed `searchString` field.
+ * - Perform case-insensitive substring matching across the precomputed `searchStringLower` field.
  * - Require all tokens to match (AND semantics) to keep results tightly focused.
  */
 

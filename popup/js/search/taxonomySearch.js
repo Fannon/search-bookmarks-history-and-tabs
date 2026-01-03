@@ -68,7 +68,7 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
         searchString = entry.groupLower ? `@${entry.groupLower}` : entry.group ? `@${entry.group}`.toLowerCase() : ''
       } else {
         // For tags/folders, use pre-calculated lower field (tagsLower, folderLower)
-        searchString = entry[taxonomyType + 'Lower'] || (entry[taxonomyType] || '').toLowerCase()
+        searchString = entry[`${taxonomyType}Lower`] || (entry[taxonomyType] || '').toLowerCase()
       }
 
       if (searchTerms.every((term) => searchString.includes(taxonomyMarker + term))) {

@@ -50,7 +50,9 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   const resetFuzzySearchState = jest.fn()
   const resetSimpleSearchState = jest.fn()
   const searchMock = jest.fn(() => Promise.resolve())
-  const createSearchString = jest.fn((title, url, tags, folder) => `search:${title}|${url}|${tags}|${folder}`)
+  const createSearchStringLower = jest.fn((title, url, tags, folder) =>
+    `search:${title}|${url}|${tags}|${folder}`.toLowerCase(),
+  )
   const browserApi = {
     bookmarks: {
       update: jest.fn(),
@@ -85,7 +87,7 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   jest.unstable_mockModule('../../helper/browserApi.js', () => ({
     __esModule: true,
     browserApi,
-    createSearchString,
+    createSearchStringLower,
   }))
   jest.unstable_mockModule('../../search/fuzzySearch.js', () => ({
     resetFuzzySearchState,
@@ -109,7 +111,7 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
       resetFuzzySearchState,
       resetSimpleSearchState,
       searchMock,
-      createSearchString,
+      createSearchStringLower,
       browserApi,
       getUniqueTags,
       resetUniqueFoldersCache,
@@ -216,7 +218,6 @@ describe('editBookmarkView', () => {
       originalUrl: 'http://example.com',
       tags: '#old',
       folder: '~Work',
-      searchString: 'old',
       searchStringLower: 'old',
     }
     setupExt([bookmark])
@@ -232,14 +233,13 @@ describe('editBookmarkView', () => {
     module.updateBookmark(BOOKMARK_ID)
 
     const expectedCleanUrl = helpers.cleanUpUrl('http://updated.com')
-    const expectedSearchString = `search:Updated Title|${expectedCleanUrl}|#alpha #beta|~Work`
+    const expectedSearchStringLower = `search:Updated Title|${expectedCleanUrl}|#alpha #beta|~Work`.toLowerCase()
 
     expect(bookmark.title).toBe('Updated Title')
     expect(bookmark.originalUrl).toBe('http://updated.com')
     expect(bookmark.url).toBe(expectedCleanUrl)
     expect(bookmark.tags).toBe('#alpha #beta')
-    expect(bookmark.searchString).toBe(expectedSearchString)
-    expect(bookmark.searchStringLower).toBe(bookmark.searchString.toLowerCase())
+    expect(bookmark.searchStringLower).toBe(expectedSearchStringLower)
 
     expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
@@ -258,7 +258,6 @@ describe('editBookmarkView', () => {
       originalUrl: 'http://example.com',
       tags: '#old',
       folder: '~Work',
-      searchString: 'old',
       searchStringLower: 'old',
     }
     setupExt([bookmark])

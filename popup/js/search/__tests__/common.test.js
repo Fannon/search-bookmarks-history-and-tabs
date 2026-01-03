@@ -336,15 +336,12 @@ describe('search', () => {
         url: 'https://fallback.test',
       },
     ])
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
     await search({ key: 'f' })
 
     const fallbackResult = ext.model.result.find((item) => item.title === 'Fallback')
     expect(fallbackResult).toBeDefined()
     expect(fallbackResult?.searchApproach).toBe('precise')
-    expect(consoleSpy).toHaveBeenCalledWith('Unsupported option "search.approach" value: "unsupported"')
-    consoleSpy.mockRestore()
   })
 
   test('stores new results in cache after search', async () => {

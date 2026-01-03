@@ -4,7 +4,7 @@ import {
   convertBrowserBookmarks,
   convertBrowserHistory,
   convertBrowserTabs,
-  createSearchString,
+  createSearchStringLower,
   getBrowserTabs,
   getTitle,
   shortenTitle,
@@ -74,7 +74,6 @@ describe('convertBrowserTabs', () => {
       originalId: 5,
       active: true,
       windowId: 3,
-      searchString: 'Example¦example.com/path',
       searchStringLower: 'example¦example.com/path',
     })
     expect(tab.lastVisitSecondsAgo).toBe(1)
@@ -104,20 +103,20 @@ describe('convertBrowserTabs', () => {
   })
 })
 
-describe('createSearchString', () => {
+describe('createSearchStringLower', () => {
   it('includes title, url, tags and folder when available', () => {
-    const result = createSearchString('Example title', 'example.com', '#tag', '~Folder')
-    expect(result).toBe('Example title¦example.com¦#tag¦~Folder')
+    const result = createSearchStringLower('Example title', 'example.com', '#tag', '~Folder')
+    expect(result).toBe('example title¦example.com¦#tag¦~folder')
   })
 
   it('avoids duplicating url when the title already includes it', () => {
-    const result = createSearchString('example.com', 'example.com', undefined, undefined)
+    const result = createSearchStringLower('example.com', 'example.com', undefined, undefined)
     expect(result).toBe('example.com')
   })
 
   it('returns a search string from available data when no url is provided', () => {
-    const result = createSearchString('Title', '', '#tag', undefined)
-    expect(result).toBe('Title¦#tag')
+    const result = createSearchStringLower('Title', '', '#tag', undefined)
+    expect(result).toBe('title¦#tag')
   })
 })
 
@@ -177,8 +176,7 @@ describe('convertBrowserBookmarks', () => {
       tags: '#tag1 #tag2',
       tagsArray: ['tag1', 'tag2'],
       folder: '~Root ~Parent folder ~Work',
-      folderArray: ['Root', 'Parent folder', 'Work'],
-      searchString: 'Example¦example.com¦#tag1 #tag2¦~Root ~Parent folder ~Work',
+      folderArrayLower: ['root', 'parent folder', 'work'],
       searchStringLower: 'example¦example.com¦#tag1 #tag2¦~root ~parent folder ~work',
     })
   })
@@ -358,7 +356,6 @@ describe('convertBrowserHistory', () => {
       originalUrl: 'https://keep.example.com/page',
       visitCount: 3,
       lastVisitSecondsAgo: 1,
-      searchString: 'Keep¦keep.example.com/page',
       searchStringLower: 'keep¦keep.example.com/page',
     })
   })

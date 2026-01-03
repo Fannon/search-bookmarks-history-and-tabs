@@ -82,7 +82,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
       haystack: new Array(data.length),
     }
     for (let i = 0; i < data.length; i++) {
-      state[searchMode].haystack[i] = data[i].searchString
+      state[searchMode].haystack[i] = data[i].searchStringLower
     }
   }
 
