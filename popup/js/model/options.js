@@ -135,6 +135,10 @@ export const defaultOptions = {
    */
   displaySearchMatchHighlight: true,
   /**
+   * Display tab group name as clickable badges for tabs in a group.
+   */
+  displayTabGroup: true,
+  /**
    * Display last visit (time ago)
    */
   displayLastVisit: true,
@@ -287,6 +291,8 @@ export const defaultOptions = {
   // the match gets a multiplier applied on how important the match is.
   /** Weight for a tag match*/
   scoreTagWeight: 0.7,
+  /** Weight for a tab group match*/
+  scoreGroupWeight: 0.7,
   /** Weight for a URL match*/
   scoreUrlWeight: 0.6,
   /** Weight for a folder match*/
@@ -320,6 +326,10 @@ export const defaultOptions = {
    * Additional points for an exact match of a search term tag
    */
   scoreExactTagMatchBonus: 15,
+  /**
+   * Additional points for an exact match of a search term tab group name
+   */
+  scoreExactGroupMatchBonus: 15,
   /**
    * Additional points for an exact match of a search term folder name
    */

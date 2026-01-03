@@ -280,13 +280,20 @@ li.error {
 .button {
   height: 28px;
   border-radius: 3px;
-  display: inline-block;
-  line-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: normal;
   padding: 2px 12px 4px;
   font-size: 16px;
   border: none;
   background: #777;
   color: #fff;
+}
+.button svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.5;
 }
 .controls {
   text-align: right;

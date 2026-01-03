@@ -15,6 +15,7 @@ import {
   convertBrowserTabs,
   getBrowserBookmarks,
   getBrowserHistory,
+  getBrowserTabGroups,
   getBrowserTabs,
 } from '../helper/browserApi.js'
 
@@ -117,16 +118,20 @@ export async function getSearchData() {
     }
   } else {
     // Fetch all browser data sources in parallel for faster startup
-    const [browserTabs, browserBookmarks, browserHistory] = await Promise.all([
+    const [browserTabs, browserBookmarks, browserHistory, browserTabGroups] = await Promise.all([
       browserApi.tabs && ext.opts.enableTabs ? getBrowserTabs() : Promise.resolve([]),
       browserApi.bookmarks && ext.opts.enableBookmarks ? getBrowserBookmarks() : Promise.resolve([]),
       browserApi.history && ext.opts.enableHistory
         ? getBrowserHistory(Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo, ext.opts.historyMaxItems)
         : Promise.resolve([]),
+      browserApi.tabGroups && ext.opts.enableTabs ? getBrowserTabGroups() : Promise.resolve([]),
     ])
 
+    // Build group lookup map
+    const groupMap = new Map(browserTabGroups.map((g) => [g.id, g]))
+
     // Convert browser data to internal format
-    result.tabs = convertBrowserTabs(browserTabs)
+    result.tabs = convertBrowserTabs(browserTabs, groupMap)
     result.bookmarks = convertBrowserBookmarks(browserBookmarks)
     result.history = convertBrowserHistory(browserHistory)
 

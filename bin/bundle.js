@@ -43,6 +43,12 @@ const jsBundles = [
     globalName: 'foldersPopup',
   },
   {
+    name: 'initGroups',
+    entry: resolve(repoRoot, 'popup/js/initGroups.js'),
+    outfile: resolve(repoRoot, 'popup/js/initGroups.bundle.min.js'),
+    globalName: 'groupsPopup',
+  },
+  {
     name: 'initEditBookmark',
     entry: resolve(repoRoot, 'popup/js/initEditBookmark.js'),
     outfile: resolve(repoRoot, 'popup/js/initEditBookmark.bundle.min.js'),

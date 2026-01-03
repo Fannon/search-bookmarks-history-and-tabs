@@ -21,6 +21,9 @@ It supports two different search approaches:
 With this extension you can also **tag your bookmarks** including auto completions.
 The tags are considered when searching and can be used for navigation.
 
+**Tab Groups support**: Search for tabs by their group name using the `@` prefix.
+Browse all your tab groups in the dedicated Tab Groups page.
+
 The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). It's also very lightweight (< 150kb JavaScript, including dependencies).
 
 > 💡 Have a look at the [Tips & Tricks](./Tips.md) collection.
@@ -45,6 +48,8 @@ The extension is very customizable (see [user options](#user-configuration)) and
     - Supports AND search, e.g. search for `#github #pr` to only get results which have both tags
   - Start your query with `~`: only **bookmarks within the folder** will be returned (exact "starts with" search)
     - Supports AND search, e.g. search for `~Sites ~Blogs` to only get results in both folders
+  - Start your query with `@`: only **tabs in the named group** will be returned
+    - Example: `@Work` to find all tabs in the "Work" tab group
   - Start your query with `b ` (including space): only **bookmarks** will be searched.
   - Start your query with `h ` (including space): only **history** and **open tabs** will be searched.
   - Start your query with `t ` (including space): only **open tabs** will be searched.
@@ -162,8 +167,8 @@ The scoring system calculates a relevance score for each search result using a 5
 3. **Match Bonuses** — Additional points for how the search term matches:
    - **Starts-with bonus**: Title or URL begins with the search term (`scoreExactStartsWithBonus`)
    - **Equals bonus**: Title exactly matches the search term (`scoreExactEqualsBonus`)
-   - **Tag/folder match**: Search term matches a tag or folder name exactly (`scoreExactTagMatchBonus`, `scoreExactFolderMatchBonus`)
-   - **Substring match**: Each search word found in title/url/tag/folder adds points (`scoreExactIncludesBonus`), weighted by field (title=1.0 > url=0.6 > tag=0.7 > folder=0.5), capped at 3 bonuses per result
+   - **Tag/folder/group match**: Search term matches a tag, folder, or tab group name exactly (`scoreExactTagMatchBonus`, `scoreExactFolderMatchBonus`, `scoreExactGroupMatchBonus`)
+   - **Substring match**: Each search word found in title/url/tag/folder/group adds points (`scoreExactIncludesBonus`), weighted by field (title=1.0 > tag=0.7 > group=0.7 > url=0.6 > folder=0.5), capped at 3 bonuses per result
    - **Phrase match**: Multi-word searches get bonus when the full phrase appears in title or URL (`scoreExactPhraseTitleBonus`, `scoreExactPhraseUrlBonus`)
 
 4. **Usage Signals** — Points based on browsing behavior:
@@ -189,6 +194,7 @@ This extension is built to respect your privacy:
   - **bookmarks**: Necessary to read and edit the bookmarks. Can be disabled via [user configuration](#user-configuration).
   - **history**: Necessary to read the browsing history. Can be disabled or limited via [user configuration](#user-configuration).
   - **tabs**: Necessary to find open tabs and to use tabs for navigation. Can be disabled via [user configuration](#user-configuration).
+  - **tabGroups**: Necessary to read tab group names for the tab group search feature. The feature degrades gracefully if unavailable.
   - **storage**: Necessary to store and retrieve the [user configuration](#user-configuration).
     If the browser has setting synchronization enabled, the extension settings will be synced (in this case you already trust your browser to sync everything else anyway).
     If browser sync is disabled, the user configuration is only stored locally.
