@@ -92,7 +92,7 @@ export async function renderSearchResults() {
         for (let j = 0; j < tagsArray.length; j++) {
           const tag = tagsArray[j]
           const content = shouldHighlight && highlightedTags?.[j] ? highlightedTags[j] : `#${escapeHtml(tag)}`
-          badges.push(createBadge(content, 'Bookmark Tags', 'tags', `#search/#${escapeHtml(tag)}`))
+          badges.push(createBadge(content, 'Bookmark Tags', 'tags', `#search/#${encodeURIComponent(tag)}`))
         }
       }
 
@@ -104,7 +104,15 @@ export async function renderSearchResults() {
           const folder = folderArray[j]
           trail += (j === 0 ? '' : ' ~') + folder
           const content = shouldHighlight && highlightedFolders?.[j] ? highlightedFolders[j] : `~${escapeHtml(folder)}`
-          badges.push(createBadge(content, 'Bookmark Folder', 'folder', `#search/~${trail}`, bookmarkBaseColorStyle))
+          badges.push(
+            createBadge(
+              content,
+              'Bookmark Folder',
+              'folder',
+              `#search/~${encodeURIComponent(trail)}`,
+              bookmarkBaseColorStyle,
+            ),
+          )
         }
       }
 
@@ -112,7 +120,13 @@ export async function renderSearchResults() {
       if (opts.displayTabGroup && group) {
         const content = shouldHighlight && entry.highlightedGroup ? entry.highlightedGroup : `@${escapeHtml(group)}`
         badges.push(
-          createBadge(content, 'Tab Group', 'group', `#search/@${escapeHtml(group)}`, 'background-color: #6a4fbb'),
+          createBadge(
+            content,
+            'Tab Group',
+            'group',
+            `#search/@${encodeURIComponent(group)}`,
+            'background-color: #6a4fbb',
+          ),
         )
       }
 

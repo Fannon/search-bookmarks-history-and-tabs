@@ -155,7 +155,7 @@ describe('tagsView', () => {
 
     // Check that all expected tag names are present in the hrefs
     const hrefStrings = hrefs.join(' ')
-    expect(hrefStrings).toContain('tag with spaces')
+    expect(hrefStrings).toContain('tag%20with%20spaces')
     expect(hrefStrings).toContain('tag-with-dashes')
     expect(hrefStrings).toContain('tag.with.dots')
     expect(hrefStrings).toContain('tag_with_underscores')
@@ -186,11 +186,11 @@ describe('tagsView', () => {
     // Note: Emoji and special unicode characters may sort differently across environments,
     // so we verify all expected hrefs are present without asserting exact order.
     const hrefs = badges.map((el) => el.getAttribute('href'))
-    expect(hrefs).toContain('./index.html#search/#café')
-    expect(hrefs).toContain('./index.html#search/#naïve')
-    expect(hrefs).toContain('./index.html#search/#résumé')
-    expect(hrefs).toContain('./index.html#search/#日本語')
-    expect(hrefs).toContain('./index.html#search/#🚀')
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('café')}`)
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('naïve')}`)
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('résumé')}`)
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('日本語')}`)
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('🚀')}`)
   })
 
   it('escapes HTML content in tag names', async () => {
