@@ -347,6 +347,7 @@ describe('searchNavigation navigationKeyListener', () => {
       key: 'f',
       ctrlKey: true,
       preventDefault,
+      stopPropagation: jest.fn(),
     })
 
     expect(preventDefault).toHaveBeenCalledTimes(1)
@@ -356,8 +357,37 @@ describe('searchNavigation navigationKeyListener', () => {
       key: 'F',
       ctrlKey: true,
       preventDefault,
+      stopPropagation: jest.fn(),
     })
 
     expect(ext.opts.searchStrategy).toBe('precise')
+  })
+
+  it('inserts two spaces when TAB is pressed in search input', async () => {
+    const { module, elements } = await setupSearchNavigation()
+    const preventDefault = jest.fn()
+    const dispatchEvent = jest.fn()
+
+    // Setup input state
+    elements.searchInput.value = 'tag'
+    elements.searchInput.selectionStart = 3
+    elements.searchInput.selectionEnd = 3
+    elements.searchInput.focus()
+    elements.searchInput.dispatchEvent = dispatchEvent
+
+    // JSDOM usually respects focus() for activeElement
+
+    await module.navigationKeyListener({
+      key: 'Tab',
+      preventDefault,
+    })
+
+    expect(preventDefault).toHaveBeenCalledTimes(1)
+    expect(elements.searchInput.value).toBe('tag  ')
+    expect(elements.searchInput.selectionStart).toBe(5)
+    expect(elements.searchInput.selectionEnd).toBe(5)
+    // Check that 'input' event was dispatched
+    expect(dispatchEvent).toHaveBeenCalledTimes(1)
+    expect(dispatchEvent.mock.calls[0][0].type).toBe('input')
   })
 })

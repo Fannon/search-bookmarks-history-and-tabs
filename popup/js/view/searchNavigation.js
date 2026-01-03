@@ -26,6 +26,27 @@ export async function navigationKeyListener(event) {
     return
   }
 
+  // Handle Tab key to insert two spaces for hybrid search separator
+  if (event.key === 'Tab') {
+    if (document.activeElement === ext.dom.searchInput) {
+      event.preventDefault()
+      const input = ext.dom.searchInput
+      const start = input.selectionStart
+      const end = input.selectionEnd
+      const value = input.value
+
+      // Insert two spaces
+      input.value = value.substring(0, start) + '  ' + value.substring(end)
+
+      // Move cursor after the inserted spaces
+      input.selectionStart = input.selectionEnd = start + 2
+
+      // Trigger input event to update search results
+      input.dispatchEvent(new Event('input'))
+      return
+    }
+  }
+
   if (up) {
     // Always consume vim-style/arrow up to prevent browser defaults from closing popup
     event.preventDefault()

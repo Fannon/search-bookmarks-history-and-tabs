@@ -17,9 +17,9 @@ test.describe('Folder View', () => {
 
     test('allows navigation via folders', async ({ page }) => {
       await page.locator('#folders-view #folders-list [x-folder="Tools"]').click()
-      await expect(page).toHaveURL(/#search\/~Tools$/)
+      await expect(page).toHaveURL(/#search\/~Tools%20%20$/)
 
-      await expect(page.locator('#q')).toHaveValue('~Tools')
+      await expect(page.locator('#q')).toHaveValue('~Tools  ')
       await expect(page.locator('#results')).not.toHaveCount(0)
       await expect(page.locator('#results [x-original-id="6"]')).toBeVisible()
       await expect(page.locator('#results li.bookmark')).not.toHaveCount(0)

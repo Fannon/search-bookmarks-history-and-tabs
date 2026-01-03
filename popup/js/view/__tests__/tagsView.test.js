@@ -52,9 +52,9 @@ describe('tagsView', () => {
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges.map((el) => el.getAttribute('x-tag'))).toEqual(['alpha', 'beta', 'release'])
     expect(badges.map((el) => el.getAttribute('href'))).toEqual([
-      './index.html#search/#alpha',
-      './index.html#search/#beta',
-      './index.html#search/#release',
+      './index.html#search/#alpha%20%20',
+      './index.html#search/#beta%20%20',
+      './index.html#search/#release%20%20',
     ])
     expect(badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())).toEqual([
       '#alpha (2)',
@@ -99,7 +99,7 @@ describe('tagsView', () => {
     // Check that valid tags are still rendered correctly
     const validBadge = badges.find((badge) => badge.getAttribute('x-tag') === 'valid-tag')
     expect(validBadge).toBeDefined()
-    expect(validBadge.getAttribute('href')).toBe('./index.html#search/#valid-tag')
+    expect(validBadge.getAttribute('href')).toBe('./index.html#search/#valid-tag%20%20')
 
     consoleWarnSpy.mockRestore()
   })
@@ -109,7 +109,7 @@ describe('tagsView', () => {
 
     // Create many tags to test performance
     const tags = {}
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 5000; i++) {
       tags[`tag${i}`] = Array.from({ length: Math.floor(Math.random() * 10) + 1 }, (_, idx) => ({ id: `${i}-${idx}` }))
     }
 
@@ -123,10 +123,10 @@ describe('tagsView', () => {
     expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
-    expect(badges).toHaveLength(100)
+    expect(badges).toHaveLength(5000)
 
-    // Should render within reasonable time (less than 100ms for 100 tags)
-    expect(endTime - startTime).toBeLessThan(100)
+    // Should render within reasonable time (less than 500ms for 5000 tags)
+    expect(endTime - startTime).toBeLessThan(500)
   })
 
   it('handles special characters in tag names', async () => {
@@ -186,11 +186,11 @@ describe('tagsView', () => {
     // Note: Emoji and special unicode characters may sort differently across environments,
     // so we verify all expected hrefs are present without asserting exact order.
     const hrefs = badges.map((el) => el.getAttribute('href'))
-    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('café')}`)
-    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('naïve')}`)
-    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('résumé')}`)
-    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('日本語')}`)
-    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('🚀')}`)
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('café')}%20%20`)
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('naïve')}%20%20`)
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('résumé')}%20%20`)
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('日本語')}%20%20`)
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('🚀')}%20%20`)
   })
 
   it('escapes HTML content in tag names', async () => {

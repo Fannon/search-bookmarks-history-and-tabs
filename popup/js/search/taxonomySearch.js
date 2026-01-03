@@ -28,21 +28,50 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
   if (taxonomyType === 'folder') taxonomyMarker = '~'
   if (taxonomyType === 'group') taxonomyMarker = '@'
 
-  const searchTermArray = searchTerm.split(taxonomyMarker)
+  // Split by double space to separate taxonomy filter from content search
+  let taxonomyQuery = searchTerm
+  let contentQuery = ''
+  const splitIndex = searchTerm.indexOf('  ')
+  if (splitIndex !== -1) {
+    taxonomyQuery = searchTerm.substring(0, splitIndex)
+    contentQuery = searchTerm
+      .substring(splitIndex + 2)
+      .trim()
+      .toLowerCase()
+  }
 
-  if (searchTermArray.length) {
+  const searchTerms = taxonomyQuery
+    .split(taxonomyMarker)
+    .map((term) => term.trim().toLowerCase())
+    .filter((term) => term.length > 0)
+
+  if (searchTerms.length) {
     for (const entry of data) {
-      // For groups, prepend @ since entry.group doesn't include the prefix
-      const rawValue = entry[taxonomyType] || ''
-      const searchString = taxonomyType === 'group' ? `@${rawValue}`.toLowerCase() : rawValue.toLowerCase()
-      let searchTermMatches = 0
-      for (const term of searchTermArray) {
-        const trimmedTerm = term.trim()
-        if (trimmedTerm && searchString.includes(taxonomyMarker + trimmedTerm)) {
-          searchTermMatches++
+      if (!entry) continue
+
+      // Content Filter (if active)
+      if (contentQuery) {
+        // Use pre-calculated lowercase values if available
+        const title = entry.titleLower || (entry.title || '').toLowerCase()
+        // entry.url is already normalized and lowercased by cleanUpUrl
+        const url = entry.url || ''
+        // If neither title nor URL (and optional originalUrl) matches, skip
+        if (!title.includes(contentQuery) && !url.includes(contentQuery)) {
+          continue
         }
       }
-      if (searchTermMatches === searchTermArray.length) {
+
+      // Prepare search string for taxonomy matching
+      let searchString = ''
+      if (taxonomyType === 'group') {
+        // For groups, we prepend @. Use pre-calculated groupLower if available.
+        searchString = entry.groupLower ? `@${entry.groupLower}` : entry.group ? `@${entry.group}`.toLowerCase() : ''
+      } else {
+        // For tags/folders, use pre-calculated lower field (tagsLower, folderLower)
+        searchString = entry[taxonomyType + 'Lower'] || (entry[taxonomyType] || '').toLowerCase()
+      }
+
+      if (searchTerms.every((term) => searchString.includes(taxonomyMarker + term))) {
         results.push({
           ...entry,
           searchApproach: 'taxonomy',
