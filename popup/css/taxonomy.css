@@ -62,10 +62,10 @@
 .empty a {
   color: var(--a);
 }
-.empty.warning {
-  background: rgba(255, 193, 7, 0.1);
-  border-left: 4px solid #ffc107;
-  border-radius: 4px;
+.warning-prefix {
+  color: #ffc107;
+  font-weight: bold;
+  margin-right: 4px;
 }
 
 @media (prefers-color-scheme: dark) {
