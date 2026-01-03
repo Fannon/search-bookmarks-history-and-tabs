@@ -170,16 +170,7 @@ function applyScoring(results, searchTerm, searchMode) {
   const scoredResults = calculateFinalScore(results, searchTerm)
 
   if (searchTerm) {
-    // Optimization: Filter by minimum score BEFORE sorting.
-    // This significantly reduces the time spent in sort() for large result sets.
-    const minScore = 30
-    const filtered = []
-    for (let i = 0; i < scoredResults.length; i++) {
-      if (scoredResults[i].score >= minScore) {
-        filtered.push(scoredResults[i])
-      }
-    }
-    return sortResults(filtered, 'score')
+    return sortResults(scoredResults, 'score')
   }
 
   if (searchMode === 'history' || searchMode === 'tabs') {

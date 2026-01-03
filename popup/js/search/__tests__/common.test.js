@@ -292,7 +292,6 @@ describe('search', () => {
         url: 'https://example.com',
       },
     ])
-    // Note: scoreMinScore is now hard-coded to 30, can't be overridden
 
     await search({ key: 'e' })
 
@@ -306,7 +305,7 @@ describe('search', () => {
     expect(direct.title).toBe('Direct: "example.com"')
   })
 
-  test('filters low scoring results and limits total size', async () => {
+  test('limits results to searchMaxResults', async () => {
     ext.dom.searchInput.value = 'filter'
     ext.model.bookmarks = createBookmarksTestData([
       { title: 'High +50', url: 'https://high.test' },
@@ -314,7 +313,7 @@ describe('search', () => {
       { title: 'Low', url: 'https://low.test' },
       { title: 'Second Mid +15', url: 'https://mid2.test' },
     ])
-    // Note: scoreMinScore is now hard-coded to 30, can't be overridden
+    // No minimum score filtering - all results pass through if they match the search
     ext.opts.searchMaxResults = 2
     ext.opts.enableSearchEngines = false
     ext.opts.customSearchEngines = []
@@ -323,7 +322,6 @@ describe('search', () => {
     await search({ key: 'f' })
 
     expect(ext.model.result.length).toBeLessThanOrEqual(2)
-    expect(ext.model.result.every((item) => item.score >= 30)).toBe(true)
     // Note: resultCounter is now updated by searchView.renderSearchResults, not here
   })
 
