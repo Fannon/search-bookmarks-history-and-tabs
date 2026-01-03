@@ -80,6 +80,9 @@ export const defaultOptions = {
    * Color for custom search results, expressed as CSS color
    */
   customSearchColor: '#ce5c2f',
+  /**
+   * Color for direct URL results, expressed as CSS color
+   */
   directColor: '#7799CE',
 
   //////////////////////////////////////////
