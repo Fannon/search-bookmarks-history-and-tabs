@@ -8,7 +8,7 @@
  * - Coordinate with search result rendering to maintain proper selection state.
  */
 
-import { openResultItem } from './searchEvents.js'
+import { openResultItem, toggleSearchApproach } from './searchEvents.js'
 
 /**
  * Handle keyboard navigation for search results
@@ -18,6 +18,13 @@ export async function navigationKeyListener(event) {
   // Define navigation directions with multiple keybinding options
   const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p') || (event.ctrlKey && event.key === 'k')
   const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n') || (event.ctrlKey && event.key === 'j')
+
+  // Toggle fuzzy/precise search with Ctrl+F
+  if (event.ctrlKey && (event.key === 'f' || event.key === 'F')) {
+    event.preventDefault()
+    await toggleSearchApproach()
+    return
+  }
 
   if (up) {
     // Always consume vim-style/arrow up to prevent browser defaults from closing popup

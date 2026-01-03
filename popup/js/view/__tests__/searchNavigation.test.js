@@ -334,4 +334,30 @@ describe('searchNavigation navigationKeyListener', () => {
     expect(window.location.hash).toBe('#search/')
     expect(focusMock).toHaveBeenCalledTimes(1)
   })
+
+  it('toggles search strategy with Ctrl+F', async () => {
+    const { module, viewModule } = await setupSearchNavigation()
+    await viewModule.renderSearchResults()
+    const preventDefault = jest.fn()
+
+    // Default is 'precise' (set in setupSearchNavigation)
+    expect(ext.opts.searchStrategy).toBe('precise')
+
+    await module.navigationKeyListener({
+      key: 'f',
+      ctrlKey: true,
+      preventDefault,
+    })
+
+    expect(preventDefault).toHaveBeenCalledTimes(1)
+    expect(ext.opts.searchStrategy).toBe('fuzzy')
+
+    await module.navigationKeyListener({
+      key: 'F',
+      ctrlKey: true,
+      preventDefault,
+    })
+
+    expect(ext.opts.searchStrategy).toBe('precise')
+  })
 })
