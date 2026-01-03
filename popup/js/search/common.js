@@ -12,7 +12,7 @@
  * 2. Parse query to detect mode prefixes and taxonomy markers.
  * 3. Execute appropriate search algorithm (precise, fuzzy, or taxonomy).
  * 4. Apply scoring and sorting to rank results.
- * 5. Filter by minimum score and max results.
+ * 5. Limit results to max count.
  * 6. Render results via view layer.
  *
  * Zero-DOM Highlighting:
@@ -170,16 +170,7 @@ function applyScoring(results, searchTerm, searchMode) {
   const scoredResults = calculateFinalScore(results, searchTerm)
 
   if (searchTerm) {
-    // Optimization: Filter by minimum score BEFORE sorting.
-    // This significantly reduces the time spent in sort() for large result sets.
-    const minScore = 30
-    const filtered = []
-    for (let i = 0; i < scoredResults.length; i++) {
-      if (scoredResults[i].score >= minScore) {
-        filtered.push(scoredResults[i])
-      }
-    }
-    return sortResults(filtered, 'score')
+    return sortResults(scoredResults, 'score')
   }
 
   if (searchMode === 'history' || searchMode === 'tabs') {
@@ -190,7 +181,7 @@ function applyScoring(results, searchTerm, searchMode) {
 }
 
 /**
- * Filter results by minimum score and maximum count.
+ * Limit results by maximum count.
  *
  * @param {Array} results - Search results.
  * @param {string} searchMode - Active search mode.
@@ -202,7 +193,6 @@ function filterResults(results, searchMode) {
     searchMode !== 'tags' && searchMode !== 'folders' && searchMode !== 'tabs' && searchMode !== 'groups'
 
   // If we don't need to limit, or we're already under the limit, return as is.
-  // Note: minScore filtering is now handled in applyScoring for the search path.
   if (!shouldLimit || results.length <= maxResults) {
     return results
   }
@@ -289,7 +279,7 @@ export async function search(event) {
       // Apply scoring and sorting
       results = applyScoring(results, searchTerm, searchMode)
 
-      // Filter by score and max results
+      // Limit to max results
       results = filterResults(results, searchMode)
 
       // Apply highlighting only to the truncated result set (better performance)
