@@ -9,6 +9,7 @@
 - **IMPROVED**: Streamlined UI by removing redundant section titles across all views, maximizing the visible area for the actual content.
 - **CHANGED**: Popup width has been increased from 500px to 515px.
 - **CHANGED**: Smaller layout / CSS adjustments to allow for more textarea size when editing bookmark titles and URLs.
+- **IMPROVED**: Bookmark edit textareas are now vertically resizable, allowing for easier editing of long titles and URLs.
 - **FIXED**: Potential fix (to be confirmed) for zoom level issues on some systems, not showing controls at the bottom of the popup.
 
 ## [v1.18.0]
