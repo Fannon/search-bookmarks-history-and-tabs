@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
-import { cleanUpUrl, escapeHtml, generateRandomId, loadScript, timeSince } from '../utils.js'
+import {
+  cleanUpUrl,
+  escapeHtml,
+  escapeRegex,
+  generateRandomId,
+  highlightMatches,
+  loadScript,
+  timeSince,
+} from '../utils.js'
 
 describe('generateRandomId', () => {
   it('returns a deterministic identifier prefixed with R', () => {
@@ -246,5 +254,44 @@ describe('escapeHtml', () => {
 
   it('leaves plain text untouched', () => {
     expect(escapeHtml('plain text')).toBe('plain text')
+  })
+})
+
+describe('escapeRegex', () => {
+  it('escapes all regex special characters', () => {
+    const chars = '.*+?^${}()|[]\\'
+    expect(escapeRegex(chars)).toBe('\\.\\*\\+\\?\\^\\$\\{\\}\\(\\)\\|\\[\\]\\\\')
+  })
+
+  it('leaves other characters untouched', () => {
+    expect(escapeRegex('abc-123')).toBe('abc-123')
+  })
+})
+
+describe('highlightMatches', () => {
+  it('escapes and highlights matching terms', () => {
+    const text = 'Hello world, hello universe'
+    const terms = ['hello', 'universe']
+    expect(highlightMatches(text, terms)).toBe('<mark>Hello</mark> world, <mark>hello</mark> <mark>universe</mark>')
+  })
+
+  it('handles empty text', () => {
+    expect(highlightMatches('', ['test'])).toBe('')
+  })
+
+  it('handles empty terms', () => {
+    expect(highlightMatches('text', [])).toBe('text')
+  })
+
+  it('handles regex input directly', () => {
+    const text = 'Foo Bar'
+    const regex = /(Bar)/
+    expect(highlightMatches(text, regex)).toBe('Foo <mark>Bar</mark>')
+  })
+
+  it('escapes HTML in text matching', () => {
+    const text = '<b>Bold</b>'
+    const terms = ['Bold']
+    expect(highlightMatches(text, terms)).toBe('&lt;b&gt;<mark>Bold</mark>&lt;/b&gt;')
   })
 })
