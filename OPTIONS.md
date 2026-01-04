@@ -74,7 +74,7 @@ Control what information is shown in search result items.
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `tabsOnlyCurrentWindow` | boolean | `false` | If `true`, only search and switch to tabs in the current browser window. |
-| `maxRecentTabsToShow` | number | `16` | Number of recently visited tabs to show when the popup opens (before typing). Set to `0` to disable. Lower values improve startup performance. |
+| `maxRecentTabsToShow` | number | `8` | Number of recently visited tabs to show when the popup opens (before typing). Set to `0` to disable. Lower values improve startup performance. |
 
 ## History Options
 

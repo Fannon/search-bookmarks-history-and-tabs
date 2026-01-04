@@ -5,12 +5,9 @@
 ## [v2.0.1]
 
 - **IMPROVED**: Configuration system is now fully synchronized across `options.js`, `options.schema.json`, and `OPTIONS.md`.
-- **IMPROVED**: Added a custom, CSP-safe JSON Schema validator for user settings.
+- **IMPROVED**: Added validation for user settings (based on JSON Schema).
 - **IMPROVED**: Enhanced options error overlay with better readability, inline code highlighting, and a "REMOVE UNKNOWN OPTIONS" quick-fix button.
-- **IMPROVED**: Doubled default `maxRecentTabsToShow` from 8 to 16 for better out-of-the-box utility.
-- **ADDED**: New `debug` option for detailed console logging.
 - **FIXED**: Corrected missing or inconsistent scoring options in the schema and documentation.
-- **CLARIFIED**: `detectBookmarksWithOpenTabs` and `detectDuplicateBookmarks` are active features (added in v1.17.1) and are now properly documented and validated.
 - **REMOVED**: Removed several dead configuration keys (`searchMinMatchCharLength`, `colorStripeWidth`, `scoreMinScore`, `scoreMinSearchTermMatchRatio`, etc.) that are now fixed at sensible defaults or no longer used.
 
 ## [v2.0.0]

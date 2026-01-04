@@ -201,7 +201,7 @@
     "maxRecentTabsToShow": {
       "type": "integer",
       "minimum": 0,
-      "default": 16,
+      "default": 8,
       "description": "Number of most recently used tabs to show when the popup opens without a search term. Set to 0 to disable the MRU list entirely.",
       "x-ui-section": "tabs",
       "x-allowZeroOrMin": 3
