@@ -73,29 +73,30 @@
 }
 
 .error-overlay .overlay-button {
-  padding: 6px 12px;
-  border-radius: 4px;
-  border: 1px solid currentColor;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
+  height: 28px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  line-height: normal;
+  padding: 0 12px;
   font-size: 13px;
+  border: none;
+  background: #777;
+  color: #fff;
+  cursor: pointer;
   font-weight: 600;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .error-overlay .overlay-button:hover {
-  background: rgba(204, 88, 88, 0.1);
+  filter: brightness(110%);
 }
 
 .error-overlay .overlay-button.primary {
   background: #cc5858;
   color: #fff;
-  border-color: #cc5858;
-}
-
-.error-overlay .overlay-button.primary:hover {
-  filter: brightness(1.1);
 }
 
 @media (prefers-color-scheme: dark) {
