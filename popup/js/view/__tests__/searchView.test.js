@@ -343,6 +343,45 @@ describe('searchView renderSearchResults', () => {
     expect(lastVisitedBadge).not.toBeNull()
     expect(lastVisitedBadge.textContent).toBe('-0 s')
   })
+
+  it('renders a gradient border for bookmarks that are also open tabs', async () => {
+    const bookmarkWithTab = [
+      {
+        type: 'bookmark',
+        originalId: 'bm-tab',
+        originalUrl: 'https://open.test',
+        url: 'open.test',
+        title: 'Open Bookmark',
+        tab: true, // This indicates it's also an open tab
+      },
+    ]
+
+    const { module, elements } = await setupSearchView({
+      results: bookmarkWithTab,
+      opts: {
+        bookmarkColor: '#111',
+        tabColor: '#222',
+      },
+    })
+
+    await module.renderSearchResults()
+
+    const listItem = elements.resultList.querySelector('li')
+
+    // Check that the border-left-color is transparent (to let gradient show)
+    expect(listItem.style.borderLeftColor).toBe('transparent')
+
+    // Check that the background-image contains the linear gradient with correct stops
+    // Note: detailed string matching might be brittle to spacing, so checking key parts
+    const bgImage = listItem.style.backgroundImage
+    expect(bgImage).toContain('linear-gradient')
+    expect(bgImage).toContain('to bottom')
+
+    // Verify the "T" badge is NOT present
+    const badges = Array.from(listItem.querySelectorAll('.badge'))
+    const tBadge = badges.find((b) => b.textContent === 'T')
+    expect(tBadge).toBeUndefined()
+  })
 })
 
 describe('✅ FIXED: Error Handling Robustness', () => {

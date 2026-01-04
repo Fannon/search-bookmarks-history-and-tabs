@@ -3,6 +3,7 @@
 ## [unreleased]
 
 - **IMPROVED**: Bookmarks with open tabs now also display the tab's group badge (if the tab belongs to a named group).
+- **IMPROVED**: Replaced the lilac "T" badge for bookmarks with open tabs with a vertical color gradient on the left border (transitioning from bookmark to tab color). This reduces visual noise while keeping the information easily discoverable.
 - **FIXED**: Search cache is now properly cleared when toggling between "Precise" and "Fuzzy" search strategies, preventing stale results and memory bloat.
 - **REMOVED**: Removed dead `scoreMinScore` filtering code. Since all result types have base scores ≥30 and scoring only adds bonuses, no results were ever filtered out.
 - **FIXED**: Potential memory leak in event delegation tracking for search results, now using module-level state instead of DOM properties.

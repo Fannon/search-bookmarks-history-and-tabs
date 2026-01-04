@@ -153,9 +153,6 @@ code {
   position: relative;
   top: -2px;
 }
-.badge.source-tab {
-  background: #b89aff;
-}
 .badge.duplicate {
   background: #d9534f;
 }
@@ -222,7 +219,7 @@ code {
 }
 #results li,
 #errors li {
-  background: var(--li-bg);
+  background-color: var(--li-bg);
   margin: 0 0 4px;
   padding: 3px 0 4px 6px;
   border-radius: 3px;
@@ -241,7 +238,7 @@ code {
   border-left: 0;
 }
 #sel {
-  background: var(--li-sel) !important;
+  background-color: var(--li-sel) !important;
 }
 li.error {
   color: #cc5858;
