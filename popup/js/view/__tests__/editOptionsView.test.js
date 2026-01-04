@@ -262,8 +262,8 @@ describe('editOptionsView', () => {
     await Promise.resolve()
     await Promise.resolve()
 
-    // It should have cleaned the text and called setUserOptions
-    expect(mocks.setUserOptions).toHaveBeenCalled()
+    // It should have cleaned the text but NOT called setUserOptions (user must save manually)
+    expect(mocks.setUserOptions).not.toHaveBeenCalled()
     expect(errorMessageEl.style.display).toBe('none')
     expect(document.getElementById('config').value).toBe('knownKey: value')
   })
