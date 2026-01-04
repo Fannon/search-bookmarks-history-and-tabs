@@ -59,7 +59,6 @@ Control what information is shown in search result items.
 | :--- | :--- | :--- | :--- |
 | `bookmarksIgnoreFolderList` | array | `[]` | List of folder names to exclude from search. All bookmarks in these folders (and their subfolders) will be ignored. Example: `['Archive', 'Old Bookmarks']` |
 | `detectDuplicateBookmarks` | boolean | `false` | Detect bookmarks with identical URLs and mark them with a red "D" badge. Useful for cleaning up duplicates. Disable for faster startup with large collections. |
-| `detectBookmarksWithOpenTabs` | boolean | `true` | Mark bookmarks that are currently open in a tab with a lilac "T" badge. Also enables `scoreBookmarkOpenTabBonus`. Disable for faster startup. |
 
 ## Tabs Options
 
@@ -156,7 +155,7 @@ For a detailed explanation, see the [Scoring System section in README.md](https:
 | `scoreVisitedBonusScore` | number | `0.5` | Points added per visit count from history. |
 | `scoreVisitedBonusScoreMaximum` | number | `20` | Cap on visit count bonus. |
 | `scoreRecentBonusScoreMaximum` | number | `20` | Max bonus for recently visited items. Scales linearly: just visited = max, `historyDaysAgo` old = 0. |
-| `scoreBookmarkOpenTabBonus` | number | `10` | Bonus when a bookmark is also open as a tab (requires `detectBookmarksWithOpenTabs`). |
+| `scoreBookmarkOpenTabBonus` | number | `10` | Bonus when a bookmark is also open as a tab. |
 | `scoreCustomBonusScore` | boolean | `true` | Enable custom bonus in bookmark titles. Add `+N` before tags (e.g., `My Site +20 #work`). |
 
 ## Power User Options

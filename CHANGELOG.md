@@ -9,6 +9,7 @@
 - **FIXED**: Search cache is now properly cleared when toggling between "Precise" and "Fuzzy" search strategies, preventing stale results and memory bloat.
 - **REMOVED**: Removed dead `scoreMinScore` filtering code. Since all result types have base scores ≥30 and scoring only adds bonuses, no results were ever filtered out.
 - **FIXED**: Potential memory leak in event delegation tracking for search results, now using module-level state instead of DOM properties.
+- **REMOVED**: Removed `detectBookmarksWithOpenTabs` option. This feature was enabled by default, and is now always active. The scoring impact can still be customized via `scoreBookmarkOpenTabBonus`.
 
 ## [v2.0.0]
 
