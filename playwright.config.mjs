@@ -18,7 +18,7 @@ export default defineConfig({
   },
   use: {
     baseURL,
-    viewport: { width: 500, height: 600 },
+    viewport: { width: 515, height: 600 },
     trace: 'on-first-retry',
   },
   webServer: {
@@ -32,14 +32,14 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        viewport: { width: 500, height: 600 },
+        viewport: { width: 515, height: 600 },
       },
     },
     {
       name: 'firefox',
       use: {
         ...devices['Desktop Firefox'],
-        viewport: { width: 500, height: 600 },
+        viewport: { width: 515, height: 600 },
       },
     },
     {
@@ -47,7 +47,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Edge'],
         channel: 'msedge',
-        viewport: { width: 500, height: 600 },
+        viewport: { width: 515, height: 600 },
       },
     },
   ],
