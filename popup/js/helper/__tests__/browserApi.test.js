@@ -5,6 +5,7 @@ import {
   convertBrowserHistory,
   convertBrowserTabs,
   createSearchStringLower,
+  getBrowserTabGroups,
   getBrowserTabs,
   getTitle,
   shortenTitle,
@@ -46,6 +47,43 @@ describe('getBrowserTabs', () => {
     expect(result[0]).toMatchObject({ id: 3, url: 'chrome-extension://abcdef' })
     expect(result[1]).toMatchObject({ id: 4, url: 'https://example.com' })
     expect(result[2]).toMatchObject({ id: 5, url: 'moz-extension://xyz' })
+  })
+})
+
+describe('getBrowserTabGroups', () => {
+  it('handles query errors gracefully', async () => {
+    browserApi.tabGroups = {
+      query: jest.fn().mockRejectedValue(new Error('API Error')),
+    }
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const result = await getBrowserTabGroups()
+
+    expect(result).toEqual([])
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Error fetching tab groups'))
+    warnSpy.mockRestore()
+  })
+})
+
+describe('convertBrowserBookmarks - edge cases', () => {
+  it('rejects tags that start with a number (e.g. version numbers)', () => {
+    const tree = [
+      {
+        title: 'Folder',
+        children: [
+          {
+            id: 'bm-num',
+            title: 'C# 11 Features #11 #valid',
+            url: 'https://example.com',
+          },
+        ],
+      },
+    ]
+
+    const [bookmark] = convertBrowserBookmarks(tree)
+
+    expect(bookmark.tags).toBe('#valid')
+    expect(bookmark.title).toBe('C# 11 Features #11')
   })
 })
 
