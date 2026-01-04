@@ -62,7 +62,6 @@ export async function renderSearchResults() {
       `<span class="badge ${extraClass}"${title ? ` title="${escapeHtml(title)}"` : ''}${extraLink ? ` x-link="${escapeHtml(extraLink)}"` : ''}${extraStyle ? ` style="${extraStyle}"` : ''}>${content}</span>`
 
     // Pre-render static badges
-    const BADGE_SOURCE_TAB = createBadge('T', 'Open Tab', 'source-tab')
     const BADGE_DUPLICATE = createBadge('Duplicate', 'Duplicate Bookmark', 'duplicate')
     const bookmarkBaseColorStyle = opts.bookmarkColor ? `background-color: ${typeColors.bookmark}` : ''
 
@@ -73,7 +72,6 @@ export async function renderSearchResults() {
 
       const badges = []
       const type = entry.type || ''
-      if (type === 'bookmark' && entry.tab) badges.push(BADGE_SOURCE_TAB)
       if (entry.dupe) badges.push(BADGE_DUPLICATE)
 
       const tagsArray = entry.tagsArray
@@ -143,7 +141,13 @@ export async function renderSearchResults() {
       const title =
         shouldHighlight && entry.highlightedTitle ? entry.highlightedTitle : escapeHtml(entry.title || entry.url || '')
       const url = shouldHighlight && entry.highlightedUrl ? entry.highlightedUrl : escapeHtml(entry.url || '')
-      const colorStyle = `border-left-color: ${typeColors[type] || ''}`
+
+      let colorStyle = `border-left-color: ${typeColors[type] || ''}`
+      if (type === 'bookmark' && entry.tab) {
+        // Use a vertical gradient as indicator for "both bookmark and tab"
+        // background-origin: border-box is used to ensure the gradient fills the border area
+        colorStyle = `border-left-color: transparent; background-image: linear-gradient(to bottom, ${typeColors.bookmark} 0%, ${typeColors.bookmark} 20%, ${typeColors.tab} 80%, ${typeColors.tab} 100%); background-size: 4px 100%; background-repeat: no-repeat; background-origin: border-box;`
+      }
 
       const originalUrl = entry.originalUrl ? ` x-open-url="${escapeHtml(entry.originalUrl)}"` : ''
       const originalId =
