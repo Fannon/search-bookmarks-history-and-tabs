@@ -223,7 +223,7 @@ test.describe('Edit Bookmark View', () => {
 
     await Promise.all([page.waitForURL(/#search\/t$/), page.locator('#bm-save').click()])
 
-    await page.waitForSelector('#results [x-original-id="23"]')
+    await page.waitForSelector('#results [x-original-id="23"] .title:has-text("Pandoc Playground")')
     const bookmarkRow = page.locator('#results [x-original-id="23"]')
     await expect(bookmarkRow.locator('.title')).toContainText('Pandoc Playground')
     await expect(bookmarkRow.locator('.url')).toContainText('pandoc.org/playground')
@@ -244,7 +244,7 @@ test.describe('Edit Bookmark View', () => {
 
     await Promise.all([page.waitForURL(/#search\/reference$/), page.locator('#bm-save').click()])
 
-    await page.waitForSelector('#results [x-original-id="29"]')
+    await page.waitForSelector('#results [x-original-id="29"] .badge.tags:has-text("#first-tag")')
     const bookmarkRow = page.locator('#results [x-original-id="29"]')
     await expect(bookmarkRow.locator('.badge.tags').nth(0)).toContainText('#first-tag')
     await expect(bookmarkRow.locator('.badge.tags').nth(1)).toContainText('#second-tag')
