@@ -117,8 +117,6 @@ export const defaultOptions = {
   bookmarksIgnoreFolderList: [],
   /** Detect and mark duplicate bookmarks (same URL) */
   detectDuplicateBookmarks: false,
-  /** Detect bookmarks that have a currently open browser tab */
-  detectBookmarksWithOpenTabs: true,
 
   //////////////////////////////////////////
   // TABS OPTIONS                         //

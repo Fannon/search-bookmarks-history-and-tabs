@@ -60,16 +60,11 @@ function mergeHistoryLazily(items, historyMap, mergedUrls) {
 /**
  * Annotate bookmark entries that have a currently open browser tab.
  * Also copies tab group information when available.
- * Only runs if detectBookmarksWithOpenTabs option is enabled.
  *
  * @param {Array} bookmarks - Bookmark search items.
  * @param {Array} tabs - Tab search items.
  */
 function flagBookmarksWithOpenTabs(bookmarks, tabs) {
-  if (!ext.opts.detectBookmarksWithOpenTabs) {
-    return
-  }
-
   if (!bookmarks.length || !tabs.length) {
     return
   }
@@ -157,7 +152,7 @@ export async function getSearchData() {
       result.history = result.history.filter((item) => !mergedHistoryUrls.has(item.originalUrl))
     }
 
-    // Flag bookmarks with open tabs (if feature is enabled)
+    // Flag bookmarks with open tabs
     flagBookmarksWithOpenTabs(result.bookmarks, result.tabs)
   }
   console.debug(

@@ -186,12 +186,6 @@
       "description": "Detect bookmarks with identical URLs and mark them with a red 'D' badge. Useful for cleaning up duplicates.",
       "x-ui-section": "bookmarks"
     },
-    "detectBookmarksWithOpenTabs": {
-      "type": "boolean",
-      "default": true,
-      "description": "Mark bookmarks that are currently open in a tab with a color gradient on the left border.",
-      "x-ui-section": "bookmarks"
-    },
     "tabsOnlyCurrentWindow": {
       "type": "boolean",
       "default": false,

@@ -7,8 +7,12 @@
 - **IMPROVED**: Configuration system is now fully synchronized across `options.js`, `options.schema.json`, and `OPTIONS.md`.
 - **IMPROVED**: Added validation for user settings (based on JSON Schema).
 - **IMPROVED**: Enhanced options error overlay with better readability, inline code highlighting, and a "REMOVE UNKNOWN OPTIONS" quick-fix button.
-- **FIXED**: Corrected missing or inconsistent scoring options in the schema and documentation.
+- **IMPROVED**: Bookmarks with open tabs now also display the tab's group badge (if the tab belongs to a named group).
+- **IMPROVED**: Replaced the lilac "T" badge for bookmarks with open tabs with a vertical color gradient on the left border.
+- **FIXED**: Search cache is now properly cleared when toggling between "Precise" and "Fuzzy" search strategies.
+- **FIXED**: Potential memory leak in event delegation tracking for search results, now using module-level state.
 - **REMOVED**: Removed several dead configuration keys (`searchMinMatchCharLength`, `colorStripeWidth`, `scoreMinScore`, `scoreMinSearchTermMatchRatio`, etc.) that are now fixed at sensible defaults or no longer used.
+- **REMOVED**: Removed `detectBookmarksWithOpenTabs` option. This feature is now always active.
 
 ## [v2.0.0]
 
