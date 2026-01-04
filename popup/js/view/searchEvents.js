@@ -202,6 +202,7 @@ export async function toggleSearchApproach() {
   }
 
   // Persist the new strategy to user preferences
+  // No validation needed here - the value is always valid since it's controlled by code
   userOptions.searchStrategy = ext.opts.searchStrategy
   await setUserOptions(userOptions)
 

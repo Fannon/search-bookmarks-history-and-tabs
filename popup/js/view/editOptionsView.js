@@ -3,11 +3,12 @@
  *
  * Responsibilities:
  * - Load persisted configuration, present it as YAML, and keep the textarea in sync with stored overrides.
- * - Validate user edits, surface parse errors inline, and persist accepted changes via the options model.
+ * - Validate user edits against the JSON schema, surface errors inline, and persist accepted changes.
  * - Provide reset/save controls and navigate back to the search view so tweaks can be tested immediately.
  */
 
 import { getUserOptions, setUserOptions } from '../model/options.js'
+import { validateOptions } from '../model/validateOptions.js'
 
 /**
  * Initialise the options editor view by loading and displaying user overrides.
@@ -30,6 +31,12 @@ export async function initOptions() {
 /**
  * Persist YAML updates back to storage and return users to the search view.
  *
+ * Validates user options against the JSON schema before saving.
+ * This validation is only done here (not in setUserOptions) because:
+ * 1. This is where users can enter arbitrary values that need validation
+ * 2. Internal code (like search strategy toggle) uses known-valid values
+ * 3. Keeping validation here avoids bundling schema/validator in initSearch
+ *
  * @returns {Promise<void>}
  */
 async function saveOptions() {
@@ -38,6 +45,15 @@ async function saveOptions() {
 
   try {
     const userOptions = window.jsyaml.load(userOptionsString)
+
+    // Validate options against schema before saving
+    const validation = await validateOptions(userOptions || {})
+    if (!validation.valid) {
+      const schemaError = new Error('User options do not match the required schema.')
+      schemaError.validationErrors = validation.errors
+      throw schemaError
+    }
+
     document.getElementById('config').value = window.jsyaml.dump(userOptions)
     await setUserOptions(userOptions)
 

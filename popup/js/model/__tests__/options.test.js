@@ -3,7 +3,7 @@
  *
  * ## Behaviors Covered:
  * - validateUserOptions: Input validation, type checking, circular reference detection
- * - setUserOptions: Sync storage fallback to localStorage, error handling, validation
+ * - setUserOptions: Sync storage fallback to localStorage, error handling (no validation - see editOptionsView)
  * - getUserOptions: Sync storage fallback to localStorage, malformed JSON handling
  * - getEffectiveOptions: Merging defaults with user options, error recovery
  * - Constants: Structure validation for defaultOptions and emptyOptions
@@ -116,16 +116,9 @@ describe('options model', () => {
       await expect(optionsModule.setUserOptions({ searchStrategy: 'fuzzy' })).rejects.toThrow(runtimeError)
     })
 
-    test('rejects options that do not match the schema', async () => {
-      createTestExt({
-        browserApi: {},
-      })
-
-      await expect(optionsModule.setUserOptions({ searchMaxResults: 0 })).rejects.toMatchObject({
-        message: 'User options do not match the required schema.',
-        validationErrors: expect.arrayContaining(['searchMaxResults must be >= 1']),
-      })
-    })
+    // Note: setUserOptions no longer validates options against the schema.
+    // Validation is now done separately in editOptionsView.js using validateOptions().
+    // This design keeps the validation code (and its dependencies) out of the initSearch bundle.
   })
 
   describe('getUserOptions', () => {

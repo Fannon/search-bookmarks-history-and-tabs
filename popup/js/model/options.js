@@ -225,7 +225,13 @@ export const emptyOptions = {
 }
 
 /**
- * Writes user settings to the sync storage, falls back to local storage
+ * Writes user settings to the sync storage, falls back to local storage.
+ *
+ * NOTE: This function does NOT validate options against the schema.
+ * Validation should be done separately (e.g., in editOptionsView.js) before
+ * calling this function when users edit raw configuration.
+ * Internal code changes (like search strategy toggle) can call this directly
+ * since the values are known to be valid.
  *
  * @see https://developer.chrome.com/docs/extensions/reference/storage/
  *
@@ -233,21 +239,7 @@ export const emptyOptions = {
  * @returns {Promise<void>}
  */
 export async function setUserOptions(userOptions = {}) {
-  let normalizedOptions
-  try {
-    normalizedOptions = normalizeUserOptions(userOptions)
-    // Dynamically import validation to keep initSearch bundle small
-    const { validateOptions } = await import('./validateOptions.js')
-    const validation = await validateOptions(normalizedOptions)
-    if (!validation.valid) {
-      const schemaError = new Error('User options do not match the required schema.')
-      schemaError.validationErrors = validation.errors
-      throw schemaError
-    }
-  } catch (err) {
-    printError(err, 'Could not save user options.')
-    throw err
-  }
+  const normalizedOptions = normalizeUserOptions(userOptions)
 
   return new Promise((resolve, reject) => {
     if (ext.browserApi.storage?.sync) {

@@ -15,7 +15,13 @@ function setupDom() {
   `
 }
 
-async function loadEditOptionsView({ userOptions = {}, dumpImpl, loadImpl, setUserOptionsImpl } = {}) {
+async function loadEditOptionsView({
+  userOptions = {},
+  dumpImpl,
+  loadImpl,
+  setUserOptionsImpl,
+  validateOptionsImpl,
+} = {}) {
   jest.resetModules()
 
   const getUserOptions = jest.fn(() => Promise.resolve(userOptions))
@@ -23,6 +29,12 @@ async function loadEditOptionsView({ userOptions = {}, dumpImpl, loadImpl, setUs
     setUserOptionsImpl ||
     jest.fn(() => {
       return Promise.resolve()
+    })
+
+  const validateOptions =
+    validateOptionsImpl ||
+    jest.fn(() => {
+      return Promise.resolve({ valid: true, errors: [] })
     })
 
   const dumpMock =
@@ -52,6 +64,10 @@ async function loadEditOptionsView({ userOptions = {}, dumpImpl, loadImpl, setUs
     setUserOptions,
   }))
 
+  jest.unstable_mockModule('../../model/validateOptions.js', () => ({
+    validateOptions,
+  }))
+
   const module = await import('../editOptionsView.js')
 
   return {
@@ -59,6 +75,7 @@ async function loadEditOptionsView({ userOptions = {}, dumpImpl, loadImpl, setUs
     mocks: {
       getUserOptions,
       setUserOptions,
+      validateOptions,
       dump: dumpMock,
       load: loadMock,
     },
@@ -103,7 +120,7 @@ describe('editOptionsView', () => {
     expect(document.getElementById('config').value).toBe('')
   })
 
-  it('saveOptions normalizes YAML, persists options, and navigates back to search', async () => {
+  it('saveOptions validates, normalizes YAML, persists options, and navigates back to search', async () => {
     setupDom()
     const loadImpl = jest.fn(() => ({ theme: 'dark' }))
     const dumpImpl = jest
@@ -123,6 +140,7 @@ describe('editOptionsView', () => {
     await Promise.resolve()
 
     expect(mocks.load).toHaveBeenCalledWith('theme: dark')
+    expect(mocks.validateOptions).toHaveBeenCalledWith({ theme: 'dark' })
     expect(mocks.setUserOptions).toHaveBeenCalledWith({ theme: 'dark' })
     expect(document.getElementById('config').value).toBe('normalized: dark')
   })
@@ -155,15 +173,18 @@ describe('editOptionsView', () => {
     errorSpy.mockRestore()
   })
 
-  it('saveOptions displays schema validation errors returned from setUserOptions', async () => {
+  it('saveOptions displays schema validation errors when validateOptions returns invalid', async () => {
     setupDom()
-    const validationError = Object.assign(new Error('User options do not match the required schema.'), {
-      validationErrors: ['searchMaxResults must be >= 1', 'displayScore must be boolean'],
-    })
+    const validateOptionsImpl = jest.fn(() =>
+      Promise.resolve({
+        valid: false,
+        errors: ['searchMaxResults must be >= 1', 'displayScore must be boolean'],
+      }),
+    )
     const { module, mocks } = await loadEditOptionsView({
       userOptions: {},
       dumpImpl: jest.fn(() => '{}'),
-      setUserOptionsImpl: jest.fn(() => Promise.reject(validationError)),
+      validateOptionsImpl,
     })
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -174,10 +195,10 @@ describe('editOptionsView', () => {
     await Promise.resolve()
 
     const errorMessageEl = document.getElementById('error-message')
-    expect(mocks.setUserOptions).toHaveBeenCalled()
+    expect(mocks.validateOptions).toHaveBeenCalled()
+    expect(mocks.setUserOptions).not.toHaveBeenCalled() // Should NOT call setUserOptions when validation fails
     expect(errorMessageEl.style.display).toBe('')
     expect(errorMessageEl.innerText).toBe('Invalid: searchMaxResults must be >= 1\ndisplayScore must be boolean')
-    expect(errorSpy).toHaveBeenCalledWith(validationError)
 
     errorSpy.mockRestore()
   })
