@@ -1,3 +1,13 @@
+/**
+ * @file Loads and normalizes the datasets searched by the popup.
+ *
+ * Responsibilities:
+ * - Fetch bookmarks, tabs, and history from the browser API layer and convert them into the shared `searchItem` format.
+ * - Apply option-driven limits (history window, item caps, ignored folders) to balance freshness with performance.
+ * - Merge history metadata lazily into bookmarks/tabs only when URLs overlap, avoiding unnecessary allocations.
+ * - Prepare derived indexes (search strings, taxonomy aggregates) for downstream search strategies and views.
+ */
+
 import {
   browserApi,
   convertBrowserBookmarks,
@@ -5,6 +15,7 @@ import {
   convertBrowserTabs,
   getBrowserBookmarks,
   getBrowserHistory,
+  getBrowserTabGroups,
   getBrowserTabs,
 } from '../helper/browserApi.js'
 
@@ -32,8 +43,7 @@ function mergeHistoryLazily(items, historyMap, mergedUrls) {
       }
       result[i] = {
         ...item,
-        lastVisitSecondsAgo:
-          historyEntry.lastVisitSecondsAgo ?? item.lastVisitSecondsAgo,
+        lastVisitSecondsAgo: historyEntry.lastVisitSecondsAgo ?? item.lastVisitSecondsAgo,
         visitCount: historyEntry.visitCount ?? item.visitCount,
       }
       hasMerged = true
@@ -48,9 +58,48 @@ function mergeHistoryLazily(items, historyMap, mergedUrls) {
 }
 
 /**
- * Gets the actual data that we search through
+ * Annotate bookmark entries that have a currently open browser tab.
+ * Also copies tab group information when available.
+ * Only runs if detectBookmarksWithOpenTabs option is enabled.
  *
- * Merges and removes some items (e.g. duplicates) before they are indexed
+ * @param {Array} bookmarks - Bookmark search items.
+ * @param {Array} tabs - Tab search items.
+ */
+function flagBookmarksWithOpenTabs(bookmarks, tabs) {
+  if (!ext.opts.detectBookmarksWithOpenTabs) {
+    return
+  }
+
+  if (!bookmarks.length || !tabs.length) {
+    return
+  }
+
+  // Use a Map to preserve the full tab object for group info lookup
+  const tabByUrl = new Map()
+  for (const tab of tabs) {
+    if (tab?.url) {
+      tabByUrl.set(tab.url, tab)
+    }
+  }
+
+  for (const bookmark of bookmarks) {
+    const matchingTab = bookmark && tabByUrl.get(bookmark.url)
+    if (matchingTab) {
+      bookmark.tab = true
+      // Copy tab group information if available
+      if (matchingTab.group) {
+        bookmark.group = matchingTab.group
+        bookmark.groupLower = matchingTab.groupLower
+        bookmark.groupId = matchingTab.groupId
+      }
+    }
+  }
+}
+
+/**
+ * Fetch and normalize the datasets used by the popup search experience.
+ *
+ * @returns {Promise<{tabs: Array, bookmarks: Array, history: Array}>} Prepared search data.
  */
 export async function getSearchData() {
   const startTime = Date.now()
@@ -77,40 +126,26 @@ export async function getSearchData() {
       console.warn('Could not load example mock data', err)
     }
   } else {
-    if (browserApi.tabs && ext.opts.enableTabs) {
-      if (ext.opts.debug) {
-        performance.mark('get-data-tabs-start')
-      }
-      const browserTabs = await getBrowserTabs()
-      result.tabs = convertBrowserTabs(browserTabs)
-      if (ext.opts.debug) {
-        performance.mark('get-data-tabs-end')
-        performance.measure('get-data-tabs', 'get-data-tabs-start', 'get-data-tabs-end')
-      }
-    }
-    if (browserApi.bookmarks && ext.opts.enableBookmarks) {
-      if (ext.opts.debug) {
-        performance.mark('get-data-bookmarks-start')
-      }
-      const browserBookmarks = await getBrowserBookmarks()
-      result.bookmarks = convertBrowserBookmarks(browserBookmarks)
-      if (ext.opts.debug) {
-        performance.mark('get-data-bookmarks-end')
-        performance.measure('get-data-bookmarks', 'get-data-bookmarks-start', 'get-data-bookmarks-end')
-      }
-    }
-    if (browserApi.history && ext.opts.enableHistory) {
-      if (ext.opts.debug) {
-        performance.mark('get-data-history-start')
-      }
-      let startTime = Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo
-      const browserHistory = await getBrowserHistory(startTime, ext.opts.historyMaxItems)
-      result.history = convertBrowserHistory(browserHistory)
-      if (ext.opts.debug) {
-        performance.mark('get-data-history-end')
-        performance.measure('get-data-history', 'get-data-history-start', 'get-data-history-end')
-      }
+    // Fetch all browser data sources in parallel for faster startup
+    const [browserTabs, browserBookmarks, browserHistory, browserTabGroups] = await Promise.all([
+      browserApi.tabs && ext.opts.enableTabs ? getBrowserTabs() : Promise.resolve([]),
+      browserApi.bookmarks && ext.opts.enableBookmarks ? getBrowserBookmarks() : Promise.resolve([]),
+      browserApi.history && ext.opts.enableHistory
+        ? getBrowserHistory(Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo, ext.opts.historyMaxItems)
+        : Promise.resolve([]),
+      browserApi.tabGroups && ext.opts.enableTabs ? getBrowserTabGroups() : Promise.resolve([]),
+    ])
 
+    // Build group lookup map
+    const groupMap = new Map(browserTabGroups.map((g) => [g.id, g]))
+
+    // Convert browser data to internal format
+    result.tabs = convertBrowserTabs(browserTabs, groupMap)
+    result.bookmarks = convertBrowserBookmarks(browserBookmarks)
+    result.history = convertBrowserHistory(browserHistory)
+
+    // Merge history data into bookmarks and tabs if history is enabled
+    if (browserApi.history && ext.opts.enableHistory && result.history.length > 0) {
       // Build maps with URL as key, so we have fast hashmap access
       const historyMap = new Map(result.history.map((item) => [item.originalUrl, item]))
 
@@ -121,24 +156,25 @@ export async function getSearchData() {
 
       result.history = result.history.filter((item) => !mergedHistoryUrls.has(item.originalUrl))
     }
+
+    // Flag bookmarks with open tabs (if feature is enabled)
+    flagBookmarksWithOpenTabs(result.bookmarks, result.tabs)
   }
-  if (ext.opts.debug) {
-    console.debug(
-      `Loaded ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${
-        result.history.length
-      } history items in ${Date.now() - startTime}ms.`,
-    )
-    let oldestHistoryItem = 0
-    for (const item of result.history) {
-      if (item.lastVisitSecondsAgo > oldestHistoryItem) {
-        oldestHistoryItem = item.lastVisitSecondsAgo
-      }
-    }
-    console.debug(
-      `Oldest history item is ${Math.round(oldestHistoryItem / 60 / 60 / 24)} days ago. Max history back is ${
-        ext.opts.historyDaysAgo
-      } days (Option: historyDaysAgo).`,
-    )
-  }
+  console.debug(
+    `Loaded ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${
+      result.history.length
+    } history items in ${Date.now() - startTime}ms.`,
+  )
+  // let oldestHistoryItem = 0
+  // for (const item of result.history) {
+  //   if (item.lastVisitSecondsAgo > oldestHistoryItem) {
+  //     oldestHistoryItem = item.lastVisitSecondsAgo
+  //   }
+  // }
+  // console.debug(
+  //   `Oldest history item is ${Math.round(oldestHistoryItem / 60 / 60 / 24)} days ago. Max history back is ${
+  //     ext.opts.historyDaysAgo
+  //   } days (Option: historyDaysAgo).`,
+  // )
   return result
 }

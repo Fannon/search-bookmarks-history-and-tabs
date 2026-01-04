@@ -2,13 +2,184 @@
 
 ## [unreleased]
 
+## [v2.0.1]
+
+- **IMPROVED**: Bookmarks with open tabs now also display the tab's group badge (if the tab belongs to a named group).
+- **IMPROVED**: Replaced the lilac "T" badge for bookmarks with open tabs with a vertical color gradient on the left border (transitioning from bookmark to tab color). This reduces visual noise while keeping the information easily discoverable.
+- **FIXED**: Search cache is now properly cleared when toggling between "Precise" and "Fuzzy" search strategies, preventing stale results and memory bloat.
+- **REMOVED**: Removed dead `scoreMinScore` filtering code. Since all result types have base scores ≥30 and scoring only adds bonuses, no results were ever filtered out.
+- **FIXED**: Potential memory leak in event delegation tracking for search results, now using module-level state instead of DOM properties.
+
+## [v2.0.0]
+
+This is a major release with new features, a refreshed UI, and improved search capabilities.
+
+### ✨ New Features
+
+- **Tab Groups Overview** ([#188](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/188))
+  - New dedicated **Tab Groups** page in the bottom navigation.
+  - Lists all named tab groups with their tab counts.
+  - Click to filter search results by group.
+  - ⚠️ **New Permission**: Requires `tabGroups` permission to read tab group names (not yet supported by Firefox).
+
+- **Taxonomy Sorting**
+  - Added a **Sort** toggle for Tags, Folders, and Tab Groups pages.
+  - Switch between **Alphabetical** (A-Z) and **By Count** (most used first).
+  - Sorting preference is persisted in `localStorage`.
+
+- **Search Within Taxonomy** ([#104](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/104))
+  - Combine taxonomy filters (`#tag`, `~folder`, `@group`) with a text search.
+  - Example: `~Work  project` searches for "project" within the "Work" folder.
+  - Use **double space** to separate filter from search term.
+  - **Tip**: Press `TAB` to quickly insert the double-space separator.
+
+- **Keyboard Shortcut**: `Ctrl + F` to toggle between "Precise" and "Fuzzy" search modes.
+
+### 🎨 UI Improvements
+
+- **Redesigned Navigation Bar**
+  - Modern "segmented control" toolbar with Tabler Icons.
+  - Result counter integrated into the Search nav item.
+
+- **Unified Button Design**
+  - All action buttons (SAVE, CANCEL, DELETE) now use Tabler Icons.
+  - Consistent styling across all pages.
+
+- **Resizable Textareas**
+  - Bookmark title and URL fields are now vertically resizable.
+  - Improved dark mode styling for resize handles.
+
+- **Streamlined Layout**
+  - Removed redundant section headers to maximize content area.
+  - Improved horizontal alignment of taxonomy items.
+
+### 🔧 Changes
+
+- Popup width increased from 500px to 515px.
+- Layout adjustments for better textarea sizing in bookmark editor.
+
+### 🐛 Fixes
+
+- Potential fix for zoom level issues on some systems where controls at the bottom were cut off.
+
+## [v1.18.0]
+
+This release is mostly about performance improvements, partially due to simplification of the codebase and potential config options.
+
+- **CHANGE**: Default entries now exclude the currently active tab from the "recently visited" list (avoiding duplication), while ensuring it remains visible if it is bookmarked. The matching logic now also ignores anchor tags (hashes) for better discovery.
+- **CHANGE**: Reduced default `maxRecentTabsToShow` from 16 to 8 to improve performance on startup.
+- **FIXED**: Tag (`#`) and folder (`~`) search now correctly highlights the full phrase including the marker (e.g., `#music`), ensuring visual consistency and proper matching.
+- **IMPROVED**: Documentation for configuration options (`OPTIONS.md` and `README.md`).
+- **REMOVED**: Low-value configuration options that are now hard-coded with sensible defaults:
+  - `colorStripeWidth` → now fixed at 4px via CSS
+  - `titleLengthRestrictionForUrls` → now fixed at 80 characters
+  - `scoreTitleWeight` → now fixed at 1 (other field weights remain configurable)
+  - `scoreExactIncludesMaxBonuses` → now fixed at 3
+  - `scoreExactIncludesBonusMinChars` → now fixed at 3
+  - `searchMinMatchCharLength` → now fixed at 1 character
+  - `scoreMinScore` → now fixed at 30 points
+- **OPTIMIZED**: Results rendering speed with Zero-DOM highlighting.
+  - Replaced `mark.js` with high-performance inline `<mark>` tags computed after filtering and sorting.
+  - Results now render with highlights already applied, eliminating secondary DOM passes.
+- **OPTIMIZED**: Major search performance improvements across all search strategies.
+- **OPTIMIZED**: Search performance with deferred highlighting.
+  - Highlighting is only applied to the final filtered and sorted results that will be displayed, not during the search phase.
+  - This significantly speeds up searches in large collections where many items match but few are shown.
+- **OPTIMIZED**: Major data loading / conversion performance improvements which positively impacts startup performance.
+- **ADDED**: Performance Monitoring & Regression Testing.
+  - Integrated `performance.mark` and `performance.measure` into search and render loops.
+  - Added Jest-based benchmarks for core algorithms with datasets of 5,000+ items.
+  - Added Playwright end-to-end performance tests to verify real-world rendering latency.
+
+## [v1.17.3]
+
+- **IMPROVED**: Significant search and ranking performance through data pre-normalization
+  - Normalized fields are now pre-calculated during ingestion, avoiding redundant computations during search and scoring
+- **IMPROVED**: UI responsiveness and rendering speed
+  - Implemented batch DOM updates and single-pass highlighting (mark.js) to minimize layout shifts and CPU usage
+- **IMPROVED**: History filtering performance with an optimized single-pass Regex engine
+- **IMPROVED**: General codebase cleanup, including documentation fixes and metadata normalization
+- **CHANGED**: The tab search now also includes tabs owned by browser extensions
+- **CHANGED**: By default only 24 search results are shown to improve performance, this can be adjusted via `searchMaxResults` in the options
+- **FIXED**: Bookmark titles now correctly respect the `titleLengthRestrictionForUrls` user option
+
+## [v1.17.2]
+
+- **FIXED**: Hover selection no longer triggers when popup opens with cursor already over a result item
+  - Previously, if the mouse cursor happened to be positioned where a result item would render when opening the popup, that item would be incorrectly selected instead of the top result
+  - Now tracks actual mouse movement and only allows hover selection after the user moves their cursor
+  - Ensures the top result always stays selected on popup open, matching expected behavior
+- **CHANGED**: Simplified highlighting logic to always use mark.js for consistent behavior
+- **IMPROVED**: Runtime performance with micro-optimizations
+
+## [v1.17.1]
+
+- **IMPROVED**: Startup performance with parallelized browser API calls
+
+  - Browser APIs (tabs, bookmarks, history) now load in parallel using `Promise.all()` instead of sequentially
+  - Significantly reduces initial load time, especially when history API is slow
+  - No user configuration required – performance improvement is automatic
+
+- **NEW**: Optional performance features for large collections
+
+  - Added `detectDuplicateBookmarks` option (default: `false`) to optionally enable duplicate bookmark detection
+  - Added `detectBookmarksWithOpenTabs` option (default: `true`) to optionally disable bookmark-tab matching
+  - Users with large bookmark/tab collections who don't need these features can disable them for faster startup
+
+## [v1.17.0]
+
+- **NEW**: Duplicate bookmark detection and indication
+
+  - Detects bookmarks with identical URLs during data loading and marks them with a `dupe` flag
+  - Visual indication in search results with a red badge on duplicate bookmarks
+  - Console warning logs when duplicates are found, including the URL and affected folders
+  - Helps users identify and clean up redundant bookmarks across different folders
+
+- **NEW**: Highlight bookmarks that are currently open
+
+  - Bookmarks sharing a URL with an open tab are tagged during dataset preparation
+  - Search results render a lilac `T` badge so it’s obvious when a bookmark is already open
+
+- **IMPROVED**: Prioritize already-open bookmarks in scoring
+
+  - Added `scoreBookmarkOpenTabBonus` (defaults to +10) so matching bookmarks float above unopened ones
+  - Bonus applies only to bookmarks with an active tab, keeping other result types unchanged
+
+- **FIXED**: Search score multiplier incorrectly handled zero scores
+  - Fixed falsy coalescing bug where valid `searchScore: 0` was treated as missing, incorrectly falling back to `scoreTitleWeight`
+  - Now uses proper null check (`!= null`) to distinguish between 0 (valid) and undefined/null (missing)
+- **FIXED**: Vim navigation shortcuts no longer close the popup when overshooting the first or last result, preventing Chrome's default Ctrl+K / Ctrl+J actions from taking over.
+
+* **CHANGED**: More concise / simple last visited time
+
+- **REMOVED**: Date-added scoring bonus along with the `scoreDateAddedBonusScoreMaximum` / `scoreDateAddedBonusScorePerDay` options to keep ranking focused on usage signals.
+  - The options had already been removed, this was a code leftover
+
+- **DEV**: Replaced the ESLint + Prettier toolchain with Biome (config, scripts, and editor defaults) for a single-source formatter and linter.
+
+## [v1.16.0]
+
+- **IMPROVED**: Search scoring precision and reliability
+  - **Higher bonuses for perfect matches**: Exact matches on titles, tags, and folders now receive +20, +15, and +10 points respectively (previously +15, +10, +5), so precise results appear ahead of partial matches by default.
+  - **Better multi-term query handling**: Search terms are normalized once and evaluated individually in a case-insensitive way, ensuring multi-word queries and mixed-case text reliably trigger the configured substring bonuses.
+  - **New phrase boost options**: Added `scoreExactPhraseTitleBonus` (default: 8) and `scoreExactPhraseUrlBonus` (default: 5) to boost results where the full search phrase appears as substring. For example, searching "javascript tutorial" will boost a bookmark titled "Advanced JavaScript Tutorial Guide" (+8) or with URL "example.com/javascript-tutorial" (+5).
+  - **Capped substring bonuses**: Introduced `scoreExactIncludesMaxBonuses` (default: 3) to prevent noisy documents from excessive stacking of includes bonuses.
+- **IMPROVED**: Further reduced initial load bundle size for faster startup.
+- **FIXED**: When editing a bookmark and saving, the search state was sometimes not properly updated. Now the search is completely reset, but remembers the search term.
+- **FIXED**: Search debounce logic was creating race-condition issues when pressing ENTER too quickly after typing the search string. Removed the debounce logic to fix this issue.
+
+## [v1.15.0]
+
 - **IMPROVED**: Various performance improvements:
-  - Creating a single minified production bundle, should speed up initial loading time a lot when IO is slow
-  - lazy-loading the library for search highlighting, further init load speedup
-  - Various smaller improvements that increase search and render performance
-- **FIXED**: Bug in scoring that `lastVisited`: 0 was not treated as most recent (max score)
-- **FIXED**: Bug in scoring where `visitCount` was not correctly merged in from history
+  - Creating a single minified production bundle, should speed up initial loading time significantly when IO is slow.
+  - Lazy-loading the search highlight library, speeds up initial load further.
+  - More general caching of search results, now also for fuzzy search.
+  - Various smaller improvements that increase search and render performance.
+- **FIXED**: Scoring bug where `lastVisited: 0` was not treated as most recent (max score). Results you opened moments ago now receive the maximum recency bonus instead of being skipped.
+- **FIXED**: Scoring bug where `visitCount` was not correctly merged in from history.
 - **IMPROVED**: Improved unit-test coverage and switched for E2E testing to Playwright, leading to faster and less brittle tests.
+- **CHANGED**: Renamed some options for clarity, e.g. `scoreBookmarkBaseScore` to `scoreBookmarkBase`. Custom configuration keys for base bookmark, history, and tab weights no longer include the trailing "Score" word, so existing overrides must adopt the shorter names to keep working.
+- **REMOVED**: Removed `debug` option, as debug logging will now always take place if console is loaded - and the performance.\* logging has been removed to clean up the code.
 
 ## [v1.14.0]
 
@@ -110,14 +281,14 @@
 
 ## [v1.9.0]
 
-- **FIXED**: Fuzzy search now also works with non-ASCII characters like CKJ chars by default
+- **FIXED**: Fuzzy search now also works with non-ASCII characters like CJK chars by default
 - **FIXED**: Option `bookmarkColor` now also applies to the bookmark folder badge in the search results
 - **REMOVED**: Removed hybrid search as the benefits / differences against new fuzzy search are negligible.
 
 ## [v1.8.7]
 
 - **NEW**: New option `uFuzzyOptions` that allows to configure the fuzzy search library used by this extension
-  - This can be used, e.g. that fuzzy search supports CKJ characters (see README)
+  - This can be used, e.g. that fuzzy search supports CJK characters (see README)
 
 ## [v1.8.5]
 

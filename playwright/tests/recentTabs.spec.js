@@ -1,16 +1,16 @@
-import { test, expect, expectNoClientErrors } from './fixtures.js'
+import { expect, expectNoClientErrors, test } from './fixtures.js'
 
 const waitForInitialization = async (page) => {
-  await expect(page.locator('#results-loading')).toBeHidden()
+  await expect(page.locator('#results-load')).toBeHidden()
 }
 
 const updateUserConfig = async (page, config) => {
   const newConfig = JSON.stringify(config, null, 2)
   await page.goto('/options.html')
-  const userConfig = page.locator('#user-config')
+  const userConfig = page.locator('#config')
   await userConfig.fill('')
   await userConfig.fill(newConfig)
-  await page.locator('#edit-options-save').click()
+  await page.locator('#opt-save').click()
 }
 
 test.describe('Recent Tabs on Open Functionality', () => {
@@ -22,9 +22,9 @@ test.describe('Recent Tabs on Open Functionality', () => {
     test('shows tabs sorted by recent access when popup opens', async ({ page }) => {
       await waitForInitialization(page)
 
-      await expect(page.locator('#search-input')).toHaveValue('')
+      await expect(page.locator('#q')).toHaveValue('')
 
-      const results = page.locator('#result-list li')
+      const results = page.locator('#results li')
       await expect(results).not.toHaveCount(0)
 
       await expectNoClientErrors(page)
@@ -33,7 +33,7 @@ test.describe('Recent Tabs on Open Functionality', () => {
     test('maintains tab sorting by last accessed time', async ({ page }) => {
       await waitForInitialization(page)
 
-      const results = page.locator('#result-list li')
+      const results = page.locator('#results li')
       const count = await results.count()
       expect(count).toBeGreaterThanOrEqual(2)
 
@@ -43,13 +43,13 @@ test.describe('Recent Tabs on Open Functionality', () => {
     test('switches to search results when typing', async ({ page }) => {
       await waitForInitialization(page)
 
-      const results = page.locator('#result-list li')
+      const results = page.locator('#results li')
       await expect(results).not.toHaveCount(0)
 
-      await page.locator('#search-input').fill('test')
+      await page.locator('#q').fill('test')
       await expect(results).not.toHaveCount(0)
 
-      await page.locator('#search-input').fill('')
+      await page.locator('#q').fill('')
       await expect(results).not.toHaveCount(0)
 
       await expectNoClientErrors(page)
@@ -60,8 +60,8 @@ test.describe('Recent Tabs on Open Functionality', () => {
     test('shows tabs with tab-only prefix', async ({ page }) => {
       await waitForInitialization(page)
 
-      await page.locator('#search-input').fill('t ')
-      await expect(page.locator('#result-list li')).not.toHaveCount(0)
+      await page.locator('#q').fill('t ')
+      await expect(page.locator('#results li')).not.toHaveCount(0)
 
       await expectNoClientErrors(page)
     })
@@ -69,8 +69,8 @@ test.describe('Recent Tabs on Open Functionality', () => {
     test('filters tabs while maintaining order', async ({ page }) => {
       await waitForInitialization(page)
 
-      await page.locator('#search-input').fill('t chrome')
-      await expect(page.locator('#result-list li')).not.toHaveCount(0)
+      await page.locator('#q').fill('t chrome')
+      await expect(page.locator('#results li')).not.toHaveCount(0)
 
       await expectNoClientErrors(page)
     })
@@ -85,7 +85,7 @@ test.describe('Recent Tabs on Open Functionality', () => {
     test('respects the default limit of 30', async ({ page }) => {
       await waitForInitialization(page)
 
-      const count = await page.locator('#result-list li').count()
+      const count = await page.locator('#results li').count()
       expect(count).toBeLessThanOrEqual(30)
 
       await expectNoClientErrors(page)
@@ -97,7 +97,7 @@ test.describe('Recent Tabs on Open Functionality', () => {
       await page.goto('/')
       await waitForInitialization(page)
 
-      const count = await page.locator('#result-list li').count()
+      const count = await page.locator('#results li').count()
       expect(count).toBeLessThanOrEqual(5)
       await expectNoClientErrors(page)
     })
@@ -108,7 +108,7 @@ test.describe('Recent Tabs on Open Functionality', () => {
       await page.goto('/')
       await waitForInitialization(page)
 
-      const results = page.locator('#result-list li')
+      const results = page.locator('#results li')
       const count = await results.count()
 
       if (count > 0) {
@@ -132,24 +132,25 @@ test.describe('Recent Tabs on Open Functionality', () => {
       await page.goto('/')
       await waitForInitialization(page)
 
-      const count = await page.locator('#result-list li').count()
+      const count = await page.locator('#results li').count()
       expect(count).toBeLessThanOrEqual(1000)
       expect(count).toBeGreaterThan(0)
 
       await expectNoClientErrors(page)
     })
 
-    test('maintains the result counter behaviour', async ({ page }) => {
+    test('shows result counter for recent tabs', async ({ page }) => {
       await updateUserConfig(page, { maxRecentTabsToShow: 10 })
 
       await page.goto('/')
       await waitForInitialization(page)
 
-      const count = await page.locator('#result-list li').count()
+      const count = await page.locator('#results li').count()
       expect(count).toBeLessThanOrEqual(10)
       expect(count).toBeGreaterThanOrEqual(1)
 
-      await expect(page.locator('#result-counter')).toHaveText('')
+      // Result counter should show count even for default entries (recent tabs)
+      await expect(page.locator('#counter')).toHaveText(`(${count})`)
       await expectNoClientErrors(page)
     })
   })

@@ -1,5 +1,28 @@
-import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals'
-import { cleanUpUrl, timeSince, printError, loadScript, loadCSS } from '../utils.js'
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
+import {
+  cleanUpUrl,
+  escapeHtml,
+  escapeRegex,
+  generateRandomId,
+  highlightMatches,
+  loadScript,
+  timeSince,
+} from '../utils.js'
+
+describe('generateRandomId', () => {
+  it('returns a deterministic identifier prefixed with R', () => {
+    expect(generateRandomId()).toMatch(/^R\d+$/)
+  })
+
+  it('increments the numeric portion on each call', () => {
+    const first = generateRandomId()
+    const second = generateRandomId()
+    const firstNumeric = Number(first.slice(1))
+    const secondNumeric = Number(second.slice(1))
+
+    expect(secondNumeric).toBe(firstNumeric + 1)
+  })
+})
 
 describe('cleanUpUrl', () => {
   it('normalizes protocol, www and trailing slash', () => {
@@ -23,7 +46,7 @@ describe('cleanUpUrl', () => {
   })
 
   it('handles URLs with fragments', () => {
-    expect(cleanUpUrl('https://www.example.com/page#section')).toBe('example.com/page#section')
+    expect(cleanUpUrl('https://www.example.com/page#section')).toBe('example.com/page')
   })
 
   it('handles edge cases gracefully', () => {
@@ -38,7 +61,7 @@ describe('cleanUpUrl', () => {
 
   it('handles complex URLs', () => {
     expect(cleanUpUrl('HTTPS://WWW.SUBDOMAIN.EXAMPLE.CO.UK/PATH/TO/RESOURCE?QUERY=VALUE#FRAGMENT')).toBe(
-      'subdomain.example.co.uk/path/to/resource?query=value#fragment',
+      'subdomain.example.co.uk/path/to/resource?query=value',
     )
   })
 
@@ -60,54 +83,54 @@ describe('timeSince', () => {
 
   it('returns seconds for very recent times', () => {
     const thirtySecondsAgo = new Date('2024-01-01T11:59:30Z')
-    expect(timeSince(thirtySecondsAgo)).toBe('30 seconds')
+    expect(timeSince(thirtySecondsAgo)).toBe('30 s')
 
     const oneSecondAgo = new Date('2024-01-01T11:59:59Z')
-    expect(timeSince(oneSecondAgo)).toBe('1 second')
+    expect(timeSince(oneSecondAgo)).toBe('1 s')
   })
 
   it('returns minutes for times less than an hour', () => {
     const thirtyMinutesAgo = new Date('2024-01-01T11:30:00Z')
-    expect(timeSince(thirtyMinutesAgo)).toBe('30 minutes')
+    expect(timeSince(thirtyMinutesAgo)).toBe('30 m')
   })
 
   it('returns hours for times less than a day', () => {
     const twelveHoursAgo = new Date('2024-01-01T00:00:00Z')
-    expect(timeSince(twelveHoursAgo)).toBe('12 hours')
+    expect(timeSince(twelveHoursAgo)).toBe('12 h')
   })
 
   it('returns days for times less than a month', () => {
     const tenDaysAgo = new Date('2023-12-22T12:00:00Z')
-    expect(timeSince(tenDaysAgo)).toBe('10 days')
+    expect(timeSince(tenDaysAgo)).toBe('10 d')
   })
 
   it('returns months for times less than a year', () => {
     const sixMonthsAgo = new Date('2023-07-01T12:00:00Z')
-    expect(timeSince(sixMonthsAgo)).toBe('6 months')
+    expect(timeSince(sixMonthsAgo)).toBe('6 month')
   })
 
   it('returns years for times more than a year', () => {
     const twoYearsAgo = new Date('2022-01-01T12:00:00Z')
-    expect(timeSince(twoYearsAgo)).toBe('2 years')
+    expect(timeSince(twoYearsAgo)).toBe('2 year')
   })
 
   it('handles boundary conditions correctly', () => {
-    // Test minute boundary: 59 seconds = "59 seconds", 61 seconds = "1 minute"
-    expect(timeSince(new Date('2024-01-01T11:59:01Z'))).toBe('59 seconds')
-    expect(timeSince(new Date('2024-01-01T11:58:59Z'))).toBe('1 minute')
+    // Test minute boundary: 59 seconds = "59 s", 61 seconds = "1 m"
+    expect(timeSince(new Date('2024-01-01T11:59:01Z'))).toBe('59 s')
+    expect(timeSince(new Date('2024-01-01T11:58:59Z'))).toBe('1 m')
 
-    // Test hour boundary: 59 minutes = "59 minutes", 61 minutes = "1 hour"
-    expect(timeSince(new Date('2024-01-01T11:01:00Z'))).toBe('59 minutes')
-    expect(timeSince(new Date('2024-01-01T10:59:00Z'))).toBe('1 hour')
+    // Test hour boundary: 59 minutes = "59 m", 61 minutes = "1 h"
+    expect(timeSince(new Date('2024-01-01T11:01:00Z'))).toBe('59 m')
+    expect(timeSince(new Date('2024-01-01T10:59:00Z'))).toBe('1 h')
 
-    // Test day boundary: 23 hours = "0 seconds", 25 hours = "1 day"
-    expect(timeSince(new Date('2024-01-01T13:00:00Z'))).toBe('0 seconds')
-    expect(timeSince(new Date('2023-12-31T11:00:00Z'))).toBe('1 day')
+    // Test day boundary: 23 hours = "0 s", 25 hours = "1 d"
+    expect(timeSince(new Date('2024-01-01T13:00:00Z'))).toBe('0 s')
+    expect(timeSince(new Date('2023-12-31T11:00:00Z'))).toBe('1 d')
   })
 
   it('handles edge cases', () => {
     // Future dates
-    expect(timeSince(new Date('2024-01-02T12:00:00Z'))).toBe('0 seconds')
+    expect(timeSince(new Date('2024-01-02T12:00:00Z'))).toBe('0 s')
 
     // Invalid inputs
     expect(timeSince('invalid')).toBe('Invalid date')
@@ -119,6 +142,8 @@ describe('timeSince', () => {
 describe('loadScript', () => {
   let mockScript
   let mockHead
+  const originalCreateElement = document.createElement
+  const originalGetElementsByTagName = document.getElementsByTagName
 
   beforeEach(() => {
     // Mock DOM elements
@@ -142,6 +167,8 @@ describe('loadScript', () => {
 
   afterEach(() => {
     jest.restoreAllMocks()
+    document.createElement = originalCreateElement
+    document.getElementsByTagName = originalGetElementsByTagName
   })
 
   it('loads a script successfully with correct DOM manipulation', async () => {
@@ -215,120 +242,56 @@ describe('loadScript', () => {
   })
 })
 
-describe('loadCSS', () => {
-  let mockLink
-  let mockHead
-
-  beforeEach(() => {
-    mockLink = {
-      href: '',
-      rel: '',
-      type: '',
-    }
-
-    mockHead = {
-      appendChild: jest.fn(),
-    }
-
-    document.createElement = jest.fn().mockReturnValue(mockLink)
-    document.getElementsByTagName = jest.fn().mockReturnValue([mockHead])
+describe('escapeHtml', () => {
+  it('escapes all special characters', () => {
+    expect(escapeHtml('<script>"test"&\'')).toBe('&lt;script&gt;&quot;test&quot;&amp;&#39;')
   })
 
-  afterEach(() => {
-    jest.restoreAllMocks()
+  it('handles nullish values gracefully', () => {
+    expect(escapeHtml(null)).toBe('')
+    expect(escapeHtml(undefined)).toBe('')
   })
 
-  it('loads CSS with correct link element properties', () => {
-    const href = 'https://example.com/style.css'
-
-    loadCSS(href)
-
-    expect(document.createElement).toHaveBeenCalledWith('link')
-    expect(mockLink.href).toBe(href)
-    expect(mockLink.rel).toBe('stylesheet')
-    expect(mockLink.type).toBe('text/css')
-    expect(mockHead.appendChild).toHaveBeenCalledWith(mockLink)
+  it('leaves plain text untouched', () => {
+    expect(escapeHtml('plain text')).toBe('plain text')
   })
 })
 
-describe('printError', () => {
-  beforeEach(() => {
-    document.body.innerHTML = '<ul id="error-list"></ul>'
-    jest.spyOn(console, 'error').mockImplementation(() => {})
+describe('escapeRegex', () => {
+  it('escapes all regex special characters', () => {
+    const chars = '.*+?^${}()|[]\\'
+    expect(escapeRegex(chars)).toBe('\\.\\*\\+\\?\\^\\$\\{\\}\\(\\)\\|\\[\\]\\\\')
   })
 
-  afterEach(() => {
-    jest.restoreAllMocks()
+  it('leaves other characters untouched', () => {
+    expect(escapeRegex('abc-123')).toBe('abc-123')
+  })
+})
+
+describe('highlightMatches', () => {
+  it('escapes and highlights matching terms', () => {
+    const text = 'Hello world, hello universe'
+    const terms = ['hello', 'universe']
+    expect(highlightMatches(text, terms)).toBe('<mark>Hello</mark> world, <mark>hello</mark> <mark>universe</mark>')
   })
 
-  it('logs errors with text and updates DOM correctly', () => {
-    const err = new Error('Something went wrong')
-
-    printError(err, 'While loading data')
-
-    const errorList = document.getElementById('error-list')
-    expect(errorList.innerHTML).toContain('<b>Error</b>: While loading data')
-    expect(errorList.innerHTML).toContain('<b>Error Message</b>: Something went wrong')
-    expect(errorList.style.cssText).toBe('display: block;')
-    expect(console.error).toHaveBeenCalledTimes(2)
+  it('handles empty text', () => {
+    expect(highlightMatches('', ['test'])).toBe('')
   })
 
-  it('handles error without text parameter', () => {
-    const err = new Error('Something went wrong')
-
-    printError(err)
-
-    const errorList = document.getElementById('error-list')
-    expect(errorList.innerHTML).not.toContain('<b>Error</b>:')
-    expect(errorList.innerHTML).toContain('<b>Error Message</b>: Something went wrong')
-    expect(errorList.style.cssText).toBe('display: block;')
+  it('handles empty terms', () => {
+    expect(highlightMatches('text', [])).toBe('text')
   })
 
-  it('handles stack traces correctly', () => {
-    const err = new Error('Something went wrong')
-    err.stack = 'Error: Something went wrong\n    at testFunction (test.js:10:5)'
-
-    printError(err, 'Test error')
-
-    const errorList = document.getElementById('error-list')
-    expect(errorList.innerHTML).toContain('<b>Error Stack</b>: Error: Something went wrong')
+  it('handles regex input directly', () => {
+    const text = 'Foo Bar'
+    const regex = /(Bar)/
+    expect(highlightMatches(text, regex)).toBe('Foo <mark>Bar</mark>')
   })
 
-  it('handles errors without stack traces', () => {
-    const err = new Error('Something went wrong')
-    delete err.stack
-
-    printError(err, 'Test error')
-
-    const errorList = document.getElementById('error-list')
-    expect(errorList.innerHTML).not.toContain('<b>Error Stack</b>:')
-  })
-
-  it('handles edge cases and error conditions', () => {
-    // Test null/undefined errors
-    expect(() => printError(null, 'Test error')).toThrow()
-    expect(() => printError(undefined, 'Test error')).toThrow()
-
-    // Test error without message property
-    const err = {}
-    printError(err, 'Test error')
-
-    const errorList = document.getElementById('error-list')
-    expect(errorList.innerHTML).toContain('<b>Error Message</b>: undefined')
-  })
-
-  it('prepends new errors to existing error list', () => {
-    const errorList = document.getElementById('error-list')
-    errorList.innerHTML = '<li class="error">Previous error</li>'
-
-    const err = new Error('New error')
-    printError(err, 'New error message')
-
-    expect(errorList.innerHTML).toContain('<b>Error</b>: New error message')
-    expect(errorList.innerHTML).toContain('Previous error')
-    // New error should be prepended
-    expect(errorList.innerHTML.indexOf('<b>Error</b>: New error message')).toBeLessThan(
-      errorList.innerHTML.indexOf('Previous error'),
-    )
+  it('escapes HTML in text matching', () => {
+    const text = '<b>Bold</b>'
+    const terms = ['Bold']
+    expect(highlightMatches(text, terms)).toBe('&lt;b&gt;<mark>Bold</mark>&lt;/b&gt;')
   })
 })

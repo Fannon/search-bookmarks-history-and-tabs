@@ -1,39 +1,45 @@
-//////////////////////////////////////////
-// BOOKMARK EDITING                     //
-//////////////////////////////////////////
+/**
+ * @file Drives the bookmark editor interactions and form logic.
+ *
+ * Responsibilities:
+ * - Load bookmark data for editing and initialize Tagify-powered tag autocompletion.
+ * - Validate user input, persist updates through the browser API, and surface inline errors.
+ * - Handle delete/cancel flows plus bonus-score parsing while keeping the UI responsive.
+ * - Invalidate search caches and taxonomy indexes so edits reflect immediately in the popup search view.
+ */
 
-import { browserApi, createSearchString } from '../helper/browserApi.js'
-import { cleanUpUrl, loadCSS, loadScript } from '../helper/utils.js'
+import { browserApi, createSearchStringLower } from '../helper/browserApi.js'
+import { cleanUpUrl } from '../helper/utils.js'
 import { resetFuzzySearchState } from '../search/fuzzySearch.js'
-import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
-import { search } from '../search/common.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
+import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
 
-let tagifyLoaded = false
-
+/**
+ * Populate the bookmark editor form for the given bookmark id.
+ *
+ * @param {string} bookmarkId - Identifier of the bookmark to edit.
+ * @returns {Promise<void>}
+ */
 export async function editBookmark(bookmarkId) {
-  // Lazy load tagify if it has not been loaded already
-  if (!tagifyLoaded) {
-    loadCSS('./lib/tagify.min.css')
-    loadCSS('./css/tagify.css')
-    await loadScript('./lib/tagify.min.js')
-    tagifyLoaded = true
-  }
-
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
-  const tags = Object.keys(getUniqueTags()).sort()
-  if (ext.opts.debug) {
-    console.debug('Editing bookmark ' + bookmarkId, bookmark)
-  }
+  const uniqueTags = getUniqueTags() || {}
+  const tags = Object.keys(uniqueTags).sort()
+  const editContainer = document.getElementById('edit-bm')
+  const titleInput = document.getElementById('bm-title')
+  const urlInput = document.getElementById('bm-url')
+  const tagsInput = document.getElementById('bm-tags')
+  const saveButton = document.getElementById('bm-save')
+  const deleteButton = document.getElementById('bm-del')
+
   if (bookmark) {
-    document.getElementById('edit-bookmark').style = ''
-    document.getElementById('bookmark-title').value = bookmark.title
-    document.getElementById('bookmark-url').value = bookmark.originalUrl
+    editContainer.style = ''
+    titleInput.value = bookmark.title
+    urlInput.value = bookmark.originalUrl
     if (!ext.tagify) {
-      ext.tagify = new Tagify(document.getElementById('bookmark-tags'), {
+      ext.tagify = new Tagify(tagsInput, {
         whitelist: tags,
         trim: true,
-        transformTag: transformTag,
+        transformTag,
         skipInvalid: false,
         editTags: {
           clicks: 1,
@@ -59,15 +65,9 @@ export async function editBookmark(bookmarkId) {
       .filter((el) => el)
     ext.tagify.addTags(currentTags)
 
-    document.getElementById('edit-bookmark-save').href = '#update-bookmark/' + bookmarkId
-
-    const deleteButton = document.getElementById('edit-bookmark-delete')
-    deleteButton.onclick = (event) => {
-      deleteBookmark(bookmarkId)
-      if (event && event.stopPropagation) {
-        event.stopPropagation()
-      }
-    }
+    saveButton.dataset.bookmarkId = bookmarkId
+    deleteButton.dataset.bookmarkId = bookmarkId
+    ext.currentBookmarkId = bookmarkId
   } else {
     console.warn(`Tried to edit bookmark id="${bookmarkId}", but could not find it in searchData.`)
   }
@@ -79,13 +79,18 @@ export async function editBookmark(bookmarkId) {
   }
 }
 
+/**
+ * Apply form changes to the data model and browser bookmarks API.
+ *
+ * @param {string} bookmarkId - Identifier of the bookmark being updated.
+ */
 export function updateBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
-  const titleInput = document.getElementById('bookmark-title').value.trim()
-  const urlInput = document.getElementById('bookmark-url').value.trim()
+  const titleInput = document.getElementById('bm-title').value.trim()
+  const urlInput = document.getElementById('bm-url').value.trim()
   let tagsInput = ''
   if (ext.tagify.value.length) {
-    tagsInput = '#' + ext.tagify.value.map((el) => el.value.trim()).join(' #')
+    tagsInput = `#${ext.tagify.value.map((el) => el.value.trim()).join(' #')}`
   }
 
   // Update search data model of bookmark
@@ -93,15 +98,10 @@ export function updateBookmark(bookmarkId) {
   bookmark.originalUrl = urlInput
   bookmark.url = cleanUpUrl(urlInput)
   bookmark.tags = tagsInput
-  bookmark.searchString = createSearchString(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
-  bookmark.searchStringLower = bookmark.searchString.toLowerCase()
+  bookmark.searchStringLower = createSearchStringLower(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
   resetUniqueFoldersCache()
-
-  if (ext.opts.debug) {
-    console.debug(`Update bookmark with ID ${bookmarkId}: "${titleInput} ${tagsInput}"`)
-  }
 
   if (browserApi.bookmarks) {
     browserApi.bookmarks.update(bookmarkId, {
@@ -113,9 +113,15 @@ export function updateBookmark(bookmarkId) {
   }
 
   // Start search again to update the search index and the UI with new bookmark model
-  window.location.href = '#'
+  navigateToSearchView()
 }
 
+/**
+ * Remove a bookmark via the browser API and refresh search caches.
+ *
+ * @param {string} bookmarkId - Identifier of the bookmark to delete.
+ * @returns {Promise<void>}
+ */
 export async function deleteBookmark(bookmarkId) {
   if (browserApi.bookmarks) {
     browserApi.bookmarks.remove(bookmarkId)
@@ -131,7 +137,36 @@ export async function deleteBookmark(bookmarkId) {
   resetSimpleSearchState('bookmarks')
   resetUniqueFoldersCache()
 
-  // Re-execute search
-  await search()
-  window.location.href = '#search/'
+  navigateToSearchView()
+}
+
+/**
+ * Navigate back to the search view, preserving return hashes when possible.
+ */
+function navigateToSearchView() {
+  const redirectHash =
+    ext && typeof ext.returnHash === 'string' && ext.returnHash.startsWith('#search') ? ext.returnHash : '#search/'
+  const redirectTarget = `./index.html${redirectHash}`
+  let resolvedTarget = redirectTarget
+  try {
+    resolvedTarget = new URL(redirectTarget, window.location.href).toString()
+  } catch {
+    resolvedTarget = redirectTarget
+  }
+  try {
+    if (typeof window.location.assign === 'function') {
+      window.location.assign(resolvedTarget)
+    } else {
+      window.location.href = resolvedTarget
+    }
+  } catch (navigationError) {
+    console.warn('Navigation to search view not supported in this environment.', navigationError)
+    if (window.history?.replaceState) {
+      try {
+        window.history.replaceState(null, '', resolvedTarget)
+      } catch (historyError) {
+        console.warn('Failed to update history state for search view navigation.', historyError)
+      }
+    }
+  }
 }

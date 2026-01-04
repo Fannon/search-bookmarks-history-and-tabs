@@ -1,0 +1,128 @@
+/* Edit Bookmark Page */
+
+#edit-bm {
+  padding: 0;
+  overflow: hidden;
+  width: var(--w);
+  height: calc(var(--h) - 44px);
+  background: var(--bg);
+  position: relative;
+}
+
+#edit-bm .heading {
+  margin: 4px 8px;
+}
+#bm-load {
+  padding: 12px;
+  font-size: 16px;
+}
+
+/* Action Buttons */
+#bm-del {
+  background: #ee4343;
+  float: left;
+}
+#bm-cancel {
+  background: #929292;
+}
+#bm-save {
+  background: #5fc944;
+}
+
+/* Form Fields */
+#bm-title {
+  height: 142px; /* 5 lines without scrollbar */
+  resize: vertical;
+  min-height: 80px;
+  font-size: 1em;
+  margin-top: 8px;
+}
+#bm-url {
+  height: 76px; /* 3 lines without scrollbar */
+  resize: vertical;
+  min-height: 50px;
+  font-size: 0.85em;
+}
+
+#bm-tags,
+#edit-bm .tagify {
+  height: 105px;
+  font-size: 18px;
+  border: none;
+  padding: 4px 2px;
+  overflow-x: hidden;
+}
+
+/* Tagify Library Overrides */
+.tagify {
+  height: 105px;
+  border: none;
+  --tag-bg: #557292;
+  --tag-hover: #5c84af;
+  --tagify-dd-color-primary: #557292;
+  --tag-text-color: #fff;
+  --tag-text-color--edit: #111;
+  --tag-remove-bg: var(--tag-hover);
+  --tag-pad: 2px 8px 4px;
+  --tag-inset-shadow-size: 1.35em;
+  --tag-remove-btn-bg--hover: #000;
+}
+
+.tagify__tag {
+  margin: 6px 0 5px 6px;
+}
+.tagify__tag > div {
+  font-size: 15px;
+}
+
+/* Dropdown */
+.tagify__dropdown {
+  max-height: 217px;
+  border: none;
+}
+.tagify__dropdown__wrapper {
+  border: none;
+}
+.tagify__dropdown__item {
+  padding: 3px 8px;
+  background: #fff;
+}
+.tagify__dropdown__item--active {
+  background: #557292 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  #edit-bm a:hover {
+    color: var(--a);
+  }
+  #edit-bm mark {
+    color: var(--mark);
+  }
+  .tagify__dropdown__wrapper {
+    background: #111;
+  }
+  .tagify__dropdown__item {
+    color: #ccc;
+    background: #000;
+  }
+  .tagify__tag > div > [contenteditable] {
+    color: #eee;
+  }
+  /* Style for textarea resizer handle in dark mode */
+  textarea::-webkit-resizer {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    background-image: linear-gradient(
+      135deg,
+      transparent 50%,
+      #888 50%,
+      #888 60%,
+      transparent 60%,
+      transparent 80%,
+      #888 80%,
+      #888 90%,
+      transparent 90%
+    );
+  }
+}

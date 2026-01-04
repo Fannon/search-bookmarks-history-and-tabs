@@ -5,9 +5,11 @@ let validatorPromise
 
 const sanitizedOptionsSchema = sanitizeSchema(optionsSchema)
 
-export async function validateOptions(options = {
-  allErrors: true,
-}) {
+export async function validateOptions(
+  options = {
+    allErrors: true,
+  },
+) {
   const validate = await getValidator()
   const isValid = validate(options)
 
@@ -154,6 +156,6 @@ function sanitizeSchema(schema) {
         return undefined
       }
       return value
-    })
+    }),
   )
 }

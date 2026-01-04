@@ -1,75 +1,142 @@
 <!DOCTYPE html>
 <html lang="en-US">
-  <head>
-    <title>Search Bookmarks, History and Tabs: Options</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="./css/style.css" />
-    <link rel="stylesheet" href="./css/options.css" />
-    <link rel="icon" type="image/png" href="../images/logo-32.png" />
-  </head>
 
-  <body>
-    <div id="container">
-      <!-- Edit User Config -->
-      <div id="options">
-        <div class="inputs">
-          <div class="input-description">
-            USER OPTIONS
-            <span class="badge error-message" id="error-message" style="display: none"></span>
-          </div>
-          <textarea
-            id="user-config"
-            title="User Config"
-            class="input"
-            type="text"
-            spellcheck="false"
-            autofocus
-          ></textarea>
-        </div>
-        <div class="help">
-          The options are written in
-          <a href="https://en.wikipedia.org/wiki/YAML" target="_newtab">YAML</a> notation.<br />
-          Please have a look at the
-          <a
-            class="button help-button"
-            href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration"
-            target="_newtab"
-            >user configuration help</a
-          >
-          what options are available and what they do.
-        </div>
+<head>
+  <title>Search Bookmarks, History and Tabs: Options</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="./css/options.css" />
+  <link rel="icon" type="image/png" href="../images/logo-32.png" />
+</head>
 
-        <div class="controls">
-          <a id="edit-options-cancel" class="button" href="./index.html#search/">CANCEL</a>
-          <a
-            id="edit-options-help"
-            class="button"
-            href="https://github.com/Fannon/search-tabs-bookmarks-and-history#user-configuration"
-            target="_newtab"
-            >HELP</a
-          >
-          <a id="edit-options-reset" class="button" href="#reset">RESET</a>
-          <a id="edit-options-save" class="button" href="#save">SAVE</a>
+<body id="opts">
+  <div id="container">
+    <div id="options">
+      <div class="inputs">
+        <div class="heading">
+          <span class="badge error-message" id="error-message" style="display: none"></span>
         </div>
+        <textarea id="config" title="User Config" class="input" type="text" spellcheck="false" autofocus></textarea>
+      </div>
+      <div class="help">
+        The options are written in
+        <a href="https://en.wikipedia.org/wiki/YAML" target="_blank">YAML</a> notation.<br />
+        Please have a look at the
+        <a href="https://github.com/Fannon/search-bookmarks-history-and-tabs#user-configuration" target="_blank">user
+          configuration help</a> or inspect the
+        <a href="https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json" target="_blank">JSON Schema</a>.
       </div>
 
-      <!-- Footer Navigation -->
-      <footer id="links">
-        <a href="./index.html#search/">Search</a> | <a href="./index.html#tags/">Tags</a> |
-        <a href="./index.html#folders/">Folders</a> | <a href="#folders/">Options</a> |
-        <a href="https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/Tips.md" target="_newtab"
-          >Tips</a
-        >
-        |
-        <a href="https://github.com/Fannon/search-tabs-bookmarks-and-history#readme" target="_newtab"
-          >Documentation & Help</a
-        >
-      </footer>
-      <ul id="error-list"></ul>
+      <div class="controls">
+        <a id="opt-help" class="button"
+          href="https://github.com/Fannon/search-bookmarks-history-and-tabs#user-configuration" target="_blank">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-info-circle">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+            <path d="M12 9h.01" />
+            <path d="M11 12h1v4h1" />
+          </svg>
+          HELP
+        </a>
+        <a id="opt-cancel" class="button" href="./index.html#search/">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-x">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M18 6l-12 12" />
+            <path d="M6 6l12 12" />
+          </svg>
+          CANCEL
+        </a>
+        <a id="opt-reset" class="button" href="#reset">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-rotate">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M19.95 11a8 8 0 1 0 -.5 4m.5 5v-5h-5" />
+          </svg>
+          RESET
+        </a>
+        <a id="opt-save" class="button" href="#save">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-check">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M5 12l5 5l10 -10" />
+          </svg>
+          SAVE
+        </a>
+      </div>
     </div>
-    <script src="./lib/schemasafe.min.js"></script>
-    <script src="./lib/js-yaml.min.js"></script>
-    <script defer type="module" src="./js/initOptions.js"></script>
-  </body>
+
+    <footer id="links">
+      <a href="./index.html#search/" class="nav">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          class="icon-tabler-search">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+          <path d="M21 21l-6 -6" />
+        </svg>
+        <span>Search</span>
+      </a>
+      <a href="./tags.html" class="nav">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-tag">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path d="M7.5 7.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+          <path
+            d="M3 6v5.172a2 2 0 0 0 .586 1.414l7.71 7.71a2.41 2.41 0 0 0 3.408 0l3.592 -3.592a2.41 2.41 0 0 0 0 -3.408l-7.71 -7.71a2 2 0 0 0 -1.414 -.586h-5.172a3 3 0 0 0 -3 3z" />
+        </svg>
+        <span>Tags</span>
+      </a>
+      <a href="./folders.html" class="nav">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          class="icon-tabler-folder">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />
+        </svg>
+        <span>Folders</span>
+      </a>
+      <a href="./groups.html" class="nav">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          class="icon-tabler-layout-grid" aria-hidden="true">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+          <path d="M14 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+          <path d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+          <path d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+        </svg>
+        <span>Tab Groups</span>
+      </a>
+      <a href="#options" class="nav active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          class="icon-tabler-settings">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path
+            d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37a1.724 1.724 0 0 0 2.572 -1.065z" />
+          <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+        </svg>
+        <span>Options</span>
+      </a>
+      <a href="https://github.com/Fannon/search-bookmarks-history-and-tabs#readme" target="_blank" class="nav">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          class="icon-tabler-help">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+          <path d="M12 17l0 .01" />
+          <path d="M12 13.5a1.5 1.5 0 0 1 1 -1.5a2.6 2.6 0 1 0 -3 -4" />
+        </svg>
+        <span>Help</span>
+      </a>
+    </footer>
+    <ul id="errors"></ul>
+  </div>
+  <script defer src="./lib/js-yaml.min.js"></script>
+  <script defer type="module" src="./js/initOptions.js"></script>
+</body>
+
 </html>

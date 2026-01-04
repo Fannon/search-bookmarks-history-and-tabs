@@ -8,7 +8,7 @@ import { jest } from '@jest/globals'
 
 function setupDom() {
   document.body.innerHTML = `
-    <section id="folders-overview" style="display:none"></section>
+    <section id="folders-overview"></section>
     <div id="folders-list"></div>
   `
 }
@@ -48,13 +48,13 @@ describe('foldersView', () => {
     module.loadFoldersOverview()
 
     expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('folders-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('folders-overview').getAttribute('style')).toBe(null)
     const badges = Array.from(document.querySelectorAll('#folders-list a.badge.folder'))
     expect(badges.map((el) => el.getAttribute('x-folder'))).toEqual(['Archive', 'Personal', 'Work'])
     expect(badges.map((el) => el.getAttribute('href'))).toEqual([
-      '#search/~Archive',
-      '#search/~Personal',
-      '#search/~Work',
+      './index.html#search/~Archive%20%20',
+      './index.html#search/~Personal%20%20',
+      './index.html#search/~Work%20%20',
     ])
     expect(badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())).toEqual([
       '~Archive (1)',
@@ -69,7 +69,7 @@ describe('foldersView', () => {
 
     module.loadFoldersOverview()
 
-    expect(document.getElementById('folders-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('folders-overview').getAttribute('style')).toBe(null)
     expect(document.querySelectorAll('#folders-list a.badge.folder')).toHaveLength(0)
   })
 
@@ -80,8 +80,8 @@ describe('foldersView', () => {
     // Test with malformed folder data
     const folders = {
       '': [], // Empty folder name
-      'null': [{ id: 1 }], // null key
-      'undefined': [{ id: 2 }], // undefined key
+      null: [{ id: 1 }], // null key
+      undefined: [{ id: 2 }], // undefined key
       'Valid Folder': [{ id: 3 }],
     }
 
@@ -90,7 +90,7 @@ describe('foldersView', () => {
     module.loadFoldersOverview()
 
     expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('folders-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('folders-overview').getAttribute('style')).toBe(null)
 
     // The actual implementation renders all folders including malformed ones
     const badges = Array.from(document.querySelectorAll('#folders-list a.badge.folder'))
@@ -99,7 +99,7 @@ describe('foldersView', () => {
     // Check that valid folders are still rendered correctly
     const validBadge = badges.find((badge) => badge.getAttribute('x-folder') === 'Valid Folder')
     expect(validBadge).toBeDefined()
-    expect(validBadge.getAttribute('href')).toBe('#search/~Valid Folder')
+    expect(validBadge.getAttribute('href')).toBe('./index.html#search/~Valid%20Folder%20%20')
 
     consoleWarnSpy.mockRestore()
   })
@@ -122,7 +122,7 @@ describe('foldersView', () => {
     const endTime = Date.now()
 
     expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('folders-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('folders-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#folders-list a.badge.folder'))
     expect(badges).toHaveLength(100)
@@ -145,20 +145,41 @@ describe('foldersView', () => {
     module.loadFoldersOverview()
 
     expect(mocks.getUniqueFolders).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('folders-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('folders-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#folders-list a.badge.folder'))
     expect(badges).toHaveLength(4)
 
     const hrefs = badges.map((el) => el.getAttribute('href'))
     expect(hrefs).toEqual([
-      '#search/~Folder with "quotes"',
-      '#search/~Personal/Archive',
-      '#search/~Test (2024)',
-      '#search/~Work & Projects',
+      './index.html#search/~Folder%20with%20%22quotes%22%20%20',
+      './index.html#search/~Personal%2FArchive%20%20',
+      './index.html#search/~Test%20(2024)%20%20',
+      './index.html#search/~Work%20%26%20Projects%20%20',
     ])
 
     const labelTexts = badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())
-    expect(labelTexts).toEqual(['~Folder with "quotes" (1)', '~Personal/Archive (1)', '~Test (2024) (1)', '~Work & Projects (1)'])
+    expect(labelTexts).toEqual([
+      '~Folder with "quotes" (1)',
+      '~Personal/Archive (1)',
+      '~Test (2024) (1)',
+      '~Work & Projects (1)',
+    ])
+  })
+
+  it('escapes HTML content in folder names', async () => {
+    setupDom()
+    const folders = {
+      'Danger<script>alert(1)</script>': [{ id: 1 }],
+    }
+
+    const { module } = await loadFoldersView({ folders })
+
+    module.loadFoldersOverview()
+
+    const badge = document.querySelector('#folders-list a.badge.folder')
+    expect(badge).not.toBeNull()
+    expect(badge.textContent).toBe('~Danger<script>alert(1)</script> (1)')
+    expect(badge.innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
   })
 })

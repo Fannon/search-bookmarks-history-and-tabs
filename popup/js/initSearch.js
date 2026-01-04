@@ -1,133 +1,81 @@
-import { loadScript, printError } from './helper/utils.js'
+/**
+ * @file Coordinates the popup search entry point (`popup/index.html`).
+ *
+ * Responsibilities:
+ * - Initialize the shared extension context and expose it on `window.ext` for debugging.
+ * - Load options plus bookmarks, tabs, and history data before wiring up search handlers.
+ * - Bind navigation listeners, search input handling, and strategy toggles for simple/fuzzy/taxonomy flows.
+ * - Maintain hash-based routing (`#search/<term>`) and restore cached results to keep navigation snappy.
+ */
+
+import { createExtensionContext } from './helper/extensionContext.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
-import { search } from './search/common.js'
-import { addDefaultEntries } from './search/common.js'
-import { editBookmark, updateBookmark } from './view/editBookmarkView.js'
-import { loadFoldersOverview } from './view/foldersView.js'
-import { browserApi } from './helper/browserApi.js'
-import {
-  navigationKeyListener,
-  renderSearchResults,
-  toggleSearchApproach,
-  updateSearchApproachToggle,
-} from './view/searchView.js'
-import { loadTagsOverview } from './view/tagsView.js'
 
-//////////////////////////////////////////
-// EXTENSION NAMESPACE                  //
-//////////////////////////////////////////
+import { addDefaultEntries, search } from './search/common.js'
+
+import { closeErrors, printError } from './view/errorView.js'
+import { toggleSearchApproach, updateSearchApproachToggle } from './view/searchEvents.js'
+import { navigationKeyListener } from './view/searchNavigation.js'
+import { renderSearchResults } from './view/searchView.js'
+
+export { closeErrors } from './view/errorView.js'
 
 /** Browser extension namespace */
-export const ext = {
-  /** Options */
-  opts: {},
-  /** Model / data */
-  model: {
-    /** Currently selected result item */
-    currentItem: 0,
-    /** Current search results */
-    result: [],
-  },
-  /** Search indexes */
-  index: {
-    taxonomy: {},
-  },
-  /** Commonly used DOM Elements */
-  dom: {},
-  /** The browser / extension API */
-  browserApi: browserApi,
-
-  /** Whether extension is already initialized -> ready for search */
-  initialized: false,
-}
+export const ext = createExtensionContext()
 
 window.ext = ext
 
-//////////////////////////////////////////
-// INITIALIZE EXTENSION                 //
-//////////////////////////////////////////
-
-// Trigger initialization
-ext.initialized = false
 initExtension().catch((err) => {
   printError(err, 'Could not initialize Extension')
 })
 
 /**
- * Initialize the extension
- * This includes indexing the current bookmarks and history
+ * Initialize the popup search experience and preload datasets.
+ *
+ * @returns {Promise<void>}
  */
 export async function initExtension() {
+  const startTime = Date.now()
   // Load effective options, including user customizations
   ext.opts = await getEffectiveOptions()
 
-  if (ext.opts.debug) {
-    performance.mark('init-start')
-    console.debug('Initialized with options:', ext.opts)
-  }
-
   // HTML Element selectors
-  ext.dom.searchInput = document.getElementById('search-input')
-  ext.dom.resultList = document.getElementById('result-list')
-  ext.dom.resultCounter = document.getElementById('result-counter')
-  ext.dom.searchApproachToggle = document.getElementById('search-approach-toggle')
+
+  ext.dom.searchInput = document.getElementById('q')
+  ext.dom.resultList = document.getElementById('results')
+  ext.dom.resultCounter = document.getElementById('counter')
+  ext.dom.searchApproachToggle = document.getElementById('toggle')
 
   updateSearchApproachToggle()
 
-  const { bookmarks, tabs, history } = await getSearchData()
-  ext.model.tabs = tabs
-  ext.model.bookmarks = bookmarks
-  ext.model.history = history
-
-  ext.initialized = true
+  // Load bookmarks, tabs, and history data for searching
+  Object.assign(ext.model, await getSearchData())
 
   // Register Events
   document.addEventListener('keydown', navigationKeyListener)
   window.addEventListener('hashchange', hashRouter, false)
   ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
-  // Add debounced search to prevent excessive calls on rapid typing
-  let searchTimeout = null
-  const debouncedSearch = (event) => {
-    clearTimeout(searchTimeout)
-    searchTimeout = setTimeout(() => search(event), ext.opts.searchDebounceMs || 100)
-  }
-  ext.dom.searchInput.addEventListener('input', debouncedSearch)
 
-  // Add search result cache for better performance (simple, no expiration needed)
+  // Run a search on every input event instead of debouncing. The popup dataset is small
+  // enough that the simpler approach keeps navigation in sync with what the user sees,
+  // avoiding stale selections when Enter is pressed quickly after typing.
+  ext.dom.searchInput.addEventListener('input', search)
+
+  // Cache search results by (term, strategy, mode) to avoid re-running algorithms
+  // when user navigates or repeats searches. Cache is simple with no expiration
+  // since extension data is immutable during a popup session.
   ext.searchCache = new Map()
 
-  // Display default entries
-  await addDefaultEntries()
-  renderSearchResults(ext.model.result)
-  if (!window.location.hash || window.location.hash === '/') {
-    // Placeholder. We could add help-text here.
-  } else {
-    hashRouter()
+  ext.initialized = true
+
+  hashRouter()
+
+  if (document.getElementById('results-load')) {
+    document.getElementById('results-load').remove()
   }
 
-  if (document.getElementById('results-loading')) {
-    document.getElementById('results-loading').remove()
-  }
-
-  if (ext.opts.debug) {
-    // Do some performance measurements and log it to debug
-    performance.mark('init-end')
-    performance.measure('init-end-to-end', 'init-start', 'init-end')
-    const initPerformance = performance.getEntriesByType('measure')
-    const totalInitPerformance = performance.getEntriesByName('init-end-to-end')
-    console.debug('Init Performance: ' + totalInitPerformance[0].duration + 'ms', initPerformance)
-    performance.clearMeasures()
-  }
-
-  // Only trigger final search if user has entered a search term
-  // This prevents overriding the default entries with a duplicate call
-  if (ext.dom.searchInput.value && ext.dom.searchInput.value.trim()) {
-    search()
-  }
-
-  // Lazy load mark.js for highlighting search results after init phase
-  await loadScript('./lib/mark.es6.min.js')
+  console.debug(`Init in ${Date.now() - startTime}ms`)
 }
 
 //////////////////////////////////////////
@@ -135,47 +83,30 @@ export async function initExtension() {
 //////////////////////////////////////////
 
 /**
- * URL Hash Router
+ * Handle `window.location.hash` changes and dispatch to the correct view.
+ *
+ * @returns {Promise<void>}
  */
 export async function hashRouter() {
-  try {
-    const hash = window.location.hash
-    closeModals()
-    if (!hash || hash === '#') {
-      // Index route -> redirect to last known search or empty search
-      window.location.hash = '#search/'
-    } else if (hash.startsWith('#search/')) {
-      // Search specific term
-      const searchTerm = hash.replace('#search/', '')
-      if (searchTerm) {
-        ext.dom.searchInput.value = decodeURIComponent(searchTerm)
-      }
+  let hash = window.location.hash
+  if (!hash || hash === '#' || hash === '#/') {
+    hash = `#search/${ext.dom.searchInput.value}`
+  }
+  closeErrors()
+  if (hash.startsWith('#search/')) {
+    // Search specific term
+    const searchTerm = decodeURIComponent(hash.replace('#search/', ''))
+    if (searchTerm) {
+      ext.dom.searchInput.value = searchTerm
       ext.dom.searchInput.focus()
       search()
-    } else if (hash.startsWith('#tags/')) {
-      loadTagsOverview()
-    } else if (hash.startsWith('#folders/')) {
-      loadFoldersOverview()
-    } else if (hash.startsWith('#edit-bookmark/')) {
-      // Edit bookmark route
-      const bookmarkId = hash.replace('#edit-bookmark/', '')
-      void editBookmark(bookmarkId)
-    } else if (hash.startsWith('#update-bookmark/')) {
-      // Update bookmark route
-      const bookmarkId = hash.replace('#update-bookmark/', '')
-      updateBookmark(bookmarkId)
+    } else {
+      // Empty search term, show default entries
+      ext.dom.searchInput.value = ''
+      ext.dom.searchInput.focus()
+      // Display default entries
+      ext.model.result = await addDefaultEntries()
+      renderSearchResults()
     }
-  } catch (err) {
-    printError(err)
   }
-}
-
-/**
- * Close all modal overlays
- */
-export function closeModals() {
-  document.getElementById('edit-bookmark').style = 'display: none;'
-  document.getElementById('tags-overview').style = 'display: none;'
-  document.getElementById('folders-overview').style = 'display: none;'
-  document.getElementById('error-list').style = 'display: none;'
 }

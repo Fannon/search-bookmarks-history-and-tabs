@@ -1,44 +1,53 @@
 {
   "name": "search-bookmarks-history-and-tabs",
-  "version": "1.14.0",
+  "version": "2.0.1",
   "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.",
   "main": "index.js",
   "type": "module",
   "dependencies": {
     "@exodus/schemasafe": "^1.3.0",
     "@leeoniya/ufuzzy": "^1.0.19",
-    "@yaireo/tagify": "^4.35.4",
-    "js-yaml": "^4.1.0",
-    "mark.js": "^8.11.1"
+    "@yaireo/tagify": "^4.35.6",
+    "js-yaml": "^4.1.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.11",
     "@jest/globals": "^30.2.0",
-    "@playwright/test": "^1.56.0",
+    "@playwright/test": "^1.57.0",
     "archiver": "^7.0.1",
-    "chokidar": "^4.0.3",
-    "esbuild": "^0.25.10",
-    "eslint": "^9.37.0",
-    "fs-extra": "^11.3.2",
-    "globals": "^16.4.0",
+    "chokidar": "^5.0.0",
+    "esbuild": "^0.27.2",
+    "fs-extra": "^11.3.3",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
+    "lefthook": "^2.0.13",
     "serve": "^14.2.5"
   },
   "scripts": {
+    "prepare": "lefthook install",
     "clean": "node bin/clean.js",
-    "build": "npm run clean && npm run build:update-libs && npm run build:bundle && npm run build:update-manifests && npm run build:create-dist && npm run size",
+    "build": "npm run clean && npm run build:update-libs && npm run build:bundle && npm run build:update-manifests && npm run build:create-dist && npm run format && npm run size",
     "build:bundle": "node bin/bundle.js",
     "build:update-libs": "node bin/updateLibs.js",
     "build:create-dist": "node bin/createDist.js",
     "build:update-manifests": "node bin/updateManifests.js",
+    "benchmark": "hyperfine --warmup 2 --runs 5 --export-json hyperfine.json 'npm run clean' 'npm run lint' 'npm run format' 'npm run build' 'npm run test' 'npm run test:e2e'",
     "test": "npm run test:unit",
-    "test:e2e": "playwright test",
+    "test:watch": "npm run test:unit:watch",
+    "test:e2e": "playwright test --project=chromium",
+    "test:e2e:html": "playwright test --project=chromium --reporter=html",
     "test:e2e:chromium": "playwright test --project=chromium",
     "test:e2e:firefox": "playwright test --project=firefox",
     "test:e2e:edge": "playwright test --project=edge",
-    "test:unit": "node --experimental-vm-modules --experimental-json-modules ./node_modules/jest/bin/jest.js",
-    "test:unit:coverage": "node --experimental-vm-modules --experimental-json-modules ./node_modules/jest/bin/jest.js --coverage",
-    "lint": "eslint ./popup/js/",
+    "test:unit": "node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js",
+    "test:unit:watch": "node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js --watch",
+    "test:unit:coverage": "node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js --coverage",
+    "test:perf": "npm run test:unit -- popup/js/__tests__/performance.test.js popup/js/__tests__/comparison.test.js > reports/jest_output.txt 2>&1 && npx playwright test playwright/tests/performance.spec.js --project=chromium > reports/playwright_output.txt 2>&1; node bin/perf-summary.js",
+    "test:ci": "npm run lint && npm run test:unit && npm run test:e2e",
+    "lint": "biome check --error-on-warnings .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format . --write",
+    "format:check": "biome format .",
     "start": "serve -p 8080 ./popup/",
     "start:dist": "serve -p 8080 ./dist/chrome/popup/",
     "size": "node bin/size.js",
@@ -47,14 +56,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Fannon/search-tabs-bookmarks-and-history.git"
+    "url": "git+https://github.com/Fannon/search-bookmarks-history-and-tabs.git"
   },
   "keywords": [
     "chrome",
     "extension",
     "search",
     "fuzzy",
-    "search",
     "history",
     "bookmarks",
     "tabs"
@@ -62,7 +70,7 @@
   "author": "Simon Heimler",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Fannon/search-tabs-bookmarks-and-history/issues"
+    "url": "https://github.com/Fannon/search-bookmarks-history-and-tabs/issues"
   },
-  "homepage": "https://github.com/Fannon/search-tabs-bookmarks-and-history#readme"
+  "homepage": "https://github.com/Fannon/search-bookmarks-history-and-tabs#readme"
 }

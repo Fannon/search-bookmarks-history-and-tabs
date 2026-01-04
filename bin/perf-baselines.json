@@ -1,0 +1,25 @@
+{
+  "$comment": "Performance baselines in milliseconds based on GitHub CI runs. CI will fail if results exceed threshold (baseline * toleranceMultiplier).",
+  "toleranceMultiplier": 2.0,
+  "baselines": {
+    "jest": {
+      "Precise Search (\"resource-123\")": 10,
+      "Fuzzy Search (\"resrc 123\")": 5,
+      "Cold Start (2100 items) Precise": 60,
+      "Cold Start (2100 items) Fuzzy": 45,
+      "Tiny (210 items) Precise": 10,
+      "Tiny (210 items) Fuzzy": 10,
+      "Small (2100 items) Precise": 10,
+      "Small (2100 items) Fuzzy": 10,
+      "Medium (6300 items) Precise": 15,
+      "Medium (6300 items) Fuzzy": 15,
+      "Huge (52500 items) Precise": 35,
+      "Huge (52500 items) Fuzzy": 30
+    },
+    "playwright": {
+      "Search & Render for 5000 items": 10,
+      "Worst-case Rendering (1000 items with all badges)": 10,
+      "Fuzzy Search & Render for 2000 items": 10
+    }
+  }
+}

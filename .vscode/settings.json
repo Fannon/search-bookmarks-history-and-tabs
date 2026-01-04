@@ -1,5 +1,6 @@
 {
   "cSpell.words": [
+    "berdon",
     "BULMA",
     "contenteditable",
     "downarrow",
@@ -15,6 +16,7 @@
     "minireset",
     "newtab",
     "readonly",
+    "robertjmason",
     "tagify",
     "uFuzzy",
     "uparrow",
@@ -24,15 +26,21 @@
   ],
   "editor.formatOnSave": true,
   "editor.formatOnSaveMode": "file",
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "biomejs.biome",
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome"
   },
   "[html]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.html-language-features"
   },
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+    "source.organizeImports.biome": "explicit"
   },
-  "jest.nodeEnv": { "NODE_OPTIONS": "--experimental-vm-modules" }
+  "jest.nodeEnv": {
+    "NODE_OPTIONS": "--experimental-vm-modules",
+    "NODE_NO_WARNINGS": "1"
+  }
 }

@@ -1,11 +1,16 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
-import fs from 'fs'
+/**
+ * @file Synchronizes manifest version with package.json.
+ *
+ * Keeps the browser extension manifest in lockstep with the npm package version
+ * so publishing workflows only require updating package.json.
+ */
+import fs from 'node:fs'
 
 const packageJson = JSON.parse(fs.readFileSync('package.json').toString())
 const manifestJson = JSON.parse(fs.readFileSync('manifest.json').toString())
 
-console.log('Updating Manifests with version v' + packageJson.version)
+console.log(`Updating Manifests with version v${packageJson.version}`)
 
 manifestJson.version = packageJson.version
 

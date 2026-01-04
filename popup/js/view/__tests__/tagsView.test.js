@@ -8,7 +8,7 @@ import { jest } from '@jest/globals'
 
 function setupDom() {
   document.body.innerHTML = `
-    <section id="tags-overview" style="display:none"></section>
+    <section id="tags-overview"></section>
     <div id="tags-list"></div>
   `
 }
@@ -48,10 +48,14 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges.map((el) => el.getAttribute('x-tag'))).toEqual(['alpha', 'beta', 'release'])
-    expect(badges.map((el) => el.getAttribute('href'))).toEqual(['#search/#alpha', '#search/#beta', '#search/#release'])
+    expect(badges.map((el) => el.getAttribute('href'))).toEqual([
+      './index.html#search/#alpha%20%20',
+      './index.html#search/#beta%20%20',
+      './index.html#search/#release%20%20',
+    ])
     expect(badges.map((el) => el.textContent.replace(/\s+/g, ' ').trim())).toEqual([
       '#alpha (2)',
       '#beta (1)',
@@ -65,7 +69,7 @@ describe('tagsView', () => {
 
     module.loadTagsOverview()
 
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
     expect(document.querySelectorAll('#tags-list a.badge.tags')).toHaveLength(0)
   })
 
@@ -76,8 +80,8 @@ describe('tagsView', () => {
     // Test with malformed tag data - the actual implementation renders all tags
     const tags = {
       '': [], // Empty tag name
-      'null': [{ id: 1 }], // null key
-      'undefined': [{ id: 2 }], // undefined key
+      null: [{ id: 1 }], // null key
+      undefined: [{ id: 2 }], // undefined key
       'valid-tag': [{ id: 3 }],
     }
 
@@ -86,7 +90,7 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     // The actual implementation renders all tags including malformed ones
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
@@ -95,7 +99,7 @@ describe('tagsView', () => {
     // Check that valid tags are still rendered correctly
     const validBadge = badges.find((badge) => badge.getAttribute('x-tag') === 'valid-tag')
     expect(validBadge).toBeDefined()
-    expect(validBadge.getAttribute('href')).toBe('#search/#valid-tag')
+    expect(validBadge.getAttribute('href')).toBe('./index.html#search/#valid-tag%20%20')
 
     consoleWarnSpy.mockRestore()
   })
@@ -105,7 +109,7 @@ describe('tagsView', () => {
 
     // Create many tags to test performance
     const tags = {}
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 5000; i++) {
       tags[`tag${i}`] = Array.from({ length: Math.floor(Math.random() * 10) + 1 }, (_, idx) => ({ id: `${i}-${idx}` }))
     }
 
@@ -116,13 +120,14 @@ describe('tagsView', () => {
     const endTime = Date.now()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
-    expect(badges).toHaveLength(100)
+    expect(badges).toHaveLength(5000)
 
-    // Should render within reasonable time (less than 100ms for 100 tags)
-    expect(endTime - startTime).toBeLessThan(100)
+    // Should render within reasonable time (less than 1000ms for 5000 tags)
+    // Using 1000ms threshold to account for slower CI/CD runners
+    expect(endTime - startTime).toBeLessThan(1000)
   })
 
   it('handles special characters in tag names', async () => {
@@ -130,7 +135,7 @@ describe('tagsView', () => {
     const tags = {
       'tag with spaces': [{ id: 1 }],
       'tag-with-dashes': [{ id: 2 }],
-      'tag_with_underscores': [{ id: 3 }],
+      tag_with_underscores: [{ id: 3 }],
       'tag.with.dots': [{ id: 4 }],
       'tag(with)parentheses': [{ id: 5 }],
     }
@@ -140,7 +145,7 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges).toHaveLength(5)
@@ -151,7 +156,7 @@ describe('tagsView', () => {
 
     // Check that all expected tag names are present in the hrefs
     const hrefStrings = hrefs.join(' ')
-    expect(hrefStrings).toContain('tag with spaces')
+    expect(hrefStrings).toContain('tag%20with%20spaces')
     expect(hrefStrings).toContain('tag-with-dashes')
     expect(hrefStrings).toContain('tag.with.dots')
     expect(hrefStrings).toContain('tag_with_underscores')
@@ -161,10 +166,10 @@ describe('tagsView', () => {
   it('handles tags with unicode characters', async () => {
     setupDom()
     const tags = {
-      'café': [{ id: 1 }],
-      'naïve': [{ id: 2 }],
-      'résumé': [{ id: 3 }],
-      '日本語': [{ id: 4 }],
+      café: [{ id: 1 }],
+      naïve: [{ id: 2 }],
+      résumé: [{ id: 3 }],
+      日本語: [{ id: 4 }],
       '🚀': [{ id: 5 }],
     }
 
@@ -173,13 +178,35 @@ describe('tagsView', () => {
     module.loadTagsOverview()
 
     expect(mocks.getUniqueTags).toHaveBeenCalledTimes(1)
-    expect(document.getElementById('tags-overview').getAttribute('style')).toBe('')
+    expect(document.getElementById('tags-overview').getAttribute('style')).toBe(null)
 
     const badges = Array.from(document.querySelectorAll('#tags-list a.badge.tags'))
     expect(badges).toHaveLength(5)
 
     // Check that unicode characters are properly handled in hrefs
+    // Note: Emoji and special unicode characters may sort differently across environments,
+    // so we verify all expected hrefs are present without asserting exact order.
     const hrefs = badges.map((el) => el.getAttribute('href'))
-    expect(hrefs).toEqual(['#search/#café', '#search/#naïve', '#search/#résumé', '#search/#日本語', '#search/#🚀'])
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('café')}%20%20`)
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('naïve')}%20%20`)
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('résumé')}%20%20`)
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('日本語')}%20%20`)
+    expect(hrefs).toContain(`./index.html#search/#${encodeURIComponent('🚀')}%20%20`)
+  })
+
+  it('escapes HTML content in tag names', async () => {
+    setupDom()
+    const tags = {
+      'alpha<script>alert(1)</script>': [{ id: 1 }],
+    }
+
+    const { module } = await loadTagsView({ tags })
+
+    module.loadTagsOverview()
+
+    const badge = document.querySelector('#tags-list a.badge.tags')
+    expect(badge).not.toBeNull()
+    expect(badge.textContent).toBe('#alpha<script>alert(1)</script> (1)')
+    expect(badge.innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
   })
 })

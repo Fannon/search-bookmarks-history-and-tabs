@@ -1,27 +1,51 @@
-//////////////////////////////////////////
-// FUZZY SEARCH SUPPORT                 //
-//////////////////////////////////////////
+/**
+ * @file Implements the popup's fuzzy/approximate-match search via uFuzzy.
+ *
+ * Strategy:
+ * - Lazy-load uFuzzy on first use to keep initial bundle size low.
+ * - Build memoized haystacks per mode (bookmarks, tabs, history) for quick repeated searches.
+ * - Handle typo tolerance, loose word boundaries, and non-ASCII fallbacks better than the simple strategy.
+ *
+ * Scoring and Highlighting:
+ * - uFuzzy's internal scoring (info call) and highlighting are disabled to save CPU.
+ * - All fuzzy matches return a base searchScore of 1.
+ * - Final scoring and highlighting are handled by common.js and scoring.js.
+ */
 
-import { loadScript, printError } from '../helper/utils.js'
+import { loadScript } from '../helper/utils.js'
+import { printError } from '../view/errorView.js'
+import { resolveSearchTargets } from './common.js'
 
 const nonASCIIRegex = /[\u0080-\uFFFF]/
 
-/** Memoize some state, to avoid re-creating haystack and fuzzy search instances */
+/** Memoize some state, to avoid re-creating haystack and fuzzy search instances. */
 let state = {}
 
 /**
  * Resets state for fuzzy search. Necessary when search data changes or search string is reset.
  * If searchMode is given, will only reset that particular state.
+ * If no searchMode is given, resets all state.
+ *
+ * @param {string} [searchMode] - Optional mode to reset; resets all when omitted.
  */
 export function resetFuzzySearchState(searchMode) {
   if (searchMode) {
     state[searchMode] = undefined
+  } else {
+    state = {}
   }
 }
 
-export async function fuzzySearch(searchMode, searchTerm) {
+/**
+ * Execute fuzzy search across the datasets mapped to the active mode.
+ *
+ * @param {string} searchMode - Active search mode.
+ * @param {string} searchTerm - Query string.
+ * @returns {Promise<Array<Object>>} Matching entries with fuzzy scores.
+ */
+export async function fuzzySearch(searchMode, searchTerm, data, options) {
   // Lazy load the uFuzzy library if not there already
-  if (!window['uFuzzy']) {
+  if (!window.uFuzzy) {
     try {
       await loadScript('./lib/uFuzzy.iife.min.js')
     } catch (err) {
@@ -29,122 +53,125 @@ export async function fuzzySearch(searchMode, searchTerm) {
     }
   }
 
-  if (searchMode === 'history') {
-    return [...fuzzySearchWithScoring(searchTerm, 'tabs'), ...fuzzySearchWithScoring(searchTerm, 'history')]
-  } else if (searchMode === 'bookmarks' || searchMode === 'tabs') {
-    return fuzzySearchWithScoring(searchTerm, searchMode)
-  } else if (searchMode === 'search') {
+  const targets = resolveSearchTargets(searchMode)
+  if (!targets.length) {
     return []
-  } else {
-    return [
-      ...fuzzySearchWithScoring(searchTerm, 'bookmarks'),
-      ...fuzzySearchWithScoring(searchTerm, 'tabs'),
-      ...fuzzySearchWithScoring(searchTerm, 'history'),
-    ]
   }
+
+  const results = []
+  for (const target of targets) {
+    results.push(...fuzzySearchWithScoring(searchTerm, target, data[target], options))
+  }
+  return results
 }
 
 /**
  * Execute a fuzzy search with additional scoring and highlighting of results
+ *
+ * @param {string} searchTerm - Query string.
+ * @param {string} searchMode - Dataset key inside `ext.model`.
+ * @returns {Array<Object>} Fuzzy search matches with scores.
  */
-function fuzzySearchWithScoring(searchTerm, searchMode) {
-  const data = ext.model[searchMode]
-
-  if (!data.length) {
+function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
+  if (!data || !data.length) {
     return [] // early return
   }
 
-  if (containsNonASCII(searchTerm)) {
-    state[searchMode] = undefined
+  if (!state[searchMode]) {
+    state[searchMode] = {
+      haystack: new Array(data.length),
+    }
+    for (let i = 0; i < data.length; i++) {
+      state[searchMode].haystack[i] = data[i].searchStringLower
+    }
   }
 
-  if (!state[searchMode]) {
+  const s = state[searchMode]
+
+  // (Re-)create uFuzzy instance if needed
+  const isNonASCII = containsNonASCII(searchTerm)
+  if (!s.uf || s.isNonASCII !== isNonASCII) {
+    const searchFuzzyness = opts.searchFuzzyness
     const options = {
-      // How many characters "in between" are allowed -> increased fuzzyness
-      intraIns: Math.round(ext.opts.searchFuzzyness * 4.2),
-      ...(ext.opts.uFuzzyOptions || {}),
+      intraIns: Math.round(searchFuzzyness * 4.2),
+      ...(opts.uFuzzyOptions || {}),
     }
 
-    if (containsNonASCII(searchTerm)) {
+    if (isNonASCII) {
       options.interSplit = '(p{Unified_Ideograph=yes})+'
     }
 
-    // When searchFuzzyness is set to 0.8 or higher:
-    // allows for a single error in each term of the search phrase
-    // @see https://github.com/leeoniya/uFuzzy#how-it-works
-    if (ext.opts.searchFuzzyness >= 0.8) {
+    if (searchFuzzyness >= 0.8) {
       options.intraMode = 1
-      options.intraSub = 1 // substitution (replacement)
-      options.intraTrn = 1 // transposition (swap), insertion (addition)
-      options.intraDel = 1 // deletion (omission)
+      options.intraSub = 1
+      options.intraTrn = 1
+      options.intraDel = 1
     }
 
-    state[searchMode] = {
-      haystack: data.map((el) => {
-        return el.searchString
-      }),
-      uf: new uFuzzy(options),
-    }
+    s.uf = new uFuzzy(options)
+    s.isNonASCII = isNonASCII
   }
 
-  /** Search results */
-  let results = []
-  const s = state[searchMode]
+  // Return cached results if search term is identical
+  if (s.searchTerm === searchTerm && s.idxs !== null) {
+    return createResultObjects(data, s.idxs)
+  }
 
-  // Invalidate s.idxs cache if the new search term is not just an extension of the last one
+  // Invalidate cache if search term changed direction
   if (s.searchTerm && !searchTerm.startsWith(s.searchTerm)) {
     s.idxs = undefined
   }
 
-  let searchTermArray = searchTerm.split(' ')
+  const searchTermArray = searchTerm.split(' ')
+  const sTerms = s.searchTerm ? s.searchTerm.split(' ') : []
 
-  for (const term of searchTermArray) {
+  for (let t = 0; t < searchTermArray.length; t++) {
+    const term = searchTermArray[t]
     if (!term) continue // Skip empty terms
 
-    const localResults = []
+    // Skip terms already satisfied by current idxs
+    if (s.idxs && sTerms[t] === term) {
+      continue
+    }
 
     try {
-      let idxs = s.uf.filter(s.haystack, term, s.idxs)
-      let info = s.uf.info(idxs, s.haystack, term)
-
-      for (let i = 0; i < info.idx.length; i++) {
-        const result = data[idxs[i]]
-
-        // Apply highlighting, but only on last iteration
-        const highlight = uFuzzy.highlight(result.searchString, info.ranges[i])
-        // Split highlighted string back into its original multiple properties
-        const highlightArray = highlight.split('¦')
-        if (highlightArray[0] && highlightArray[0].includes('<mark>')) {
-          result.titleHighlighted = highlightArray[0]
-        }
-        if (highlightArray[1] && highlightArray[1].includes('<mark>')) {
-          result.urlHighlighted = highlightArray[1]
-        }
-
-        localResults.push({
-          ...result,
-          // 0 intra chars are perfect score, 5 and more are 0 score.
-          searchScore: Math.max(0, 1 * (1 - info.intraIns[i] / 5)),
-          searchApproach: 'fuzzy',
-        })
-      }
-
+      const idxs = s.uf.filter(s.haystack, term, s.idxs)
       s.idxs = idxs // Save idxs cache to state
     } catch (err) {
       err.message = 'Fuzzy search could not handle search term. Please try precise search instead.'
       printError(err)
     }
 
-    results = localResults // keep and return the last iteration of local results
-    if (!results.length) {
+    if (!s.idxs?.length) {
       break // Early termination if no matches found
     }
   }
 
-  s.searchTerm = searchTerm // Remember last search term, to know when to invalidate idxx cache
-  return results
+  s.searchTerm = searchTerm
+  return createResultObjects(data, s.idxs)
 }
 
+/**
+ * Detect whether a string contains non-ASCII characters.
+ */
 function containsNonASCII(str) {
   return nonASCIIRegex.test(str)
+}
+
+/**
+ * Creates result objects for matched indices.
+ */
+function createResultObjects(data, idxs) {
+  if (!idxs || idxs.length === 0) {
+    return []
+  }
+  const count = idxs.length
+  const results = new Array(count)
+  for (let i = 0; i < count; i++) {
+    results[i] = {
+      ...data[idxs[i]],
+      searchApproach: 'fuzzy',
+    }
+  }
+  return results
 }

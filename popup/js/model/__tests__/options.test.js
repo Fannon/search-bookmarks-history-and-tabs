@@ -19,11 +19,11 @@
  */
 
 import { jest } from '@jest/globals'
-import { createTestExt, clearTestExt } from '../../__tests__/testUtils.js'
+import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
 // Mock the utils module
 const mockPrintError = jest.fn()
-jest.mock('../../helper/utils.js', () => ({
+jest.mock('../../view/errorView.js', () => ({
   __esModule: true,
   printError: mockPrintError,
 }))
@@ -46,7 +46,7 @@ describe('options model', () => {
   describe('validateUserOptions', () => {
     test('accepts valid objects', () => {
       const validObject = { searchStrategy: 'fuzzy' }
-      expect(optionsModule.validateUserOptions(validObject)).toBe(validObject)
+      expect(optionsModule.validateUserOptions(validObject)).toEqual(validObject)
       expect(optionsModule.validateUserOptions({})).toEqual({})
       expect(optionsModule.validateUserOptions(null)).toEqual({})
       expect(optionsModule.validateUserOptions(undefined)).toEqual({})
@@ -64,11 +64,20 @@ describe('options model', () => {
       circular.self = circular
       expect(() => optionsModule.validateUserOptions(circular)).toThrow(/User options cannot be parsed into JSON/)
     })
+
+    test('removes unknown options and logs warning', () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+      const optionsWithUnknown = { searchStrategy: 'fuzzy', unknownOption: 'value' }
+      const result = optionsModule.validateUserOptions(optionsWithUnknown)
+      expect(result).toEqual({ searchStrategy: 'fuzzy' })
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown user option: "unknownOption"'))
+      warnSpy.mockRestore()
+    })
   })
 
   describe('setUserOptions', () => {
     test('saves through sync storage when available', async () => {
-      const syncSet = jest.fn((payload, callback) => callback())
+      const syncSet = jest.fn((_payload, callback) => callback())
       createTestExt({
         browserApi: {
           storage: { sync: { set: syncSet } },
@@ -91,7 +100,7 @@ describe('options model', () => {
 
     test('handles storage API errors', async () => {
       const runtimeError = new Error('Storage quota exceeded')
-      const syncSet = jest.fn((payload, callback) => {
+      const syncSet = jest.fn((_payload, callback) => {
         // Simulate runtime error
         global.ext.browserApi.runtime.lastError = runtimeError
         callback()
@@ -121,7 +130,7 @@ describe('options model', () => {
 
   describe('getUserOptions', () => {
     test('reads from sync storage when available', async () => {
-      const syncGet = jest.fn((keys, callback) => callback({ userOptions: { searchStrategy: 'precise' } }))
+      const syncGet = jest.fn((_keys, callback) => callback({ userOptions: { searchStrategy: 'precise' } }))
       createTestExt({
         browserApi: {
           storage: { sync: { get: syncGet } },
@@ -129,7 +138,9 @@ describe('options model', () => {
         },
       })
 
-      await expect(optionsModule.getUserOptions()).resolves.toEqual({ searchStrategy: 'precise' })
+      await expect(optionsModule.getUserOptions()).resolves.toEqual({
+        searchStrategy: 'precise',
+      })
       expect(syncGet).toHaveBeenCalledWith(['userOptions'], expect.any(Function))
     })
 
@@ -139,7 +150,9 @@ describe('options model', () => {
       })
       localStorage.setItem('userOptions', JSON.stringify({ searchMaxResults: 5 }))
 
-      await expect(optionsModule.getUserOptions()).resolves.toEqual({ searchMaxResults: 5 })
+      await expect(optionsModule.getUserOptions()).resolves.toEqual({
+        searchMaxResults: 5,
+      })
     })
 
     test('returns emptyOptions when no user options exist', async () => {
@@ -161,7 +174,7 @@ describe('options model', () => {
 
     test('handles storage API errors', async () => {
       const runtimeError = new Error('Storage API unavailable')
-      const syncGet = jest.fn((keys, callback) => {
+      const syncGet = jest.fn((_keys, callback) => {
         global.ext.browserApi.runtime.lastError = runtimeError
         callback()
       })
@@ -218,7 +231,6 @@ describe('options model', () => {
       const requiredCategories = [
         'searchStrategy',
         'searchMaxResults',
-        'searchMinMatchCharLength',
         'bookmarkColor',
         'tabColor',
         'historyColor',
@@ -229,7 +241,6 @@ describe('options model', () => {
         'displayTags',
         'displayFolderName',
         'displaySearchMatchHighlight',
-        'scoreMinScore',
         'scoreBookmarkBaseScore',
         'scoreTabBaseScore',
       ]
@@ -246,16 +257,19 @@ describe('options model', () => {
       createTestExt({ browserApi: {} })
 
       // Set user options
-      await optionsModule.setUserOptions({ searchMaxResults: 20, debug: true })
+      await optionsModule.setUserOptions({
+        searchMaxResults: 20,
+        historyMaxItems: 2048,
+      })
 
       // Get user options
       const userOptions = await optionsModule.getUserOptions()
-      expect(userOptions).toEqual({ searchMaxResults: 20, debug: true })
+      expect(userOptions).toEqual({ searchMaxResults: 20, historyMaxItems: 2048 })
 
       // Get effective options (should merge with defaults)
       const effectiveOptions = await optionsModule.getEffectiveOptions()
       expect(effectiveOptions.searchMaxResults).toBe(20)
-      expect(effectiveOptions.debug).toBe(true)
+      expect(effectiveOptions.historyMaxItems).toBe(2048)
       expect(effectiveOptions.bookmarkColor).toBe(optionsModule.defaultOptions.bookmarkColor)
 
       expect(mockPrintError).not.toHaveBeenCalled()

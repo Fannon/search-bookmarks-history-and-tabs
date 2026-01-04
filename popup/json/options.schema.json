@@ -17,10 +17,7 @@
     },
     "searchStrategy": {
       "type": "string",
-      "enum": [
-        "precise",
-        "fuzzy"
-      ],
+      "enum": ["precise", "fuzzy"],
       "default": "precise",
       "description": "Choose how searches behave: `precise` favors exact matches and fastest responses, while `fuzzy` tolerates typos and similar words but runs a bit slower.",
       "x-ui-section": "search"
@@ -226,9 +223,7 @@
         "type": "string",
         "minLength": 1
       },
-      "default": [
-        "extension://"
-      ],
+      "default": ["extension://"],
       "description": "List of string fragments. History entries whose URL contains any of these fragments will be excluded from indexing.",
       "x-ui-section": "history"
     },
@@ -262,19 +257,13 @@
       },
       "default": [
         {
-          "alias": [
-            "g",
-            "google"
-          ],
+          "alias": ["g", "google"],
           "name": "Google",
           "urlPrefix": "https://www.google.com/search?q=$s",
           "blank": "https://www.google.com"
         },
         {
-          "alias": [
-            "d",
-            "dict"
-          ],
+          "alias": ["d", "dict"],
           "name": "dict.cc",
           "urlPrefix": "https://www.dict.cc/?s=$s",
           "blank": "https://www.dict.cc"
@@ -440,10 +429,7 @@
   "definitions": {
     "searchEngine": {
       "type": "object",
-      "required": [
-        "name",
-        "urlPrefix"
-      ],
+      "required": ["name", "urlPrefix"],
       "additionalProperties": false,
       "properties": {
         "name": {
@@ -460,11 +446,7 @@
     },
     "customSearchEngine": {
       "type": "object",
-      "required": [
-        "alias",
-        "name",
-        "urlPrefix"
-      ],
+      "required": ["alias", "name", "urlPrefix"],
       "additionalProperties": false,
       "properties": {
         "alias": {

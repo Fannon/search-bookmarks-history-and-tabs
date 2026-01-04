@@ -1,17 +1,16 @@
-import { jest, describe, test, expect, beforeEach, afterEach } from '@jest/globals'
-import { flushPromises, clearTestExt } from './testUtils.js'
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
+import { clearTestExt, flushPromises } from './testUtils.js'
 
 const setupDom = () => {
   document.body.innerHTML = `
-    <input id="search-input" />
-    <ul id="result-list"></ul>
-    <span id="result-counter"></span>
-    <button id="search-approach-toggle"></button>
-    <div id="results-loading"></div>
-    <div id="edit-bookmark"></div>
-    <div id="tags-overview"></div>
-    <div id="folders-overview"></div>
-    <div id="error-list"></div>
+    <input id="q" />
+    <ul id="results"></ul>
+    <span id="counter"></span>
+    <button id="toggle"></button>
+    <div id="results-load"></div>
+    <div id="tags-view"></div>
+    <div id="folders-view"></div>
+    <div id="errors"></div>
   `
   window.location.hash = ''
 }
@@ -23,7 +22,6 @@ const mockDependencies = async (overrides = {}) => {
     getEffectiveOptions: jest.fn(() =>
       Promise.resolve({
         searchStrategy: 'precise',
-        searchDebounceMs: 10,
         debug: false,
         enableTabs: true,
         enableBookmarks: true,
@@ -47,21 +45,28 @@ const mockDependencies = async (overrides = {}) => {
     }),
     renderSearchResults: jest.fn(),
     search: jest.fn(() => Promise.resolve()),
-    editBookmark: jest.fn(() => Promise.resolve()),
-    updateBookmark: jest.fn(),
-    loadFoldersOverview: jest.fn(),
-    loadTagsOverview: jest.fn(),
   }
   const config = { ...defaults, ...overrides }
 
   await jest.unstable_mockModule('../helper/utils.js', () => ({
     __esModule: true,
     loadScript: config.loadScript,
+  }))
+  await jest.unstable_mockModule('../view/errorView.js', () => ({
+    __esModule: true,
+    closeErrors: () => {
+      const element = document.getElementById('errors')
+      if (element) {
+        element.style = 'display: none;'
+      }
+    },
     printError: config.printError,
   }))
   await jest.unstable_mockModule('../model/options.js', () => ({
     __esModule: true,
     getEffectiveOptions: config.getEffectiveOptions,
+    getUserOptions: jest.fn(() => Promise.resolve({ searchStrategy: 'precise' })),
+    setUserOptions: jest.fn(() => Promise.resolve()),
   }))
   await jest.unstable_mockModule('../model/searchData.js', () => ({
     __esModule: true,
@@ -72,15 +77,6 @@ const mockDependencies = async (overrides = {}) => {
     search: config.search,
     addDefaultEntries: config.addDefaultEntries,
   }))
-  await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
-    __esModule: true,
-    editBookmark: config.editBookmark,
-    updateBookmark: config.updateBookmark,
-  }))
-  await jest.unstable_mockModule('../view/foldersView.js', () => ({
-    __esModule: true,
-    loadFoldersOverview: config.loadFoldersOverview,
-  }))
   await jest.unstable_mockModule('../helper/browserApi.js', () => ({
     __esModule: true,
     browserApi: {},
@@ -88,13 +84,20 @@ const mockDependencies = async (overrides = {}) => {
   await jest.unstable_mockModule('../view/searchView.js', () => ({
     __esModule: true,
     renderSearchResults: config.renderSearchResults,
+  }))
+  await jest.unstable_mockModule('../view/searchNavigation.js', () => ({
+    __esModule: true,
     navigationKeyListener: jest.fn(),
+    hoverResultItem: jest.fn(),
+    clearSelection: jest.fn(),
+    selectListItem: jest.fn(),
+  }))
+  await jest.unstable_mockModule('../view/searchEvents.js', () => ({
+    __esModule: true,
     toggleSearchApproach: jest.fn(),
     updateSearchApproachToggle: jest.fn(),
-  }))
-  await jest.unstable_mockModule('../view/tagsView.js', () => ({
-    __esModule: true,
-    loadTagsOverview: config.loadTagsOverview,
+    openResultItem: jest.fn(),
+    setupResultItemsEvents: jest.fn(),
   }))
 
   return config
@@ -131,123 +134,80 @@ describe('initSearch entry point', () => {
     expect(module.ext.searchCache instanceof Map).toBe(true)
     expect(mocks.addDefaultEntries).toHaveBeenCalled()
     expect(mocks.renderSearchResults).toHaveBeenCalled()
-    expect(mocks.loadScript).toHaveBeenCalledWith('./lib/mark.es6.min.js')
-    expect(document.getElementById('results-loading')).toBeNull()
+    expect(document.getElementById('results-load')).toBeNull()
   })
 
-  test('hashRouter handles search, tags, folders and bookmark routes', async () => {
+  test('hashRouter handles search, bookmark routes, and ignores tags/folders routes', async () => {
     const mocks = await mockDependencies()
     const module = await import('../initSearch.js')
     moduleUnderTest = module
     await flushPromises()
 
     window.removeEventListener('hashchange', module.hashRouter)
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 
-    window.location.hash = '#search/test%20query'
-    await module.hashRouter()
-    expect(module.ext.dom.searchInput.value).toBe('test query')
-    expect(mocks.search).toHaveBeenCalled()
+    try {
+      window.location.hash = '#search/test%20query'
+      await module.hashRouter()
+      expect(module.ext.dom.searchInput.value).toBe('test query')
+      expect(mocks.search).toHaveBeenCalled()
 
-    const searchCallsAfterSearchRoute = mocks.search.mock.calls.length
+      const searchCallsAfterSearchRoute = mocks.search.mock.calls.length
 
-    window.location.hash = '#tags/'
-    await module.hashRouter()
-    expect(mocks.loadTagsOverview).toHaveBeenCalled()
-    expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
+      window.history.replaceState(null, '', 'http://localhost/')
+      window.location.hash = '#bookmark/123'
+      await module.hashRouter()
+      expect(window.location.href).toBe('http://localhost/#bookmark/123')
+      expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
 
-    window.location.hash = '#folders/'
-    await module.hashRouter()
-    expect(mocks.loadFoldersOverview).toHaveBeenCalled()
-    expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
-
-    window.location.hash = '#edit-bookmark/123'
-    await module.hashRouter()
-    expect(mocks.editBookmark).toHaveBeenCalledWith('123')
-    expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
-
-    window.location.hash = '#update-bookmark/999'
-    await module.hashRouter()
-    expect(mocks.updateBookmark).toHaveBeenCalledWith('999')
-    expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
+      window.history.replaceState(null, '', 'http://localhost/')
+      window.location.hash = '#bookmark/999'
+      await module.hashRouter()
+      expect(window.location.href).toBe('http://localhost/#bookmark/999')
+      expect(mocks.search.mock.calls.length).toBe(searchCallsAfterSearchRoute)
+    } finally {
+      window.history.replaceState(null, '', 'http://localhost/')
+      warnSpy.mockRestore()
+    }
   })
 
-  test('hashRouter reports unexpected errors', async () => {
-    const routeError = new Error('Route failure')
+  test('search input triggers search immediately on each input event', async () => {
+    const searchMock = jest.fn()
     const mocks = await mockDependencies({
-      loadTagsOverview: jest.fn(() => {
-        throw routeError
-      }),
-      printError: jest.fn(),
+      search: searchMock,
     })
 
     const module = await import('../initSearch.js')
     moduleUnderTest = module
     await flushPromises()
 
-    window.removeEventListener('hashchange', module.hashRouter)
-    window.location.hash = '#tags/'
-    await module.hashRouter()
+    const firstInput = new Event('input')
+    const secondInput = new Event('input')
 
-    expect(mocks.printError).toHaveBeenCalledWith(routeError)
+    module.ext.dom.searchInput.value = 'first'
+    module.ext.dom.searchInput.dispatchEvent(firstInput)
+    module.ext.dom.searchInput.value = 'second'
+    module.ext.dom.searchInput.dispatchEvent(secondInput)
+
+    expect(mocks.search).toHaveBeenCalledTimes(2)
+    expect(mocks.search).toHaveBeenNthCalledWith(1, firstInput)
+    expect(mocks.search).toHaveBeenNthCalledWith(2, secondInput)
   })
 
-  test('debounced search input triggers search once after delay', async () => {
-    jest.useFakeTimers()
-    const mocks = await mockDependencies({
-      search: jest.fn(),
-      getEffectiveOptions: jest.fn(() =>
-        Promise.resolve({
-          searchStrategy: 'precise',
-          searchDebounceMs: 50,
-          debug: false,
-          enableTabs: true,
-          enableBookmarks: true,
-          enableHistory: true,
-          maxRecentTabsToShow: 5,
-        }),
-      ),
-    })
-
-    try {
-      const module = await import('../initSearch.js')
-      moduleUnderTest = module
-
-      const initPromises = flushPromises()
-      jest.runOnlyPendingTimers()
-      await initPromises
-
-      const firstInput = new Event('input')
-      const secondInput = new Event('input')
-
-      module.ext.dom.searchInput.value = 'test'
-      module.ext.dom.searchInput.dispatchEvent(firstInput)
-      module.ext.dom.searchInput.value = 'test updated'
-      module.ext.dom.searchInput.dispatchEvent(secondInput)
-
-      expect(mocks.search).not.toHaveBeenCalled()
-      jest.runOnlyPendingTimers()
-      expect(mocks.search).toHaveBeenCalledTimes(1)
-    } finally {
-      jest.useRealTimers()
-    }
-  })
-
-  test('closeModals hides overlay containers', async () => {
+  test('closeErrors hides overlay containers', async () => {
     await mockDependencies()
     const module = await import('../initSearch.js')
     moduleUnderTest = module
     await flushPromises()
 
-    document.getElementById('edit-bookmark').style = ''
-    document.getElementById('tags-overview').style = ''
-    document.getElementById('folders-overview').style = ''
-    document.getElementById('error-list').style = ''
+    document.getElementById('errors').style = ''
+    document.getElementById('tags-view').style = ''
+    document.getElementById('folders-view').style = ''
 
-    module.closeModals()
+    module.closeErrors()
 
-    expect(document.getElementById('edit-bookmark').style.cssText).toBe('display: none;')
-    expect(document.getElementById('tags-overview').style.cssText).toBe('display: none;')
-    expect(document.getElementById('folders-overview').style.cssText).toBe('display: none;')
-    expect(document.getElementById('error-list').style.cssText).toBe('display: none;')
+    expect(document.getElementById('errors').style.cssText).toBe('display: none;')
+    expect(document.getElementById('tags-view').style.cssText).toBe('')
+    expect(document.getElementById('folders-view').style.cssText).toBe('')
   })
 })

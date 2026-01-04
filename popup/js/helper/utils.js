@@ -1,70 +1,184 @@
 /**
- * Get text how long a date is ago
+ * @file Gathers shared helper utilities for popup modules.
+ *
+ * Provides:
+ * - Relative time formatting (`timeSince`) for surfacing history/recency metadata.
+ * - URL cleanup helpers to normalize and compare bookmark addresses reliably.
+ * - Lazy script loading with deduplication for libraries like uFuzzy.
+ * - HTML escaping helpers (`escapeHtml`) to keep rendered content safe.
+ */
+
+const HTML_ESCAPE_REGEX = /[&<>"']/g
+const HTML_ESCAPE_MAP = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+}
+
+let nextGeneratedId = 1
+
+/**
+ * Generate a deterministic identifier for synthetic search result entries.
+ */
+export function generateRandomId() {
+  const id = `R${nextGeneratedId}`
+  nextGeneratedId += 1
+  return id
+}
+
+/**
+ * Escape HTML special characters to prevent markup injection.
+ *
+ * @param {*} value - Value to escape.
+ * @returns {string} Sanitized string safe for HTML contexts.
+ */
+export function escapeHtml(value) {
+  if (value === null || value === undefined) {
+    return ''
+  }
+  return String(value).replace(HTML_ESCAPE_REGEX, (match) => HTML_ESCAPE_MAP[match])
+}
+
+// Regex special characters that need escaping for literal matching
+const REGEX_ESCAPE_REGEX = /[.*+?^${}()|[\]\\]/g
+
+/**
+ * Escape special regex characters for literal matching.
+ *
+ * @param {string} str - String to escape.
+ * @returns {string} Escaped string safe for RegExp constructor.
+ */
+export function escapeRegex(str) {
+  return str.replace(REGEX_ESCAPE_REGEX, '\\$&')
+}
+
+/**
+ * Highlight matching terms in text by wrapping them with <mark> tags.
+ *
+ * This is a shared utility for pre-computing search result highlights during
+ * the search phase (Zero-DOM highlighting approach). The text is HTML-escaped
+ * first to prevent XSS, then <mark> tags are applied for matching terms.
+ *
+ * @param {string} text - Text to highlight (will be HTML-escaped).
+ * @param {string[]|RegExp} termsOrRegex - Search terms to highlight or a pre-compiled RegExp.
+ * @returns {string} HTML-safe string with <mark> tags around matching terms.
+ */
+export function highlightMatches(text, termsOrRegex) {
+  if (!text || !termsOrRegex) {
+    return escapeHtml(text)
+  }
+
+  // Escape HTML first to prevent XSS
+  const escapedText = escapeHtml(text)
+
+  if (termsOrRegex instanceof RegExp) {
+    return escapedText.replace(termsOrRegex, '<mark>$1</mark>')
+  }
+
+  // Filter out empty terms and sort by length descending (match longest first)
+  const validTerms = termsOrRegex.filter((t) => t && t.length > 0)
+  if (validTerms.length === 0) {
+    return escapedText
+  }
+
+  // Escape terms for regex and sort by length descending to match longest first
+  const escapedTerms = validTerms
+    .map((t) => escapeHtml(t)) // Escape HTML chars in terms too
+    .map((t) => escapeRegex(t))
+    .sort((a, b) => b.length - a.length)
+
+  const highlightRegex = new RegExp(`(${escapedTerms.join('|')})`, 'gi')
+  return escapedText.replace(highlightRegex, '<mark>$1</mark>')
+}
+
+// Pre-calculate time units for performance
+const TIME_UNITS = [
+  [31536000, 'year'],
+  [2592000, 'month'],
+  [86400, 'd'],
+  [3600, 'h'],
+  [60, 'm'],
+]
+
+/**
+ * Converts a date to a compact "time since" string.
+ *
+ * Converts Unix timestamps or Date objects to relative time strings like
+ * "3 m" or "2 month". Values are simple integer counts plus unit labels with
+ * no pluralization or "ago" suffix.
+ *
+ * @param {Date|number} date - Date object or Unix timestamp.
+ * @returns {string} Compact relative time (e.g., "5 h").
  *
  * @see https://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
  */
 export function timeSince(date) {
-  // Handle invalid inputs
-  if (!date || isNaN(new Date(date).getTime())) {
+  if (!date) {
+    return 'Invalid date'
+  }
+  const timestamp = typeof date === 'number' ? date : new Date(date).getTime()
+  if (Number.isNaN(timestamp)) {
     return 'Invalid date'
   }
 
-  const seconds = Math.floor((new Date() - new Date(date)) / 1000)
-
-  // Handle future dates
-  if (seconds < 0) {
-    return '0 seconds'
-  }
-
-  const intervals = [
-    { unitSeconds: 31536000, label: 'year' },
-    { unitSeconds: 2592000, label: 'month' },
-    { unitSeconds: 86400, label: 'day' },
-    { unitSeconds: 3600, label: 'hour' },
-    { unitSeconds: 60, label: 'minute' },
-  ]
-
-  for (const { unitSeconds, label } of intervals) {
+  const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000))
+  for (let i = 0; i < TIME_UNITS.length; i++) {
+    const unit = TIME_UNITS[i]
+    const unitSeconds = unit[0]
     const count = Math.floor(seconds / unitSeconds)
     if (count >= 1) {
-      return `${count} ${label}${count === 1 ? '' : 's'}`
+      return `${count} ${unit[1]}`
     }
   }
 
-  const secondsCount = Math.floor(seconds)
-  const secondsLabel = secondsCount === 1 ? 'second' : 'seconds'
-  return `${secondsCount} ${secondsLabel}`
+  return `${seconds} s`
 }
+
+const URL_CLEANUP_PREFIX_REGEX = /^(?:https?:\/\/)?(?:www\.)?/
+const URL_CLEANUP_HASH_REGEX = /#.*$/
+const URL_CLEANUP_TRAILING_SLASH_REGEX = /\/$/
 
 /**
- * Remove http://, http://, www, trailing slashes from URLs
- * @see https://stackoverflow.com/a/57698415
+ * Normalizes URLs by removing protocol, www, trailing slashes and hashes
+ *
+ * Strips http://, https://, www. prefix and converts to lowercase
+ * to enable consistent URL comparison across different URL formats.
+ * Used for matching bookmarks/history to current page and for display.
+ *
+ * @param {string|null} url - URL to normalize
+ * @returns {string} Normalized URL (lowercase, no protocol/www/trailing slash/hash)
  */
 export function cleanUpUrl(url) {
-  // Handle null, undefined, or empty inputs
-  if (!url) {
-    return ''
-  }
-
-  // Convert to string and clean up
-  const urlString = String(url)
-    .replace(/^(?:https?:\/\/)?(?:www\.)?/i, '')
-    .replace(/\/$/, '')
+  if (!url) return ''
+  return String(url)
     .toLowerCase()
-
-  return urlString
+    .replace(URL_CLEANUP_PREFIX_REGEX, '')
+    .replace(URL_CLEANUP_HASH_REGEX, '')
+    .replace(URL_CLEANUP_TRAILING_SLASH_REGEX, '')
 }
 
-// Cache for loaded scripts to avoid duplicate loading
+// Cache for loaded scripts to avoid duplicate loading and network requests
 const loadedScripts = new Set()
 
+/**
+ * Dynamically loads a script file and caches the result
+ *
+ * Prevents loading the same script multiple times by tracking loaded URLs.
+ * Used for lazy-loading large libraries (uFuzzy) that are only
+ * needed when specific features are used.
+ *
+ * @param {string} url - Script URL to load
+ * @returns {Promise<void>} Resolves when script is loaded or cached
+ * @throws {Error} If script fails to load
+ */
 export async function loadScript(url) {
-  // Return immediately if already loaded
   if (loadedScripts.has(url)) {
     return Promise.resolve()
   }
 
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     const s = document.createElement('script')
     s.type = 'text/javascript'
     s.onload = () => {
@@ -77,27 +191,4 @@ export async function loadScript(url) {
     s.src = url
     document.getElementsByTagName('head')[0].appendChild(s)
   })
-}
-export async function loadCSS(href) {
-  var l = document.createElement('link')
-  l.href = href
-  l.rel = 'stylesheet'
-  l.type = 'text/css'
-  document.getElementsByTagName('head')[0].appendChild(l)
-}
-
-export function printError(err, text) {
-  let html = ''
-  if (text) {
-    html += `<li class="error"><b>Error</b>: ${text}</span>`
-    console.error(text)
-  }
-  console.error(err)
-  html += `<li class="error"><b>Error Message</b>: ${err.message}</span>`
-  if (err.stack) {
-    html += `<li class="error"><b>Error Stack</b>: ${err.stack}</li>`
-  }
-  const errorList = document.getElementById('error-list')
-  errorList.innerHTML = html + errorList.innerHTML
-  errorList.style = 'display: block;'
 }

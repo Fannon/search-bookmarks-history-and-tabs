@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
 import {
-  convertBrowserTabs,
+  browserApi,
   convertBrowserBookmarks,
   convertBrowserHistory,
-  createSearchString,
+  convertBrowserTabs,
+  createSearchStringLower,
+  getBrowserTabGroups,
+  getBrowserTabs,
   getTitle,
   shortenTitle,
 } from '../browserApi.js'
@@ -22,6 +25,66 @@ beforeEach(() => {
 afterEach(() => {
   delete globalThis.ext
   jest.restoreAllMocks()
+  delete browserApi.tabs
+})
+
+describe('getBrowserTabs', () => {
+  it('filters out entries missing a usable url but includes all other URLs including extension URLs', async () => {
+    const queryMock = jest.fn().mockResolvedValue([
+      { id: 1, title: 'Internal tab' },
+      { id: 2, url: '', title: 'Empty url' },
+      { id: 3, url: 'chrome-extension://abcdef', title: 'Extension page' },
+      { id: 4, url: 'https://example.com', title: 'Example' },
+      { id: 5, url: 'moz-extension://xyz', title: 'Firefox extension' },
+    ])
+
+    browserApi.tabs = { query: queryMock }
+
+    const result = await getBrowserTabs()
+
+    expect(queryMock).toHaveBeenCalledWith({})
+    expect(result).toHaveLength(3)
+    expect(result[0]).toMatchObject({ id: 3, url: 'chrome-extension://abcdef' })
+    expect(result[1]).toMatchObject({ id: 4, url: 'https://example.com' })
+    expect(result[2]).toMatchObject({ id: 5, url: 'moz-extension://xyz' })
+  })
+})
+
+describe('getBrowserTabGroups', () => {
+  it('handles query errors gracefully', async () => {
+    browserApi.tabGroups = {
+      query: jest.fn().mockRejectedValue(new Error('API Error')),
+    }
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const result = await getBrowserTabGroups()
+
+    expect(result).toEqual([])
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Error fetching tab groups'))
+    warnSpy.mockRestore()
+  })
+})
+
+describe('convertBrowserBookmarks - edge cases', () => {
+  it('rejects tags that start with a number (e.g. version numbers)', () => {
+    const tree = [
+      {
+        title: 'Folder',
+        children: [
+          {
+            id: 'bm-num',
+            title: 'C# 11 Features #11 #valid',
+            url: 'https://example.com',
+          },
+        ],
+      },
+    ]
+
+    const [bookmark] = convertBrowserBookmarks(tree)
+
+    expect(bookmark.tags).toBe('#valid')
+    expect(bookmark.title).toBe('C# 11 Features #11')
+  })
 })
 
 describe('convertBrowserTabs', () => {
@@ -49,31 +112,49 @@ describe('convertBrowserTabs', () => {
       originalId: 5,
       active: true,
       windowId: 3,
-      searchString: 'Example¦example.com/path',
       searchStringLower: 'example¦example.com/path',
     })
     expect(tab.lastVisitSecondsAgo).toBe(1)
   })
+
+  it('skips tabs without a usable url', () => {
+    const tabs = [
+      { id: 1, title: 'Missing url' },
+      { id: 2, url: '', title: 'Empty url' },
+      { id: 3, url: '   ', title: 'Whitespace url' },
+      {
+        id: 4,
+        url: 'https://valid.example.com/',
+        title: 'Valid tab',
+        lastAccessed: 1_000,
+      },
+    ]
+
+    const result = convertBrowserTabs(tabs)
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({
+      originalId: 4,
+      url: 'valid.example.com',
+      originalUrl: 'https://valid.example.com',
+    })
+  })
 })
 
-describe('createSearchString', () => {
+describe('createSearchStringLower', () => {
   it('includes title, url, tags and folder when available', () => {
-    const result = createSearchString('Example title', 'example.com', '#tag', '~Folder')
-    expect(result).toBe('Example title¦example.com¦#tag¦~Folder')
+    const result = createSearchStringLower('Example title', 'example.com', '#tag', '~Folder')
+    expect(result).toBe('example title¦example.com¦#tag¦~folder')
   })
 
   it('avoids duplicating url when the title already includes it', () => {
-    const result = createSearchString('example.com', 'example.com', undefined, undefined)
+    const result = createSearchStringLower('example.com', 'example.com', undefined, undefined)
     expect(result).toBe('example.com')
   })
 
-  it('returns an empty string when no url is provided', () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
-    const result = createSearchString('Title', '', '#tag', undefined)
-
-    expect(result).toBe('')
-    expect(errorSpy).toHaveBeenCalledTimes(1)
-    expect(errorSpy.mock.calls[0][0]).toBe('createSearchString: No URL given')
+  it('returns a search string from available data when no url is provided', () => {
+    const result = createSearchStringLower('Title', '', '#tag', undefined)
+    expect(result).toBe('title¦#tag')
   })
 })
 
@@ -88,9 +169,10 @@ describe('getTitle', () => {
 })
 
 describe('shortenTitle', () => {
-  it('truncates titles longer than the url length restriction', () => {
+  it('truncates titles longer than the url length restriction (hard-coded to 80)', () => {
     const longTitle = 'a'.repeat(90)
-    expect(shortenTitle(longTitle)).toBe('a'.repeat(82) + '...')
+    // Hard-coded limit is 80, so it truncates to 77 characters + '...'
+    expect(shortenTitle(longTitle)).toBe(`${'a'.repeat(77)}...`)
   })
 
   it('returns the title unchanged when it is under the limit', () => {
@@ -132,9 +214,48 @@ describe('convertBrowserBookmarks', () => {
       tags: '#tag1 #tag2',
       tagsArray: ['tag1', 'tag2'],
       folder: '~Root ~Parent folder ~Work',
-      folderArray: ['Root', 'Parent folder', 'Work'],
-      searchString: 'Example¦example.com¦#tag1 #tag2¦~Root ~Parent folder ~Work',
+      folderArrayLower: ['root', 'parent folder', 'work'],
       searchStringLower: 'example¦example.com¦#tag1 #tag2¦~root ~parent folder ~work',
+    })
+  })
+
+  it('parses custom bonus scores correctly with radix 10', () => {
+    const tree = [
+      {
+        title: 'Root',
+        children: [
+          {
+            id: 'bookmark-1',
+            title: 'Score with leading zero +08',
+            url: 'https://example.com/',
+          },
+          {
+            id: 'bookmark-2',
+            title: 'Double digit score +10',
+            url: 'https://test.com/',
+          },
+          {
+            id: 'bookmark-3',
+            title: 'Large score +100',
+            url: 'https://large.com/',
+          },
+        ],
+      },
+    ]
+
+    const bookmarks = convertBrowserBookmarks(tree)
+
+    expect(bookmarks[0]).toMatchObject({
+      title: 'Score with leading zero',
+      customBonusScore: 8,
+    })
+    expect(bookmarks[1]).toMatchObject({
+      title: 'Double digit score',
+      customBonusScore: 10,
+    })
+    expect(bookmarks[2]).toMatchObject({
+      title: 'Large score',
+      customBonusScore: 100,
     })
   })
 
@@ -156,9 +277,89 @@ describe('convertBrowserBookmarks', () => {
     const result = convertBrowserBookmarks(tree, ['Ignore me'], 3)
     expect(result).toHaveLength(0)
   })
+
+  it('flags duplicate bookmarks when detection is enabled', () => {
+    ext.opts.bookmarksIgnoreFolderList = []
+    ext.opts.detectDuplicateBookmarks = true
+    const tree = [
+      {
+        title: 'Root',
+        children: [
+          {
+            id: 'bookmark-1',
+            title: 'First entry',
+            url: 'https://duplicate.example.com',
+          },
+          {
+            id: 'bookmark-2',
+            title: 'Second entry',
+            url: 'https://duplicate.example.com',
+          },
+        ],
+      },
+    ]
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    try {
+      const result = convertBrowserBookmarks(tree)
+
+      const duplicates = result.filter((bookmark) => bookmark.dupe)
+      expect(duplicates).toHaveLength(2)
+      expect(duplicates.every((bookmark) => bookmark.dupe)).toBe(true)
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy.mock.calls[0][0]).toContain('Duplicate bookmark detected')
+      expect(warnSpy.mock.calls[0][0]).toContain('https://duplicate.example.com')
+      expect(warnSpy.mock.calls[0][0]).toContain('folder: /')
+    } finally {
+      warnSpy.mockRestore()
+    }
+  })
+
+  it('skips duplicate detection when disabled', () => {
+    ext.opts.bookmarksIgnoreFolderList = []
+    ext.opts.detectDuplicateBookmarks = false
+    const tree = [
+      {
+        title: 'Root',
+        children: [
+          {
+            id: 'bookmark-1',
+            title: 'First entry',
+            url: 'https://duplicate.example.com',
+          },
+          {
+            id: 'bookmark-2',
+            title: 'Second entry',
+            url: 'https://duplicate.example.com',
+          },
+        ],
+      },
+    ]
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    try {
+      const result = convertBrowserBookmarks(tree)
+
+      // When detection is disabled, dupe flag should not be set
+      const duplicates = result.filter((bookmark) => bookmark.dupe)
+      expect(duplicates).toHaveLength(0)
+      expect(warnSpy).not.toHaveBeenCalled()
+    } finally {
+      warnSpy.mockRestore()
+    }
+  })
 })
 
 describe('convertBrowserHistory', () => {
+  beforeEach(() => {
+    // Clear the memoized regex state before each test
+    if (globalThis.ext) {
+      ext.state = {}
+    }
+  })
+
   it('filters ignored urls and normalizes history entries', () => {
     jest.spyOn(Date, 'now').mockReturnValue(10_000)
     ext.opts.historyIgnoreList = ['ignore.example.com']
@@ -193,8 +394,65 @@ describe('convertBrowserHistory', () => {
       originalUrl: 'https://keep.example.com/page',
       visitCount: 3,
       lastVisitSecondsAgo: 1,
-      searchString: 'Keep¦keep.example.com/page',
       searchStringLower: 'keep¦keep.example.com/page',
     })
+  })
+
+  it('handles multiple ignore patterns and case sensitivity', () => {
+    ext.opts.historyIgnoreList = ['GOOG.LE', 'test.com']
+
+    const history = [
+      { id: '1', url: 'https://goog.le/search', title: 'Google' },
+      { id: '2', url: 'https://TEST.COM/path', title: 'Test' },
+      { id: '3', url: 'https://example.com', title: 'KeepMe' },
+    ]
+
+    const result = convertBrowserHistory(history)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('KeepMe')
+  })
+
+  it('correctly escapes regex special characters in patterns', () => {
+    // Patterns with dots, pluses, parentheses, etc.
+    ext.opts.historyIgnoreList = ['example.com/a+b', 'site(dot)com', 'bank.com?id=']
+
+    const history = [
+      { id: '1', url: 'https://example.com/a+b', title: 'Match Plus' },
+      { id: '2', url: 'https://site(dot)com/page', title: 'Match Parens' },
+      { id: '3', url: 'https://bank.com?id=123', title: 'Match QMark' },
+      { id: '4', url: 'https://example.com/ab', title: 'No Match Plus' },
+      { id: '5', url: 'https://sitedot.com', title: 'No Match Parens' },
+    ]
+
+    const result = convertBrowserHistory(history)
+    expect(result).toHaveLength(2)
+    expect(result.map((r) => r.title)).toContain('No Match Plus')
+    expect(result.map((r) => r.title)).toContain('No Match Parens')
+  })
+
+  it('handles empty, null, or whitespace patterns without matching everything', () => {
+    ext.opts.historyIgnoreList = ['', null, '   ', 'valid.com']
+
+    const history = [
+      { id: '1', url: 'https://valid.com/page', title: 'Ignored' },
+      { id: '2', url: 'https://anything.else', title: 'Kept' },
+    ]
+
+    const result = convertBrowserHistory(history)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Kept')
+  })
+
+  it('handles complex URL characters like slashes and hyphens in ignore patterns', () => {
+    ext.opts.historyIgnoreList = ['my-site.com/sub-path/']
+
+    const history = [
+      { id: '1', url: 'https://my-site.com/sub-path/page', title: 'Ignored' },
+      { id: '2', url: 'https://my-site.com/other', title: 'Kept' },
+    ]
+
+    const result = convertBrowserHistory(history)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Kept')
   })
 })

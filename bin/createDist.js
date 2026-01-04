@@ -1,9 +1,20 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
-import fs from 'fs-extra'
-import { createWriteStream } from 'fs'
-import { join } from 'path'
+import { createWriteStream } from 'node:fs'
+import { join } from 'node:path'
+import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 import archiver from 'archiver'
+/**
+ * @file Builds the Chrome-ready distribution directory and archive.
+ *
+ * Copies source assets into `dist/chrome`, swaps development scripts for
+ * bundled equivalents, removes test fixtures, and packages the result as a zip
+ * file. This mirrors the artifact uploaded to browser extension stores.
+ */
+import fs from 'fs-extra'
+
+// Track CSS files that receive minified companions so we can prune originals
+const CSS_BUNDLED_FILENAMES = new Set(['style.css', 'options.css', 'taxonomy.css', 'editBookmark.css'])
 
 /**
  * Build the Chrome distribution directory and accompanying archive.
@@ -20,7 +31,7 @@ export async function createDist(clean = true) {
   await fs.copy('manifest.json', 'dist/chrome/manifest.json')
 
   // Copy images
-  const images = ['edit.svg', 'x.svg', 'logo-16.png', 'logo-32.png', 'logo-48.png', 'logo-128.png']
+  const images = ['logo-16.png', 'logo-32.png', 'logo-48.png', 'logo-128.png']
   await Promise.all(images.map((img) => fs.copy(`images/${img}`, `dist/chrome/images/${img}`)))
 
   // Copy popup directory
@@ -28,11 +39,16 @@ export async function createDist(clean = true) {
 
   await modifyHtmlFile('dist/chrome/popup/options.html')
   await modifyHtmlFile('dist/chrome/popup/index.html')
+  await modifyHtmlFile('dist/chrome/popup/tags.html')
+  await modifyHtmlFile('dist/chrome/popup/folders.html')
+  await modifyHtmlFile('dist/chrome/popup/groups.html')
+  await modifyHtmlFile('dist/chrome/popup/editBookmark.html')
 
   // Remove mock data and test artifacts
-  await fs.remove('dist/chrome/popup/mockData')
+  await fs.rm('dist/chrome/popup/mockData', { recursive: true, force: true })
 
   await removeBundledJs('dist/chrome/popup/js')
+  await removeBundledCss('dist/chrome/popup/css')
 
   const popupDir = 'dist/chrome/popup'
   await removeTestArtifacts(popupDir)
@@ -51,17 +67,18 @@ export async function createDist(clean = true) {
     archive.on('error', reject)
 
     archive.pipe(output)
-    archive.directory('dist/chrome/', '.')
+    archive.directory('dist/chrome/', false)
     archive.finalize()
   })
 }
 
-createDist().catch((error) => {
-  console.error('Failed to create distribution')
-  console.error(error)
-  // eslint-disable-next-line no-undef
-  process.exit(1)
-})
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  createDist().catch((error) => {
+    console.error('Failed to create distribution')
+    console.error(error)
+    process.exit(1)
+  })
+}
 
 /**
  * Recursively delete non-bundled JavaScript files beneath a directory.
@@ -110,8 +127,7 @@ async function removeTestArtifacts(dir) {
         await fs.remove(fullPath)
       }
     }
-    // eslint-disable-next-line no-unused-vars
-  } catch (ignore) {
+  } catch {
     // Ignore errors if dir doesn't exist
   }
 }
@@ -123,15 +139,84 @@ async function removeTestArtifacts(dir) {
  */
 async function modifyHtmlFile(filePath) {
   const content = await fs.readFile(filePath, 'utf8')
-  let modified = content
-    .replace(
-      '<script defer type="module" src="./js/initOptions.js"></script>',
-      '<script defer src="./js/initOptions.bundle.min.js"></script>',
-    )
-    .replace(
-      '<script defer type="module" src="./js/initSearch.js"></script>',
-      '<script defer src="./js/initSearch.bundle.min.js"></script>',
-    )
+
+  // Robustly replace init scripts with their bundled versions
+  // This regex matches <script> tags pointing to ./js/init*.js and replaces them with the bundled .min.js version
+  // It handles variations in attributes (like defer, type="module"), quotes, and optional ./ prefix
+  let modified = content.replace(
+    /<script\b[^>]*src=["']((\.\/)?js\/init[^"']+)\.js["'][^>]*>\s*<\/script>/gi,
+    (_match, src) => {
+      return `<script defer src="${src}.bundle.min.js"></script>`
+    },
+  )
+
+  modified = replaceStylesheetReferences(modified)
 
   await fs.writeFile(filePath, modified, 'utf8')
+}
+
+/**
+ * Swap unbundled stylesheet references with minified bundle versions.
+ * @param {string} htmlContent HTML content to update.
+ * @returns {string}
+ */
+function replaceStylesheetReferences(htmlContent) {
+  // Robustly replace CSS references with their .min.css versions
+  // This regex matches <link rel="stylesheet"> tags pointing to ./css/*.css and replaces them with the .min.css version
+  // It handles variations in attributes, quotes, and optional ./ prefix.
+  // It only replaces files that are tracked in CSS_BUNDLED_FILENAMES.
+  return htmlContent.replace(
+    /<link\b[^>]*href=["']((\.\/)?css\/([^"']+))\.css["'][^>]*\/?>/gi,
+    (match, fullPath, _prefix, fileName) => {
+      // Check if this CSS file is one that we minify/bundle
+      if (CSS_BUNDLED_FILENAMES.has(`${fileName}.css`)) {
+        return `<link rel="stylesheet" href="${fullPath}.min.css" />`
+      }
+      return match
+    },
+  )
+}
+
+/**
+ * Recursively delete non-bundled CSS files beneath a directory.
+ * @param {string} dir Path to inspect for removable files.
+ * @returns {Promise<void>}
+ */
+async function removeBundledCss(dir) {
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true })
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        await removeBundledCss(fullPath)
+        const remaining = await fs.readdir(fullPath)
+        if (!remaining.length) {
+          await fs.remove(fullPath)
+        }
+      } else if (entry.isFile() && shouldRemoveOriginalCss(entry.name)) {
+        await fs.remove(fullPath)
+      }
+    }
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error
+    }
+  }
+}
+
+/**
+ * Determine whether an original CSS file should be pruned from dist output.
+ * @param {string} fileName File name to evaluate.
+ * @returns {boolean}
+ */
+function shouldRemoveOriginalCss(fileName) {
+  if (!fileName.endsWith('.css')) {
+    return false
+  }
+
+  if (fileName.endsWith('.bundle.min.css')) {
+    return false
+  }
+
+  return CSS_BUNDLED_FILENAMES.has(fileName)
 }

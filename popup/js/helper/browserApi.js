@@ -1,14 +1,37 @@
+const BONUS_SCORE_REGEX = /[ ][+]([0-9]+)/
+const TAG_NUMERIC_CHECK_REGEX = /^\d/
+const URL_ROOT_CLEANUP_REGEX = /\/$/
+const REGEX_SPECIAL_CHARS_REGEX = /[.*+?^${}()|[\]/-]/g
+
+/**
+ * @file Normalizes browser APIs for bookmarks, tabs, and history sources.
+ *
+ * Responsibilities:
+ * - Fetch raw entries with defensive fallbacks for browsers that omit certain APIs.
+ * - Convert every record into the shared `searchItem` shape (type, title, url, tags, folder trail, search strings).
+ * - Parse inline annotations like `#tag` taxonomy markers and `+20` custom bonus hints from bookmark titles.
+ * - Clean URLs/titles by stripping protocol, `www`, and trailing slashes to stabilize comparisons and cache keys.
+ * - Preserve breadcrumb-style folder metadata so taxonomy pages and scoring rules stay in sync across browsers.
+ */
+
 import { cleanUpUrl } from './utils.js'
 
 export const browserApi = window.chrome || window.browser || {}
 
+/**
+ * Retrieve browser tabs with optional query filters while respecting user options.
+ *
+ * @param {Object} [queryOptions={}] - Filters passed to the tabs API.
+ * @returns {Promise<Array>} Tab objects, including all valid URLs.
+ */
 export async function getBrowserTabs(queryOptions = {}) {
   if (ext.opts.tabsOnlyCurrentWindow) {
     queryOptions.currentWindow = true
   }
   if (browserApi.tabs) {
     return (await browserApi.tabs.query(queryOptions)).filter((el) => {
-      return !el.url.includes('extension://')
+      const url = typeof el?.url === 'string' ? el.url : ''
+      return !!url.trim()
     })
   } else {
     console.warn(`No browser tab API found. Returning no results.`)
@@ -16,27 +39,72 @@ export async function getBrowserTabs(queryOptions = {}) {
   }
 }
 
-export function convertBrowserTabs(chromeTabs) {
-  return chromeTabs.map((el) => {
-    const cleanUrl = cleanUpUrl(el.url)
-    const searchString = createSearchString(el.title, cleanUrl)
-    return {
-      type: 'tab',
-      title: getTitle(el.title, cleanUrl),
-      url: cleanUrl,
-      originalUrl: el.url.replace(/\/$/, ''),
-      originalId: el.id,
-      active: el.active,
-      windowId: el.windowId,
-      searchString,
-      searchStringLower: searchString.toLowerCase(),
-      lastVisitSecondsAgo: el.lastAccessed ? (Date.now() - el.lastAccessed) / 1000 : undefined,
+/**
+ * Normalize browser tab objects into the shared search item shape.
+ *
+ * @param {Array<Object>} chromeTabs - Raw tab entries from the browser API.
+ * @param {Map<number, Object>} [groupMap] - Map of group ID to group object.
+ * @returns {Array<Object>} Standardized tab entries.
+ */
+export function convertBrowserTabs(chromeTabs, groupMap) {
+  const result = []
+  const count = chromeTabs.length
+  const hasGroups = groupMap && groupMap.size > 0
+
+  for (let i = 0; i < count; i++) {
+    const el = chromeTabs[i]
+    if (typeof el?.url === 'string' && el.url.trim()) {
+      const cleanUrl = cleanUpUrl(el.url)
+      const title = getTitle(el.title, cleanUrl)
+      const titleLower = title.toLowerCase().trim()
+
+      // Only look up group info if groups are available and tab has a valid groupId
+      let group = ''
+      let groupLower = ''
+      if (hasGroups && el.groupId != null && el.groupId !== -1) {
+        const groupInfo = groupMap.get(el.groupId)
+        if (groupInfo?.title) {
+          group = groupInfo.title
+          groupLower = group.toLowerCase()
+        }
+      }
+
+      const searchStringLower = createSearchStringLower(title, cleanUrl, undefined, undefined, group)
+
+      const tabItem = {
+        type: 'tab',
+        title,
+        titleLower: titleLower,
+        url: cleanUrl,
+        originalUrl: el.url.replace(URL_ROOT_CLEANUP_REGEX, ''),
+        originalId: el.id,
+        active: el.active,
+        windowId: el.windowId,
+        searchStringLower,
+        lastVisitSecondsAgo: el.lastAccessed ? (Date.now() - el.lastAccessed) / 1000 : undefined,
+      }
+
+      // Only add group properties if the tab actually has a named group
+      if (group) {
+        tabItem.groupId = el.groupId
+        tabItem.group = group
+        tabItem.groupLower = groupLower
+      }
+
+      result.push(tabItem)
     }
-  })
+  }
+
+  return result
 }
 
+/**
+ * Retrieve the bookmark tree from the browser API.
+ *
+ * @returns {Promise<Array>} Bookmark hierarchy or empty array when unsupported.
+ */
 export async function getBrowserBookmarks() {
-  if (browserApi.bookmarks && browserApi.bookmarks.getTree) {
+  if (browserApi.bookmarks?.getTree) {
     return browserApi.bookmarks.getTree()
   } else {
     console.warn(`No browser bookmark API found. Returning no results.`)
@@ -46,102 +114,154 @@ export async function getBrowserBookmarks() {
 
 /**
  * Recursive function to return bookmarks in our internal, flat array format
+ *
+ * @param {Array<Object>} bookmarks - Raw bookmark tree nodes.
+ * @param {Array<string>} [folderTrail] - Accumulated folder hierarchy.
+ * @param {number} [depth] - Current traversal depth.
+ * @param {Map<string, Object>} [seenByUrl] - Map to track duplicate URLs (only if duplicate detection is enabled).
+ * @param {string} [folderText] - Pre-calculated folder string for search.
+ * @returns {Array<Object>} Flattened bookmark entries.
  */
-export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
-  depth = depth || 1
-  let result = []
-  folderTrail = folderTrail || []
+export function convertBrowserBookmarks(
+  bookmarks,
+  folderTrail = [],
+  depth = 1,
+  seenByUrl,
+  folderText,
+  result = [],
+  folderLower = '',
+  folderArrayLower = [],
+) {
+  // Build folderText and folderLower if not provided (first call)
+  if (folderText === undefined && folderTrail.length > 0) {
+    folderText = folderTrail.map((f) => `~${f}`).join(' ')
+    folderLower = folderText.toLowerCase()
+    folderArrayLower = folderTrail.map((f) => f.toLowerCase())
+  } else if (folderText === undefined) {
+    folderText = ''
+    folderLower = ''
+    folderArrayLower = []
+  }
 
-  for (const entry of bookmarks) {
-    let newFolderTrail = folderTrail.slice() // clone
-    // Only consider bookmark folders that have a title and have
-    // at least a depth of 2, so we skip the default chrome "system" folders
-    if (depth > 2) {
-      newFolderTrail = folderTrail.concat(entry.title)
-    }
+  // Only initialize seenByUrl Map if duplicate detection is enabled
+  if (seenByUrl === undefined && ext.opts.detectDuplicateBookmarks) {
+    seenByUrl = new Map()
+  }
 
-    // Filter out bookmarks by ignored folder
-    if (ext.opts.bookmarksIgnoreFolderList) {
-      if (folderTrail.some((el) => ext.opts.bookmarksIgnoreFolderList.includes(el))) {
-        continue
-      }
-    }
+  const ignoreList = ext.opts.bookmarksIgnoreFolderList
+  const hasIgnoreList = ignoreList?.length > 0
+
+  for (let i = 0; i < bookmarks.length; i++) {
+    const entry = bookmarks[i]
 
     if (entry.url) {
-      let title = entry.title
+      let title = entry.title || ''
       let customBonusScore = 0
 
-      const regex = /[ ][+]([0-9]+)/
-      const match = title.match(regex)
-      if (match && match.length > 0) {
-        title = title.replace(match[0], '')
-        if (match.length !== 2) {
-          console.error(`Unexpected custom bonus score match length`, match, entry)
-        } else {
-          customBonusScore = parseInt(match[1])
+      // Simple check for custom bonus score "+20"
+      if (title.includes(' +')) {
+        const match = title.match(BONUS_SCORE_REGEX)
+        if (match) {
+          title = title.replace(match[0], '')
+          customBonusScore = parseInt(match[1], 10)
         }
       }
+
+      const url = entry.url.replace(URL_ROOT_CLEANUP_REGEX, '')
+      const cleanedUrl = cleanUpUrl(url)
+
+      // Parse out tags from bookmark title (starting with " #")
+      let tagsText = ''
+      const tagsArray = []
+      if (title.includes(' #')) {
+        const tagSplit = title.split(' #')
+        title = tagSplit[0]
+
+        for (let j = 1; j < tagSplit.length; j++) {
+          const tag = tagSplit[j].trim()
+          if (!tag) continue
+          if (TAG_NUMERIC_CHECK_REGEX.test(tag)) {
+            // If tag starts with a digit, it's probably not a tag (e.g. "C# 11")
+            title += ` #${tag}`
+          } else {
+            tagsArray.push(tag)
+            tagsText += `#${tag} `
+          }
+        }
+        tagsText = tagsText.trim()
+      }
+
+      const finalTitle = getTitle(title, cleanedUrl)
+      const titleLower = finalTitle.toLowerCase().trim()
+      const searchStringLower = createSearchStringLower(finalTitle, cleanedUrl, tagsText, folderText)
 
       const mappedEntry = {
         type: 'bookmark',
         originalId: entry.id,
-        title: title,
-        originalUrl: entry.url.replace(/\/$/, ''),
-        url: cleanUpUrl(entry.url),
+        title: finalTitle,
+        titleLower: titleLower,
+        originalUrl: url,
+        url: cleanedUrl,
         dateAdded: entry.dateAdded,
         customBonusScore,
+        tags: tagsText,
+        tagsLower: tagsText.toLowerCase(),
+        tagsArray: tagsArray,
+        tagsArrayLower: tagsArray.map((t) => t.toLowerCase()),
+        folder: folderText,
+        folderLower: folderLower,
+        folderArray: folderTrail,
+        folderArrayLower: folderArrayLower,
+        searchStringLower,
       }
 
-      // Parse out tags from bookmark title (starting with " #")
-      let tagsText = ''
-      let tagsArray = []
-      if (title) {
-        const tagSplit = title.split(' #').map((el) => el.trim())
-        title = tagSplit.shift()
-
-        tagsArray = tagSplit.filter((el) => {
-          if (el.match(/^\d/)) {
-            title += ' #' + el
-            return false
-          } else if (!el.trim()) {
-            return false
-          } else {
-            return el
-          }
-        })
-        for (const tag of tagsArray) {
-          tagsText += '#' + tag.trim() + ' '
+      // Only detect duplicates if the feature is enabled
+      if (seenByUrl) {
+        const existingEntry = seenByUrl.get(mappedEntry.url)
+        if (existingEntry) {
+          existingEntry.dupe = true
+          mappedEntry.dupe = true
+          console.warn(
+            `Duplicate bookmark detected for ${mappedEntry.originalUrl} in folder: ${mappedEntry.folderArray.join(' > ') || '/'}`,
+          )
+        } else {
+          seenByUrl.set(mappedEntry.url, mappedEntry)
         }
-        tagsText = tagsText.slice(0, -1)
       }
-
-      mappedEntry.title = getTitle(title, mappedEntry.url)
-      mappedEntry.tags = tagsText
-      mappedEntry.tagsArray = tagsArray
-
-      // Consider the folder names / structure of bookmarks
-      let folderText = ''
-      for (const folder of folderTrail) {
-        folderText += '~' + folder + ' '
-      }
-      folderText = folderText.slice(0, -1)
-
-      mappedEntry.folder = folderText
-      mappedEntry.folderArray = folderTrail
-
-      mappedEntry.searchString = createSearchString(
-        mappedEntry.title,
-        mappedEntry.url,
-        mappedEntry.tags,
-        mappedEntry.folder,
-      )
-      mappedEntry.searchStringLower = mappedEntry.searchString.toLowerCase()
 
       result.push(mappedEntry)
-    }
+    } else if (entry.children) {
+      // It's a folder
+      const folderTitle = entry.title
+      let newFolderTrail = folderTrail
+      let nextFolderText = folderText
+      let nextFolderLower = folderLower
+      let nextFolderArrayLower = folderArrayLower
 
-    if (entry.children) {
-      result = result.concat(convertBrowserBookmarks(entry.children, newFolderTrail, depth + 1))
+      // Skip default chrome "system" folders at depth 1/2
+      if (depth > 2 && folderTitle) {
+        newFolderTrail = folderTrail.concat(folderTitle)
+        const folderTitleLower = folderTitle.toLowerCase()
+        nextFolderText = `${folderText ? `${folderText} ` : ''}~${folderTitle}`
+        nextFolderLower = `${folderLower ? `${folderLower} ` : ''}~${folderTitleLower}`
+        nextFolderArrayLower = folderArrayLower.concat(folderTitleLower)
+      }
+
+      // Check ignore list
+      if (hasIgnoreList && folderTitle && ignoreList.includes(folderTitle)) {
+        continue
+      }
+
+      convertBrowserBookmarks(
+        entry.children,
+        newFolderTrail,
+        depth + 1,
+        seenByUrl,
+        nextFolderText,
+        result,
+        nextFolderLower,
+        nextFolderArrayLower,
+      )
     }
   }
 
@@ -151,6 +271,10 @@ export function convertBrowserBookmarks(bookmarks, folderTrail, depth) {
 /**
  * Gets chrome browsing history.
  * Warning: This chrome API call tends to be rather slow
+ *
+ * @param {number} startTime - Earliest visit timestamp to include.
+ * @param {number} maxResults - Maximum number of history items.
+ * @returns {Promise<Array>} History entries or empty array when unsupported.
  */
 export async function getBrowserHistory(startTime, maxResults) {
   if (browserApi.history) {
@@ -166,67 +290,114 @@ export async function getBrowserHistory(startTime, maxResults) {
 }
 
 /**
- * Convert chrome history into our internal, flat array format
+ * Retrieve tab groups from the browser API.
+ *
+ * @returns {Promise<Array>} Tab group objects or empty array when unsupported.
  */
-export function convertBrowserHistory(history) {
-  if (ext.opts.historyIgnoreList && ext.opts.historyIgnoreList.length) {
-    let ignoredHistoryCounter = 0
-    history = history.filter((el) => {
-      for (const ignoreUrl of ext.opts.historyIgnoreList) {
-        if (el.url.includes(ignoreUrl)) {
-          ignoredHistoryCounter += 1
-          return false
-        }
-      }
-      return true
-    })
-    if (ext.opts.debug) {
-      console.debug(`Ignored ${ignoredHistoryCounter} history items due to ignore list`)
+export async function getBrowserTabGroups() {
+  if (browserApi.tabGroups?.query) {
+    try {
+      return await browserApi.tabGroups.query({})
+    } catch (err) {
+      console.warn(`Error fetching tab groups: ${err.message}`)
+      return []
     }
+  } else {
+    return []
+  }
+}
+
+export function convertBrowserHistory(history) {
+  const historyIgnoreList = ext.opts.historyIgnoreList
+  let ignoreRegex = null
+  if (historyIgnoreList?.length) {
+    if (!ext.state) ext.state = {}
+    if (!ext.state.historyIgnoreRegex) {
+      // Filter out empty strings and escape special characters
+      const cleanPatterns = historyIgnoreList
+        .filter(Boolean)
+        .map((str) => String(str).replace(REGEX_SPECIAL_CHARS_REGEX, '\\$&'))
+
+      if (cleanPatterns.length > 0) {
+        ext.state.historyIgnoreRegex = new RegExp(cleanPatterns.join('|'), 'i')
+      } else {
+        // Fallback to a regex that matches nothing
+        ext.state.historyIgnoreRegex = /$.^/
+      }
+    }
+    ignoreRegex = ext.state.historyIgnoreRegex
   }
 
+  const result = []
+  const count = history.length
   const now = Date.now()
-  return history.map((el) => {
+  let ignoredHistoryCounter = 0
+
+  for (let i = 0; i < count; i++) {
+    const el = history[i]
+    if (ignoreRegex?.test(el.url)) {
+      ignoredHistoryCounter += 1
+      continue
+    }
+
     const cleanUrl = cleanUpUrl(el.url)
-    const searchString = createSearchString(el.title, cleanUrl)
-    return {
+    const title = getTitle(el.title, cleanUrl)
+    const titleLower = title.toLowerCase().trim()
+    const searchStringLower = createSearchStringLower(title, cleanUrl)
+
+    result.push({
       type: 'history',
-      title: getTitle(el.title, cleanUrl),
-      originalUrl: el.url.replace(/\/$/, ''),
+      title,
+      titleLower: titleLower,
+      originalUrl: el.url.replace(URL_ROOT_CLEANUP_REGEX, ''),
       url: cleanUrl,
       visitCount: el.visitCount,
       lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
       originalId: el.id,
-      searchString,
-      searchStringLower: searchString.toLowerCase(),
-    }
-  })
+      searchStringLower,
+    })
+  }
+
+  if (ignoredHistoryCounter > 0) {
+    console.debug(`Ignored ${ignoredHistoryCounter} history items due to ignore list`)
+  }
+
+  return result
 }
 
-export function createSearchString(title, url, tags, folder) {
-  const separator = '¦'
-  let searchString = ''
-  if (!url) {
-    console.error('createSearchString: No URL given', { title, url, tags, folder })
-    return searchString
+/**
+ * Combine title/url/tags/folder/group fields into a single lowercased search string.
+ *
+ * @param {string} title - Bookmark title.
+ * @param {string} url - Normalized URL.
+ * @param {string} [tags] - Tag string.
+ * @param {string} [folder] - Folder breadcrumb string.
+ * @param {string} [group] - Tab group string.
+ * @returns {string} Combined lowercased search string.
+ */
+export function createSearchStringLower(title, url, tags, folder, group) {
+  let result = ''
+  if (title && title !== url) {
+    result += title
   }
-  // Keep the original casing intact. Fuzzy search relies on searchString
-  // to generate highlighted snippets for the UI, so we compute
-  // searchStringLower separately when building the data model.
-  if (title && !title.toLowerCase().includes(url.toLowerCase())) {
-    searchString += title + separator + url
-  } else {
-    searchString += url
+  if (url) {
+    result += (result ? '¦' : '') + url
   }
   if (tags) {
-    searchString += separator + tags
+    result += (result ? '¦' : '') + tags
   }
   if (folder) {
-    searchString += separator + folder
+    result += (result ? '¦' : '') + folder
   }
-  return searchString
+  if (group) {
+    result += (result ? '¦' : '') + group
+  }
+  return result.toLowerCase()
 }
 
+/**
+ * Ensure bookmarks have a human-readable title, falling back to shortened URLs.
+ */
 export function getTitle(title, url) {
   let newTitle = title || ''
   if (newTitle.includes('http://') || newTitle.includes('https://') || newTitle === url) {
@@ -238,14 +409,16 @@ export function getTitle(title, url) {
   return newTitle
 }
 
+/**
+ * Shorten overly long titles or URLs for display purposes.
+ *
+ * @param {string} title - Title to shorten.
+ * @returns {string} Possibly truncated title.
+ */
 export function shortenTitle(title) {
-  const urlTitleLengthRestriction = 85
-  const maxLengthRestriction = 512
-  if (title && title.length > urlTitleLengthRestriction) {
-    return `${title.substring(0, urlTitleLengthRestriction - 3)}...`
-  } else if (title && title.length > maxLengthRestriction) {
-    return `${title.substring(0, maxLengthRestriction - 3)}...`
-  } else {
-    return title
+  const limit = 80
+  if (title?.length > limit) {
+    return `${title.substring(0, limit - 3)}...`
   }
+  return title
 }

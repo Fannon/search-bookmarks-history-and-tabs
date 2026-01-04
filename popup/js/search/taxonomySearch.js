@@ -1,8 +1,15 @@
-//////////////////////////////////////////
-// TAXONOMY SEARCH SUPPORT              //
-//////////////////////////////////////////
-
-// This helps finding bookmarks that include tags or are part of a folder
+/**
+ * @file Implements dedicated tag (`#`) and folder (`~`) taxonomy searches.
+ *
+ * Strategy:
+ * - Provide AND-based filtering so queries like `#react #node` or `~Projects ~React` match bookmarks with every term.
+ * - Power the tags and folders overview pages with aggregated counts derived from bookmark metadata.
+ * - Maintain cached taxonomy indexes for quick lookups when switching between popup navigation modes.
+ *
+ * Scoring:
+ * - Matches always report a `searchScore` of 1 before entering the shared scoring pipeline.
+ * - Taxonomy results are marked with `searchApproach: 'taxonomy'` to keep rendering and analytics aware of the source.
+ */
 
 /**
  * Simple, precise search for bookmark tags and folder names
@@ -10,28 +17,63 @@
  *
  * @param {string} searchTerm
  * @param {'tags' | 'folder'} taxonomyType
+ * @param {Array<Object>} data - Bookmark-derived taxonomy entries.
+ * @returns {Array<Object>} Taxonomy results with score metadata.
  */
 export function searchTaxonomy(searchTerm, taxonomyType, data) {
   /** Search results */
   const results = []
   /** Marker for taxonomy search mode */
-  const taxonomyMarker = taxonomyType === 'tags' ? '#' : '~'
+  let taxonomyMarker = '#'
+  if (taxonomyType === 'folder') taxonomyMarker = '~'
+  if (taxonomyType === 'group') taxonomyMarker = '@'
 
-  let searchTermArray = searchTerm.split(taxonomyMarker)
+  // Split by double space to separate taxonomy filter from content search
+  let taxonomyQuery = searchTerm
+  let contentQuery = ''
+  const splitIndex = searchTerm.indexOf('  ')
+  if (splitIndex !== -1) {
+    taxonomyQuery = searchTerm.substring(0, splitIndex)
+    contentQuery = searchTerm
+      .substring(splitIndex + 2)
+      .trim()
+      .toLowerCase()
+  }
 
-  if (searchTermArray.length) {
+  const searchTerms = taxonomyQuery
+    .split(taxonomyMarker)
+    .map((term) => term.trim().toLowerCase())
+    .filter((term) => term.length > 0)
+
+  if (searchTerms.length) {
     for (const entry of data) {
-      const searchString = `${entry[taxonomyType] || ''}`.toLowerCase()
-      let searchTermMatches = 0
-      for (const term of searchTermArray) {
-        if (searchString.includes(taxonomyMarker + term)) {
-          searchTermMatches++
+      if (!entry) continue
+
+      // Content Filter (if active)
+      if (contentQuery) {
+        // Use pre-calculated lowercase values if available
+        const title = entry.titleLower || (entry.title || '').toLowerCase()
+        // entry.url is already normalized and lowercased by cleanUpUrl
+        const url = entry.url || ''
+        // If neither title nor URL (and optional originalUrl) matches, skip
+        if (!title.includes(contentQuery) && !url.includes(contentQuery)) {
+          continue
         }
       }
-      if (searchTermMatches === searchTermArray.length) {
+
+      // Prepare search string for taxonomy matching
+      let searchString = ''
+      if (taxonomyType === 'group') {
+        // For groups, we prepend @. Use pre-calculated groupLower if available.
+        searchString = entry.groupLower ? `@${entry.groupLower}` : entry.group ? `@${entry.group}`.toLowerCase() : ''
+      } else {
+        // For tags/folders, use pre-calculated lower field (tagsLower, folderLower)
+        searchString = entry[`${taxonomyType}Lower`] || (entry[taxonomyType] || '').toLowerCase()
+      }
+
+      if (searchTerms.every((term) => searchString.includes(taxonomyMarker + term))) {
         results.push({
           ...entry,
-          searchScore: 1,
           searchApproach: 'taxonomy',
         })
       }
@@ -41,6 +83,11 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
   return results
 }
 
+/**
+ * Build a tag-to-bookmark index from the current bookmark model.
+ *
+ * @returns {Object<string, Array<string>>} Map of tag name to bookmark ids.
+ */
 export function getUniqueTags() {
   ext.index.taxonomy.tags = {}
   for (const el of ext.model.bookmarks) {
@@ -60,6 +107,11 @@ export function getUniqueTags() {
   return ext.index.taxonomy.tags
 }
 
+/**
+ * Build (or reuse) a memoized folder-to-bookmark index.
+ *
+ * @returns {Object<string, Array<string>>} Map of folder name to bookmark ids.
+ */
 export function getUniqueFolders() {
   // This function is memoized, as the folders don't change while the extension is open
   if (!ext || !ext.index.taxonomy.folders) {
@@ -88,7 +140,30 @@ export function getUniqueFolders() {
  * Call this after mutating ext.model.bookmarks to keep folder views in sync.
  */
 export function resetUniqueFoldersCache() {
-  if (ext && ext.index && ext.index.taxonomy) {
+  if (ext?.index?.taxonomy) {
     ext.index.taxonomy.folders = undefined
   }
+}
+
+/**
+ * Build a group-to-tab index from the current tab model.
+ *
+ * @returns {Object<string, Array<number>>} Map of group name to tab ids.
+ */
+export function getUniqueGroups() {
+  const groupsDictionary = {}
+  const tabs = ext.model.tabs || []
+
+  for (const el of tabs) {
+    if (el.group) {
+      const groupName = el.group
+      if (!groupsDictionary[groupName]) {
+        groupsDictionary[groupName] = [el.originalId]
+      } else {
+        groupsDictionary[groupName].push(el.originalId)
+      }
+    }
+  }
+
+  return groupsDictionary
 }

@@ -1,11 +1,23 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
-import chokidar from 'chokidar'
-import process from 'node:process'
 import { performance } from 'node:perf_hooks'
+import process from 'node:process'
+/**
+ * @file Watches popup sources and triggers incremental rebuilds.
+ *
+ * Listens for changes under `popup/`, reruns the esbuild bundler, and refreshes
+ * the Chrome distribution directory. Designed for `npm run watch` to keep the
+ * side-loaded extension in sync without manual rebuilds.
+ */
+import chokidar from 'chokidar'
 import { bundleAll } from './bundle.js'
 import { createDist } from './createDist.js'
 
+/**
+ * Determine whether a changed file should be ignored by the watcher.
+ *
+ * @param {string} filePath - Path reported by chokidar.
+ * @returns {boolean} True when the path should be skipped.
+ */
 const isIgnoredPath = (filePath) => {
   if (!filePath) return false
 
@@ -16,11 +28,7 @@ const isIgnoredPath = (filePath) => {
   }
 
   const fileName = normalized.substring(normalized.lastIndexOf('/') + 1)
-  if (/\.min\.js(\.map)?$/i.test(fileName)) {
-    return true
-  }
-
-  return /\.bundle\.min\.js(\.map)?$/i.test(fileName)
+  return /\.min\.(js|css)(\.map)?$/i.test(fileName)
 }
 
 const watcher = chokidar.watch('popup', {
@@ -37,6 +45,11 @@ let pendingTimer = null
 let isBuilding = false
 let hasQueuedBuild = false
 
+/**
+ * Run a single bundle + dist build and report timing.
+ *
+ * @returns {Promise<void>}
+ */
 async function buildOnce() {
   console.info('Starting build...')
   const startedAt = performance.now()
@@ -47,8 +60,14 @@ async function buildOnce() {
   console.info(`Build complete in ${durationMs}ms`)
 }
 
+/**
+ * Serialise build executions, queueing the next run if one is in progress.
+ *
+ * @returns {Promise<void>}
+ */
 async function runBuild() {
   if (isBuilding) {
+    // Defer the rebuild until the current bundle completes to avoid overlaps
     hasQueuedBuild = true
     return
   }
@@ -68,11 +87,15 @@ async function runBuild() {
   }
 }
 
+/**
+ * Debounce rapid filesystem events before kicking off another build.
+ */
 const scheduleBuild = () => {
   if (pendingTimer) {
     return
   }
 
+  // Coalesce rapid file change events into a single rebuild invocation
   pendingTimer = setTimeout(() => {
     pendingTimer = null
     runBuild()
@@ -93,6 +116,9 @@ watcher.on('all', (eventName, filePath) => {
   scheduleBuild()
 })
 
+/**
+ * Cancel pending timers and close the watcher before exit.
+ */
 const cleanup = () => {
   if (pendingTimer) {
     clearTimeout(pendingTimer)

@@ -1,0 +1,25 @@
+# Lefthook configuration for git hooks
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: false
+  commands:
+    # Prevent commits to main branch
+    no-main-commits:
+      run: |
+        if [ "$(git rev-parse --abbrev-ref HEAD)" = "main" ]; then
+          echo "❌ Direct commits to 'main' branch are not allowed!"
+          exit 1
+        fi
+
+    # Lint and fix JavaScript files
+    lint-js:
+      glob: "*.{js,mjs}"
+      run: npx biome check --write --unsafe --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
+
+    # Format CSS, HTML, JSON files
+    format-files:
+      glob: "*.{css,html,json}"
+      run: npx biome format --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true

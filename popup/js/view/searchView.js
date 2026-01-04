@@ -1,463 +1,188 @@
 /**
- * SEARCH VIEW MODULE
+ * @file Renders search results in the popup UI.
  *
- * Handles the user interface and interaction for the search results display.
- * This module is responsible for:
- * - Rendering search results (bookmarks and open tabs) in a structured list format
- * - Managing visual selection and keyboard/mouse navigation between results
- * - Handling various click behaviors (open in tab, close tab, copy URL, etc.)
- * - Displaying result metadata (tags, folders, visit counts, dates, scores)
- * - Supporting search term highlighting and search strategy switching
+ * Responsibilities:
+ * - Render bookmark/tab/history results with metadata badges, highlights, and contextual actions (open, close, copy, edit).
+ * - Surface visit counts, taxonomy labels, and scoring hints to keep the UI aligned with search models.
+ * - Coordinate with searchNavigation.js for selection management and searchEvents.js for event delegation.
  */
 
-import { timeSince } from '../helper/utils.js'
-import { getUserOptions, setUserOptions } from '../model/options.js'
-import { search } from '../search/common.js'
+import { escapeHtml, timeSince } from '../helper/utils.js'
+import { printError } from './errorView.js'
+import { setupResultItemsEvents } from './searchEvents.js'
+import { selectListItem } from './searchNavigation.js'
 
 /**
- * Render the search results in UI as result items
+ * Render the search results in UI as result items.
+ * Always uses ext.model.result as the source of truth.
  */
-export async function renderSearchResults(result) {
-  result = result || ext.model.result
-
-  if (!result || result.length === 0) {
-    ext.dom.resultList.replaceChildren()
-    return
+export async function renderSearchResults() {
+  if (typeof performance !== 'undefined' && typeof performance.mark === 'function') {
+    performance.mark('render-start')
   }
+  try {
+    const result = ext.model.result
 
-  // Prepare for rendering - disable hover until results are fully rendered
-  ext.model.mouseHoverEnabled = false
-
-  // Cache configuration values for this render cycle
-  const opts = ext.opts
-  const shouldHighlight = opts.displaySearchMatchHighlight
-  const searchTerm = ext.model.searchTerm
-
-  // Set up right-click context menu prevention (one-time setup)
-  if (!document.hasContextMenuListener) {
-    document.addEventListener('contextmenu', (e) => {
-      e.preventDefault()
-    })
-    document.hasContextMenuListener = true
-  }
-
-  // Use DocumentFragment to batch DOM updates for smoother rendering
-  const fragment = document.createDocumentFragment()
-
-  for (let i = 0; i < result.length; i++) {
-    const resultEntry = result[i]
-
-    if (!resultEntry) {
-      continue
-    }
-
-    // Create the main list item element with appropriate attributes
-    const resultListItem = document.createElement('li')
-    resultListItem.className = resultEntry.type
-    resultListItem.setAttribute('x-open-url', resultEntry.originalUrl)
-    resultListItem.setAttribute('x-index', i)
-    resultListItem.setAttribute('x-original-id', resultEntry.originalId)
-
-    // Apply colored left border based on result type (bookmark, tab, etc.)
-    const colorKey = resultEntry.type + 'Color'
-    resultListItem.style.cssText = `border-left: ${opts.colorStripeWidth}px solid ${opts[colorKey]}`
-
-    // Add edit button for bookmark entries
-    if (resultEntry.type === 'bookmark') {
-      const editImg = document.createElement('img')
-      editImg.className = 'edit-button'
-      editImg.setAttribute('x-link', '#edit-bookmark/' + resultEntry.originalId)
-      editImg.title = 'Edit Bookmark'
-      editImg.src = '../images/edit.svg'
-      resultListItem.appendChild(editImg)
-    }
-
-    // Add close button for tab entries
-    if (resultEntry.type === 'tab') {
-      const closeImg = document.createElement('img')
-      closeImg.className = 'close-button'
-      closeImg.title = 'Close Tab'
-      closeImg.src = '../images/x.svg'
-      resultListItem.appendChild(closeImg)
-    }
-
-    // Create container for title and metadata
-    const titleDiv = document.createElement('div')
-    titleDiv.className = 'title'
-
-    // Create the title text element with highlighting support
-    const titleText = document.createElement('span')
-    titleText.className = 'title-text'
-
-    if (shouldHighlight) {
-      // Use pre-highlighted content if available, otherwise fall back to plain text
-      const content = resultEntry.titleHighlighted || resultEntry.title || resultEntry.urlHighlighted || resultEntry.url
-      if (content && content.includes('<mark>')) {
-        titleText.innerHTML = content + ' '
-      } else {
-        titleText.innerText = content + ' '
+    if (!result || result.length === 0) {
+      ext.dom.resultList.replaceChildren()
+      // Clear result counter when no results to show
+      if (ext.dom.resultCounter) {
+        ext.dom.resultCounter.innerText = ''
       }
-    } else {
-      // Display title or URL as fallback
-      const titleContent = resultEntry.title || resultEntry.url + ' '
-      titleText.innerText = titleContent
-    }
-    titleDiv.appendChild(titleText)
-
-    // Add clickable tag badges for bookmark entries
-    if (opts.displayTags && resultEntry.tagsArray) {
-      for (const tag of resultEntry.tagsArray) {
-        const el = document.createElement('span')
-        el.title = 'Bookmark Tags'
-        el.className = 'badge tags'
-        el.setAttribute('x-link', `#search/#${tag}`)
-        if (shouldHighlight) {
-          el.innerText = '#' + tag
-        }
-        titleDiv.appendChild(el)
-      }
-    }
-
-    // Add clickable folder path badges for bookmark entries
-    if (opts.displayFolderName && resultEntry.folderArray) {
-      const trail = []
-      for (const f of resultEntry.folderArray) {
-        trail.push(f)
-        const el = document.createElement('span')
-        el.title = 'Bookmark Folder'
-        el.className = 'badge folder'
-        el.setAttribute('x-link', `#search/~${trail.join(' ~')}`)
-        if (opts.bookmarkColor) {
-          el.style.cssText = `background-color: ${opts.bookmarkColor}`
-        }
-        if (shouldHighlight) {
-          el.innerText = '~' + f
-        }
-        titleDiv.appendChild(el)
-      }
-    }
-
-    // Add relative visit time badge (e.g., "2 hours ago")
-    if (opts.displayLastVisit && resultEntry.lastVisitSecondsAgo) {
-      const lastVisit = timeSince(new Date(Date.now() - resultEntry.lastVisitSecondsAgo * 1000))
-      const lastVisited = document.createElement('span')
-      lastVisited.title = 'Last Visited'
-      lastVisited.className = 'badge last-visited'
-      lastVisited.innerText = '-' + lastVisit
-      titleDiv.appendChild(lastVisited)
-    }
-
-    // Add visit count badge showing how many times the page was visited
-    if (opts.displayVisitCounter && resultEntry.visitCount !== undefined) {
-      const visitCounter = document.createElement('span')
-      visitCounter.title = 'Visited Counter'
-      visitCounter.className = 'badge visit-counter'
-      visitCounter.innerText = resultEntry.visitCount
-      titleDiv.appendChild(visitCounter)
-    }
-
-    // Add date when bookmark was added
-    if (opts.displayDateAdded && resultEntry.dateAdded) {
-      const dateAdded = document.createElement('span')
-      dateAdded.title = 'Date Added'
-      dateAdded.className = 'badge date-added'
-      dateAdded.innerText = new Date(resultEntry.dateAdded).toISOString().split('T')[0]
-      titleDiv.appendChild(dateAdded)
-    }
-
-    // Add relevance score badge for search result ranking
-    if (opts.displayScore && resultEntry.score) {
-      const score = document.createElement('span')
-      score.title = 'Score'
-      score.className = 'badge score'
-      score.innerText = Math.round(resultEntry.score)
-      titleDiv.appendChild(score)
-    }
-
-    // Create and populate URL display section
-    const urlDiv = document.createElement('div')
-    urlDiv.className = 'url'
-    urlDiv.title = resultEntry.url
-    if (shouldHighlight && resultEntry.urlHighlighted && resultEntry.urlHighlighted.includes('<mark>')) {
-      urlDiv.innerHTML = resultEntry.urlHighlighted
-    } else {
-      urlDiv.innerText = resultEntry.url
-    }
-
-    // Assemble the complete result item
-    resultListItem.appendChild(titleDiv)
-    resultListItem.appendChild(urlDiv)
-
-    // Enable interaction with the result item
-    resultListItem.addEventListener('mouseenter', hoverResultItem)
-    resultListItem.addEventListener('mouseup', openResultItem)
-
-    // Apply client-side text highlighting for search terms if needed
-    if (shouldHighlight && searchTerm && window.Mark) {
-      if (!resultEntry.titleHighlighted || !resultEntry.urlHighlighted) {
-        const mark = new window.Mark(resultListItem)
-        mark.mark(searchTerm)
-      }
-    }
-
-    fragment.appendChild(resultListItem)
-  }
-
-  // Update the DOM with all new result items at once
-  ext.dom.resultList.replaceChildren(fragment)
-
-  // Highlight the first result as the current selection
-  selectListItem(0)
-}
-
-//////////////////////////////////////////
-// SEARCH VIEW NAVIGATION               //
-//////////////////////////////////////////
-
-/**
- * Handle keyboard navigation for search results
- * Supports arrow keys and vim-style keybindings (Ctrl+P/Ctrl+N, Ctrl+K/Ctrl+J)
- */
-export function navigationKeyListener(event) {
-  // Define navigation directions with multiple keybinding options
-  const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p') || (event.ctrlKey && event.key === 'k')
-  const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n') || (event.ctrlKey && event.key === 'j')
-
-  if (up && ext.dom.searchInput.value && ext.model.currentItem === 0) {
-    // Prevent navigation above first item when search field has content
-    event.preventDefault()
-  } else if (up && ext.model.currentItem > 0) {
-    // Navigate to previous result
-    event.preventDefault()
-    selectListItem(ext.model.currentItem - 1, true)
-  } else if (down && ext.model.currentItem < ext.model.result.length - 1) {
-    // Navigate to next result
-    event.preventDefault()
-    selectListItem(ext.model.currentItem + 1, true)
-  } else if (event.key === 'Enter' && ext.model.result.length > 0) {
-    // Activate selected result when Enter is pressed
-    if (window.location.hash.startsWith('#search/') || !window.location.hash) {
-      openResultItem(event)
-    }
-  } else if (event.key === 'Escape') {
-    // Return to search mode and focus the search input
-    window.location.hash = '#search/'
-    ext.dom.searchInput.focus()
-  }
-}
-
-/**
- * Update the visual selection state of result items
- * Removes previous selection and applies new selection with optional scrolling
- */
-export function selectListItem(index, scroll = false) {
-  // Clear existing selection
-  const currentSelection = document.getElementById('selected-result')
-  if (currentSelection) {
-    currentSelection.id = ''
-    delete currentSelection.id
-  }
-
-  // Apply new selection if the item exists
-  if (ext.dom.resultList.children[index]) {
-    ext.dom.resultList.children[index].id = 'selected-result'
-
-    // Smoothly scroll the selected item into view if requested
-    if (scroll) {
-      ext.dom.resultList.children[index].scrollIntoView({
-        behavior: 'auto',
-        block: 'nearest',
-      })
-    }
-  }
-
-  // Update the application state to reflect the new selection
-  ext.model.currentItem = index
-}
-
-/**
- * Handle mouse hover events on result items to update selection
- * Includes protection against spurious hover events during rendering
- */
-export function hoverResultItem(event) {
-  const target = event.target ? event.target : event.srcElement
-  const index = target.getAttribute('x-index')
-
-  // Prevent hover events during the initial render phase
-  if (!ext.model.mouseHoverEnabled) {
-    ext.model.mouseHoverEnabled = true
-    return
-  }
-
-  if (index) {
-    selectListItem(index)
-  } else {
-    console.warn('Could not hover result item', target, event)
-  }
-}
-
-/**
- * Handle click/mouse events on search results with different behaviors based on modifiers and target elements
- * Provides multiple ways to interact with search results (open, close tabs, navigate to tags/folders, etc.)
- */
-export function openResultItem(event) {
-  const resultEntry = document.getElementById('selected-result')
-  const originalId = resultEntry.getAttribute('x-original-id')
-  const url = resultEntry.getAttribute('x-open-url')
-
-  if (event) {
-    event.stopPropagation()
-
-    // Handle browser compatibility for event target
-    let target = event.target ? event.target : event.srcElement
-
-    // Skip over highlight markup to get the actual element
-    if (target.nodeName === 'MARK') {
-      target = target.parentNode
-    }
-
-    // Handle clicks on special navigation elements (tags, folders, etc.)
-    if (target && target.getAttribute('x-link')) {
-      window.location = target.getAttribute('x-link')
       return
     }
 
-    // Handle close button clicks on tab entries
-    if (target && target.className.includes('close-button')) {
-      const targetId = parseInt(originalId)
+    // Prepare for rendering - reset mouse movement tracking
+    ext.model.mouseMoved = false
 
-      // Close the browser tab
-      ext.browserApi.tabs.remove(targetId)
+    // Cache configuration values for this render cycle
+    const opts = ext.opts
+    const shouldHighlight = opts.displaySearchMatchHighlight
+    const searchTerm = ext.model.searchTerm
 
-      // Remove the item from the UI
-      document.querySelector(`#result-list > li[x-original-id="${originalId}"]`).remove()
-
-      // Update the application state
-      ext.model.tabs.splice(
-        ext.model.tabs.findIndex((el) => el.originalId === targetId),
-        1,
-      )
-      ext.model.result.splice(
-        ext.model.result.findIndex((el) => el.originalId === targetId),
-        1,
-      )
-
-      // Re-render to update indices and selection
-      renderSearchResults()
-      return
-    }
-  }
-
-  // Handle right-click to copy URL to clipboard
-  if (event.button === 2) {
-    navigator.clipboard.writeText(url)
-    event.preventDefault()
-    return
-  }
-
-  // Handle Shift/Alt modifiers - open in current tab
-  if (event.shiftKey || event.altKey) {
-    if (ext.browserApi.tabs) {
-      // Use browser tabs API to update current tab
-      ext.browserApi.tabs
-        .query({
-          active: true,
-          currentWindow: true,
-        })
-        .then(([currentTab]) => {
-          ext.browserApi.tabs.update(currentTab.id, {
-            url: url,
-          })
-
-          // Close popup unless Ctrl is also pressed
-          if (!event.ctrlKey) {
-            window.close()
-          }
-        })
-        .catch(console.error)
-    } else {
-      // Fallback for non-extension environments
-      window.location.href = url
-    }
-    return
-  }
-
-  // Handle Ctrl modifier - open in background tab
-  if (event.ctrlKey) {
-    if (ext.browserApi.tabs) {
-      ext.browserApi.tabs.create({
-        active: false,
-        url: url,
+    // Set up right-click context menu prevention (one-time setup)
+    if (!document.hasContextMenuListener) {
+      document.addEventListener('contextmenu', (e) => {
+        e.preventDefault()
       })
-    } else {
-      window.open(url, '_newtab')
+      document.hasContextMenuListener = true
     }
-    return
-  }
 
-  // Default behavior - open in new tab or switch to existing tab
-  const foundTab = ext.model.tabs.find((el) => {
-    return el.originalUrl === url
-  })
+    // Use an array to accumulate HTML strings for all result items
+    const itemsHTML = []
+    const searchTermSuffix = `/search/${encodeURIComponent(searchTerm || '')}`
 
-  if (foundTab && ext.browserApi.tabs.highlight) {
-    // Switch to existing tab if found
-    ext.browserApi.tabs.update(foundTab.originalId, {
-      active: true,
-    })
-    ext.browserApi.windows.update(foundTab.windowId, {
-      focused: true,
-    })
-    window.close()
-  } else if (ext.browserApi.tabs) {
-    // Create new tab as active
-    ext.browserApi.tabs.create({
-      active: true,
-      url: url,
-    })
-    window.close()
-  } else {
-    // Fallback for non-extension environments
-    window.open(url, '_newtab')
-  }
-}
+    // Pre-calculate type-based colors once
+    const typeColors = {}
+    for (const t of ['bookmark', 'tab', 'history', 'search', 'customSearch', 'direct']) {
+      typeColors[t] = escapeHtml(String(opts[`${t}Color`] || ''))
+    }
 
-/**
- * Switch between fuzzy and precise search strategies
- * Updates user preferences and refreshes search results with the new strategy
- */
-export async function toggleSearchApproach() {
-  // Load current user preferences
-  const userOptions = await getUserOptions()
+    const createBadge = (content, title, extraClass = '', extraLink = '', extraStyle = '') =>
+      `<span class="badge ${extraClass}"${title ? ` title="${escapeHtml(title)}"` : ''}${extraLink ? ` x-link="${escapeHtml(extraLink)}"` : ''}${extraStyle ? ` style="${extraStyle}"` : ''}>${content}</span>`
 
-  // Toggle the current search strategy
-  if (ext.opts.searchStrategy === 'precise') {
-    ext.opts.searchStrategy = 'fuzzy'
-  } else {
-    ext.opts.searchStrategy = 'precise'
-  }
+    // Pre-render static badges
+    const BADGE_DUPLICATE = createBadge('Duplicate', 'Duplicate Bookmark', 'duplicate')
+    const bookmarkBaseColorStyle = opts.bookmarkColor ? `background-color: ${typeColors.bookmark}` : ''
 
-  // Persist the new strategy to user preferences
-  userOptions.searchStrategy = ext.opts.searchStrategy
-  await setUserOptions(userOptions)
+    const resultLen = result.length
+    for (let i = 0; i < resultLen; i++) {
+      const entry = result[i]
+      if (!entry) continue
 
-  // Update the UI to reflect the new strategy
-  updateSearchApproachToggle()
+      const badges = []
+      const type = entry.type || ''
+      if (entry.dupe) badges.push(BADGE_DUPLICATE)
 
-  // Re-run search with the new strategy
-  search()
-}
+      const tagsArray = entry.tagsArray
+      if (opts.displayTags && tagsArray) {
+        const highlightedTags = entry.highlightedTagsArray
+        for (let j = 0; j < tagsArray.length; j++) {
+          const tag = tagsArray[j]
+          const content = shouldHighlight && highlightedTags?.[j] ? highlightedTags[j] : `#${escapeHtml(tag)}`
+          badges.push(createBadge(content, 'Bookmark Tags', 'tags', `#search/#${encodeURIComponent(tag)}%20%20`))
+        }
+      }
 
-/**
- * Update the search strategy toggle button appearance
- * Changes both the displayed text and CSS class based on current strategy
- */
-export function updateSearchApproachToggle() {
-  if (ext.opts.searchStrategy === 'fuzzy') {
-    ext.dom.searchApproachToggle.innerText = 'FUZZY'
-    ext.dom.searchApproachToggle.classList = 'fuzzy'
-  } else if (ext.opts.searchStrategy === 'precise') {
-    ext.dom.searchApproachToggle.innerText = 'PRECISE'
-    ext.dom.searchApproachToggle.classList = 'precise'
+      const folderArray = entry.folderArray
+      if (opts.displayFolderName && folderArray) {
+        const highlightedFolders = entry.highlightedFolderArray
+        let trail = ''
+        for (let j = 0; j < folderArray.length; j++) {
+          trail += (j === 0 ? '' : ' ~') + folderArray[j]
+          const folder = folderArray[j]
+          const content = shouldHighlight && highlightedFolders?.[j] ? highlightedFolders[j] : `~${escapeHtml(folder)}`
+          badges.push(
+            createBadge(
+              content,
+              'Bookmark Folder',
+              'folder',
+              `#search/~${encodeURIComponent(trail)}%20%20`,
+              bookmarkBaseColorStyle,
+            ),
+          )
+        }
+      }
+
+      const group = entry.group
+      if (opts.displayTabGroup && group) {
+        const content = shouldHighlight && entry.highlightedGroup ? entry.highlightedGroup : `@${escapeHtml(group)}`
+        badges.push(
+          createBadge(
+            content,
+            'Tab Group',
+            'group',
+            `#search/@${encodeURIComponent(group)}%20%20`,
+            'background-color: #6a4fbb',
+          ),
+        )
+      }
+
+      if (opts.displayLastVisit && entry.lastVisitSecondsAgo != null) {
+        badges.push(
+          createBadge(
+            `-${escapeHtml(timeSince(Date.now() - entry.lastVisitSecondsAgo * 1000))}`,
+            'Last Visited',
+            'last-visited',
+          ),
+        )
+      }
+      if (opts.displayVisitCounter && entry.visitCount !== undefined) {
+        badges.push(createBadge(escapeHtml(String(entry.visitCount)), 'Visited Counter', 'visit-counter'))
+      }
+      if (opts.displayDateAdded && entry.dateAdded) {
+        const dateStr = new Date(entry.dateAdded).toISOString().substring(0, 10)
+        badges.push(createBadge(escapeHtml(dateStr), 'Date Added', 'date-added'))
+      }
+      if (opts.displayScore && entry.score) {
+        badges.push(createBadge(escapeHtml(String(Math.round(entry.score))), 'Score', 'score'))
+      }
+
+      const title =
+        shouldHighlight && entry.highlightedTitle ? entry.highlightedTitle : escapeHtml(entry.title || entry.url || '')
+      const url = shouldHighlight && entry.highlightedUrl ? entry.highlightedUrl : escapeHtml(entry.url || '')
+
+      let colorStyle = `border-left-color: ${typeColors[type] || ''}`
+      if (type === 'bookmark' && entry.tab) {
+        // Use a vertical gradient as indicator for "both bookmark and tab"
+        // background-origin: border-box is used to ensure the gradient fills the border area
+        colorStyle = `border-left-color: transparent; background-image: linear-gradient(to bottom, ${typeColors.bookmark} 0%, ${typeColors.bookmark} 20%, ${typeColors.tab} 80%, ${typeColors.tab} 100%); background-size: 4px 100%; background-repeat: no-repeat; background-origin: border-box;`
+      }
+
+      const originalUrl = entry.originalUrl ? ` x-open-url="${escapeHtml(entry.originalUrl)}"` : ''
+      const originalId =
+        entry.originalId !== undefined ? ` x-original-id="${escapeHtml(String(entry.originalId))}"` : ''
+
+      itemsHTML.push(
+        `<li class="${escapeHtml(type)}"${originalUrl} x-index="${i}"${originalId} style="${colorStyle}">${type === 'bookmark' ? `<img class="edit" x-link="./editBookmark.html#bookmark/${encodeURIComponent(entry.originalId)}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">` : ''}${type === 'tab' ? '<img class="close" title="Close Tab" src="./img/x.svg">' : ''}<div class="title"><span class="title-text">${title} </span>${badges.join('')}</div><div class="url" title="${escapeHtml(entry.url || '')}">${url}</div></li>`,
+      )
+    }
+
+    // Update the DOM with all new result items at once using innerHTML (faster for large updates)
+    ext.dom.resultList.innerHTML = itemsHTML.join('')
+
+    // Update result counter
+    if (ext.dom.resultCounter) {
+      ext.dom.resultCounter.innerText = `(${result.length})`
+    }
+
+    // Highlight the first result as the current selection
+    selectListItem(0)
+
+    if (typeof performance !== 'undefined' && typeof performance.mark === 'function') {
+      performance.mark('render-end')
+      if (typeof performance.measure === 'function') {
+        performance.measure('render-results', 'render-start', 'render-end')
+      }
+    }
+
+    // Set up event delegation for better performance (one-time setup)
+    setupResultItemsEvents()
+  } catch (err) {
+    // Reset mouse movement tracking even if rendering fails to prevent permanent UI breakage
+    ext.model.mouseMoved = false
+    printError(err, 'Failed to render search results')
+    // Re-throw to allow caller to handle if needed
+    throw err
   }
 }
