@@ -1,4 +1,4 @@
-import optionsSchema from '../../json/options.schema.json' with { type: 'json' }
+let optionsSchema
 
 /**
  * Validates user options against the JSON schema.
@@ -19,6 +19,9 @@ import optionsSchema from '../../json/options.schema.json' with { type: 'json' }
  * @returns {Promise<{valid: boolean, errors: string[]}>}
  */
 export async function validateOptions(options = {}) {
+  if (!optionsSchema) {
+    optionsSchema = (await import('../../json/options.schema.json')).default
+  }
   const errors = []
 
   if (options === null || options === undefined) {

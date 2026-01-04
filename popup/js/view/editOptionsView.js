@@ -7,16 +7,20 @@
  * - Provide reset/save controls and navigate back to the search view so tweaks can be tested immediately.
  */
 
-import optionsSchema from '../../json/options.schema.json' with { type: 'json' }
+let optionsSchema
+
 import { getUserOptions, setUserOptions } from '../model/options.js'
 import { validateOptions } from '../model/validateOptions.js'
 
 /**
- * Initialise the options editor view by loading and displaying user overrides.
+ * Initialize the options editor view by loading and displaying user overrides.
  *
  * @returns {Promise<void>}
  */
 export async function initOptions() {
+  if (!optionsSchema) {
+    optionsSchema = (await import('../../json/options.schema.json')).default
+  }
   const userOptions = await getUserOptions()
   const userOptionsYaml = window.jsyaml.dump(userOptions)
 
