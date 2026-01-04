@@ -8,6 +8,7 @@
  */
 
 let optionsSchema
+let isInitialized = false
 
 import { getUserOptions, setUserOptions } from '../model/options.js'
 import { validateOptions } from '../model/validateOptions.js'
@@ -29,11 +30,30 @@ export async function initOptions() {
   } else {
     document.getElementById('config').value = userOptionsYaml
   }
-  document.getElementById('opt-reset').addEventListener('click', resetOptions)
-  document.getElementById('opt-save').addEventListener('click', saveOptions)
 
-  // Hide error overlay when focusing the textarea
-  document.getElementById('config').addEventListener('focus', hideErrors)
+  // Ensure event listeners are only attached once to prevent duplicates
+  if (!isInitialized) {
+    document.getElementById('opt-reset').addEventListener('click', resetOptions)
+    document.getElementById('opt-save').addEventListener('click', saveOptions)
+
+    // Hide error overlay when focusing the textarea
+    document.getElementById('config').addEventListener('focus', hideErrors)
+
+    // Use event delegation for the error overlay buttons
+    const errorMessageEl = document.getElementById('error-message')
+    if (errorMessageEl) {
+      errorMessageEl.addEventListener('click', (ev) => {
+        if (ev.target.id === 'btn-dismiss') {
+          hideErrors()
+        } else if (ev.target.id === 'btn-clean') {
+          ev.stopPropagation()
+          removeUnknownOptions()
+        }
+      })
+    }
+
+    isInitialized = true
+  }
 }
 
 /**
@@ -66,10 +86,11 @@ function removeUnknownOptions() {
     }
 
     document.getElementById('config').value = window.jsyaml.dump(cleanOptions)
-    // Re-validate/save
-    saveOptions()
+    // Clear error overlay so user can see the cleaned YAML and save manually
+    hideErrors()
   } catch (e) {
     console.error('Failed to clean options:', e)
+    showErrorMessage(e)
   }
 }
 
@@ -86,7 +107,7 @@ function removeUnknownOptions() {
  */
 async function saveOptions() {
   const userOptionsString = document.getElementById('config').value
-  const errorMessageEl = document.getElementById('error-message')
+  const _errorMessageEl = document.getElementById('error-message')
 
   try {
     const userOptions = window.jsyaml.load(userOptionsString)
@@ -106,57 +127,7 @@ async function saveOptions() {
     hideErrors()
   } catch (e) {
     console.error(e)
-
-    // Format validation errors from schema validation
-    if (errorMessageEl) {
-      errorMessageEl.style.display = 'flex'
-
-      const hasUnknownOptions =
-        e && Array.isArray(e.validationErrors) && e.validationErrors.some((err) => err.includes('Unknown option'))
-
-      let errorContent = ''
-      if (e && Array.isArray(e.validationErrors) && e.validationErrors.length > 0) {
-        errorContent = e.validationErrors
-          .map((err) => {
-            const escaped = err.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            return `• ${escaped.replace(/"([^"]+)"/g, '<code>$1</code>')}`
-          })
-          .join('\n')
-      } else {
-        const escaped = (e?.message || 'Unknown error')
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-        errorContent = escaped.replace(/"([^"]+)"/g, '<code>$1</code>')
-      }
-
-      errorMessageEl.innerHTML = `
-        <div class="error-header">⚠️ Invalid Options</div>
-        <div class="error-list">${errorContent}</div>
-        <div class="error-footer">
-          ${
-            hasUnknownOptions
-              ? '<button id="btn-clean" class="overlay-button primary">REMOVE UNKNOWN OPTIONS</button>'
-              : ''
-          }
-          <button id="btn-dismiss" class="overlay-button">DISMISS</button>
-        </div>
-      `
-
-      // Add event listeners for the new buttons
-      const btnDismiss = document.getElementById('btn-dismiss')
-      if (btnDismiss) {
-        btnDismiss.addEventListener('click', hideErrors)
-      }
-
-      const btnClean = document.getElementById('btn-clean')
-      if (btnClean) {
-        btnClean.addEventListener('click', (ev) => {
-          ev.stopPropagation()
-          removeUnknownOptions()
-        })
-      }
-    }
+    showErrorMessage(e)
     return
   }
 
@@ -173,4 +144,43 @@ async function saveOptions() {
 async function resetOptions() {
   document.getElementById('config').value = ''
   hideErrors()
+}
+
+/**
+ * Surface errors in the UI overlay.
+ *
+ * @param {Error} e - The error object to display.
+ */
+function showErrorMessage(e) {
+  const errorMessageEl = document.getElementById('error-message')
+  if (!errorMessageEl) return
+
+  errorMessageEl.style.display = 'flex'
+
+  const hasUnknownOptions =
+    e && Array.isArray(e.validationErrors) && e.validationErrors.some((err) => err.includes('Unknown option'))
+
+  let errorContent = ''
+  if (e && Array.isArray(e.validationErrors) && e.validationErrors.length > 0) {
+    errorContent = e.validationErrors
+      .map((err) => {
+        const escaped = err.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        return `• ${escaped.replace(/"([^"]+)"/g, '<code>$1</code>')}`
+      })
+      .join('\n')
+  } else {
+    const escaped = (e?.message || 'Unknown error').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    errorContent = escaped.replace(/"([^"]+)"/g, '<code>$1</code>')
+  }
+
+  errorMessageEl.innerHTML = `
+    <div class="error-header">⚠️ Invalid Options</div>
+    <div class="error-list">${errorContent}</div>
+    <div class="error-footer">
+      ${
+        hasUnknownOptions ? '<button id="btn-clean" class="overlay-button primary">REMOVE UNKNOWN OPTIONS</button>' : ''
+      }
+      <button id="btn-dismiss" class="overlay-button">DISMISS</button>
+    </div>
+  `
 }

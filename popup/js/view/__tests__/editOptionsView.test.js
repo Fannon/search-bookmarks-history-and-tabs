@@ -257,7 +257,7 @@ describe('editOptionsView', () => {
     // Second validate call for cleaning should return valid
     mocks.validateOptions.mockImplementationOnce(() => Promise.resolve({ valid: true, errors: [] }))
 
-    btnClean.dispatchEvent(new MouseEvent('click'))
+    btnClean.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     await Promise.resolve()
     await Promise.resolve()
     await Promise.resolve()
