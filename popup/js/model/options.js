@@ -46,8 +46,6 @@ export const defaultOptions = {
   searchStrategy: 'precise',
   /** Max search results. Reduce for better performance. */
   searchMaxResults: 32,
-  /** Minimum character length before searching starts */
-  searchMinMatchCharLength: 1,
   /** Fuzzy search threshold (0-1). 0 = no fuzzyness, 1 = full fuzzyness */
   searchFuzzyness: 0.6,
   /** Debounce time in milliseconds before search executes */
@@ -57,8 +55,6 @@ export const defaultOptions = {
   // COLORS AND STYLE                     //
   //////////////////////////////////////////
 
-  /** Width in pixels of the colored stripe on the left edge of results */
-  colorStripeWidth: 5,
   /** Color for bookmark results, expressed as CSS color */
   bookmarkColor: '#3c8d8d',
   /** Color for tab results */
@@ -175,20 +171,18 @@ export const defaultOptions = {
   // SCORE CALCULATION OPTIONS            //
   //////////////////////////////////////////
 
-  // Minimum score thresholds
-  scoreMinScore: 30,
+  // Minimum search term match ratio (for precise search)
   scoreMinSearchTermMatchRatio: 0.6,
 
   // Result type base scores
-  scoreBookmarkBaseScore: 100,
-  scoreTabBaseScore: 70,
-  scoreHistoryBaseScore: 45,
-  scoreSearchEngineBaseScore: 30,
-  scoreCustomSearchEngineBaseScore: 400,
+  scoreBookmarkBase: 100,
+  scoreTabBase: 70,
+  scoreHistoryBase: 45,
+  scoreSearchEngineBase: 30,
+  scoreCustomSearchEngineBase: 400,
   scoreDirectUrlScore: 500,
 
   // Field weights for score calculation
-  scoreTitleWeight: 1,
   scoreTagWeight: 0.7,
   scoreGroupWeight: 0.7,
   scoreUrlWeight: 0.6,
@@ -197,12 +191,11 @@ export const defaultOptions = {
   // Bonus scores
   scoreCustomBonusScore: true,
   scoreExactIncludesBonus: 5,
-  scoreExactIncludesBonusMinChars: 3,
   scoreExactStartsWithBonus: 10,
-  scoreExactEqualsBonus: 15,
-  scoreExactTagMatchBonus: 10,
+  scoreExactEqualsBonus: 20,
+  scoreExactTagMatchBonus: 15,
   scoreExactGroupMatchBonus: 15,
-  scoreExactFolderMatchBonus: 5,
+  scoreExactFolderMatchBonus: 10,
   scoreExactPhraseTitleBonus: 8,
   scoreExactPhraseUrlBonus: 5,
   scoreVisitedBonusScore: 0.5,
@@ -214,8 +207,6 @@ export const defaultOptions = {
   // POWER USER OPTIONS                   //
   //////////////////////////////////////////
 
-  /** Truncate displayed title when it exceeds this character length */
-  titleLengthRestrictionForUrls: 80,
   /** Advanced configuration for the uFuzzy search library */
   uFuzzyOptions: {},
 }

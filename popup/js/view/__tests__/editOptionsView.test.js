@@ -224,4 +224,47 @@ describe('editOptionsView', () => {
 
     expect(input.value).toBe('')
   })
+
+  it('saveOptions shows REMOVE UNKNOWN OPTIONS button for unknown options, and it works', async () => {
+    setupDom()
+    const validateOptionsImpl = jest.fn(() =>
+      Promise.resolve({
+        valid: false,
+        errors: ['Unknown option: "unknownKey"'],
+      }),
+    )
+    const { module, mocks } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: jest.fn(() => 'knownKey: value'),
+      loadImpl: jest.fn(() => ({ knownKey: 'value' })),
+      validateOptionsImpl,
+    })
+
+    await module.initOptions()
+    document.getElementById('config').value = 'knownKey: value\nunknownKey: extra'
+
+    // First save attempt shows the error with clean button
+    document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
+    await Promise.resolve()
+
+    const errorMessageEl = document.getElementById('error-message')
+    expect(errorMessageEl.textContent).toContain('REMOVE UNKNOWN OPTIONS')
+
+    // Click REMOVE UNKNOWN OPTIONS
+    const btnClean = document.getElementById('btn-clean')
+    expect(btnClean).not.toBeNull()
+
+    // Second validate call for cleaning should return valid
+    mocks.validateOptions.mockImplementationOnce(() => Promise.resolve({ valid: true, errors: [] }))
+
+    btnClean.dispatchEvent(new MouseEvent('click'))
+    await Promise.resolve()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    // It should have cleaned the text and called setUserOptions
+    expect(mocks.setUserOptions).toHaveBeenCalled()
+    expect(errorMessageEl.style.display).toBe('none')
+    expect(document.getElementById('config').value).toBe('knownKey: value')
+  })
 })

@@ -51,14 +51,6 @@
       "description": "Time in milliseconds to wait after typing before refreshing results. Values below 1 fall back to 100 ms.",
       "x-ui-section": "search"
     },
-    "colorStripeWidth": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 16,
-      "default": 5,
-      "description": "Width in pixels of the colored stripe shown on the left edge of each result row.",
-      "x-ui-section": "style"
-    },
     "bookmarkColor": {
       "type": "string",
       "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
@@ -149,6 +141,12 @@
       "description": "Show each bookmark's folder trail as clickable breadcrumbs.",
       "x-ui-section": "display"
     },
+    "displayTabGroup": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show tab group names as clickable badges for open tabs.",
+      "x-ui-section": "display"
+    },
     "displaySearchMatchHighlight": {
       "type": "boolean",
       "default": true,
@@ -187,6 +185,18 @@
       },
       "default": [],
       "description": "Array of bookmark folder paths whose contents should never be indexed. All subfolders of the listed folders are skipped as well.",
+      "x-ui-section": "bookmarks"
+    },
+    "detectDuplicateBookmarks": {
+      "type": "boolean",
+      "default": false,
+      "description": "Detect bookmarks with identical URLs and mark them with a red 'D' badge. Useful for cleaning up duplicates.",
+      "x-ui-section": "bookmarks"
+    },
+    "detectBookmarksWithOpenTabs": {
+      "type": "boolean",
+      "default": true,
+      "description": "Mark bookmarks that are currently open in a tab with a color gradient on the left border.",
       "x-ui-section": "bookmarks"
     },
     "tabsOnlyCurrentWindow": {
@@ -237,14 +247,6 @@
         {
           "name": "Google",
           "urlPrefix": "https://www.google.com/search?q=$s"
-        },
-        {
-          "name": "Bing",
-          "urlPrefix": "https://www.bing.com/search?q=$s"
-        },
-        {
-          "name": "dict.cc",
-          "urlPrefix": "https://www.dict.cc/?s=$s"
         }
       ],
       "description": "Ordered list of built-in search engines that appear as fallback actions. `$s` within the `urlPrefix` is replaced with the search term; otherwise the term is appended.",
@@ -272,13 +274,6 @@
       "description": "Custom search engine definitions that can be triggered with aliases (e.g. `g query`). `$s` inside `urlPrefix` is replaced with the search term. `blank` is optional and used when the alias is entered without a query.",
       "x-ui-section": "searchEngines"
     },
-    "scoreMinScore": {
-      "type": "integer",
-      "minimum": 0,
-      "default": 30,
-      "description": "Filter out search results whose final score falls below this threshold.",
-      "x-ui-section": "scores"
-    },
     "scoreMinSearchTermMatchRatio": {
       "type": "number",
       "minimum": 0,
@@ -287,31 +282,31 @@
       "description": "Minimum ratio of search terms that must match for a result to be kept when using precise search. 1 means all terms must match; 0 means any term is enough.",
       "x-ui-section": "scores"
     },
-    "scoreBookmarkBaseScore": {
+    "scoreBookmarkBase": {
       "type": "integer",
       "default": 100,
       "description": "Base score applied to bookmark results before any multipliers or bonuses are added.",
       "x-ui-section": "scores"
     },
-    "scoreTabBaseScore": {
+    "scoreTabBase": {
       "type": "integer",
       "default": 70,
       "description": "Base score applied to open tab results before additional weighting.",
       "x-ui-section": "scores"
     },
-    "scoreHistoryBaseScore": {
+    "scoreHistoryBase": {
       "type": "integer",
       "default": 45,
       "description": "Base score applied to history results before additional weighting.",
       "x-ui-section": "scores"
     },
-    "scoreSearchEngineBaseScore": {
+    "scoreSearchEngineBase": {
       "type": "integer",
       "default": 30,
       "description": "Base score applied to built-in search engine choices to keep them sorted after organic results.",
       "x-ui-section": "scores"
     },
-    "scoreCustomSearchEngineBaseScore": {
+    "scoreCustomSearchEngineBase": {
       "type": "integer",
       "default": 400,
       "description": "Base score applied to custom search engine choices so they float to the top when their alias matches.",
@@ -321,12 +316,6 @@
       "type": "integer",
       "default": 500,
       "description": "Base score awarded when the user types a direct URL, ensuring it always ranks first.",
-      "x-ui-section": "scores"
-    },
-    "scoreTitleWeight": {
-      "type": "number",
-      "default": 1,
-      "description": "Weight multiplier applied when a search term matches the title of an item.",
       "x-ui-section": "scores"
     },
     "scoreTagWeight": {
@@ -339,6 +328,12 @@
       "type": "number",
       "default": 0.6,
       "description": "Weight multiplier applied when a search term matches the URL of an item.",
+      "x-ui-section": "scores"
+    },
+    "scoreGroupWeight": {
+      "type": "number",
+      "default": 0.7,
+      "description": "Weight multiplier applied when a search term matches the tab group name.",
       "x-ui-section": "scores"
     },
     "scoreFolderWeight": {
@@ -359,13 +354,6 @@
       "description": "Bonus score awarded for each search term that appears as an exact substring within the title or URL.",
       "x-ui-section": "scores"
     },
-    "scoreExactIncludesBonusMinChars": {
-      "type": "integer",
-      "minimum": 1,
-      "default": 3,
-      "description": "Minimum length a search term must have before the exact include bonus is considered.",
-      "x-ui-section": "scores"
-    },
     "scoreExactStartsWithBonus": {
       "type": "integer",
       "default": 10,
@@ -374,20 +362,38 @@
     },
     "scoreExactEqualsBonus": {
       "type": "integer",
-      "default": 15,
+      "default": 20,
       "description": "Bonus score awarded when the title exactly equals the search term.",
       "x-ui-section": "scores"
     },
     "scoreExactTagMatchBonus": {
       "type": "integer",
-      "default": 10,
+      "default": 15,
       "description": "Bonus score awarded when a tag matches the search term exactly.",
       "x-ui-section": "scores"
     },
     "scoreExactFolderMatchBonus": {
       "type": "integer",
-      "default": 5,
+      "default": 10,
       "description": "Bonus score awarded when a folder name matches the search term exactly.",
+      "x-ui-section": "scores"
+    },
+    "scoreExactGroupMatchBonus": {
+      "type": "integer",
+      "default": 15,
+      "description": "Bonus score awarded when a tab group name matches the search term exactly.",
+      "x-ui-section": "scores"
+    },
+    "scoreExactPhraseTitleBonus": {
+      "type": "integer",
+      "default": 8,
+      "description": "Bonus score awarded for an exact phrase match within the title.",
+      "x-ui-section": "scores"
+    },
+    "scoreExactPhraseUrlBonus": {
+      "type": "integer",
+      "default": 5,
+      "description": "Bonus score awarded for an exact phrase match within the URL.",
       "x-ui-section": "scores"
     },
     "scoreVisitedBonusScore": {
@@ -411,12 +417,11 @@
       "description": "Maximum bonus that can be awarded based on how recently an item was visited. Fresh visits score higher than those near the `historyDaysAgo` cutoff.",
       "x-ui-section": "scores"
     },
-    "titleLengthRestrictionForUrls": {
+    "scoreBookmarkOpenTabBonus": {
       "type": "integer",
-      "minimum": 0,
-      "default": 80,
-      "description": "When the title is identical to the URL, truncate the displayed title once it exceeds this character length.",
-      "x-ui-section": "powerUsers"
+      "default": 10,
+      "description": "Bonus score awarded when a bookmark is also open as an active browser tab.",
+      "x-ui-section": "scores"
     },
     "uFuzzyOptions": {
       "type": "object",

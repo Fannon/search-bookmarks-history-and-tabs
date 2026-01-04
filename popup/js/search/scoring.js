@@ -51,11 +51,11 @@ export function calculateFinalScore(results, searchTerm) {
 
   // Pre-calculate base scores for each type to avoid repeated lookups
   const baseScores = {
-    bookmark: opts.scoreBookmarkBaseScore || 0,
-    tab: opts.scoreTabBaseScore || 0,
-    history: opts.scoreHistoryBaseScore || 0,
-    search: opts.scoreSearchEngineBaseScore || 0,
-    customSearch: opts.scoreCustomSearchEngineBaseScore || 0,
+    bookmark: opts.scoreBookmarkBase || 0,
+    tab: opts.scoreTabBase || 0,
+    history: opts.scoreHistoryBase || 0,
+    search: opts.scoreSearchEngineBase || 0,
+    customSearch: opts.scoreCustomSearchEngineBase || 0,
     direct: opts.scoreDirectUrlScore || 0,
   }
 

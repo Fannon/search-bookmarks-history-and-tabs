@@ -1,3 +1,4 @@
+import { defaultOptions } from '../options.js'
 import { validateOptions } from '../validateOptions.js'
 
 describe('validateOptions', () => {
@@ -17,6 +18,14 @@ describe('validateOptions', () => {
     expect(result).toEqual({ valid: true, errors: [] })
   })
 
+  test('accepts defaultOptions from options.js', async () => {
+    const result = await validateOptions(defaultOptions)
+    if (!result.valid) {
+      console.error('Validation errors in defaultOptions:', result.errors)
+    }
+    expect(result).toEqual({ valid: true, errors: [] })
+  })
+
   test('accepts options with default values', async () => {
     const result = await validateOptions({
       debug: false,
@@ -33,18 +42,15 @@ describe('validateOptions', () => {
     })
 
     expect(result.valid).toBe(false)
-    expect(result.errors).toContain('searchMaxResults must be >= 1')
+    expect(result.errors).toContain('"searchMaxResults" must be >= 1')
   })
 
   test('accepts minimum numeric bounds', async () => {
     const result = await validateOptions({
       searchMaxResults: 1,
-      searchMinMatchCharLength: 1,
       searchFuzzyness: 0,
       searchDebounceMs: 0,
-      colorStripeWidth: 0,
       historyDaysAgo: 1,
-      scoreMinScore: 0,
     })
 
     expect(result).toEqual({ valid: true, errors: [] })
@@ -53,7 +59,6 @@ describe('validateOptions', () => {
   test('accepts maximum numeric bounds', async () => {
     const result = await validateOptions({
       searchFuzzyness: 1,
-      colorStripeWidth: 16,
     })
 
     expect(result).toEqual({ valid: true, errors: [] })
@@ -62,12 +67,10 @@ describe('validateOptions', () => {
   test('rejects values above maximum numeric bounds', async () => {
     const result = await validateOptions({
       searchFuzzyness: 1.5,
-      colorStripeWidth: 20,
     })
 
     expect(result.valid).toBe(false)
-    expect(result.errors).toContain('searchFuzzyness must be <= 1')
-    expect(result.errors).toContain('colorStripeWidth must be <= 16')
+    expect(result.errors).toContain('"searchFuzzyness" must be <= 1')
   })
 
   test('accepts valid color hex patterns', async () => {
@@ -87,8 +90,8 @@ describe('validateOptions', () => {
     })
 
     expect(result.valid).toBe(false)
-    expect(result.errors).toContain('bookmarkColor must match pattern ^#([0-9a-fA-F]{3}){1,2}$')
-    expect(result.errors).toContain('tabColor must match pattern ^#([0-9a-fA-F]{3}){1,2}$')
+    expect(result.errors).toContain('"bookmarkColor" must match pattern ^#([0-9a-fA-F]{3}){1,2}$')
+    expect(result.errors).toContain('"tabColor" must match pattern ^#([0-9a-fA-F]{3}){1,2}$')
   })
 
   test('accepts valid enum values', async () => {
@@ -105,129 +108,111 @@ describe('validateOptions', () => {
     })
 
     expect(result.valid).toBe(false)
-    expect(result.errors).toContain('searchStrategy must be one of: precise, fuzzy')
+    expect(result.errors).toContain('"searchStrategy" must be one of: precise, fuzzy')
   })
 
-  test('accepts valid boolean values', async () => {
+  test('rejects invalid types', async () => {
     const result = await validateOptions({
-      debug: true,
-      enableTabs: false,
-      enableBookmarks: true,
-      displayTags: false,
-    })
-
-    expect(result).toEqual({ valid: true, errors: [] })
-  })
-
-  test('accepts valid array properties', async () => {
-    const result = await validateOptions({
-      bookmarksIgnoreFolderList: ['folder1', 'folder2'],
-      historyIgnoreList: ['extension://'],
-      searchEngineChoices: [
-        {
-          name: 'Google',
-          urlPrefix: 'https://www.google.com/search?q=$s',
-        },
-      ],
-      customSearchEngines: [
-        {
-          alias: ['g', 'google'],
-          name: 'Google',
-          urlPrefix: 'https://www.google.com/search?q=$s',
-        },
-      ],
-    })
-
-    expect(result).toEqual({ valid: true, errors: [] })
-  })
-
-  test('rejects invalid array items', async () => {
-    const result = await validateOptions({
-      bookmarksIgnoreFolderList: [''],
-      searchEngineChoices: [
-        {
-          name: '',
-          urlPrefix: '',
-        },
-      ],
+      debug: 'true',
+      searchMaxResults: '10',
+      bookmarksIgnoreFolderList: 'folder',
     })
 
     expect(result.valid).toBe(false)
-    expect(result.errors.some((error) => error.includes('must have length >= 1'))).toBe(true)
+    expect(result.errors).toContain('"debug" must be boolean')
+    expect(result.errors).toContain('"searchMaxResults" must be integer')
+    expect(result.errors).toContain('"bookmarksIgnoreFolderList" must be array')
   })
 
-  test('accepts valid nested objects', async () => {
+  test('rejects unknown options', async () => {
     const result = await validateOptions({
-      uFuzzyOptions: {
-        intraMode: 1,
-        intraIns: 1,
-        intraSub: 1,
-        intraTrn: 1,
-        intraDel: 1,
-      },
-    })
-
-    expect(result).toEqual({ valid: true, errors: [] })
-  })
-
-  test('rejects unknown properties', async () => {
-    const result = await validateOptions({
-      unknownOption: true,
+      unknownOption: 'value',
     })
 
     expect(result.valid).toBe(false)
     expect(result.errors).toContain('Unknown option: "unknownOption"')
   })
 
-  test('reports multiple validation errors', async () => {
+  test('validates nested objects (searchEngineChoices)', async () => {
     const result = await validateOptions({
-      searchMaxResults: 0,
-      searchFuzzyness: 2,
-      searchStrategy: 'invalid',
-      unknownOption: true,
-      bookmarkColor: 'invalid-color',
+      searchEngineChoices: [
+        {
+          name: 'Valid Engine',
+          urlPrefix: 'https://example.com/s=$s',
+        },
+        {
+          name: '', // Too short
+        },
+      ],
     })
 
     expect(result.valid).toBe(false)
-    expect(result.errors.length).toBeGreaterThan(1)
-    expect(result.errors).toContain('searchMaxResults must be >= 1')
-    expect(result.errors).toContain('searchFuzzyness must be <= 1')
-    expect(result.errors).toContain('searchStrategy must be one of: precise, fuzzy')
-    expect(result.errors).toContain('Unknown option: "unknownOption"')
-    expect(result.errors).toContain('bookmarkColor must match pattern ^#([0-9a-fA-F]{3}){1,2}$')
+    expect(result.errors).toContain('"searchEngineChoices[1].name" must have length >= 1')
+    expect(result.errors).toContain('"searchEngineChoices[1].urlPrefix" is required')
   })
 
-  test('accepts string alias as array or string', async () => {
-    const result1 = await validateOptions({
+  test('validates customSearchEngines with anyOf', async () => {
+    const resultStringAlias = await validateOptions({
       customSearchEngines: [
         {
           alias: 'g',
           name: 'Google',
-          urlPrefix: 'https://www.google.com/search?q=$s',
+          urlPrefix: 'https://google.com/q=$s',
         },
       ],
     })
+    expect(resultStringAlias.valid).toBe(true)
 
-    const result2 = await validateOptions({
+    const resultArrayAlias = await validateOptions({
       customSearchEngines: [
         {
           alias: ['g', 'google'],
           name: 'Google',
-          urlPrefix: 'https://www.google.com/search?q=$s',
+          urlPrefix: 'https://google.com/q=$s',
+        },
+      ],
+    })
+    expect(resultArrayAlias.valid).toBe(true)
+
+    const resultInvalidAlias = await validateOptions({
+      customSearchEngines: [
+        {
+          alias: 123,
+          name: 'Google',
+          urlPrefix: 'https://google.com/q=$s',
+        },
+      ],
+    })
+    expect(resultInvalidAlias.valid).toBe(false)
+    expect(resultInvalidAlias.errors[0]).toContain(
+      '"customSearchEngines[0].alias" must match one of the allowed formats',
+    )
+  })
+
+  test('rejects additional properties when disallowed', async () => {
+    const result = await validateOptions({
+      searchEngineChoices: [
+        {
+          name: 'Google',
+          urlPrefix: 'https://google.com',
+          extra: 'not allowed',
         },
       ],
     })
 
-    expect(result1).toEqual({ valid: true, errors: [] })
-    expect(result2).toEqual({ valid: true, errors: [] })
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContain('Unknown option: "searchEngineChoices[0].extra"')
+  })
+
+  test('accepts null/undefined values by returning valid: true (legacy behavior)', async () => {
+    expect((await validateOptions(null)).valid).toBe(true)
+    expect((await validateOptions(undefined)).valid).toBe(true)
   })
 
   test('accepts zero values where allowed', async () => {
     const result = await validateOptions({
-      historyMaxItems: 0,
       maxRecentTabsToShow: 0,
-      scoreMinScore: 0,
-      titleLengthRestrictionForUrls: 0,
+      historyMaxItems: 0,
     })
 
     expect(result).toEqual({ valid: true, errors: [] })

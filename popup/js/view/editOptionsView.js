@@ -112,9 +112,18 @@ async function saveOptions() {
 
       let errorContent = ''
       if (e && Array.isArray(e.validationErrors) && e.validationErrors.length > 0) {
-        errorContent = e.validationErrors.map((err) => `• ${err}`).join('\n')
+        errorContent = e.validationErrors
+          .map((err) => {
+            const escaped = err.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            return `• ${escaped.replace(/"([^"]+)"/g, '<code>$1</code>')}`
+          })
+          .join('\n')
       } else {
-        errorContent = e?.message || 'Unknown error'
+        const escaped = (e?.message || 'Unknown error')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+        errorContent = escaped.replace(/"([^"]+)"/g, '<code>$1</code>')
       }
 
       errorMessageEl.innerHTML = `
