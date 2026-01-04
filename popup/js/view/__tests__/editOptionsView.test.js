@@ -166,8 +166,10 @@ describe('editOptionsView', () => {
 
     const errorMessageEl = document.getElementById('error-message')
     expect(mocks.setUserOptions).not.toHaveBeenCalled()
-    expect(errorMessageEl.style.display).toBe('')
-    expect(errorMessageEl.innerText).toBe('Invalid: bad input')
+    expect(errorMessageEl.style.display).toBe('flex')
+    expect(errorMessageEl.textContent).toContain('Invalid Options')
+    expect(errorMessageEl.textContent).toContain('bad input')
+    expect(errorMessageEl.textContent).toContain('DISMISS')
     expect(errorSpy).toHaveBeenCalledWith(error)
 
     errorSpy.mockRestore()
@@ -197,8 +199,11 @@ describe('editOptionsView', () => {
     const errorMessageEl = document.getElementById('error-message')
     expect(mocks.validateOptions).toHaveBeenCalled()
     expect(mocks.setUserOptions).not.toHaveBeenCalled() // Should NOT call setUserOptions when validation fails
-    expect(errorMessageEl.style.display).toBe('')
-    expect(errorMessageEl.innerText).toBe('Invalid: searchMaxResults must be >= 1\ndisplayScore must be boolean')
+    expect(errorMessageEl.style.display).toBe('flex')
+    expect(errorMessageEl.textContent).toContain('Invalid Options')
+    expect(errorMessageEl.textContent).toContain('• searchMaxResults must be >= 1')
+    expect(errorMessageEl.textContent).toContain('• displayScore must be boolean')
+    expect(errorMessageEl.textContent).toContain('DISMISS')
 
     errorSpy.mockRestore()
   })

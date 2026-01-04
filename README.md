@@ -90,12 +90,12 @@ The user options are written in [YAML](https://en.wikipedia.org/wiki/YAML) or [J
 
 > 📘 **See [OPTIONS.md](./OPTIONS.md) for a comprehensive list of all available options.**
 >
+> For advanced users, there is also a [JSON Schema](https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json) available.
+>
 > You can also browse the source in [options.js](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/model/options.js) for inline documentation.
 
 When defining your custom config, you only need to define the options that you want to overwrite from the defaults.
-
-> ⚠ The options are not validated properly. Please make sure to use them correctly.<br/>
-> If something breaks, consider resetting your options.
+The extension will validate your input against the JSON schema before saving.
 
 An exemplary user config can look like the following example:
 

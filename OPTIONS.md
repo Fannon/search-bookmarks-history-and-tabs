@@ -1,7 +1,9 @@
 # User Options
 
 This document lists all available configuration options for the extension.
-You can customize these options in the extension settings using YAML or JSON format.
+You can customize these options in the extension settings using **YAML** or **JSON** format.
+
+For advanced users, you can also inspect the [JSON Schema](https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json) for a formal definition of all properties and constraints.
 
 ## Search Options
 

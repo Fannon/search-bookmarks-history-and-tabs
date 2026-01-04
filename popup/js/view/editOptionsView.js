@@ -7,6 +7,7 @@
  * - Provide reset/save controls and navigate back to the search view so tweaks can be tested immediately.
  */
 
+import optionsSchema from '../../json/options.schema.json' with { type: 'json' }
 import { getUserOptions, setUserOptions } from '../model/options.js'
 import { validateOptions } from '../model/validateOptions.js'
 
@@ -26,6 +27,46 @@ export async function initOptions() {
   }
   document.getElementById('opt-reset').addEventListener('click', resetOptions)
   document.getElementById('opt-save').addEventListener('click', saveOptions)
+
+  // Hide error overlay when focusing the textarea
+  document.getElementById('config').addEventListener('focus', hideErrors)
+}
+
+/**
+ * Hide the error overlay
+ */
+function hideErrors() {
+  const errorMessageEl = document.getElementById('error-message')
+  if (errorMessageEl) {
+    errorMessageEl.style.display = 'none'
+    errorMessageEl.innerHTML = ''
+  }
+}
+
+/**
+ * Automatically remove properties that are not in the schema.
+ */
+function removeUnknownOptions() {
+  const userOptionsString = document.getElementById('config').value
+  try {
+    const userOptions = window.jsyaml.load(userOptionsString)
+    if (!userOptions || typeof userOptions !== 'object') return
+
+    const schemaProperties = optionsSchema.properties || {}
+    const cleanOptions = {}
+
+    for (const [key, value] of Object.entries(userOptions)) {
+      if (key in schemaProperties || key === '$schema') {
+        cleanOptions[key] = value
+      }
+    }
+
+    document.getElementById('config').value = window.jsyaml.dump(cleanOptions)
+    // Re-validate/save
+    saveOptions()
+  } catch (e) {
+    console.error('Failed to clean options:', e)
+  }
 }
 
 /**
@@ -58,22 +99,50 @@ async function saveOptions() {
     await setUserOptions(userOptions)
 
     // Clear any previous error messages
-    if (errorMessageEl) {
-      errorMessageEl.style.display = 'none'
-      errorMessageEl.innerText = ''
-    }
+    hideErrors()
   } catch (e) {
     console.error(e)
 
     // Format validation errors from schema validation
-    const validationMessage =
-      e && Array.isArray(e.validationErrors) && e.validationErrors.length > 0
-        ? e.validationErrors.join('\n')
-        : e?.message
-
     if (errorMessageEl) {
-      errorMessageEl.style.display = ''
-      errorMessageEl.innerText = `Invalid: ${validationMessage}`
+      errorMessageEl.style.display = 'flex'
+
+      const hasUnknownOptions =
+        e && Array.isArray(e.validationErrors) && e.validationErrors.some((err) => err.includes('Unknown option'))
+
+      let errorContent = ''
+      if (e && Array.isArray(e.validationErrors) && e.validationErrors.length > 0) {
+        errorContent = e.validationErrors.map((err) => `• ${err}`).join('\n')
+      } else {
+        errorContent = e?.message || 'Unknown error'
+      }
+
+      errorMessageEl.innerHTML = `
+        <div class="error-header">⚠️ Invalid Options</div>
+        <div class="error-list">${errorContent}</div>
+        <div class="error-footer">
+          ${
+            hasUnknownOptions
+              ? '<button id="btn-clean" class="overlay-button primary">REMOVE UNKNOWN OPTIONS</button>'
+              : ''
+          }
+          <button id="btn-dismiss" class="overlay-button">DISMISS</button>
+        </div>
+      `
+
+      // Add event listeners for the new buttons
+      const btnDismiss = document.getElementById('btn-dismiss')
+      if (btnDismiss) {
+        btnDismiss.addEventListener('click', hideErrors)
+      }
+
+      const btnClean = document.getElementById('btn-clean')
+      if (btnClean) {
+        btnClean.addEventListener('click', (ev) => {
+          ev.stopPropagation()
+          removeUnknownOptions()
+        })
+      }
     }
     return
   }
@@ -90,4 +159,5 @@ async function saveOptions() {
  */
 async function resetOptions() {
   document.getElementById('config').value = ''
+  hideErrors()
 }

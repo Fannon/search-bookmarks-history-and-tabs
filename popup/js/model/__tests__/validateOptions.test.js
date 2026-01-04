@@ -105,7 +105,7 @@ describe('validateOptions', () => {
     })
 
     expect(result.valid).toBe(false)
-    expect(result.errors).toContain('searchStrategy must be one of precise, fuzzy')
+    expect(result.errors).toContain('searchStrategy must be one of: precise, fuzzy')
   })
 
   test('accepts valid boolean values', async () => {
@@ -176,7 +176,7 @@ describe('validateOptions', () => {
     })
 
     expect(result.valid).toBe(false)
-    expect(result.errors).toContain('unknownOption is not allowed')
+    expect(result.errors).toContain('Unknown option: "unknownOption"')
   })
 
   test('reports multiple validation errors', async () => {
@@ -192,8 +192,8 @@ describe('validateOptions', () => {
     expect(result.errors.length).toBeGreaterThan(1)
     expect(result.errors).toContain('searchMaxResults must be >= 1')
     expect(result.errors).toContain('searchFuzzyness must be <= 1')
-    expect(result.errors).toContain('searchStrategy must be one of precise, fuzzy')
-    expect(result.errors).toContain('unknownOption is not allowed')
+    expect(result.errors).toContain('searchStrategy must be one of: precise, fuzzy')
+    expect(result.errors).toContain('Unknown option: "unknownOption"')
     expect(result.errors).toContain('bookmarkColor must match pattern ^#([0-9a-fA-F]{3}){1,2}$')
   })
 
