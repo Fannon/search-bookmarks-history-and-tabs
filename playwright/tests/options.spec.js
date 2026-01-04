@@ -183,10 +183,17 @@ test.describe('Options View', () => {
       const userConfig = page.locator('#config')
 
       await userConfig.fill(onlyUnknownOptions)
+      await page.locator('#opt-save').click()
+
+      // Error should appear
+      await expect(page.locator('#error-message')).toBeVisible()
+
+      // Click the remove button
       await page.locator('#btn-clean').click()
 
-      // After removal, textarea should be empty
-      await expect(userConfig).toHaveValue('')
+      // After removal, textarea should contain empty object (YAML representation of {})
+      const currentValue = await userConfig.inputValue()
+      expect(currentValue.trim()).toBe('{}')
     })
 
     test('preserves valid complex config when removing unknown options', async ({ page }) => {
