@@ -30,6 +30,7 @@ test.describe('Options View', () => {
       await userConfig.fill(newConfig)
 
       await page.locator('#opt-save').click()
+      await page.waitForURL(/.*#search.*/)
 
       await page.goto('/options.html')
       await expect(page.locator('#config')).toHaveValue(/displayVisitCounter/)
@@ -45,6 +46,7 @@ test.describe('Options View', () => {
       await userConfig.fill(newConfig)
 
       await page.locator('#opt-save').click()
+      await page.waitForURL(/.*#search.*/)
 
       await page.goto('/options.html')
       await expect(page.locator('#config')).toHaveValue(/displayVisitCounter/)

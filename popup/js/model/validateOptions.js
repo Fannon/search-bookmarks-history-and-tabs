@@ -20,7 +20,13 @@ let optionsSchema
  */
 export async function validateOptions(options = {}) {
   if (!optionsSchema) {
-    optionsSchema = (await import('../../json/options.schema.json')).default
+    try {
+      optionsSchema = (await import('../../json/options.schema.json', { with: { type: 'json' } })).default
+    } catch (_e) {
+      // Fallback for browsers that don't support import attributes (e.g., Firefox < 128)
+      const response = await fetch('./json/options.schema.json')
+      optionsSchema = await response.json()
+    }
   }
   const errors = []
 

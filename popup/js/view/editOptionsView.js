@@ -20,7 +20,13 @@ import { validateOptions } from '../model/validateOptions.js'
  */
 export async function initOptions() {
   if (!optionsSchema) {
-    optionsSchema = (await import('../../json/options.schema.json')).default
+    try {
+      optionsSchema = (await import('../../json/options.schema.json', { with: { type: 'json' } })).default
+    } catch {
+      // Fallback for browsers that don't support import attributes (e.g., Firefox < 128)
+      const response = await fetch('./json/options.schema.json')
+      optionsSchema = await response.json()
+    }
   }
   const userOptions = await getUserOptions()
   const userOptionsYaml = window.jsyaml.dump(userOptions)
