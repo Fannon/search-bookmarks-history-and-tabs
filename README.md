@@ -117,7 +117,6 @@ searchMaxResults: 20 # Number of search results can be further limited
 historyMaxItems: 512 # Number of browser history items can be further reduced
 maxRecentTabsToShow: 4 # Reduce number of recent tabs for better performance
 detectDuplicateBookmarks: false # Disable duplicate detection for faster startup (if you don't have duplicates)
-detectBookmarksWithOpenTabs: false # Disable bookmark-tab matching for faster startup (if you don't need the feature)
 ```
 
 Or a more advanced example:
@@ -131,7 +130,6 @@ historyIgnoreList:
   - http://localhost
   - http://127.0.0.1
 scoreTabBase: 70 # customize base score for open tabs
-detectBookmarksWithOpenTabs: true
 detectDuplicateBookmarks: true
 maxRecentTabsToShow: 4
 searchEngineChoices:
