@@ -2,7 +2,6 @@
 
 ## [unreleased]
 
-- **IMPROVED**: Configuration system is now fully synchronized across `options.js`, `options.schema.json`, and `OPTIONS.md`.
 - **IMPROVED**: Added validation for user settings (based on JSON Schema).
 - **IMPROVED**: Enhanced options error overlay with better readability, inline code highlighting, and a "REMOVE UNKNOWN OPTIONS" quick-fix button.
 - **REMOVED**: Removed several dead configuration keys (`searchMinMatchCharLength`, `colorStripeWidth`, `scoreMinScore`, `scoreMinSearchTermMatchRatio`, etc.) that are now fixed at sensible defaults or no longer used.
