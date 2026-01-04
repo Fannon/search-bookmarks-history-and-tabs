@@ -19,6 +19,7 @@ const mockState = {
 let tabsQueryMock
 let bookmarksGetTreeMock
 let historySearchMock
+let tabGroupsQueryMock
 
 let helperModule
 let browserApi
@@ -46,13 +47,14 @@ function setBrowserData({ tabs = [], bookmarks = [], history = [] } = {}) {
   mockState.history = currentHistory
 }
 
-function setBrowserApiAvailability({ tabs = true, bookmarks = true, history = true } = {}) {
+function setBrowserApiAvailability({ tabs = true, bookmarks = true, history = true, tabGroups = true } = {}) {
   if (!browserApi) {
     return
   }
   browserApi.tabs = tabs ? { query: tabsQueryMock } : undefined
   browserApi.bookmarks = bookmarks ? { getTree: bookmarksGetTreeMock } : undefined
   browserApi.history = history ? { search: historySearchMock } : undefined
+  browserApi.tabGroups = tabGroups ? { query: tabGroupsQueryMock } : undefined
 }
 
 beforeAll(async () => {
@@ -74,6 +76,7 @@ describe('getSearchData', () => {
     tabsQueryMock = jest.fn(async () => currentTabs)
     bookmarksGetTreeMock = jest.fn(async () => currentBookmarks)
     historySearchMock = jest.fn(async () => currentHistory)
+    tabGroupsQueryMock = jest.fn(async () => [])
 
     setBrowserApiAvailability()
     setBrowserData()
@@ -244,6 +247,58 @@ describe('getSearchData', () => {
     }
   })
 
+  test('copies tab group information to matching bookmarks', async () => {
+    const baseTime = 1700000300000
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
+
+    try {
+      ext.opts.detectBookmarksWithOpenTabs = true
+      const mockTabGroup = { id: 101, title: 'Work Group', color: 'blue' }
+      tabGroupsQueryMock.mockResolvedValue([mockTabGroup])
+
+      setBrowserData({
+        tabs: [
+          {
+            url: 'https://work.com/doc',
+            title: 'Work Doc',
+            id: 'tab-1',
+            groupId: 101,
+            active: false,
+            windowId: 1,
+          },
+        ],
+        bookmarks: [
+          {
+            title: '',
+            children: [
+              {
+                title: 'BM Bar',
+                children: [
+                  {
+                    id: 'bm-1',
+                    title: 'Work Bookmark',
+                    url: 'https://work.com/doc',
+                    dateAdded: baseTime,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: [],
+      })
+
+      const result = await getSearchData()
+
+      const bookmark = result.bookmarks.find((b) => b.originalUrl === 'https://work.com/doc')
+      expect(bookmark.tab).toBe(true)
+      expect(bookmark.group).toBe('Work Group')
+      expect(bookmark.groupId).toBe(101)
+    } finally {
+      nowSpy.mockRestore()
+    }
+  })
+
   test('skips marking bookmarks with open tabs when disabled', async () => {
     const baseTime = 1700000200000
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
@@ -293,8 +348,8 @@ describe('getSearchData', () => {
   })
 
   test('uses bundled mock data when browser APIs are unavailable', async () => {
-    setBrowserApiAvailability({ tabs: false, bookmarks: false, history: false })
-    ext.opts.enableBookmarks = false
+    setBrowserApiAvailability({ tabs: false, bookmarks: false, history: false, tabGroups: false })
+    ext.opts.enableBookmarks = true
 
     const baseTime = 1700000100000
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
@@ -354,11 +409,12 @@ describe('getSearchData', () => {
       expect(historySearchMock).not.toHaveBeenCalled()
 
       const expectedTabs = actualConvertBrowserTabs(mockResponse.tabs)
+      const expectedBookmarks = actualConvertBrowserBookmarks(mockResponse.bookmarks)
       const expectedHistory = actualConvertBrowserHistory(mockResponse.history)
 
       expect(result.tabs).toEqual(expectedTabs)
       expect(result.history).toEqual(expectedHistory)
-      expect(result.bookmarks).toEqual([])
+      expect(result.bookmarks).toEqual(expectedBookmarks)
     } finally {
       nowSpy.mockRestore()
     }

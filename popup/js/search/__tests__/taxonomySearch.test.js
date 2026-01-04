@@ -241,4 +241,20 @@ describe('taxonomy search', () => {
     expect(result).toHaveLength(1)
     expect(result[0].title).toBe('Martin Fowler')
   })
+
+  test('getUniqueGroups aggregates group usage', () => {
+    const { getUniqueGroups } = taxonomyModule
+    ext.model.tabs = [
+      { originalId: '1', group: 'Work' },
+      { originalId: '2', group: 'Work' },
+      { originalId: '3', group: 'Personal' },
+      { originalId: '4' }, // No group
+    ]
+
+    const result = getUniqueGroups()
+
+    expect(result.Work).toEqual(['1', '2'])
+    expect(result.Personal).toEqual(['3'])
+    expect(Object.keys(result)).not.toContain('undefined')
+  })
 })
