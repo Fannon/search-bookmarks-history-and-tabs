@@ -8,11 +8,11 @@ const { defaultOptions } = await import('../../model/options.js')
 // Note: scoreTitleWeight (1), scoreExactIncludesBonusMinChars (3), and scoreExactIncludesMaxBonuses (3)
 // are now hard-coded constants in scoring.js and cannot be overridden via options.
 const baseOpts = {
-  scoreBookmarkBase: 100,
-  scoreTabBase: 70,
-  scoreHistoryBase: 45,
-  scoreSearchEngineBase: 30,
-  scoreCustomSearchEngineBase: 400,
+  scoreBookmarkBaseScore: 100,
+  scoreTabBaseScore: 70,
+  scoreHistoryBaseScore: 45,
+  scoreSearchEngineBaseScore: 30,
+  scoreCustomSearchEngineBaseScore: 400,
   scoreDirectUrlScore: 500,
   scoreTagWeight: 1,
   scoreUrlWeight: 1,
@@ -865,7 +865,7 @@ describe('scoring', () => {
       // With defaults:
       // - scoreExactIncludesBonus: 5
       // - scoreExactIncludesBonusMinChars: 3
-      // - scoreExactTagMatchBonus: 15
+      // - scoreExactTagMatchBonus: 10
       // - scoreExactStartsWithBonus: 10
       // - scoreTitleWeight: 1.0
       // - scoreTagWeight: 0.7
@@ -874,6 +874,7 @@ describe('scoring', () => {
       // Title-only: 100 (base) + 5 (includes 5*1.0) + 10 (starts with "JavaScript") = 115
       //
       // Note: No phrase bonus for single-word search "javascript"
+      // With default scoreExactTagMatchBonus of 15, tags WIN by 3.5 points
       expect(tagOnlyScore).toBeCloseTo(118.5)
       expect(titleOnlyScore).toBeCloseTo(115)
       expect(tagOnlyScore - titleOnlyScore).toBeCloseTo(3.5)
@@ -931,7 +932,8 @@ describe('scoring', () => {
       expect(titleOnlyScore).toBeCloseTo(115)
       expect(bothScore).toBeGreaterThan(tagOnlyScore)
       expect(bothScore).toBeGreaterThan(titleOnlyScore)
-      expect(tagOnlyScore).toBeGreaterThan(titleOnlyScore) // Tag wins over title for single-word
+      // With default scoreExactTagMatchBonus of 15, tag-only now edges out title-only
+      expect(tagOnlyScore).toBeGreaterThan(titleOnlyScore)
     })
 
     it('validates partial tag matches still get some benefit (includes bonus only)', () => {
@@ -951,7 +953,7 @@ describe('scoring', () => {
 
       // Partial tag "java" in "#javascript":
       // - Gets includes bonus: 5 * 0.7 = 3.5
-      // - Does NOT get exact tag match bonus (15) because "java" !== "javascript"
+      // - Does NOT get exact tag match bonus (10) because "java" !== "javascript"
       // Total: 100 + 3.5 = 103.5
       expect(partialTagScore).toBeCloseTo(103.5)
     })
@@ -1064,16 +1066,10 @@ describe('scoring', () => {
       // Tag: 100 + 3.5 (includes with 0.7 weight) + 15 (exact tag) = 118.5
       // Title: 100 + 5 (includes with 1.0 weight) + 10 (starts with "Tutorial") = 115
       // Note: No phrase bonus for single-word search "tutorial"
-      // Tags now edge ahead despite lower field weight!
+      // With default scoreExactTagMatchBonus of 15, tags WIN by 3.5 points!
       expect(tagScore).toBeCloseTo(118.5)
       expect(titleScore).toBeCloseTo(115)
       expect(tagScore - titleScore).toBeCloseTo(3.5)
-
-      // If bonus was still 10 (old default):
-      // Tag would be: 100 + 3.5 + 10 = 113.5
-      // Title would be: 100 + 5 + 10 = 115
-      // Title would WIN by 1.5 points!
-      // The increase from 10 to 15 gives tags the edge!
     })
   })
 })

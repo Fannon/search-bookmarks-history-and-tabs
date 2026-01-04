@@ -9,12 +9,101 @@
   margin: 4px 8px;
 }
 
+/* Textarea Container for overlay positioning */
+.textarea-container {
+  position: relative;
+}
+
 /* Config Textarea */
 #options textarea {
   height: 450px;
   font-size: 18px;
   font-family: Consolas, monospace;
   resize: none;
+}
+
+/* Error Overlay - appears on top of textarea */
+.error-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 450px;
+  background: rgba(255, 255, 255, 0.98);
+  color: #cc0000;
+  font-size: 14px;
+  padding: 12px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+  z-index: 10;
+  border-left: 4px solid #cc5858;
+  display: flex;
+  flex-direction: column;
+}
+
+.error-overlay code {
+  font-family: Consolas, monospace;
+  background: rgba(204, 88, 88, 0.1);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.error-overlay .error-header {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(204, 88, 88, 0.2);
+}
+
+.error-overlay .error-list {
+  flex: 1;
+}
+
+.error-overlay .error-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(204, 88, 88, 0.2);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.error-overlay .overlay-button {
+  height: 28px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  line-height: normal;
+  padding: 0 12px;
+  font-size: 13px;
+  border: none;
+  background: #777;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.error-overlay .overlay-button:hover {
+  filter: brightness(110%);
+}
+
+.error-overlay .overlay-button.primary {
+  background: #cc5858;
+  color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .error-overlay {
+    background: rgba(30, 0, 0, 0.95);
+    color: #ff9999;
+  }
 }
 
 #options .controls {

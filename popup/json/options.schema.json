@@ -1,0 +1,471 @@
+{
+  "$id": "https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json",
+      "description": "Optional JSON Schema identifier that documents which schema version this options file adheres to."
+    },
+    "debug": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable detailed logging in the browser console to help diagnose indexing or performance issues.",
+      "x-ui-section": "general"
+    },
+    "searchStrategy": {
+      "type": "string",
+      "enum": ["precise", "fuzzy"],
+      "default": "precise",
+      "description": "Choose how searches behave: `precise` favors exact matches and fastest responses, while `fuzzy` tolerates typos and similar words but runs a bit slower.",
+      "x-ui-section": "search"
+    },
+    "searchMaxResults": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 24,
+      "description": "Maximum number of results shown for a normal search. Tag, folder, and tab lists always show everything relevant.",
+      "x-ui-section": "search"
+    },
+    "searchFuzzyness": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.6,
+      "description": "How tolerant fuzzy search should be. 0 behaves like precise search; values closer to 1 allow more relaxed matches.",
+      "x-ui-section": "search"
+    },
+    "searchDebounceMs": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 100,
+      "description": "Time in milliseconds to wait after typing before refreshing results. Values below 1 fall back to 100 ms.",
+      "x-ui-section": "search"
+    },
+    "bookmarkColor": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
+      "default": "#3c8d8d",
+      "description": "Hex color applied to bookmark results in the list.",
+      "x-ui-section": "style"
+    },
+    "tabColor": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
+      "default": "#b89aff",
+      "description": "Hex color applied to entries representing currently open tabs.",
+      "x-ui-section": "style"
+    },
+    "historyColor": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
+      "default": "#9ece2f",
+      "description": "Hex color applied to browsing history results.",
+      "x-ui-section": "style"
+    },
+    "searchColor": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
+      "default": "#e1a535",
+      "description": "Hex color used for the built-in web search suggestions that follow the query.",
+      "x-ui-section": "style"
+    },
+    "customSearchColor": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
+      "default": "#ce5c2f",
+      "description": "Hex color used for custom search engine results triggered via aliases.",
+      "x-ui-section": "style"
+    },
+    "directColor": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
+      "default": "#7799CE",
+      "description": "Hex color applied to direct navigation suggestions (for example when typing a URL).",
+      "x-ui-section": "style"
+    },
+    "enableTabs": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include your currently open browser tabs in the search results. Disable if you only want saved items.",
+      "x-ui-section": "sources"
+    },
+    "enableBookmarks": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include bookmarks in the index so they can be searched.",
+      "x-ui-section": "sources"
+    },
+    "enableHistory": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include browsing history in the index. Large history ranges can slow down startup on older machines.",
+      "x-ui-section": "sources"
+    },
+    "enableSearchEngines": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show quick links to web search engines that use the current query.",
+      "x-ui-section": "sources"
+    },
+    "enableHelp": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show helpful tips when the popup opens. Turn off if you prefer a minimal experience.",
+      "x-ui-section": "sources"
+    },
+    "enableDirectUrl": {
+      "type": "boolean",
+      "default": true,
+      "description": "Detect URL-shaped search terms and offer a direct navigation result at the top.",
+      "x-ui-section": "sources"
+    },
+    "displayTags": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show hashtag-style tags extracted from bookmark titles as clickable badges.",
+      "x-ui-section": "display"
+    },
+    "displayFolderName": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show each bookmark's folder trail as clickable breadcrumbs.",
+      "x-ui-section": "display"
+    },
+    "displayTabGroup": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show tab group names as clickable badges for open tabs.",
+      "x-ui-section": "display"
+    },
+    "displaySearchMatchHighlight": {
+      "type": "boolean",
+      "default": true,
+      "description": "Highlight matching text in titles and URLs. Turn off to reduce rendering work on slower devices.",
+      "x-ui-section": "display"
+    },
+    "displayLastVisit": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show how long ago each result was last visited when that information is available.",
+      "x-ui-section": "display"
+    },
+    "displayVisitCounter": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show how many times an item has been visited according to your browsing history.",
+      "x-ui-section": "display"
+    },
+    "displayDateAdded": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show the date a bookmark was created (YYYY-MM-DD) when that information exists.",
+      "x-ui-section": "display"
+    },
+    "displayScore": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show the numeric relevance score next to each result, which can be useful when tuning ranking options.",
+      "x-ui-section": "display"
+    },
+    "bookmarksIgnoreFolderList": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "default": [],
+      "description": "Array of bookmark folder paths whose contents should never be indexed. All subfolders of the listed folders are skipped as well.",
+      "x-ui-section": "bookmarks"
+    },
+    "detectDuplicateBookmarks": {
+      "type": "boolean",
+      "default": false,
+      "description": "Detect bookmarks with identical URLs and mark them with a red 'D' badge. Useful for cleaning up duplicates.",
+      "x-ui-section": "bookmarks"
+    },
+    "tabsOnlyCurrentWindow": {
+      "type": "boolean",
+      "default": false,
+      "description": "Limit tab indexing to the active browser window. Helps multi-window users keep the result set focused.",
+      "x-ui-section": "tabs"
+    },
+    "maxRecentTabsToShow": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 8,
+      "description": "Number of most recently used tabs to show when the popup opens without a search term. Set to 0 to disable the MRU list entirely.",
+      "x-ui-section": "tabs",
+      "x-allowZeroOrMin": 3
+    },
+    "historyDaysAgo": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 14,
+      "description": "How many days back in time the extension should request items from the browsing history.",
+      "x-ui-section": "history"
+    },
+    "historyMaxItems": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 1024,
+      "description": "Upper bound on the number of history items retrieved. Larger values increase initialization time and memory usage.",
+      "x-ui-section": "history"
+    },
+    "historyIgnoreList": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "default": ["extension://"],
+      "description": "List of string fragments. History entries whose URL contains any of these fragments will be excluded from indexing.",
+      "x-ui-section": "history"
+    },
+    "searchEngineChoices": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/searchEngine"
+      },
+      "default": [
+        {
+          "name": "Google",
+          "urlPrefix": "https://www.google.com/search?q=$s"
+        }
+      ],
+      "description": "Ordered list of built-in search engines that appear as fallback actions. `$s` within the `urlPrefix` is replaced with the search term; otherwise the term is appended.",
+      "x-ui-section": "searchEngines"
+    },
+    "customSearchEngines": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/customSearchEngine"
+      },
+      "default": [
+        {
+          "alias": ["g", "google"],
+          "name": "Google",
+          "urlPrefix": "https://www.google.com/search?q=$s",
+          "blank": "https://www.google.com"
+        },
+        {
+          "alias": ["d", "dict"],
+          "name": "dict.cc",
+          "urlPrefix": "https://www.dict.cc/?s=$s",
+          "blank": "https://www.dict.cc"
+        }
+      ],
+      "description": "Custom search engine definitions that can be triggered with aliases (e.g. `g query`). `$s` inside `urlPrefix` is replaced with the search term. `blank` is optional and used when the alias is entered without a query.",
+      "x-ui-section": "searchEngines"
+    },
+    "scoreBookmarkBase": {
+      "type": "integer",
+      "default": 100,
+      "description": "Base score applied to bookmark results before any multipliers or bonuses are added.",
+      "x-ui-section": "scores"
+    },
+    "scoreTabBase": {
+      "type": "integer",
+      "default": 70,
+      "description": "Base score applied to open tab results before additional weighting.",
+      "x-ui-section": "scores"
+    },
+    "scoreHistoryBase": {
+      "type": "integer",
+      "default": 45,
+      "description": "Base score applied to history results before additional weighting.",
+      "x-ui-section": "scores"
+    },
+    "scoreSearchEngineBase": {
+      "type": "integer",
+      "default": 30,
+      "description": "Base score applied to built-in search engine choices to keep them sorted after organic results.",
+      "x-ui-section": "scores"
+    },
+    "scoreCustomSearchEngineBase": {
+      "type": "integer",
+      "default": 400,
+      "description": "Base score applied to custom search engine choices so they float to the top when their alias matches.",
+      "x-ui-section": "scores"
+    },
+    "scoreDirectUrlScore": {
+      "type": "integer",
+      "default": 500,
+      "description": "Base score awarded when the user types a direct URL, ensuring it always ranks first.",
+      "x-ui-section": "scores"
+    },
+    "scoreTagWeight": {
+      "type": "number",
+      "default": 0.7,
+      "description": "Weight multiplier applied when a search term matches one of the parsed tags.",
+      "x-ui-section": "scores"
+    },
+    "scoreUrlWeight": {
+      "type": "number",
+      "default": 0.6,
+      "description": "Weight multiplier applied when a search term matches the URL of an item.",
+      "x-ui-section": "scores"
+    },
+    "scoreGroupWeight": {
+      "type": "number",
+      "default": 0.7,
+      "description": "Weight multiplier applied when a search term matches the tab group name.",
+      "x-ui-section": "scores"
+    },
+    "scoreFolderWeight": {
+      "type": "number",
+      "default": 0.5,
+      "description": "Weight multiplier applied when a search term matches the folder name of a bookmark.",
+      "x-ui-section": "scores"
+    },
+    "scoreCustomBonusScore": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow bookmark titles to include manual bonus scores in the form ` +<score>` which are added to the calculated result score.",
+      "x-ui-section": "scores"
+    },
+    "scoreExactIncludesBonus": {
+      "type": "integer",
+      "default": 5,
+      "description": "Bonus score awarded for each search term that appears as an exact substring within the title or URL.",
+      "x-ui-section": "scores"
+    },
+    "scoreExactStartsWithBonus": {
+      "type": "integer",
+      "default": 10,
+      "description": "Bonus score awarded when the title or URL starts with the full search term.",
+      "x-ui-section": "scores"
+    },
+    "scoreExactEqualsBonus": {
+      "type": "integer",
+      "default": 20,
+      "description": "Bonus score awarded when the title exactly equals the search term.",
+      "x-ui-section": "scores"
+    },
+    "scoreExactTagMatchBonus": {
+      "type": "integer",
+      "default": 15,
+      "description": "Bonus score awarded when a tag matches the search term exactly.",
+      "x-ui-section": "scores"
+    },
+    "scoreExactFolderMatchBonus": {
+      "type": "integer",
+      "default": 10,
+      "description": "Bonus score awarded when a folder name matches the search term exactly.",
+      "x-ui-section": "scores"
+    },
+    "scoreExactGroupMatchBonus": {
+      "type": "integer",
+      "default": 15,
+      "description": "Bonus score awarded when a tab group name matches the search term exactly.",
+      "x-ui-section": "scores"
+    },
+    "scoreExactPhraseTitleBonus": {
+      "type": "integer",
+      "default": 8,
+      "description": "Bonus score awarded for an exact phrase match within the title.",
+      "x-ui-section": "scores"
+    },
+    "scoreExactPhraseUrlBonus": {
+      "type": "integer",
+      "default": 5,
+      "description": "Bonus score awarded for an exact phrase match within the URL.",
+      "x-ui-section": "scores"
+    },
+    "scoreVisitedBonusScore": {
+      "type": "number",
+      "minimum": 0,
+      "default": 0.5,
+      "description": "Multiplier applied per visit count when calculating the history-based bonus score.",
+      "x-ui-section": "scores"
+    },
+    "scoreVisitedBonusScoreMaximum": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 20,
+      "description": "Upper limit applied to the visit-based bonus so frequently visited items cannot exceed this value.",
+      "x-ui-section": "scores"
+    },
+    "scoreRecentBonusScoreMaximum": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 20,
+      "description": "Maximum bonus that can be awarded based on how recently an item was visited. Fresh visits score higher than those near the `historyDaysAgo` cutoff.",
+      "x-ui-section": "scores"
+    },
+    "scoreBookmarkOpenTabBonus": {
+      "type": "integer",
+      "default": 10,
+      "description": "Bonus score awarded when a bookmark is also open as an active browser tab.",
+      "x-ui-section": "scores"
+    },
+    "uFuzzyOptions": {
+      "type": "object",
+      "default": {},
+      "description": "Advanced configuration passed straight to the uFuzzy search library. Leave empty to rely on the built-in tuning. See https://github.com/leeoniya/uFuzzy?tab=readme-ov-file#options.",
+      "additionalProperties": true,
+      "x-ui-section": "powerUsers"
+    }
+  },
+  "definitions": {
+    "searchEngine": {
+      "type": "object",
+      "required": ["name", "urlPrefix"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human readable label shown in the results list."
+        },
+        "urlPrefix": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Base URL including any required query parameters. `$s` is substituted with the typed search term; otherwise the term is appended."
+        }
+      }
+    },
+    "customSearchEngine": {
+      "type": "object",
+      "required": ["alias", "name", "urlPrefix"],
+      "additionalProperties": false,
+      "properties": {
+        "alias": {
+          "oneOf": [
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ],
+          "description": "Trigger phrase or list of phrases (without the trailing space) that activates this custom engine. Users type the alias followed by a space."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human readable name displayed in the results list."
+        },
+        "urlPrefix": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Base URL including any required query parameters. `$s` is substituted with the typed search term; otherwise the term is appended."
+        },
+        "blank": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional URL visited when the alias is triggered without an additional search term, making it behave like a high priority bookmark."
+        }
+      }
+    }
+  }
+}

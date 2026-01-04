@@ -152,7 +152,7 @@ export async function getSearchData() {
       result.history = result.history.filter((item) => !mergedHistoryUrls.has(item.originalUrl))
     }
 
-    // Flag bookmarks with open tabs (if feature is enabled)
+    // Flag bookmarks with open tabs
     flagBookmarksWithOpenTabs(result.bookmarks, result.tabs)
   }
   console.debug(

@@ -2,6 +2,11 @@
 
 ## [unreleased]
 
+- **IMPROVED**: Added validation for user settings (based on JSON Schema).
+- **IMPROVED**: Enhanced options error overlay with better readability, inline code highlighting, and a "REMOVE UNKNOWN OPTIONS" quick-fix button.
+- **REMOVED**: Removed several dead configuration keys (`searchMinMatchCharLength`, `colorStripeWidth`, `scoreMinScore`, `scoreMinSearchTermMatchRatio`, etc.) that are now fixed at sensible defaults or no longer used.
+- **REMOVED**: Removed `detectBookmarksWithOpenTabs` option. This feature is now always active.
+
 ## [v2.0.1]
 
 - **IMPROVED**: Bookmarks with open tabs now also display the tab's group badge (if the tab belongs to a named group).
@@ -9,7 +14,6 @@
 - **FIXED**: Search cache is now properly cleared when toggling between "Precise" and "Fuzzy" search strategies, preventing stale results and memory bloat.
 - **REMOVED**: Removed dead `scoreMinScore` filtering code. Since all result types have base scores ≥30 and scoring only adds bonuses, no results were ever filtered out.
 - **FIXED**: Potential memory leak in event delegation tracking for search results, now using module-level state instead of DOM properties.
-- **REMOVED**: Removed `detectBookmarksWithOpenTabs` option. This feature was enabled by default, and is now always active. The scoring impact can still be customized via `scoreBookmarkOpenTabBonus`.
 
 ## [v2.0.0]
 

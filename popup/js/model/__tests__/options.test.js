@@ -3,7 +3,7 @@
  *
  * ## Behaviors Covered:
  * - validateUserOptions: Input validation, type checking, circular reference detection
- * - setUserOptions: Sync storage fallback to localStorage, error handling, validation
+ * - setUserOptions: Sync storage fallback to localStorage, error handling (no validation - see editOptionsView)
  * - getUserOptions: Sync storage fallback to localStorage, malformed JSON handling
  * - getEffectiveOptions: Merging defaults with user options, error recovery
  * - Constants: Structure validation for defaultOptions and emptyOptions
@@ -45,10 +45,11 @@ describe('options model', () => {
 
   describe('validateUserOptions', () => {
     test('accepts valid objects', () => {
-      expect(() => optionsModule.validateUserOptions({ searchStrategy: 'fuzzy' })).not.toThrow()
-      expect(() => optionsModule.validateUserOptions({})).not.toThrow()
-      expect(() => optionsModule.validateUserOptions(null)).not.toThrow()
-      expect(() => optionsModule.validateUserOptions(undefined)).not.toThrow()
+      const validObject = { searchStrategy: 'fuzzy' }
+      expect(optionsModule.validateUserOptions(validObject)).toEqual(validObject)
+      expect(optionsModule.validateUserOptions({})).toEqual({})
+      expect(optionsModule.validateUserOptions(null)).toEqual({})
+      expect(optionsModule.validateUserOptions(undefined)).toEqual({})
     })
 
     test('rejects invalid structures', () => {
@@ -62,6 +63,15 @@ describe('options model', () => {
       const circular = {}
       circular.self = circular
       expect(() => optionsModule.validateUserOptions(circular)).toThrow(/User options cannot be parsed into JSON/)
+    })
+
+    test('removes unknown options and logs warning', () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+      const optionsWithUnknown = { searchStrategy: 'fuzzy', unknownOption: 'value' }
+      const result = optionsModule.validateUserOptions(optionsWithUnknown)
+      expect(result).toEqual({ searchStrategy: 'fuzzy' })
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown user option: "unknownOption"'))
+      warnSpy.mockRestore()
     })
   })
 
@@ -105,6 +115,10 @@ describe('options model', () => {
 
       await expect(optionsModule.setUserOptions({ searchStrategy: 'fuzzy' })).rejects.toThrow(runtimeError)
     })
+
+    // Note: setUserOptions no longer validates options against the schema.
+    // Validation is now done separately in editOptionsView.js using validateOptions().
+    // This design keeps the validation code (and its dependencies) out of the initSearch bundle.
   })
 
   describe('getUserOptions', () => {

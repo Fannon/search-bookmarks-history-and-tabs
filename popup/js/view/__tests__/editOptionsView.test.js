@@ -11,15 +11,31 @@ function setupDom() {
     <textarea id="config"></textarea>
     <button id="opt-save"></button>
     <button id="opt-reset"></button>
-    <div id="err-msg" style="display:none"></div>
+    <div id="error-message" style="display:none"></div>
   `
 }
 
-async function loadEditOptionsView({ userOptions = {}, dumpImpl, loadImpl } = {}) {
+async function loadEditOptionsView({
+  userOptions = {},
+  dumpImpl,
+  loadImpl,
+  setUserOptionsImpl,
+  validateOptionsImpl,
+} = {}) {
   jest.resetModules()
 
   const getUserOptions = jest.fn(() => Promise.resolve(userOptions))
-  const setUserOptions = jest.fn(() => Promise.resolve())
+  const setUserOptions =
+    setUserOptionsImpl ||
+    jest.fn(() => {
+      return Promise.resolve()
+    })
+
+  const validateOptions =
+    validateOptionsImpl ||
+    jest.fn(() => {
+      return Promise.resolve({ valid: true, errors: [] })
+    })
 
   const dumpMock =
     dumpImpl ||
@@ -48,6 +64,10 @@ async function loadEditOptionsView({ userOptions = {}, dumpImpl, loadImpl } = {}
     setUserOptions,
   }))
 
+  jest.unstable_mockModule('../../model/validateOptions.js', () => ({
+    validateOptions,
+  }))
+
   const module = await import('../editOptionsView.js')
 
   return {
@@ -55,6 +75,7 @@ async function loadEditOptionsView({ userOptions = {}, dumpImpl, loadImpl } = {}
     mocks: {
       getUserOptions,
       setUserOptions,
+      validateOptions,
       dump: dumpMock,
       load: loadMock,
     },
@@ -99,7 +120,7 @@ describe('editOptionsView', () => {
     expect(document.getElementById('config').value).toBe('')
   })
 
-  it('saveOptions normalizes YAML, persists options, and navigates back to search', async () => {
+  it('saveOptions validates, normalizes YAML, persists options, and navigates back to search', async () => {
     setupDom()
     const loadImpl = jest.fn(() => ({ theme: 'dark' }))
     const dumpImpl = jest
@@ -119,6 +140,7 @@ describe('editOptionsView', () => {
     await Promise.resolve()
 
     expect(mocks.load).toHaveBeenCalledWith('theme: dark')
+    expect(mocks.validateOptions).toHaveBeenCalledWith({ theme: 'dark' })
     expect(mocks.setUserOptions).toHaveBeenCalledWith({ theme: 'dark' })
     expect(document.getElementById('config').value).toBe('normalized: dark')
   })
@@ -142,11 +164,46 @@ describe('editOptionsView', () => {
     document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
     await Promise.resolve()
 
-    const errorMessageEl = document.getElementById('err-msg')
+    const errorMessageEl = document.getElementById('error-message')
     expect(mocks.setUserOptions).not.toHaveBeenCalled()
-    expect(errorMessageEl.getAttribute('style')).toBe('')
-    expect(errorMessageEl.innerText).toBe('Invalid bad input')
+    expect(errorMessageEl.style.display).toBe('flex')
+    expect(errorMessageEl.textContent).toContain('Invalid Options')
+    expect(errorMessageEl.textContent).toContain('bad input')
+    expect(errorMessageEl.textContent).toContain('DISMISS')
     expect(errorSpy).toHaveBeenCalledWith(error)
+
+    errorSpy.mockRestore()
+  })
+
+  it('saveOptions displays schema validation errors when validateOptions returns invalid', async () => {
+    setupDom()
+    const validateOptionsImpl = jest.fn(() =>
+      Promise.resolve({
+        valid: false,
+        errors: ['searchMaxResults must be >= 1', 'displayScore must be boolean'],
+      }),
+    )
+    const { module, mocks } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: jest.fn(() => '{}'),
+      validateOptionsImpl,
+    })
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    await module.initOptions()
+    document.getElementById('config').value = 'searchMaxResults: 0'
+
+    document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
+    await Promise.resolve()
+
+    const errorMessageEl = document.getElementById('error-message')
+    expect(mocks.validateOptions).toHaveBeenCalled()
+    expect(mocks.setUserOptions).not.toHaveBeenCalled() // Should NOT call setUserOptions when validation fails
+    expect(errorMessageEl.style.display).toBe('flex')
+    expect(errorMessageEl.textContent).toContain('Invalid Options')
+    expect(errorMessageEl.textContent).toContain('• searchMaxResults must be >= 1')
+    expect(errorMessageEl.textContent).toContain('• displayScore must be boolean')
+    expect(errorMessageEl.textContent).toContain('DISMISS')
 
     errorSpy.mockRestore()
   })
@@ -166,5 +223,48 @@ describe('editOptionsView', () => {
     await Promise.resolve()
 
     expect(input.value).toBe('')
+  })
+
+  it('saveOptions shows REMOVE UNKNOWN OPTIONS button for unknown options, and it works', async () => {
+    setupDom()
+    const validateOptionsImpl = jest.fn(() =>
+      Promise.resolve({
+        valid: false,
+        errors: ['Unknown option: "unknownKey"'],
+      }),
+    )
+    const { module, mocks } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: jest.fn(() => 'knownKey: value'),
+      loadImpl: jest.fn(() => ({ knownKey: 'value' })),
+      validateOptionsImpl,
+    })
+
+    await module.initOptions()
+    document.getElementById('config').value = 'knownKey: value\nunknownKey: extra'
+
+    // First save attempt shows the error with clean button
+    document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
+    await Promise.resolve()
+
+    const errorMessageEl = document.getElementById('error-message')
+    expect(errorMessageEl.textContent).toContain('REMOVE UNKNOWN OPTIONS')
+
+    // Click REMOVE UNKNOWN OPTIONS
+    const btnClean = document.getElementById('btn-clean')
+    expect(btnClean).not.toBeNull()
+
+    // Second validate call for cleaning should return valid
+    mocks.validateOptions.mockImplementationOnce(() => Promise.resolve({ valid: true, errors: [] }))
+
+    btnClean.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await Promise.resolve()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    // It should have cleaned the text but NOT called setUserOptions (user must save manually)
+    expect(mocks.setUserOptions).not.toHaveBeenCalled()
+    expect(errorMessageEl.style.display).toBe('none')
+    expect(document.getElementById('config').value).toBe('knownKey: value')
   })
 })

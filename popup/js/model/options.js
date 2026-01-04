@@ -15,106 +15,74 @@
  * All options are optional - unspecified options fall back to defaults.
  *
  * @see https://github.com/Fannon/search-bookmarks-history-and-tabs#user-configuration
+ * @see /popup/json/options.schema.json for documentation and validation details.
  */
 
 import { printError } from '../view/errorView.js'
 
 /**
- * The default options
+ * The default options.
  *
- * They can be selectively overwritten and customized via user options
- * @see https://github.com/Fannon/search-bookmarks-history-and-tabs#user-configuration
+ * See /popup/json/options.schema.json for documentation and validation details.
+ * They can be selectively overwritten and customized via user options.
  */
 export const defaultOptions = {
+  //////////////////////////////////////////
+  // GENERAL OPTIONS                      //
+  //////////////////////////////////////////
+
+  /** Enable detailed logging in the browser console */
+  debug: false,
+
   //////////////////////////////////////////
   // SEARCH OPTIONS                       //
   //////////////////////////////////////////
 
   /**
    * Search approach to use. Choose between:
-   *
-   * * 'precise': Simple search approach that will only find precise matches.
-   *              It provides best init performance and provides good search performance.
-   *              The 'fuzzyness' option will be ignored
-   *
-   * * 'fuzzy':   Search approach that implements a fuzzy (approximate) search.
-   *              This search approach will find more results, even if there are no perfect matches.
-   *              It has a moderate impact on init performance, and is slower when searching.
-   *              It supports all options.
-   *              Uses https://github.com/leeoniya/uFuzzy
+   * - 'precise': Simple search that only finds precise matches (fastest)
+   * - 'fuzzy': Fuzzy search that finds approximate matches (uses uFuzzy)
    */
-  searchStrategy: 'precise', // 'precise' or 'fuzzy'
-  /**
-   * Max search results. Reduce for better performance.
-   * Does not apply for tag and folder search
-   */
+  searchStrategy: 'precise',
+  /** Max search results. Reduce for better performance. */
   searchMaxResults: 24,
-  /**
-   * Fuzzy search threshold (0 - 1)
-   * 0 is no fuzzyness, 1 is full fuzzyness
-   *
-   * This applies only to search approach 'fuzzy'.
-   * For precise this is always 0 (no fuzzyness)
-   */
+  /** Fuzzy search threshold (0-1). 0 = no fuzzyness, 1 = full fuzzyness */
   searchFuzzyness: 0.6,
+  /** Debounce time in milliseconds before search executes */
+  searchDebounceMs: 100,
+
   //////////////////////////////////////////
   // COLORS AND STYLE                     //
   //////////////////////////////////////////
-  /**
-   * Color for bookmark results, expressed as CSS color
-   */
+
+  /** Color for bookmark results, expressed as CSS color */
   bookmarkColor: '#3c8d8d',
-  /**
-   * Color for tab results, expressed as CSS color
-   */
+  /** Color for tab results */
   tabColor: '#b89aff',
-  /**
-   * Color for history results, expressed as CSS color
-   */
+  /** Color for history results */
   historyColor: '#9ece2f',
-  /**
-   * Color for search results, expressed as CSS color
-   */
+  /** Color for search engine suggestions */
   searchColor: '#e1a535',
-  /**
-   * Color for custom search results, expressed as CSS color
-   */
+  /** Color for custom search engine results */
   customSearchColor: '#ce5c2f',
-  /**
-   * Color for direct URL results, expressed as CSS color
-   */
+  /** Color for direct URL navigation */
   directColor: '#7799CE',
 
   //////////////////////////////////////////
-  // SEARCH SOURCES                       //
+  // SOURCES                              //
   //////////////////////////////////////////
 
-  /**
-   * Whether to index and search for open browser tabs
-   */
+  /** Enable tab indexing */
   enableTabs: true,
-  /**
-   * Whether to index and search for bookmarks
-   */
+  /** Enable bookmark indexing */
   enableBookmarks: true,
-  /**
-   * Whether to index and search for browsing history
-   * Please note that the history API tends to be slow,
-   * so be careful about how many items you load.
-   */
+  /** Enable history indexing */
   enableHistory: true,
-  /**
-   * Enable or disable search engine links in results
-   * Search engines can be a useful fallback mechanism to search externally for the term
-   */
+  /** Enable search engine suggestions */
   enableSearchEngines: true,
-  /**
-   * Enable help and tips on startup
-   */
+  /** Show helpful tips when popup opens */
   enableHelp: true,
-  /**
-   * Whether to treat URL like terms as directly navigable.
-   */
+  /** Detect URL-shaped terms and offer direct navigation */
   enableDirectUrl: true,
 
   //////////////////////////////////////////
@@ -123,119 +91,65 @@ export const defaultOptions = {
 
   /**
    * Extract tags from bookmark titles and display them as clickable badges.
-   * Tags are text prefixed with `#` in bookmark titles (e.g., `Bookmark Title #work #dev`).
-   * Setting to false hides tag badges but does NOT disable tag search mode (`#tag`).
+   * Tags are text prefixed with `#` (e.g., `Bookmark Title #work #dev`).
    */
   displayTags: true,
-  /**
-   * Display bookmark folder names as clickable badges showing the folder hierarchy.
-   * Setting to false hides folder badges but does NOT disable folder search mode (`~folder`).
-   */
+  /** Display bookmark folder names as clickable badges */
   displayFolderName: true,
-  /**
-   * Highlight search matches in results.
-   * Reduces rendering performance a little.
-   */
+  /** Highlight matching text in titles and URLs */
   displaySearchMatchHighlight: true,
-  /**
-   * Display tab group name as clickable badges for tabs in a group.
-   */
+  /** Display tab group name as clickable badges */
   displayTabGroup: true,
-  /**
-   * Display last visit (time ago)
-   */
+  /** Display last visit time ago */
   displayLastVisit: true,
-  /**
-   * Display how many times a result was visited (by history)
-   */
+  /** Display visit counter from browsing history */
   displayVisitCounter: false,
-  /**
-   * Display date when a bookmark was added
-   */
+  /** Display date bookmark was added */
   displayDateAdded: false,
-  /**
-   * Display result score.
-   * The score indicates the relevance of the result and defines the order of results.
-   */
+  /** Display numeric relevance score */
   displayScore: true,
 
   //////////////////////////////////////////
   // BOOKMARKS OPTIONS                    //
   //////////////////////////////////////////
 
-  /**
-   * Ignores all bookmarks within the folders listed here, including their subfolders.
-   */
+  /** Bookmark folder paths to exclude from indexing */
   bookmarksIgnoreFolderList: [],
-  /**
-   * Detect and mark duplicate bookmarks (same URL in different folders).
-   * Disabling this can improve startup performance for large bookmark collections.
-   */
+  /** Detect and mark duplicate bookmarks (same URL) */
   detectDuplicateBookmarks: false,
 
   //////////////////////////////////////////
   // TABS OPTIONS                         //
   //////////////////////////////////////////
 
-  /**
-   * If true, only the current browser window is considered for tab indexing and switching
-   */
+  /** Only consider tabs from the current browser window */
   tabsOnlyCurrentWindow: false,
-  /**
-   * Number of recent tabs to show when popup is opened without search term. Set to 0 to disable.
-   * Limiting this improves performance for users with many open tabs
-   */
+  /** Number of recently visited tabs to show when the popup opens. Set to 0 to disable. */
   maxRecentTabsToShow: 8,
 
   //////////////////////////////////////////
   // HISTORY OPTIONS                      //
   //////////////////////////////////////////
 
-  /**
-   * How many days ago the browser history should be fetched
-   */
+  /** How many days ago the browser history should be fetched */
   historyDaysAgo: 14,
-  /**
-   * How many history items should be fetched at most
-   * Be careful, as too many items have negative impact on startup and search performance
-   */
+  /** Maximum number of history items to retrieve */
   historyMaxItems: 1024,
-  /**
-   * All history items where the URL includes the given strings will be skipped
-   */
+  /** URL fragments to exclude from history indexing */
   historyIgnoreList: ['extension://'],
 
   //////////////////////////////////////////
-  // SEARCH ENGINES OPTIONS               //
+  // SEARCH ENGINES                       //
   //////////////////////////////////////////
 
-  /**
-   * Search Engine "Providers" which are used to pass on the search term via URL
-   *
-   * For each entry here, one result will be created - in the order they are defined.
-   * The URLs need to include the search querystring (see examples).
-   *
-   * If an '$s' is part of the urlPrefix, it will be replaced with the search term.
-   * Otherwise, the search term is appended to the urlPrefix.
-   */
+  /** Built-in search engines shown as fallback actions */
   searchEngineChoices: [
     {
       name: 'Google',
       urlPrefix: 'https://www.google.com/search?q=$s',
     },
   ],
-
-  /**
-   * Allows to define custom search engines with their own custom alias
-   * To trigger a search, type in the alias plus space: `<alias> ` to begin the search
-   * The alias can be one string or an array of strings
-   *
-   * If an '$s' is part of the urlPrefix, it will be replaced with the search term.
-   * Otherwise, the search term is appended to the urlPrefix.
-   *
-   * Optionally, a "blank" can be given, which is the URL chosen when there is no search string.
-   * With this, they act like a "high-priority" custom bookmark.
-   */
+  /** Custom search engines triggered via aliases */
   customSearchEngines: [
     {
       alias: ['g', 'google'],
@@ -255,133 +169,40 @@ export const defaultOptions = {
   // SCORE CALCULATION OPTIONS            //
   //////////////////////////////////////////
 
-  // RESULT TYPE BASE SCORES
-  // Depending on the type of result, they start with a base score
-  // Please make sure that this is not below the minScore :)
-  /**
-   * Base score for bookmark results
-   */
+  // Result type base scores
   scoreBookmarkBase: 100,
-  /**
-   * Base score for tab results
-   */
   scoreTabBase: 70,
-  /**
-   * Base score for history results
-   */
   scoreHistoryBase: 45,
-  /**
-   * Base score for search engine choices
-   */
   scoreSearchEngineBase: 30,
-  /**
-   * Base score for custom search engine choices
-   * This is set very high to ensure that it's the topmost entry
-   */
   scoreCustomSearchEngineBase: 400,
-  /**
-   * Base score for a direct URL being typed in
-   */
   scoreDirectUrlScore: 500,
 
-  // FIELD WEIGHTS
-  // Depending on in which field the search match was found,
-  // the match gets a multiplier applied on how important the match is.
-  /** Weight for a tag match*/
+  // Field weights for score calculation
   scoreTagWeight: 0.7,
-  /** Weight for a tab group match*/
   scoreGroupWeight: 0.7,
-  /** Weight for a URL match*/
   scoreUrlWeight: 0.6,
-  /** Weight for a folder match*/
   scoreFolderWeight: 0.5,
 
-  // BONUS SCORES
-  // If certain conditions apply, extra score points can be added
-  /**
-   * If enabled, bookmarks can add custom bonus scores by putting it in the title
-   * HowTo: Add a ` +<score>` (space, plus sign, whole number) in the title before tags.
-   * Do not add bonus scores more than once in a single bookmark title.
-   * E.g: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`
-   * */
+  // Bonus scores
   scoreCustomBonusScore: true,
-  /**
-   * For each exact "includes" match we add some bonus points
-   */
   scoreExactIncludesBonus: 5,
-
-  /**
-   * Additional score points if title or url starts exactly with the search text.
-   * This comes on top of an include bonus.
-   */
   scoreExactStartsWithBonus: 10,
-  /**
-   * Additional score points if title matches exactly with the search text.
-   * This comes on top of an include and starts with bonus.
-   */
   scoreExactEqualsBonus: 20,
-  /**
-   * Additional points for an exact match of a search term tag
-   */
   scoreExactTagMatchBonus: 15,
-  /**
-   * Additional points for an exact match of a search term tab group name
-   */
   scoreExactGroupMatchBonus: 15,
-  /**
-   * Additional points for an exact match of a search term folder name
-   */
   scoreExactFolderMatchBonus: 10,
-  /**
-   * Bonus if the full search phrase appears in the title (multi-word searches only).
-   * This rewards results where ALL search terms appear together as a phrase, not just individually.
-   * Example: searching "react hooks" gives this bonus if title contains "react hooks" exactly.
-   * This is in addition to individual word bonuses from scoreExactIncludesBonus.
-   * Single-word searches do not receive this bonus.
-   */
   scoreExactPhraseTitleBonus: 8,
-  /**
-   * Bonus if the full search phrase appears in the URL (multi-word searches only, hyphen-normalized).
-   * URLs typically use hyphens instead of spaces, so "react hooks" matches "react-hooks" in URLs.
-   * This rewards results where the search phrase appears as a cohesive unit in the URL path.
-   * Example: searching "user profile" matches URLs containing "user-profile".
-   * This is in addition to individual word bonuses from scoreExactIncludesBonus.
-   * Single-word searches do not receive this bonus.
-   */
   scoreExactPhraseUrlBonus: 5,
-  /**
-   * Adds score points for every site visit according to browsing history
-   * Please note that only history items within `history.daysAgo` can be considered,
-   * however the visited counter itself considers your complete history.
-   */
   scoreVisitedBonusScore: 0.5,
-  /**
-   * Maximum score points for visited bonus
-   */
   scoreVisitedBonusScoreMaximum: 20,
-  /**
-   * Adds score points when item has been visited recently.
-   * If it has been visited just now, score is maximum
-   * If it has been visited at the end of `historyDaysAgo`, score is 0
-   */
   scoreRecentBonusScoreMaximum: 20,
-  /**
-   * Adds bonus points when a bookmark is also currently open as a browser tab.
-   * Helps prioritize results that already exist in your session to prevent duplicate openings.
-   */
   scoreBookmarkOpenTabBonus: 10,
 
   //////////////////////////////////////////
   // POWER USER OPTIONS                   //
   //////////////////////////////////////////
 
-  // Those are only meant for power users who know what they're doing
-  // And those options may also not be long-time stable
-
-  /**
-   * Customized options for the fuzzy search library uFuzzy ('@leeoniya/ufuzzy')
-   * @see https://github.com/leeoniya/uFuzzy/blob/main/src/uFuzzy.js#L9
-   */
+  /** Advanced configuration for the uFuzzy search library */
   uFuzzyOptions: {},
 }
 
@@ -390,7 +211,13 @@ export const emptyOptions = {
 }
 
 /**
- * Writes user settings to the sync storage, falls back to local storage
+ * Writes user settings to the sync storage, falls back to local storage.
+ *
+ * NOTE: This function does NOT validate options against the schema.
+ * Validation should be done separately (e.g., in editOptionsView.js) before
+ * calling this function when users edit raw configuration.
+ * Internal code changes (like search strategy toggle) can call this directly
+ * since the values are known to be valid.
  *
  * @see https://developer.chrome.com/docs/extensions/reference/storage/
  *
@@ -398,16 +225,11 @@ export const emptyOptions = {
  * @returns {Promise<void>}
  */
 export async function setUserOptions(userOptions = {}) {
-  return new Promise((resolve, reject) => {
-    try {
-      validateUserOptions(userOptions)
-    } catch (err) {
-      printError(err, 'Could not save user options.')
-      return reject(err)
-    }
+  const normalizedOptions = normalizeUserOptions(userOptions)
 
+  return new Promise((resolve, reject) => {
     if (ext.browserApi.storage?.sync) {
-      ext.browserApi.storage.sync.set({ userOptions: userOptions }, () => {
+      ext.browserApi.storage.sync.set({ userOptions: normalizedOptions }, () => {
         if (ext.browserApi.runtime.lastError) {
           return reject(ext.browserApi.runtime.lastError)
         }
@@ -415,7 +237,7 @@ export async function setUserOptions(userOptions = {}) {
       })
     } else {
       console.warn('No storage API found. Falling back to local Web Storage')
-      window.localStorage.setItem('userOptions', JSON.stringify(userOptions))
+      window.localStorage.setItem('userOptions', JSON.stringify(normalizedOptions))
       return resolve()
     }
   })
@@ -458,10 +280,10 @@ export async function getUserOptions() {
 export async function getEffectiveOptions() {
   try {
     const userOptions = await getUserOptions()
-    validateUserOptions(userOptions)
+    const normalizedOptions = normalizeUserOptions(userOptions)
     return {
       ...defaultOptions,
-      ...userOptions,
+      ...normalizedOptions,
     }
   } catch (err) {
     printError(err, 'Could not get valid user options, falling back to defaults.')
@@ -470,27 +292,44 @@ export async function getEffectiveOptions() {
 }
 
 /**
- * Ensure user options are valid JSON-serialisable objects.
+ * Normalize and clean up user options.
+ * - Validates that options are a valid JSON-serializable object
+ * - Warns about and removes unknown option keys
  *
- * @param {Object} userOptions - Options object to validate.
+ * @param {Object} userOptions - Options object to normalize.
+ * @returns {Object} Normalized options with unknown keys removed.
  */
-export function validateUserOptions(userOptions) {
-  if (userOptions) {
-    if (typeof userOptions !== 'object') {
-      throw new Error('User options must be a valid YAML / JSON object')
-    }
-    try {
-      JSON.stringify(userOptions)
-    } catch (err) {
-      throw new Error(`User options cannot be parsed into JSON: ${err.message}`)
-    }
+export function normalizeUserOptions(userOptions) {
+  if (userOptions === undefined || userOptions === null) {
+    return {}
+  }
 
-    // Warn about unknown options
-    const validKeys = new Set(Object.keys(defaultOptions))
-    for (const key of Object.keys(userOptions)) {
-      if (!validKeys.has(key)) {
-        console.warn(`Unknown user option: "${key}". It will be ignored.`)
-      }
+  if (typeof userOptions !== 'object' || Array.isArray(userOptions)) {
+    throw new Error('User options must be a valid YAML / JSON object')
+  }
+
+  try {
+    JSON.stringify(userOptions)
+  } catch (err) {
+    throw new Error(`User options cannot be parsed into JSON: ${err.message}`)
+  }
+
+  // Warn about and remove unknown options
+  const validKeys = new Set(Object.keys(defaultOptions))
+  const cleanedOptions = {}
+
+  for (const key of Object.keys(userOptions)) {
+    if (validKeys.has(key)) {
+      cleanedOptions[key] = userOptions[key]
+    } else {
+      console.warn(`Unknown user option: "${key}". It will be ignored and removed.`)
     }
   }
+
+  return cleanedOptions
 }
+
+/**
+ * @deprecated Use normalizeUserOptions instead
+ */
+export const validateUserOptions = normalizeUserOptions

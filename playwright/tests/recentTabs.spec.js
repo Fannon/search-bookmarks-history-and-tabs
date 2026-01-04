@@ -11,6 +11,7 @@ const updateUserConfig = async (page, config) => {
   await userConfig.fill('')
   await userConfig.fill(newConfig)
   await page.locator('#opt-save').click()
+  await page.waitForURL(/.*#search\/?/)
 }
 
 test.describe('Recent Tabs on Open Functionality', () => {
@@ -94,7 +95,6 @@ test.describe('Recent Tabs on Open Functionality', () => {
     test('respects a custom limit', async ({ page }) => {
       await updateUserConfig(page, { maxRecentTabsToShow: 5 })
 
-      await page.goto('/')
       await waitForInitialization(page)
 
       const count = await page.locator('#results li').count()
@@ -105,7 +105,6 @@ test.describe('Recent Tabs on Open Functionality', () => {
     test('handles a zero tab limit', async ({ page }) => {
       await updateUserConfig(page, { maxRecentTabsToShow: 0 })
 
-      await page.goto('/')
       await waitForInitialization(page)
 
       const results = page.locator('#results li')
@@ -129,7 +128,6 @@ test.describe('Recent Tabs on Open Functionality', () => {
     test('handles limits larger than the available tabs', async ({ page }) => {
       await updateUserConfig(page, { maxRecentTabsToShow: 1000 })
 
-      await page.goto('/')
       await waitForInitialization(page)
 
       const count = await page.locator('#results li').count()
@@ -142,7 +140,6 @@ test.describe('Recent Tabs on Open Functionality', () => {
     test('shows result counter for recent tabs', async ({ page }) => {
       await updateUserConfig(page, { maxRecentTabsToShow: 10 })
 
-      await page.goto('/')
       await waitForInitialization(page)
 
       const count = await page.locator('#results li').count()

@@ -14,14 +14,15 @@
   <div id="container">
     <div id="options">
       <div class="inputs">
-        <div class="heading">
-          <span class="badge error-message" id="err-msg" style="display: none"></span>
+        <div class="textarea-container">
+          <textarea id="config" title="User Config" class="input" type="text" spellcheck="false" autofocus></textarea>
+          <div id="error-message" class="error-overlay" style="display: none"></div>
         </div>
-        <textarea id="config" title="User Config" class="input" type="text" spellcheck="false" autofocus></textarea>
       </div>
       <div class="help">
         The options are written in
-        <a href="https://en.wikipedia.org/wiki/YAML" target="_blank">YAML</a> notation.<br />
+        <a href="https://en.wikipedia.org/wiki/YAML" target="_blank">YAML</a> or
+        <a href="https://en.wikipedia.org/wiki/JSON" target="_blank">JSON</a> notation.<br />
         Please have a look at the
         <a href="https://github.com/Fannon/search-bookmarks-history-and-tabs#user-configuration" target="_blank">user
           configuration help</a>.
