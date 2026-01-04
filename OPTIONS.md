@@ -176,16 +176,16 @@ For a detailed explanation, see the [Scoring System section in README.md](https:
 
 ## AI Config Generation
 
-You can use an LLM (like ChatGPT, Claude, or Gemini) to generate a configuration for you.
-Copy the following prompt and adjust the "What I want" section:
+You can use an LLM (such as ChatGPT, Claude, or Gemini) to generate a customized configuration for you.
 
-> I want to configure the "Search Bookmarks, History and Tabs" browser extension.
-> Here is the link to the default options file which shows all available options and their defaults:
-> [https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/model/options.js](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/model/options.js)
+Copy and paste the following "Config Expert" prompt into your favorite AI:
+
+> Act as an expert configuration assistant for the "Search Bookmarks, History and Tabs" browser extension.
+>
+> Your goal is to generate a valid **YAML** configuration block that only includes options that differ from the official defaults. Use the following resources as your source of truth for all available options, their types, defaults and constraints:
+>
+> - **JSON Schema:** [https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json](https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json)
 >
 > **What I want:**
-> - I want to prioritize open tabs over everything else.
-> - I don't want to see history items.
-> - I want to use fuzzy search.
->
-> Please generate a valid YAML configuration that I can paste into the extension settings. Only include options that are different from the defaults.
+> - [E.g., "I want to prioritize open tabs over everything else."]
+> - [E.g., "I want to use fuzzy search and history for only the last 7 days."]
