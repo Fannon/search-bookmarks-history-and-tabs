@@ -870,14 +870,14 @@ describe('scoring', () => {
       // - scoreTitleWeight: 1.0
       // - scoreTagWeight: 0.7
       //
-      // Tag-only: 100 (base) + 3.5 (includes 5*0.7) + 10 (exact tag) = 113.5
+      // Tag-only: 100 (base) + 3.5 (includes 5*0.7) + 15 (exact tag) = 118.5
       // Title-only: 100 (base) + 5 (includes 5*1.0) + 10 (starts with "JavaScript") = 115
       //
       // Note: No phrase bonus for single-word search "javascript"
-      // With default scoreExactTagMatchBonus of 10, title slightly edges out tags
-      expect(tagOnlyScore).toBeCloseTo(113.5)
+      // With default scoreExactTagMatchBonus of 15, tags WIN by 3.5 points
+      expect(tagOnlyScore).toBeCloseTo(118.5)
       expect(titleOnlyScore).toBeCloseTo(115)
-      expect(titleOnlyScore - tagOnlyScore).toBeCloseTo(1.5)
+      expect(tagOnlyScore - titleOnlyScore).toBeCloseTo(3.5)
     })
 
     it('validates that both title AND tag match scores highest with defaults', () => {
@@ -923,17 +923,17 @@ describe('scoring', () => {
         },
       })
 
-      // Both title+tag: 100 + 5 (title includes) + 10 (title starts with) + 10 (exact tag) = 125
-      // Tag-only: 100 + 3.5 (tag includes) + 10 (exact tag) = 113.5
+      // Both title+tag: 100 + 5 (title includes) + 10 (title starts with) + 15 (exact tag) = 130
+      // Tag-only: 100 + 3.5 (tag includes) + 15 (exact tag) = 118.5
       // Title-only: 100 + 5 (title includes) + 10 (title starts with "React") = 115
       // Note: No phrase bonus for single-word search "react"
-      expect(bothScore).toBeCloseTo(125)
-      expect(tagOnlyScore).toBeCloseTo(113.5)
+      expect(bothScore).toBeCloseTo(130)
+      expect(tagOnlyScore).toBeCloseTo(118.5)
       expect(titleOnlyScore).toBeCloseTo(115)
       expect(bothScore).toBeGreaterThan(tagOnlyScore)
       expect(bothScore).toBeGreaterThan(titleOnlyScore)
-      // With default scoreExactTagMatchBonus of 10, title slightly edges out tag-only
-      expect(titleOnlyScore).toBeGreaterThan(tagOnlyScore)
+      // With default scoreExactTagMatchBonus of 15, tag-only now edges out title-only
+      expect(tagOnlyScore).toBeGreaterThan(titleOnlyScore)
     })
 
     it('validates partial tag matches still get some benefit (includes bonus only)', () => {
@@ -1025,12 +1025,12 @@ describe('scoring', () => {
         },
       })
 
-      // Exact: 100 + 5 (includes) + 10 (starts with) + 15 (equals) = 130
+      // Exact: 100 + 5 (includes) + 10 (starts with) + 20 (equals) = 135
       // Partial: 100 + 5 (includes) + 10 (starts with "React") = 115
       // Note: No phrase bonus for single-word search "react"
-      expect(exactTitleMatch).toBeCloseTo(130)
+      expect(exactTitleMatch).toBeCloseTo(135)
       expect(partialTitleMatch).toBeCloseTo(115)
-      expect(exactTitleMatch - partialTitleMatch).toBeCloseTo(15)
+      expect(exactTitleMatch - partialTitleMatch).toBeCloseTo(20)
     })
 
     it('confirms scoreExactTagMatchBonus of 15 makes tags competitive', () => {
@@ -1063,18 +1063,13 @@ describe('scoring', () => {
         },
       })
 
-      // Tag: 100 + 3.5 (includes with 0.7 weight) + 10 (exact tag) = 113.5
+      // Tag: 100 + 3.5 (includes with 0.7 weight) + 15 (exact tag) = 118.5
       // Title: 100 + 5 (includes with 1.0 weight) + 10 (starts with "Tutorial") = 115
       // Note: No phrase bonus for single-word search "tutorial"
-      // With default scoreExactTagMatchBonus of 10, title slightly edges out tags
-      expect(tagScore).toBeCloseTo(113.5)
+      // With default scoreExactTagMatchBonus of 15, tags WIN by 3.5 points!
+      expect(tagScore).toBeCloseTo(118.5)
       expect(titleScore).toBeCloseTo(115)
-      expect(titleScore - tagScore).toBeCloseTo(1.5)
-
-      // Note: To make tags more competitive, increase scoreExactTagMatchBonus from 10 to 15:
-      // Tag would be: 100 + 3.5 + 15 = 118.5
-      // Title would be: 100 + 5 + 10 = 115
-      // Tags would WIN by 3.5 points!
+      expect(tagScore - titleScore).toBeCloseTo(3.5)
     })
   })
 })

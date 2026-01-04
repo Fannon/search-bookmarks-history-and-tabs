@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { build } from 'esbuild'
 /**
  * @file Refreshes third-party libraries in popup/lib.
  *
@@ -22,17 +21,6 @@ async function updateLibs() {
     fs.copy('node_modules/js-yaml/dist/js-yaml.min.js', 'popup/lib/js-yaml.min.js'),
     fs.copy('node_modules/@yaireo/tagify/dist/tagify.js', 'popup/lib/tagify.min.js'),
     fs.copy('node_modules/@yaireo/tagify/dist/tagify.css', 'popup/lib/tagify.min.css'),
-    build({
-      entryPoints: ['node_modules/@exodus/schemasafe/src/index.js'],
-      outfile: 'popup/lib/schemasafe.min.js',
-      bundle: true,
-      minify: true,
-      format: 'iife',
-      globalName: 'schemasafe',
-      legalComments: 'none',
-      platform: 'browser',
-      target: ['es2019'],
-    }),
   ])
 
   console.info('Updated libraries in popup/lib')

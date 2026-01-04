@@ -5,6 +5,12 @@ You can customize these options in the extension settings using **YAML** or **JS
 
 For advanced users, you can also inspect the [JSON Schema](https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json) for a formal definition of all properties and constraints.
 
+## General Options
+
+| Option | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `debug` | boolean | `false` | Enable detailed logging in the browser console. |
+
 ## Search Options
 
 | Option | Type | Default | Description |
@@ -68,7 +74,7 @@ Control what information is shown in search result items.
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `tabsOnlyCurrentWindow` | boolean | `false` | If `true`, only search and switch to tabs in the current browser window. |
-| `maxRecentTabsToShow` | number | `8` | Number of recently visited tabs to show when the popup opens (before typing). Set to `0` to disable. Lower values improve startup performance. |
+| `maxRecentTabsToShow` | number | `16` | Number of recently visited tabs to show when the popup opens (before typing). Set to `0` to disable. Lower values improve startup performance. |
 
 ## History Options
 

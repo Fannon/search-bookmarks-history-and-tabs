@@ -45,7 +45,7 @@ export const defaultOptions = {
    */
   searchStrategy: 'precise',
   /** Max search results. Reduce for better performance. */
-  searchMaxResults: 32,
+  searchMaxResults: 24,
   /** Fuzzy search threshold (0-1). 0 = no fuzzyness, 1 = full fuzzyness */
   searchFuzzyness: 0.6,
   /** Debounce time in milliseconds before search executes */
@@ -170,9 +170,6 @@ export const defaultOptions = {
   //////////////////////////////////////////
   // SCORE CALCULATION OPTIONS            //
   //////////////////////////////////////////
-
-  // Minimum search term match ratio (for precise search)
-  scoreMinSearchTermMatchRatio: 0.6,
 
   // Result type base scores
   scoreBookmarkBase: 100,

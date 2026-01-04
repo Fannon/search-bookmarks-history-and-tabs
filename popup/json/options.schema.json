@@ -25,15 +25,8 @@
     "searchMaxResults": {
       "type": "integer",
       "minimum": 1,
-      "default": 32,
+      "default": 24,
       "description": "Maximum number of results shown for a normal search. Tag, folder, and tab lists always show everything relevant.",
-      "x-ui-section": "search"
-    },
-    "searchMinMatchCharLength": {
-      "type": "integer",
-      "minimum": 1,
-      "default": 1,
-      "description": "Wait to start searching until the query reaches this many characters. Helpful to avoid noise from very short terms.",
       "x-ui-section": "search"
     },
     "searchFuzzyness": {
@@ -273,14 +266,6 @@
       ],
       "description": "Custom search engine definitions that can be triggered with aliases (e.g. `g query`). `$s` inside `urlPrefix` is replaced with the search term. `blank` is optional and used when the alias is entered without a query.",
       "x-ui-section": "searchEngines"
-    },
-    "scoreMinSearchTermMatchRatio": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1,
-      "default": 0.6,
-      "description": "Minimum ratio of search terms that must match for a result to be kept when using precise search. 1 means all terms must match; 0 means any term is enough.",
-      "x-ui-section": "scores"
     },
     "scoreBookmarkBase": {
       "type": "integer",

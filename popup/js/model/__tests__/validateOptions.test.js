@@ -30,7 +30,7 @@ describe('validateOptions', () => {
     const result = await validateOptions({
       debug: false,
       searchStrategy: 'precise',
-      searchMaxResults: 32,
+      searchMaxResults: 24,
     })
 
     expect(result).toEqual({ valid: true, errors: [] })
