@@ -259,6 +259,7 @@ describe('escapeHtml', () => {
 
 describe('escapeRegex', () => {
   it('escapes all regex special characters', () => {
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Testing literal curly braces, not template placeholders
     const chars = '.*+?^${}()|[]\\'
     expect(escapeRegex(chars)).toBe('\\.\\*\\+\\?\\^\\$\\{\\}\\(\\)\\|\\[\\]\\\\')
   })

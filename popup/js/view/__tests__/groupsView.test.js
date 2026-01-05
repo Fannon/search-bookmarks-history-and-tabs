@@ -40,7 +40,7 @@ describe('groupsView', () => {
 
   test('renders warning when permission is missing', async () => {
     // specific behavior: if chrome.permissions.contains returns false
-    global.chrome.permissions.contains.mockImplementation(({ permissions }, cb) => cb(false))
+    global.chrome.permissions.contains.mockImplementation(({ permissions: _permissions }, cb) => cb(false))
     // And tabGroups API is NOT available (mocking undefined would be hard on global, let's rely on permissions check flow)
     // Actually the code checks permissions.contains OR chrome.tabGroups presence as a fallback.
     // If we want to simulate missing permission, we should probably ensure both fail.
@@ -63,7 +63,7 @@ describe('groupsView', () => {
 
   test('fetches and renders groups when permissions are granted', async () => {
     // Mock permission granted
-    global.chrome.permissions.contains.mockImplementation(({ permissions }, cb) => cb(true))
+    global.chrome.permissions.contains.mockImplementation(({ permissions: _permissions }, cb) => cb(true))
     global.chrome.tabGroups = {} // API exists
 
     const mockGroups = {
