@@ -335,12 +335,21 @@ describe('fuzzySearch', () => {
   it('handles malformed search data gracefully', async () => {
     // Mock DOM to prevent errors in printError function
     Object.defineProperty(document, 'getElementById', {
-      value: jest.fn(() => ({
-        innerHTML: '',
-        style: { display: '' },
-        firstChild: null,
-        insertBefore: jest.fn(),
-      })),
+      value: jest.fn((id) => {
+        if (id === 'error-overlay') {
+          return {
+            innerHTML: '',
+            style: { display: '' },
+            addEventListener: jest.fn(),
+          }
+        }
+        if (id === 'btn-dismiss-error') {
+          return {
+            addEventListener: jest.fn(),
+          }
+        }
+        return null
+      }),
       writable: true,
     })
 
