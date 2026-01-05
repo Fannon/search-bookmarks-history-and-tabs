@@ -76,14 +76,15 @@ export { expect }
  * @returns {Promise<void>}
  */
 export const expectNoClientErrors = async (page) => {
-  // Locate either the generic error overlay or the options page specific error message element
   const errorOverlay = page.locator('#error-overlay, #error-message')
-  // Verify that exactly one such element exists in the DOM
-  await expect(errorOverlay).toHaveCount(1)
-  const isVisible = await errorOverlay.isVisible()
-  if (isVisible) {
-    // If visible, it should be empty (no errors displayed)
-    await expect(errorOverlay).toHaveText('')
+  // Ensure the element matches in the DOM (can be hidden) to catch selector issues
+  await expect(errorOverlay).not.toHaveCount(0)
+
+  // Use a visibility-aware check: if any overlay is visible, it must be empty
+  const visibleOverlay = errorOverlay.filter({ visible: true })
+  if ((await visibleOverlay.count()) > 0) {
+    // If one is visible, it should be the only one and it should have no text
+    await expect(visibleOverlay).toHaveCount(1)
+    await expect(visibleOverlay).toHaveText('')
   }
-  // If not visible, no errors are being shown
 }
