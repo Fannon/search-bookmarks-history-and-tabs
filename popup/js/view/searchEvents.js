@@ -286,26 +286,26 @@ export function setupResultItemsEvents() {
   )
 
   // Handle favicon load events (Capturing phase)
-  // load and error do not bubble, so we must use capture: true
+  // load/error do not bubble, so we must use capture: true
+  const spacer = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
   ext.dom.resultList.addEventListener(
     'load',
-    (event) => {
-      const target = event.target
-      if (target.nodeName === 'IMG' && target.classList.contains('favicon')) {
+    (ev) => {
+      const target = ev.target
+      if (target.classList.contains('favicon') && target.src !== spacer) {
         target.classList.add('loaded')
+        if (ext.model.loadedFavicons) {
+          ext.model.loadedFavicons.add(target.src)
+        }
       }
     },
     true,
   )
 
-  // Handle favicon error events (Capturing phase)
   ext.dom.resultList.addEventListener(
     'error',
-    (event) => {
-      const target = event.target
-      if (target.nodeName === 'IMG' && target.classList.contains('favicon')) {
-        // If it fails, we just don't add .loaded, so the background icon remains visible
-      }
+    (_ev) => {
+      // If it fails, we keep background icon visible (no .loaded class)
     },
     true,
   )

@@ -12,6 +12,16 @@ import { printError } from './errorView.js'
 import { setupResultItemsEvents } from './searchEvents.js'
 import { selectListItem } from './searchNavigation.js'
 
+// Pre-render static badges and constants
+const createBadge = (content, title, extraClass = '', extraLink = '', extraStyle = '') =>
+  `<span class="badge ${extraClass}"${title ? ` title="${escapeHtml(title)}"` : ''}${extraLink ? ` x-link="${escapeHtml(extraLink)}"` : ''}${extraStyle ? ` style="${extraStyle}"` : ''}>${content}</span>`
+
+const BADGE_DUPLICATE = createBadge('Duplicate', 'Duplicate Bookmark', 'duplicate')
+
+// Transparent 1x1 GIF spacer
+const SPACER = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+const TYPE_LIST = ['bookmark', 'tab', 'history', 'search', 'customSearch', 'direct']
+
 /**
  * Render the search results in UI as result items.
  * Always uses ext.model.result as the source of truth.
@@ -54,15 +64,10 @@ export async function renderSearchResults() {
 
     // Pre-calculate type-based colors once
     const typeColors = {}
-    for (const t of ['bookmark', 'tab', 'history', 'search', 'customSearch', 'direct']) {
+    for (const t of TYPE_LIST) {
       typeColors[t] = escapeHtml(String(opts[`${t}Color`] || ''))
     }
 
-    const createBadge = (content, title, extraClass = '', extraLink = '', extraStyle = '') =>
-      `<span class="badge ${extraClass}"${title ? ` title="${escapeHtml(title)}"` : ''}${extraLink ? ` x-link="${escapeHtml(extraLink)}"` : ''}${extraStyle ? ` style="${extraStyle}"` : ''}>${content}</span>`
-
-    // Pre-render static badges
-    const BADGE_DUPLICATE = createBadge('Duplicate', 'Duplicate Bookmark', 'duplicate')
     const bookmarkBaseColorStyle = opts.bookmarkColor ? `background-color: ${typeColors.bookmark}` : ''
 
     const resultLen = result.length
@@ -144,9 +149,8 @@ export async function renderSearchResults() {
 
       let colorStyle = `border-left-color: ${typeColors[type] || ''}`
       if (type === 'bookmark' && entry.tab) {
-        // Use a vertical gradient as indicator for "both bookmark and tab"
-        // background-origin: border-box is used to ensure the gradient fills the border area
-        colorStyle = `border-left-color: transparent; background-image: linear-gradient(to bottom, ${typeColors.bookmark} 0%, ${typeColors.bookmark} 20%, ${typeColors.tab} 80%, ${typeColors.tab} 100%); background-size: 4px 100%; background-repeat: no-repeat; background-origin: border-box;`
+        // Vertical gradient indicator for "both bookmark and tab"
+        colorStyle = `border-left-color:transparent;background-image:linear-gradient(${typeColors.bookmark} 20%,${typeColors.tab} 80%);background-size:4px 100%;background-repeat:no-repeat;background-origin:border-box`
       }
 
       const originalUrl = entry.originalUrl ? ` x-open-url="${escapeHtml(entry.originalUrl)}"` : ''
@@ -156,17 +160,9 @@ export async function renderSearchResults() {
       // Build favicon HTML if enabled
       let faviconHtml = ''
       if (opts.displayFavicon) {
-        const primaryUrl = entry.favIconUrl
-
-        // Always render the img tag to maintain layout alignment.
-        // If no URL is available initially, it will just show the type-specific background icon from CSS.
-        // We use a 1x1 transparent spacer as initial src to avoid broken icon symbols in some browsers.
-        const initialSrc =
-          primaryUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
-
-        // Note: No inline onload or onerror here! They violate CSP.
-        // Events are handled via delegation in searchEvents.js using capturing listeners.
-        faviconHtml = `<span class="favicon-col"><img class="favicon" src="${escapeHtml(initialSrc)}" alt=""></span>`
+        const iconUrl = entry.favIconUrl || SPACER
+        const isLoaded = ext.model.loadedFavicons?.has(iconUrl)
+        faviconHtml = `<span class="favicon-col"><img class="favicon${isLoaded ? ' loaded' : ''}" src="${escapeHtml(iconUrl)}" alt=""></span>`
       }
 
       itemsHTML.push(

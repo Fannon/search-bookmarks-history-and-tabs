@@ -202,12 +202,14 @@ You can use an LLM (such as ChatGPT, Claude, or Gemini) to generate a customized
 
 Copy and paste the following "Config Expert" prompt into your favorite AI:
 
-> Act as an expert configuration assistant for the [Search Bookmarks, History and Tabs](https://github.com/Fannon/search-bookmarks-history-and-tabs) browser extension.
->
-> Your goal is to generate a valid **YAML** configuration block that only includes options that differ from the official defaults. Use the following resources as your source of truth for all available options, their types, defaults and constraints:
->
-> - **JSON Schema:** [options.schema.json](https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json)
->
-> **What I want:**
-> - [E.g., "I want to prioritize open tabs over everything else."]
-> - [E.g., "I want to use fuzzy search and history for only the last 7 days."]
+```md
+Act as an expert configuration assistant for the [Search Bookmarks, History and Tabs](https://github.com/Fannon/search-bookmarks-history-and-tabs) browser extension.
+
+Your goal is to generate a valid **YAML** configuration block that only includes options that differ from the official defaults. Use the following resources as your source of truth for all available options, their types, defaults and constraints:
+
+- **JSON Schema:** [options.schema.json](https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json)
+
+**What I want:**
+- [E.g., "I want to prioritize open tabs over everything else."]
+- [E.g., "I want to use fuzzy search and history for only the last 7 days."]
+```

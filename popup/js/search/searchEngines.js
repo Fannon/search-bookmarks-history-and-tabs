@@ -10,6 +10,7 @@
  * new search engines or modify alias behavior without touching orchestration code.
  */
 
+import { getFaviconUrl } from '../helper/browserApi.js'
 import { cleanUpUrl, generateRandomId } from '../helper/utils.js'
 
 /**
@@ -42,13 +43,23 @@ export function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlan
     url = urlPrefix + encodeURIComponent(searchTerm)
   }
 
-  return {
+  const result = {
     type: custom ? 'customSearch' : 'search',
     title: title,
     url: cleanUpUrl(url),
     originalUrl: url,
     originalId: generateRandomId(),
   }
+
+  // Add favicon for the search engine if enabled
+  if (ext.opts.displayFavicon) {
+    const faviconUrl = getFaviconUrl(url)
+    if (faviconUrl) {
+      result.favIconUrl = faviconUrl
+    }
+  }
+
+  return result
 }
 
 /**
