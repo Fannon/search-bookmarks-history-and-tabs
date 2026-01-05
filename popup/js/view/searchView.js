@@ -159,8 +159,8 @@ export async function renderSearchResults() {
 
       // Build favicon HTML if enabled
       let faviconHtml = ''
-      if (opts.displayFavicon) {
-        const iconUrl = entry.favIconUrl || SPACER
+      if (opts.displayIcons || opts.displayFavicons) {
+        const iconUrl = opts.displayFavicons ? entry.favIconUrl || SPACER : SPACER
         const isLoaded = ext.model.loadedFavicons?.has(iconUrl)
         faviconHtml = `<span class="favicon-col"><img class="favicon${isLoaded ? ' loaded' : ''}" src="${escapeHtml(iconUrl)}" alt=""></span>`
       }

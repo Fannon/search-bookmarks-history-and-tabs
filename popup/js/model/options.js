@@ -108,8 +108,10 @@ export const defaultOptions = {
   displayDateAdded: false,
   /** Display numeric relevance score */
   displayScore: true,
+  /** Display default placeholder icons for each result type */
+  displayIcons: false,
   /** Display website favicons next to results (Chrome only for bookmarks/history) */
-  displayFavicon: false,
+  displayFavicons: false,
 
   //////////////////////////////////////////
   // BOOKMARKS OPTIONS                    //

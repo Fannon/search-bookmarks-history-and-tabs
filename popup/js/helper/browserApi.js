@@ -241,7 +241,7 @@ export function convertBrowserBookmarks(
       }
 
       // Add favicon URL for Chrome (uses _favicon API)
-      if (ext.opts.displayFavicon) {
+      if (ext.opts.displayFavicons) {
         const faviconUrl = getFaviconUrl(url)
         if (faviconUrl) {
           mappedEntry.favIconUrl = faviconUrl
@@ -391,7 +391,7 @@ export function convertBrowserHistory(history) {
     }
 
     // Add favicon URL for Chrome (uses _favicon API)
-    if (ext.opts.displayFavicon) {
+    if (ext.opts.displayFavicons) {
       const faviconUrl = getFaviconUrl(el.url)
       if (faviconUrl) {
         historyItem.favIconUrl = faviconUrl

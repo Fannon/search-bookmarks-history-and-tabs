@@ -77,8 +77,8 @@ The extension is very customizable (see [user options](#user-configuration)) and
 - **Tags**:
   - A bookmark title cannot start with a tag, it needs a title
   - Tags cannot start with a number. This is how the extension filters out issue / ticket numbers.
-- **Favicons**: This extension can optionally display website favicons next to your search results.
-  - To enable this, add `displayFavicon: true` to your [user configuration](#user-configuration).
+- **Icons & Favicons**: This extension can display default placeholder icons or website favicons next to your search results.
+  - To customize this, see `displayIcons` and `displayFavicons` in the [user configuration](#user-configuration).
   - See [Website Favicons in OPTIONS.md](./OPTIONS.md#website-favicons) for details on privacy, implementation, and browser support.
 - This extension works best if you avoid:
   - using `#` in bookmark titles that do not indicate a tag.

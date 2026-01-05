@@ -130,8 +130,8 @@ async function saveOptions() {
     document.getElementById('config').value = window.jsyaml.dump(userOptions)
 
     // Handle optional permissions
-    // Favicon permission is needed for displayFavicon
-    if (userOptions?.displayFavicon === true && browserApi.permissions) {
+    // Favicon permission is needed for displayFavicons
+    if (userOptions?.displayFavicons === true && browserApi.permissions) {
       const granted = await browserApi.permissions.request({ permissions: ['favicon'] })
       if (!granted) {
         throw new Error('The "favicon" permission is required to enable website icons.')
