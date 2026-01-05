@@ -1,3 +1,4 @@
+/** @file Test suite for error overlay behavior */
 // Note: These tests intentionally trigger errors, so we need to use base test
 // to avoid the console error monitoring failing them
 import { test as baseTest } from '@playwright/test'
