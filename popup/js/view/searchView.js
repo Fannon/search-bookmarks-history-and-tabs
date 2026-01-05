@@ -150,7 +150,7 @@ export async function renderSearchResults() {
       let colorStyle = `border-left-color: ${typeColors[type] || ''}`
       if (type === 'bookmark' && entry.tab) {
         // Vertical gradient indicator for "both bookmark and tab"
-        colorStyle = `border-left-color:transparent;background-image:linear-gradient(${typeColors.bookmark} 20%,${typeColors.tab} 80%);background-size:4px 100%;background-repeat:no-repeat;background-origin:border-box`
+        colorStyle = `border-left-color:transparent;background-image:linear-gradient(to bottom, ${typeColors.bookmark} 20%,${typeColors.tab} 80%);background-size:4px 100%;background-repeat:no-repeat;background-origin:border-box`
       }
 
       const originalUrl = entry.originalUrl ? ` x-open-url="${escapeHtml(entry.originalUrl)}"` : ''
