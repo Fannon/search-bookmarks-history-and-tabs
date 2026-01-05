@@ -153,8 +153,15 @@ export async function renderSearchResults() {
       const originalId =
         entry.originalId !== undefined ? ` x-original-id="${escapeHtml(String(entry.originalId))}"` : ''
 
+      // Build favicon HTML if enabled and available
+      let faviconHtml = ''
+      if (opts.displayFavicon && entry.favIconUrl) {
+        // Use onerror to hide the image if loading fails (graceful degradation)
+        faviconHtml = `<img class="favicon" src="${escapeHtml(entry.favIconUrl)}" alt="" onerror="this.style.display='none'">`
+      }
+
       itemsHTML.push(
-        `<li class="${escapeHtml(type)}"${originalUrl} x-index="${i}"${originalId} style="${colorStyle}">${type === 'bookmark' ? `<img class="edit" x-link="./editBookmark.html#bookmark/${encodeURIComponent(entry.originalId)}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">` : ''}${type === 'tab' ? '<img class="close" title="Close Tab" src="./img/x.svg">' : ''}<div class="title"><span class="title-text">${title} </span>${badges.join('')}</div><div class="url" title="${escapeHtml(entry.url || '')}">${url}</div></li>`,
+        `<li class="${escapeHtml(type)}"${originalUrl} x-index="${i}"${originalId} style="${colorStyle}">${type === 'bookmark' ? `<img class="edit" x-link="./editBookmark.html#bookmark/${encodeURIComponent(entry.originalId)}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">` : ''}${type === 'tab' ? '<img class="close" title="Close Tab" src="./img/x.svg">' : ''}<div class="title">${faviconHtml}<span class="title-text">${title} </span>${badges.join('')}</div><div class="url" title="${escapeHtml(entry.url || '')}">${url}</div></li>`,
       )
     }
 

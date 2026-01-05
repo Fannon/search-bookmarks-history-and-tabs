@@ -170,6 +170,12 @@
       "description": "Show the numeric relevance score next to each result, which can be useful when tuning ranking options.",
       "x-ui-section": "display"
     },
+    "displayFavicon": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show website favicons next to search results. Uses Chrome's favicon API for bookmarks and history; tabs already have their own favicons. Firefox may not show favicons for bookmarks/history.",
+      "x-ui-section": "display"
+    },
     "bookmarksIgnoreFolderList": {
       "type": "array",
       "items": {

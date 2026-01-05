@@ -254,6 +254,17 @@ code {
   filter: brightness(135%);
 }
 
+/* Favicons */
+.favicon {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+  margin-top: -2px;
+  flex-shrink: 0;
+}
+
 /* Buttons */
 .button {
   height: 28px;
