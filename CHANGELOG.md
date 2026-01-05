@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+## [v2.1.0]
+
 - **NEW**: Added support for website favicons and result type icons for search results.
   - **Customizable**: Two new options added: `displayIcons` (shows default result type icons, default: `false`) and `displayFavicons` (shows real website favicons, default: `false`).
   - **Adaptive Fallbacks**: If `displayFavicons` is enabled, the extension uses the result type icons as placeholders during load or if a site icon is missing.
@@ -10,6 +12,7 @@
   - **Privacy First**: No 3rd-party favicon services are used. All icons are retrieved from local browser caches or internal SVG assets.
 - **IMPROVED**: Added validation for user settings (based on JSON Schema).
 - **IMPROVED**: Enhanced options error overlay with better readability, inline code highlighting, and a "REMOVE UNKNOWN OPTIONS" quick-fix button.
+- **IMPROVED**: Error overlay display now consistent over all screens
 - **REMOVED**: Removed several dead configuration keys (`searchMinMatchCharLength`, `colorStripeWidth`, `scoreMinScore`, `scoreMinSearchTermMatchRatio`, etc.) that are now fixed at sensible defaults or no longer used.
 - **REMOVED**: Removed `detectBookmarksWithOpenTabs` option. This feature is now always active.
 
