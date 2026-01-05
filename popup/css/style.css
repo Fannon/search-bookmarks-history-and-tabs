@@ -310,7 +310,7 @@ li.direct .favicon-col {
 }
 
 @media (prefers-color-scheme: dark) {
-  .favicon-col {
+  .favicon-col:not(:has(.favicon.loaded)) {
     filter: brightness(1.5);
   }
 }

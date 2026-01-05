@@ -185,11 +185,14 @@ When `displayFavicon: true` is enabled, the extension displays website icons nex
 - **Firefox & Fallbacks**: Firefox does not currently support a native favicon API for background access. On Firefox (or when an icon is missing in Chrome), the extension displays a high-quality SVG placeholder representing the result type (bookmark, tab, or history).
 - **Tab Synchronization**: If a bookmark is also an open tab, the extension "borrows" the tab's current icon directly.
 
-### Technical Trade-offs
+### Technical Implementation
 
-Enabling this feature requires the **"Read and change your favicons"** permission. 
+To adhere to the principle of least privilege, the **"Read and change your favicons"** permission is handled as an **optional permission**. 
 
-Technically, to allow the extension's popup to display these icons, the favicon resource must be declared as "web accessible." This introduces a minor **side-channel privacy risk**: a malicious website that knows this extension's ID could theoretically probe whether a specific domain (like `yourbank.com`) exists in your browser's icon cache. Given the minimal nature of this risk compared to the utility of the feature, it is enabled by default in most search-centric extensions.
+- If you enable `displayFavicon: true`, the browser will prompt you to grant this permission when you click **SAVE**.
+- If you never enable favicons, the extension never requests the permission.
+
+Technically, to allow the extension's popup to display these icons, the favicon resource must be declared as "web accessible." This introduces a minor **side-channel privacy risk**: a malicious website that knows this extension's ID could theoretically probe whether a specific domain (like `yourbank.com`) exists in your browser's icon cache. Given the minimal nature of this risk compared to the utility of the feature, it is a standard implementation in most search-centric extensions.
 
 ---
 
