@@ -54,7 +54,10 @@ test.describe('Options View', () => {
     })
   })
 
+  // Validation tests intentionally produce console errors, so we skip the monitoring
   test.describe('Validation', () => {
+    test.use({ skipConsoleErrors: true })
+
     test('saves valid config without errors', async ({ page }) => {
       const validConfig = 'searchStrategy: precise\nsearchMaxResults: 50\n'
       const userConfig = page.locator('#config')
@@ -106,6 +109,7 @@ test.describe('Options View', () => {
   })
 
   test.describe('Unknown Options', () => {
+    test.use({ skipConsoleErrors: true })
     test('detects unknown option and shows remove button', async ({ page }) => {
       const configWithUnknown = 'searchStrategy: precise\nunknownOption: someValue\nanotherUnknown: 123\n'
       const userConfig = page.locator('#config')
@@ -178,6 +182,7 @@ test.describe('Options View', () => {
   })
 
   test.describe('Edge Cases', () => {
+    test.use({ skipConsoleErrors: true })
     test('handles only unknown options (no valid options)', async ({ page }) => {
       const onlyUnknownOptions = 'completelyUnknown: value\nanotherBad: 123\n'
       const userConfig = page.locator('#config')

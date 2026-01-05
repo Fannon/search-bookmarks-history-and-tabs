@@ -33,7 +33,6 @@ export async function initEditBookmark() {
 
   try {
     ext.dom.editBookmark = document.getElementById('edit-bm')
-    ext.dom.errorList = document.getElementById('errors')
     ext.dom.saveButton = document.getElementById('bm-save')
     ext.dom.deleteButton = document.getElementById('bm-del')
     ext.dom.cancelButton = document.getElementById('bm-cancel')

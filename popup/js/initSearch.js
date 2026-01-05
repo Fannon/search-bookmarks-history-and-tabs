@@ -25,6 +25,9 @@ export { closeErrors } from './view/errorView.js'
 export const ext = createExtensionContext()
 
 window.ext = ext
+// Expose error helpers for e2e testing
+window.ext.printError = printError
+window.ext.closeErrors = closeErrors
 
 initExtension().catch((err) => {
   printError(err, 'Could not initialize Extension')

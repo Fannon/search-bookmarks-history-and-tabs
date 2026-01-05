@@ -91,6 +91,12 @@
   background: #557292 !important;
 }
 
+/* Error Overlay Position Override - edit bookmark page has no search input */
+.error-overlay {
+  top: 0 !important;
+  height: 556px !important;
+}
+
 @media (prefers-color-scheme: dark) {
   #edit-bm a:hover {
     color: var(--a);

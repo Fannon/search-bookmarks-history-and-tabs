@@ -64,7 +64,7 @@ describe('Extension Integration Tests', () => {
       <div id="edit-bm"></div>
       <div id="tags-view"></div>
       <div id="folders-view"></div>
-      <div id="errors"></div>
+      <div id="error-overlay" class="error-overlay"></div>
     `
 
     ext.dom.searchInput = document.getElementById('q')
@@ -142,9 +142,9 @@ describe('Extension Integration Tests', () => {
 
     await search({ key: 'a' })
 
-    const errorList = document.getElementById('errors')
-    expect(errorList.getAttribute('style')).toBe('display: block;')
-    expect(errorList.innerHTML).toContain('Simple search failure')
+    const errorOverlay = document.getElementById('error-overlay')
+    expect(errorOverlay.style.display).toBe('block')
+    expect(errorOverlay.innerHTML).toContain('Simple search failure')
   })
 
   test('caches results to avoid redundant searches', async () => {

@@ -13,12 +13,6 @@
   overflow-y: scroll;
 }
 
-/* Error List Position Override */
-#tags #errors,
-#folders #errors {
-  top: 0;
-}
-
 #tags-list,
 #folders-list,
 #groups-list {
@@ -79,6 +73,14 @@
   #groups mark {
     color: var(--mark);
   }
+}
+
+/* Error Overlay Position Override - taxonomy pages have no search input */
+body#tags .error-overlay,
+body#folders .error-overlay,
+body#groups .error-overlay {
+  top: 0 !important;
+  height: 556px !important;
 }
 
 .taxonomy-footer {
