@@ -23,12 +23,6 @@ export function closeErrors() {
     overlay.innerHTML = ''
   }
 
-  // Also check for legacy #errors element (for backwards compatibility)
-  const legacyErrorList = document.getElementById('errors')
-  if (legacyErrorList) {
-    legacyErrorList.style.display = 'none'
-  }
-
   // Clear the error queue
   errorQueue = []
 }
@@ -55,18 +49,11 @@ export function printError(err, text) {
   }
   errorQueue.push(errorInfo)
 
-  // Try the new overlay first
+  // Render to the error overlay
   const overlay = document.getElementById('error-overlay')
 
   if (overlay) {
     renderErrorOverlay(overlay, errorQueue)
-    return
-  }
-
-  // Fallback to legacy #errors element for other pages
-  const legacyErrorList = document.getElementById('errors')
-  if (legacyErrorList) {
-    renderLegacyErrors(legacyErrorList, errorQueue)
     return
   }
 
@@ -125,27 +112,4 @@ function renderErrorOverlay(overlay, errors) {
     }
   }
   document.addEventListener('keydown', escHandler)
-}
-
-/**
- * Render errors using the legacy list style (for backwards compatibility with other pages).
- *
- * @param {HTMLElement} errorList - The legacy #errors ul element
- * @param {Array} errors - Array of error info objects
- */
-function renderLegacyErrors(errorList, errors) {
-  let html = ''
-
-  for (const e of errors) {
-    if (e.context) {
-      html += `<li class="error"><b>Error</b>: ${escapeHtml(e.context)}</li>`
-    }
-    html += `<li class="error"><b>Error Message</b>: ${escapeHtml(e.message)}</li>`
-    if (e.stack) {
-      html += `<li class="error"><b>Error Stack</b>: ${escapeHtml(e.stack)}</li>`
-    }
-  }
-
-  errorList.innerHTML = html
-  errorList.style.display = 'block'
 }

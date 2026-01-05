@@ -120,7 +120,7 @@ describe('fuzzySearch', () => {
       // Mock DOM for Node.js environment
       global.document = {
         getElementById: (id) => {
-          if (id === 'errors') {
+          if (id === 'error-overlay') {
             return {
               innerHTML: '',
               style: { display: '' },

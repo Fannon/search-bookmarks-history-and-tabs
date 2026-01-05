@@ -13,12 +13,6 @@
   overflow-y: scroll;
 }
 
-/* Error List Position Override */
-#tags #errors,
-#folders #errors {
-  top: 0;
-}
-
 #tags-list,
 #folders-list,
 #groups-list {

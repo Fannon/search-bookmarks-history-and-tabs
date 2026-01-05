@@ -201,8 +201,7 @@ code {
 }
 
 /* Lists */
-#results,
-#errors {
+#results {
   padding: 4px 6px 0 4px;
   height: 501px;
   overflow-x: hidden;
@@ -210,15 +209,7 @@ code {
   z-index: 10;
   list-style: none;
 }
-#errors {
-  width: var(--w);
-  position: fixed;
-  top: 55px;
-  display: none;
-  overflow-y: hidden;
-}
-#results li,
-#errors li {
+#results li {
   background-color: var(--li-bg);
   margin: 0 0 4px;
   padding: 3px 0 4px 6px;
@@ -227,22 +218,12 @@ code {
   cursor: pointer;
   border-left: 4px solid;
 }
-#errors li {
-  border-left: 5px solid #cc5858;
-  word-break: break-all;
-  margin: 0 -4px;
-  border-radius: 0;
-}
 #results ul li {
   border-radius: 0;
   border-left: 0;
 }
 #sel {
   background-color: var(--li-sel) !important;
-}
-li.error {
-  color: #cc5858;
-  border-left: 5px solid #cc5858;
 }
 
 /* Content */
