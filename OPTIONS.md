@@ -60,6 +60,7 @@ Control what information is shown in search result items.
 | `displayVisitCounter` | boolean | `false` | Show total visit count from browsing history. |
 | `displayDateAdded` | boolean | `false` | Show date when bookmark was added. |
 | `displayScore` | boolean | `true` | Show the relevance score next to each result (useful for debugging scoring). |
+| `displayFavicon` | boolean | `false` | Show website favicons next to results. Uses Chrome's native API for bookmarks and history. On other browsers or for uncached items, it shows a high-quality SVG placeholder based on the result type. |
 
 ## Bookmarks Options
 

@@ -166,10 +166,7 @@ export async function renderSearchResults() {
 
         // Note: No inline onload or onerror here! They violate CSP.
         // Events are handled via delegation in searchEvents.js using capturing listeners.
-        faviconHtml = `
-          <span class="favicon-col">
-            <img class="favicon" src="${escapeHtml(initialSrc)}" alt="">
-          </span>`
+        faviconHtml = `<span class="favicon-col"><img class="favicon" src="${escapeHtml(initialSrc)}" alt=""></span>`
       }
 
       itemsHTML.push(

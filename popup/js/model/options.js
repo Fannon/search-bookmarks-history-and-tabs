@@ -109,7 +109,7 @@ export const defaultOptions = {
   /** Display numeric relevance score */
   displayScore: true,
   /** Display website favicons next to results (Chrome only for bookmarks/history) */
-  displayFavicon: true,
+  displayFavicon: false,
 
   //////////////////////////////////////////
   // BOOKMARKS OPTIONS                    //
