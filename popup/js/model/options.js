@@ -110,6 +110,8 @@ export const defaultOptions = {
   displayScore: true,
   /** Display website favicons next to results (Chrome only for bookmarks/history) */
   displayFavicon: true,
+  /** If native favicon fails, use a fallback service (DuckDuckGo). Sends domain names to 3rd party! */
+  displayFaviconFallback: false,
 
   //////////////////////////////////////////
   // BOOKMARKS OPTIONS                    //

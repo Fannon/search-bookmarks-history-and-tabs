@@ -36,5 +36,11 @@
       "id": "{bd5cec91-8853-40d9-aa80-8388a4544bd3}",
       "strict_min_version": "126.0"
     }
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["_favicon/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

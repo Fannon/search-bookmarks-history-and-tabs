@@ -285,5 +285,36 @@ export function setupResultItemsEvents() {
     true,
   )
 
+  // Handle favicon load events (Capturing phase)
+  // load and error do not bubble, so we must use capture: true
+  ext.dom.resultList.addEventListener(
+    'load',
+    (event) => {
+      const target = event.target
+      if (target.nodeName === 'IMG' && target.classList.contains('favicon')) {
+        target.classList.add('loaded')
+      }
+    },
+    true,
+  )
+
+  // Handle favicon error events (Capturing phase)
+  ext.dom.resultList.addEventListener(
+    'error',
+    (event) => {
+      const target = event.target
+      if (target.nodeName === 'IMG' && target.classList.contains('favicon')) {
+        const fallbackUrl = target.getAttribute('data-fallback')
+        if (fallbackUrl && target.src !== fallbackUrl && !target.src.includes('data:image')) {
+          // If fallback is available and hasn't been tried yet
+          // Note: we check !data:image to avoid trying fallback for our spacer
+          target.src = fallbackUrl
+        }
+        // If it still fails, we just don't add .loaded, so the background icon remains visible
+      }
+    },
+    true,
+  )
+
   eventDelegationSetup = true
 }

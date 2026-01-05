@@ -173,7 +173,13 @@
     "displayFavicon": {
       "type": "boolean",
       "default": true,
-      "description": "Show website favicons next to search results. Uses Chrome's favicon API for bookmarks and history; tabs already have their own favicons. Firefox may not show favicons for bookmarks/history.",
+      "description": "Show website favicons next to search results. Uses Chrome's favicon API for bookmarks and history; tabs already have their own favicons.",
+      "x-ui-section": "display"
+    },
+    "displayFaviconFallback": {
+      "type": "boolean",
+      "default": false,
+      "description": "If the native favicon API fails (or is unavailable like in Firefox), use a fallback service (DuckDuckGo). This sends the domain names of your results to DuckDuckGo to retrieve the icon.",
       "x-ui-section": "display"
     },
     "bookmarksIgnoreFolderList": {
