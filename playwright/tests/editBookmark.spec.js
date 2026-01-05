@@ -52,136 +52,126 @@ const BOOKMARK_FIXTURE_TREE = [
   },
 ]
 
-const installChromeMock = (() => {
-  let installed = false
+const installChromeMock = async (page) => {
+  await page.addInitScript(
+    ({ initialTree, storageKey }) => {
+      const initialTreeJson = JSON.stringify(initialTree)
+      const clone = (value) => JSON.parse(JSON.stringify(value))
 
-  return async (page) => {
-    if (installed) {
-      return
-    }
-
-    await page.addInitScript(
-      ({ initialTree, storageKey }) => {
-        const initialTreeJson = JSON.stringify(initialTree)
-        const clone = (value) => JSON.parse(JSON.stringify(value))
-
-        const ensureState = () => {
-          if (!sessionStorage.getItem(storageKey)) {
-            sessionStorage.setItem(storageKey, initialTreeJson)
-          }
-        }
-
-        const readTree = () => {
-          ensureState()
-          return JSON.parse(sessionStorage.getItem(storageKey))
-        }
-
-        const writeTree = (tree) => {
-          sessionStorage.setItem(storageKey, JSON.stringify(tree))
-        }
-
-        const findNode = (nodes, targetId) => {
-          for (const node of nodes) {
-            if (node.id === targetId) {
-              return node
-            }
-
-            if (node.children?.length) {
-              const match = findNode(node.children, targetId)
-              if (match) {
-                return match
-              }
-            }
-          }
-
-          return null
-        }
-
-        const removeNode = (nodes, targetId) => {
-          for (let i = 0; i < nodes.length; i += 1) {
-            const node = nodes[i]
-            if (node.id === targetId) {
-              nodes.splice(i, 1)
-              return true
-            }
-
-            if (node.children?.length) {
-              const removed = removeNode(node.children, targetId)
-              if (removed) {
-                return true
-              }
-            }
-          }
-
-          return false
-        }
-
-        window.__resetMockBookmarks = () => {
+      const ensureState = () => {
+        if (!sessionStorage.getItem(storageKey)) {
           sessionStorage.setItem(storageKey, initialTreeJson)
         }
+      }
 
-        const bookmarksApi = {
-          async getTree() {
-            return clone(readTree())
-          },
-          async update(id, changes = {}) {
-            const tree = readTree()
-            const node = findNode(tree, id)
+      const readTree = () => {
+        ensureState()
+        return JSON.parse(sessionStorage.getItem(storageKey))
+      }
 
-            if (!node) {
-              return undefined
+      const writeTree = (tree) => {
+        sessionStorage.setItem(storageKey, JSON.stringify(tree))
+      }
+
+      const findNode = (nodes, targetId) => {
+        for (const node of nodes) {
+          if (node.id === targetId) {
+            return node
+          }
+
+          if (node.children?.length) {
+            const match = findNode(node.children, targetId)
+            if (match) {
+              return match
             }
+          }
+        }
 
-            if (Object.hasOwn(changes, 'title')) {
-              node.title = changes.title
+        return null
+      }
+
+      const removeNode = (nodes, targetId) => {
+        for (let i = 0; i < nodes.length; i += 1) {
+          const node = nodes[i]
+          if (node.id === targetId) {
+            nodes.splice(i, 1)
+            return true
+          }
+
+          if (node.children?.length) {
+            const removed = removeNode(node.children, targetId)
+            if (removed) {
+              return true
             }
+          }
+        }
 
-            if (Object.hasOwn(changes, 'url')) {
-              node.url = changes.url
-            }
+        return false
+      }
 
+      window.__resetMockBookmarks = () => {
+        sessionStorage.setItem(storageKey, initialTreeJson)
+      }
+
+      const bookmarksApi = {
+        async getTree() {
+          return clone(readTree())
+        },
+        async update(id, changes = {}) {
+          const tree = readTree()
+          const node = findNode(tree, id)
+
+          if (!node) {
+            return undefined
+          }
+
+          if (Object.hasOwn(changes, 'title')) {
+            node.title = changes.title
+          }
+
+          if (Object.hasOwn(changes, 'url')) {
+            node.url = changes.url
+          }
+
+          writeTree(tree)
+          return clone(node)
+        },
+        async remove(id) {
+          const tree = readTree()
+          if (removeNode(tree, id)) {
             writeTree(tree)
-            return clone(node)
-          },
-          async remove(id) {
-            const tree = readTree()
-            if (removeNode(tree, id)) {
-              writeTree(tree)
-            }
-          },
-        }
+          }
+        },
+      }
 
-        const chromeStub = {
-          bookmarks: bookmarksApi,
-          history: {
-            async search() {
-              return []
-            },
+      const chromeStub = {
+        bookmarks: bookmarksApi,
+        history: {
+          async search() {
+            return []
           },
-          tabs: {
-            async query() {
-              return []
-            },
+        },
+        tabs: {
+          async query() {
+            return []
           },
-          runtime: {},
-        }
+        },
+        runtime: {},
+      }
 
-        Object.defineProperty(window, 'chrome', {
-          value: chromeStub,
-          configurable: true,
-        })
+      Object.defineProperty(window, 'chrome', {
+        value: chromeStub,
+        configurable: true,
+      })
 
-        Object.defineProperty(window, 'browser', {
-          value: chromeStub,
-          configurable: true,
-        })
-      },
-      { initialTree: BOOKMARK_FIXTURE_TREE, storageKey: BOOKMARK_STORAGE_KEY },
-    )
-
-    installed = true
-  }
-})()
+      Object.defineProperty(window, 'browser', {
+        value: chromeStub,
+        configurable: true,
+      })
+    },
+    { initialTree: BOOKMARK_FIXTURE_TREE, storageKey: BOOKMARK_STORAGE_KEY },
+  )
+}
 
 const waitForTagify = (page) => page.waitForFunction(() => window.ext?.tagify)
 

@@ -25,35 +25,42 @@ function isExpectedError(text) {
  *
  * Expected errors (like validation errors) are filtered out based on
  * the EXPECTED_ERROR_PATTERNS list above.
+ *
+ * Use test.use({ skipConsoleErrors: true }) to disable this for specific tests.
  */
 export const test = base.extend({
-  page: async ({ page }, use) => {
+  // Default to false (monitoring enabled)
+  skipConsoleErrors: [false, { option: true }],
+
+  page: async ({ page, skipConsoleErrors }, use) => {
     const consoleErrors = []
 
-    // Capture console.error messages
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') {
-        const text = msg.text()
-        // Ignore expected errors or Playwright-specific messages
-        if (!text.includes('[Playwright]') && !isExpectedError(text)) {
-          consoleErrors.push(text)
+    if (!skipConsoleErrors) {
+      // Capture console.error messages
+      page.on('console', (msg) => {
+        if (msg.type() === 'error') {
+          const text = msg.text()
+          // Ignore expected errors or Playwright-specific messages
+          if (!text.includes('[Playwright]') && !isExpectedError(text)) {
+            consoleErrors.push(text)
+          }
         }
-      }
-    })
+      })
 
-    // Capture uncaught JavaScript exceptions
-    page.on('pageerror', (err) => {
-      const message = err.message
-      if (!isExpectedError(message)) {
-        consoleErrors.push(`Page Error: ${message}`)
-      }
-    })
+      // Capture uncaught JavaScript exceptions
+      page.on('pageerror', (err) => {
+        const message = err.message
+        if (!isExpectedError(message)) {
+          consoleErrors.push(`Page Error: ${message}`)
+        }
+      })
+    }
 
     await use(page)
 
     // After test completes, fail if there were unexpected errors
     // Note: This runs after the test body but before afterEach hooks
-    if (consoleErrors.length > 0) {
+    if (!skipConsoleErrors && consoleErrors.length > 0) {
       throw new Error(`Unexpected console errors during test:\n${consoleErrors.join('\n')}`)
     }
   },

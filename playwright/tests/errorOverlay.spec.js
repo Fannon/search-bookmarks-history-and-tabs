@@ -1,16 +1,15 @@
-/** @file Test suite for error overlay behavior */
-// Note: These tests intentionally trigger errors, so we need to use base test
-// to avoid the console error monitoring failing them
-import { test as baseTest } from '@playwright/test'
 import { expect, test } from './fixtures.js'
 
 /**
  * Dedicated test suite for error overlay functionality.
  * These tests verify that errors are displayed and can be dismissed correctly.
  */
-baseTest.describe('Error Overlay', () => {
-  baseTest.describe('Search Page Error Overlay', () => {
-    baseTest('displays error when triggered and can be dismissed via button', async ({ page }) => {
+test.describe('Error Overlay', () => {
+  // These tests intentionally produce console errors, so we skip the monitoring
+  test.use({ skipConsoleErrors: true })
+
+  test.describe('Search Page Error Overlay', () => {
+    test('displays error when triggered and can be dismissed via button', async ({ page }) => {
       await page.goto('/')
 
       // Wait for initialization to complete
@@ -41,7 +40,7 @@ baseTest.describe('Error Overlay', () => {
       await expect(errorOverlay).not.toBeVisible()
     })
 
-    baseTest('displays error and can be dismissed via Escape key', async ({ page }) => {
+    test('displays error and can be dismissed via Escape key', async ({ page }) => {
       await page.goto('/')
 
       // Wait for initialization
@@ -63,7 +62,7 @@ baseTest.describe('Error Overlay', () => {
       await expect(errorOverlay).not.toBeVisible()
     })
 
-    baseTest('accumulates multiple errors with correct count', async ({ page }) => {
+    test('accumulates multiple errors with correct count', async ({ page }) => {
       await page.goto('/')
 
       // Wait for initialization
@@ -90,8 +89,8 @@ baseTest.describe('Error Overlay', () => {
     })
   })
 
-  baseTest.describe('Options Page Error Overlay', () => {
-    baseTest('displays validation error for invalid config', async ({ page }) => {
+  test.describe('Options Page Error Overlay', () => {
+    test('displays validation error for invalid config', async ({ page }) => {
       await page.goto('/options.html')
 
       // Enter invalid config
@@ -112,7 +111,7 @@ baseTest.describe('Error Overlay', () => {
       await expect(errorOverlay).not.toBeVisible()
     })
 
-    baseTest('displays unknown option warning with remove button', async ({ page }) => {
+    test('displays unknown option warning with remove button', async ({ page }) => {
       await page.goto('/options.html')
 
       // Enter config with unknown option
