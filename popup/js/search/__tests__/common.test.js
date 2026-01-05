@@ -38,7 +38,6 @@ beforeAll(async () => {
   await jest.unstable_mockModule('../../helper/browserApi.js', () => ({
     __esModule: true,
     getBrowserTabs: mockGetBrowserTabs,
-    getFaviconUrl: jest.fn(),
   }))
   const utilsModule = await import('../../helper/utils.js')
   await jest.unstable_mockModule('../../helper/utils.js', () => ({
