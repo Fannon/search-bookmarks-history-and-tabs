@@ -99,6 +99,30 @@ Search must feel instant (<16ms). 5k+ item collections are common.
 - `search/`: Algorithms/orchestration (e.g., `fuzzySearch`, `scoring`)
 - `view/`: DOM updates/rendering (e.g., `renderSearchResults`)
 
+### Error Handling Strategy
+
+Errors should be rare. The goal is **graceful degradation** — show the error overlay only as a last resort.
+
+- **Browser API failures**: Log `console.warn`, return empty results (continue working)
+- **Options loading errors**: Fall back to `defaultOptions` + show error via `printError`
+- **Search/render errors**: Show dismissible error overlay with full stack trace
+- **Use `printError(error, context)`** for user-visible errors — logs to console AND shows overlay
+- **Never let errors crash the popup** — users should be able to dismiss and continue
+
+The error overlay covers the results area and includes a DISMISS button. Users can copy the full error for bug reports.
+
+### CSS Architecture
+
+CSS is organized to keep the main file lean:
+
+- **`style.css`**: Main shared styles for search popup and all taxonomy pages (tags, folders, groups)
+  - Includes dark mode support via `@media (prefers-color-scheme: dark)`
+  - Contains the error overlay styles used across all pages
+- **`options.css`**: Specific styles for the options/configuration page
+- **`editBookmark.css`**: Specific styles for the bookmark editor page
+
+All pages include `style.css`. Page-specific CSS files add only what's unique to that page.
+
 ## Common Pitfalls
 
 1. **Always test with large datasets** — Small test data hides performance issues
