@@ -66,11 +66,12 @@ export { expect }
  * Checks the error overlay element which is hidden by default.
  *
  * @param {import('@playwright/test').Page} page - Playwright page instance
+ * @returns {Promise<void>}
  */
 export const expectNoClientErrors = async (page) => {
-  // The error overlay is hidden by default and only shown when errors occur
-  // Check that either the overlay is not visible OR has no content
   const errorOverlay = page.locator('#error-overlay')
+  // Verify the element exists in the DOM
+  await expect(errorOverlay).toHaveCount(1)
   const isVisible = await errorOverlay.isVisible()
   if (isVisible) {
     // If visible, it should be empty (no errors displayed)
