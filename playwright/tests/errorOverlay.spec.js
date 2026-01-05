@@ -1,3 +1,4 @@
+/** @file Test suite for error overlay behavior */
 import { expect, test } from './fixtures.js'
 
 /**
