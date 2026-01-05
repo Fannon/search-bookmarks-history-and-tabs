@@ -2,6 +2,13 @@
 
 ## [unreleased]
 
+- **NEW**: Added support for website favicons next to search results.
+  - Optional feature (default: `false`) can be enabled via `displayFavicon: true` in user configuration.
+  - **Premium Placeholders**: Every result type (Bookmark, Tab, History) now has a high-quality SVG placeholder icon (from [Tabler](https://tabler-icons.io/)) to ensure a consistent, aligned UI.
+  - **Tiered Loading**: Favicons are loaded asynchronously to prevent layout jumps. Site icons smoothly replace placeholders upon successful load.
+  - **Chrome API Support**: Utilizes Chrome's native `_favicon` API for fast, cached favicon retrieval.
+  - **Tab Synchronization**: Bookmarks that are also open tabs automatically "borrow" the tab's current, high-quality icon.
+  - **Privacy First**: No 3rd-party favicon services are used. All icons are retrieved from local browser caches or internal SVG assets.
 - **IMPROVED**: Added validation for user settings (based on JSON Schema).
 - **IMPROVED**: Enhanced options error overlay with better readability, inline code highlighting, and a "REMOVE UNKNOWN OPTIONS" quick-fix button.
 - **REMOVED**: Removed several dead configuration keys (`searchMinMatchCharLength`, `colorStripeWidth`, `scoreMinScore`, `scoreMinSearchTermMatchRatio`, etc.) that are now fixed at sensible defaults or no longer used.
