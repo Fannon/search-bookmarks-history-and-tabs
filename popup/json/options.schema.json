@@ -170,6 +170,18 @@
       "description": "Show the numeric relevance score next to each result, which can be useful when tuning ranking options.",
       "x-ui-section": "display"
     },
+    "displayIcons": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show default placeholder icons (bookmarks, tabs, history) next to search results. This provides visual structure even without site-specific favicons.",
+      "x-ui-section": "display"
+    },
+    "displayFavicons": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show real website favicons. Requires the 'favicon' permission. When enabled, it implies `displayIcons` as well, using them as placeholders while favicons load.",
+      "x-ui-section": "display"
+    },
     "bookmarksIgnoreFolderList": {
       "type": "array",
       "items": {

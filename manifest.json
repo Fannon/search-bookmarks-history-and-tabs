@@ -6,6 +6,7 @@
   "author": "Simon Heimler",
   "version": "2.0.1",
   "permissions": ["tabs", "bookmarks", "history", "storage", "tabGroups"],
+  "optional_permissions": ["favicon"],
   "action": {
     "default_popup": "/popup/index.html",
     "default_title": "Search Bookmarks, History and Tabs",
@@ -36,5 +37,11 @@
       "id": "{bd5cec91-8853-40d9-aa80-8388a4544bd3}",
       "strict_min_version": "126.0"
     }
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["_favicon/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

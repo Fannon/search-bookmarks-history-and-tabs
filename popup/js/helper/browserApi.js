@@ -19,6 +19,30 @@ import { cleanUpUrl } from './utils.js'
 export const browserApi = window.chrome || window.browser || {}
 
 /**
+ * Get the favicon URL for a given page URL using Chrome's _favicon API.
+ * This only works in Chrome with the 'favicon' permission.
+ * Returns undefined if the API is not available (e.g., Firefox).
+ *
+ * @param {string} pageUrl - The URL of the page to get the favicon for.
+ * @param {number} [size=16] - The desired size of the favicon (16, 32, 64).
+ * @returns {string|undefined} The favicon URL or undefined if not available.
+ */
+export function getFaviconUrl(pageUrl, size = 16) {
+  // Chrome's _favicon API requires the favicon permission
+  // and is accessed via chrome.runtime.getURL
+  if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
+    try {
+      // Use the _favicon endpoint with properly encoded URL
+      return chrome.runtime.getURL(`_favicon/?pageUrl=${encodeURIComponent(pageUrl)}&size=${size}`)
+    } catch (_e) {
+      // Native API failed, continue to return undefined
+    }
+  }
+
+  return undefined
+}
+
+/**
  * Retrieve browser tabs with optional query filters while respecting user options.
  *
  * @param {Object} [queryOptions={}] - Filters passed to the tabs API.
@@ -78,6 +102,7 @@ export function convertBrowserTabs(chromeTabs, groupMap) {
         url: cleanUrl,
         originalUrl: el.url.replace(URL_ROOT_CLEANUP_REGEX, ''),
         originalId: el.id,
+        favIconUrl: el.favIconUrl,
         active: el.active,
         windowId: el.windowId,
         searchStringLower,
@@ -215,6 +240,14 @@ export function convertBrowserBookmarks(
         searchStringLower,
       }
 
+      // Add favicon URL for Chrome (uses _favicon API)
+      if (ext.opts.displayFavicons) {
+        const faviconUrl = getFaviconUrl(url)
+        if (faviconUrl) {
+          mappedEntry.favIconUrl = faviconUrl
+        }
+      }
+
       // Only detect duplicates if the feature is enabled
       if (seenByUrl) {
         const existingEntry = seenByUrl.get(mappedEntry.url)
@@ -345,7 +378,7 @@ export function convertBrowserHistory(history) {
     const titleLower = title.toLowerCase().trim()
     const searchStringLower = createSearchStringLower(title, cleanUrl)
 
-    result.push({
+    const historyItem = {
       type: 'history',
       title,
       titleLower: titleLower,
@@ -355,7 +388,17 @@ export function convertBrowserHistory(history) {
       lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,
       originalId: el.id,
       searchStringLower,
-    })
+    }
+
+    // Add favicon URL for Chrome (uses _favicon API)
+    if (ext.opts.displayFavicons) {
+      const faviconUrl = getFaviconUrl(el.url)
+      if (faviconUrl) {
+        historyItem.favIconUrl = faviconUrl
+      }
+    }
+
+    result.push(historyItem)
   }
 
   if (ignoredHistoryCounter > 0) {

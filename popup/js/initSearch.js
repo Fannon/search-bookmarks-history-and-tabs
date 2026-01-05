@@ -66,9 +66,9 @@ export async function initExtension() {
   ext.dom.searchInput.addEventListener('input', search)
 
   // Cache search results by (term, strategy, mode) to avoid re-running algorithms
-  // when user navigates or repeats searches. Cache is simple with no expiration
-  // since extension data is immutable during a popup session.
   ext.searchCache = new Map()
+  // Track successfully loaded favicon URLs to prevent fade-in on re-renders
+  ext.model.loadedFavicons = new Set()
 
   ext.initialized = true
 

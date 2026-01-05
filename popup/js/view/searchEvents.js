@@ -285,5 +285,30 @@ export function setupResultItemsEvents() {
     true,
   )
 
+  // Handle favicon load events (Capturing phase)
+  // load/error do not bubble, so we must use capture: true
+  const spacer = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+  ext.dom.resultList.addEventListener(
+    'load',
+    (ev) => {
+      const target = ev.target
+      if (target.classList.contains('favicon') && target.src !== spacer) {
+        target.classList.add('loaded')
+        if (ext.model.loadedFavicons) {
+          ext.model.loadedFavicons.add(target.src)
+        }
+      }
+    },
+    true,
+  )
+
+  ext.dom.resultList.addEventListener(
+    'error',
+    (_ev) => {
+      // If it fails, we keep background icon visible (no .loaded class)
+    },
+    true,
+  )
+
   eventDelegationSetup = true
 }

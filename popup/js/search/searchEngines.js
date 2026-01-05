@@ -42,13 +42,15 @@ export function getCustomSearchEngineResult(searchTerm, name, urlPrefix, urlBlan
     url = urlPrefix + encodeURIComponent(searchTerm)
   }
 
-  return {
+  const result = {
     type: custom ? 'customSearch' : 'search',
     title: title,
     url: cleanUpUrl(url),
     originalUrl: url,
     originalId: generateRandomId(),
   }
+
+  return result
 }
 
 /**

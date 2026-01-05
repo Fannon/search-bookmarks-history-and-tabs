@@ -10,6 +10,7 @@
 let optionsSchema
 let isInitialized = false
 
+import { browserApi } from '../helper/browserApi.js'
 import { getUserOptions, setUserOptions } from '../model/options.js'
 import { validateOptions } from '../model/validateOptions.js'
 
@@ -127,6 +128,16 @@ async function saveOptions() {
     }
 
     document.getElementById('config').value = window.jsyaml.dump(userOptions)
+
+    // Handle optional permissions
+    // Favicon permission is needed for displayFavicons
+    if (userOptions?.displayFavicons === true && browserApi.permissions) {
+      const granted = await browserApi.permissions.request({ permissions: ['favicon'] })
+      if (!granted) {
+        throw new Error('The "favicon" permission is required to enable website icons.')
+      }
+    }
+
     await setUserOptions(userOptions)
 
     // Clear any previous error messages

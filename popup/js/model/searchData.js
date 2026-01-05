@@ -81,6 +81,10 @@ function flagBookmarksWithOpenTabs(bookmarks, tabs) {
     const matchingTab = bookmark && tabByUrl.get(bookmark.url)
     if (matchingTab) {
       bookmark.tab = true
+      // Copy favicon from tab if not already present or if tab favicon is better
+      if (matchingTab.favIconUrl) {
+        bookmark.favIconUrl = matchingTab.favIconUrl
+      }
       // Copy tab group information if available
       if (matchingTab.group) {
         bookmark.group = matchingTab.group

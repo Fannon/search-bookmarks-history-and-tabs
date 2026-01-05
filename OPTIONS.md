@@ -2,6 +2,7 @@
 
 This document lists all available configuration options for the extension.
 You can customize these options in the extension settings using **YAML** or **JSON** format.
+If you need help, consider [AI Config Generation](#ai-config-generation).
 
 For advanced users, you can also inspect the [JSON Schema](https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json) for a formal definition of all properties and constraints.
 
@@ -60,6 +61,8 @@ Control what information is shown in search result items.
 | `displayVisitCounter` | boolean | `false` | Show total visit count from browsing history. |
 | `displayDateAdded` | boolean | `false` | Show date when bookmark was added. |
 | `displayScore` | boolean | `true` | Show the relevance score next to each result (useful for debugging scoring). |
+| `displayIcons` | boolean | `false` | Show default result type icons (bookmarks, tabs, history, etc.) for results. |
+| `displayFavicons` | boolean | `false` | Show real website favicons next to results. See [Website Favicons](#website-favicons) for details and privacy information. |
 
 ## Bookmarks Options
 
@@ -172,6 +175,29 @@ For a detailed explanation, see the [Scoring System section in README.md](https:
 | :--- | :--- | :--- | :--- |
 | `uFuzzyOptions` | object | `{}` | Advanced options passed to the [uFuzzy library](https://github.com/leeoniya/uFuzzy). Use for CJK support or custom fuzzy behavior. See [uFuzzy options](https://github.com/leeoniya/uFuzzy#options). |
 
+## Website Favicons
+
+You can control how icons are displayed using two complementary options:
+
+- **`displayIcons` (Default: `false`)**: Shows high-quality SVG placeholder icons representing the result type (bookmark, tab, or history). This provides a consistent visual structure without requiring extra permissions or network lookups.
+- **`displayFavicons` (Default: `false`)**: Attempts to show the actual website favicon. **Enabling this implies `displayIcons` is also active**, as the default icons are used as placeholders while the real favicons are being retrieved from the browser's cache.
+
+### Implementation & Privacy
+
+- **No External Requests**: To respect your privacy, this feature is built to make zero external calls. Icons are retrieved solely from your browser's local cache or internal SVG assets.
+- **Chrome/Edge Native API**: Chromium-based browsers provide a secure, built-in helper (`_favicon`) to retrieve cached icons for your bookmarks and history.
+- **Firefox & Fallbacks**: Firefox does not currently support a native favicon API for background access. On Firefox (or when an icon is missing in Chrome), the extension gracefully falls back to the SVG placeholder icons (if `displayIcons` is true).
+- **Tab Synchronization**: If a bookmark is also an open tab, the extension "borrows" the tab's current icon directly.
+
+### Technical Implementation
+
+To adhere to the principle of least privilege, the **"Read and change your favicons"** permission is handled as an **optional permission**. 
+
+- If you enable `displayFavicons: true`, the browser will prompt you to grant this permission when you click **SAVE**.
+- If you never enable favicons, the extension never requests the permission.
+
+Technically, to allow the extension's popup to display these icons, the favicon resource must be declared as "web accessible." This introduces a minor **side-channel privacy risk**: a malicious website that knows this extension's ID could theoretically probe whether a specific domain (like `yourbank.com`) exists in your browser's icon cache. Given the minimal nature of this risk compared to the utility of the feature, it is a standard implementation in most search-centric extensions.
+
 ---
 
 ## AI Config Generation
@@ -180,12 +206,14 @@ You can use an LLM (such as ChatGPT, Claude, or Gemini) to generate a customized
 
 Copy and paste the following "Config Expert" prompt into your favorite AI:
 
-> Act as an expert configuration assistant for the "Search Bookmarks, History and Tabs" browser extension.
->
-> Your goal is to generate a valid **YAML** configuration block that only includes options that differ from the official defaults. Use the following resources as your source of truth for all available options, their types, defaults and constraints:
->
-> - **JSON Schema:** [https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json](https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json)
->
-> **What I want:**
-> - [E.g., "I want to prioritize open tabs over everything else."]
-> - [E.g., "I want to use fuzzy search and history for only the last 7 days."]
+```md
+Act as an expert configuration assistant for the [Search Bookmarks, History and Tabs](https://github.com/Fannon/search-bookmarks-history-and-tabs) browser extension.
+
+Your goal is to generate a valid **YAML** configuration block that only includes options that differ from the official defaults. Use the following resources as your source of truth for all available options, their types, defaults and constraints:
+
+- **JSON Schema:** [options.schema.json](https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json)
+
+**What I want:**
+- [E.g., "I want to prioritize open tabs over everything else."]
+- [E.g., "I want to use fuzzy search and history for only the last 7 days."]
+```

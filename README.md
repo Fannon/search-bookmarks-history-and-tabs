@@ -77,6 +77,8 @@ The extension is very customizable (see [user options](#user-configuration)) and
 - **Tags**:
   - A bookmark title cannot start with a tag, it needs a title
   - Tags cannot start with a number. This is how the extension filters out issue / ticket numbers.
+- **Icons & Favicons**: This extension can display favicons or result type icons next to your search results.
+  - To customize this, see `displayIcons` and `displayFavicons` in the [user configuration](#user-configuration) and [favicons in OPTIONS.md](./OPTIONS.md#website-favicons) for details on privacy, implementation, and browser support.
 - This extension works best if you avoid:
   - using `#` in bookmark titles that do not indicate a tag.
   - using `~` in bookmark folder names.
@@ -202,6 +204,7 @@ This extension is built to respect your privacy:
   - **history**: Necessary to read the browsing history. Can be disabled or limited via [user configuration](#user-configuration).
   - **tabs**: Necessary to find open tabs and to use tabs for navigation. Can be disabled via [user configuration](#user-configuration).
   - **tabGroups**: Necessary to read tab group names for the tab group search feature. The feature degrades gracefully if unavailable.
+  - **favicon**: Necessary for Chrome's native favicon API to retrieve icons for bookmarks and history (if `displayFavicons` is enabled). This only accesses local data.
   - **storage**: Necessary to store and retrieve the [user configuration](#user-configuration).
     If the browser has setting synchronization enabled, the extension settings will be synced (in this case you already trust your browser to sync everything else anyway).
     If browser sync is disabled, the user configuration is only stored locally.
