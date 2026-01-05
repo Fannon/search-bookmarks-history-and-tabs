@@ -156,18 +156,7 @@ export async function renderSearchResults() {
       // Build favicon HTML if enabled
       let faviconHtml = ''
       if (opts.displayFavicon) {
-        // Calculate DDG fallback URL
-        let fallbackUrl = ''
-        if (opts.displayFaviconFallback && entry.url?.startsWith('http')) {
-          try {
-            const url = new URL(entry.originalUrl || entry.url)
-            fallbackUrl = `https://icons.duckduckgo.com/ip3/${url.hostname}.ico`
-          } catch (_e) {
-            /* ignore */
-          }
-        }
-
-        const primaryUrl = entry.favIconUrl || fallbackUrl
+        const primaryUrl = entry.favIconUrl
 
         // Always render the img tag to maintain layout alignment.
         // If no URL is available initially, it will just show the type-specific background icon from CSS.
@@ -179,7 +168,7 @@ export async function renderSearchResults() {
         // Events are handled via delegation in searchEvents.js using capturing listeners.
         faviconHtml = `
           <span class="favicon-col">
-            <img class="favicon" src="${escapeHtml(initialSrc)}" alt="" data-fallback="${escapeHtml(fallbackUrl)}">
+            <img class="favicon" src="${escapeHtml(initialSrc)}" alt="">
           </span>`
       }
 

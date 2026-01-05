@@ -304,13 +304,7 @@ export function setupResultItemsEvents() {
     (event) => {
       const target = event.target
       if (target.nodeName === 'IMG' && target.classList.contains('favicon')) {
-        const fallbackUrl = target.getAttribute('data-fallback')
-        if (fallbackUrl && target.src !== fallbackUrl && !target.src.includes('data:image')) {
-          // If fallback is available and hasn't been tried yet
-          // Note: we check !data:image to avoid trying fallback for our spacer
-          target.src = fallbackUrl
-        }
-        // If it still fails, we just don't add .loaded, so the background icon remains visible
+        // If it fails, we just don't add .loaded, so the background icon remains visible
       }
     },
     true,

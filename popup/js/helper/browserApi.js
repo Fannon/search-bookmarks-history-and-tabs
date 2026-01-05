@@ -35,18 +35,7 @@ export function getFaviconUrl(pageUrl, size = 16) {
       // Use the _favicon endpoint with properly encoded URL
       return chrome.runtime.getURL(`_favicon/?pageUrl=${encodeURIComponent(pageUrl)}&size=${size}`)
     } catch (_e) {
-      // Native API failed, continue to fallback check below
-    }
-  }
-
-  // Optional Fallback Service (DuckDuckGo icon service)
-  // This sends the hostname to a 3rd party service
-  if (ext.opts.displayFaviconFallback && pageUrl?.startsWith('http')) {
-    try {
-      const url = new URL(pageUrl)
-      return `https://icons.duckduckgo.com/ip3/${url.hostname}.ico`
-    } catch (_e) {
-      // Invalid URL
+      // Native API failed, continue to return undefined
     }
   }
 
