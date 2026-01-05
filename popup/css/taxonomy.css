@@ -75,6 +75,14 @@
   }
 }
 
+/* Error Overlay Position Override - taxonomy pages have no search input */
+#tags .error-overlay,
+#folders .error-overlay,
+#groups .error-overlay {
+  top: 0;
+  height: 556px;
+}
+
 .taxonomy-footer {
   display: flex;
   justify-content: flex-start;
