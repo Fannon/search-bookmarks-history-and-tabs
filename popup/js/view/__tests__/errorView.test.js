@@ -5,7 +5,7 @@ describe('closeErrors', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <ul id="errors" style=""></ul>
-      <div id="error-overlay" class="error-overlay" style="display: flex">content</div>
+      <div id="error-overlay" class="error-overlay" style="display: block">content</div>
     `
   })
 
@@ -54,12 +54,30 @@ describe('printError with overlay', () => {
     printError(err, 'Something went wrong')
 
     const overlay = document.getElementById('error-overlay')
-    expect(overlay.style.display).toBe('flex')
+    expect(overlay.style.display).toBe('block')
     expect(overlay.innerHTML).toContain('⚠️ An Error Occurred')
     expect(overlay.innerHTML).toContain('Something went wrong')
     expect(overlay.innerHTML).toContain('Test error message')
     expect(overlay.innerHTML).toContain('DISMISS')
     expect(consoleErrorSpy).toHaveBeenCalled()
+  })
+
+  it('renders context with strong tag', () => {
+    printError(new Error('Test'), 'Context message')
+
+    const overlay = document.getElementById('error-overlay')
+    expect(overlay.innerHTML).toContain('<strong>Context message</strong>')
+  })
+
+  it('renders stack trace with word wrap', () => {
+    const err = new Error('Test')
+    err.stack = 'Error: Test\n    at someFunction (file.js:10:5)'
+
+    printError(err)
+
+    const overlay = document.getElementById('error-overlay')
+    expect(overlay.innerHTML).toContain('error-stack')
+    expect(overlay.innerHTML).toContain('at someFunction')
   })
 
   it('accumulates multiple errors with count in header', () => {

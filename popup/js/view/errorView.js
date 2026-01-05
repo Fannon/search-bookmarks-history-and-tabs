@@ -74,7 +74,7 @@ export function printError(err, text) {
 }
 
 /**
- * Render errors using the new overlay style that covers the results area.
+ * Render errors using the overlay that covers the results area.
  *
  * @param {HTMLElement} overlay - The overlay element
  * @param {Array} errors - Array of error info objects
@@ -83,27 +83,33 @@ function renderErrorOverlay(overlay, errors) {
   const errorCount = errors.length
   const headerText = errorCount > 1 ? `⚠️ ${errorCount} Errors Occurred` : '⚠️ An Error Occurred'
 
-  const errorListHtml = errors
-    .map((e) => {
+  // Build simple error content
+  const errorContentHtml = errors
+    .map((e, index) => {
       let html = ''
-      if (e.context) {
-        html += `<li><b>Context:</b> ${escapeHtml(e.context)}</li>`
+      if (index > 0) {
+        html += '<br>'
       }
-      html += `<li><b>Message:</b> ${escapeHtml(e.message)}</li>`
+      if (e.context) {
+        html += `<strong>${escapeHtml(e.context)}</strong><br>`
+      }
+      html += escapeHtml(e.message)
+      if (e.stack) {
+        html += `<div class="error-stack">${escapeHtml(e.stack)}</div>`
+      }
       return html
     })
     .join('')
 
   overlay.innerHTML = `
     <div class="error-header">${headerText}</div>
-    <ul class="error-list">${errorListHtml}</ul>
+    ${errorContentHtml}
     <div class="error-footer">
-      <button id="btn-dismiss-error" class="overlay-button primary">DISMISS</button>
+      <button id="btn-dismiss-error" class="overlay-button">DISMISS</button>
     </div>
   `
 
-  // Show overlay
-  overlay.style.display = 'flex'
+  overlay.style.display = 'block'
 
   // Attach dismiss handler
   const dismissBtn = document.getElementById('btn-dismiss-error')
