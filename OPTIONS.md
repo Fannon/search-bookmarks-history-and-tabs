@@ -61,7 +61,7 @@ Control what information is shown in search result items.
 | `displayVisitCounter` | boolean | `false` | Show total visit count from browsing history. |
 | `displayDateAdded` | boolean | `false` | Show date when bookmark was added. |
 | `displayScore` | boolean | `true` | Show the relevance score next to each result (useful for debugging scoring). |
-| `displayIcons` | boolean | `false` | Show default placeholder icons (bookmarks, tabs, history) next to results. |
+| `displayIcons` | boolean | `false` | Show default result type icons (bookmarks, tabs, history, etc.) for results. |
 | `displayFavicons` | boolean | `false` | Show real website favicons next to results. See [Website Favicons](#website-favicons) for details and privacy information. |
 
 ## Bookmarks Options

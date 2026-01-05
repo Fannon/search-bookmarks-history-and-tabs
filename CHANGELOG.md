@@ -2,14 +2,11 @@
 
 ## [unreleased]
 
-- **NEW**: Added support for website favicons and placeholder icons next to search results.
-  - **Customizable**: Two new options added: `displayIcons` (shows default placeholder icons, default: `false`) and `displayFavicons` (shows real website favicons, default: `false`).
-  - **Adaptive Fallbacks**: If `displayFavicons` is enabled, the extension uses the default icons as placeholders during load or if a site icon is missing.
+- **NEW**: Added support for website favicons and result type icons for search results.
+  - **Customizable**: Two new options added: `displayIcons` (shows default result type icons, default: `false`) and `displayFavicons` (shows real website favicons, default: `false`).
+  - **Adaptive Fallbacks**: If `displayFavicons` is enabled, the extension uses the result type icons as placeholders during load or if a site icon is missing.
   - **Privacy First**: No 3rd-party favicon services are used. All icons are retrieved from local browser caches or internal SVG assets. Enable `displayFavicons` to trigger the optional 'favicon' permission. See [Website Favicons in OPTIONS.md](./OPTIONS.md#website-favicons) for details.
-  - **Premium Placeholders**: Every result type (Bookmark, Tab, History) now has a high-quality SVG placeholder icon (from [Tabler](https://tabler-icons.io/)) to ensure a consistent, aligned UI.
-  - **Tiered Loading**: Favicons are loaded asynchronously to prevent layout jumps. Site icons smoothly replace placeholders upon successful load.
-  - **Chrome API Support**: Utilizes Chrome's native `_favicon` API for fast, cached favicon retrieval.
-  - **Tab Synchronization**: Bookmarks that are also open tabs automatically "borrow" the tab's current, high-quality icon.
+  - Every result type (Bookmark, Tab, History) now has a SVG placeholder icon (from [Tabler](https://tabler-icons.io/)) to ensure a consistent, aligned UI.
   - **Privacy First**: No 3rd-party favicon services are used. All icons are retrieved from local browser caches or internal SVG assets.
 - **IMPROVED**: Added validation for user settings (based on JSON Schema).
 - **IMPROVED**: Enhanced options error overlay with better readability, inline code highlighting, and a "REMOVE UNKNOWN OPTIONS" quick-fix button.
