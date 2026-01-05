@@ -3,7 +3,7 @@
 ## [unreleased]
 
 - **NEW**: Added support for website favicons next to search results.
-  - Optional feature (default: `false`) can be enabled via `displayFavicon: true` in user configuration.
+  - Optional feature (default: `false`) can be enabled via `displayFavicon: true` in user configuration. See [Website Favicons in OPTIONS.md](./OPTIONS.md#website-favicons) for details.
   - **Premium Placeholders**: Every result type (Bookmark, Tab, History) now has a high-quality SVG placeholder icon (from [Tabler](https://tabler-icons.io/)) to ensure a consistent, aligned UI.
   - **Tiered Loading**: Favicons are loaded asynchronously to prevent layout jumps. Site icons smoothly replace placeholders upon successful load.
   - **Chrome API Support**: Utilizes Chrome's native `_favicon` API for fast, cached favicon retrieval.

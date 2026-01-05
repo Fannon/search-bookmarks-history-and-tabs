@@ -2,6 +2,7 @@
 
 This document lists all available configuration options for the extension.
 You can customize these options in the extension settings using **YAML** or **JSON** format.
+If you need help, consider [AI Config Generation](#ai-config-generation).
 
 For advanced users, you can also inspect the [JSON Schema](https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json) for a formal definition of all properties and constraints.
 
@@ -60,7 +61,7 @@ Control what information is shown in search result items.
 | `displayVisitCounter` | boolean | `false` | Show total visit count from browsing history. |
 | `displayDateAdded` | boolean | `false` | Show date when bookmark was added. |
 | `displayScore` | boolean | `true` | Show the relevance score next to each result (useful for debugging scoring). |
-| `displayFavicon` | boolean | `false` | Show website favicons next to results. Uses Chrome's native API for bookmarks and history. On other browsers or for uncached items, it shows a high-quality SVG placeholder based on the result type. |
+| `displayFavicon` | boolean | `false` | Show website favicons next to results. See [Website Favicons](#website-favicons) for details and privacy information. |
 
 ## Bookmarks Options
 
@@ -172,6 +173,23 @@ For a detailed explanation, see the [Scoring System section in README.md](https:
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `uFuzzyOptions` | object | `{}` | Advanced options passed to the [uFuzzy library](https://github.com/leeoniya/uFuzzy). Use for CJK support or custom fuzzy behavior. See [uFuzzy options](https://github.com/leeoniya/uFuzzy#options). |
+
+## Website Favicons
+
+When `displayFavicon: true` is enabled, the extension displays website icons next to each search result.
+
+### Implementation & Privacy
+
+- **No External Requests**: To respect your privacy, this feature is built to make zero external calls. Icons are retrieved solely from your browser's local cache or internal SVG assets.
+- **Chrome/Edge Native API**: Chromium-based browsers provide a secure, built-in helper (`_favicon`) to retrieve cached icons for your bookmarks and history.
+- **Firefox & Fallbacks**: Firefox does not currently support a native favicon API for background access. On Firefox (or when an icon is missing in Chrome), the extension displays a high-quality SVG placeholder representing the result type (bookmark, tab, or history).
+- **Tab Synchronization**: If a bookmark is also an open tab, the extension "borrows" the tab's current icon directly.
+
+### Technical Trade-offs
+
+Enabling this feature requires the **"Read and change your favicons"** permission. 
+
+Technically, to allow the extension's popup to display these icons, the favicon resource must be declared as "web accessible." This introduces a minor **side-channel privacy risk**: a malicious website that knows this extension's ID could theoretically probe whether a specific domain (like `yourbank.com`) exists in your browser's icon cache. Given the minimal nature of this risk compared to the utility of the feature, it is enabled by default in most search-centric extensions.
 
 ---
 
