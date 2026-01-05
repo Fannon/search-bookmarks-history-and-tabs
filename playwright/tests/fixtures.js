@@ -69,8 +69,9 @@ export { expect }
  * @returns {Promise<void>}
  */
 export const expectNoClientErrors = async (page) => {
-  const errorOverlay = page.locator('#error-overlay')
-  // Verify the element exists in the DOM
+  // Locate either the generic error overlay or the options page specific error message element
+  const errorOverlay = page.locator('#error-overlay, #error-message')
+  // Verify that exactly one such element exists in the DOM
   await expect(errorOverlay).toHaveCount(1)
   const isVisible = await errorOverlay.isVisible()
   if (isVisible) {
