@@ -25,11 +25,9 @@ The extension is very customizable (see [user options](#user-configuration)) and
 
 ## Screenshots & Demo
 
-![Screenshots (3 screenshots)](/images/search-bookmarks-history-and-tabs.png 'Screenshots')
+![Screenshots (3 screenshots)](/images/search-bookmarks-history-and-tabs-screenshots-wide.png 'Screenshots')
 
-----------------------
-
-(Press play to start the GIF animation)
+Press play to start the GIF animation:
 
 ![Demo Animation](/images/bookmark-and-history-search.gif 'Demo Animation')
 
