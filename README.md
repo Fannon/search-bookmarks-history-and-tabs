@@ -17,7 +17,7 @@ With this extension you can also **tag your bookmarks** including auto completio
 The tags are considered when searching and can be used for navigation. 
 Tabs support now the tab grouping feature by the browser.
 
-The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). It's also very lightweight (< 150kb JavaScript, including dependencies).
+The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). It's also very lightweight (< 120kb JavaScript, including dependencies).
 
 > 💡 Have a look at the [Tips & Tricks](./Tips.md) collection.
 
