@@ -2,12 +2,7 @@
 
 🔎 Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.
 
-## Installation
-
-- [Chrome Extension](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0)
-- [Microsoft Edge Addon](https://microsoftedge.microsoft.com/addons/detail/search-tabs-bookmarks-an/ldmbegkendnchhjppahaadhhakgfbfpo)
-- [Firefox Addon](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/)
-- [Opera Addon](https://addons.opera.com/en/extensions/details/search-bookmarks-history-and-tabs/) (only an old version)
+Available as [Chrome Extension](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0), [Microsoft Edge Addon](https://microsoftedge.microsoft.com/addons/detail/search-tabs-bookmarks-an/ldmbegkendnchhjppahaadhhakgfbfpo), [Firefox Addon](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/) and  [Opera Addon](https://addons.opera.com/en/extensions/details/search-bookmarks-history-and-tabs/) (only an old version).
 
 ## Features
 
@@ -19,18 +14,22 @@ It supports two different search approaches:
 - **Fuzzy search** (approximate matching): Slower, but also includes inexact (fuzzy) matches.
 
 With this extension you can also **tag your bookmarks** including auto completions.
-The tags are considered when searching and can be used for navigation.
+The tags are considered when searching and can be used for navigation. 
+Tabs support now the tab grouping feature by the browser.
 
-**Tab Groups support**: Search for tabs by their group name using the `@` prefix.
-Browse all your tab groups in the dedicated Tab Groups page.
-
-The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). It's also very lightweight (< 150kb JavaScript, including dependencies).
+The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). It's also very lightweight (< 120kb JavaScript, only ~30-40kb need to load initially - including dependencies).
 
 > 💡 Have a look at the [Tips & Tricks](./Tips.md) collection.
 
 > 🗎 For a list of recent changes, see [CHANGELOG.md](./CHANGELOG.md).
 
 ## Screenshots & Demo
+
+![Screenshots (3 screenshots)](/images/search-bookmarks-history-and-tabs.png 'Screenshots')
+
+----------------------
+
+(Press play to start the GIF animation)
 
 ![Demo Animation](/images/bookmark-and-history-search.gif 'Demo Animation')
 
@@ -203,11 +202,11 @@ This extension is built to respect your privacy:
   - **bookmarks**: Necessary to read and edit the bookmarks. Can be disabled via [user configuration](#user-configuration).
   - **history**: Necessary to read the browsing history. Can be disabled or limited via [user configuration](#user-configuration).
   - **tabs**: Necessary to find open tabs and to use tabs for navigation. Can be disabled via [user configuration](#user-configuration).
-  - **tabGroups**: Necessary to read tab group names for the tab group search feature. The feature degrades gracefully if unavailable.
-  - **favicon**: Necessary for Chrome's native favicon API to retrieve icons for bookmarks and history (if `displayFavicons` is enabled). This only accesses local data.
   - **storage**: Necessary to store and retrieve the [user configuration](#user-configuration).
     If the browser has setting synchronization enabled, the extension settings will be synced (in this case you already trust your browser to sync everything else anyway).
     If browser sync is disabled, the user configuration is only stored locally.
+  - **tabGroups**: Necessary to read tab group names for the tab group search feature. The feature degrades gracefully if unavailable.
+  - **favicon**: Optional permission, but needed if `displayFavicons` is enabled: Used for Chrome's native favicon API to retrieve icons for bookmarks and history. This only accesses local data.
 - The extension is open source, so feel free to convince yourself :)
 
 ## Local Development
