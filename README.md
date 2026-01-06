@@ -14,10 +14,8 @@ It supports two different search approaches:
 - **Fuzzy search** (approximate matching): Slower, but also includes inexact (fuzzy) matches.
 
 With this extension you can also **tag your bookmarks** including auto completions.
-The tags are considered when searching and can be used for navigation.
-
-**Tab Groups support**: Search for tabs by their group name using the `@` prefix.
-Browse all your tab groups in the dedicated Tab Groups page.
+The tags are considered when searching and can be used for navigation. 
+Tabs support now the tab grouping feature by the browser.
 
 The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). It's also very lightweight (< 150kb JavaScript, including dependencies).
 
