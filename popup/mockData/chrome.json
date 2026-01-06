@@ -6,7 +6,7 @@
       "autoDiscardable": true,
       "discarded": false,
       "favIconUrl": "https://ssl.gstatic.com/chrome/webstore/images/icon_192px.png",
-      "groupId": -1,
+      "groupId": 1,
       "height": 1172,
       "highlighted": false,
       "id": 179,
@@ -33,7 +33,7 @@
       "autoDiscardable": true,
       "discarded": false,
       "favIconUrl": "https://partner.microsoft.com/favicon.ico",
-      "groupId": -1,
+      "groupId": 1,
       "height": 1172,
       "highlighted": false,
       "id": 182,
@@ -60,7 +60,7 @@
       "autoDiscardable": true,
       "discarded": false,
       "favIconUrl": "https://json-schema.org/favicon.ico",
-      "groupId": -1,
+      "groupId": 2,
       "height": 1172,
       "highlighted": false,
       "id": 185,
@@ -87,7 +87,7 @@
       "autoDiscardable": true,
       "discarded": false,
       "favIconUrl": "https://app.quicktype.io/favicon.ico",
-      "groupId": -1,
+      "groupId": 2,
       "height": 1172,
       "highlighted": false,
       "id": 190,
@@ -107,6 +107,83 @@
       "windowId": 1,
       "lastVisitSecondsAgo": 5,
       "lastAccessed": 1724182419000
+    },
+    {
+      "active": false,
+      "audible": false,
+      "autoDiscardable": true,
+      "discarded": false,
+      "favIconUrl": "https://github.githubassets.com/favicons/favicon.svg",
+      "groupId": 3,
+      "height": 1172,
+      "highlighted": false,
+      "id": 191,
+      "incognito": false,
+      "index": 4,
+      "mutedInfo": {
+        "muted": false
+      },
+      "pinned": false,
+      "selected": false,
+      "status": "complete",
+      "title": "GitHub - Trending Repositories",
+      "type": "tab",
+      "url": "https://github.com/trending",
+      "originalUrl": "https://github.com/trending",
+      "width": 1334,
+      "windowId": 1,
+      "lastVisitSecondsAgo": 120,
+      "lastAccessed": 1724182299000
+    },
+    {
+      "active": false,
+      "audible": false,
+      "autoDiscardable": true,
+      "discarded": false,
+      "favIconUrl": "https://stackoverflow.com/favicon.ico",
+      "groupId": 2,
+      "height": 1172,
+      "highlighted": false,
+      "id": 192,
+      "incognito": false,
+      "index": 5,
+      "mutedInfo": {
+        "muted": false
+      },
+      "pinned": false,
+      "selected": false,
+      "status": "complete",
+      "title": "Stack Overflow - JavaScript Questions",
+      "type": "tab",
+      "url": "https://stackoverflow.com/questions/tagged/javascript",
+      "originalUrl": "https://stackoverflow.com/questions/tagged/javascript",
+      "width": 1334,
+      "windowId": 1,
+      "lastVisitSecondsAgo": 180,
+      "lastAccessed": 1724182239000
+    }
+  ],
+  "tabGroups": [
+    {
+      "id": 1,
+      "collapsed": false,
+      "color": "blue",
+      "title": "Browser Stores",
+      "windowId": 1
+    },
+    {
+      "id": 2,
+      "collapsed": false,
+      "color": "green",
+      "title": "Documentation",
+      "windowId": 1
+    },
+    {
+      "id": 3,
+      "collapsed": true,
+      "color": "orange",
+      "title": "Code",
+      "windowId": 1
     }
   ],
   "bookmarks": [
@@ -413,6 +490,64 @@
               "index": 1,
               "parentId": "1",
               "title": "Blogs"
+            },
+            {
+              "children": [
+                {
+                  "dateAdded": 1704067200000,
+                  "id": "100",
+                  "index": 0,
+                  "parentId": "99",
+                  "title": "GitHub #git #code",
+                  "url": "https://github.com/"
+                },
+                {
+                  "dateAdded": 1704067200000,
+                  "id": "101",
+                  "index": 1,
+                  "parentId": "99",
+                  "title": "GitLab #git #devops",
+                  "url": "https://gitlab.com/"
+                },
+                {
+                  "dateAdded": 1704067200000,
+                  "id": "102",
+                  "index": 2,
+                  "parentId": "99",
+                  "title": "MDN Web Docs #docs #mozilla #javascript",
+                  "url": "https://developer.mozilla.org/"
+                },
+                {
+                  "dateAdded": 1704067200000,
+                  "id": "103",
+                  "index": 3,
+                  "parentId": "99",
+                  "title": "TypeScript Handbook #docs #typescript",
+                  "url": "https://www.typescriptlang.org/docs/"
+                },
+                {
+                  "dateAdded": 1704067200000,
+                  "id": "104",
+                  "index": 4,
+                  "parentId": "99",
+                  "title": "React Documentation #docs #react #frontend",
+                  "url": "https://react.dev/"
+                },
+                {
+                  "dateAdded": 1704067200000,
+                  "id": "105",
+                  "index": 5,
+                  "parentId": "99",
+                  "title": "Vue.js Guide #docs #vue #frontend",
+                  "url": "https://vuejs.org/guide/"
+                }
+              ],
+              "dateAdded": 1704067200000,
+              "dateGroupModified": 1704067200000,
+              "id": "99",
+              "index": 2,
+              "parentId": "1",
+              "title": "Development"
             }
           ],
           "dateAdded": 1627219418121,

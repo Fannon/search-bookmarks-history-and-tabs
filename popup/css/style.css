@@ -524,3 +524,64 @@ li.direct .favicon-col {
     color: #ff8888;
   }
 }
+
+/* Info Overlay - covers the results area for demos/guidance */
+.info-overlay {
+  position: fixed;
+  top: 55px;
+  left: 0;
+  right: 0;
+  height: 501px;
+  background: rgba(255, 255, 255, 0.98);
+  color: #1a5490;
+  font-size: 14px;
+  padding: 12px;
+  overflow-y: auto;
+  word-break: break-word;
+  line-height: 1.4;
+  z-index: 1000;
+  border-left: 4px solid #4a90d9;
+}
+
+.info-overlay .info-header {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(74, 144, 217, 0.2);
+}
+
+.info-overlay .info-message {
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+.info-overlay .info-footer {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(74, 144, 217, 0.2);
+}
+
+.info-overlay .overlay-button {
+  height: 28px;
+  border-radius: 3px;
+  padding: 0 12px;
+  font-size: 13px;
+  border: none;
+  background: #4a90d9;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.info-overlay .overlay-button:hover {
+  filter: brightness(110%);
+}
+
+/* Info Overlay Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .info-overlay {
+    background: rgba(0, 15, 30, 0.98);
+    color: #88bbff;
+  }
+}

@@ -1,10 +1,11 @@
 /**
- * @file Shared helpers for managing the popup error overlay.
+ * @file Shared helpers for managing popup overlays (errors and info).
  *
  * Responsibilities:
- * - Provide the `closeErrors` view helper without importing the primary search entry point.
+ * - Provide the `closeErrors` and `closeInfo` view helpers.
  * - Render errors consistently via `printError`, including markup sanitization and console logging.
- * - Allow users to dismiss errors and continue using the extension gracefully.
+ * - Render informational messages via `printInfo` for demos and user guidance.
+ * - Allow users to dismiss overlays and continue using the extension gracefully.
  */
 
 import { escapeHtml } from '../helper/utils.js'
@@ -25,6 +26,18 @@ export function closeErrors() {
 
   // Clear the error queue
   errorQueue = []
+}
+
+/**
+ * Hide the global info overlay if present on the current page.
+ */
+export function closeInfo() {
+  const overlay = document.getElementById('info-overlay')
+
+  if (overlay) {
+    overlay.style.display = 'none'
+    overlay.innerHTML = ''
+  }
 }
 
 /**
@@ -58,6 +71,31 @@ export function printError(err, text) {
   }
 
   console.warn('Error display element not found in DOM. Error:', err?.message || err)
+}
+
+/**
+ * Display an informational message in the UI info overlay.
+ * Useful for demos and user guidance. Does not log to console.error.
+ *
+ * @param {string} title - The title/header for the info message.
+ * @param {string} [message] - Optional detailed message content.
+ */
+export function printInfo(title, message) {
+  // Close any existing info overlay first
+  closeInfo()
+
+  // Log to console for debugging
+  console.info(`ℹ️ ${title}${message ? `: ${message}` : ''}`)
+
+  // Render to the info overlay
+  const overlay = document.getElementById('info-overlay')
+
+  if (overlay) {
+    renderInfoOverlay(overlay, title, message)
+    return
+  }
+
+  console.warn('Info display element not found in DOM.')
 }
 
 /**
@@ -112,4 +150,40 @@ function renderErrorOverlay(overlay, errors) {
     }
   }
   document.addEventListener('keydown', escHandler)
+}
+
+/**
+ * Render an informational message using the info overlay.
+ *
+ * @param {HTMLElement} overlay - The overlay element
+ * @param {string} title - The title/header text
+ * @param {string} [message] - Optional message content
+ */
+function renderInfoOverlay(overlay, title, message) {
+  const messageHtml = message ? `<div class="info-message">${escapeHtml(message)}</div>` : ''
+
+  overlay.innerHTML = `
+    <div class="info-header">ℹ️ ${escapeHtml(title)}</div>
+    ${messageHtml}
+    <div class="info-footer">
+      <button id="btn-dismiss-info" class="overlay-button">OK</button>
+    </div>
+  `
+
+  overlay.style.display = 'block'
+
+  // Attach dismiss handler
+  const dismissBtn = document.getElementById('btn-dismiss-info')
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', closeInfo)
+  }
+
+  // Also close on Escape key or any other key
+  const keyHandler = (e) => {
+    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+      closeInfo()
+      document.removeEventListener('keydown', keyHandler)
+    }
+  }
+  document.addEventListener('keydown', keyHandler)
 }

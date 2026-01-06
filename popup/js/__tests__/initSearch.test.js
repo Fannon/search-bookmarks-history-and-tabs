@@ -60,7 +60,9 @@ const mockDependencies = async (overrides = {}) => {
         element.style = 'display: none;'
       }
     },
+    closeInfo: jest.fn(),
     printError: config.printError,
+    printInfo: jest.fn(),
   }))
   await jest.unstable_mockModule('../model/options.js', () => ({
     __esModule: true,

@@ -14,7 +14,7 @@ import { getSearchData } from './model/searchData.js'
 
 import { addDefaultEntries, search } from './search/common.js'
 
-import { closeErrors, printError } from './view/errorView.js'
+import { closeErrors, closeInfo, printError, printInfo } from './view/errorView.js'
 import { toggleSearchApproach, updateSearchApproachToggle } from './view/searchEvents.js'
 import { navigationKeyListener } from './view/searchNavigation.js'
 import { renderSearchResults } from './view/searchView.js'
@@ -25,9 +25,11 @@ export { closeErrors } from './view/errorView.js'
 export const ext = createExtensionContext()
 
 window.ext = ext
-// Expose error helpers for e2e testing
+// Expose helpers for e2e testing and demos
 window.ext.printError = printError
 window.ext.closeErrors = closeErrors
+window.ext.printInfo = printInfo
+window.ext.closeInfo = closeInfo
 
 initExtension().catch((err) => {
   printError(err, 'Could not initialize Extension')
