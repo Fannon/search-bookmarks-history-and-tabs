@@ -94,8 +94,8 @@ describe('options model', () => {
         browserApi: {},
       })
 
-      await expect(optionsModule.setUserOptions({ enableHelp: false })).resolves.toBeUndefined()
-      expect(localStorage.getItem('userOptions')).toBe(JSON.stringify({ enableHelp: false }))
+      await expect(optionsModule.setUserOptions({ enableDirectUrl: false })).resolves.toBeUndefined()
+      expect(localStorage.getItem('userOptions')).toBe(JSON.stringify({ enableDirectUrl: false }))
     })
 
     test('handles storage API errors', async () => {
@@ -187,11 +187,11 @@ describe('options model', () => {
     test('merges defaults with user overrides', async () => {
       // Use localStorage to simulate user options
       createTestExt({ browserApi: {} })
-      localStorage.setItem('userOptions', JSON.stringify({ searchMaxResults: 10, debug: true }))
+      localStorage.setItem('userOptions', JSON.stringify({ searchMaxResults: 10, enableDirectUrl: false }))
 
       const effective = await optionsModule.getEffectiveOptions()
       expect(effective.searchMaxResults).toBe(10)
-      expect(effective.debug).toBe(true)
+      expect(effective.enableDirectUrl).toBe(false)
       expect(effective.bookmarkColor).toBe(optionsModule.defaultOptions.bookmarkColor)
     })
 

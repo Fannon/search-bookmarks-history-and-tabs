@@ -9,12 +9,6 @@
       "const": "https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json",
       "description": "Optional JSON Schema identifier that documents which schema version this options file adheres to."
     },
-    "debug": {
-      "type": "boolean",
-      "default": false,
-      "description": "Enable detailed logging in the browser console to help diagnose indexing or performance issues.",
-      "x-ui-section": "general"
-    },
     "searchStrategy": {
       "type": "string",
       "enum": ["precise", "fuzzy"],
@@ -35,13 +29,6 @@
       "maximum": 1,
       "default": 0.6,
       "description": "How tolerant fuzzy search should be. 0 behaves like precise search; values closer to 1 allow more relaxed matches.",
-      "x-ui-section": "search"
-    },
-    "searchDebounceMs": {
-      "type": "integer",
-      "minimum": 0,
-      "default": 100,
-      "description": "Time in milliseconds to wait after typing before refreshing results. Values below 1 fall back to 100 ms.",
       "x-ui-section": "search"
     },
     "bookmarkColor": {
@@ -108,12 +95,6 @@
       "type": "boolean",
       "default": true,
       "description": "Show quick links to web search engines that use the current query.",
-      "x-ui-section": "sources"
-    },
-    "enableHelp": {
-      "type": "boolean",
-      "default": true,
-      "description": "Show helpful tips when the popup opens. Turn off if you prefer a minimal experience.",
       "x-ui-section": "sources"
     },
     "enableDirectUrl": {
