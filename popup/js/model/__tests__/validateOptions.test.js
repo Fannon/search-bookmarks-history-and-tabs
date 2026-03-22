@@ -5,7 +5,7 @@ describe('validateOptions', () => {
   test('accepts valid options', async () => {
     const result = await validateOptions({
       searchStrategy: 'fuzzy',
-      debug: true,
+      enableDirectUrl: true,
       searchMaxResults: 10,
     })
 
@@ -28,7 +28,7 @@ describe('validateOptions', () => {
 
   test('accepts options with default values', async () => {
     const result = await validateOptions({
-      debug: false,
+      enableDirectUrl: false,
       searchStrategy: 'precise',
       searchMaxResults: 24,
     })
@@ -49,7 +49,6 @@ describe('validateOptions', () => {
     const result = await validateOptions({
       searchMaxResults: 1,
       searchFuzzyness: 0,
-      searchDebounceMs: 0,
       historyDaysAgo: 1,
     })
 
@@ -113,13 +112,13 @@ describe('validateOptions', () => {
 
   test('rejects invalid types', async () => {
     const result = await validateOptions({
-      debug: 'true',
+      enableDirectUrl: 'true',
       searchMaxResults: '10',
       bookmarksIgnoreFolderList: 'folder',
     })
 
     expect(result.valid).toBe(false)
-    expect(result.errors).toContain('"debug" must be boolean')
+    expect(result.errors).toContain('"enableDirectUrl" must be boolean')
     expect(result.errors).toContain('"searchMaxResults" must be integer')
     expect(result.errors).toContain('"bookmarksIgnoreFolderList" must be array')
   })

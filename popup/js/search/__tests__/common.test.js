@@ -322,6 +322,69 @@ describe('search', () => {
     expect(ext.model.result.length).toBeLessThanOrEqual(2)
   })
 
+  test('keeps the highest-scoring limited results without sorting the full match set', async () => {
+    ext.dom.searchInput.value = 'filter'
+    ext.opts.searchMaxResults = 2
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+
+    const bookmarks = createBookmarksTestData([
+      { id: 'low', title: 'Filter low', url: 'https://low.test' },
+      { id: 'high', title: 'Filter high', url: 'https://high.test' },
+      { id: 'mid', title: 'Filter mid', url: 'https://mid.test' },
+      { id: 'other', title: 'Filter other', url: 'https://other.test' },
+    ])
+    bookmarks[0].visitCount = 0
+    bookmarks[1].visitCount = 30
+    bookmarks[2].visitCount = 10
+    bookmarks[3].visitCount = 5
+    ext.model.bookmarks = bookmarks
+
+    await search({ key: 'f' })
+
+    expect(ext.model.result.map((item) => item.originalId)).toEqual(['high', 'mid'])
+  })
+
+  test('preserves input order for equal scores when limiting search results', async () => {
+    ext.dom.searchInput.value = 'filter'
+    ext.opts.searchMaxResults = 2
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+    ext.opts.scoreExactIncludesBonus = 0
+    ext.opts.scoreExactStartsWithBonus = 0
+    ext.opts.scoreExactEqualsBonus = 0
+    ext.opts.scoreExactTagMatchBonus = 0
+    ext.opts.scoreExactFolderMatchBonus = 0
+    ext.opts.scoreVisitedBonusScore = 0
+    ext.opts.scoreVisitedBonusScoreMaximum = 0
+    ext.opts.scoreRecentBonusScoreMaximum = 0
+    ext.opts.scoreCustomBonusScore = false
+
+    ext.model.bookmarks = createBookmarksTestData([
+      { id: 'first', title: 'Filter first', url: 'https://first.test' },
+      { id: 'second', title: 'Filter second', url: 'https://second.test' },
+      { id: 'third', title: 'Filter third', url: 'https://third.test' },
+    ])
+
+    await search({ key: 'f' })
+
+    expect(ext.model.result.map((item) => item.originalId)).toEqual(['first', 'second'])
+  })
+
+  test('returns no results when searchMaxResults is zero', async () => {
+    ext.dom.searchInput.value = 'filter'
+    ext.opts.searchMaxResults = 0
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+    ext.model.bookmarks = createBookmarksTestData([
+      { id: 'first', title: 'Filter first', url: 'https://first.test' },
+      { id: 'second', title: 'Filter second', url: 'https://second.test' },
+    ])
+
+    await expect(search({ key: 'f' })).resolves.toBeUndefined()
+    expect(ext.model.result).toEqual([])
+  })
+
   test('falls back to precise search when configured strategy is unsupported', async () => {
     ext.dom.searchInput.value = 'fallback'
     ext.opts.searchStrategy = 'unsupported'
@@ -337,6 +400,26 @@ describe('search', () => {
     const fallbackResult = ext.model.result.find((item) => item.title === 'Fallback')
     expect(fallbackResult).toBeDefined()
     expect(fallbackResult?.searchApproach).toBe('precise')
+  })
+
+  test('skips highlight markup generation when match highlighting is disabled', async () => {
+    ext.dom.searchInput.value = 'highlight'
+    ext.opts.displaySearchMatchHighlight = false
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+    ext.model.bookmarks = createBookmarksTestData([
+      {
+        title: 'Highlight Example #tag',
+        url: 'https://highlight.test/path',
+      },
+    ])
+
+    await search({ key: 'h' })
+
+    expect(ext.model.result).toHaveLength(1)
+    expect(ext.model.result[0].highlightedTitle).toBeUndefined()
+    expect(ext.model.result[0].highlightedUrl).toBeUndefined()
+    expect(ext.model.result[0].highlightedTagsArray).toBeUndefined()
   })
 
   test('stores new results in cache after search', async () => {

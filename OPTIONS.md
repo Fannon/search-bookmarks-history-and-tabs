@@ -6,12 +6,6 @@ If you need help, consider [AI Config Generation](#ai-config-generation).
 
 For advanced users, you can also inspect the [JSON Schema](https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json) for a formal definition of all properties and constraints.
 
-## General Options
-
-| Option | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `debug` | boolean | `false` | Enable detailed logging in the browser console. |
-
 ## Search Options
 
 | Option | Type | Default | Description |
@@ -44,7 +38,6 @@ Toggle which data sources are included in search results.
 | `enableBookmarks` | boolean | `true` | Include bookmarks in search results. |
 | `enableHistory` | boolean | `true` | Include browsing history in search results. Note: The browser history API can be slow; see History Options for tuning. |
 | `enableSearchEngines` | boolean | `true` | Show search engine links as fallback results (e.g., "Search Google for..."). |
-| `enableHelp` | boolean | `true` | Show help tips when the popup opens. |
 | `enableDirectUrl` | boolean | `true` | When typing a URL-like term (e.g., `example.com`), offer direct navigation as a result. |
 
 ## Display Options

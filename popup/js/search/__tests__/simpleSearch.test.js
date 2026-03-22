@@ -421,6 +421,53 @@ describe('simpleSearch', () => {
   })
 
   describe('Optimization edge cases', () => {
+    test('skips unchanged leading terms during incremental multi-word searches', () => {
+      let includesCalls = 0
+
+      const createSearchString = (matchingTerms) => ({
+        includes(term) {
+          includesCalls++
+          return matchingTerms.includes(term)
+        },
+      })
+
+      model.bookmarks = [
+        {
+          type: 'bookmark',
+          originalId: '1',
+          title: 'alpha beta',
+          titleLower: 'alpha beta',
+          url: 'u1',
+          searchStringLower: createSearchString(['alpha', 'beta']),
+        },
+        {
+          type: 'bookmark',
+          originalId: '2',
+          title: 'alpha gamma',
+          titleLower: 'alpha gamma',
+          url: 'u2',
+          searchStringLower: createSearchString(['alpha']),
+        },
+        {
+          type: 'bookmark',
+          originalId: '3',
+          title: 'beta only',
+          titleLower: 'beta only',
+          url: 'u3',
+          searchStringLower: createSearchString(['beta']),
+        },
+      ]
+
+      simpleSearch('bookmarks', 'alpha', model)
+      includesCalls = 0
+
+      const results = simpleSearch('bookmarks', 'alpha beta', model)
+
+      expect(results).toHaveLength(1)
+      expect(results[0].originalId).toBe('1')
+      expect(includesCalls).toBe(2)
+    })
+
     test('progressive search from "abc" to "abc def" works correctly', () => {
       model.bookmarks = createBookmarksTestData([
         { id: '1', title: 'abc def ghi', url: 'url1' },

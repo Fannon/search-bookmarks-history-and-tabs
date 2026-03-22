@@ -31,13 +31,6 @@ export const defaultOptions = {
   // GENERAL OPTIONS                      //
   //////////////////////////////////////////
 
-  /** Enable detailed logging in the browser console */
-  debug: false,
-
-  //////////////////////////////////////////
-  // SEARCH OPTIONS                       //
-  //////////////////////////////////////////
-
   /**
    * Search approach to use. Choose between:
    * - 'precise': Simple search that only finds precise matches (fastest)
@@ -48,8 +41,6 @@ export const defaultOptions = {
   searchMaxResults: 24,
   /** Fuzzy search threshold (0-1). 0 = no fuzzyness, 1 = full fuzzyness */
   searchFuzzyness: 0.6,
-  /** Debounce time in milliseconds before search executes */
-  searchDebounceMs: 100,
 
   //////////////////////////////////////////
   // COLORS AND STYLE                     //
@@ -80,8 +71,6 @@ export const defaultOptions = {
   enableHistory: true,
   /** Enable search engine suggestions */
   enableSearchEngines: true,
-  /** Show helpful tips when popup opens */
-  enableHelp: true,
   /** Detect URL-shaped terms and offer direct navigation */
   enableDirectUrl: true,
 
