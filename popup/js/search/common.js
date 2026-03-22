@@ -158,6 +158,70 @@ function addDirectUrlIfApplicable(searchTerm, results) {
   }
 }
 
+function shouldLimitResults(searchMode) {
+  return searchMode !== 'tags' && searchMode !== 'folders' && searchMode !== 'tabs' && searchMode !== 'groups'
+}
+
+/**
+ * Keep only the highest-scoring entries when a later slice would discard most matches anyway.
+ *
+ * This avoids sorting the full result set for the common case where search modes are limited
+ * to a small `searchMaxResults` window. Equal scores preserve input order, matching the stable
+ * behavior of `Array.prototype.sort`.
+ *
+ * @param {Array<Object>} results - Scored results.
+ * @param {number} limit - Maximum number of entries to keep.
+ * @returns {Array<Object>} Top entries sorted by descending score.
+ */
+function selectTopScoreResults(results, limit) {
+  if (results.length <= limit) {
+    return sortResults(results, 'score')
+  }
+
+  const topResults = []
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i]
+    const score = result.score
+    const currentLen = topResults.length
+
+    if (currentLen === limit && score <= topResults[currentLen - 1].score) {
+      continue
+    }
+
+    let insertAt = currentLen
+    for (let j = 0; j < currentLen; j++) {
+      if (score > topResults[j].score) {
+        insertAt = j
+        break
+      }
+    }
+
+    if (insertAt === currentLen) {
+      if (currentLen < limit) {
+        topResults.push(result)
+      }
+      continue
+    }
+
+    if (currentLen < limit) {
+      topResults.push(result)
+    }
+
+    const upperBound = topResults.length < limit ? topResults.length - 1 : limit - 1
+    for (let j = upperBound; j > insertAt; j--) {
+      topResults[j] = topResults[j - 1]
+    }
+    topResults[insertAt] = result
+
+    if (topResults.length > limit) {
+      topResults.length = limit
+    }
+  }
+
+  return topResults
+}
+
 /**
  * Apply scoring and sorting to search results.
  *
@@ -170,6 +234,9 @@ function applyScoring(results, searchTerm, searchMode) {
   const scoredResults = calculateFinalScore(results, searchTerm)
 
   if (searchTerm) {
+    if (shouldLimitResults(searchMode) && scoredResults.length > ext.opts.searchMaxResults) {
+      return selectTopScoreResults(scoredResults, ext.opts.searchMaxResults)
+    }
     return sortResults(scoredResults, 'score')
   }
 
@@ -189,8 +256,7 @@ function applyScoring(results, searchTerm, searchMode) {
  */
 function filterResults(results, searchMode) {
   const maxResults = ext.opts.searchMaxResults
-  const shouldLimit =
-    searchMode !== 'tags' && searchMode !== 'folders' && searchMode !== 'tabs' && searchMode !== 'groups'
+  const shouldLimit = shouldLimitResults(searchMode)
 
   // If we don't need to limit, or we're already under the limit, return as is.
   if (!shouldLimit || results.length <= maxResults) {
@@ -343,9 +409,13 @@ export function sortResults(results, sortMode) {
  */
 function highlightResults(results, searchTerm) {
   const resultsLen = results.length
-  if (resultsLen === 0 || !searchTerm) {
+  if (resultsLen === 0 || !searchTerm || !ext.opts.displaySearchMatchHighlight) {
     return results
   }
+
+  const highlightTags = ext.opts.displayTags
+  const highlightFolders = ext.opts.displayFolderName
+  const highlightGroup = ext.opts.displayTabGroup
 
   // Extract and clean terms once
   const rawTerms = searchTerm.split(' ')
@@ -374,7 +444,7 @@ function highlightResults(results, searchTerm) {
     entry.highlightedUrl = highlightMatches(entry.url, highlightRegex)
 
     const tagsArray = entry.tagsArray
-    if (tagsArray) {
+    if (highlightTags && tagsArray) {
       const tagCount = tagsArray.length
       const highlightedTags = new Array(tagCount)
       for (let j = 0; j < tagCount; j++) {
@@ -384,7 +454,7 @@ function highlightResults(results, searchTerm) {
     }
 
     const folderArray = entry.folderArray
-    if (folderArray) {
+    if (highlightFolders && folderArray) {
       const folderCount = folderArray.length
       const highlightedFolders = new Array(folderCount)
       for (let j = 0; j < folderCount; j++) {
@@ -393,7 +463,7 @@ function highlightResults(results, searchTerm) {
       entry.highlightedFolderArray = highlightedFolders
     }
 
-    if (entry.group) {
+    if (highlightGroup && entry.group) {
       entry.highlightedGroup = highlightMatches(`@${entry.group}`, highlightRegex)
     }
   }
