@@ -1,140 +1,64 @@
-# Agent Guidelines
+# AGENTS.md
 
-Context and guidelines for AI agents working on this codebase.
+## Project rules
 
-## Project Context
+- Browser extension popup only: no background worker, no network or telemetry, stateless except for user options.
+- Search must stay instant on large datasets. Avoid unnecessary DOM work and allocations in hot paths.
+- Keep the extension small. Avoid unnecessary code, duplicated logic, and new dependencies that increase bundle size.
+- Use ESM and vanilla JS only. Follow Biome formatting: 2 spaces, single quotes, no semicolons.
+- Prefer small, focused diffs. Do not add dependencies without approval.
 
-**Browser extension** for (fuzzy) search across bookmarks, history, and tabs.
+## Structure
 
-- **Stateless**: No storage except user options. Loads fresh on every popup open.
-- **No Background Process**: Runs only when popup is open.
-- **Privacy**: No network, telemetry, or data collection.
-- **Performance**: Instant search (<16ms) for 10k+ items.
+- Search entry points: `popup/js/initSearch.js`, `popup/js/initOptions.js`, `popup/js/initTags.js`, `popup/js/initFolders.js`, `popup/js/initGroups.js`, `popup/js/initEditBookmark.js`
+- Search orchestration and strategies: `popup/js/search/common.js`, `popup/js/search/simpleSearch.js`, `popup/js/search/fuzzySearch.js`, `popup/js/search/taxonomySearch.js`
+- Query parsing, ranking, defaults: `popup/js/search/queryParser.js`, `popup/js/search/scoring.js`, `popup/js/search/defaultResults.js`, `popup/js/search/searchEngines.js`
+- Data and options: `popup/js/model/searchData.js`, `popup/js/model/options.js`, `popup/js/model/validateOptions.js`
+- Browser wrappers and helpers: `popup/js/helper/browserApi.js`, `popup/js/helper/utils.js`, `popup/js/helper/extensionContext.js`
+- Rendering: `popup/js/view/*`
+- Shared styles: `popup/css/style.css`
 
-### Execution Flow
+## Search and performance
 
-1. **Init**: Load options → fetch data → pre-normalize.
-2. **Idle**: Show recent tags/bookmarks.
-3. **Search**: Debounced search → score/sort → render.
-4. **Action**: Selection → switch to tab or navigate.
+- Pre-normalize searchable fields during init.
+- Precompute highlight markup as strings; avoid DOM-based highlighting during search.
+- Avoid object spread and repeated regex compilation in hot loops.
+- Filter and slice before expensive ranking or rendering work.
+- Test both precise and fuzzy paths when changing search behavior.
+- Validate perf-sensitive changes against large datasets.
 
-### Architecture Overview
+## Error handling
 
-```bash
-popup/
-├─ js/
-│  ├─ init*.js             # Entry points: Initializers for search and options pages
-│  ├─ helper/              # Pure utilities: DOM helpers and browser API wrappers
-│  ├─ model/               # Data & Config: Options management and data normalization
-│  ├─ search/              # Core Logic: All search algorithms and orchestration
-│  │  ├─ common.js         # Coordinator: Orchestrates the search flow and caching
-│  │  ├─ simpleSearch.js   # Exact Match: Fast substring-based search strategy
-│  │  ├─ fuzzySearch.js    # uFuzzy: Approximate matching using uFuzzy library
-│  │  ├─ taxonomySearch.js # Taxonomy: Filtering by tags (#) and folders (~)
-│  │  ├─ queryParser.js    # Parser: Detects search modes, tags, and commands
-│  │  ├─ scoring.js        # Ranking: Algorithm for sorting and scoring results
-│  │  ├─ searchEngines.js  # Engines: Fallback search engine result generation
-│  │  └─ defaultResults.js # Defaults: Results shown when the query is empty
-│  └─ view/                # UI Rendering: DOM manipulation and result display
-├─ css/                    # Styling: CSS files for popup and options UI
-└─ lib/                    # Dependencies: Vendored libs (uFuzzy, Tagify, js-yaml)
-```
+- Browser API failures: `console.warn` and return empty results.
+- Options failures: fall back to defaults and call `printError`.
+- Search and render failures: show the dismissible overlay via `printError`; do not crash the popup.
 
 ## Commands
 
-- **Build**:
-  - `npm run build`: Full build (libs, bundle, manifests, dist, format)
-  - `npm run watch`: Dev mode (auto-rebuild)
-  - `npm run clean`: Remove build artifacts
-  - `npm run build:bundle`: JS/CSS bundle only
-- **Run**:
-  - `npm run start`: Mock data (localhost:8080)
-  - `npm run start:dist`: Serve production build
-- **Test**:
-  - `npm run lint`: Biome lint/format check (`:fix` to auto-fix)
-  - `npm run test`: All unit tests (`npm run test <file>` for specific)
-  - `npm run test:watch`: Jest watch mode
-  - `npm run test:unit:coverage`: Coverage report
-  - `npm run test:e2e`: Playwright E2E (chromium/firefox)
-- **Perf**:
-  - `npm run test:perf`: All benchmarks + summary
-- **Analysis**:
-  - `npm run size`: Bundle size report
-  - `npm run analyze`: Code diagnostics
+- Prefer targeted checks first:
+  - `npx @biomejs/biome check path/to/file.js`
+  - `npm run test:unit -- path/to/test.js`
+- Typical loop: `npm run lint` then relevant unit tests.
+- Run `npm run test:e2e` for UI or behavior changes.
+- Run `npm run test:perf` for search, scoring, render, or cache changes.
+- Run `npm run size` when changing dependencies, bundling, shared utilities, or adding significant new code.
+- Run `npm run build` only when explicitly requested or for release-oriented work.
 
-## Verify Loops
+## Ask first
 
-- **Standard**: `lint` → `test <file>` → `test:e2e` (UI/behavior)
-- **Performance**: `lint` → `test <file>` → `test:perf`
-  - *Targets*: Search <20ms (5k items), Render <16ms (60fps)
-- **Full**: `lint` → `test` → `test:e2e` → `test:perf` → `build`
+- package installs
+- deleting or renaming many files
+- broad refactors outside the requested area
+- expensive full-suite runs when targeted checks are sufficient
 
-## Performance Guidelines
+## Examples
 
-Search must feel instant (<16ms). 5k+ item collections are common.
+- Query parsing: `popup/js/search/queryParser.js`
+- Ranking: `popup/js/search/scoring.js`
+- Search rendering: `popup/js/view/searchView.js`
+- Error overlay: `popup/js/view/errorView.js`
+- Options loading and validation: `popup/js/model/options.js`, `popup/js/model/validateOptions.js`
 
-- **Zero-DOM Highlighting**: Pre-compute `<mark>` tags as strings (no DOM ops during search).
-- **Pre-normalization**: Lowercase and prepare search strings during `init`.
-- **Avoid Object Spread**: Use direct property assignment in hot loops.
-- **Regex Caching**: Compile patterns once, reuse across iterations.
-- **Compact Templates**: Minimize whitespace in HTML templates for faster `innerHTML`.
-- **Early Limiting**: Filter and slice before expensive operations.
+## When stuck
 
-### Measuring & Workflow
-- **Micro**: `npm run test -- performance.test.js`
-- **Algorithm**: `npm run test -- comparison.test.js`
-- **E2E**: `npm run test:e2e -- performance.spec.js`
-- **Workflow**: Establish baseline (`main`) → Apply → Compare (`test:perf`).
-
-## Coding Standards
-
-- **Tech**: ESM, Vanilla JS (No TS).
-- **Style**: Biome (2 spaces, single quotes, no semicolons).
-- **Docs**: JSDoc `@param`/`@returns` for exports; `@file` header for modules.
-
-### Module Responsibilities
-
-- `helper/`: Pure utilities, no side effects (e.g., `escapeHtml`, `cleanUpUrl`)
-- `model/`: Data loading/config (e.g., `getEffectiveOptions`)
-- `search/`: Algorithms/orchestration (e.g., `fuzzySearch`, `scoring`)
-- `view/`: DOM updates/rendering (e.g., `renderSearchResults`)
-
-### Error Handling Strategy
-
-Errors should be rare. The goal is **graceful degradation** — show the error overlay only as a last resort.
-
-- **Browser API failures**: Log `console.warn`, return empty results (continue working)
-- **Options loading errors**: Fall back to `defaultOptions` + show error via `printError`
-- **Search/render errors**: Show dismissible error overlay with full stack trace
-- **Use `printError(error, context)`** for user-visible errors — logs to console AND shows overlay
-- **Never let errors crash the popup** — users should be able to dismiss and continue
-
-The error overlay covers the results area and includes a DISMISS button. Users can copy the full error for bug reports.
-
-### CSS Architecture
-
-CSS is organized to keep the main file lean:
-
-- **`style.css`**: Main shared styles for search popup and all taxonomy pages (tags, folders, groups)
-  - Includes dark mode support via `@media (prefers-color-scheme: dark)`
-  - Contains the error overlay styles used across all pages
-- **`options.css`**: Specific styles for the options/configuration page
-- **`editBookmark.css`**: Specific styles for the bookmark editor page
-
-All pages include `style.css`. Page-specific CSS files add only what's unique to that page.
-
-## Common Pitfalls
-
-1. **Always test with large datasets** — Small test data hides performance issues
-2. **Check both search strategies** — Precise and fuzzy have different code paths
-3. **Remember statelessness** — Don't assume any state persists between popup opens
-4. **Browser API differences** — Test on Chrome and Firefox; APIs vary slightly
-5. **Options validation** — User options are merged with defaults; handle missing/invalid values
-6. **Cache invalidation** — Search cache uses `searchTerm_strategy_mode` as key; clear when data changes
-
-## Related Documentation
-
-- **[README.md](README.md)** — User documentation, features, configuration examples
-- **[OPTIONS.md](OPTIONS.md)** — Complete list of user-configurable options
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — Local development setup and PR workflow
-- **[CHANGELOG.md](CHANGELOG.md)** — Version history and release notes
+- Ask a clarifying question or propose a short plan instead of making speculative large changes.
