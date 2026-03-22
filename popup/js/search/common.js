@@ -174,6 +174,10 @@ function shouldLimitResults(searchMode) {
  * @returns {Array<Object>} Top entries sorted by descending score.
  */
 function selectTopScoreResults(results, limit) {
+  if (limit <= 0) {
+    return []
+  }
+
   if (results.length <= limit) {
     return sortResults(results, 'score')
   }

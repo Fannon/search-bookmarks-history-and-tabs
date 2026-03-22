@@ -371,6 +371,20 @@ describe('search', () => {
     expect(ext.model.result.map((item) => item.originalId)).toEqual(['first', 'second'])
   })
 
+  test('returns no results when searchMaxResults is zero', async () => {
+    ext.dom.searchInput.value = 'filter'
+    ext.opts.searchMaxResults = 0
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+    ext.model.bookmarks = createBookmarksTestData([
+      { id: 'first', title: 'Filter first', url: 'https://first.test' },
+      { id: 'second', title: 'Filter second', url: 'https://second.test' },
+    ])
+
+    await expect(search({ key: 'f' })).resolves.toBeUndefined()
+    expect(ext.model.result).toEqual([])
+  })
+
   test('falls back to precise search when configured strategy is unsupported', async () => {
     ext.dom.searchInput.value = 'fallback'
     ext.opts.searchStrategy = 'unsupported'
