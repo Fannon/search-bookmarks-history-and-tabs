@@ -2,9 +2,11 @@
 
 ## [Unreleased]
 
-- **IMPROVED**: Reduced repeated work in precise incremental search by skipping unchanged leading terms when a query is extended.
-- **IMPROVED**: Replaced full score sorting for limited search modes with a top-k selection path that keeps only the best `searchMaxResults` items.
-- **IMPROVED**: Disabled highlight generation work when `displaySearchMatchHighlight` is turned off, and skip tag/folder/group highlight markup when those badges are hidden.
+## [v2.1.1]
+
+- **IMPROVED**: Performance: Reduced repeated work in precise incremental search by skipping unchanged leading terms when a query is extended.
+- **IMPROVED**: Performance: Replaced full score sorting for limited search modes with a top-k selection path that keeps only the best `searchMaxResults` items.
+- **IMPROVED**: Performance: Disabled highlight generation work when `displaySearchMatchHighlight` is turned off, and skip tag/folder/group highlight markup when those badges are hidden.
 - **REMOVED**: Removed dead user options `debug`, `searchDebounceMs`, and `enableHelp`.
 
 ## [v2.1.0]
