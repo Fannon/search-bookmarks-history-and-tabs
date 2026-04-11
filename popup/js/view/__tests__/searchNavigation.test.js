@@ -257,6 +257,51 @@ describe('searchNavigation navigationKeyListener', () => {
     expect(windowCloseSpy).toHaveBeenCalledTimes(1)
   })
 
+  it('ignores Enter while IME composition is active', async () => {
+    const { module, viewModule } = await setupSearchNavigation()
+    await viewModule.renderSearchResults()
+
+    const windowCloseSpy = jest.fn()
+    window.close = windowCloseSpy
+
+    await module.navigationKeyListener({
+      key: 'Enter',
+      isComposing: true,
+      preventDefault: jest.fn(),
+      stopPropagation: jest.fn(),
+      button: 0,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+    })
+
+    expect(windowCloseSpy).not.toHaveBeenCalled()
+    expect(ext.model.currentItem).toBe(0)
+  })
+
+  it('ignores navigation keys while IME composition is active', async () => {
+    const { module, viewModule, elements } = await setupSearchNavigation()
+    await viewModule.renderSearchResults()
+
+    const preventDefault = jest.fn()
+    Array.from(elements.resultList.children).forEach((child) => {
+      child.scrollIntoView = jest.fn()
+    })
+
+    ext.model.currentItem = 0
+    await module.navigationKeyListener({
+      key: 'ArrowDown',
+      isComposing: true,
+      preventDefault,
+    })
+
+    expect(preventDefault).not.toHaveBeenCalled()
+    expect(ext.model.currentItem).toBe(0)
+    expect(document.getElementById('sel')).toBe(elements.resultList.children[0])
+  })
+
   it('waits for in-flight search to complete before opening result on Enter', async () => {
     const { module, viewModule } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
