@@ -267,4 +267,44 @@ describe('editOptionsView', () => {
     expect(errorMessageEl.style.display).toBe('none')
     expect(document.getElementById('config').value).toBe('knownKey: value')
   })
+
+  it.failing('REMOVE UNKNOWN OPTIONS also strips nested unknown properties', async () => {
+    setupDom()
+    const nestedOptions = {
+      customSearchEngines: [
+        {
+          alias: 'gh',
+          name: 'GitHub',
+          urlPrefix: 'https://github.com/search?q=$s',
+          extra: 'remove-me',
+        },
+      ],
+    }
+
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: jest.fn((value) => JSON.stringify(value, null, 2)),
+      loadImpl: jest.fn(() => nestedOptions),
+      validateOptionsImpl: jest.fn(() =>
+        Promise.resolve({
+          valid: false,
+          errors: ['Unknown option: "customSearchEngines[0].extra"'],
+        }),
+      ),
+    })
+
+    await module.initOptions()
+    document.getElementById('config').value = JSON.stringify(nestedOptions, null, 2)
+
+    document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
+    await Promise.resolve()
+
+    const btnClean = document.getElementById('btn-clean')
+    expect(btnClean).not.toBeNull()
+
+    btnClean.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await Promise.resolve()
+
+    expect(document.getElementById('config').value).not.toContain('remove-me')
+  })
 })
