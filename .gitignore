@@ -45,4 +45,5 @@ popup/js/*.min.js*
 popup/css/*.min.css*
 
 .claude/
+.codex
 plans/
