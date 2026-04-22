@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **FIXED**: Preserve original bookmark, tab, and history URLs for display and opening, while keeping normalized URL matching for search and deduplication.
+
 ## [v2.1.1]
 
 - **IMPROVED**: Performance: Reduced repeated work in precise incremental search by skipping unchanged leading terms when a query is extended.
