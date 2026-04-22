@@ -9,9 +9,9 @@
  * - Coordinate with search and navigation modules for result interactions.
  */
 
+import { cleanUpUrl } from '../helper/utils.js'
 import { getUserOptions, setUserOptions } from '../model/options.js'
 import { search } from '../search/common.js'
-import { cleanUpUrl } from '../helper/utils.js'
 import { clearSelection, hoverResultItem } from './searchNavigation.js'
 import { renderSearchResults } from './searchView.js'
 
@@ -162,9 +162,16 @@ export function openResultItem(event) {
   }
 
   // Default behavior - open in new tab or switch to existing tab
-  const foundTab = ext.model.tabs.find((el) => {
-    return el.url === normalizedUrl
-  })
+  let foundTab = null
+  if (selectedResult?.type === 'tab' && selectedResult.originalId != null) {
+    foundTab = ext.model.tabs.find((el) => el.originalId === selectedResult.originalId)
+  }
+
+  if (!foundTab) {
+    foundTab = ext.model.tabs.find((el) => {
+      return el.url === normalizedUrl
+    })
+  }
 
   if (foundTab && ext.browserApi.tabs.highlight) {
     // Switch to existing tab if found

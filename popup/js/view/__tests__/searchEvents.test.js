@@ -413,6 +413,68 @@ describe('searchEvents openResultItem', () => {
     expect(window.close).toHaveBeenCalledTimes(1)
   })
 
+  it('prefers matching tabs by originalId before normalized URL', async () => {
+    const tabResults = [
+      {
+        type: 'tab',
+        originalId: 100,
+        originalUrl: 'https://example.test/page#one',
+        url: 'example.test/page',
+        title: 'First tab',
+        score: 10,
+      },
+      {
+        type: 'tab',
+        originalId: 200,
+        originalUrl: 'https://example.test/page#two',
+        url: 'example.test/page',
+        title: 'Second tab',
+        score: 9,
+      },
+    ]
+
+    const { module, viewModule, navigationModule } = await setupSearchEvents({
+      results: tabResults,
+    })
+    await viewModule.renderSearchResults()
+    navigationModule.selectListItem(1)
+
+    ext.model.tabs = [
+      {
+        originalId: 100,
+        originalUrl: 'https://example.test/page#one',
+        url: 'example.test/page',
+        windowId: 101,
+      },
+      {
+        originalId: 200,
+        originalUrl: 'https://example.test/page#two',
+        url: 'example.test/page',
+        windowId: 202,
+      },
+    ]
+
+    module.openResultItem({
+      button: 0,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+
+    expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(200, { active: true })
+    expect(ext.browserApi.windows.update).toHaveBeenCalledWith(202, {
+      focused: true,
+    })
+    expect(ext.browserApi.tabs.create).not.toHaveBeenCalled()
+  })
+
   it('matches existing tabs by normalized URL when originalUrl formatting differs', async () => {
     const { module, viewModule } = await setupSearchEvents({
       results: [
