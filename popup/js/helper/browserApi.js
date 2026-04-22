@@ -1,6 +1,5 @@
 const BONUS_SCORE_REGEX = /[ ][+]([0-9]+)/
 const TAG_NUMERIC_CHECK_REGEX = /^\d/
-const URL_ROOT_CLEANUP_REGEX = /\/$/
 const REGEX_SPECIAL_CHARS_REGEX = /[.*+?^${}()|[\]/-]/g
 
 /**
@@ -10,7 +9,7 @@ const REGEX_SPECIAL_CHARS_REGEX = /[.*+?^${}()|[\]/-]/g
  * - Fetch raw entries with defensive fallbacks for browsers that omit certain APIs.
  * - Convert every record into the shared `searchItem` shape (type, title, url, tags, folder trail, search strings).
  * - Parse inline annotations like `#tag` taxonomy markers and `+20` custom bonus hints from bookmark titles.
- * - Clean URLs/titles by stripping protocol, `www`, and trailing slashes to stabilize comparisons and cache keys.
+ * - Preserve source URLs exactly while also deriving normalized URL keys for search, comparisons, and dedupe.
  * - Preserve breadcrumb-style folder metadata so taxonomy pages and scoring rules stay in sync across browsers.
  */
 
@@ -100,7 +99,7 @@ export function convertBrowserTabs(chromeTabs, groupMap) {
         title,
         titleLower: titleLower,
         url: cleanUrl,
-        originalUrl: el.url.replace(URL_ROOT_CLEANUP_REGEX, ''),
+        originalUrl: el.url,
         originalId: el.id,
         favIconUrl: el.favIconUrl,
         active: el.active,
@@ -192,8 +191,8 @@ export function convertBrowserBookmarks(
         }
       }
 
-      const url = entry.url.replace(URL_ROOT_CLEANUP_REGEX, '')
-      const cleanedUrl = cleanUpUrl(url)
+      const originalUrl = entry.url
+      const cleanedUrl = cleanUpUrl(originalUrl)
 
       // Parse out tags from bookmark title (starting with " #")
       let tagsText = ''
@@ -225,7 +224,7 @@ export function convertBrowserBookmarks(
         originalId: entry.id,
         title: finalTitle,
         titleLower: titleLower,
-        originalUrl: url,
+        originalUrl,
         url: cleanedUrl,
         dateAdded: entry.dateAdded,
         customBonusScore,
@@ -242,7 +241,7 @@ export function convertBrowserBookmarks(
 
       // Add favicon URL for Chrome (uses _favicon API)
       if (ext.opts.displayFavicons) {
-        const faviconUrl = getFaviconUrl(url)
+        const faviconUrl = getFaviconUrl(originalUrl)
         if (faviconUrl) {
           mappedEntry.favIconUrl = faviconUrl
         }
@@ -382,7 +381,7 @@ export function convertBrowserHistory(history) {
       type: 'history',
       title,
       titleLower: titleLower,
-      originalUrl: el.url.replace(URL_ROOT_CLEANUP_REGEX, ''),
+      originalUrl: el.url,
       url: cleanUrl,
       visitCount: el.visitCount,
       lastVisitSecondsAgo: (now - el.lastVisitTime) / 1000,

@@ -197,7 +197,7 @@ test.describe('Edit Bookmark View', () => {
 
   test('prefills bookmark fields and tag list with existing data', async ({ page }) => {
     await expect(page.locator('#bm-title')).toHaveValue('Try pandoc!')
-    await expect(page.locator('#bm-url')).toHaveValue('https://pandoc.org/try')
+    await expect(page.locator('#bm-url')).toHaveValue('https://pandoc.org/try/')
 
     const tagValues = await page.evaluate(() => window.ext.tagify.value.map((tag) => tag.value))
     expect(tagValues).toEqual(['md'])

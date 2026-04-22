@@ -108,7 +108,7 @@ describe('convertBrowserTabs', () => {
       type: 'tab',
       title: 'Example',
       url: 'example.com/path',
-      originalUrl: 'https://Example.com/path',
+      originalUrl: 'https://Example.com/path/',
       originalId: 5,
       active: true,
       windowId: 3,
@@ -136,7 +136,7 @@ describe('convertBrowserTabs', () => {
     expect(result[0]).toMatchObject({
       originalId: 4,
       url: 'valid.example.com',
-      originalUrl: 'https://valid.example.com',
+      originalUrl: 'https://valid.example.com/',
     })
   })
 })
@@ -208,7 +208,7 @@ describe('convertBrowserBookmarks', () => {
       originalId: 'bookmark-1',
       title: 'Example',
       url: 'example.com',
-      originalUrl: 'https://Example.com',
+      originalUrl: 'https://Example.com/',
       dateAdded: 123,
       customBonusScore: 5,
       tags: '#tag1 #tag2',
@@ -395,6 +395,25 @@ describe('convertBrowserHistory', () => {
       visitCount: 3,
       lastVisitSecondsAgo: 1,
       searchStringLower: 'keep¦keep.example.com/page',
+    })
+  })
+
+  it('preserves trailing slashes in history originalUrl', () => {
+    const history = [
+      {
+        id: '1',
+        url: 'https://keep.example.com/page/',
+        title: 'Keep',
+        visitCount: 3,
+        lastVisitTime: 9_000,
+      },
+    ]
+
+    const [entry] = convertBrowserHistory(history)
+
+    expect(entry).toMatchObject({
+      url: 'keep.example.com/page',
+      originalUrl: 'https://keep.example.com/page/',
     })
   })
 

@@ -145,7 +145,7 @@ const URL_CLEANUP_TRAILING_SLASH_REGEX = /\/$/
  *
  * Strips http://, https://, www. prefix and converts to lowercase
  * to enable consistent URL comparison across different URL formats.
- * Used for matching bookmarks/history to current page and for display.
+ * Used for matching, deduplication, and search indexing.
  *
  * @param {string|null} url - URL to normalize
  * @returns {string} Normalized URL (lowercase, no protocol/www/trailing slash/hash)
