@@ -11,6 +11,7 @@
 
 import { getUserOptions, setUserOptions } from '../model/options.js'
 import { search } from '../search/common.js'
+import { cleanUpUrl } from '../helper/utils.js'
 import { clearSelection, hoverResultItem } from './searchNavigation.js'
 import { renderSearchResults } from './searchView.js'
 
@@ -110,6 +111,7 @@ export function openResultItem(event) {
 
   // Final fallback to DOM attributes if model state is unavailable
   const url = selectedResult?.originalUrl ?? resultEntry?.getAttribute('x-open-url')
+  const normalizedUrl = selectedResult?.url ?? (url ? cleanUpUrl(url) : '')
 
   // Handle right-click to copy URL to clipboard
   if (event.button === 2) {
@@ -161,7 +163,7 @@ export function openResultItem(event) {
 
   // Default behavior - open in new tab or switch to existing tab
   const foundTab = ext.model.tabs.find((el) => {
-    return el.originalUrl === url
+    return el.url === normalizedUrl
   })
 
   if (foundTab && ext.browserApi.tabs.highlight) {

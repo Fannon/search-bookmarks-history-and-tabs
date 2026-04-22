@@ -74,6 +74,7 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
     .map((entry) => ({
       originalId: entry.originalId,
       originalUrl: entry.originalUrl,
+      url: entry.url,
       windowId: 101,
     }))
 
@@ -410,6 +411,48 @@ describe('searchEvents openResultItem', () => {
       focused: true,
     })
     expect(window.close).toHaveBeenCalledTimes(1)
+  })
+
+  it('matches existing tabs by normalized URL when originalUrl formatting differs', async () => {
+    const { module, viewModule } = await setupSearchEvents({
+      results: [
+        {
+          type: 'bookmark',
+          originalId: 'bm-1',
+          originalUrl: 'https://bookmark.test/',
+          url: 'bookmark.test',
+          title: 'Bookmark Title',
+          score: 10,
+        },
+      ],
+    })
+    await viewModule.renderSearchResults()
+
+    ext.model.tabs = [
+      {
+        originalId: 22,
+        originalUrl: 'https://bookmark.test',
+        url: 'bookmark.test',
+        windowId: 101,
+      },
+    ]
+
+    module.openResultItem({
+      button: 0,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+
+    expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(22, { active: true })
+    expect(ext.browserApi.tabs.create).not.toHaveBeenCalled()
   })
 
   it('opens a new active tab when no matching tab exists', async () => {

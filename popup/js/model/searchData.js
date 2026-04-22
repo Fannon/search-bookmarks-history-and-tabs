@@ -23,7 +23,7 @@ import {
  * Efficiently merges history data into bookmarks or tabs using lazy evaluation
  * Only creates new objects when there are actual history matches to merge
  * @param {Array} items - Array of bookmarks or tabs
- * @param {Map} historyMap - Map of URL to history item
+ * @param {Map} historyMap - Map of normalized URL to history item
  * @param {Set<string>} [mergedUrls] - Tracks which history URLs were merged
  * @returns {Array} - Merged array with history data
  */
@@ -35,11 +35,11 @@ function mergeHistoryLazily(items, historyMap, mergedUrls) {
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i]
-    const historyEntry = historyMap.get(item.originalUrl)
+    const historyEntry = historyMap.get(item.url)
 
     if (historyEntry) {
       if (mergedUrls) {
-        mergedUrls.add(item.originalUrl)
+        mergedUrls.add(historyEntry.originalUrl)
       }
       result[i] = {
         ...item,
@@ -146,7 +146,7 @@ export async function getSearchData() {
     // Merge history data into bookmarks and tabs if history is enabled
     if (browserApi.history && ext.opts.enableHistory && result.history.length > 0) {
       // Build maps with URL as key, so we have fast hashmap access
-      const historyMap = new Map(result.history.map((item) => [item.originalUrl, item]))
+      const historyMap = new Map(result.history.map((item) => [item.url, item]))
 
       const mergedHistoryUrls = new Set()
 

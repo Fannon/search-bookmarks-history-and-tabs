@@ -252,8 +252,29 @@ describe('searchView renderSearchResults', () => {
     expect(folderBadge.innerHTML).toContain('&lt;img src=x&gt;')
 
     const urlDiv = listItem.querySelector('.url')
-    expect(urlDiv.textContent).toBe('example.com/<iframe src=javascript:alert(1)>')
-    expect(urlDiv.innerHTML).toContain('&lt;iframe src=javascript:alert(1)&gt;')
+    expect(urlDiv.textContent).toBe('https://example.com/<script>alert(1)</script>')
+    expect(urlDiv.innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
+  })
+
+  it('renders the preserved original URL instead of the normalized comparison key', async () => {
+    const { module, elements } = await setupSearchView({
+      results: [
+        {
+          type: 'bookmark',
+          originalId: 'bm-slash',
+          originalUrl: 'https://example.com/path/',
+          url: 'example.com/path',
+          title: 'Slash Bookmark',
+        },
+      ],
+      opts: { displaySearchMatchHighlight: false },
+    })
+
+    await module.renderSearchResults()
+
+    const urlDiv = elements.resultList.querySelector('.url')
+    expect(urlDiv.textContent).toBe('https://example.com/path/')
+    expect(urlDiv.getAttribute('title')).toBe('https://example.com/path/')
   })
 
   it('handles results without optional fields gracefully', async () => {

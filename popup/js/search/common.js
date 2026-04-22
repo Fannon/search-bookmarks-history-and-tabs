@@ -445,7 +445,7 @@ function highlightResults(results, searchTerm) {
     const entry = results[i]
 
     entry.highlightedTitle = highlightMatches(entry.title || entry.url, highlightRegex)
-    entry.highlightedUrl = highlightMatches(entry.url, highlightRegex)
+    entry.highlightedUrl = highlightMatches(entry.originalUrl || entry.url, highlightRegex)
 
     const tagsArray = entry.tagsArray
     if (highlightTags && tagsArray) {

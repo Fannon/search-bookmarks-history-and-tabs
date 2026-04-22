@@ -145,7 +145,8 @@ export async function renderSearchResults() {
 
       const title =
         shouldHighlight && entry.highlightedTitle ? entry.highlightedTitle : escapeHtml(entry.title || entry.url || '')
-      const url = shouldHighlight && entry.highlightedUrl ? entry.highlightedUrl : escapeHtml(entry.url || '')
+      const displayUrl = entry.originalUrl || entry.url || ''
+      const url = shouldHighlight && entry.highlightedUrl ? entry.highlightedUrl : escapeHtml(displayUrl)
 
       let colorStyle = `border-left-color: ${typeColors[type] || ''}`
       if (type === 'bookmark' && entry.tab) {
@@ -166,7 +167,7 @@ export async function renderSearchResults() {
       }
 
       itemsHTML.push(
-        `<li class="${escapeHtml(type)}"${originalUrl} x-index="${i}"${originalId} style="${colorStyle}">${type === 'bookmark' ? `<img class="edit" x-link="./editBookmark.html#bookmark/${encodeURIComponent(entry.originalId)}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">` : ''}${type === 'tab' ? '<img class="close" title="Close Tab" src="./img/x.svg">' : ''}<div class="title">${faviconHtml}<span class="title-text">${title} </span>${badges.join('')}</div><div class="url" title="${escapeHtml(entry.url || '')}">${url}</div></li>`,
+        `<li class="${escapeHtml(type)}"${originalUrl} x-index="${i}"${originalId} style="${colorStyle}">${type === 'bookmark' ? `<img class="edit" x-link="./editBookmark.html#bookmark/${encodeURIComponent(entry.originalId)}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">` : ''}${type === 'tab' ? '<img class="close" title="Close Tab" src="./img/x.svg">' : ''}<div class="title">${faviconHtml}<span class="title-text">${title} </span>${badges.join('')}</div><div class="url" title="${escapeHtml(displayUrl)}">${url}</div></li>`,
       )
     }
 
