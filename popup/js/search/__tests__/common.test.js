@@ -229,6 +229,47 @@ describe('search', () => {
     expect(mockRenderSearchResults).toHaveBeenCalledWith()
   })
 
+  test.failing('does not serve a cache hit from the previous logical mode when the new query has no prefix', async () => {
+    const cached = [{ type: 'bookmark', title: 'stale tag cache', score: 50 }]
+    ext.searchCache = new Map([['foo_precise_tags', cached]])
+    ext.model.searchMode = 'tags'
+    ext.dom.searchInput.value = 'foo'
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+    ext.model.bookmarks = createBookmarksTestData([
+      {
+        id: 'bookmark-1',
+        title: 'Foo live result',
+        url: 'https://foo.test',
+      },
+    ])
+
+    await search({ key: 'f' })
+
+    expect(ext.model.result).not.toBe(cached)
+    expect(ext.model.searchMode).toBe('all')
+  })
+
+  test.failing('reuses cached results for prefixed queries using the resolved mode instead of the raw input', async () => {
+    const cached = [{ type: 'tab', title: 'cached tab', originalId: 'cached-tab', score: 99 }]
+    ext.searchCache = new Map([['foo_precise_tabs', cached]])
+    ext.model.searchMode = 'tabs'
+    ext.dom.searchInput.value = 't foo'
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+    ext.model.tabs = createTabsTestData([
+      {
+        id: 'tab-live',
+        title: 'Foo live tab',
+        url: 'https://live-tab.test',
+      },
+    ])
+
+    await search({ key: 'f' })
+
+    expect(ext.model.result).toBe(cached)
+  })
+
   test('loads default entries when search term empty', async () => {
     ext.model.searchMode = 'history'
     ext.model.history = createHistoryTestData([
@@ -303,6 +344,87 @@ describe('search', () => {
     })
     expect(direct.url).toBe('example.com')
     expect(direct.title).toBe('Direct: "example.com"')
+  })
+
+  test.failing('preserves the user-typed casing for direct URL navigation targets', async () => {
+    ext.dom.searchInput.value = 'Example.com/API/Foo'
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+
+    await search({ key: 'e' })
+
+    const direct = ext.model.result.find((item) => item.type === 'direct')
+    expect(direct).toBeDefined()
+    expect(direct.originalUrl).toBe('https://Example.com/API/Foo')
+  })
+
+  test.failing('keeps the newest async search results when earlier searches resolve later', async () => {
+    let resolveFirstLoad
+    let resolveSecondLoad
+    let loadCount = 0
+
+    const FakeUFuzzy = class {
+      filter(haystack, term) {
+        const indices = []
+        for (let i = 0; i < haystack.length; i++) {
+          if (haystack[i].includes(term)) {
+            indices.push(i)
+          }
+        }
+        return indices
+      }
+    }
+
+    mockLoadScript.mockImplementation(() => {
+      loadCount += 1
+      return new Promise((resolve) => {
+        const finish = () => {
+          window.uFuzzy = FakeUFuzzy
+          globalThis.uFuzzy = FakeUFuzzy
+          resolve()
+        }
+
+        if (loadCount === 1) {
+          resolveFirstLoad = finish
+        } else {
+          resolveSecondLoad = finish
+        }
+      })
+    })
+
+    ext.opts.searchStrategy = 'fuzzy'
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+    ext.model.bookmarks = createBookmarksTestData([
+      {
+        id: 'alpha-result',
+        title: 'Alpha result',
+        url: 'https://alpha.test',
+      },
+      {
+        id: 'beta-result',
+        title: 'Beta result',
+        url: 'https://beta.test',
+      },
+    ])
+
+    delete window.uFuzzy
+    delete globalThis.uFuzzy
+
+    ext.dom.searchInput.value = 'alpha'
+    const firstSearch = search({ key: 'a' })
+
+    ext.dom.searchInput.value = 'beta'
+    const secondSearch = search({ key: 'b' })
+
+    resolveSecondLoad()
+    await secondSearch
+
+    resolveFirstLoad()
+    await firstSearch
+
+    expect(ext.model.result).toHaveLength(1)
+    expect(ext.model.result[0].originalId).toBe('beta-result')
   })
 
   test('limits results to searchMaxResults', async () => {

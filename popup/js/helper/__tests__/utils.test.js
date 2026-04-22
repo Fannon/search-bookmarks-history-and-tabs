@@ -204,6 +204,28 @@ describe('loadScript', () => {
     expect(mockHead.appendChild).not.toHaveBeenCalled()
   })
 
+  it.failing('deduplicates concurrent loads for the same script while the first request is still pending', () => {
+    const url = 'https://example.com/concurrent.js'
+    const createdScripts = []
+
+    document.createElement = jest.fn().mockImplementation(() => {
+      const script = {
+        type: '',
+        onload: null,
+        onerror: null,
+        src: '',
+      }
+      createdScripts.push(script)
+      return script
+    })
+
+    loadScript(url)
+    loadScript(url)
+
+    expect(document.createElement).toHaveBeenCalledTimes(1)
+    expect(mockHead.appendChild).toHaveBeenCalledTimes(1)
+  })
+
   it('rejects when script fails to load and retries create element on next call', async () => {
     const url = 'https://example.com/fail.js'
 

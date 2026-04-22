@@ -255,6 +255,31 @@ describe('fuzzySearch', () => {
     expect(afterReset).toBeGreaterThan(afterSecondCall)
   })
 
+  it.failing('rebuilds cached tab indices after tab data is mutated in place', async () => {
+    model.tabs = createTabsTestData([
+      {
+        id: 'tab-1',
+        title: 'Alpha tab',
+        url: 'https://alpha.test',
+      },
+      {
+        id: 'tab-2',
+        title: 'Beta tab',
+        url: 'https://beta.test',
+      },
+    ])
+
+    const initialResults = await fuzzySearch('tabs', 'beta', model, opts)
+    expect(initialResults).toHaveLength(1)
+    expect(initialResults[0].originalId).toBe('tab-2')
+
+    model.tabs.splice(0, 1)
+
+    const refreshedResults = await fuzzySearch('tabs', 'beta', model, opts)
+    expect(refreshedResults).toHaveLength(1)
+    expect(refreshedResults[0].originalId).toBe('tab-2')
+  })
+
   it('applies non-ASCII specific options when fuzzyness is high', async () => {
     opts.searchFuzzyness = 0.85
     opts.uFuzzyOptions = { extra: 'option' }

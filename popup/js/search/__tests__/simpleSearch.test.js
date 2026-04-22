@@ -329,6 +329,23 @@ describe('simpleSearch', () => {
       expect(refreshedResults[0].originalId).toBe('bookmark-4')
     })
 
+    test.failing('rebuilds cached tab haystacks after tab data is mutated in place', () => {
+      model.tabs = createTabsTestData([
+        { id: 'tab-1', title: 'Alpha tab', url: 'https://alpha.test' },
+        { id: 'tab-2', title: 'Beta tab', url: 'https://beta.test' },
+      ])
+
+      const initialResults = simpleSearch('tabs', 'beta', model)
+      expect(initialResults).toHaveLength(1)
+      expect(initialResults[0].originalId).toBe('tab-2')
+
+      model.tabs.splice(0, 1)
+
+      const refreshedResults = simpleSearch('tabs', 'beta', model)
+      expect(refreshedResults).toHaveLength(1)
+      expect(refreshedResults[0].originalId).toBe('tab-2')
+    })
+
     test('maintains separate caches for different modes', () => {
       model.bookmarks = createBookmarksTestData([
         { id: 'bookmark-1', title: 'javascript', url: 'https://example.com/bm' },
