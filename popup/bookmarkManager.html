@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <title>Search Bookmarks, History and Tabs: Bookmark Manager</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./css/bookmarkManager.css" />
+  <link rel="icon" type="image/png" href="../images/logo-32.png" />
+</head>
+
+<body id="bookmark-manager">
+  <header class="manager-header">
+    <div>
+      <h1>Bookmark Manager</h1>
+      <p id="manager-summary">Loading bookmarks...</p>
+    </div>
+    <div class="manager-actions">
+      <span id="manager-status" data-tone="info">Loading</span>
+      <button id="refresh-bookmarks" class="button" type="button" title="Refresh bookmarks">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" />
+          <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
+        </svg>
+        Refresh
+      </button>
+      <a class="button secondary" href="./index.html#search/" title="Open popup search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+          <path d="M21 21l-6 -6" />
+        </svg>
+        Search
+      </a>
+    </div>
+  </header>
+
+  <main class="manager-layout">
+    <nav class="manager-tabs" aria-label="Bookmark manager sections">
+      <a href="#overview" data-manager-tab="overview" class="active" aria-current="page">
+        <span>Overview</span>
+      </a>
+      <a href="#duplicates" data-manager-tab="duplicates">
+        <span>Duplicates</span>
+        <strong id="duplicate-count"></strong>
+      </a>
+      <a href="#tags" data-manager-tab="tags">
+        <span>Tags</span>
+        <strong id="tag-count"></strong>
+      </a>
+    </nav>
+
+    <section class="manager-content">
+      <div id="manager-load" class="loading">Loading...</div>
+
+      <section data-manager-panel="overview" class="manager-panel">
+        <div id="stats-grid" class="stats-grid"></div>
+
+        <div class="overview-grid">
+          <section>
+            <h2>Top Tags</h2>
+            <div id="top-tags"></div>
+          </section>
+          <section>
+            <h2>Top Domains</h2>
+            <div id="top-domains"></div>
+          </section>
+          <section>
+            <h2>Top Folders</h2>
+            <div id="top-folders"></div>
+          </section>
+        </div>
+
+        <section>
+          <h2>Recently Added</h2>
+          <div id="recent-bookmarks"></div>
+        </section>
+      </section>
+
+      <section data-manager-panel="duplicates" class="manager-panel" hidden>
+        <header class="manager-panel-header duplicate-page-header">
+          <h2>Duplicate Bookmarks</h2>
+          <div id="duplicate-summary"></div>
+        </header>
+        <div class="duplicate-toolbar">
+          <div class="duplicate-actions">
+            <button id="select-suggested" class="button secondary" type="button">Select Lower-Ranked Copies</button>
+            <button id="select-none" class="button secondary" type="button">Select None</button>
+            <button id="delete-selected" class="button danger" type="button" disabled>
+              Delete Selected (<span data-selected-count>0</span>)
+            </button>
+          </div>
+        </div>
+        <div id="duplicates-list"></div>
+      </section>
+
+      <section data-manager-panel="tags" class="manager-panel" hidden>
+        <header class="manager-panel-header tag-page-header">
+          <h2>Tag Manager</h2>
+          <div id="tag-summary"></div>
+        </header>
+        <div class="tag-toolbar">
+          <input id="tag-filter" type="search" placeholder="Filter tags" autocomplete="off" spellcheck="false" />
+        </div>
+        <div id="tag-list"></div>
+      </section>
+    </section>
+  </main>
+
+  <div id="error-overlay" class="error-overlay" style="display: none"></div>
+  <script defer type="module" src="./js/initBookmarkManager.js"></script>
+</body>
+
+</html>
