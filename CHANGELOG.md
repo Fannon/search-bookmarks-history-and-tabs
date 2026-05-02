@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **FIXED**: Ignore keyboard navigation shortcuts (Enter, arrow keys) during IME composition, preventing accidental result activation for CJK input users ([#328](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/328)).
 - **FIXED**: Preserve original bookmark, tab, and history URLs for display and opening, while keeping normalized URL matching for search and deduplication.
 
 ## [v2.1.1]
