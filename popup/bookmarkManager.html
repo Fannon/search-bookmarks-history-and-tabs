@@ -12,35 +12,10 @@
 
 <body id="bookmark-manager" data-beta="true">
   <header class="manager-header">
-    <div>
-      <div class="manager-title-row">
-        <h1>Bookmark Manager</h1>
-        <span class="beta-badge" aria-label="Beta feature">BETA</span>
-      </div>
-      <p id="manager-summary">Loading bookmarks...</p>
+    <div class="manager-title-row">
+      <h1><a href="#overview">Bookmark Manager</a></h1>
+      <span class="beta-badge" aria-label="Beta feature">BETA</span>
     </div>
-    <div class="manager-actions">
-      <span id="manager-status" data-tone="info">Loading</span>
-      <button id="refresh-bookmarks" class="button" type="button" title="Refresh bookmarks">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" />
-          <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
-        </svg>
-        Refresh
-      </button>
-      <a class="button secondary" href="./index.html#search/" title="Open popup search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
-          <path d="M21 21l-6 -6" />
-        </svg>
-        Search
-      </a>
-    </div>
-  </header>
-
-  <main class="manager-layout">
     <nav class="manager-tabs" aria-label="Bookmark manager sections">
       <a href="#overview" data-manager-tab="overview" class="active" aria-current="page">
         <span>Overview</span>
@@ -58,7 +33,20 @@
         <strong id="tag-count"></strong>
       </a>
     </nav>
+    <div class="manager-actions">
+      <span id="manager-status" data-tone="info">Loading</span>
+      <button id="refresh-bookmarks" class="button" type="button" title="Refresh bookmarks">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" />
+          <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
+        </svg>
+        Refresh
+      </button>
+    </div>
+  </header>
 
+  <main class="manager-layout">
     <section class="manager-content">
       <div id="manager-load" class="loading">Loading...</div>
 

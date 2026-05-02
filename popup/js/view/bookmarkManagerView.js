@@ -19,7 +19,6 @@ const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
  */
 export function getBookmarkManagerDom() {
   return {
-    summaryLine: document.getElementById('manager-summary'),
     status: document.getElementById('manager-status'),
     bookmarkSearch: document.getElementById('bookmark-manager-search'),
     bookmarkFolderTree: document.getElementById('bookmark-folder-tree'),
@@ -70,10 +69,6 @@ export function getBookmarkManagerDom() {
 export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookmarks) {
   const dom = ext.dom.manager
   const stats = model.stats
-
-  dom.summaryLine.textContent = `${formatInteger(stats.bookmarkCount)} bookmarks across ${formatInteger(
-    stats.folderCount,
-  )} folders and ${formatInteger(stats.uniqueDomainCount)} domains`
 
   dom.statsGrid.innerHTML = renderStats(stats)
   dom.topTags.innerHTML = renderTopList(stats.topTags, 'No tags found')
@@ -195,6 +190,13 @@ export function bindBookmarkManagerEvents({
     renderTagManagerIntoDom(ext.model.bookmarkManagerCanUpdateBookmarks)
   })
   dom.tagList.addEventListener('click', (event) => {
+    const selectButton = event.target.closest('[data-select-tag]')
+    if (selectButton) {
+      ext.model.bookmarkManagerSelectedTag = selectButton.dataset.selectTag
+      renderTagManagerIntoDom(ext.model.bookmarkManagerCanUpdateBookmarks)
+      return
+    }
+
     const renameButton = event.target.closest('[data-rename-tag]')
     if (renameButton) {
       onRenameTag(renameButton.dataset.renameTag)
@@ -817,7 +819,7 @@ function findFolderById(folder, folderId) {
 
 function renderStats(stats) {
   return [
-    renderStat('Bookmarks', formatInteger(stats.bookmarkCount), 'Total bookmark entries', undefined, 'bookmark'),
+    renderStat('Bookmarks', formatInteger(stats.bookmarkCount), 'Total bookmark entries', '#bookmarks', 'bookmark'),
     renderStat(
       'Duplicates',
       formatInteger(stats.duplicateGroupCount),
@@ -829,8 +831,9 @@ function renderStats(stats) {
       'Tagged',
       formatInteger(stats.taggedBookmarkCount),
       `${formatInteger(stats.untaggedBookmarkCount)} without tags`,
-      undefined,
+      '#tags',
       'tag',
+      'Manage tags',
     ),
     renderStat(
       'Unique Tags',
@@ -844,8 +847,9 @@ function renderStats(stats) {
       'Avg Tags',
       formatDecimal(stats.averageTagsPerBookmark),
       `${formatDecimal(stats.averageTagsPerTaggedBookmark)} on tagged bookmarks`,
-      undefined,
+      '#tags',
       'tag',
+      'Manage tags',
     ),
     renderStat('Domains', formatInteger(stats.uniqueDomainCount), 'Unique URL hostnames', undefined, 'domain'),
   ].join('')
@@ -1070,24 +1074,42 @@ function renderTagManager(canUpdateBookmarks) {
     return `${updateNotice}<p class="empty-state">No tags match this filter.</p>`
   }
 
+  const selectedTag = getSelectedTag(visibleTags)
+
   return `
     ${updateNotice}
-    <ol class="tag-manager-list">
-      ${visibleTags.map((tag) => renderTagManagerRow(tag, canUpdateBookmarks)).join('')}
-    </ol>
+    <div class="tag-manager-layout">
+      <ol class="tag-manager-list">
+        ${visibleTags.map((tag) => renderTagManagerRow(tag, canUpdateBookmarks, selectedTag)).join('')}
+      </ol>
+      ${renderTagBookmarkPanel(selectedTag)}
+    </div>
   `
 }
 
-function renderTagManagerRow(tag, canUpdateBookmarks) {
+function getSelectedTag(visibleTags) {
+  const selectedName = ext.model.bookmarkManagerSelectedTag
+  const selectedTag = visibleTags.find((tag) => tag.name === selectedName)
+  const nextTag = selectedTag || visibleTags[0]
+  ext.model.bookmarkManagerSelectedTag = nextTag.name
+  return nextTag
+}
+
+function renderTagManagerRow(tag, canUpdateBookmarks, selectedTag) {
   const disabled = canUpdateBookmarks ? '' : ' disabled'
   const safeName = escapeHtml(tag.name)
+  const isActive = tag.name === selectedTag.name
 
   return `
-    <li>
-      <div class="tag-manager-main">
-        <span class="badge tags">#${safeName}</span>
-        <span class="tag-manager-count">${formatInteger(tag.count)} ${tag.count === 1 ? 'bookmark' : 'bookmarks'}</span>
-      </div>
+    <li class="${isActive ? 'active' : ''}">
+      <button class="tag-manager-select" type="button" data-select-tag="${safeName}" aria-pressed="${isActive}">
+        <div class="tag-manager-main">
+          <span class="badge tags">#${safeName}</span>
+          <span class="tag-manager-count">${formatInteger(tag.count)} ${
+            tag.count === 1 ? 'bookmark' : 'bookmarks'
+          }</span>
+        </div>
+      </button>
       <div class="tag-manager-actions">
         <button class="button secondary tag-rename-button" type="button" data-rename-tag="${safeName}"${disabled}>
           Rename
@@ -1098,6 +1120,44 @@ function renderTagManagerRow(tag, canUpdateBookmarks) {
       </div>
     </li>
   `
+}
+
+function renderTagBookmarkPanel(tag) {
+  const bookmarks = getBookmarksForTag(tag)
+
+  if (!bookmarks.length) {
+    return `
+      <section class="tag-bookmark-panel">
+        <p class="empty-state">No bookmarks use this tag.</p>
+      </section>
+    `
+  }
+
+  return `
+    <section class="tag-bookmark-panel">
+      <header class="tag-bookmark-panel-header">
+        <h3>#${escapeHtml(tag.name)}</h3>
+        <p>${formatInteger(bookmarks.length)} ${bookmarks.length === 1 ? 'bookmark' : 'bookmarks'}</p>
+      </header>
+      <ul class="bookmark-list tag-bookmark-list">
+        ${bookmarks.map(renderBookmarkListItem).join('')}
+      </ul>
+    </section>
+  `
+}
+
+function getBookmarksForTag(tag) {
+  const bookmarkIds = new Set(tag.bookmarkIds)
+  const bookmarks = ext.model.bookmarkManager?.bookmarks || []
+  const taggedBookmarks = []
+
+  for (let i = 0; i < bookmarks.length; i++) {
+    if (bookmarkIds.has(String(bookmarks[i].originalId))) {
+      taggedBookmarks.push(bookmarks[i])
+    }
+  }
+
+  return taggedBookmarks
 }
 
 function renderTagManagerIntoDom(canUpdateBookmarks) {

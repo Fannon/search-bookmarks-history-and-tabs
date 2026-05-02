@@ -26,6 +26,7 @@
   --badge-folder: #3c8d8d;
   --badge-date: #bb8c26;
   --danger: #d9534f;
+  --success: #5fc944;
   --panel-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
@@ -73,20 +74,20 @@ button {
 }
 
 .manager-header {
-  min-height: 72px;
-  padding: 12px 22px 13px;
+  min-height: 56px;
+  padding: 9px 22px 10px;
   background: var(--input-bg);
   border-bottom: 1px solid var(--input-border);
   color: var(--input-fg);
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px 18px;
 }
 
 .manager-header h1 {
   color: var(--input-fg);
-  font-size: 26px;
+  font-size: 22px;
   line-height: 1.15;
   font-weight: 500;
 }
@@ -96,6 +97,12 @@ button {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  white-space: nowrap;
+}
+
+.manager-title-row a {
+  color: inherit;
+  text-decoration: none;
 }
 
 .beta-badge {
@@ -111,13 +118,6 @@ button {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.manager-header p {
-  color: var(--fg);
-  font-size: 14px;
-  line-height: 1.25;
-  margin-top: 2px;
 }
 
 .manager-actions,
@@ -188,7 +188,7 @@ button {
 }
 
 .button.success {
-  background: #5fc944;
+  background: var(--success);
 }
 
 .button.warning {
@@ -211,34 +211,38 @@ button {
 }
 
 .manager-layout {
-  display: grid;
-  grid-template-columns: 184px minmax(0, 1fr);
   max-width: 1520px;
   margin: 0 auto;
   width: 100%;
 }
 
 .manager-tabs {
-  min-height: calc(100vh - 72px);
-  padding: 12px 10px;
-  background: var(--footer-bg);
-  border-right: 1px solid var(--footer-border);
-  display: block;
-  font-size: 12px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  font-size: 13px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.manager-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .manager-tabs a {
-  min-height: 42px;
-  width: 100%;
+  min-height: 32px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 11px;
-  gap: 8px;
+  justify-content: center;
+  padding: 0 9px;
+  gap: 6px;
+  border-radius: 4px;
   color: var(--nav-fg);
-  text-align: left;
-  box-shadow: inset 0 1px 0 0 #99999933;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .manager-tabs a:hover {
@@ -250,9 +254,7 @@ button {
 .manager-tabs a.active {
   color: var(--nav-active-fg);
   background: var(--nav-active-bg);
-  box-shadow:
-    inset 2px 0 0 0 var(--nav-active-fg),
-    inset 0 1px 0 0 #99999933;
+  box-shadow: inset 0 -2px 0 0 var(--nav-active-fg);
 }
 
 .manager-tabs strong {
@@ -639,7 +641,7 @@ button {
 }
 
 .badge.suggestion-best {
-  background: var(--bookmark-color);
+  background: var(--success);
 }
 
 .badge.suggestion-copy {
@@ -929,7 +931,8 @@ h3 {
 }
 
 .duplicate-bookmark.keep-bookmark {
-  background: var(--li-sel);
+  background: #f0fbec;
+  border-left-color: var(--success);
 }
 
 .duplicate-suggestion {
@@ -999,21 +1002,53 @@ h3 {
   border-color: var(--a);
 }
 
+.tag-manager-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 460px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
 .tag-manager-list {
   list-style: none;
   padding: 0;
 }
 
 .tag-manager-list li {
-  min-height: 42px;
+  min-height: 44px;
   background-color: var(--li-bg);
   margin: 0 0 4px;
-  padding: 6px 8px;
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  overflow: hidden;
+  border-left: 4px solid transparent;
+}
+
+.tag-manager-list li.active {
+  background: var(--nav-active-bg);
+  border-left-color: var(--badge-tag);
+}
+
+.tag-manager-select {
+  min-width: 0;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  text-align: left;
+  font: inherit;
+}
+
+.tag-manager-select:hover {
+  background: var(--nav-hover);
 }
 
 .tag-manager-main {
@@ -1040,10 +1075,35 @@ h3 {
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
+  padding-right: 8px;
 }
 
 .tag-rename-button,
 .tag-remove-button {
+  font-size: 13px;
+}
+
+.tag-bookmark-panel {
+  min-width: 0;
+  background: var(--footer-bg);
+  border: 1px solid var(--footer-border);
+  border-radius: 4px;
+  padding: 10px;
+  box-shadow: var(--panel-shadow);
+}
+
+.tag-bookmark-panel-header {
+  margin-bottom: 8px;
+}
+
+.tag-bookmark-panel-header h3 {
+  margin: 0 0 2px;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.tag-bookmark-panel-header p {
+  color: var(--fg);
   font-size: 13px;
 }
 
@@ -1110,6 +1170,19 @@ h3 {
 }
 
 @media (max-width: 980px) {
+  .manager-header {
+    grid-template-columns: minmax(220px, 1fr) auto;
+  }
+
+  .manager-tabs {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .tag-manager-layout {
+    grid-template-columns: 1fr;
+  }
+
   .overview-grid {
     grid-template-columns: 1fr;
   }
@@ -1131,7 +1204,10 @@ h3 {
   .duplicate-toolbar,
   .duplicate-header {
     align-items: stretch;
-    flex-direction: column;
+  }
+
+  .manager-header {
+    grid-template-columns: 1fr;
   }
 
   .manager-actions,
@@ -1148,30 +1224,15 @@ h3 {
   }
 
   .manager-tabs {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    min-height: 44px;
+    min-height: 0;
     width: 100%;
-    padding: 0;
-    border-right: 0;
-    border-bottom: 1px solid var(--footer-border);
-    display: flex;
+    justify-content: flex-start;
   }
 
   .manager-tabs a {
-    flex: 1;
-    min-height: 44px;
-    flex-direction: column;
+    min-height: 32px;
     justify-content: center;
-    padding: 2px 0 0;
-    gap: 1px;
-    text-align: center;
-    box-shadow: inset 0 1px 0 0 #99999933;
-  }
-
-  .manager-tabs a.active {
-    box-shadow: inset 0 2px 0 0 var(--nav-active-fg);
+    padding: 0 8px;
   }
 
   .manager-content {
@@ -1205,10 +1266,16 @@ h3 {
   .tag-manager-list li {
     align-items: stretch;
     flex-direction: column;
+    gap: 0;
+  }
+
+  .tag-manager-select {
+    width: 100%;
   }
 
   .tag-manager-actions {
     justify-content: flex-start;
+    padding: 0 8px 8px;
   }
 }
 
@@ -1248,5 +1315,9 @@ h3 {
 
   .error-overlay .error-stack {
     color: #ff8888;
+  }
+
+  .duplicate-bookmark.keep-bookmark {
+    background: #162817;
   }
 }
