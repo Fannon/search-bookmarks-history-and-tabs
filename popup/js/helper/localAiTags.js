@@ -88,6 +88,7 @@ export async function suggestBookmarkTags(bookmarks, existingTags = [], onDownlo
 function createTagPrompt(bookmarks, existingTags) {
   const knownTags = formatExistingTagsForPrompt(existingTags)
   const bookmarkLines = bookmarks.slice(0, MAX_BOOKMARKS_IN_PROMPT).map(formatBookmarkForPrompt).join('\n')
+  const multiHint = bookmarks.length > 1 ? '\n- Only suggest tags that apply to ALL of the provided bookmarks.' : ''
 
   return `
 Suggest concise bookmark tags.
@@ -101,7 +102,7 @@ Rules:
 - Use a folder-like tag only when title, URL, existing tags, or high existing tag counts show it is a real user convention.
 - Avoid redundant tags, near-duplicates, generic tags, and tags that only restate the domain or folder.
 - Do not include "#".
-- Output JSON only in this shape: {"tags":["example"]}.
+- Output JSON only in this shape: {"tags":["example"]}.${multiHint}
 
 Bookmarks:
 ${bookmarkLines}

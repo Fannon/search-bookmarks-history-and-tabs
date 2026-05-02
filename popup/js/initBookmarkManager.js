@@ -212,11 +212,14 @@ async function suggestTagsForBookmarks(bookmarks, target) {
 
     showManagerStatus(availability === 'available' ? 'Suggesting tags...' : 'Downloading local AI model...')
     showTagSuggestionBusy(true, availability === 'available' ? 'Suggesting tags...' : 'Downloading local AI model...')
-    const tags = await suggestBookmarkTags(bookmarks, getKnownBookmarkTags(), (progress) => {
+    const aiTags = await suggestBookmarkTags(bookmarks, getKnownBookmarkTags(), (progress) => {
       const message = `Downloading local AI model ${Math.round(progress * 100)}%`
       showManagerStatus(message)
       showTagSuggestionBusy(true, message)
     })
+
+    const commonTags = bookmarks.length > 1 ? getCommonTags(bookmarks) : []
+    const tags = uniqueTags(commonTags.concat(aiTags))
 
     if (!tags.length) {
       showManagerStatus('No tags suggested', 'error')
@@ -542,6 +545,39 @@ function normalizeTagName(tagName) {
     .replaceAll('#', '')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+function getCommonTags(bookmarks) {
+  if (!bookmarks.length) {
+    return []
+  }
+
+  const firstTags = bookmarks[0].tagsArray || []
+  const originalCasing = new Map(firstTags.map((tag) => [tag.toLowerCase(), tag]))
+  const tagSets = new Array(bookmarks.length)
+
+  for (let i = 0; i < bookmarks.length; i++) {
+    const tags = bookmarks[i].tagsArray || []
+    tagSets[i] = new Set(tags.map((tag) => tag.toLowerCase()))
+  }
+
+  const result = []
+  const firstSet = tagSets[0]
+
+  for (const tag of firstSet) {
+    let common = true
+    for (let i = 1; i < tagSets.length; i++) {
+      if (!tagSets[i].has(tag)) {
+        common = false
+        break
+      }
+    }
+    if (common) {
+      result.push(originalCasing.get(tag) || tag)
+    }
+  }
+
+  return result
 }
 
 function uniqueTags(tags) {
