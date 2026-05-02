@@ -346,6 +346,13 @@ button {
   font-size: 15px;
 }
 
+.bookmark-edit-panel input:disabled,
+.bookmark-edit-panel select:disabled {
+  background: var(--footer-bg);
+  color: var(--fg);
+  opacity: 0.75;
+}
+
 .bookmark-browser-actions,
 .bulk-tag-actions {
   display: flex;
@@ -795,6 +802,21 @@ h3 {
   background-color: var(--nav-hover);
 }
 
+.rank-link {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: inherit;
+}
+
+.rank-link:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
 .rank-name {
   color: var(--li-title);
   min-width: 0;
@@ -1026,10 +1048,6 @@ h3 {
   background-color: var(--li-bg);
   margin: 0 0 4px;
   border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
   overflow: hidden;
   border-left: 4px solid transparent;
 }
@@ -1042,6 +1060,7 @@ h3 {
 .tag-manager-select {
   min-width: 0;
   min-height: 44px;
+  width: 100%;
   border: none;
   background: transparent;
   color: inherit;
@@ -1049,7 +1068,6 @@ h3 {
   padding: 6px 8px;
   display: flex;
   align-items: center;
-  flex: 1;
   text-align: left;
   font: inherit;
 }
@@ -1060,6 +1078,7 @@ h3 {
 
 .tag-manager-main {
   min-width: 0;
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1072,8 +1091,10 @@ h3 {
 }
 
 .tag-manager-count {
+  margin-left: auto;
   color: var(--fg);
   font-size: 13px;
+  text-align: right;
   white-space: nowrap;
 }
 
@@ -1082,7 +1103,6 @@ h3 {
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
-  padding-right: 8px;
 }
 
 .tag-rename-button,
@@ -1100,7 +1120,15 @@ h3 {
 }
 
 .tag-bookmark-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 8px;
+}
+
+.tag-bookmark-panel-title {
+  min-width: 0;
 }
 
 .tag-bookmark-panel-header h3 {
@@ -1270,19 +1298,13 @@ h3 {
     grid-template-columns: 1fr;
   }
 
-  .tag-manager-list li {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .tag-manager-select {
-    width: 100%;
-  }
-
   .tag-manager-actions {
     justify-content: flex-start;
-    padding: 0 8px 8px;
+  }
+
+  .tag-bookmark-panel-header {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

@@ -15,6 +15,38 @@ test.describe('Bookmark Manager', () => {
     await expectNoClientErrors(page)
   })
 
+  test('links top domains to all bookmarks filtered by domain', async ({ page }) => {
+    const firstDomain = page.locator('#top-domains .rank-link').first()
+    const domain = await firstDomain.locator('.rank-name').textContent()
+
+    await firstDomain.click()
+
+    await expect(page).toHaveURL(/bookmarkManager\.html\?folder=all&search=[^#]+#bookmarks$/)
+    await expect(page.locator('[data-manager-panel="bookmarks"]')).toBeVisible()
+    await expect(page.locator('.folder-tree-button.active')).toHaveAttribute('data-manager-folder-id', 'all')
+    await expect(page.locator('#bookmark-manager-search')).toHaveValue(domain)
+    await expect(page.locator('#bookmark-browser-summary')).toContainText(
+      `selected in All Bookmarks matching "${domain}"`,
+    )
+    await expectNoClientErrors(page)
+  })
+
+  test('updates bookmark browser query params while navigating', async ({ page }) => {
+    await page.locator('[data-manager-tab="bookmarks"]').click()
+    await page.locator('#bookmark-manager-search').fill('github.com')
+
+    await expect(page).toHaveURL(/bookmarkManager\.html\?folder=all&search=github\.com#bookmarks$/)
+
+    const firstBookmark = page.locator('[data-managed-bookmark-row-id]').first()
+    const bookmarkId = await firstBookmark.getAttribute('data-managed-bookmark-row-id')
+    await firstBookmark.locator('.url').click()
+
+    await expect(page).toHaveURL(
+      new RegExp(`bookmarkManager\\.html\\?folder=all&search=github\\.com&bookmark=${bookmarkId}#bookmarks$`),
+    )
+    await expectNoClientErrors(page)
+  })
+
   test('opens passive bookmark rows in the editable bookmark browser', async ({ page }) => {
     await page.locator('#recent-bookmarks [data-open-managed-bookmark-id]').first().click()
 
@@ -96,8 +128,10 @@ test.describe('Bookmark Manager', () => {
     await expect(page.locator('.tag-page-header')).toContainText('Tag Manager')
     await expect(page.locator('#tag-list')).toContainText('#json')
     await expect(page.locator('#tag-list')).toContainText('Tag updates are unavailable')
-    await expect(page.locator('#tag-list .tag-rename-button').first()).toBeDisabled()
-    await expect(page.locator('#tag-list .tag-remove-button').first()).toBeDisabled()
+    await expect(page.locator('.tag-manager-list .tag-rename-button')).toHaveCount(0)
+    await expect(page.locator('.tag-manager-list .tag-remove-button')).toHaveCount(0)
+    await expect(page.locator('.tag-bookmark-panel-header .tag-rename-button')).toBeDisabled()
+    await expect(page.locator('.tag-bookmark-panel-header .tag-remove-button')).toBeDisabled()
     await expectNoClientErrors(page)
   })
 })

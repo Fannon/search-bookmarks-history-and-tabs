@@ -68,6 +68,7 @@ export async function initBookmarkManager() {
     onRenameTag: renameTag,
     onRemoveTag: removeTag,
     onOpenBookmark: openBookmarkInManager,
+    onBookmarkNavigation: writeBookmarkBrowserUrl,
   })
 
   await reloadBookmarkManager()
@@ -142,10 +143,19 @@ function applyBookmarkDeepLinkState() {
   const params = new URLSearchParams(window.location.search)
   const bookmarkId = params.get('bookmark')
   const folderId = params.get('folder')
+  const searchTerm = params.get('search')
   const folder = folderId ? findFolderById(ext.model.bookmarkManager?.folderTree, folderId) : null
 
-  if (folder) {
+  const hasAllFolder = folderId === 'all'
+
+  if (hasAllFolder) {
+    ext.model.bookmarkManagerFolderId = 'all'
+  } else if (folder) {
     ext.model.bookmarkManagerFolderId = folderId
+  }
+
+  if (searchTerm) {
+    ext.dom.manager.bookmarkSearch.value = searchTerm
   }
 
   if (!bookmarkId) {
@@ -159,8 +169,8 @@ function applyBookmarkDeepLinkState() {
 
   ext.model.bookmarkManagerSelectedIds = new Set()
   ext.model.bookmarkManagerCurrentId = String(bookmark.originalId)
-  ext.model.bookmarkManagerFolderId = folder ? folderId : getMostPreciseBookmarkFolderId(bookmark)
-  ext.dom.manager.bookmarkSearch.value = ''
+  ext.model.bookmarkManagerFolderId = folder || hasAllFolder ? folderId : getMostPreciseBookmarkFolderId(bookmark)
+  ext.dom.manager.bookmarkSearch.value = searchTerm || ''
 }
 
 function writeBookmarkDeepLink(bookmark) {
@@ -168,8 +178,33 @@ function writeBookmarkDeepLink(bookmark) {
   const url = new URL(window.location.href)
   url.searchParams.set('folder', folderId)
   url.searchParams.set('bookmark', String(bookmark.originalId))
+  url.searchParams.delete('search')
   url.hash = 'bookmarks'
   window.history.pushState(null, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
+function writeBookmarkBrowserUrl() {
+  const url = new URL(window.location.href)
+  const folderId = ext.model.bookmarkManagerFolderId || 'all'
+  const searchTerm = ext.dom.manager.bookmarkSearch.value.trim()
+  const bookmarkId = getCurrentManagedBookmarkId()
+
+  url.searchParams.set('folder', folderId)
+
+  if (searchTerm) {
+    url.searchParams.set('search', searchTerm)
+  } else {
+    url.searchParams.delete('search')
+  }
+
+  if (bookmarkId) {
+    url.searchParams.set('bookmark', bookmarkId)
+  } else {
+    url.searchParams.delete('bookmark')
+  }
+
+  url.hash = 'bookmarks'
+  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
 }
 
 function getMostPreciseBookmarkFolderId(bookmark) {

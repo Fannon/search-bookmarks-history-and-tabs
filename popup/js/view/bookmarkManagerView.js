@@ -72,7 +72,7 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
 
   dom.statsGrid.innerHTML = renderStats(stats)
   dom.topTags.innerHTML = renderTopList(stats.topTags, 'No tags found')
-  dom.topDomains.innerHTML = renderTopList(stats.topDomains, 'No domains found')
+  dom.topDomains.innerHTML = renderTopList(stats.topDomains, 'No domains found', createDomainBookmarkHref)
   dom.topFolders.innerHTML = renderTopList(stats.topFolders, 'No folders found')
   dom.recentBookmarks.innerHTML = renderRecentBookmarks(model.bookmarks)
   dom.bookmarkCount.textContent = stats.bookmarkCount ? String(stats.bookmarkCount) : ''
@@ -107,6 +107,7 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
  * @param {Function} handlers.onRenameTag Tag rename handler.
  * @param {Function} handlers.onRemoveTag Tag removal handler.
  * @param {Function} handlers.onOpenBookmark Open bookmark in the editable bookmark browser.
+ * @param {Function} handlers.onBookmarkNavigation Bookmark browser URL state handler.
  */
 export function bindBookmarkManagerEvents({
   onRefresh,
@@ -121,11 +122,15 @@ export function bindBookmarkManagerEvents({
   onRenameTag,
   onRemoveTag,
   onOpenBookmark,
+  onBookmarkNavigation,
 }) {
   const dom = ext.dom.manager
 
   dom.refreshBookmarks.addEventListener('click', onRefresh)
-  dom.bookmarkSearch.addEventListener('input', onBookmarkSearch)
+  dom.bookmarkSearch.addEventListener('input', () => {
+    onBookmarkNavigation()
+    onBookmarkSearch()
+  })
   dom.bookmarkFolderTree.addEventListener('click', (event) => {
     const button = event.target.closest('[data-manager-folder-id]')
     if (!button) {
@@ -133,6 +138,7 @@ export function bindBookmarkManagerEvents({
     }
 
     ext.model.bookmarkManagerFolderId = button.dataset.managerFolderId
+    onBookmarkNavigation()
     onBookmarkSearch()
   })
   dom.managedBookmarkList.addEventListener('change', (event) => {
@@ -142,6 +148,7 @@ export function bindBookmarkManagerEvents({
 
     setCurrentManagedBookmark(event.target.dataset.managedBookmarkId)
     onSelectBookmark(event.target.dataset.managedBookmarkId, event.target.checked)
+    onBookmarkNavigation()
     syncManagedBookmarkSelectionRows()
   })
   dom.managedBookmarkList.addEventListener('click', (event) => {
@@ -152,6 +159,7 @@ export function bindBookmarkManagerEvents({
 
     setCurrentManagedBookmark(row.dataset.managedBookmarkRowId)
     updateManagedSelectionUi()
+    onBookmarkNavigation()
   })
   dom.selectVisibleBookmarks.addEventListener('click', () => {
     selectVisibleManagedBookmarks()
@@ -459,7 +467,6 @@ export function renderBookmarkWorkspace(visibleBookmarks, canUpdateBookmarks, ca
     visibleBookmarks,
     canUpdateBookmarks || canMoveBookmarks,
   )
-  dom.bookmarkBrowserSummary.textContent = renderBrowserSummary(visibleBookmarks.length, model.bookmarks.length)
 
   ensureManagerTagify()
   updateManagedSelectionUi()
@@ -619,14 +626,14 @@ function renderManagedBookmarkRow(bookmark, canUpdateBookmarks) {
   `
 }
 
-function renderBrowserSummary(visibleCount, totalCount) {
+function renderBrowserSummary(visibleCount, selectedCount) {
   const folderId = ext.model.bookmarkManagerFolderId || 'all'
   const query = ext.dom.manager.bookmarkSearch.value.trim()
   const folder = findFolderById(ext.model.bookmarkManager?.folderTree, folderId)
   const folderName = folderId === 'all' || !folder ? 'All Bookmarks' : folder.path.join(' / ')
   const searchText = query ? ` matching "${query}"` : ''
 
-  return `${formatInteger(visibleCount)} of ${formatInteger(totalCount)} bookmarks in ${folderName}${searchText}`
+  return `${formatInteger(selectedCount)}/${formatInteger(visibleCount)} selected in ${folderName}${searchText}`
 }
 
 function ensureManagerTagify() {
@@ -680,6 +687,10 @@ function updateManagedSelectionUi() {
     targetIds.length && canUpdateBookmarks && suggestedTagsReady && !isSuggestingTags,
   )
 
+  dom.bookmarkBrowserSummary.textContent = renderBrowserSummary(
+    ext.model.bookmarkManagerVisibleBookmarks?.length || 0,
+    getVisibleManagedSelectionCount(selectedIds, currentBookmark),
+  )
   dom.bookmarkSelectionSummary.textContent = renderActionTargetSummary(selectedCount, currentBookmark)
   dom.moveSelectedBookmarks.disabled = !targetIds.length || !canMoveBookmarks || !dom.bookmarkMoveFolder.value
   dom.addTagsSelected.disabled = !canApplySuggestedTags
@@ -693,8 +704,8 @@ function updateManagedSelectionUi() {
   dom.bulkTagsInput.disabled = !suggestedTagsReady || isSuggestingTags
 
   if (selectedCount > 1) {
-    dom.bookmarkEditTitle.value = 'multiple selection'
-    dom.bookmarkEditUrl.value = 'multiple selection'
+    dom.bookmarkEditTitle.value = '<< multiple selection >>'
+    dom.bookmarkEditUrl.value = '<< multiple selection >>'
     setTagifyValues(ext.managerEditTagify, dom.bookmarkEditTags, [])
   } else if (currentBookmark) {
     dom.bookmarkEditTitle.value = currentBookmark.title || ''
@@ -721,6 +732,36 @@ function renderActionTargetSummary(selectedCount, currentBookmark) {
   }
 
   return 'Click a bookmark or check bookmarks.'
+}
+
+function getVisibleManagedSelectionCount(selectedIds, currentBookmark) {
+  const visibleBookmarks = ext.model.bookmarkManagerVisibleBookmarks || []
+
+  if (selectedIds.length) {
+    let selectedVisibleCount = 0
+    const selectedIdSet = new Set(selectedIds.map(String))
+
+    for (let i = 0; i < visibleBookmarks.length; i++) {
+      if (selectedIdSet.has(String(visibleBookmarks[i].originalId))) {
+        selectedVisibleCount += 1
+      }
+    }
+
+    return selectedVisibleCount
+  }
+
+  if (!currentBookmark) {
+    return 0
+  }
+
+  const currentId = String(currentBookmark.originalId)
+  for (let i = 0; i < visibleBookmarks.length; i++) {
+    if (String(visibleBookmarks[i].originalId) === currentId) {
+      return 1
+    }
+  }
+
+  return 0
 }
 
 function selectVisibleManagedBookmarks() {
@@ -901,25 +942,47 @@ function renderTagSummary(stats) {
   `
 }
 
-function renderTopList(items, emptyText) {
+function renderTopList(items, emptyText, createHref) {
   if (!items.length) {
     return `<p class="empty-state">${escapeHtml(emptyText)}</p>`
   }
 
   return `
     <ol class="rank-list">
-      ${items
-        .map(
-          (item) => `
-            <li>
-              <span class="rank-name">${escapeHtml(item.name)}</span>
-              <span class="rank-count">${formatInteger(item.count)}</span>
-            </li>
-          `,
-        )
-        .join('')}
+      ${items.map((item) => renderTopListItem(item, createHref)).join('')}
     </ol>
   `
+}
+
+function renderTopListItem(item, createHref) {
+  const name = escapeHtml(item.name)
+  const count = formatInteger(item.count)
+
+  if (!createHref) {
+    return `
+      <li>
+        <span class="rank-name">${name}</span>
+        <span class="rank-count">${count}</span>
+      </li>
+    `
+  }
+
+  const href = createHref(item)
+  return `
+    <li>
+      <a class="rank-link" href="${escapeHtml(href)}" title="Show bookmarks for ${name}">
+        <span class="rank-name">${name}</span>
+        <span class="rank-count">${count}</span>
+      </a>
+    </li>
+  `
+}
+
+function createDomainBookmarkHref(item) {
+  const params = new URLSearchParams()
+  params.set('folder', 'all')
+  params.set('search', item.name)
+  return `?${params.toString()}#bookmarks`
 }
 
 function renderRecentBookmarks(bookmarks) {
@@ -1099,9 +1162,9 @@ function renderTagManager(canUpdateBookmarks) {
     ${updateNotice}
     <div class="tag-manager-layout">
       <ol class="tag-manager-list">
-        ${visibleTags.map((tag) => renderTagManagerRow(tag, canUpdateBookmarks, selectedTag)).join('')}
+        ${visibleTags.map((tag) => renderTagManagerRow(tag, selectedTag)).join('')}
       </ol>
-      ${renderTagBookmarkPanel(selectedTag)}
+      ${renderTagBookmarkPanel(selectedTag, canUpdateBookmarks)}
     </div>
   `
 }
@@ -1114,8 +1177,7 @@ function getSelectedTag(visibleTags) {
   return nextTag
 }
 
-function renderTagManagerRow(tag, canUpdateBookmarks, selectedTag) {
-  const disabled = canUpdateBookmarks ? '' : ' disabled'
+function renderTagManagerRow(tag, selectedTag) {
   const safeName = escapeHtml(tag.name)
   const isActive = tag.name === selectedTag.name
 
@@ -1129,6 +1191,42 @@ function renderTagManagerRow(tag, canUpdateBookmarks, selectedTag) {
           }</span>
         </div>
       </button>
+    </li>
+  `
+}
+
+function renderTagBookmarkPanel(tag, canUpdateBookmarks) {
+  const bookmarks = getBookmarksForTag(tag)
+  const disabled = canUpdateBookmarks ? '' : ' disabled'
+
+  if (!bookmarks.length) {
+    return `
+      <section class="tag-bookmark-panel">
+        ${renderTagBookmarkPanelHeader(tag, 0, disabled)}
+        <p class="empty-state">No bookmarks use this tag.</p>
+      </section>
+    `
+  }
+
+  return `
+    <section class="tag-bookmark-panel">
+      ${renderTagBookmarkPanelHeader(tag, bookmarks.length, disabled)}
+      <ul class="bookmark-list tag-bookmark-list">
+        ${bookmarks.map(renderBookmarkListItem).join('')}
+      </ul>
+    </section>
+  `
+}
+
+function renderTagBookmarkPanelHeader(tag, bookmarkCount, disabled) {
+  const safeName = escapeHtml(tag.name)
+
+  return `
+    <header class="tag-bookmark-panel-header">
+      <div class="tag-bookmark-panel-title">
+        <h3>#${safeName}</h3>
+        <p>${formatInteger(bookmarkCount)} ${bookmarkCount === 1 ? 'bookmark' : 'bookmarks'}</p>
+      </div>
       <div class="tag-manager-actions">
         <button class="button secondary tag-rename-button" type="button" data-rename-tag="${safeName}"${disabled}>
           Rename
@@ -1137,31 +1235,7 @@ function renderTagManagerRow(tag, canUpdateBookmarks, selectedTag) {
           Remove
         </button>
       </div>
-    </li>
-  `
-}
-
-function renderTagBookmarkPanel(tag) {
-  const bookmarks = getBookmarksForTag(tag)
-
-  if (!bookmarks.length) {
-    return `
-      <section class="tag-bookmark-panel">
-        <p class="empty-state">No bookmarks use this tag.</p>
-      </section>
-    `
-  }
-
-  return `
-    <section class="tag-bookmark-panel">
-      <header class="tag-bookmark-panel-header">
-        <h3>#${escapeHtml(tag.name)}</h3>
-        <p>${formatInteger(bookmarks.length)} ${bookmarks.length === 1 ? 'bookmark' : 'bookmarks'}</p>
-      </header>
-      <ul class="bookmark-list tag-bookmark-list">
-        ${bookmarks.map(renderBookmarkListItem).join('')}
-      </ul>
-    </section>
+    </header>
   `
 }
 
