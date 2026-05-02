@@ -7,6 +7,17 @@ import { createExtensionContext } from './helper/extensionContext.js'
 import { getLocalAiTagAvailability, suggestBookmarkTags } from './helper/localAiTags.js'
 import { cleanUpUrl } from './helper/utils.js'
 import { createBookmarkManagerModel } from './model/bookmarkManagerData.js'
+import {
+  createTaggedBookmarkTitle,
+  filterBookmarksByFolder,
+  findBookmarkById,
+  findFolderById,
+  getCommonTags,
+  getMostPreciseBookmarkFolderId,
+  mergeBulkTags,
+  normalizeTagName,
+  uniqueTags,
+} from './model/bookmarkManagerOperations.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { calculateFinalScore, executeSearch, sortResults } from './search/common.js'
@@ -119,7 +130,7 @@ async function updateBookmarkBrowser() {
 }
 
 async function openBookmarkInManager(bookmarkId) {
-  const bookmark = findBookmarkById(bookmarkId)
+  const bookmark = findBookmarkById(ext.model.bookmarkManager?.bookmarks || [], bookmarkId)
   if (!bookmark) {
     return
   }
@@ -127,7 +138,7 @@ async function openBookmarkInManager(bookmarkId) {
   ext.model.bookmarkManagerSelectedIds = new Set()
   ext.model.bookmarkManagerCurrentId = String(bookmark.originalId)
   ext.model.bookmarkManagerHasManualSelection = false
-  ext.model.bookmarkManagerFolderId = getMostPreciseBookmarkFolderId(bookmark)
+  ext.model.bookmarkManagerFolderId = getMostPreciseBookmarkFolderId(ext.model.bookmarkManager, bookmark)
   ext.dom.manager.bookmarkSearch.value = ''
   writeBookmarkDeepLink(bookmark)
 
@@ -164,7 +175,7 @@ function applyBookmarkDeepLinkState() {
     return
   }
 
-  const bookmark = findBookmarkById(bookmarkId)
+  const bookmark = findBookmarkById(ext.model.bookmarkManager?.bookmarks || [], bookmarkId)
   if (!bookmark) {
     return
   }
@@ -172,12 +183,13 @@ function applyBookmarkDeepLinkState() {
   ext.model.bookmarkManagerSelectedIds = new Set()
   ext.model.bookmarkManagerCurrentId = String(bookmark.originalId)
   ext.model.bookmarkManagerHasManualSelection = false
-  ext.model.bookmarkManagerFolderId = folder || hasAllFolder ? folderId : getMostPreciseBookmarkFolderId(bookmark)
+  ext.model.bookmarkManagerFolderId =
+    folder || hasAllFolder ? folderId : getMostPreciseBookmarkFolderId(ext.model.bookmarkManager, bookmark)
   ext.dom.manager.bookmarkSearch.value = searchTerm || ''
 }
 
 function writeBookmarkDeepLink(bookmark) {
-  const folderId = getMostPreciseBookmarkFolderId(bookmark)
+  const folderId = getMostPreciseBookmarkFolderId(ext.model.bookmarkManager, bookmark)
   const url = new URL(window.location.href)
   url.searchParams.set('folder', folderId)
   url.searchParams.set('bookmark', String(bookmark.originalId))
@@ -208,55 +220,6 @@ function writeBookmarkBrowserUrl() {
 
   url.hash = 'bookmarks'
   window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
-}
-
-function getMostPreciseBookmarkFolderId(bookmark) {
-  const folder = findMostPreciseBookmarkFolder(bookmark)
-  return folder?.id || bookmark.folderId || 'all'
-}
-
-function findMostPreciseBookmarkFolder(bookmark) {
-  const folderTree = ext.model.bookmarkManager?.folderTree
-  const directFolder = bookmark.folderId ? findFolderById(folderTree, bookmark.folderId) : null
-  const pathFolder = findDeepestFolderByPath(folderTree, bookmark.folderArray || [])
-
-  if (directFolder && pathFolder) {
-    return (pathFolder.path || []).length > (directFolder.path || []).length ? pathFolder : directFolder
-  }
-
-  return directFolder || pathFolder
-}
-
-function findDeepestFolderByPath(folder, path) {
-  if (!folder || !path.length) {
-    return null
-  }
-
-  let bestMatch = pathMatchesFolder(folder.path || [], path) ? folder : null
-  const children = folder.children || []
-
-  for (let i = 0; i < children.length; i++) {
-    const childMatch = findDeepestFolderByPath(children[i], path)
-    if (childMatch && (!bestMatch || childMatch.path.length > bestMatch.path.length)) {
-      bestMatch = childMatch
-    }
-  }
-
-  return bestMatch
-}
-
-function pathMatchesFolder(folderPath, bookmarkPath) {
-  if (!folderPath.length || folderPath.length > bookmarkPath.length) {
-    return false
-  }
-
-  for (let i = 0; i < folderPath.length; i++) {
-    if (folderPath[i] !== bookmarkPath[i]) {
-      return false
-    }
-  }
-
-  return true
 }
 
 function scrollManagedBookmarkIntoView(bookmarkId) {
@@ -293,7 +256,7 @@ async function getVisibleBookmarks() {
     results = sortResults(calculateFinalScore(results, searchTerm), 'score')
   }
 
-  return filterBookmarksByFolder(results, folderId)
+  return filterBookmarksByFolder(results, ext.model.bookmarkManager?.folderTree, folderId)
 }
 
 async function saveManagedBookmark() {
@@ -302,7 +265,7 @@ async function saveManagedBookmark() {
     return
   }
 
-  const bookmark = findBookmarkById(bookmarkId)
+  const bookmark = findBookmarkById(ext.model.bookmarkManager?.bookmarks || [], bookmarkId)
   const values = getManagedBookmarkEditValues()
   if (!bookmark || !values.title || !values.url) {
     showManagerStatus('Title and URL are required.', 'error')
@@ -568,62 +531,6 @@ async function checkLocalAiTagSupport() {
   await updateBookmarkBrowser()
 }
 
-function filterBookmarksByFolder(bookmarks, folderId) {
-  if (!folderId || folderId === 'all') {
-    return bookmarks
-  }
-
-  const folder = findFolderById(ext.model.bookmarkManager?.folderTree, folderId)
-  if (!folder) {
-    return bookmarks
-  }
-
-  const folderIds = collectFolderIds(folder)
-  const folderPath = folder.path || []
-  const folderPathLength = folderPath.length
-  return bookmarks.filter((bookmark) => {
-    if (folderIds.has(String(bookmark.folderId))) {
-      return true
-    }
-
-    const bookmarkPath = bookmark.folderArray || []
-    if (bookmarkPath.length < folderPathLength) {
-      return false
-    }
-
-    for (let i = 0; i < folderPathLength; i++) {
-      if (bookmarkPath[i] !== folderPath[i]) {
-        return false
-      }
-    }
-
-    return true
-  })
-}
-
-function collectFolderIds(folder) {
-  const folderIds = new Set([String(folder.id)])
-
-  for (let i = 0; i < folder.children.length; i++) {
-    const childIds = collectFolderIds(folder.children[i])
-    for (const childId of childIds) {
-      folderIds.add(childId)
-    }
-  }
-
-  return folderIds
-}
-
-function findBookmarkById(bookmarkId) {
-  const bookmarks = ext.model.bookmarkManager?.bookmarks || []
-  for (let i = 0; i < bookmarks.length; i++) {
-    if (String(bookmarks[i].originalId) === String(bookmarkId)) {
-      return bookmarks[i]
-    }
-  }
-  return null
-}
-
 function getBookmarksByIds(bookmarkIds) {
   const bookmarkIdSet = new Set(bookmarkIds.map(String))
   const bookmarks = ext.model.bookmarkManager?.bookmarks || []
@@ -642,24 +549,6 @@ function getKnownBookmarkTags() {
   return tags
 }
 
-function findFolderById(folder, folderId) {
-  if (!folder) {
-    return null
-  }
-  if (String(folder.id) === String(folderId)) {
-    return folder
-  }
-
-  for (let i = 0; i < folder.children.length; i++) {
-    const match = findFolderById(folder.children[i], folderId)
-    if (match) {
-      return match
-    }
-  }
-
-  return null
-}
-
 function getBookmarksWithTag(tagName) {
   const bookmarks = ext.model.bookmarkManager?.bookmarks || []
   return bookmarks.filter((bookmark) => bookmark.tagsArray?.includes(tagName))
@@ -673,12 +562,6 @@ async function updateTaggedBookmarks(bookmarks, getNextTags) {
       title: createTaggedBookmarkTitle(bookmark.title, nextTags),
     })
   }
-}
-
-function createTaggedBookmarkTitle(title, tags) {
-  const titleText = String(title || '').trim()
-  const tagsText = tags.length ? `#${tags.join(' #')}` : ''
-  return `${titleText}${tagsText ? ` ${tagsText}` : ''}`.trim()
 }
 
 function updateBookmarkInMemory(bookmark, title, url, tags) {
@@ -700,76 +583,8 @@ function resetBookmarkSearchCaches() {
   ext.searchCache?.clear()
 }
 
-function mergeBulkTags(currentTags, nextTags, mode) {
-  if (mode === 'replace') {
-    return nextTags
-  }
-  if (mode === 'remove') {
-    const removeSet = new Set(nextTags.map((tag) => tag.toLowerCase()))
-    return currentTags.filter((tag) => !removeSet.has(tag.toLowerCase()))
-  }
-  return uniqueTags(currentTags.concat(nextTags))
-}
-
 function clearBulkTagInput() {
   clearManagerSuggestedTags()
-}
-
-function normalizeTagName(tagName) {
-  return String(tagName || '')
-    .replaceAll('#', '')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-function getCommonTags(bookmarks) {
-  if (!bookmarks.length) {
-    return []
-  }
-
-  const firstTags = bookmarks[0].tagsArray || []
-  const originalCasing = new Map(firstTags.map((tag) => [tag.toLowerCase(), tag]))
-  const tagSets = new Array(bookmarks.length)
-
-  for (let i = 0; i < bookmarks.length; i++) {
-    const tags = bookmarks[i].tagsArray || []
-    tagSets[i] = new Set(tags.map((tag) => tag.toLowerCase()))
-  }
-
-  const result = []
-  const firstSet = tagSets[0]
-
-  for (const tag of firstSet) {
-    let common = true
-    for (let i = 1; i < tagSets.length; i++) {
-      if (!tagSets[i].has(tag)) {
-        common = false
-        break
-      }
-    }
-    if (common) {
-      result.push(originalCasing.get(tag) || tag)
-    }
-  }
-
-  return result
-}
-
-function uniqueTags(tags) {
-  const seen = new Set()
-  const result = []
-
-  for (let i = 0; i < tags.length; i++) {
-    const tag = tags[i]
-    const key = tag.toLowerCase()
-    if (!tag || seen.has(key)) {
-      continue
-    }
-    seen.add(key)
-    result.push(tag)
-  }
-
-  return result
 }
 
 function applyManagerColors() {

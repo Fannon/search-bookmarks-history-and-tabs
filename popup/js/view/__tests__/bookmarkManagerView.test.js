@@ -145,6 +145,7 @@ describe('bookmarkManagerView selection', () => {
     expect(rows[0].classList.contains('current')).toBe(true)
     expect(rows[0].classList.contains('selected')).toBe(true)
     expect(inputs[0].checked).toBe(true)
+    expect(document.getElementById('bookmark-edit-title').disabled).toBe(false)
     expect(getSelectedManagedBookmarkIds()).toEqual([])
 
     rows[1].querySelector('.url').click()
@@ -174,12 +175,15 @@ describe('bookmarkManagerView selection', () => {
     expect(rows[1].classList.contains('selected')).toBe(false)
     expect(inputs[0].checked).toBe(true)
     expect(inputs[1].checked).toBe(false)
+    expect(document.getElementById('bookmark-edit-title').disabled).toBe(true)
+    expect(document.getElementById('bookmark-edit-url').disabled).toBe(true)
     expect(getManagedActionTargetIds()).toEqual(['bookmark-1'])
 
     inputs[1].click()
 
     expect(rows[1].classList.contains('selected')).toBe(true)
     expect(inputs[1].checked).toBe(true)
+    expect(document.getElementById('bookmark-edit-title').disabled).toBe(true)
     expect(getSelectedManagedBookmarkIds()).toEqual(['bookmark-1', 'bookmark-2'])
   })
 })

@@ -21,7 +21,7 @@ test.describe('Bookmark Manager', () => {
 
     await firstDomain.click()
 
-    await expect(page).toHaveURL(/bookmarkManager\.html\?folder=all&search=[^#]+#bookmarks$/)
+    await expect(page).toHaveURL(/bookmarkManager(?:\.html)?\?folder=all&search=[^#]+#bookmarks$/)
     await expect(page.locator('[data-manager-panel="bookmarks"]')).toBeVisible()
     await expect(page.locator('.folder-tree-button.active')).toHaveAttribute('data-manager-folder-id', 'all')
     await expect(page.locator('#bookmark-manager-search')).toHaveValue(domain)
@@ -32,17 +32,21 @@ test.describe('Bookmark Manager', () => {
   })
 
   test('updates bookmark browser query params while navigating', async ({ page }) => {
-    await page.locator('[data-manager-tab="bookmarks"]').click()
-    await page.locator('#bookmark-manager-search').fill('github.com')
+    const query = 'app.quicktype.io'
 
-    await expect(page).toHaveURL(/bookmarkManager\.html\?folder=all&search=github\.com#bookmarks$/)
+    await page.locator('[data-manager-tab="bookmarks"]').click()
+    await page.locator('#bookmark-manager-search').fill(query)
+
+    await expect(page).toHaveURL(/bookmarkManager(?:\.html)?\?folder=all&search=app\.quicktype\.io#bookmarks$/)
 
     const firstBookmark = page.locator('[data-managed-bookmark-row-id]').first()
     const bookmarkId = await firstBookmark.getAttribute('data-managed-bookmark-row-id')
     await firstBookmark.locator('.url').click()
 
     await expect(page).toHaveURL(
-      new RegExp(`bookmarkManager\\.html\\?folder=all&search=github\\.com&bookmark=${bookmarkId}#bookmarks$`),
+      new RegExp(
+        `bookmarkManager(?:\\.html)?\\?folder=all&search=app\\.quicktype\\.io&bookmark=${bookmarkId}#bookmarks$`,
+      ),
     )
     await expectNoClientErrors(page)
   })
@@ -92,7 +96,7 @@ test.describe('Bookmark Manager', () => {
     await expect(page.locator('#add-tags-visible')).toHaveCount(0)
     await expect(page.locator('#suggest-tags-bookmark')).toHaveCount(0)
     await expect(page.locator('#select-all-bookmarks')).toHaveCount(0)
-    await expect(existingTags).not.toHaveAttribute('disabled')
+    await expect(existingTags).toHaveAttribute('disabled')
     await expect(suggestedTags).toHaveAttribute('disabled')
 
     await page.locator('#select-visible-bookmarks').click()

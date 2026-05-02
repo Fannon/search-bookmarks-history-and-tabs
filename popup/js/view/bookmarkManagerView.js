@@ -3,6 +3,7 @@
  */
 
 import { escapeHtml } from '../helper/utils.js'
+import { canEditCurrentManagedBookmark, findBookmarkById, findFolderById } from '../model/bookmarkManagerOperations.js'
 
 const RECENT_BOOKMARKS_PER_PAGE = 24
 
@@ -684,11 +685,14 @@ function updateManagedSelectionUi() {
   const dom = ext.dom.manager
   const selectedIds = getSelectedManagedBookmarkIds()
   const selectedCount = selectedIds.length
-  const currentBookmark = findBookmarkById(ext.model.bookmarkManagerCurrentId)
+  const currentBookmark = findBookmarkById(
+    ext.model.bookmarkManager?.bookmarks || [],
+    ext.model.bookmarkManagerCurrentId,
+  )
   const targetIds = getManagedActionTargetIds()
   const canUpdateBookmarks = Boolean(ext.model.bookmarkManagerCanUpdateBookmarks)
   const canMoveBookmarks = Boolean(ext.model.bookmarkManagerCanMoveBookmarks)
-  const canEditCurrentBookmark = Boolean(currentBookmark && selectedCount <= 1 && canUpdateBookmarks)
+  const canEditCurrentBookmark = canEditCurrentManagedBookmark(currentBookmark, selectedIds, canUpdateBookmarks)
   const isSuggestingTags = Boolean(ext.model.bookmarkManagerSuggestingTags)
   const hasSuggestedTags = getManagerTagInputValues('bulk').length > 0
   const suggestedTagsReady = Boolean(ext.model.bookmarkManagerSuggestedTagsReady && hasSuggestedTags)
@@ -876,34 +880,6 @@ function transformTag(tagData) {
   if (tagData.value.includes('#')) {
     tagData.value = tagData.value.split('#').join('')
   }
-}
-
-function findBookmarkById(bookmarkId) {
-  const bookmarks = ext.model.bookmarkManager?.bookmarks || []
-  for (let i = 0; i < bookmarks.length; i++) {
-    if (String(bookmarks[i].originalId) === String(bookmarkId)) {
-      return bookmarks[i]
-    }
-  }
-  return null
-}
-
-function findFolderById(folder, folderId) {
-  if (!folder) {
-    return null
-  }
-  if (String(folder.id) === String(folderId)) {
-    return folder
-  }
-
-  for (let i = 0; i < folder.children.length; i++) {
-    const match = findFolderById(folder.children[i], folderId)
-    if (match) {
-      return match
-    }
-  }
-
-  return null
 }
 
 function renderStats(stats) {
