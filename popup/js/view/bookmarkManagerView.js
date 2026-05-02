@@ -11,6 +11,21 @@ import {
   selectSuggestedDuplicateGroup,
   updateDuplicateSelectionAction,
 } from './bookmarkManagerDuplicateSelection.js'
+import { renderDuplicateSummary, renderDuplicates } from './bookmarkManagerDuplicatesView.js'
+import {
+  createDomainBookmarkHref,
+  renderRecentBookmarks,
+  renderStats,
+  renderTagSummary,
+  renderTopList,
+} from './bookmarkManagerOverviewView.js'
+import {
+  formatInteger,
+  renderBookmarkListItem,
+  renderBookmarkTitle,
+  renderFolderBadge,
+  renderTagBadges,
+} from './bookmarkManagerRenderHelpers.js'
 import {
   ensureManagerTagControls,
   getManagerTagControlValues,
@@ -18,14 +33,6 @@ import {
   setManagerTagControlDisabled,
   setManagerTagControlValues,
 } from './bookmarkManagerTagControls.js'
-
-const RECENT_BOOKMARKS_PER_PAGE = 24
-
-const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-})
 
 /**
  * Cache bookmark manager DOM references.
@@ -89,7 +96,7 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
   dom.topTags.innerHTML = renderTopList(stats.topTags, 'No tags found')
   dom.topDomains.innerHTML = renderTopList(stats.topDomains, 'No domains found', createDomainBookmarkHref)
   dom.topFolders.innerHTML = renderTopList(stats.topFolders, 'No folders found')
-  dom.recentBookmarks.innerHTML = renderRecentBookmarks(model.bookmarks)
+  renderRecentBookmarksIntoDom()
   dom.bookmarkCount.textContent = stats.bookmarkCount ? String(stats.bookmarkCount) : ''
   dom.duplicateSummary.innerHTML = renderDuplicateSummary(stats)
   dom.duplicateCount.textContent = stats.duplicateGroupCount ? String(stats.duplicateGroupCount) : ''
@@ -801,269 +808,6 @@ function getTemporaryManagedBookmarkSelectedId() {
   return String(ext.model.bookmarkManagerCurrentId || '')
 }
 
-function renderStats(stats) {
-  return [
-    renderStat('Bookmarks', formatInteger(stats.bookmarkCount), 'Total bookmark entries', '#bookmarks', 'bookmark'),
-    renderStat(
-      'Duplicates',
-      formatInteger(stats.duplicateGroupCount),
-      `${formatInteger(stats.removableDuplicateCount)} removable copies`,
-      '#duplicates',
-      'duplicate',
-    ),
-    renderStat(
-      'Tagged',
-      formatInteger(stats.taggedBookmarkCount),
-      `${formatInteger(stats.untaggedBookmarkCount)} without tags`,
-      '#tags',
-      'tag',
-      'Manage tags',
-    ),
-    renderStat(
-      'Unique Tags',
-      formatInteger(stats.uniqueTagCount),
-      `${formatInteger(stats.tagAssignmentCount)} tag assignments`,
-      '#tags',
-      'tag',
-      'Manage tags',
-    ),
-    renderStat(
-      'Avg Tags',
-      formatDecimal(stats.averageTagsPerBookmark),
-      `${formatDecimal(stats.averageTagsPerTaggedBookmark)} on tagged bookmarks`,
-      '#tags',
-      'tag',
-      'Manage tags',
-    ),
-    renderStat('Domains', formatInteger(stats.uniqueDomainCount), 'Unique URL hostnames', undefined, 'domain'),
-  ].join('')
-}
-
-function renderStat(label, value, detail, href, tone = '', title = '') {
-  const tagName = href ? 'a' : 'article'
-  const hrefAttribute = href ? ` href="${escapeHtml(href)}"` : ''
-  const titleAttribute = href ? ` title="${escapeHtml(title || `Open ${label}`)}"` : ''
-  const linkClass = href ? ' stat-link' : ''
-  const toneClass = tone ? ` stat-${tone}` : ''
-
-  return `
-    <${tagName} class="stat${linkClass}${toneClass}"${hrefAttribute}${titleAttribute}>
-      <div class="stat-label">${escapeHtml(label)}</div>
-      <div class="stat-value">${escapeHtml(value)}</div>
-      <div class="stat-detail">${escapeHtml(detail)}</div>
-    </${tagName}>
-  `
-}
-
-function renderTagSummary(stats) {
-  if (!stats.uniqueTagCount) {
-    return '<p>No bookmark tags were found.</p>'
-  }
-
-  return `
-    <p>${formatInteger(stats.uniqueTagCount)} unique tags are assigned ${formatInteger(
-      stats.tagAssignmentCount,
-    )} times across ${formatInteger(stats.taggedBookmarkCount)} tagged bookmarks.</p>
-  `
-}
-
-function renderTopList(items, emptyText, createHref) {
-  if (!items.length) {
-    return `<p class="empty-state">${escapeHtml(emptyText)}</p>`
-  }
-
-  return `
-    <ol class="rank-list">
-      ${items.map((item) => renderTopListItem(item, createHref)).join('')}
-    </ol>
-  `
-}
-
-function renderTopListItem(item, createHref) {
-  const name = escapeHtml(item.name)
-  const count = formatInteger(item.count)
-
-  if (!createHref) {
-    return `
-      <li>
-        <span class="rank-name">${name}</span>
-        <span class="rank-count">${count}</span>
-      </li>
-    `
-  }
-
-  const href = createHref(item)
-  return `
-    <li>
-      <a class="rank-link" href="${escapeHtml(href)}" title="Show bookmarks for ${name}">
-        <span class="rank-name">${name}</span>
-        <span class="rank-count">${count}</span>
-      </a>
-    </li>
-  `
-}
-
-function createDomainBookmarkHref(item) {
-  const params = new URLSearchParams()
-  params.set('folder', 'all')
-  params.set('search', item.name)
-  return `?${params.toString()}#bookmarks`
-}
-
-function renderRecentBookmarks(bookmarks) {
-  const recentBookmarks = bookmarks
-    .filter((bookmark) => Number.isFinite(bookmark.dateAdded))
-    .slice()
-    .sort((a, b) => b.dateAdded - a.dateAdded)
-
-  if (!recentBookmarks.length) {
-    return '<p class="empty-state">No bookmark date metadata found.</p>'
-  }
-
-  const pageCount = Math.ceil(recentBookmarks.length / RECENT_BOOKMARKS_PER_PAGE)
-  const currentPage = clampRecentPage(ext.model.bookmarkManagerRecentPage || 1, pageCount)
-  ext.model.bookmarkManagerRecentPage = currentPage
-
-  const startIndex = (currentPage - 1) * RECENT_BOOKMARKS_PER_PAGE
-  const pageBookmarks = recentBookmarks.slice(startIndex, startIndex + RECENT_BOOKMARKS_PER_PAGE)
-
-  return `
-    <ul class="bookmark-list recent-bookmark-list">
-      ${pageBookmarks.map(renderBookmarkListItem).join('')}
-    </ul>
-    ${renderRecentPagination(currentPage, pageCount, recentBookmarks.length)}
-  `
-}
-
-function renderBookmarkListItem(bookmark) {
-  const displayUrl = bookmark.originalUrl || bookmark.url || ''
-  const bookmarkId = bookmark.originalId !== undefined ? String(bookmark.originalId) : ''
-  const originalId = bookmarkId ? ` x-original-id="${escapeHtml(bookmarkId)}"` : ''
-  const openBookmark = bookmarkId ? ` data-open-managed-bookmark-id="${escapeHtml(bookmarkId)}"` : ''
-  const openUrl = displayUrl ? ` x-open-url="${escapeHtml(displayUrl)}"` : ''
-
-  return `
-    <li class="bookmark"${openUrl}${originalId}${openBookmark}>
-      <div class="recent-bookmark-main">
-        <div class="title">
-          <span class="title-text">${renderBookmarkTitle(bookmark)} </span>
-          ${renderDateBadge(bookmark.dateAdded)}
-          ${renderFolderBadge(bookmark.folderArray)}
-          ${renderTagBadges(bookmark.tagsArray)}
-        </div>
-        <div class="url" title="${escapeHtml(displayUrl)}">${escapeHtml(displayUrl)}</div>
-      </div>
-    </li>
-  `
-}
-
-function renderTrashIcon() {
-  return `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M4 7h16" />
-      <path d="M10 11v6" />
-      <path d="M14 11v6" />
-      <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-      <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
-    </svg>
-  `
-}
-
-function renderDuplicateSummary(stats) {
-  if (!stats.duplicateGroupCount) {
-    return '<p>No duplicate bookmark URLs were found.</p>'
-  }
-
-  return `
-    <p>${formatInteger(stats.duplicateBookmarkCount)} bookmarks share URLs in ${formatInteger(
-      stats.duplicateGroupCount,
-    )} groups. Ranking prefers more tags, cleaner titles, newer additions, then deeper folder placement. ${formatInteger(
-      stats.removableDuplicateCount,
-    )} lower-ranked copies can be selected for deletion.</p>
-  `
-}
-
-function renderDuplicates(duplicateGroups, canModifyBookmarks) {
-  if (!duplicateGroups.length) {
-    return '<p class="empty-state">No duplicate bookmark URLs were found.</p>'
-  }
-
-  const deleteNotice = canModifyBookmarks
-    ? ''
-    : '<p class="manager-note">Bookmark deletion is unavailable in this preview context.</p>'
-
-  return `${deleteNotice}${duplicateGroups.map((group) => renderDuplicateGroup(group, canModifyBookmarks)).join('')}`
-}
-
-function renderDuplicateGroup(group, canModifyBookmarks) {
-  return `
-    <section class="duplicate-group" data-duplicate-group>
-      <header class="duplicate-header">
-        <div>
-          <h3>${escapeHtml(group.displayUrl)}</h3>
-          <p>${formatInteger(group.count)} bookmarks with the same normalized URL</p>
-        </div>
-        <button class="text-button" type="button" data-select-group>Select lower-ranked copies</button>
-      </header>
-      <ul class="duplicate-bookmarks">
-        ${group.bookmarks.map((bookmark) => renderDuplicateBookmark(group, bookmark, canModifyBookmarks)).join('')}
-      </ul>
-    </section>
-  `
-}
-
-function renderDuplicateBookmark(group, bookmark, canModifyBookmarks) {
-  const bookmarkId = String(bookmark.originalId)
-  const isKeep = bookmarkId === group.keepId
-  const disabled = canModifyBookmarks ? '' : ' disabled'
-  const checked = isKeep ? '' : ' checked'
-  const deleteTitle = canModifyBookmarks ? 'Delete this bookmark' : 'Bookmark deletion is unavailable in this context'
-
-  return `
-    <li class="duplicate-bookmark${isKeep ? ' keep-bookmark' : ''}">
-      <div class="duplicate-details">
-        ${renderDuplicateSuggestion(bookmark)}
-        <div class="bookmark-title">${renderBookmarkTitle(bookmark)}</div>
-        <div class="bookmark-meta">
-          ${renderFolderBadge(bookmark.folderArray, 'duplicate-folder')}
-          ${renderDateBadge(bookmark.dateAdded)}
-          ${renderTagBadges(bookmark.tagsArray)}
-        </div>
-        <div class="bookmark-url">${escapeHtml(bookmark.originalUrl || bookmark.url)}</div>
-      </div>
-      <div class="duplicate-row-actions">
-        <label class="duplicate-bulk-delete">
-          <input type="checkbox" data-delete-bookmark-id="${escapeHtml(bookmarkId)}"${checked}${disabled}>
-          <span>Select</span>
-        </label>
-        <button class="button danger duplicate-delete-button" type="button" data-delete-single-bookmark-id="${escapeHtml(
-          bookmarkId,
-        )}" title="${escapeHtml(deleteTitle)}"${disabled}>
-          ${renderTrashIcon()}
-          <span>Delete</span>
-        </button>
-      </div>
-    </li>
-  `
-}
-
-function renderDuplicateSuggestion(bookmark) {
-  const suggestion = bookmark.duplicateSuggestion
-  if (!suggestion) {
-    return ''
-  }
-
-  const suggestionClass = suggestion.recommended ? 'suggestion-best' : 'suggestion-copy'
-
-  return `
-    <div class="duplicate-suggestion">
-      <span class="badge ${suggestionClass}">${escapeHtml(suggestion.label)}</span>
-      <span>${escapeHtml(suggestion.detail)}</span>
-    </div>
-  `
-}
-
 function renderTagManager(canUpdateBookmarks) {
   const tagGroups = ext.model.bookmarkManager?.tagGroups || []
   const filter = ext.model.bookmarkManagerTagFilter || ''
@@ -1187,67 +931,11 @@ function renderTagManagerIntoDom(canUpdateBookmarks) {
   tagList.innerHTML = renderTagManager(canUpdateBookmarks)
 }
 
-function renderBookmarkTitle(bookmark) {
-  const title = bookmark.title || bookmark.originalUrl || bookmark.url
-  const url = bookmark.originalUrl || bookmark.url
-
-  if (isSafeLinkUrl(url)) {
-    return `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(title)}</a>`
-  }
-
-  return escapeHtml(title)
-}
-
-function renderFolderBadge(folderArray, extraClass = '') {
-  const folder = formatFolder(folderArray)
-  return `<span class="badge folder ${extraClass}" title="Bookmark Folder">~${escapeHtml(folder)}</span>`
-}
-
-function renderTagBadges(tags = []) {
-  if (!tags.length) {
-    return ''
-  }
-
-  return tags.map((tag) => `<span class="badge tags" title="Bookmark Tags">#${escapeHtml(tag)}</span>`).join('')
-}
-
-function renderDateBadge(timestamp) {
-  const text = Number.isFinite(timestamp) ? formatDate(timestamp) : 'No date'
-  return `<span class="badge date-added" title="Date Added">${escapeHtml(text)}</span>`
-}
-
-function renderRecentPagination(currentPage, pageCount, bookmarkCount) {
-  if (pageCount <= 1) {
-    return ''
-  }
-
-  const previousPage = Math.max(1, currentPage - 1)
-  const nextPage = Math.min(pageCount, currentPage + 1)
-  const start = (currentPage - 1) * RECENT_BOOKMARKS_PER_PAGE + 1
-  const end = Math.min(bookmarkCount, currentPage * RECENT_BOOKMARKS_PER_PAGE)
-
-  return `
-    <div class="pagination">
-      <button class="button" type="button" data-recent-page="${previousPage}"${currentPage === 1 ? ' disabled' : ''}>
-        Previous
-      </button>
-      <span>${formatInteger(start)}-${formatInteger(end)} of ${formatInteger(bookmarkCount)}</span>
-      <button class="button" type="button" data-recent-page="${nextPage}"${
-        currentPage === pageCount ? ' disabled' : ''
-      }>
-        Next
-      </button>
-    </div>
-  `
-}
-
 function renderRecentBookmarksIntoDom() {
   const bookmarks = ext.model.bookmarkManager?.bookmarks || []
-  ext.dom.manager.recentBookmarks.innerHTML = renderRecentBookmarks(bookmarks)
-}
-
-function clampRecentPage(page, pageCount) {
-  return Math.min(pageCount, Math.max(1, page))
+  const result = renderRecentBookmarks(bookmarks, ext.model.bookmarkManagerRecentPage || 1)
+  ext.model.bookmarkManagerRecentPage = result.page
+  ext.dom.manager.recentBookmarks.innerHTML = result.html
 }
 
 function selectSuggestedDuplicates() {
@@ -1262,38 +950,4 @@ function clearDuplicateSelection() {
 
 function updateDuplicateActions() {
   updateDuplicateSelectionAction(ext.dom.manager.deleteSelected)
-}
-
-function formatInteger(value) {
-  return Number(value || 0).toLocaleString('en-US')
-}
-
-function formatDecimal(value) {
-  return Number(value || 0).toLocaleString('en-US', {
-    maximumFractionDigits: 1,
-  })
-}
-
-function formatDate(timestamp) {
-  return DATE_FORMATTER.format(new Date(timestamp))
-}
-
-function formatFolder(folderArray) {
-  if (!folderArray || folderArray.length === 0) {
-    return 'Root'
-  }
-  return folderArray.join(' / ')
-}
-
-function isSafeLinkUrl(url) {
-  if (!url) {
-    return false
-  }
-
-  try {
-    const parsedUrl = new URL(url)
-    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:'
-  } catch (_error) {
-    return false
-  }
 }
