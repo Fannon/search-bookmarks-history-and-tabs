@@ -115,7 +115,7 @@ The scoring system uses a **5-step process**:
 2. **Search Quality** — Multiply by how well the result matches the search (0–1 from fuzzy/precise algorithm)
 3. **Match Bonuses** — Add points for exact matches, substring matches, tag/folder matches
 4. **Usage Signals** — Add points based on visit count and recency
-5. **Custom Bonus** — Add user-defined bonus from bookmark titles (e.g., `+20`)
+5. **Favorite Bonus** — Add the configured favorite bonus for starred bookmarks
 
 For a detailed explanation, see the [Scoring System section in README.md](https://github.com/Fannon/search-bookmarks-history-and-tabs#scoring-system).
 
@@ -160,7 +160,7 @@ For a detailed explanation, see the [Scoring System section in README.md](https:
 | `scoreVisitedBonusScoreMaximum` | number | `20` | Cap on visit count bonus. |
 | `scoreRecentBonusScoreMaximum` | number | `20` | Max bonus for recently visited items. Scales linearly: just visited = max, `historyDaysAgo` old = 0. |
 | `scoreBookmarkOpenTabBonus` | number | `10` | Bonus when a bookmark is also open as a tab. |
-| `scoreCustomBonusScore` | boolean | `true` | Enable custom bonus in bookmark titles. Add `+N` before tags (e.g., `My Site +20 #work`). |
+| `scoreFavoriteBookmarkBonus` | number | `50` | Bonus added when a bookmark is favorited. Favorites are stored as ` +★` before tags (e.g., `My Site +★ #work`). |
 
 ## Power User Options
 

@@ -29,7 +29,7 @@ const baseOpts = {
   scoreVisitedBonusScoreMaximum: 0,
   scoreRecentBonusScoreMaximum: 0,
   historyDaysAgo: 7,
-  scoreCustomBonusScore: false,
+  scoreFavoriteBookmarkBonus: 0,
 }
 
 const baseResult = {
@@ -40,7 +40,7 @@ const baseResult = {
   tagsArray: [],
   folder: '',
   folderArray: [],
-  customBonusScore: 0,
+  favorite: false,
 }
 
 function scoreFor({ searchTerm = 'query', opts = {}, result = {} }) {
@@ -363,12 +363,12 @@ describe('scoring', () => {
     expect(score).toBeCloseTo(109)
   })
 
-  it('adds custom bonus score when enabled', () => {
+  it('adds favorite bookmark bonus when configured', () => {
     const score = scoreFor({
       searchTerm: 'alpha',
-      opts: { scoreCustomBonusScore: true },
+      opts: { scoreFavoriteBookmarkBonus: 7 },
       result: {
-        customBonusScore: 7,
+        favorite: true,
       },
     })
 
@@ -958,8 +958,8 @@ describe('scoring', () => {
       expect(partialTagScore).toBeCloseTo(103.5)
     })
 
-    it('demonstrates how custom bonus score can prioritize important bookmarks', () => {
-      const withCustomBonus = scoreWithDefaults({
+    it('demonstrates how favorite bonus can prioritize important bookmarks', () => {
+      const withFavoriteBonus = scoreWithDefaults({
         searchTerm: 'docs',
         result: {
           type: 'bookmark',
@@ -970,7 +970,7 @@ describe('scoring', () => {
           folder: '',
           folderArray: [],
           searchScore: 1,
-          customBonusScore: 50, // User added +50 to title
+          favorite: true,
         },
       })
 
@@ -985,15 +985,15 @@ describe('scoring', () => {
           folder: '',
           folderArray: [],
           searchScore: 1,
-          customBonusScore: 0,
+          favorite: false,
         },
       })
 
-      // Both get base 100 + includes 5, but one gets +50 custom bonus
+      // Both get base 100 + includes 5, but one gets the configured favorite bonus
       // Note: No phrase bonus for single-word search "docs"
-      expect(withCustomBonus).toBeCloseTo(155)
+      expect(withFavoriteBonus).toBeCloseTo(155)
       expect(withoutCustomBonus).toBeCloseTo(105)
-      expect(withCustomBonus - withoutCustomBonus).toBeCloseTo(50)
+      expect(withFavoriteBonus - withoutCustomBonus).toBeCloseTo(50)
     })
 
     it('validates that exact title match gets massive bonus with defaults', () => {

@@ -18,6 +18,7 @@ function createResults() {
       originalUrl: 'https://bookmark.test',
       url: 'bookmark.test',
       title: 'Bookmark Title',
+      favorite: true,
       tagsArray: ['alpha', 'beta'],
       folderArray: ['Work', 'Docs'],
       lastVisitSecondsAgo: 3600,
@@ -187,6 +188,8 @@ describe('searchView renderSearchResults', () => {
     // Verify highlighted content is rendered as HTML (not escaped again)
     const titleText = bookmarkItem.querySelector('.title-text')
     expect(titleText.innerHTML).toContain('High <mark>lighted</mark> Title')
+    expect(bookmarkItem.querySelector('.favorite-star')).not.toBeNull()
+    expect(bookmarkItem.querySelector('.favorite-star').getAttribute('src')).toBe('./img/star.svg')
     const urlDiv = bookmarkItem.querySelector('.url')
     expect(urlDiv.innerHTML).toContain('bookmark.<mark>test</mark>')
 

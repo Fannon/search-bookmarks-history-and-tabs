@@ -253,6 +253,13 @@ code {
   border-radius: 4px;
   filter: brightness(135%);
 }
+.favorite-star {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: -3px 5px 0 0;
+  vertical-align: middle;
+}
 
 /* Favicons */
 .favicon-col {

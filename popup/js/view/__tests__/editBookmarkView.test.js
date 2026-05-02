@@ -16,6 +16,7 @@ function setupDom() {
     <input id="bm-title" />
     <input id="bm-url" />
     <input id="bm-tags" />
+    <button id="bm-favorite"><img src="./img/star-outline.svg" alt="" /><span>Favorite</span></button>
     <a id="bm-save" href="#"></a>
     <button id="bm-del"></button>
     <div id="errors" style="display:none"></div>
@@ -86,6 +87,7 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
 
   jest.unstable_mockModule('../../helper/browserApi.js', () => ({
     __esModule: true,
+    FAVORITE_BOOKMARK_MARKER: ' +★',
     browserApi,
     createSearchStringLower,
   }))
@@ -145,6 +147,7 @@ describe('editBookmarkView', () => {
         originalId: BOOKMARK_ID,
         title: 'Original Title',
         originalUrl: 'http://example.com',
+        favorite: true,
         tags: '#alpha #beta',
         folder: '~Work',
       },
@@ -161,6 +164,9 @@ describe('editBookmarkView', () => {
     expect(document.getElementById('edit-bm').getAttribute('style')).toBe('')
     expect(document.getElementById('bm-title').value).toBe('Original Title')
     expect(document.getElementById('bm-url').value).toBe('http://example.com')
+    expect(document.getElementById('bm-favorite').dataset.favorite).toBe('true')
+    expect(document.getElementById('bm-favorite').getAttribute('aria-pressed')).toBe('true')
+    expect(document.getElementById('bm-favorite').querySelector('img').getAttribute('src')).toBe('./img/star.svg')
     expect(document.getElementById('bm-save').dataset.bookmarkId).toBe(BOOKMARK_ID)
     expect(document.getElementById('bm-del').dataset.bookmarkId).toBe(BOOKMARK_ID)
     expect(global.ext.currentBookmarkId).toBe(BOOKMARK_ID)
@@ -216,6 +222,7 @@ describe('editBookmarkView', () => {
       originalId: BOOKMARK_ID,
       title: 'Original Title',
       originalUrl: 'http://example.com',
+      favorite: false,
       tags: '#old',
       folder: '~Work',
       searchStringLower: 'old',
@@ -226,6 +233,7 @@ describe('editBookmarkView', () => {
 
     document.getElementById('bm-title').value = 'Updated Title'
     document.getElementById('bm-url').value = 'http://updated.com'
+    document.getElementById('bm-favorite').dataset.favorite = 'true'
     global.ext.tagify = {
       value: [{ value: 'alpha' }, { value: 'beta' }],
     }
@@ -238,6 +246,7 @@ describe('editBookmarkView', () => {
     expect(bookmark.title).toBe('Updated Title')
     expect(bookmark.originalUrl).toBe('http://updated.com')
     expect(bookmark.url).toBe(expectedCleanUrl)
+    expect(bookmark.favorite).toBe(true)
     expect(bookmark.tags).toBe('#alpha #beta')
     expect(bookmark.searchStringLower).toBe(expectedSearchStringLower)
 
@@ -245,7 +254,7 @@ describe('editBookmarkView', () => {
     expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
     expect(mocks.browserApi.bookmarks.update).toHaveBeenCalledWith(BOOKMARK_ID, {
-      title: 'Updated Title #alpha #beta',
+      title: 'Updated Title +★ #alpha #beta',
       url: 'http://updated.com',
     })
   })

@@ -4,11 +4,11 @@
  * Responsibilities:
  * - Load bookmark data for editing and initialize Tagify-powered tag autocompletion.
  * - Validate user input, persist updates through the browser API, and surface inline errors.
- * - Handle delete/cancel flows plus bonus-score parsing while keeping the UI responsive.
+ * - Handle delete/cancel flows plus favorite state while keeping the UI responsive.
  * - Invalidate search caches and taxonomy indexes so edits reflect immediately in the popup search view.
  */
 
-import { browserApi, createSearchStringLower } from '../helper/browserApi.js'
+import { browserApi, createSearchStringLower, FAVORITE_BOOKMARK_MARKER } from '../helper/browserApi.js'
 import { cleanUpUrl } from '../helper/utils.js'
 import { resetFuzzySearchState } from '../search/fuzzySearch.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
@@ -28,6 +28,7 @@ export async function editBookmark(bookmarkId) {
   const titleInput = document.getElementById('bm-title')
   const urlInput = document.getElementById('bm-url')
   const tagsInput = document.getElementById('bm-tags')
+  const favoriteButton = document.getElementById('bm-favorite')
   const saveButton = document.getElementById('bm-save')
   const deleteButton = document.getElementById('bm-del')
 
@@ -35,6 +36,14 @@ export async function editBookmark(bookmarkId) {
     editContainer.style = ''
     titleInput.value = bookmark.title
     urlInput.value = bookmark.originalUrl
+    updateFavoriteButton(favoriteButton, bookmark.favorite)
+    if (favoriteButton && !favoriteButton.dataset.listenerAttached) {
+      favoriteButton.addEventListener('click', (event) => {
+        event.preventDefault()
+        updateFavoriteButton(favoriteButton, favoriteButton.dataset.favorite !== 'true')
+      })
+      favoriteButton.dataset.listenerAttached = 'true'
+    }
     if (!ext.tagify) {
       ext.tagify = new Tagify(tagsInput, {
         whitelist: tags,
@@ -88,15 +97,18 @@ export function updateBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
   const titleInput = document.getElementById('bm-title').value.trim()
   const urlInput = document.getElementById('bm-url').value.trim()
+  const favorite = document.getElementById('bm-favorite')?.dataset.favorite === 'true'
   let tagsInput = ''
   if (ext.tagify.value.length) {
     tagsInput = `#${ext.tagify.value.map((el) => el.value.trim()).join(' #')}`
   }
+  const persistedTitle = `${titleInput}${favorite ? FAVORITE_BOOKMARK_MARKER : ''}${tagsInput ? ` ${tagsInput}` : ''}`
 
   // Update search data model of bookmark
   bookmark.title = titleInput
   bookmark.originalUrl = urlInput
   bookmark.url = cleanUpUrl(urlInput)
+  bookmark.favorite = favorite
   bookmark.tags = tagsInput
   bookmark.searchStringLower = createSearchStringLower(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
   resetFuzzySearchState('bookmarks')
@@ -105,7 +117,7 @@ export function updateBookmark(bookmarkId) {
 
   if (browserApi.bookmarks) {
     browserApi.bookmarks.update(bookmarkId, {
-      title: `${titleInput} ${tagsInput}`,
+      title: persistedTitle,
       url: urlInput,
     })
   } else {
@@ -114,6 +126,18 @@ export function updateBookmark(bookmarkId) {
 
   // Start search again to update the search index and the UI with new bookmark model
   navigateToSearchView()
+}
+
+function updateFavoriteButton(favoriteButton, favorite) {
+  if (!favoriteButton) return
+
+  const icon = favoriteButton.querySelector('img')
+  const label = favoriteButton.querySelector('span')
+  favoriteButton.dataset.favorite = favorite ? 'true' : 'false'
+  favoriteButton.setAttribute('aria-pressed', favorite ? 'true' : 'false')
+  favoriteButton.title = favorite ? 'Unstar bookmark' : 'Star bookmark'
+  if (icon) icon.src = favorite ? './img/star.svg' : './img/star-outline.svg'
+  if (label) label.textContent = favorite ? 'Favorited' : 'Favorite'
 }
 
 /**

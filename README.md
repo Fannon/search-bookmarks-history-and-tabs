@@ -69,8 +69,8 @@ Press play to start the GIF animation:
   - `Ctrl+N` and `Ctrl+J` to navigate search results down
   - `Ctrl+K` and `Ctrl+P` to navigate search results up
 - **Special Browser Pages**: You can add special browser pages to your bookmarks, like `chrome://downloads`.
-- **Custom Scores**: Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
-  - Examples: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`
+- **Favorite Bookmarks**: Star a bookmark from the edit view. Favorites are stored by adding ` +★` to the bookmark title before tags.
+  - Examples: `Bookmark Title +★` or `Another Bookmark +★ #tag1 #tag2`
 - **Tags**:
   - A bookmark title cannot start with a tag, it needs a title
   - Tags cannot start with a number. This is how the extension filters out issue / ticket numbers.
@@ -182,7 +182,7 @@ The scoring system calculates a relevance score for each search result using a 5
    - **Recency**: Recently visited items get higher scores, scaling linearly from max to 0 over `historyDaysAgo`
    - **Open tab**: Bookmarks that are currently open in a tab get a bonus (`scoreBookmarkOpenTabBonus`)
 
-5. **Custom Bonus** — User-defined boost via `+<number>` in bookmark titles (e.g., `Important Site +50 #work`)
+5. **Favorite Bonus** — Configured boost for starred bookmarks (`scoreFavoriteBookmarkBonus`)
 
 For detailed implementation and all scoring configuration options, see:
 - **[scoring.js](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/search/scoring.js)** — Core scoring algorithm with comprehensive documentation

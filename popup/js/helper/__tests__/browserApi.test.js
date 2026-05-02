@@ -181,7 +181,7 @@ describe('shortenTitle', () => {
 })
 
 describe('convertBrowserBookmarks', () => {
-  it('maps bookmark entries including tags, folders and bonus score', () => {
+  it('maps bookmark entries including tags, folders and favorite state', () => {
     const tree = [
       {
         title: 'Parent folder',
@@ -191,7 +191,7 @@ describe('convertBrowserBookmarks', () => {
             children: [
               {
                 id: 'bookmark-1',
-                title: 'Example +5 #tag1 #tag2',
+                title: 'Example +★ #tag1 #tag2',
                 url: 'https://Example.com/',
                 dateAdded: 123,
               },
@@ -210,7 +210,7 @@ describe('convertBrowserBookmarks', () => {
       url: 'example.com',
       originalUrl: 'https://Example.com/',
       dateAdded: 123,
-      customBonusScore: 5,
+      favorite: true,
       tags: '#tag1 #tag2',
       tagsArray: ['tag1', 'tag2'],
       folder: '~Root ~Parent folder ~Work',
@@ -219,7 +219,7 @@ describe('convertBrowserBookmarks', () => {
     })
   })
 
-  it('parses custom bonus scores correctly with radix 10', () => {
+  it('does not strip legacy custom bonus scores from bookmark titles', () => {
     const tree = [
       {
         title: 'Root',
@@ -246,16 +246,16 @@ describe('convertBrowserBookmarks', () => {
     const bookmarks = convertBrowserBookmarks(tree)
 
     expect(bookmarks[0]).toMatchObject({
-      title: 'Score with leading zero',
-      customBonusScore: 8,
+      title: 'Score with leading zero +08',
+      favorite: false,
     })
     expect(bookmarks[1]).toMatchObject({
-      title: 'Double digit score',
-      customBonusScore: 10,
+      title: 'Double digit score +10',
+      favorite: false,
     })
     expect(bookmarks[2]).toMatchObject({
-      title: 'Large score',
-      customBonusScore: 100,
+      title: 'Large score +100',
+      favorite: false,
     })
   })
 

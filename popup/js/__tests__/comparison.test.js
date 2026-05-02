@@ -231,7 +231,7 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
         searchScore: 0.8 + Math.random() * 0.2,
         visitCount: Math.floor(Math.random() * 50),
         lastVisitSecondsAgo: Math.floor(Math.random() * 86400 * 7),
-        customBonusScore: i % 10 === 0 ? 5 : 0,
+        favorite: i % 10 === 0,
       })
     }
 

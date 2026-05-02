@@ -37,7 +37,7 @@ export function calculateFinalScore(results, searchTerm) {
     scoreVisitedBonusScoreMaximum,
     scoreRecentBonusScoreMaximum,
     historyDaysAgo,
-    scoreCustomBonusScore,
+    scoreFavoriteBookmarkBonus,
     scoreUrlWeight,
     scoreTagWeight,
     scoreGroupWeight,
@@ -217,9 +217,9 @@ export function calculateFinalScore(results, searchTerm) {
       score += scoreBookmarkOpenTabBonus
     }
 
-    // STEP 5: Custom bonus
-    if (scoreCustomBonusScore && el.customBonusScore) {
-      score += el.customBonusScore
+    // STEP 5: Favorite bookmark bonus
+    if (scoreFavoriteBookmarkBonus && type === 'bookmark' && el.favorite) {
+      score += scoreFavoriteBookmarkBonus
     }
 
     el.score = score

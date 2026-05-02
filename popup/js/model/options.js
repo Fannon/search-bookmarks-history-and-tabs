@@ -177,7 +177,7 @@ export const defaultOptions = {
   scoreFolderWeight: 0.5,
 
   // Bonus scores
-  scoreCustomBonusScore: true,
+  scoreFavoriteBookmarkBonus: 50,
   scoreExactIncludesBonus: 5,
   scoreExactStartsWithBonus: 10,
   scoreExactEqualsBonus: 20,

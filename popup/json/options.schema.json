@@ -314,10 +314,11 @@
       "description": "Weight multiplier applied when a search term matches the folder name of a bookmark.",
       "x-ui-section": "scores"
     },
-    "scoreCustomBonusScore": {
-      "type": "boolean",
-      "default": true,
-      "description": "Allow bookmark titles to include manual bonus scores in the form ` +<score>` which are added to the calculated result score.",
+    "scoreFavoriteBookmarkBonus": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 50,
+      "description": "Bonus score added to bookmarks marked as favorites with ` +★` in the bookmark title.",
       "x-ui-section": "scores"
     },
     "scoreExactIncludesBonus": {

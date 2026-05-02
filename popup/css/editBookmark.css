@@ -30,8 +30,31 @@
 }
 
 /* Form Fields */
+.favorite-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 8px 0;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--li-title);
+  background: var(--li-bg);
+  cursor: pointer;
+}
+.favorite-toggle:hover {
+  filter: brightness(96%);
+}
+.favorite-toggle[aria-pressed="true"] {
+  color: #6f5200;
+  background: #ffe8a3;
+}
+.favorite-toggle img {
+  width: 18px;
+  height: 18px;
+}
 #bm-title {
-  height: 142px; /* 5 lines without scrollbar */
+  height: 110px;
   resize: vertical;
   min-height: 80px;
   font-size: 1em;

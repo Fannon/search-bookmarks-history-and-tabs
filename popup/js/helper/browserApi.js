@@ -1,6 +1,6 @@
-const BONUS_SCORE_REGEX = /[ ][+]([0-9]+)/
 const TAG_NUMERIC_CHECK_REGEX = /^\d/
 const REGEX_SPECIAL_CHARS_REGEX = /[.*+?^${}()|[\]/-]/g
+export const FAVORITE_BOOKMARK_MARKER = ' +★'
 
 /**
  * @file Normalizes browser APIs for bookmarks, tabs, and history sources.
@@ -8,7 +8,7 @@ const REGEX_SPECIAL_CHARS_REGEX = /[.*+?^${}()|[\]/-]/g
  * Responsibilities:
  * - Fetch raw entries with defensive fallbacks for browsers that omit certain APIs.
  * - Convert every record into the shared `searchItem` shape (type, title, url, tags, folder trail, search strings).
- * - Parse inline annotations like `#tag` taxonomy markers and `+20` custom bonus hints from bookmark titles.
+ * - Parse inline annotations like `#tag` taxonomy markers and `+★` favorite markers from bookmark titles.
  * - Preserve source URLs exactly while also deriving normalized URL keys for search, comparisons, and dedupe.
  * - Preserve breadcrumb-style folder metadata so taxonomy pages and scoring rules stay in sync across browsers.
  */
@@ -180,15 +180,11 @@ export function convertBrowserBookmarks(
 
     if (entry.url) {
       let title = entry.title || ''
-      let customBonusScore = 0
+      let favorite = false
 
-      // Simple check for custom bonus score "+20"
-      if (title.includes(' +')) {
-        const match = title.match(BONUS_SCORE_REGEX)
-        if (match) {
-          title = title.replace(match[0], '')
-          customBonusScore = parseInt(match[1], 10)
-        }
+      if (title.includes(FAVORITE_BOOKMARK_MARKER)) {
+        title = title.replace(FAVORITE_BOOKMARK_MARKER, '')
+        favorite = true
       }
 
       const originalUrl = entry.url
@@ -227,7 +223,7 @@ export function convertBrowserBookmarks(
         originalUrl,
         url: cleanedUrl,
         dateAdded: entry.dateAdded,
-        customBonusScore,
+        favorite,
         tags: tagsText,
         tagsLower: tagsText.toLowerCase(),
         tagsArray: tagsArray,

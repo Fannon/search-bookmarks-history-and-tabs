@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **CHANGED**: Replaced manual bookmark title score boosts (`+20`, `+50`, etc.) with favorite bookmarks. Starred bookmarks are stored with ` +★`, show a yellow star in search results, and use the new `scoreFavoriteBookmarkBonus` option for ranking.
 - **FIXED**: Ignore keyboard navigation shortcuts (Enter, arrow keys) during IME composition, preventing accidental result activation for CJK input users ([#328](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/328)).
 - **FIXED**: Preserve original bookmark, tab, and history URLs for display and opening, while keeping normalized URL matching for search and deduplication.
 

@@ -111,7 +111,7 @@ function setupExt(overrides = {}) {
       scoreVisitedBonusScore: 0.5,
       scoreVisitedBonusScoreMaximum: 20,
       scoreRecentBonusScoreMaximum: 20,
-      scoreCustomBonusScore: true,
+      scoreFavoriteBookmarkBonus: 50,
       scoreBookmarkBaseScore: 100,
       scoreTabBaseScore: 70,
       scoreHistoryBaseScore: 45,
@@ -430,10 +430,10 @@ describe('search', () => {
   test('limits results to searchMaxResults', async () => {
     ext.dom.searchInput.value = 'filter'
     ext.model.bookmarks = createBookmarksTestData([
-      { title: 'High +50', url: 'https://high.test' },
-      { title: 'Mid +20', url: 'https://mid.test' },
+      { title: 'High +★', url: 'https://high.test' },
+      { title: 'Mid +★', url: 'https://mid.test' },
       { title: 'Low', url: 'https://low.test' },
-      { title: 'Second Mid +15', url: 'https://mid2.test' },
+      { title: 'Second Mid', url: 'https://mid2.test' },
     ])
     ext.opts.searchMaxResults = 2
     ext.opts.enableSearchEngines = false
@@ -480,7 +480,7 @@ describe('search', () => {
     ext.opts.scoreVisitedBonusScore = 0
     ext.opts.scoreVisitedBonusScoreMaximum = 0
     ext.opts.scoreRecentBonusScoreMaximum = 0
-    ext.opts.scoreCustomBonusScore = false
+    ext.opts.scoreFavoriteBookmarkBonus = 0
 
     ext.model.bookmarks = createBookmarksTestData([
       { id: 'first', title: 'Filter first', url: 'https://first.test' },
