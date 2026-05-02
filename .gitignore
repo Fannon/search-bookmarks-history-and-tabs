@@ -35,6 +35,7 @@ node_modules/
 .env.test
 
 # Temporary files
+.DS_Store
 tmp/
 temp/
 .serena/
