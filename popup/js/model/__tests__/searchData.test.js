@@ -370,6 +370,56 @@ describe('getSearchData', () => {
     }
   })
 
+  test.failing('uses the available live APIs when history is unavailable but history search is disabled', async () => {
+    ext.opts.enableHistory = false
+    setBrowserApiAvailability({ tabs: true, bookmarks: true, history: false, tabGroups: true })
+
+    setBrowserData({
+      tabs: [
+        {
+          url: 'https://tab-only.com',
+          title: 'Real Tab',
+          id: 'tab-1',
+          active: true,
+          windowId: 2,
+        },
+      ],
+      bookmarks: [
+        {
+          title: '',
+          children: [
+            {
+              title: 'Bookmarks Bar',
+              children: [
+                {
+                  id: 'bookmark-1',
+                  title: 'Real Bookmark',
+                  url: 'https://real-bookmark.com',
+                  dateAdded: 1700000000000,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      history: [],
+    })
+
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ tabs: [], bookmarks: [], history: [] }),
+      }),
+    )
+
+    const result = await getSearchData()
+
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(tabsQueryMock).toHaveBeenCalled()
+    expect(bookmarksGetTreeMock).toHaveBeenCalled()
+    expect(result.tabs).toEqual(actualConvertBrowserTabs(mockState.tabs))
+    expect(result.bookmarks).toEqual(actualConvertBrowserBookmarks(mockState.bookmarks))
+  })
+
   test('handles mock data fetch failures gracefully', async () => {
     setBrowserApiAvailability({ tabs: false, bookmarks: false, history: false })
 
