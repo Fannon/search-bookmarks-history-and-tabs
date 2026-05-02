@@ -41,6 +41,7 @@ import {
   showLocalAiTagAvailability,
   showManagerStatus,
   showTagSuggestionBusy,
+  showTagSuggestionStatus,
 } from './view/bookmarkManagerView.js'
 import { printError } from './view/errorView.js'
 
@@ -102,6 +103,7 @@ export async function reloadBookmarkManager() {
     ext.model.bookmarkManagerCurrentId = ''
     ext.model.bookmarkManagerHasManualSelection = false
     ext.model.bookmarkManagerSuggestedTagsReady = false
+    resetTagSuggestionRetry()
     ext.model.bookmarkManagerFolderId ||= 'all'
     applyBookmarkDeepLinkState()
 
@@ -333,47 +335,93 @@ async function suggestTagsForBookmarks(bookmarks, target) {
     return
   }
 
+  const suggestionKey = createTagSuggestionKey(bookmarks)
+  const liberal = getTagSuggestionRetryCount(suggestionKey) > 0
+
   if (target === 'bulk') {
     clearManagerSuggestedTags()
   }
 
   try {
     showTagSuggestionBusy(true, 'Checking local AI...')
+    showTagSuggestionStatus(liberal ? 'Trying broader suggestions...' : 'Checking local AI...')
     showManagerStatus('Checking local AI...')
     const availability = await getLocalAiTagAvailability()
     showLocalAiTagAvailability(availability)
 
     if (availability === 'unsupported' || availability === 'unavailable') {
       showManagerStatus('Local AI unavailable', 'error')
+      showTagSuggestionStatus('Local AI unavailable', 'error')
       return
     }
 
     showManagerStatus(availability === 'available' ? 'Suggesting tags...' : 'Downloading local AI model...')
     showTagSuggestionBusy(true, availability === 'available' ? 'Suggesting tags...' : 'Downloading local AI model...')
-    const aiTags = await suggestBookmarkTags(bookmarks, getKnownBookmarkTags(), (progress) => {
-      const message = `Downloading local AI model ${Math.round(progress * 100)}%`
-      showManagerStatus(message)
-      showTagSuggestionBusy(true, message)
-    })
+    showTagSuggestionStatus(liberal ? 'Trying broader suggestions...' : 'Suggesting tags...')
+    const aiTags = await suggestBookmarkTags(
+      bookmarks,
+      getKnownBookmarkTags(),
+      (progress) => {
+        const message = `Downloading local AI model ${Math.round(progress * 100)}%`
+        showManagerStatus(message)
+        showTagSuggestionBusy(true, message)
+        showTagSuggestionStatus(message)
+      },
+      { liberal },
+    )
 
     const commonTags = bookmarks.length > 1 ? getCommonTags(bookmarks) : []
     const tags = uniqueTags(commonTags.concat(aiTags))
 
     if (!tags.length) {
-      showManagerStatus('No tags suggested', 'error')
+      bumpTagSuggestionRetry(suggestionKey)
+      showTagSuggestionStatus(
+        liberal ? 'No broader tags suggested' : 'No tags suggested. Click Suggest tags again to try broader matches.',
+        'error',
+      )
       return
     }
 
     addManagerTagInputValues(target, tags)
+    resetTagSuggestionRetry()
+    showTagSuggestionStatus(`Suggested ${tags.length} tag(s)`, 'success')
     showManagerStatus(`Suggested ${tags.length} tag(s)`, 'success')
     const nextAvailability = await getLocalAiTagAvailability()
     showLocalAiTagAvailability(nextAvailability)
   } catch (error) {
     showManagerStatus('Tag suggestion failed', 'error')
+    showTagSuggestionStatus('Tag suggestion failed', 'error')
     printError(error, 'Could not suggest bookmark tags with local AI.')
   } finally {
     showTagSuggestionBusy(false)
   }
+}
+
+function createTagSuggestionKey(bookmarks) {
+  return bookmarks.map((bookmark) => String(bookmark.originalId || bookmark.id || '')).join('|')
+}
+
+function getTagSuggestionRetryCount(key) {
+  if (ext.model.bookmarkManagerTagSuggestionRetryKey !== key) {
+    ext.model.bookmarkManagerTagSuggestionRetryKey = key
+    ext.model.bookmarkManagerTagSuggestionRetryCount = 0
+  }
+
+  return ext.model.bookmarkManagerTagSuggestionRetryCount || 0
+}
+
+function bumpTagSuggestionRetry(key) {
+  if (ext.model.bookmarkManagerTagSuggestionRetryKey !== key) {
+    ext.model.bookmarkManagerTagSuggestionRetryKey = key
+    ext.model.bookmarkManagerTagSuggestionRetryCount = 0
+  }
+
+  ext.model.bookmarkManagerTagSuggestionRetryCount = (ext.model.bookmarkManagerTagSuggestionRetryCount || 0) + 1
+}
+
+function resetTagSuggestionRetry() {
+  ext.model.bookmarkManagerTagSuggestionRetryKey = ''
+  ext.model.bookmarkManagerTagSuggestionRetryCount = 0
 }
 
 async function bulkTagBookmarks(bookmarkIds, mode) {

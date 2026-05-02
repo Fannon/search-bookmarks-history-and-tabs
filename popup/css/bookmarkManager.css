@@ -535,6 +535,21 @@ button {
   justify-self: start;
 }
 
+.tag-suggestion-status {
+  min-height: 16px;
+  color: var(--counter);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.tag-suggestion-status[data-tone="error"] {
+  color: var(--danger);
+}
+
+.tag-suggestion-status[data-tone="success"] {
+  color: #8ebb26;
+}
+
 .bookmark-edit-panel label {
   color: var(--li-title);
   font-size: 13px;

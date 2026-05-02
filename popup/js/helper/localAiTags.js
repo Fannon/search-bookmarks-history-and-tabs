@@ -53,9 +53,11 @@ export async function getLocalAiTagAvailability() {
  * @param {Array<Object>} bookmarks Bookmark entries.
  * @param {Array<string>} existingTags Known tags from the current bookmark set.
  * @param {Function} [onDownloadProgress] Progress callback for model download.
+ * @param {Object} [options] Prompt options.
+ * @param {boolean} [options.liberal=false] Whether to retry with broader inferred tags.
  * @returns {Promise<Array<string>>} Suggested tag names.
  */
-export async function suggestBookmarkTags(bookmarks, existingTags = [], onDownloadProgress) {
+export async function suggestBookmarkTags(bookmarks, existingTags = [], onDownloadProgress, options = {}) {
   const languageModel = globalThis.LanguageModel
   if (!languageModel?.create) {
     throw new Error('Local AI is not available in this browser.')
@@ -74,12 +76,12 @@ export async function suggestBookmarkTags(bookmarks, existingTags = [], onDownlo
       },
     })
 
-    const response = await session.prompt(createTagPrompt(bookmarks, existingTags), {
+    const response = await session.prompt(createTagPrompt(bookmarks, existingTags, options), {
       responseConstraint: TAG_RESPONSE_SCHEMA,
     })
 
     const tags = parseTagResponse(response)
-    return bookmarks.length > 1 ? filterTagsForEveryBookmark(tags, bookmarks) : tags
+    return bookmarks.length > 1 && !options.liberal ? filterTagsForEveryBookmark(tags, bookmarks) : tags
   } finally {
     if (typeof session?.destroy === 'function') {
       session.destroy()
@@ -87,11 +89,17 @@ export async function suggestBookmarkTags(bookmarks, existingTags = [], onDownlo
   }
 }
 
-function createTagPrompt(bookmarks, existingTags) {
+function createTagPrompt(bookmarks, existingTags, options = {}) {
   const knownTags = formatExistingTagsForPrompt(existingTags)
   const bookmarkLines = bookmarks.slice(0, MAX_BOOKMARKS_IN_PROMPT).map(formatBookmarkForPrompt).join('\n')
-  const task =
-    bookmarks.length > 1
+  const liberal = Boolean(options.liberal)
+  const task = liberal
+    ? `Task:
+- This is a second try after no tags were suggested.
+- Suggest 1 to 5 useful tags more liberally.
+- Tags may be inferred from a shared category, marketplace, product family, domain pattern, current tags, or common denominator across the provided bookmarks.
+- New tags are allowed when existing tags are too narrow.`
+    : bookmarks.length > 1
       ? `Task:
 - Suggest tags for a multi-bookmark selection.
 - Only suggest a tag when it clearly applies to EVERY provided bookmark.
@@ -100,12 +108,26 @@ function createTagPrompt(bookmarks, existingTags) {
 - Suggest tags for one bookmark.
 - Return {"tags":[]} when the bookmark has no clear, useful tag suggestion.`
   const targetRules =
-    bookmarks.length > 1
-      ? `- For multi-select, do not suggest tags that fit only some bookmarks.
+    liberal && bookmarks.length > 1
+      ? `- For multi-select, every tag must still describe the selection as a whole.
+- Prefer tags for the common denominator between the selected bookmarks, such as "browser-extension", "browser-marketplace", "developer-tools", or another reusable topic when supported by the set.
+- Avoid tags that fit only one bookmark or one vendor when the selected bookmarks span multiple vendors.`
+      : liberal
+        ? `- For one bookmark, tags may be inferred from the title, URL, current tags, open tab title, open tab group, or a strong category pattern.`
+        : bookmarks.length > 1
+          ? `- For multi-select, do not suggest tags that fit only some bookmarks.
 - A multi-select tag must be directly supported by each bookmark's title, URL, current tags, open tab title, or open tab group.
 - A shared folder alone is not enough evidence for a multi-select tag.
 - A domain or tool tag such as "github" is acceptable only when it appears for every bookmark and fits the user's existing tag conventions.`
-      : `- For one bookmark, suggest only tags directly supported by the title, URL, current tags, open tab title, open tab group, or a strong existing tag convention.`
+          : `- For one bookmark, suggest only tags directly supported by the title, URL, current tags, open tab title, open tab group, or a strong existing tag convention.`
+
+  const inventionRule = liberal
+    ? '- Invent new concise tags when they describe the common denominator better than existing tags.'
+    : '- Invent a new tag only when none of the existing tags describe the bookmark well.'
+
+  const genericRule = liberal
+    ? '- Avoid redundant tags, near-duplicates, and tags that only restate one domain or folder.'
+    : '- Avoid redundant tags, near-duplicates, generic tags, and tags that only restate the domain or folder.'
 
   return `
 Suggest concise bookmark tags.
@@ -115,11 +137,11 @@ ${task}
 Rules:
 - Use 1 to 5 lowercase tags only when useful.
 - Prefer existing tags when they fit. Their usage counts show the user's conventions: ${knownTags || 'none'}.
-- Invent a new tag only when none of the existing tags describe the bookmark well.
+${inventionRule}
 - Favor specific, reusable topics, tools, projects, or content types.
 - Treat folder names as context, not tags. Do not suggest a tag just because it matches the folder name.
 - Use a folder-like tag only when title, URL, existing tags, or high existing tag counts show it is a real user convention.
-- Avoid redundant tags, near-duplicates, generic tags, and tags that only restate the domain or folder.
+${genericRule}
 - Do not include "#".
 - Output JSON only in this shape: {"tags":["example"]} or {"tags":[]}.
 ${targetRules}

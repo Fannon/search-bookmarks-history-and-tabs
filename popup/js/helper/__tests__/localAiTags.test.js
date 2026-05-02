@@ -142,4 +142,42 @@ describe('local AI tag suggestions', () => {
     expect(promptText).toContain('A shared folder alone is not enough evidence for a multi-select tag')
     expect(promptText).toContain('do not suggest tags that fit only some bookmarks')
   })
+
+  test('uses a broader prompt on second try and keeps inferred common-denominator tags', async () => {
+    const prompt = jest.fn(() => Promise.resolve('{"tags":["Browser Marketplace"]}'))
+    globalThis.LanguageModel = {
+      create: jest.fn(() =>
+        Promise.resolve({
+          prompt,
+          destroy: jest.fn(),
+        }),
+      ),
+    }
+
+    const tags = await suggestBookmarkTags(
+      [
+        {
+          title: 'Chrome Web Store',
+          originalUrl: 'https://chromewebstore.google.com/detail/search-bookmarks',
+          folderArray: ['Browser Marketplaces'],
+          tagsArray: [],
+        },
+        {
+          title: 'Firefox Add-ons',
+          originalUrl: 'https://addons.mozilla.org/firefox/addon/search-bookmarks',
+          folderArray: ['Browser Marketplaces'],
+          tagsArray: [],
+        },
+      ],
+      [],
+      undefined,
+      { liberal: true },
+    )
+
+    expect(tags).toEqual(['browser-marketplace'])
+    const promptText = prompt.mock.calls[0][0]
+    expect(promptText).toContain('This is a second try after no tags were suggested')
+    expect(promptText).toContain('common denominator')
+    expect(promptText).toContain('New tags are allowed')
+  })
 })

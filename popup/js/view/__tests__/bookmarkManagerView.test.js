@@ -7,6 +7,7 @@ import {
   getSelectedManagedBookmarkIds,
   renderBookmarkWorkspace,
   setManagedBookmarkSelected,
+  showTagSuggestionStatus,
 } from '../bookmarkManagerView.js'
 
 const BOOKMARKS = [
@@ -42,6 +43,7 @@ function setupDom() {
     <button id="move-selected-bookmarks"></button>
     <input id="bookmark-bulk-tags" />
     <button id="suggest-tags-selected"></button>
+    <div id="tag-suggestion-status"></div>
     <button id="add-tags-selected"></button>
     <button id="replace-tags-selected"></button>
     <button id="remove-tags-selected"></button>
@@ -185,5 +187,14 @@ describe('bookmarkManagerView selection', () => {
     expect(inputs[1].checked).toBe(true)
     expect(document.getElementById('bookmark-edit-title').disabled).toBe(true)
     expect(getSelectedManagedBookmarkIds()).toEqual(['bookmark-1', 'bookmark-2'])
+  })
+
+  test('shows tag suggestion feedback next to the suggest button', () => {
+    showTagSuggestionStatus('No tags suggested', 'error')
+
+    const status = document.getElementById('tag-suggestion-status')
+    expect(status.textContent).toBe('No tags suggested')
+    expect(status.dataset.tone).toBe('error')
+    expect(document.getElementById('manager-status').textContent).toBe('')
   })
 })

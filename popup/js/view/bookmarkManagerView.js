@@ -53,6 +53,7 @@ export function getBookmarkManagerDom() {
     moveSelectedBookmarks: document.getElementById('move-selected-bookmarks'),
     bulkTagsInput: document.getElementById('bookmark-bulk-tags'),
     suggestTagsSelected: document.getElementById('suggest-tags-selected'),
+    tagSuggestionStatus: document.getElementById('tag-suggestion-status'),
     addTagsSelected: document.getElementById('add-tags-selected'),
     replaceTagsSelected: document.getElementById('replace-tags-selected'),
     removeTagsSelected: document.getElementById('remove-tags-selected'),
@@ -357,6 +358,22 @@ export function showTagSuggestionBusy(busy, message = '') {
 }
 
 /**
+ * Display a small status message next to tag suggestion controls.
+ *
+ * @param {string} message Status message.
+ * @param {'info'|'error'|'success'} [tone='info'] Message tone.
+ */
+export function showTagSuggestionStatus(message, tone = 'info') {
+  const status = ext.dom.manager?.tagSuggestionStatus
+  if (!status) {
+    return
+  }
+
+  status.textContent = message
+  status.dataset.tone = tone
+}
+
+/**
  * Return selected duplicate bookmark IDs.
  *
  * @returns {Array<string>} Selected bookmark IDs.
@@ -461,6 +478,7 @@ export function clearManagerSuggestedTags() {
   ext.model.bookmarkManagerSuggestedTagsReady = false
   setManagerTagControlValues(ext, 'bulk', [])
   setManagerTagControlDisabled(ext, 'bulk', true)
+  showTagSuggestionStatus('')
   updateManagedSelectionUi()
 }
 
