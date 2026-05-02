@@ -4,6 +4,20 @@
 
 import { escapeHtml } from '../helper/utils.js'
 import { canEditCurrentManagedBookmark, findBookmarkById, findFolderById } from '../model/bookmarkManagerOperations.js'
+import {
+  clearDuplicateBookmarkSelection,
+  getSelectedDuplicateBookmarkIds,
+  selectSuggestedDuplicateBookmarks,
+  selectSuggestedDuplicateGroup,
+  updateDuplicateSelectionAction,
+} from './bookmarkManagerDuplicateSelection.js'
+import {
+  ensureManagerTagControls,
+  getManagerTagControlValues,
+  normalizeManagerTagValues,
+  setManagerTagControlDisabled,
+  setManagerTagControlValues,
+} from './bookmarkManagerTagControls.js'
 
 const RECENT_BOOKMARKS_PER_PAGE = 24
 
@@ -251,7 +265,7 @@ export function bindBookmarkManagerEvents({
 
     const group = button.closest('[data-duplicate-group]')
     if (group) {
-      selectSuggestedGroup(group)
+      selectSuggestedDuplicateGroup(group)
       updateDuplicateActions()
     }
   })
@@ -341,9 +355,7 @@ export function showTagSuggestionBusy(busy, message = '') {
  * @returns {Array<string>} Selected bookmark IDs.
  */
 export function getSelectedDuplicateIds() {
-  return [...document.querySelectorAll('[data-delete-bookmark-id]:checked:not(:disabled)')].map(
-    (input) => input.dataset.deleteBookmarkId,
-  )
+  return getSelectedDuplicateBookmarkIds()
 }
 
 /**
@@ -395,13 +407,7 @@ function getVisibleManagedBookmarkIds() {
  * @returns {Array<string>} Normalized tag names.
  */
 export function getManagerTagInputValues(_source) {
-  const tagify = _source === 'edit' ? ext.managerEditTagify : ext.managerBulkTagify
-  if (tagify) {
-    return normalizeTagValues(tagify.value.map((tag) => tag.value))
-  }
-
-  const input = _source === 'edit' ? ext.dom.manager.bookmarkEditTags : ext.dom.manager.bulkTagsInput
-  return normalizeTagValues(String(input.value || '').split(/[#,]/))
+  return getManagerTagControlValues(ext, _source)
 }
 
 /**
@@ -425,22 +431,18 @@ export function getManagedBookmarkEditValues() {
  * @param {Array<string>} tags Tag names.
  */
 export function addManagerTagInputValues(target, tags) {
-  const tagify = target === 'edit' ? ext.managerEditTagify : ext.managerBulkTagify
-  const input = target === 'edit' ? ext.dom.manager.bookmarkEditTags : ext.dom.manager.bulkTagsInput
   const currentTags = getManagerTagInputValues(target)
-  const nextTags = normalizeTagValues(currentTags.concat(tags))
+  const nextTags = normalizeManagerTagValues(currentTags.concat(tags))
 
   if (target === 'bulk') {
     ext.model.bookmarkManagerSuggestedTagsReady = Boolean(nextTags.length)
-    setTagifyDisabled(tagify, false)
-    input.disabled = false
+    setManagerTagControlDisabled(ext, target, false)
   }
 
-  setTagifyValues(tagify, input, nextTags)
+  setManagerTagControlValues(ext, target, nextTags)
 
   if (target === 'bulk') {
-    setTagifyDisabled(tagify, !nextTags.length)
-    input.disabled = !nextTags.length
+    setManagerTagControlDisabled(ext, target, !nextTags.length)
     updateManagedSelectionUi()
   }
 }
@@ -449,11 +451,9 @@ export function addManagerTagInputValues(target, tags) {
  * Clear and disable suggested tag controls.
  */
 export function clearManagerSuggestedTags() {
-  const dom = ext.dom.manager
   ext.model.bookmarkManagerSuggestedTagsReady = false
-  setTagifyValues(ext.managerBulkTagify, dom.bulkTagsInput, [])
-  setTagifyDisabled(ext.managerBulkTagify, true)
-  dom.bulkTagsInput.disabled = true
+  setManagerTagControlValues(ext, 'bulk', [])
+  setManagerTagControlDisabled(ext, 'bulk', true)
   updateManagedSelectionUi()
 }
 
@@ -477,7 +477,7 @@ export function renderBookmarkWorkspace(visibleBookmarks, canUpdateBookmarks, ca
     canUpdateBookmarks || canMoveBookmarks,
   )
 
-  ensureManagerTagify()
+  ensureManagerTagControls(ext)
   updateManagedSelectionUi()
 }
 
@@ -646,41 +646,6 @@ function renderBrowserSummary(visibleCount, selectedCount) {
   return `${formatInteger(selectedCount)}/${formatInteger(visibleCount)} selected in ${folderName}${searchText}`
 }
 
-function ensureManagerTagify() {
-  const tags = (ext.model.bookmarkManager?.tagGroups || []).map((tag) => tag.name)
-
-  ext.managerBulkTagify = ensureTagify(ext.dom.manager.bulkTagsInput, ext.managerBulkTagify, tags)
-  ext.managerEditTagify = ensureTagify(ext.dom.manager.bookmarkEditTags, ext.managerEditTagify, tags)
-}
-
-function ensureTagify(input, currentTagify, whitelist) {
-  if (!input || typeof Tagify === 'undefined') {
-    return currentTagify
-  }
-
-  if (currentTagify) {
-    currentTagify.whitelist = whitelist
-    return currentTagify
-  }
-
-  return new Tagify(input, {
-    whitelist,
-    trim: true,
-    transformTag,
-    skipInvalid: false,
-    editTags: {
-      clicks: 1,
-      keepInvalid: false,
-    },
-    dropdown: {
-      position: 'all',
-      enabled: 0,
-      maxItems: 12,
-      closeOnSelect: false,
-    },
-  })
-}
-
 function updateManagedSelectionUi() {
   const dom = ext.dom.manager
   const selectedIds = getSelectedManagedBookmarkIds()
@@ -719,19 +684,19 @@ function updateManagedSelectionUi() {
   if (selectedCount > 1) {
     dom.bookmarkEditTitle.value = '<< multiple selection >>'
     dom.bookmarkEditUrl.value = '<< multiple selection >>'
-    setTagifyValues(ext.managerEditTagify, dom.bookmarkEditTags, [])
+    setManagerTagControlValues(ext, 'edit', [])
   } else if (currentBookmark) {
     dom.bookmarkEditTitle.value = currentBookmark.title || ''
     dom.bookmarkEditUrl.value = currentBookmark.originalUrl || ''
-    setTagifyValues(ext.managerEditTagify, dom.bookmarkEditTags, currentBookmark.tagsArray || [])
+    setManagerTagControlValues(ext, 'edit', currentBookmark.tagsArray || [])
   } else {
     dom.bookmarkEditTitle.value = ''
     dom.bookmarkEditUrl.value = ''
-    setTagifyValues(ext.managerEditTagify, dom.bookmarkEditTags, [])
+    setManagerTagControlValues(ext, 'edit', [])
   }
 
-  setTagifyDisabled(ext.managerEditTagify, !canEditCurrentBookmark)
-  setTagifyDisabled(ext.managerBulkTagify, !suggestedTagsReady || isSuggestingTags)
+  setManagerTagControlDisabled(ext, 'edit', !canEditCurrentBookmark)
+  setManagerTagControlDisabled(ext, 'bulk', !suggestedTagsReady || isSuggestingTags)
   syncManagedBookmarkCheckboxes()
   syncManagedBookmarkSelectionRows()
 }
@@ -834,52 +799,6 @@ function getTemporaryManagedBookmarkSelectedId() {
   }
 
   return String(ext.model.bookmarkManagerCurrentId || '')
-}
-
-function setTagifyValues(tagify, input, tags) {
-  if (tagify) {
-    tagify.removeAllTags()
-    if (tags.length) {
-      tagify.addTags(tags)
-    }
-    return
-  }
-
-  input.value = tags.join(', ')
-}
-
-function setTagifyDisabled(tagify, disabled) {
-  if (tagify && typeof tagify.setDisabled === 'function') {
-    tagify.setDisabled(disabled)
-  }
-}
-
-function normalizeTagValues(tags) {
-  const seen = new Set()
-  const result = []
-
-  for (let i = 0; i < tags.length; i++) {
-    const value = String(tags[i] || '')
-      .replaceAll('#', '')
-      .replace(/\s+/g, ' ')
-      .trim()
-    const key = value.toLowerCase()
-
-    if (!value || seen.has(key)) {
-      continue
-    }
-
-    seen.add(key)
-    result.push(value)
-  }
-
-  return result
-}
-
-function transformTag(tagData) {
-  if (tagData.value.includes('#')) {
-    tagData.value = tagData.value.split('#').join('')
-  }
 }
 
 function renderStats(stats) {
@@ -1332,37 +1251,17 @@ function clampRecentPage(page, pageCount) {
 }
 
 function selectSuggestedDuplicates() {
-  const groups = document.querySelectorAll('[data-duplicate-group]')
-  for (const group of groups) {
-    selectSuggestedGroup(group)
-  }
+  selectSuggestedDuplicateBookmarks()
   updateDuplicateActions()
 }
 
 function clearDuplicateSelection() {
-  const inputs = document.querySelectorAll('[data-delete-bookmark-id]')
-  for (const input of inputs) {
-    input.checked = false
-  }
+  clearDuplicateBookmarkSelection()
   updateDuplicateActions()
 }
 
 function updateDuplicateActions() {
-  const dom = ext.dom.manager
-  const selectedCount = getSelectedDuplicateIds().length
-
-  dom.deleteSelected.disabled = selectedCount === 0
-  dom.deleteSelected.querySelector('[data-selected-count]').textContent = String(selectedCount)
-}
-
-function selectSuggestedGroup(group) {
-  const rows = group.querySelectorAll('.duplicate-bookmark')
-  for (const row of rows) {
-    const input = row.querySelector('[data-delete-bookmark-id]')
-    if (input && !input.disabled) {
-      input.checked = !row.classList.contains('keep-bookmark')
-    }
-  }
+  updateDuplicateSelectionAction(ext.dom.manager.deleteSelected)
 }
 
 function formatInteger(value) {
