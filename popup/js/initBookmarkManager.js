@@ -16,17 +16,19 @@ import { resetUniqueFoldersCache } from './search/taxonomySearch.js'
 import {
   addManagerTagInputValues,
   bindBookmarkManagerEvents,
+  clearManagerSuggestedTags,
   getBookmarkManagerDom,
+  getCurrentManagedBookmarkId,
+  getManagedActionTargetIds,
   getManagedBookmarkEditValues,
   getManagerTagInputValues,
   getSelectedDuplicateIds,
-  getSelectedManagedBookmarkIds,
-  getVisibleManagedBookmarkIds,
   renderBookmarkManager,
   renderBookmarkWorkspace,
   setManagedBookmarkSelected,
   showLocalAiTagAvailability,
   showManagerStatus,
+  showTagSuggestionBusy,
 } from './view/bookmarkManagerView.js'
 import { printError } from './view/errorView.js'
 
@@ -61,9 +63,7 @@ export async function initBookmarkManager() {
     onSaveBookmark: saveManagedBookmark,
     onMoveSelected: moveSelectedBookmarks,
     onSuggestTagsSelected: suggestTagsForSelectedBookmarks,
-    onSuggestTagsBookmark: suggestTagsForSingleBookmark,
     onBulkTagSelected: bulkTagSelectedBookmarks,
-    onBulkTagVisible: bulkTagVisibleBookmarks,
     onRenameTag: renameTag,
     onRemoveTag: removeTag,
   })
@@ -85,9 +85,12 @@ export async function reloadBookmarkManager() {
     ext.searchCache = new Map()
     ext.model.searchMode = 'bookmarks'
     ext.model.bookmarkManagerSelectedIds = new Set()
+    ext.model.bookmarkManagerCurrentId = ''
+    ext.model.bookmarkManagerSuggestedTagsReady = false
     ext.model.bookmarkManagerFolderId ||= 'all'
 
     renderBookmarkManager(ext.model.bookmarkManager, canModifyBookmarks(), canUpdateBookmarks())
+    clearManagerSuggestedTags()
     await updateBookmarkBrowser()
     showManagerStatus('Loaded')
   } catch (error) {
@@ -123,12 +126,11 @@ async function getVisibleBookmarks() {
 }
 
 async function saveManagedBookmark() {
-  const selectedIds = getSelectedManagedBookmarkIds()
-  if (selectedIds.length !== 1 || !canUpdateBookmarks()) {
+  const bookmarkId = getCurrentManagedBookmarkId()
+  if (!bookmarkId || !canUpdateBookmarks()) {
     return
   }
 
-  const bookmarkId = selectedIds[0]
   const bookmark = findBookmarkById(bookmarkId)
   const values = getManagedBookmarkEditValues()
   if (!bookmark || !values.title || !values.url) {
@@ -153,13 +155,13 @@ async function saveManagedBookmark() {
 }
 
 async function moveSelectedBookmarks() {
-  const selectedIds = getSelectedManagedBookmarkIds()
+  const selectedIds = getManagedActionTargetIds()
   const parentId = ext.dom.manager.bookmarkMoveFolder.value
   if (!selectedIds.length || !parentId || !canMoveBookmarks()) {
     return
   }
 
-  const confirmed = window.confirm(`Move ${selectedIds.length} selected bookmark(s)?`)
+  const confirmed = window.confirm(`Move ${selectedIds.length} bookmark(s)?`)
   if (!confirmed) {
     return
   }
@@ -178,17 +180,12 @@ async function moveSelectedBookmarks() {
 }
 
 async function bulkTagSelectedBookmarks(mode) {
-  const selectedIds = getSelectedManagedBookmarkIds()
-  await bulkTagBookmarks(selectedIds, mode, 'selected')
-}
-
-async function bulkTagVisibleBookmarks(mode) {
-  const visibleIds = getVisibleManagedBookmarkIds()
-  await bulkTagBookmarks(visibleIds, mode, 'visible')
+  const selectedIds = getManagedActionTargetIds()
+  await bulkTagBookmarks(selectedIds, mode)
 }
 
 async function suggestTagsForSelectedBookmarks() {
-  const selectedIds = getSelectedManagedBookmarkIds()
+  const selectedIds = getManagedActionTargetIds()
   if (!selectedIds.length) {
     return
   }
@@ -197,26 +194,13 @@ async function suggestTagsForSelectedBookmarks() {
   await suggestTagsForBookmarks(bookmarks, 'bulk')
 }
 
-async function suggestTagsForSingleBookmark() {
-  const selectedIds = getSelectedManagedBookmarkIds()
-  if (selectedIds.length !== 1) {
-    return
-  }
-
-  const bookmark = findBookmarkById(selectedIds[0])
-  if (!bookmark) {
-    return
-  }
-
-  await suggestTagsForBookmarks([bookmark], 'edit')
-}
-
 async function suggestTagsForBookmarks(bookmarks, target) {
   if (!bookmarks.length) {
     return
   }
 
   try {
+    showTagSuggestionBusy(true, 'Checking local AI...')
     showManagerStatus('Checking local AI...')
     const availability = await getLocalAiTagAvailability()
     showLocalAiTagAvailability(availability)
@@ -227,8 +211,11 @@ async function suggestTagsForBookmarks(bookmarks, target) {
     }
 
     showManagerStatus(availability === 'available' ? 'Suggesting tags...' : 'Downloading local AI model...')
+    showTagSuggestionBusy(true, availability === 'available' ? 'Suggesting tags...' : 'Downloading local AI model...')
     const tags = await suggestBookmarkTags(bookmarks, getKnownBookmarkTags(), (progress) => {
-      showManagerStatus(`Downloading local AI model ${Math.round(progress * 100)}%`)
+      const message = `Downloading local AI model ${Math.round(progress * 100)}%`
+      showManagerStatus(message)
+      showTagSuggestionBusy(true, message)
     })
 
     if (!tags.length) {
@@ -243,10 +230,12 @@ async function suggestTagsForBookmarks(bookmarks, target) {
   } catch (error) {
     showManagerStatus('Tag suggestion failed', 'error')
     printError(error, 'Could not suggest bookmark tags with local AI.')
+  } finally {
+    showTagSuggestionBusy(false)
   }
 }
 
-async function bulkTagBookmarks(bookmarkIds, mode, label) {
+async function bulkTagBookmarks(bookmarkIds, mode) {
   if (!bookmarkIds.length || !canUpdateBookmarks()) {
     return
   }
@@ -254,13 +243,6 @@ async function bulkTagBookmarks(bookmarkIds, mode, label) {
   const tags = getManagerTagInputValues('bulk')
   if (!tags.length) {
     showManagerStatus('Add at least one tag.', 'error')
-    return
-  }
-
-  const confirmed = window.confirm(
-    `${formatBulkTagMode(mode)} ${tags.length} tag(s) on ${bookmarkIds.length} ${label} bookmark(s)?`,
-  )
-  if (!confirmed) {
     return
   }
 
@@ -474,7 +456,10 @@ function getKnownBookmarkTags() {
   const tagGroups = ext.model.bookmarkManager?.tagGroups || []
   const tags = new Array(tagGroups.length)
   for (let i = 0; i < tagGroups.length; i++) {
-    tags[i] = tagGroups[i].name
+    tags[i] = {
+      name: tagGroups[i].name,
+      count: tagGroups[i].count,
+    }
   }
   return tags
 }
@@ -548,22 +533,8 @@ function mergeBulkTags(currentTags, nextTags, mode) {
   return uniqueTags(currentTags.concat(nextTags))
 }
 
-function formatBulkTagMode(mode) {
-  if (mode === 'replace') {
-    return 'Replace with'
-  }
-  if (mode === 'remove') {
-    return 'Remove'
-  }
-  return 'Add'
-}
-
 function clearBulkTagInput() {
-  if (ext.managerBulkTagify) {
-    ext.managerBulkTagify.removeAllTags()
-    return
-  }
-  ext.dom.manager.bulkTagsInput.value = ''
+  clearManagerSuggestedTags()
 }
 
 function normalizeTagName(tagName) {

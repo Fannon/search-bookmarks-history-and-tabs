@@ -46,13 +46,19 @@ describe('local AI tag suggestions', () => {
           group: 'Browser APIs',
         },
       ],
-      ['chrome', 'ai', 'docs', 'local-ai'],
+      [
+        { name: 'docs', count: 2 },
+        { name: 'chrome', count: 8 },
+        { name: 'ai', count: 5 },
+        { name: 'local-ai', count: 1 },
+      ],
     )
 
     expect(tags).toEqual(['javascript', 'browser-ai', 'devtools'])
     const promptText = prompt.mock.calls[0][0]
-    expect(promptText).toContain('Prefer tags from this full existing tag vocabulary')
-    expect(promptText).toContain('chrome, ai, docs, local-ai')
+    expect(promptText).toContain("Their usage counts show the user's conventions")
+    expect(promptText).toContain('chrome (8), ai (5), docs (2), local-ai (1)')
+    expect(promptText).toContain('Treat folder names as context, not tags')
     expect(promptText).toContain('open tab title: Prompt API reference - Chrome Developers')
     expect(promptText).toContain('open tab group: Browser APIs')
     expect(prompt).toHaveBeenCalledWith(expect.stringContaining('Chrome Prompt API'), {

@@ -8,12 +8,40 @@ test.describe('Bookmark Manager', () => {
 
   test('shows bookmark overview statistics from mock data', async ({ page }) => {
     await expect(page.locator('#stats-grid')).toContainText('Bookmarks')
+    await expect(page.locator('#bookmark-count')).toHaveText('35')
     await expect(page.locator('#top-tags')).toContainText('json')
     await expect(page.locator('#recent-bookmarks')).toContainText('quicktype')
-    await expect(page.locator('#recent-bookmarks .recent-bookmark-edit').first()).toHaveAttribute(
-      'href',
-      /editBookmark\.html#bookmark\//,
-    )
+    await expect(page.locator('#recent-bookmarks .recent-bookmark-edit')).toHaveCount(0)
+    await expectNoClientErrors(page)
+  })
+
+  test('separates the current editable bookmark from checked bulk selection', async ({ page }) => {
+    await page.locator('[data-manager-tab="bookmarks"]').click()
+
+    const firstBookmark = page.locator('[data-managed-bookmark-row-id]').first()
+    const tagInputs = page.locator('.bookmark-tools-panel .tagify')
+    const existingTags = tagInputs.first()
+    const suggestedTags = tagInputs.nth(1)
+    await firstBookmark.locator('.url').click()
+
+    await expect(firstBookmark).toHaveClass(/current/)
+    await expect(page.locator('#bookmark-selection-summary')).not.toHaveText('Click a bookmark or check bookmarks.')
+    await expect(page.locator('.suggested-tags-section')).toContainText('Add suggested tags')
+    await expect(page.locator('.suggested-tags-section')).toContainText("browser's local LLM")
+    await expect(page.locator('#add-tags-visible')).toHaveCount(0)
+    await expect(page.locator('#suggest-tags-bookmark')).toHaveCount(0)
+    await expect(page.locator('#select-all-bookmarks')).toHaveCount(0)
+    await expect(existingTags).not.toHaveAttribute('disabled')
+    await expect(suggestedTags).toHaveAttribute('disabled')
+
+    await page.locator('#select-visible-bookmarks').click()
+
+    await expect(page.locator('#bookmark-selection-summary')).toHaveText('35 checked bookmarks')
+    await expect(firstBookmark).toHaveClass(/current/)
+    await expect(firstBookmark).toHaveClass(/selected/)
+    await expect(page.locator('#bookmark-edit-title')).toBeDisabled()
+    await expect(page.locator('#bookmark-edit-url')).toBeDisabled()
+    await expect(existingTags).toHaveAttribute('disabled')
     await expectNoClientErrors(page)
   })
 
@@ -25,10 +53,7 @@ test.describe('Bookmark Manager', () => {
     await expect(page.locator('#duplicates-list')).toContainText('app.quicktype.io')
     await expect(page.locator('#duplicates-list')).toContainText('Best candidate')
     await expect(page.locator('#duplicates-list')).toContainText('Lower-ranked copy')
-    await expect(page.locator('#duplicates-list .duplicate-edit-button').first()).toHaveAttribute(
-      'href',
-      /editBookmark\.html#bookmark\//,
-    )
+    await expect(page.locator('#duplicates-list .duplicate-edit-button')).toHaveCount(0)
     await expect(page.locator('#duplicates-list .duplicate-delete-button').first()).toBeDisabled()
     await expect(page.locator('#duplicates-list')).toContainText('Bookmark deletion is unavailable')
     await expect(page.locator('#delete-selected')).toBeDisabled()

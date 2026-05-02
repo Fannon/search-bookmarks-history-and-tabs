@@ -44,6 +44,7 @@
       </a>
       <a href="#bookmarks" data-manager-tab="bookmarks">
         <span>Bookmarks</span>
+        <strong id="bookmark-count"></strong>
       </a>
       <a href="#duplicates" data-manager-tab="duplicates">
         <span>Bookmark Duplicates</span>
@@ -59,6 +60,14 @@
       <div id="manager-load" class="loading">Loading...</div>
 
       <section data-manager-panel="bookmarks" class="manager-panel" hidden>
+        <header class="manager-panel-header bookmark-page-header">
+          <h2>Bookmarks</h2>
+          <p>
+            Click a bookmark to edit its title and URL. Check one or more bookmarks to apply tag and move actions to
+            that selection.
+          </p>
+        </header>
+
         <div class="bookmarks-workspace">
           <aside class="bookmark-tree-panel" aria-label="Bookmark folders">
             <div class="manager-panel-header compact">
@@ -83,37 +92,46 @@
               <div id="managed-bookmark-list" class="managed-bookmark-list"></div>
 
               <aside class="bookmark-edit-panel" aria-label="Bookmark editing">
-                <section class="selection-panel">
+                <section class="bookmark-tools-panel">
                   <h2>Selection</h2>
-                  <p id="bookmark-selection-summary">No bookmarks selected.</p>
+                  <p id="bookmark-selection-summary">Click a bookmark or check bookmarks.</p>
 
-                  <label for="bookmark-move-folder">Move to folder</label>
-                  <select id="bookmark-move-folder"></select>
-                  <button id="move-selected-bookmarks" class="button" type="button" disabled>Move Selected</button>
-
-                  <label for="bookmark-bulk-tags">Bulk tags</label>
-                  <input id="bookmark-bulk-tags" type="text" placeholder="Add, replace or remove tags" />
-                  <div class="bulk-tag-actions">
-                    <button id="suggest-tags-selected" class="button secondary" type="button" disabled>Suggest</button>
-                    <button id="add-tags-selected" class="button secondary" type="button" disabled>Add</button>
-                    <button id="replace-tags-selected" class="button secondary" type="button" disabled>Replace</button>
-                    <button id="remove-tags-selected" class="button secondary" type="button" disabled>Remove</button>
-                  </div>
-                  <button id="add-tags-visible" class="button secondary full-width" type="button" disabled>
-                    Add Tags to Visible
-                  </button>
-                </section>
-
-                <section class="single-edit-panel">
-                  <h2>Bookmark</h2>
                   <label for="bookmark-edit-title">Title</label>
                   <input id="bookmark-edit-title" type="text" autocomplete="off" disabled />
                   <label for="bookmark-edit-url">URL</label>
                   <input id="bookmark-edit-url" type="url" autocomplete="off" disabled />
-                  <label for="bookmark-edit-tags">Tags</label>
+                  <label for="bookmark-edit-tags">Existing Tags</label>
                   <input id="bookmark-edit-tags" type="text" disabled />
-                  <button id="suggest-tags-bookmark" class="button secondary" type="button" disabled>Suggest Tags</button>
-                  <button id="save-managed-bookmark" class="button" type="button" disabled>Save Bookmark</button>
+                  <button id="save-managed-bookmark" class="button success" type="button"
+                    title="Save the current bookmark title, URL, and existing tags" disabled>Save Bookmark</button>
+
+                  <div class="suggested-tags-section">
+                    <h3>Add suggested tags</h3>
+                    <p class="field-description">
+                      Uses your browser's local LLM to suggest tags for the current bookmark or checked bookmarks.
+                    </p>
+                    <button id="suggest-tags-selected" class="button secondary" type="button"
+                      title="Suggest tags for checked bookmarks, or the current bookmark if none are checked"
+                      disabled>Suggest tags</button>
+                    <label for="bookmark-bulk-tags">Suggested Tags</label>
+                    <input id="bookmark-bulk-tags" type="text" placeholder="Suggested tags appear here" disabled />
+                    <div class="bulk-tag-actions">
+                      <button id="add-tags-selected" class="button secondary" type="button"
+                        title="Add these tags to checked bookmarks, or the current bookmark if none are checked"
+                        disabled>Add</button>
+                      <button id="replace-tags-selected" class="button secondary" type="button"
+                        title="Replace all tags on checked bookmarks, or the current bookmark if none are checked"
+                        disabled>Replace</button>
+                      <button id="remove-tags-selected" class="button secondary" type="button"
+                        title="Remove these tags from checked bookmarks, or the current bookmark if none are checked"
+                        disabled>Remove</button>
+                    </div>
+                  </div>
+
+                  <label for="bookmark-move-folder">Move to folder</label>
+                  <select id="bookmark-move-folder"></select>
+                  <button id="move-selected-bookmarks" class="button warning" type="button"
+                    title="Move checked bookmarks, or the current bookmark if none are checked" disabled>Move</button>
                 </section>
               </aside>
             </div>

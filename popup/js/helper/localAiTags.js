@@ -86,23 +86,32 @@ export async function suggestBookmarkTags(bookmarks, existingTags = [], onDownlo
 }
 
 function createTagPrompt(bookmarks, existingTags) {
-  const knownTags = normalizeExistingTags(existingTags).join(', ')
+  const knownTags = formatExistingTagsForPrompt(existingTags)
   const bookmarkLines = bookmarks.slice(0, MAX_BOOKMARKS_IN_PROMPT).map(formatBookmarkForPrompt).join('\n')
 
   return `
 Suggest concise bookmark tags.
 
 Rules:
-- Use 3 to 8 lowercase tags.
-- Prefer tags from this full existing tag vocabulary when they fit: ${knownTags || 'none'}.
+- Use 1 to 5 lowercase tags. Return fewer tags when the signal is weak.
+- Prefer existing tags when they fit. Their usage counts show the user's conventions: ${knownTags || 'none'}.
 - Invent a new tag only when none of the existing tags describe the bookmark well.
-- Tags should describe topics, tools, projects, or content type.
+- Favor specific, reusable topics, tools, projects, or content types.
+- Treat folder names as context, not tags. Do not suggest a tag just because it matches the folder name.
+- Use a folder-like tag only when title, URL, existing tags, or high existing tag counts show it is a real user convention.
+- Avoid redundant tags, near-duplicates, generic tags, and tags that only restate the domain or folder.
 - Do not include "#".
 - Output JSON only in this shape: {"tags":["example"]}.
 
 Bookmarks:
 ${bookmarkLines}
   `.trim()
+}
+
+function formatExistingTagsForPrompt(tags) {
+  return normalizeExistingTags(tags)
+    .map((tag) => `${tag.name} (${tag.count})`)
+    .join(', ')
 }
 
 function formatBookmarkForPrompt(bookmark, index) {
@@ -159,10 +168,10 @@ function normalizeExistingTags(tags) {
   const result = []
 
   for (let i = 0; i < tags.length; i++) {
-    const tag = String(tags[i] || '').trim()
-    const key = tag.toLowerCase()
+    const tag = normalizeExistingTagEntry(tags[i])
+    const key = tag.name.toLowerCase()
 
-    if (!tag || seen.has(key)) {
+    if (!tag.name || seen.has(key)) {
       continue
     }
 
@@ -170,7 +179,34 @@ function normalizeExistingTags(tags) {
     result.push(tag)
   }
 
-  return result
+  return result.sort((a, b) => {
+    if (a.count !== b.count) {
+      return b.count - a.count
+    }
+    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  })
+}
+
+function normalizeExistingTagEntry(tag) {
+  if (tag && typeof tag === 'object') {
+    return {
+      name: String(tag.name || '').trim(),
+      count: normalizeTagCount(tag.count),
+    }
+  }
+
+  return {
+    name: String(tag || '').trim(),
+    count: 1,
+  }
+}
+
+function normalizeTagCount(count) {
+  const value = Number(count)
+  if (!Number.isFinite(value) || value < 1) {
+    return 1
+  }
+  return Math.round(value)
 }
 
 function limitPromptText(value) {

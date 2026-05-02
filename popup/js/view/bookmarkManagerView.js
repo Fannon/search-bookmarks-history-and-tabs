@@ -35,17 +35,16 @@ export function getBookmarkManagerDom() {
     addTagsSelected: document.getElementById('add-tags-selected'),
     replaceTagsSelected: document.getElementById('replace-tags-selected'),
     removeTagsSelected: document.getElementById('remove-tags-selected'),
-    addTagsVisible: document.getElementById('add-tags-visible'),
     bookmarkEditTitle: document.getElementById('bookmark-edit-title'),
     bookmarkEditUrl: document.getElementById('bookmark-edit-url'),
     bookmarkEditTags: document.getElementById('bookmark-edit-tags'),
-    suggestTagsBookmark: document.getElementById('suggest-tags-bookmark'),
     saveManagedBookmark: document.getElementById('save-managed-bookmark'),
     statsGrid: document.getElementById('stats-grid'),
     topTags: document.getElementById('top-tags'),
     topDomains: document.getElementById('top-domains'),
     topFolders: document.getElementById('top-folders'),
     recentBookmarks: document.getElementById('recent-bookmarks'),
+    bookmarkCount: document.getElementById('bookmark-count'),
     duplicateSummary: document.getElementById('duplicate-summary'),
     duplicateCount: document.getElementById('duplicate-count'),
     duplicatesList: document.getElementById('duplicates-list'),
@@ -81,6 +80,7 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
   dom.topDomains.innerHTML = renderTopList(stats.topDomains, 'No domains found')
   dom.topFolders.innerHTML = renderTopList(stats.topFolders, 'No folders found')
   dom.recentBookmarks.innerHTML = renderRecentBookmarks(model.bookmarks)
+  dom.bookmarkCount.textContent = stats.bookmarkCount ? String(stats.bookmarkCount) : ''
   dom.duplicateSummary.innerHTML = renderDuplicateSummary(stats)
   dom.duplicateCount.textContent = stats.duplicateGroupCount ? String(stats.duplicateGroupCount) : ''
   dom.tagSummary.innerHTML = renderTagSummary(stats)
@@ -108,9 +108,7 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
  * @param {Function} handlers.onSaveBookmark Single bookmark save handler.
  * @param {Function} handlers.onMoveSelected Move selected bookmarks handler.
  * @param {Function} handlers.onSuggestTagsSelected Suggest tags for selected bookmarks handler.
- * @param {Function} handlers.onSuggestTagsBookmark Suggest tags for one bookmark handler.
  * @param {Function} handlers.onBulkTagSelected Bulk tag selected handler.
- * @param {Function} handlers.onBulkTagVisible Bulk tag visible handler.
  * @param {Function} handlers.onRenameTag Tag rename handler.
  * @param {Function} handlers.onRemoveTag Tag removal handler.
  */
@@ -123,9 +121,7 @@ export function bindBookmarkManagerEvents({
   onSaveBookmark,
   onMoveSelected,
   onSuggestTagsSelected,
-  onSuggestTagsBookmark,
   onBulkTagSelected,
-  onBulkTagVisible,
   onRenameTag,
   onRemoveTag,
 }) {
@@ -147,7 +143,9 @@ export function bindBookmarkManagerEvents({
       return
     }
 
+    setCurrentManagedBookmark(event.target.dataset.managedBookmarkId)
     onSelectBookmark(event.target.dataset.managedBookmarkId, event.target.checked)
+    syncManagedBookmarkSelectionRows()
   })
   dom.managedBookmarkList.addEventListener('click', (event) => {
     const row = event.target.closest('[data-managed-bookmark-row-id]')
@@ -155,11 +153,8 @@ export function bindBookmarkManagerEvents({
       return
     }
 
-    const input = row.querySelector('[data-managed-bookmark-id]')
-    if (input && !input.disabled) {
-      input.checked = !input.checked
-      onSelectBookmark(input.dataset.managedBookmarkId, input.checked)
-    }
+    setCurrentManagedBookmark(row.dataset.managedBookmarkRowId)
+    updateManagedSelectionUi()
   })
   dom.selectVisibleBookmarks.addEventListener('click', () => {
     selectVisibleManagedBookmarks()
@@ -171,13 +166,13 @@ export function bindBookmarkManagerEvents({
   })
   dom.saveManagedBookmark.addEventListener('click', onSaveBookmark)
   dom.bookmarkMoveFolder.addEventListener('change', updateManagedSelectionUi)
+  dom.bulkTagsInput.addEventListener('change', updateManagedSelectionUi)
+  dom.bulkTagsInput.addEventListener('input', updateManagedSelectionUi)
   dom.moveSelectedBookmarks.addEventListener('click', onMoveSelected)
   dom.suggestTagsSelected.addEventListener('click', onSuggestTagsSelected)
-  dom.suggestTagsBookmark.addEventListener('click', onSuggestTagsBookmark)
   dom.addTagsSelected.addEventListener('click', () => onBulkTagSelected('add'))
   dom.replaceTagsSelected.addEventListener('click', () => onBulkTagSelected('replace'))
   dom.removeTagsSelected.addEventListener('click', () => onBulkTagSelected('remove'))
-  dom.addTagsVisible.addEventListener('click', () => onBulkTagVisible('add'))
   dom.deleteSelected.addEventListener('click', onDeleteSelected)
   dom.selectSuggested.addEventListener('click', selectSuggestedDuplicates)
   dom.selectNone.addEventListener('click', clearDuplicateSelection)
@@ -283,6 +278,27 @@ export function showLocalAiTagAvailability(availability) {
 }
 
 /**
+ * Show or clear the inline local-AI suggestion busy state.
+ *
+ * @param {boolean} busy Whether suggestions are running.
+ * @param {string} [message=''] Inline status message.
+ */
+export function showTagSuggestionBusy(busy, message = '') {
+  ext.model.bookmarkManagerSuggestingTags = busy
+  const dom = ext.dom.manager
+  if (!dom?.suggestTagsSelected) {
+    return
+  }
+
+  dom.suggestTagsSelected.textContent = busy ? 'Suggesting...' : 'Suggest tags'
+  dom.suggestTagsSelected.setAttribute('aria-busy', busy ? 'true' : 'false')
+  dom.suggestTagsSelected.title = busy
+    ? message || 'Suggesting tags with local AI'
+    : 'Suggest tags for checked bookmarks, or the current bookmark if none are checked'
+  updateManagedSelectionUi()
+}
+
+/**
  * Return selected duplicate bookmark IDs.
  *
  * @returns {Array<string>} Selected bookmark IDs.
@@ -303,11 +319,30 @@ export function getSelectedManagedBookmarkIds() {
 }
 
 /**
- * Return IDs for bookmarks currently visible in the manager list.
+ * Return the bookmark currently loaded in the single-bookmark editor.
  *
- * @returns {Array<string>} Visible bookmark IDs.
+ * @returns {string} Current bookmark id.
  */
-export function getVisibleManagedBookmarkIds() {
+export function getCurrentManagedBookmarkId() {
+  return ext.model.bookmarkManagerCurrentId || ''
+}
+
+/**
+ * Return action target IDs: checked bookmarks first, otherwise current bookmark.
+ *
+ * @returns {Array<string>} Target bookmark IDs.
+ */
+export function getManagedActionTargetIds() {
+  const selectedIds = getSelectedManagedBookmarkIds()
+  if (selectedIds.length) {
+    return selectedIds
+  }
+
+  const currentId = getCurrentManagedBookmarkId()
+  return currentId ? [currentId] : []
+}
+
+function getVisibleManagedBookmarkIds() {
   const bookmarks = ext.model.bookmarkManagerVisibleBookmarks || []
   const result = new Array(bookmarks.length)
   for (let i = 0; i < bookmarks.length; i++) {
@@ -322,13 +357,13 @@ export function getVisibleManagedBookmarkIds() {
  * @param {'bulk'|'edit'} source Tag input source.
  * @returns {Array<string>} Normalized tag names.
  */
-export function getManagerTagInputValues(source) {
-  const tagify = source === 'bulk' ? ext.managerBulkTagify : ext.managerEditTagify
+export function getManagerTagInputValues(_source) {
+  const tagify = _source === 'edit' ? ext.managerEditTagify : ext.managerBulkTagify
   if (tagify) {
     return normalizeTagValues(tagify.value.map((tag) => tag.value))
   }
 
-  const input = source === 'bulk' ? ext.dom.manager.bulkTagsInput : ext.dom.manager.bookmarkEditTags
+  const input = _source === 'edit' ? ext.dom.manager.bookmarkEditTags : ext.dom.manager.bulkTagsInput
   return normalizeTagValues(String(input.value || '').split(/[#,]/))
 }
 
@@ -353,12 +388,36 @@ export function getManagedBookmarkEditValues() {
  * @param {Array<string>} tags Tag names.
  */
 export function addManagerTagInputValues(target, tags) {
-  const tagify = target === 'bulk' ? ext.managerBulkTagify : ext.managerEditTagify
-  const input = target === 'bulk' ? ext.dom.manager.bulkTagsInput : ext.dom.manager.bookmarkEditTags
+  const tagify = target === 'edit' ? ext.managerEditTagify : ext.managerBulkTagify
+  const input = target === 'edit' ? ext.dom.manager.bookmarkEditTags : ext.dom.manager.bulkTagsInput
   const currentTags = getManagerTagInputValues(target)
   const nextTags = normalizeTagValues(currentTags.concat(tags))
 
+  if (target === 'bulk') {
+    ext.model.bookmarkManagerSuggestedTagsReady = Boolean(nextTags.length)
+    setTagifyDisabled(tagify, false)
+    input.disabled = false
+  }
+
   setTagifyValues(tagify, input, nextTags)
+
+  if (target === 'bulk') {
+    setTagifyDisabled(tagify, !nextTags.length)
+    input.disabled = !nextTags.length
+    updateManagedSelectionUi()
+  }
+}
+
+/**
+ * Clear and disable suggested tag controls.
+ */
+export function clearManagerSuggestedTags() {
+  const dom = ext.dom.manager
+  ext.model.bookmarkManagerSuggestedTagsReady = false
+  setTagifyValues(ext.managerBulkTagify, dom.bulkTagsInput, [])
+  setTagifyDisabled(ext.managerBulkTagify, true)
+  dom.bulkTagsInput.disabled = true
+  updateManagedSelectionUi()
 }
 
 /**
@@ -414,6 +473,7 @@ export function clearManagedBookmarkSelection() {
   for (const input of inputs) {
     input.checked = false
   }
+  syncManagedBookmarkSelectionRows()
 }
 
 /**
@@ -515,11 +575,15 @@ function renderManagedBookmarkRow(bookmark, canUpdateBookmarks) {
   const bookmarkId = String(bookmark.originalId)
   const selectedIds = ext.model.bookmarkManagerSelectedIds || new Set()
   const checked = selectedIds.has(bookmarkId) ? ' checked' : ''
+  const selectedClass = checked ? ' selected' : ''
+  const currentClass = String(ext.model.bookmarkManagerCurrentId || '') === bookmarkId ? ' current' : ''
   const disabled = canUpdateBookmarks ? '' : ' disabled'
+  const disabledClass = canUpdateBookmarks ? '' : ' disabled'
   const displayUrl = bookmark.originalUrl || bookmark.url || ''
 
   return `
-    <li class="bookmark managed-bookmark" data-managed-bookmark-row-id="${escapeHtml(bookmarkId)}">
+    <li class="bookmark managed-bookmark${selectedClass}${currentClass}${disabledClass}"
+      data-managed-bookmark-row-id="${escapeHtml(bookmarkId)}">
       <label class="managed-bookmark-check">
         <input type="checkbox" data-managed-bookmark-id="${escapeHtml(bookmarkId)}"${checked}${disabled}>
       </label>
@@ -531,7 +595,6 @@ function renderManagedBookmarkRow(bookmark, canUpdateBookmarks) {
         </div>
         <div class="url" title="${escapeHtml(displayUrl)}">${escapeHtml(displayUrl)}</div>
       </div>
-      ${renderEditLink(bookmark, 'recent-bookmark-edit')}
     </li>
   `
 }
@@ -585,35 +648,59 @@ function updateManagedSelectionUi() {
   const dom = ext.dom.manager
   const selectedIds = getSelectedManagedBookmarkIds()
   const selectedCount = selectedIds.length
-  const visibleCount = getVisibleManagedBookmarkIds().length
-  const singleBookmark = selectedCount === 1 ? findBookmarkById(selectedIds[0]) : null
+  const currentBookmark = findBookmarkById(ext.model.bookmarkManagerCurrentId)
+  const targetIds = getManagedActionTargetIds()
   const canUpdateBookmarks = Boolean(ext.model.bookmarkManagerCanUpdateBookmarks)
   const canMoveBookmarks = Boolean(ext.model.bookmarkManagerCanMoveBookmarks)
+  const canEditCurrentBookmark = Boolean(currentBookmark && selectedCount <= 1 && canUpdateBookmarks)
+  const isSuggestingTags = Boolean(ext.model.bookmarkManagerSuggestingTags)
+  const hasSuggestedTags = getManagerTagInputValues('bulk').length > 0
+  const suggestedTagsReady = Boolean(ext.model.bookmarkManagerSuggestedTagsReady && hasSuggestedTags)
+  const canApplySuggestedTags = Boolean(
+    targetIds.length && canUpdateBookmarks && suggestedTagsReady && !isSuggestingTags,
+  )
 
-  dom.bookmarkSelectionSummary.textContent = selectedCount
-    ? `${formatInteger(selectedCount)} selected`
-    : 'No bookmarks selected.'
-  dom.moveSelectedBookmarks.disabled = !selectedCount || !canMoveBookmarks || !dom.bookmarkMoveFolder.value
-  dom.addTagsSelected.disabled = !selectedCount || !canUpdateBookmarks
-  dom.replaceTagsSelected.disabled = !selectedCount || !canUpdateBookmarks
-  dom.removeTagsSelected.disabled = !selectedCount || !canUpdateBookmarks
-  dom.suggestTagsSelected.disabled = !selectedCount || !ext.model.bookmarkManagerLocalAiAvailable
-  dom.addTagsVisible.disabled = !visibleCount || !canUpdateBookmarks
-  dom.suggestTagsBookmark.disabled = !singleBookmark || !ext.model.bookmarkManagerLocalAiAvailable
-  dom.saveManagedBookmark.disabled = !singleBookmark || !canUpdateBookmarks
-  dom.bookmarkEditTitle.disabled = !singleBookmark || !canUpdateBookmarks
-  dom.bookmarkEditUrl.disabled = !singleBookmark || !canUpdateBookmarks
-  dom.bookmarkEditTags.disabled = !singleBookmark || !canUpdateBookmarks
+  dom.bookmarkSelectionSummary.textContent = renderActionTargetSummary(selectedCount, currentBookmark)
+  dom.moveSelectedBookmarks.disabled = !targetIds.length || !canMoveBookmarks || !dom.bookmarkMoveFolder.value
+  dom.addTagsSelected.disabled = !canApplySuggestedTags
+  dom.replaceTagsSelected.disabled = !canApplySuggestedTags
+  dom.removeTagsSelected.disabled = !canApplySuggestedTags
+  dom.suggestTagsSelected.disabled = isSuggestingTags || !targetIds.length || !ext.model.bookmarkManagerLocalAiAvailable
+  dom.saveManagedBookmark.disabled = !canEditCurrentBookmark
+  dom.bookmarkEditTitle.disabled = !canEditCurrentBookmark
+  dom.bookmarkEditUrl.disabled = !canEditCurrentBookmark
+  dom.bookmarkEditTags.disabled = !canEditCurrentBookmark
+  dom.bulkTagsInput.disabled = !suggestedTagsReady || isSuggestingTags
 
-  if (singleBookmark) {
-    dom.bookmarkEditTitle.value = singleBookmark.title || ''
-    dom.bookmarkEditUrl.value = singleBookmark.originalUrl || ''
-    setTagifyValues(ext.managerEditTagify, dom.bookmarkEditTags, singleBookmark.tagsArray || [])
+  if (selectedCount > 1) {
+    dom.bookmarkEditTitle.value = 'multiple selection'
+    dom.bookmarkEditUrl.value = 'multiple selection'
+    setTagifyValues(ext.managerEditTagify, dom.bookmarkEditTags, [])
+  } else if (currentBookmark) {
+    dom.bookmarkEditTitle.value = currentBookmark.title || ''
+    dom.bookmarkEditUrl.value = currentBookmark.originalUrl || ''
+    setTagifyValues(ext.managerEditTagify, dom.bookmarkEditTags, currentBookmark.tagsArray || [])
   } else {
     dom.bookmarkEditTitle.value = ''
     dom.bookmarkEditUrl.value = ''
     setTagifyValues(ext.managerEditTagify, dom.bookmarkEditTags, [])
   }
+
+  setTagifyDisabled(ext.managerEditTagify, !canEditCurrentBookmark)
+  setTagifyDisabled(ext.managerBulkTagify, !suggestedTagsReady || isSuggestingTags)
+  syncManagedBookmarkSelectionRows()
+}
+
+function renderActionTargetSummary(selectedCount, currentBookmark) {
+  if (selectedCount) {
+    return `${formatInteger(selectedCount)} checked bookmark${selectedCount === 1 ? '' : 's'}`
+  }
+
+  if (currentBookmark) {
+    return currentBookmark.title || currentBookmark.originalUrl || currentBookmark.url
+  }
+
+  return 'Click a bookmark or check bookmarks.'
 }
 
 function selectVisibleManagedBookmarks() {
@@ -625,9 +712,32 @@ function selectVisibleManagedBookmarks() {
     selectedIds.add(visibleIds[i])
   }
 
+  syncManagedBookmarkCheckboxes()
+  syncManagedBookmarkSelectionRows()
+}
+
+function setCurrentManagedBookmark(bookmarkId) {
+  ext.model.bookmarkManagerCurrentId = String(bookmarkId || '')
+}
+
+function syncManagedBookmarkCheckboxes() {
+  const selectedIds = ext.model.bookmarkManagerSelectedIds || new Set()
   const inputs = document.querySelectorAll('[data-managed-bookmark-id]')
+
   for (const input of inputs) {
     input.checked = selectedIds.has(input.dataset.managedBookmarkId)
+  }
+}
+
+function syncManagedBookmarkSelectionRows() {
+  const selectedIds = ext.model.bookmarkManagerSelectedIds || new Set()
+  const currentId = String(ext.model.bookmarkManagerCurrentId || '')
+  const rows = document.querySelectorAll('[data-managed-bookmark-row-id]')
+
+  for (const row of rows) {
+    const bookmarkId = String(row.dataset.managedBookmarkRowId)
+    row.classList.toggle('selected', selectedIds.has(bookmarkId))
+    row.classList.toggle('current', bookmarkId === currentId)
   }
 }
 
@@ -641,6 +751,12 @@ function setTagifyValues(tagify, input, tags) {
   }
 
   input.value = tags.join(', ')
+}
+
+function setTagifyDisabled(tagify, disabled) {
+  if (tagify && typeof tagify.setDisabled === 'function') {
+    tagify.setDisabled(disabled)
+  }
 }
 
 function normalizeTagValues(tags) {
@@ -826,34 +942,7 @@ function renderBookmarkListItem(bookmark) {
         </div>
         <div class="url" title="${escapeHtml(displayUrl)}">${escapeHtml(displayUrl)}</div>
       </div>
-      ${renderRecentEditLink(bookmark)}
     </li>
-  `
-}
-
-function renderRecentEditLink(bookmark) {
-  return renderEditLink(bookmark, 'recent-bookmark-edit')
-}
-
-function renderEditLink(bookmark, className) {
-  if (bookmark.originalId === undefined || bookmark.originalId === null) {
-    return ''
-  }
-
-  const bookmarkId = String(bookmark.originalId)
-  const title = bookmark.title || bookmark.originalUrl || bookmark.url || 'bookmark'
-
-  return `
-    <a class="${className}" href="./editBookmark.html#bookmark/${encodeURIComponent(
-      bookmarkId,
-    )}/search/" title="Edit bookmark tags" aria-label="Edit bookmark tags for ${escapeHtml(title)}">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M12 20h9" />
-        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3l-11 11l-4 1l1 -4z" />
-      </svg>
-      <span>Edit</span>
-    </a>
   `
 }
 
@@ -937,7 +1026,6 @@ function renderDuplicateBookmark(group, bookmark, canModifyBookmarks) {
           <input type="checkbox" data-delete-bookmark-id="${escapeHtml(bookmarkId)}"${checked}${disabled}>
           <span>Select</span>
         </label>
-        ${renderEditLink(bookmark, 'duplicate-edit-button')}
         <button class="button danger duplicate-delete-button" type="button" data-delete-single-bookmark-id="${escapeHtml(
           bookmarkId,
         )}" title="${escapeHtml(deleteTitle)}"${disabled}>
