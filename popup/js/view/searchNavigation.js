@@ -10,11 +10,24 @@
 
 import { openResultItem, toggleSearchApproach } from './searchEvents.js'
 
+// Some browsers report IME conversion keys as legacy keyCode/which 229 ("Process").
+// Treat that as composing so Enter/arrow keys used to confirm or navigate candidates
+// do not trigger extension shortcuts.
+const IME_PROCESS_KEY_CODE = 229
+
+function isImeComposing(event) {
+  return event.isComposing || event.keyCode === IME_PROCESS_KEY_CODE || event.which === IME_PROCESS_KEY_CODE
+}
+
 /**
  * Handle keyboard navigation for search results
  * Supports arrow keys and vim-style keybindings (Ctrl+P/Ctrl+N, Ctrl+K/Ctrl+J)
  */
 export async function navigationKeyListener(event) {
+  if (isImeComposing(event)) {
+    return
+  }
+
   // Define navigation directions with multiple keybinding options
   const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p') || (event.ctrlKey && event.key === 'k')
   const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n') || (event.ctrlKey && event.key === 'j')
