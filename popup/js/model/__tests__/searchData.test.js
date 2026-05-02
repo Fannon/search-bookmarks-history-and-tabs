@@ -380,7 +380,7 @@ describe('getSearchData', () => {
 
     expect(global.fetch).toHaveBeenCalledWith('./mockData/chrome.json')
     expect(warnSpy).toHaveBeenCalledWith('Could not load example mock data', expect.any(Error))
-    expect(result).toEqual({ tabs: [], bookmarks: [], history: [] })
+    expect(result).toEqual({ tabs: [], bookmarks: [], history: [], bookmarkTree: [] })
 
     warnSpy.mockRestore()
   })
