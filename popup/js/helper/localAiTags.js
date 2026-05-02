@@ -13,8 +13,8 @@ const TAG_RESPONSE_SCHEMA = {
   properties: {
     tags: {
       type: 'array',
-      minItems: 1,
-      maxItems: 8,
+      minItems: 0,
+      maxItems: 5,
       items: {
         type: 'string',
         minLength: 1,
@@ -26,6 +26,7 @@ const TAG_RESPONSE_SCHEMA = {
 }
 
 const MAX_BOOKMARKS_IN_PROMPT = 16
+const MAX_SUGGESTED_TAGS = 5
 
 /**
  * Check the browser-managed local LLM availability.
@@ -77,7 +78,8 @@ export async function suggestBookmarkTags(bookmarks, existingTags = [], onDownlo
       responseConstraint: TAG_RESPONSE_SCHEMA,
     })
 
-    return parseTagResponse(response)
+    const tags = parseTagResponse(response)
+    return bookmarks.length > 1 ? filterTagsForEveryBookmark(tags, bookmarks) : tags
   } finally {
     if (typeof session?.destroy === 'function') {
       session.destroy()
@@ -88,13 +90,30 @@ export async function suggestBookmarkTags(bookmarks, existingTags = [], onDownlo
 function createTagPrompt(bookmarks, existingTags) {
   const knownTags = formatExistingTagsForPrompt(existingTags)
   const bookmarkLines = bookmarks.slice(0, MAX_BOOKMARKS_IN_PROMPT).map(formatBookmarkForPrompt).join('\n')
-  const multiHint = bookmarks.length > 1 ? '\n- Only suggest tags that apply to ALL of the provided bookmarks.' : ''
+  const task =
+    bookmarks.length > 1
+      ? `Task:
+- Suggest tags for a multi-bookmark selection.
+- Only suggest a tag when it clearly applies to EVERY provided bookmark.
+- Return {"tags":[]} when no tag clearly fits every bookmark.`
+      : `Task:
+- Suggest tags for one bookmark.
+- Return {"tags":[]} when the bookmark has no clear, useful tag suggestion.`
+  const targetRules =
+    bookmarks.length > 1
+      ? `- For multi-select, do not suggest tags that fit only some bookmarks.
+- A multi-select tag must be directly supported by each bookmark's title, URL, current tags, open tab title, or open tab group.
+- A shared folder alone is not enough evidence for a multi-select tag.
+- A domain or tool tag such as "github" is acceptable only when it appears for every bookmark and fits the user's existing tag conventions.`
+      : `- For one bookmark, suggest only tags directly supported by the title, URL, current tags, open tab title, open tab group, or a strong existing tag convention.`
 
   return `
 Suggest concise bookmark tags.
 
+${task}
+
 Rules:
-- Use 1 to 5 lowercase tags. Return fewer tags when the signal is weak.
+- Use 1 to 5 lowercase tags only when useful.
 - Prefer existing tags when they fit. Their usage counts show the user's conventions: ${knownTags || 'none'}.
 - Invent a new tag only when none of the existing tags describe the bookmark well.
 - Favor specific, reusable topics, tools, projects, or content types.
@@ -102,7 +121,8 @@ Rules:
 - Use a folder-like tag only when title, URL, existing tags, or high existing tag counts show it is a real user convention.
 - Avoid redundant tags, near-duplicates, generic tags, and tags that only restate the domain or folder.
 - Do not include "#".
-- Output JSON only in this shape: {"tags":["example"]}.${multiHint}
+- Output JSON only in this shape: {"tags":["example"]} or {"tags":[]}.
+${targetRules}
 
 Bookmarks:
 ${bookmarkLines}
@@ -156,12 +176,62 @@ function normalizeTags(tags) {
 
     seen.add(tag)
     result.push(tag)
-    if (result.length >= 8) {
+    if (result.length >= MAX_SUGGESTED_TAGS) {
       break
     }
   }
 
   return result
+}
+
+function filterTagsForEveryBookmark(tags, bookmarks) {
+  const result = []
+
+  for (let i = 0; i < tags.length; i++) {
+    const tag = tags[i]
+    let appliesToAll = true
+
+    for (let j = 0; j < bookmarks.length; j++) {
+      if (!bookmarkHasTagEvidence(bookmarks[j], tag)) {
+        appliesToAll = false
+        break
+      }
+    }
+
+    if (appliesToAll) {
+      result.push(tag)
+    }
+  }
+
+  return result
+}
+
+function bookmarkHasTagEvidence(bookmark, tag) {
+  const evidence = normalizeEvidenceText(
+    [
+      bookmark.title,
+      bookmark.originalUrl || bookmark.url,
+      (bookmark.tagsArray || []).join(' '),
+      bookmark.openTabTitle,
+      bookmark.group,
+    ].join(' '),
+  )
+  const normalizedTag = normalizeEvidenceText(tag)
+
+  return Boolean(normalizedTag && hasEvidenceToken(evidence, normalizedTag))
+}
+
+function hasEvidenceToken(evidence, tag) {
+  const paddedEvidence = `-${evidence}-`
+  return paddedEvidence.includes(`-${tag}-`)
+}
+
+function normalizeEvidenceText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
 }
 
 function normalizeExistingTags(tags) {

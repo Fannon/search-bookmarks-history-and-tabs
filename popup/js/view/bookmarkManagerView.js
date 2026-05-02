@@ -713,11 +713,11 @@ function updateManagedSelectionUi() {
 
 function renderActionTargetSummary(selectedCount, currentBookmark) {
   if (selectedCount) {
-    return `${formatInteger(selectedCount)} checked bookmark${selectedCount === 1 ? '' : 's'}`
+    return `${formatInteger(selectedCount)} selected bookmark${selectedCount === 1 ? '' : 's'}`
   }
 
   if (currentBookmark) {
-    return currentBookmark.title || currentBookmark.originalUrl || currentBookmark.url
+    return '1 selected bookmark'
   }
 
   return 'Click a bookmark or check bookmarks.'

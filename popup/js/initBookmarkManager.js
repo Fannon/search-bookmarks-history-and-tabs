@@ -332,6 +332,10 @@ async function suggestTagsForBookmarks(bookmarks, target) {
     return
   }
 
+  if (target === 'bulk') {
+    clearManagerSuggestedTags()
+  }
+
   try {
     showTagSuggestionBusy(true, 'Checking local AI...')
     showManagerStatus('Checking local AI...')

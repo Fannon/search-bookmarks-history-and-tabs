@@ -65,7 +65,7 @@ test.describe('Bookmark Manager', () => {
 
     await page.locator('#select-visible-bookmarks').click()
 
-    await expect(page.locator('#bookmark-selection-summary')).toHaveText('35 checked bookmarks')
+    await expect(page.locator('#bookmark-selection-summary')).toHaveText('35 selected bookmarks')
     await expect(firstBookmark).toHaveClass(/current/)
     await expect(firstBookmark).toHaveClass(/selected/)
     await expect(page.locator('#bookmark-edit-title')).toBeDisabled()
