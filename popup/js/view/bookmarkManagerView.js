@@ -146,8 +146,16 @@ export function bindBookmarkManagerEvents({
       return
     }
 
-    setCurrentManagedBookmark(event.target.dataset.managedBookmarkId)
-    onSelectBookmark(event.target.dataset.managedBookmarkId, event.target.checked)
+    const bookmarkId = event.target.dataset.managedBookmarkId
+    const temporarySelectedId = getTemporaryManagedBookmarkSelectedId()
+    ext.model.bookmarkManagerHasManualSelection = true
+
+    if (temporarySelectedId && temporarySelectedId !== bookmarkId) {
+      onSelectBookmark(temporarySelectedId, true)
+    }
+
+    setCurrentManagedBookmark(bookmarkId)
+    onSelectBookmark(bookmarkId, event.target.checked || temporarySelectedId === bookmarkId)
     onBookmarkNavigation()
     syncManagedBookmarkSelectionRows()
   })
@@ -601,7 +609,8 @@ function renderManagedBookmarkList(bookmarks, canUpdateBookmarks) {
 function renderManagedBookmarkRow(bookmark, canUpdateBookmarks) {
   const bookmarkId = String(bookmark.originalId)
   const selectedIds = ext.model.bookmarkManagerSelectedIds || new Set()
-  const checked = selectedIds.has(bookmarkId) ? ' checked' : ''
+  const isSelected = selectedIds.has(bookmarkId) || isTemporaryManagedBookmarkSelected(bookmarkId)
+  const checked = isSelected ? ' checked' : ''
   const selectedClass = checked ? ' selected' : ''
   const currentClass = String(ext.model.bookmarkManagerCurrentId || '') === bookmarkId ? ' current' : ''
   const disabled = canUpdateBookmarks ? '' : ' disabled'
@@ -719,6 +728,7 @@ function updateManagedSelectionUi() {
 
   setTagifyDisabled(ext.managerEditTagify, !canEditCurrentBookmark)
   setTagifyDisabled(ext.managerBulkTagify, !suggestedTagsReady || isSuggestingTags)
+  syncManagedBookmarkCheckboxes()
   syncManagedBookmarkSelectionRows()
 }
 
@@ -767,6 +777,7 @@ function getVisibleManagedSelectionCount(selectedIds, currentBookmark) {
 function selectVisibleManagedBookmarks() {
   const selectedIds = ext.model.bookmarkManagerSelectedIds || new Set()
   ext.model.bookmarkManagerSelectedIds = selectedIds
+  ext.model.bookmarkManagerHasManualSelection = true
   const visibleIds = getVisibleManagedBookmarkIds()
 
   for (let i = 0; i < visibleIds.length; i++) {
@@ -786,7 +797,9 @@ function syncManagedBookmarkCheckboxes() {
   const inputs = document.querySelectorAll('[data-managed-bookmark-id]')
 
   for (const input of inputs) {
-    input.checked = selectedIds.has(input.dataset.managedBookmarkId)
+    input.checked =
+      selectedIds.has(input.dataset.managedBookmarkId) ||
+      isTemporaryManagedBookmarkSelected(input.dataset.managedBookmarkId)
   }
 }
 
@@ -797,9 +810,26 @@ function syncManagedBookmarkSelectionRows() {
 
   for (const row of rows) {
     const bookmarkId = String(row.dataset.managedBookmarkRowId)
-    row.classList.toggle('selected', selectedIds.has(bookmarkId))
+    row.classList.toggle('selected', selectedIds.has(bookmarkId) || isTemporaryManagedBookmarkSelected(bookmarkId))
     row.classList.toggle('current', bookmarkId === currentId)
   }
+}
+
+function isTemporaryManagedBookmarkSelected(bookmarkId) {
+  return getTemporaryManagedBookmarkSelectedId() === String(bookmarkId || '')
+}
+
+function getTemporaryManagedBookmarkSelectedId() {
+  if (ext.model.bookmarkManagerHasManualSelection) {
+    return ''
+  }
+
+  const selectedIds = ext.model.bookmarkManagerSelectedIds || new Set()
+  if (selectedIds.size) {
+    return ''
+  }
+
+  return String(ext.model.bookmarkManagerCurrentId || '')
 }
 
 function setTagifyValues(tagify, input, tags) {

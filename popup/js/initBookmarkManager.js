@@ -89,6 +89,7 @@ export async function reloadBookmarkManager() {
     ext.model.searchMode = 'bookmarks'
     ext.model.bookmarkManagerSelectedIds = new Set()
     ext.model.bookmarkManagerCurrentId = ''
+    ext.model.bookmarkManagerHasManualSelection = false
     ext.model.bookmarkManagerSuggestedTagsReady = false
     ext.model.bookmarkManagerFolderId ||= 'all'
     applyBookmarkDeepLinkState()
@@ -125,6 +126,7 @@ async function openBookmarkInManager(bookmarkId) {
 
   ext.model.bookmarkManagerSelectedIds = new Set()
   ext.model.bookmarkManagerCurrentId = String(bookmark.originalId)
+  ext.model.bookmarkManagerHasManualSelection = false
   ext.model.bookmarkManagerFolderId = getMostPreciseBookmarkFolderId(bookmark)
   ext.dom.manager.bookmarkSearch.value = ''
   writeBookmarkDeepLink(bookmark)
@@ -169,6 +171,7 @@ function applyBookmarkDeepLinkState() {
 
   ext.model.bookmarkManagerSelectedIds = new Set()
   ext.model.bookmarkManagerCurrentId = String(bookmark.originalId)
+  ext.model.bookmarkManagerHasManualSelection = false
   ext.model.bookmarkManagerFolderId = folder || hasAllFolder ? folderId : getMostPreciseBookmarkFolderId(bookmark)
   ext.dom.manager.bookmarkSearch.value = searchTerm || ''
 }
