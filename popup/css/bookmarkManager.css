@@ -914,6 +914,39 @@ h3 {
   font-size: 13px;
 }
 
+.bookmark-undo-list {
+  list-style: none;
+  padding: 0;
+}
+
+.bookmark-undo-item {
+  min-height: 40px;
+  background-color: var(--li-bg);
+  margin: 0 0 4px;
+  padding: 6px 8px 7px;
+  border-radius: 4px;
+  border-left: 4px solid var(--badge-date);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.bookmark-undo-description {
+  min-width: 0;
+  color: var(--li-title);
+  overflow-wrap: anywhere;
+}
+
+.bookmark-undo-time {
+  color: var(--fg);
+  font-size: 12px;
+}
+
+.bookmark-undo-item .button {
+  flex: 0 0 auto;
+}
+
 .manager-panel-header {
   margin: 0 0 10px;
 }

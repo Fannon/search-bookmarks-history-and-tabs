@@ -18,6 +18,12 @@ import {
   normalizeTagName,
   uniqueTags,
 } from './model/bookmarkManagerOperations.js'
+import {
+  createBookmarkUndoSnapshot,
+  getBookmarkUndoSnapshots,
+  removeBookmarkUndoSnapshot,
+  saveBookmarkUndoSnapshot,
+} from './model/bookmarkManagerUndo.js'
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
 import { calculateFinalScore, executeSearch, sortResults } from './search/common.js'
@@ -36,6 +42,7 @@ import {
   getSelectedDuplicateIds,
   renderActiveManagerScreen,
   renderBookmarkManager,
+  renderBookmarkUndoHistory,
   renderBookmarkWorkspace,
   setManagedBookmarkSelected,
   showLocalAiTagAvailability,
@@ -81,6 +88,7 @@ export async function initBookmarkManager() {
     onRemoveTag: removeTag,
     onOpenBookmark: openBookmarkInManager,
     onBookmarkNavigation: writeBookmarkBrowserUrl,
+    onUndoBookmarkChange: undoBookmarkChange,
   })
 
   await reloadBookmarkManager()
@@ -119,6 +127,7 @@ export async function reloadBookmarkManager(options = {}) {
     }
 
     renderBookmarkManager(ext.model.bookmarkManager, canModifyBookmarks(), canUpdateBookmarks())
+    updateBookmarkUndoHistory()
     clearManagerSuggestedTags()
     await updateBookmarkBrowser()
     scrollManagedBookmarkIntoView(ext.model.bookmarkManagerCurrentId)
@@ -289,6 +298,10 @@ async function saveManagedBookmark() {
 
   try {
     showManagerStatus('Saving bookmark...')
+    const snapshotCreated = await createUndoSnapshot(`Edited bookmark "${bookmark.title || values.title}"`, [bookmark])
+    if (!snapshotCreated) {
+      return
+    }
     await ext.browserApi.bookmarks.update(bookmarkId, {
       title: createTaggedBookmarkTitle(values.title, values.tags),
       url: values.url,
@@ -317,6 +330,11 @@ async function moveSelectedBookmarks() {
 
   try {
     showManagerStatus('Moving bookmarks...')
+    const bookmarks = getBookmarksByIds(selectedIds)
+    const snapshotCreated = await createUndoSnapshot(createMoveDescription(bookmarks, parentId), bookmarks)
+    if (!snapshotCreated) {
+      return
+    }
     for (let i = 0; i < selectedIds.length; i++) {
       await ext.browserApi.bookmarks.move(selectedIds[i], { parentId })
     }
@@ -486,6 +504,10 @@ async function bulkTagBookmarks(bookmarkIds, mode) {
     const bookmarks = (ext.model.bookmarkManager?.bookmarks || []).filter((bookmark) =>
       bookmarkIdSet.has(String(bookmark.originalId)),
     )
+    const snapshotCreated = await createUndoSnapshot(createBulkTagDescription(mode, tags, bookmarks.length), bookmarks)
+    if (!snapshotCreated) {
+      return
+    }
     await updateTaggedBookmarks(bookmarks, (currentTags) => mergeBulkTags(currentTags, tags, mode))
     clearBulkTagInput()
     await reloadBookmarkManager({ preserveBookmarkSelection: true })
@@ -514,6 +536,11 @@ async function deleteSelectedDuplicates() {
 
   try {
     showManagerStatus('Deleting duplicates...')
+    const bookmarks = getBookmarksByIds(selectedIds)
+    const snapshotCreated = await createUndoSnapshot(createDeletedDescription(bookmarks.length), bookmarks)
+    if (!snapshotCreated) {
+      return
+    }
     for (let i = 0; i < selectedIds.length; i++) {
       await ext.browserApi.bookmarks.remove(selectedIds[i])
     }
@@ -538,6 +565,11 @@ async function deleteSingleDuplicate(bookmarkId) {
 
   try {
     showManagerStatus('Deleting bookmark...')
+    const bookmarks = getBookmarksByIds([bookmarkId])
+    const snapshotCreated = await createUndoSnapshot(createDeletedDescription(1), bookmarks)
+    if (!snapshotCreated) {
+      return
+    }
     await ext.browserApi.bookmarks.remove(bookmarkId)
     showManagerStatus('Deleted bookmark', 'success')
     await reloadBookmarkManager()
@@ -570,6 +602,13 @@ async function renameTag(oldTag) {
 
   try {
     showManagerStatus('Renaming tag...')
+    const snapshotCreated = await createUndoSnapshot(
+      `Renamed tag "${oldTag}" to "${newTag}" on ${formatBookmarkCount(bookmarks.length)}`,
+      bookmarks,
+    )
+    if (!snapshotCreated) {
+      return
+    }
     await updateTaggedBookmarks(bookmarks, (tags) => uniqueTags(tags.map((tag) => (tag === oldTag ? newTag : tag))))
     showManagerStatus(`Renamed #${oldTag}`, 'success')
     await reloadBookmarkManager()
@@ -597,6 +636,13 @@ async function removeTag(tagName) {
 
   try {
     showManagerStatus('Removing tag...')
+    const snapshotCreated = await createUndoSnapshot(
+      `Removed tag "${tagName}" from ${formatBookmarkCount(bookmarks.length)}`,
+      bookmarks,
+    )
+    if (!snapshotCreated) {
+      return
+    }
     await updateTaggedBookmarks(bookmarks, (tags) => tags.filter((tag) => tag !== tagName))
     showManagerStatus(`Removed #${tagName}`, 'success')
     await reloadBookmarkManager()
@@ -618,6 +664,15 @@ function canMoveBookmarks() {
   return typeof ext.browserApi.bookmarks?.move === 'function'
 }
 
+function canRestoreBookmarkSnapshots() {
+  return (
+    typeof ext.browserApi.bookmarks?.create === 'function' &&
+    typeof ext.browserApi.bookmarks?.get === 'function' &&
+    typeof ext.browserApi.bookmarks?.move === 'function' &&
+    typeof ext.browserApi.bookmarks?.update === 'function'
+  )
+}
+
 async function checkLocalAiTagSupport() {
   const availability = await getLocalAiTagAvailability()
   showLocalAiTagAvailability(availability)
@@ -628,6 +683,152 @@ function getBookmarksByIds(bookmarkIds) {
   const bookmarkIdSet = new Set(bookmarkIds.map(String))
   const bookmarks = ext.model.bookmarkManager?.bookmarks || []
   return bookmarks.filter((bookmark) => bookmarkIdSet.has(String(bookmark.originalId)))
+}
+
+async function createUndoSnapshot(description, bookmarks) {
+  try {
+    const snapshotBookmarks = await getUndoSnapshotBookmarks(bookmarks)
+    const snapshot = createBookmarkUndoSnapshot(description, snapshotBookmarks)
+    saveBookmarkUndoSnapshot(snapshot)
+    updateBookmarkUndoHistory()
+    return true
+  } catch (error) {
+    showManagerStatus('Undo snapshot failed', 'error')
+    printError(error, 'Could not create bookmark undo snapshot. No changes were applied.')
+    return false
+  }
+}
+
+async function getUndoSnapshotBookmarks(bookmarks) {
+  const snapshotBookmarks = []
+
+  for (let i = 0; i < bookmarks.length; i++) {
+    const bookmark = bookmarks[i]
+    const browserBookmark = await getBrowserBookmarkNode(bookmark.originalId)
+    snapshotBookmarks.push(browserBookmark || createFallbackBookmarkNode(bookmark))
+  }
+
+  return snapshotBookmarks
+}
+
+async function getBrowserBookmarkNode(bookmarkId) {
+  if (!bookmarkId || typeof ext.browserApi.bookmarks?.get !== 'function') {
+    return null
+  }
+
+  try {
+    const bookmarks = await ext.browserApi.bookmarks.get(String(bookmarkId))
+    return bookmarks?.[0] || null
+  } catch (error) {
+    console.warn(`Could not read bookmark "${bookmarkId}" for undo snapshot.`, error)
+    return null
+  }
+}
+
+function createFallbackBookmarkNode(bookmark) {
+  return {
+    id: String(bookmark.originalId),
+    parentId: bookmark.parentId || bookmark.folderId || '',
+    index: bookmark.index,
+    title: createTaggedBookmarkTitle(bookmark.title, bookmark.tagsArray || []),
+    url: bookmark.originalUrl || bookmark.url,
+  }
+}
+
+async function undoBookmarkChange(snapshotId) {
+  const snapshots = getBookmarkUndoSnapshots()
+  const restoreSnapshotId = snapshotId || snapshots[0]?.id
+
+  if (!restoreSnapshotId || !canRestoreBookmarkSnapshots()) {
+    return
+  }
+
+  const snapshot = snapshots.find((entry) => entry.id === restoreSnapshotId)
+  if (!snapshot) {
+    updateBookmarkUndoHistory()
+    return
+  }
+
+  const confirmed = window.confirm(`Undo "${snapshot.description}"?`)
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    showManagerStatus('Restoring bookmark snapshot...')
+    await restoreBookmarkSnapshot(snapshot)
+    removeBookmarkUndoSnapshot(snapshot.id)
+    updateBookmarkUndoHistory()
+    showManagerStatus(`Undid: ${snapshot.description}`, 'success')
+    await reloadBookmarkManager()
+  } catch (error) {
+    showManagerStatus('Undo failed', 'error')
+    printError(error, 'Could not restore bookmark undo snapshot.')
+  }
+}
+
+async function restoreBookmarkSnapshot(snapshot) {
+  const bookmarks = snapshot.bookmarks.slice().sort(compareSnapshotBookmarks)
+
+  for (let i = 0; i < bookmarks.length; i++) {
+    const bookmark = bookmarks[i]
+    const existingBookmark = await getBrowserBookmarkNode(bookmark.id)
+
+    if (existingBookmark) {
+      await restoreExistingBookmark(bookmark)
+    } else {
+      await recreateDeletedBookmark(bookmark)
+    }
+  }
+}
+
+async function restoreExistingBookmark(bookmark) {
+  await ext.browserApi.bookmarks.update(bookmark.id, {
+    title: bookmark.title,
+    url: bookmark.url,
+  })
+
+  if (bookmark.parentId) {
+    const moveInfo = { parentId: bookmark.parentId }
+    if (Number.isInteger(bookmark.index)) {
+      moveInfo.index = bookmark.index
+    }
+    await ext.browserApi.bookmarks.move(bookmark.id, moveInfo)
+  }
+}
+
+async function recreateDeletedBookmark(bookmark) {
+  const createInfo = {
+    title: bookmark.title,
+    url: bookmark.url,
+  }
+
+  if (bookmark.parentId) {
+    createInfo.parentId = bookmark.parentId
+  }
+  if (Number.isInteger(bookmark.index)) {
+    createInfo.index = bookmark.index
+  }
+
+  await ext.browserApi.bookmarks.create(createInfo)
+}
+
+function updateBookmarkUndoHistory() {
+  renderBookmarkUndoHistory(getBookmarkUndoSnapshots(), canRestoreBookmarkSnapshots())
+}
+
+function compareSnapshotBookmarks(a, b) {
+  const parentCompare = String(a.parentId || '').localeCompare(String(b.parentId || ''), undefined, {
+    numeric: true,
+  })
+  if (parentCompare !== 0) {
+    return parentCompare
+  }
+  return normalizeSnapshotIndex(a.index) - normalizeSnapshotIndex(b.index)
+}
+
+function normalizeSnapshotIndex(index) {
+  return Number.isInteger(index) ? index : Number.MAX_SAFE_INTEGER
 }
 
 function getKnownBookmarkTags() {
@@ -678,6 +879,57 @@ function resetBookmarkSearchCaches() {
 
 function clearBulkTagInput() {
   clearManagerSuggestedTags()
+}
+
+function createDeletedDescription(bookmarkCount) {
+  return `Deleted ${formatBookmarkCount(bookmarkCount)}`
+}
+
+function createBulkTagDescription(mode, tags, bookmarkCount) {
+  const tagText = tags.join(', ')
+  if (mode === 'replace') {
+    return `Replaced tags with "${tagText}" on ${formatBookmarkCount(bookmarkCount)}`
+  }
+  if (mode === 'remove') {
+    return `Removed tags "${tagText}" from ${formatBookmarkCount(bookmarkCount)}`
+  }
+  return `Added tags "${tagText}" to ${formatBookmarkCount(bookmarkCount)}`
+}
+
+function createMoveDescription(bookmarks, parentId) {
+  const sourceFolders = uniqueFolderLabels(bookmarks)
+  const sourceFolder = sourceFolders.length === 1 ? sourceFolders[0] : 'multiple folders'
+  const targetFolder = getFolderLabelById(parentId)
+  return `Moved ${formatBookmarkCount(bookmarks.length)} from ${sourceFolder} to ${targetFolder}`
+}
+
+function uniqueFolderLabels(bookmarks) {
+  const seen = new Set()
+  const result = []
+
+  for (let i = 0; i < bookmarks.length; i++) {
+    const label = formatFolderLabel(bookmarks[i].folderArray)
+    const key = label.toLowerCase()
+    if (!seen.has(key)) {
+      seen.add(key)
+      result.push(label)
+    }
+  }
+
+  return result
+}
+
+function getFolderLabelById(folderId) {
+  const folder = findFolderById(ext.model.bookmarkManager?.folderTree, folderId)
+  return folder ? formatFolderLabel(folder.path) : 'Unknown Folder'
+}
+
+function formatFolderLabel(folderArray) {
+  return folderArray?.length ? folderArray.join('/') : 'Root'
+}
+
+function formatBookmarkCount(bookmarkCount) {
+  return `${bookmarkCount} bookmark${bookmarkCount === 1 ? '' : 's'}`
 }
 
 function applyManagerColors() {

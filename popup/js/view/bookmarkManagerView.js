@@ -79,6 +79,8 @@ export function getBookmarkManagerDom() {
     deleteSelected: document.getElementById('delete-selected'),
     selectSuggested: document.getElementById('select-suggested'),
     selectNone: document.getElementById('select-none'),
+    bookmarkUndoHistory: document.getElementById('bookmark-undo-history'),
+    undoBookmarkChange: document.getElementById('undo-bookmark-change'),
     refreshBookmarks: document.getElementById('refresh-bookmarks'),
     loadingIndicator: document.getElementById('manager-load'),
   }
@@ -133,6 +135,7 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
  * @param {Function} handlers.onRemoveTag Tag removal handler.
  * @param {Function} handlers.onOpenBookmark Open bookmark in the editable bookmark browser.
  * @param {Function} handlers.onBookmarkNavigation Bookmark browser URL state handler.
+ * @param {Function} handlers.onUndoBookmarkChange Restore an undo snapshot.
  */
 export function bindBookmarkManagerEvents({
   onRefresh,
@@ -148,10 +151,12 @@ export function bindBookmarkManagerEvents({
   onRemoveTag,
   onOpenBookmark,
   onBookmarkNavigation,
+  onUndoBookmarkChange,
 }) {
   const dom = ext.dom.manager
 
   dom.refreshBookmarks.addEventListener('click', onRefresh)
+  dom.undoBookmarkChange.addEventListener('click', () => onUndoBookmarkChange())
   dom.bookmarkSearch.addEventListener('input', () => {
     onBookmarkNavigation()
     onBookmarkSearch()
@@ -214,6 +219,12 @@ export function bindBookmarkManagerEvents({
   dom.deleteSelected.addEventListener('click', onDeleteSelected)
   dom.selectSuggested.addEventListener('click', selectSuggestedDuplicates)
   dom.selectNone.addEventListener('click', clearDuplicateSelection)
+  dom.bookmarkUndoHistory.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-undo-snapshot-id]')
+    if (button) {
+      onUndoBookmarkChange(button.dataset.undoSnapshotId)
+    }
+  })
   dom.recentBookmarks.addEventListener('click', (event) => {
     const button = event.target.closest('[data-recent-page]')
     if (button) {
@@ -372,6 +383,36 @@ export function showTagSuggestionStatus(message, tone = 'info') {
 
   status.textContent = message
   status.dataset.tone = tone
+}
+
+/**
+ * Render bookmark undo snapshot history controls.
+ *
+ * @param {Array<Object>} snapshots Stored undo snapshots.
+ * @param {boolean} canRestore Whether restore actions are available.
+ */
+export function renderBookmarkUndoHistory(snapshots = [], canRestore = false) {
+  const dom = ext.dom.manager
+  if (!dom?.bookmarkUndoHistory || !dom?.undoBookmarkChange) {
+    return
+  }
+
+  if (!snapshots.length) {
+    dom.bookmarkUndoHistory.innerHTML = '<p class="empty-state">No bookmark manager undo snapshots yet.</p>'
+    dom.undoBookmarkChange.disabled = true
+    dom.undoBookmarkChange.title = 'No bookmark undo snapshots are available'
+    return
+  }
+
+  dom.bookmarkUndoHistory.innerHTML = `
+    <ol class="bookmark-undo-list">
+      ${snapshots.map((snapshot) => renderBookmarkUndoItem(snapshot, canRestore)).join('')}
+    </ol>
+  `
+  dom.undoBookmarkChange.disabled = !canRestore
+  dom.undoBookmarkChange.title = canRestore
+    ? `Undo latest: ${snapshots[0].description}`
+    : 'Bookmark undo is unavailable in this context'
 }
 
 /**
@@ -1016,4 +1057,28 @@ function clearDuplicateSelection() {
 
 function updateDuplicateActions() {
   updateDuplicateSelectionAction(ext.dom.manager.deleteSelected)
+}
+
+function renderBookmarkUndoItem(snapshot, canRestore) {
+  const timestamp = Number.isFinite(snapshot.createdAt) ? formatUndoTimestamp(snapshot.createdAt) : ''
+  const disabled = canRestore ? '' : ' disabled'
+
+  return `
+    <li class="bookmark-undo-item">
+      <div class="bookmark-undo-description">
+        <div>${escapeHtml(snapshot.description)}</div>
+        ${timestamp ? `<div class="bookmark-undo-time">${escapeHtml(timestamp)}</div>` : ''}
+      </div>
+      <button class="button secondary" type="button" data-undo-snapshot-id="${escapeHtml(snapshot.id)}"${disabled}>
+        Undo
+      </button>
+    </li>
+  `
+}
+
+function formatUndoTimestamp(timestamp) {
+  return new Date(timestamp).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }

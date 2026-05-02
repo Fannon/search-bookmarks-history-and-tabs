@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **NEW**: Added a beta Bookmark Manager as a complementary full-page view for reviewing bookmark statistics, browsing folders, editing bookmark metadata, managing tags, and cleaning up duplicate bookmark URLs. It also includes optional local browser AI tag suggestions when the browser supports the local `LanguageModel` API.
+- **NEW**: Added a beta Bookmark Manager as a complementary full-page view for reviewing bookmark statistics, browsing folders, editing bookmark metadata, managing tags, and cleaning up duplicate bookmark URLs. It includes local undo snapshots for bookmark mutations and optional local browser AI tag suggestions when the browser supports the local `LanguageModel` API.
 - **FIXED**: Ignore keyboard navigation shortcuts (Enter, arrow keys) during IME composition, preventing accidental result activation for CJK input users ([#328](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/328)).
 - **FIXED**: Preserve original bookmark, tab, and history URLs for display and opening, while keeping normalized URL matching for search and deduplication.
 

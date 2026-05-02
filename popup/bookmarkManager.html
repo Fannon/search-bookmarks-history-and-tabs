@@ -35,6 +35,8 @@
     </nav>
     <div class="manager-actions">
       <span id="manager-status" data-tone="info">Loading</span>
+      <button id="undo-bookmark-change" class="button secondary" type="button"
+        title="Undo the latest bookmark manager change" disabled>Undo</button>
       <button id="refresh-bookmarks" class="button" type="button" title="Refresh bookmarks">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -152,6 +154,11 @@
         <section>
           <h2>Recently Added</h2>
           <div id="recent-bookmarks"></div>
+        </section>
+
+        <section>
+          <h2>Change History</h2>
+          <div id="bookmark-undo-history" class="bookmark-undo-history"></div>
         </section>
       </section>
 

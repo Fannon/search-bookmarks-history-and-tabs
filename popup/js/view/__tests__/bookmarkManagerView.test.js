@@ -70,6 +70,8 @@ function setupDom() {
     <button id="delete-selected"><span data-selected-count></span></button>
     <button id="select-suggested"></button>
     <button id="select-none"></button>
+    <div id="bookmark-undo-history"></div>
+    <button id="undo-bookmark-change"></button>
     <button id="refresh-bookmarks"></button>
     <div id="manager-load"></div>
     <a data-manager-tab="bookmarks"></a>
@@ -128,6 +130,7 @@ function bindEvents() {
     onRemoveTag: jest.fn(),
     onOpenBookmark: jest.fn(),
     onBookmarkNavigation: jest.fn(),
+    onUndoBookmarkChange: jest.fn(),
   })
 }
 

@@ -5,7 +5,7 @@
 import { escapeHtml } from '../helper/utils.js'
 import { formatDecimal, formatInteger, renderBookmarkListItem } from './bookmarkManagerRenderHelpers.js'
 
-export const RECENT_BOOKMARKS_PER_PAGE = 24
+export const RECENT_BOOKMARKS_PER_PAGE = 20
 
 export function renderStats(stats) {
   return [
