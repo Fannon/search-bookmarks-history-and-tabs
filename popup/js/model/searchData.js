@@ -81,6 +81,8 @@ function flagBookmarksWithOpenTabs(bookmarks, tabs) {
     const matchingTab = bookmark && tabByUrl.get(bookmark.url)
     if (matchingTab) {
       bookmark.tab = true
+      bookmark.openTabTitle = matchingTab.title
+      bookmark.openTabActive = matchingTab.active
       // Copy favicon from tab if not already present or if tab favicon is better
       if (matchingTab.favIconUrl) {
         bookmark.favIconUrl = matchingTab.favIconUrl
@@ -106,6 +108,7 @@ export async function getSearchData() {
     tabs: [],
     bookmarks: [],
     history: [],
+    bookmarkTree: [],
   }
 
   // Use mock data (for localhost preview / development)
@@ -114,6 +117,7 @@ export async function getSearchData() {
     try {
       const requestChromeMockData = await fetch('./mockData/chrome.json')
       const chromeMockData = await requestChromeMockData.json()
+      result.bookmarkTree = chromeMockData.bookmarks || []
       result.tabs = convertBrowserTabs(chromeMockData.tabs)
       if (ext.opts.enableBookmarks) {
         result.bookmarks = convertBrowserBookmarks(chromeMockData.bookmarks)
@@ -140,6 +144,7 @@ export async function getSearchData() {
 
     // Convert browser data to internal format
     result.tabs = convertBrowserTabs(browserTabs, groupMap)
+    result.bookmarkTree = browserBookmarks
     result.bookmarks = convertBrowserBookmarks(browserBookmarks)
     result.history = convertBrowserHistory(browserHistory)
 

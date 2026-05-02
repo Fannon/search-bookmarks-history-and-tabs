@@ -155,6 +155,7 @@ export function convertBrowserBookmarks(
   result = [],
   folderLower = '',
   folderArrayLower = [],
+  folderId = '',
 ) {
   // Build folderText and folderLower if not provided (first call)
   if (folderText === undefined && folderTrail.length > 0) {
@@ -222,6 +223,9 @@ export function convertBrowserBookmarks(
       const mappedEntry = {
         type: 'bookmark',
         originalId: entry.id,
+        parentId: entry.parentId,
+        index: entry.index,
+        folderId,
         title: finalTitle,
         titleLower: titleLower,
         originalUrl,
@@ -269,6 +273,7 @@ export function convertBrowserBookmarks(
       let nextFolderText = folderText
       let nextFolderLower = folderLower
       let nextFolderArrayLower = folderArrayLower
+      let nextFolderId = folderId
 
       // Skip default chrome "system" folders at depth 1/2
       if (depth > 2 && folderTitle) {
@@ -277,6 +282,9 @@ export function convertBrowserBookmarks(
         nextFolderText = `${folderText ? `${folderText} ` : ''}~${folderTitle}`
         nextFolderLower = `${folderLower ? `${folderLower} ` : ''}~${folderTitleLower}`
         nextFolderArrayLower = folderArrayLower.concat(folderTitleLower)
+        nextFolderId = entry.id
+      } else if (entry.id) {
+        nextFolderId = entry.id
       }
 
       // Check ignore list
@@ -293,6 +301,7 @@ export function convertBrowserBookmarks(
         result,
         nextFolderLower,
         nextFolderArrayLower,
+        nextFolderId,
       )
     }
   }

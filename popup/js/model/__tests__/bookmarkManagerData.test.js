@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals'
-import { createBookmarkManagerModel, getDuplicateGroups, getTagGroups } from '../bookmarkManagerData.js'
+import { createBookmarkManagerModel, getDuplicateGroups, getFolderTree, getTagGroups } from '../bookmarkManagerData.js'
 
 const bookmarks = [
   {
@@ -142,5 +142,52 @@ describe('bookmark manager data', () => {
 
     expect(tagGroups).toContainEqual({ name: 'docs', count: 1, bookmarkIds: ['1'] })
     expect(tagGroups).toContainEqual({ name: 'personal', count: 1, bookmarkIds: ['4'] })
+  })
+
+  test('builds a traditional folder tree from raw browser folders', () => {
+    const folderTree = getFolderTree([
+      {
+        id: '0',
+        title: '',
+        children: [
+          {
+            id: '1',
+            title: 'Bookmarks Bar',
+            parentId: '0',
+            children: [
+              {
+                id: '5',
+                title: 'Work',
+                parentId: '1',
+                children: [
+                  {
+                    id: '10',
+                    parentId: '5',
+                    title: 'Docs',
+                    url: 'https://docs.example.test',
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: '2',
+            title: 'Other Bookmarks',
+            parentId: '0',
+            children: [],
+          },
+        ],
+      },
+    ])
+
+    expect(folderTree.title).toBe('All Bookmarks')
+    expect(folderTree.totalCount).toBe(1)
+    expect(folderTree.children.map((folder) => folder.title)).toEqual(['Bookmarks Bar', 'Other Bookmarks'])
+    expect(folderTree.children[0].children[0]).toMatchObject({
+      id: '5',
+      title: 'Work',
+      path: ['Bookmarks Bar', 'Work'],
+      totalCount: 1,
+    })
   })
 })

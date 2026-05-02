@@ -21,6 +21,26 @@ export function getBookmarkManagerDom() {
   return {
     summaryLine: document.getElementById('manager-summary'),
     status: document.getElementById('manager-status'),
+    bookmarkSearch: document.getElementById('bookmark-manager-search'),
+    bookmarkFolderTree: document.getElementById('bookmark-folder-tree'),
+    bookmarkBrowserSummary: document.getElementById('bookmark-browser-summary'),
+    managedBookmarkList: document.getElementById('managed-bookmark-list'),
+    selectVisibleBookmarks: document.getElementById('select-visible-bookmarks'),
+    clearManagedSelection: document.getElementById('clear-managed-selection'),
+    bookmarkSelectionSummary: document.getElementById('bookmark-selection-summary'),
+    bookmarkMoveFolder: document.getElementById('bookmark-move-folder'),
+    moveSelectedBookmarks: document.getElementById('move-selected-bookmarks'),
+    bulkTagsInput: document.getElementById('bookmark-bulk-tags'),
+    suggestTagsSelected: document.getElementById('suggest-tags-selected'),
+    addTagsSelected: document.getElementById('add-tags-selected'),
+    replaceTagsSelected: document.getElementById('replace-tags-selected'),
+    removeTagsSelected: document.getElementById('remove-tags-selected'),
+    addTagsVisible: document.getElementById('add-tags-visible'),
+    bookmarkEditTitle: document.getElementById('bookmark-edit-title'),
+    bookmarkEditUrl: document.getElementById('bookmark-edit-url'),
+    bookmarkEditTags: document.getElementById('bookmark-edit-tags'),
+    suggestTagsBookmark: document.getElementById('suggest-tags-bookmark'),
+    saveManagedBookmark: document.getElementById('save-managed-bookmark'),
     statsGrid: document.getElementById('stats-grid'),
     topTags: document.getElementById('top-tags'),
     topDomains: document.getElementById('top-domains'),
@@ -67,6 +87,10 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
   dom.tagCount.textContent = stats.uniqueTagCount ? String(stats.uniqueTagCount) : ''
   dom.duplicatesList.innerHTML = renderDuplicates(model.duplicateGroups, canModifyBookmarks)
   ext.model.bookmarkManagerCanUpdateBookmarks = canUpdateBookmarks
+  ext.model.bookmarkManagerCanMoveBookmarks = typeof ext.browserApi.bookmarks?.move === 'function'
+  ext.model.bookmarkManagerSelectedIds ||= new Set()
+  ext.model.bookmarkManagerVisibleBookmarks = model.bookmarks
+  renderBookmarkWorkspace(model.bookmarks, canUpdateBookmarks, ext.model.bookmarkManagerCanMoveBookmarks)
   renderTagManagerIntoDom(canUpdateBookmarks)
 
   updateDuplicateActions()
@@ -79,13 +103,81 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
  * @param {Function} handlers.onRefresh Refresh handler.
  * @param {Function} handlers.onDeleteSelected Delete handler.
  * @param {Function} handlers.onDeleteOne Single bookmark delete handler.
+ * @param {Function} handlers.onBookmarkSearch Search/filter handler.
+ * @param {Function} handlers.onSelectBookmark Bookmark selection handler.
+ * @param {Function} handlers.onSaveBookmark Single bookmark save handler.
+ * @param {Function} handlers.onMoveSelected Move selected bookmarks handler.
+ * @param {Function} handlers.onSuggestTagsSelected Suggest tags for selected bookmarks handler.
+ * @param {Function} handlers.onSuggestTagsBookmark Suggest tags for one bookmark handler.
+ * @param {Function} handlers.onBulkTagSelected Bulk tag selected handler.
+ * @param {Function} handlers.onBulkTagVisible Bulk tag visible handler.
  * @param {Function} handlers.onRenameTag Tag rename handler.
  * @param {Function} handlers.onRemoveTag Tag removal handler.
  */
-export function bindBookmarkManagerEvents({ onRefresh, onDeleteSelected, onDeleteOne, onRenameTag, onRemoveTag }) {
+export function bindBookmarkManagerEvents({
+  onRefresh,
+  onDeleteSelected,
+  onDeleteOne,
+  onBookmarkSearch,
+  onSelectBookmark,
+  onSaveBookmark,
+  onMoveSelected,
+  onSuggestTagsSelected,
+  onSuggestTagsBookmark,
+  onBulkTagSelected,
+  onBulkTagVisible,
+  onRenameTag,
+  onRemoveTag,
+}) {
   const dom = ext.dom.manager
 
   dom.refreshBookmarks.addEventListener('click', onRefresh)
+  dom.bookmarkSearch.addEventListener('input', onBookmarkSearch)
+  dom.bookmarkFolderTree.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-manager-folder-id]')
+    if (!button) {
+      return
+    }
+
+    ext.model.bookmarkManagerFolderId = button.dataset.managerFolderId
+    onBookmarkSearch()
+  })
+  dom.managedBookmarkList.addEventListener('change', (event) => {
+    if (!event.target.matches('[data-managed-bookmark-id]')) {
+      return
+    }
+
+    onSelectBookmark(event.target.dataset.managedBookmarkId, event.target.checked)
+  })
+  dom.managedBookmarkList.addEventListener('click', (event) => {
+    const row = event.target.closest('[data-managed-bookmark-row-id]')
+    if (!row || event.target.closest('a, button, input')) {
+      return
+    }
+
+    const input = row.querySelector('[data-managed-bookmark-id]')
+    if (input && !input.disabled) {
+      input.checked = !input.checked
+      onSelectBookmark(input.dataset.managedBookmarkId, input.checked)
+    }
+  })
+  dom.selectVisibleBookmarks.addEventListener('click', () => {
+    selectVisibleManagedBookmarks()
+    updateManagedSelectionUi()
+  })
+  dom.clearManagedSelection.addEventListener('click', () => {
+    clearManagedBookmarkSelection()
+    updateManagedSelectionUi()
+  })
+  dom.saveManagedBookmark.addEventListener('click', onSaveBookmark)
+  dom.bookmarkMoveFolder.addEventListener('change', updateManagedSelectionUi)
+  dom.moveSelectedBookmarks.addEventListener('click', onMoveSelected)
+  dom.suggestTagsSelected.addEventListener('click', onSuggestTagsSelected)
+  dom.suggestTagsBookmark.addEventListener('click', onSuggestTagsBookmark)
+  dom.addTagsSelected.addEventListener('click', () => onBulkTagSelected('add'))
+  dom.replaceTagsSelected.addEventListener('click', () => onBulkTagSelected('replace'))
+  dom.removeTagsSelected.addEventListener('click', () => onBulkTagSelected('remove'))
+  dom.addTagsVisible.addEventListener('click', () => onBulkTagVisible('add'))
   dom.deleteSelected.addEventListener('click', onDeleteSelected)
   dom.selectSuggested.addEventListener('click', selectSuggestedDuplicates)
   dom.selectNone.addEventListener('click', clearDuplicateSelection)
@@ -164,6 +256,33 @@ export function showManagerStatus(message, tone = 'info') {
 }
 
 /**
+ * Store and surface local AI availability.
+ *
+ * @param {string} availability Availability state.
+ */
+export function showLocalAiTagAvailability(availability) {
+  ext.model.bookmarkManagerLocalAiAvailability = availability
+  ext.model.bookmarkManagerLocalAiAvailable = availability !== 'unsupported' && availability !== 'unavailable'
+
+  const status = ext.dom.manager?.status
+  if (!status) {
+    return
+  }
+
+  if (availability === 'unsupported') {
+    status.title = 'Local AI tag suggestions are not supported by this browser.'
+  } else if (availability === 'unavailable') {
+    status.title = 'Local AI tag suggestions are unavailable on this device.'
+  } else if (availability === 'downloadable') {
+    status.title = 'Local AI tag suggestions are available after Chrome downloads the local model.'
+  } else if (availability === 'downloading') {
+    status.title = 'Chrome is downloading the local AI model.'
+  } else {
+    status.title = 'Local AI tag suggestions are available.'
+  }
+}
+
+/**
  * Return selected duplicate bookmark IDs.
  *
  * @returns {Array<string>} Selected bookmark IDs.
@@ -175,11 +294,137 @@ export function getSelectedDuplicateIds() {
 }
 
 /**
+ * Return selected bookmark IDs from the manager workspace.
+ *
+ * @returns {Array<string>} Selected bookmark IDs.
+ */
+export function getSelectedManagedBookmarkIds() {
+  return [...(ext.model.bookmarkManagerSelectedIds || new Set())]
+}
+
+/**
+ * Return IDs for bookmarks currently visible in the manager list.
+ *
+ * @returns {Array<string>} Visible bookmark IDs.
+ */
+export function getVisibleManagedBookmarkIds() {
+  const bookmarks = ext.model.bookmarkManagerVisibleBookmarks || []
+  const result = new Array(bookmarks.length)
+  for (let i = 0; i < bookmarks.length; i++) {
+    result[i] = String(bookmarks[i].originalId)
+  }
+  return result
+}
+
+/**
+ * Read Tagify or plain input values from one of the manager tag controls.
+ *
+ * @param {'bulk'|'edit'} source Tag input source.
+ * @returns {Array<string>} Normalized tag names.
+ */
+export function getManagerTagInputValues(source) {
+  const tagify = source === 'bulk' ? ext.managerBulkTagify : ext.managerEditTagify
+  if (tagify) {
+    return normalizeTagValues(tagify.value.map((tag) => tag.value))
+  }
+
+  const input = source === 'bulk' ? ext.dom.manager.bulkTagsInput : ext.dom.manager.bookmarkEditTags
+  return normalizeTagValues(String(input.value || '').split(/[#,]/))
+}
+
+/**
+ * Read the single-edit form values.
+ *
+ * @returns {{title: string, url: string, tags: Array<string>}} Form values.
+ */
+export function getManagedBookmarkEditValues() {
+  const dom = ext.dom.manager
+  return {
+    title: dom.bookmarkEditTitle.value.trim(),
+    url: dom.bookmarkEditUrl.value.trim(),
+    tags: getManagerTagInputValues('edit'),
+  }
+}
+
+/**
+ * Fill one of the manager tag controls with suggested tags.
+ *
+ * @param {'bulk'|'edit'} target Tag input target.
+ * @param {Array<string>} tags Tag names.
+ */
+export function addManagerTagInputValues(target, tags) {
+  const tagify = target === 'bulk' ? ext.managerBulkTagify : ext.managerEditTagify
+  const input = target === 'bulk' ? ext.dom.manager.bulkTagsInput : ext.dom.manager.bookmarkEditTags
+  const currentTags = getManagerTagInputValues(target)
+  const nextTags = normalizeTagValues(currentTags.concat(tags))
+
+  setTagifyValues(tagify, input, nextTags)
+}
+
+/**
+ * Render the bookmark workspace list, folder tree, and selection-aware form.
+ *
+ * @param {Array<Object>} visibleBookmarks Bookmarks to show in the list.
+ * @param {boolean} canUpdateBookmarks Whether updates are available.
+ * @param {boolean} canMoveBookmarks Whether moving is available.
+ */
+export function renderBookmarkWorkspace(visibleBookmarks, canUpdateBookmarks, canMoveBookmarks) {
+  const dom = ext.dom.manager
+  const model = ext.model.bookmarkManager
+  ext.model.bookmarkManagerVisibleBookmarks = visibleBookmarks
+
+  dom.bookmarkFolderTree.innerHTML = renderFolderTree(model.folderTree, ext.model.bookmarkManagerFolderId || 'all')
+  dom.bookmarkMoveFolder.innerHTML = renderFolderOptions(model.folderOptions)
+  dom.bookmarkMoveFolder.disabled = !canMoveBookmarks
+  dom.managedBookmarkList.innerHTML = renderManagedBookmarkList(
+    visibleBookmarks,
+    canUpdateBookmarks || canMoveBookmarks,
+  )
+  dom.bookmarkBrowserSummary.textContent = renderBrowserSummary(visibleBookmarks.length, model.bookmarks.length)
+
+  ensureManagerTagify()
+  updateManagedSelectionUi()
+}
+
+/**
+ * Update selection state for one managed bookmark.
+ *
+ * @param {string} bookmarkId Bookmark id.
+ * @param {boolean} selected Whether selected.
+ */
+export function setManagedBookmarkSelected(bookmarkId, selected) {
+  const selectedIds = ext.model.bookmarkManagerSelectedIds || new Set()
+  ext.model.bookmarkManagerSelectedIds = selectedIds
+
+  if (selected) {
+    selectedIds.add(String(bookmarkId))
+  } else {
+    selectedIds.delete(String(bookmarkId))
+  }
+
+  updateManagedSelectionUi()
+}
+
+/**
+ * Clear bookmark manager selection.
+ */
+export function clearManagedBookmarkSelection() {
+  ext.model.bookmarkManagerSelectedIds = new Set()
+  const inputs = document.querySelectorAll('[data-managed-bookmark-id]')
+  for (const input of inputs) {
+    input.checked = false
+  }
+}
+
+/**
  * Show the current hash-selected screen.
  */
 export function renderActiveManagerScreen() {
   const hash = window.location.hash
-  const screen = hash === '#duplicates' || hash === '#tags' ? hash.slice(1) : 'overview'
+  const screen =
+    hash === '#bookmarks' || hash === '#duplicates' || hash === '#tags' || hash === '#overview'
+      ? hash.slice(1)
+      : 'overview'
   const tabs = document.querySelectorAll('[data-manager-tab]')
   const panels = document.querySelectorAll('[data-manager-panel]')
 
@@ -196,6 +441,262 @@ export function renderActiveManagerScreen() {
   for (const panel of panels) {
     panel.hidden = panel.dataset.managerPanel !== screen
   }
+}
+
+function renderFolderTree(folder, activeFolderId) {
+  if (!folder) {
+    return '<p class="empty-state">No folders found.</p>'
+  }
+
+  return `
+    <ul class="folder-tree-list">
+      ${renderFolderNode(folder, activeFolderId)}
+    </ul>
+  `
+}
+
+function renderFolderNode(folder, activeFolderId) {
+  const folderId = String(folder.id)
+  const isActive = folderId === String(activeFolderId || 'all')
+  const depth = Math.max(0, folder.depth || 0)
+  const children = folder.children || []
+
+  return `
+    <li>
+      <button class="folder-tree-button${isActive ? ' active' : ''}" type="button"
+        data-manager-folder-id="${escapeHtml(folderId)}" style="--folder-depth: ${depth}">
+        <span>${escapeHtml(folder.title)}</span>
+        <small>${formatInteger(folder.totalCount || folder.count)}</small>
+      </button>
+      ${
+        children.length
+          ? `
+            <ul>
+              ${children.map((child) => renderFolderNode(child, activeFolderId)).join('')}
+            </ul>
+          `
+          : ''
+      }
+    </li>
+  `
+}
+
+function renderFolderOptions(folderOptions) {
+  if (!folderOptions.length) {
+    return '<option value="">No folders</option>'
+  }
+
+  return folderOptions
+    .map((folder) => {
+      const indent = '\u00a0\u00a0'.repeat(Math.max(0, folder.depth - 1))
+      return `<option value="${escapeHtml(folder.id)}">${indent}${escapeHtml(folder.label)}</option>`
+    })
+    .join('')
+}
+
+function renderManagedBookmarkList(bookmarks, canUpdateBookmarks) {
+  if (!bookmarks.length) {
+    return '<p class="empty-state">No bookmarks match this view.</p>'
+  }
+
+  const updateNotice = canUpdateBookmarks
+    ? ''
+    : '<p class="manager-note">Bookmark updates are unavailable in this preview context.</p>'
+
+  return `
+    ${updateNotice}
+    <ul class="bookmark-list managed-bookmarks">
+      ${bookmarks.map((bookmark) => renderManagedBookmarkRow(bookmark, canUpdateBookmarks)).join('')}
+    </ul>
+  `
+}
+
+function renderManagedBookmarkRow(bookmark, canUpdateBookmarks) {
+  const bookmarkId = String(bookmark.originalId)
+  const selectedIds = ext.model.bookmarkManagerSelectedIds || new Set()
+  const checked = selectedIds.has(bookmarkId) ? ' checked' : ''
+  const disabled = canUpdateBookmarks ? '' : ' disabled'
+  const displayUrl = bookmark.originalUrl || bookmark.url || ''
+
+  return `
+    <li class="bookmark managed-bookmark" data-managed-bookmark-row-id="${escapeHtml(bookmarkId)}">
+      <label class="managed-bookmark-check">
+        <input type="checkbox" data-managed-bookmark-id="${escapeHtml(bookmarkId)}"${checked}${disabled}>
+      </label>
+      <div class="managed-bookmark-main">
+        <div class="title">
+          <span class="title-text">${renderBookmarkTitle(bookmark)} </span>
+          ${renderFolderBadge(bookmark.folderArray)}
+          ${renderTagBadges(bookmark.tagsArray)}
+        </div>
+        <div class="url" title="${escapeHtml(displayUrl)}">${escapeHtml(displayUrl)}</div>
+      </div>
+      ${renderEditLink(bookmark, 'recent-bookmark-edit')}
+    </li>
+  `
+}
+
+function renderBrowserSummary(visibleCount, totalCount) {
+  const folderId = ext.model.bookmarkManagerFolderId || 'all'
+  const query = ext.dom.manager.bookmarkSearch.value.trim()
+  const folder = findFolderById(ext.model.bookmarkManager?.folderTree, folderId)
+  const folderName = folderId === 'all' || !folder ? 'All Bookmarks' : folder.path.join(' / ')
+  const searchText = query ? ` matching "${query}"` : ''
+
+  return `${formatInteger(visibleCount)} of ${formatInteger(totalCount)} bookmarks in ${folderName}${searchText}`
+}
+
+function ensureManagerTagify() {
+  const tags = (ext.model.bookmarkManager?.tagGroups || []).map((tag) => tag.name)
+
+  ext.managerBulkTagify = ensureTagify(ext.dom.manager.bulkTagsInput, ext.managerBulkTagify, tags)
+  ext.managerEditTagify = ensureTagify(ext.dom.manager.bookmarkEditTags, ext.managerEditTagify, tags)
+}
+
+function ensureTagify(input, currentTagify, whitelist) {
+  if (!input || typeof Tagify === 'undefined') {
+    return currentTagify
+  }
+
+  if (currentTagify) {
+    currentTagify.whitelist = whitelist
+    return currentTagify
+  }
+
+  return new Tagify(input, {
+    whitelist,
+    trim: true,
+    transformTag,
+    skipInvalid: false,
+    editTags: {
+      clicks: 1,
+      keepInvalid: false,
+    },
+    dropdown: {
+      position: 'all',
+      enabled: 0,
+      maxItems: 12,
+      closeOnSelect: false,
+    },
+  })
+}
+
+function updateManagedSelectionUi() {
+  const dom = ext.dom.manager
+  const selectedIds = getSelectedManagedBookmarkIds()
+  const selectedCount = selectedIds.length
+  const visibleCount = getVisibleManagedBookmarkIds().length
+  const singleBookmark = selectedCount === 1 ? findBookmarkById(selectedIds[0]) : null
+  const canUpdateBookmarks = Boolean(ext.model.bookmarkManagerCanUpdateBookmarks)
+  const canMoveBookmarks = Boolean(ext.model.bookmarkManagerCanMoveBookmarks)
+
+  dom.bookmarkSelectionSummary.textContent = selectedCount
+    ? `${formatInteger(selectedCount)} selected`
+    : 'No bookmarks selected.'
+  dom.moveSelectedBookmarks.disabled = !selectedCount || !canMoveBookmarks || !dom.bookmarkMoveFolder.value
+  dom.addTagsSelected.disabled = !selectedCount || !canUpdateBookmarks
+  dom.replaceTagsSelected.disabled = !selectedCount || !canUpdateBookmarks
+  dom.removeTagsSelected.disabled = !selectedCount || !canUpdateBookmarks
+  dom.suggestTagsSelected.disabled = !selectedCount || !ext.model.bookmarkManagerLocalAiAvailable
+  dom.addTagsVisible.disabled = !visibleCount || !canUpdateBookmarks
+  dom.suggestTagsBookmark.disabled = !singleBookmark || !ext.model.bookmarkManagerLocalAiAvailable
+  dom.saveManagedBookmark.disabled = !singleBookmark || !canUpdateBookmarks
+  dom.bookmarkEditTitle.disabled = !singleBookmark || !canUpdateBookmarks
+  dom.bookmarkEditUrl.disabled = !singleBookmark || !canUpdateBookmarks
+  dom.bookmarkEditTags.disabled = !singleBookmark || !canUpdateBookmarks
+
+  if (singleBookmark) {
+    dom.bookmarkEditTitle.value = singleBookmark.title || ''
+    dom.bookmarkEditUrl.value = singleBookmark.originalUrl || ''
+    setTagifyValues(ext.managerEditTagify, dom.bookmarkEditTags, singleBookmark.tagsArray || [])
+  } else {
+    dom.bookmarkEditTitle.value = ''
+    dom.bookmarkEditUrl.value = ''
+    setTagifyValues(ext.managerEditTagify, dom.bookmarkEditTags, [])
+  }
+}
+
+function selectVisibleManagedBookmarks() {
+  const selectedIds = ext.model.bookmarkManagerSelectedIds || new Set()
+  ext.model.bookmarkManagerSelectedIds = selectedIds
+  const visibleIds = getVisibleManagedBookmarkIds()
+
+  for (let i = 0; i < visibleIds.length; i++) {
+    selectedIds.add(visibleIds[i])
+  }
+
+  const inputs = document.querySelectorAll('[data-managed-bookmark-id]')
+  for (const input of inputs) {
+    input.checked = selectedIds.has(input.dataset.managedBookmarkId)
+  }
+}
+
+function setTagifyValues(tagify, input, tags) {
+  if (tagify) {
+    tagify.removeAllTags()
+    if (tags.length) {
+      tagify.addTags(tags)
+    }
+    return
+  }
+
+  input.value = tags.join(', ')
+}
+
+function normalizeTagValues(tags) {
+  const seen = new Set()
+  const result = []
+
+  for (let i = 0; i < tags.length; i++) {
+    const value = String(tags[i] || '')
+      .replaceAll('#', '')
+      .replace(/\s+/g, ' ')
+      .trim()
+    const key = value.toLowerCase()
+
+    if (!value || seen.has(key)) {
+      continue
+    }
+
+    seen.add(key)
+    result.push(value)
+  }
+
+  return result
+}
+
+function transformTag(tagData) {
+  if (tagData.value.includes('#')) {
+    tagData.value = tagData.value.split('#').join('')
+  }
+}
+
+function findBookmarkById(bookmarkId) {
+  const bookmarks = ext.model.bookmarkManager?.bookmarks || []
+  for (let i = 0; i < bookmarks.length; i++) {
+    if (String(bookmarks[i].originalId) === String(bookmarkId)) {
+      return bookmarks[i]
+    }
+  }
+  return null
+}
+
+function findFolderById(folder, folderId) {
+  if (!folder) {
+    return null
+  }
+  if (String(folder.id) === String(folderId)) {
+    return folder
+  }
+
+  for (let i = 0; i < folder.children.length; i++) {
+    const match = findFolderById(folder.children[i], folderId)
+    if (match) {
+      return match
+    }
+  }
+
+  return null
 }
 
 function renderStats(stats) {

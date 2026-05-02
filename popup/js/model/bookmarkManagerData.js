@@ -10,19 +10,58 @@ const LONG_TITLE_LENGTH = 80
  * Create the data model consumed by the bookmark manager view.
  *
  * @param {Array<Object>} bookmarks Normalized bookmark entries.
- * @returns {{bookmarks: Array<Object>, duplicateGroups: Array<Object>, tagGroups: Array<Object>, stats: Object}}
+ * @param {Array<Object>} bookmarkTree Raw browser bookmark tree.
+ * @returns {{bookmarks: Array<Object>, duplicateGroups: Array<Object>, folderTree: Object, folderOptions: Array<Object>, tagGroups: Array<Object>, stats: Object}}
  */
-export function createBookmarkManagerModel(bookmarks = []) {
+export function createBookmarkManagerModel(bookmarks = [], bookmarkTree = []) {
   const duplicateGroups = getDuplicateGroups(bookmarks)
   const tagGroups = getTagGroups(bookmarks)
+  const folderTree = getFolderTree(bookmarkTree, bookmarks)
+  const folderOptions = getFolderOptions(folderTree)
   const stats = getBookmarkStats(bookmarks, duplicateGroups)
 
   return {
     bookmarks,
     duplicateGroups,
+    folderTree,
+    folderOptions,
     tagGroups,
     stats,
   }
+}
+
+/**
+ * Build a folder tree from the raw browser tree, falling back to normalized bookmark paths.
+ *
+ * @param {Array<Object>} bookmarkTree Raw browser bookmark tree.
+ * @param {Array<Object>} bookmarks Normalized bookmark entries.
+ * @returns {Object} Tree root with folder children.
+ */
+export function getFolderTree(bookmarkTree = [], bookmarks = []) {
+  const root = createFolderNode('all', 'All Bookmarks', '', [], 0)
+
+  if (bookmarkTree.length) {
+    addRawFolderChildren(root, bookmarkTree, [], 1)
+  }
+
+  if (!root.children.length && bookmarks.length) {
+    addBookmarkPathFolders(root, bookmarks)
+  }
+
+  sortFolderTree(root)
+  return root
+}
+
+/**
+ * Flatten a folder tree into move-target options.
+ *
+ * @param {Object} folderTree Folder tree root.
+ * @returns {Array<Object>} Folder options.
+ */
+export function getFolderOptions(folderTree) {
+  const options = []
+  collectFolderOptions(folderTree, options)
+  return options
 }
 
 /**
@@ -191,6 +230,95 @@ export function getTagGroups(bookmarks = []) {
     }
     return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
   })
+}
+
+function createFolderNode(id, title, parentId, path, depth) {
+  return {
+    id: String(id || ''),
+    title: String(title || 'Untitled Folder'),
+    parentId: parentId ? String(parentId) : '',
+    path,
+    depth,
+    count: 0,
+    totalCount: 0,
+    children: [],
+  }
+}
+
+function addRawFolderChildren(parent, entries, path, depth) {
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i]
+    if (!entry?.children) {
+      parent.count += 1
+      continue
+    }
+
+    const includeFolder = depth > 1 && entry.title
+    const nextPath = includeFolder ? path.concat(entry.title) : path
+    const child = includeFolder
+      ? createFolderNode(entry.id, entry.title, entry.parentId, nextPath, parent.depth + 1)
+      : parent
+
+    addRawFolderChildren(child, entry.children, nextPath, depth + 1)
+
+    if (includeFolder) {
+      parent.children.push(child)
+    }
+  }
+}
+
+function addBookmarkPathFolders(root, bookmarks) {
+  const childrenByKey = new Map()
+
+  for (let i = 0; i < bookmarks.length; i++) {
+    const bookmark = bookmarks[i]
+    const path = bookmark.folderArray || []
+    let parent = root
+    let pathKey = ''
+
+    for (let j = 0; j < path.length; j++) {
+      const title = path[j]
+      pathKey = pathKey ? `${pathKey}/${title}` : title
+      let child = childrenByKey.get(pathKey)
+
+      if (!child) {
+        child = createFolderNode(bookmark.folderId || pathKey, title, parent.id, path.slice(0, j + 1), parent.depth + 1)
+        childrenByKey.set(pathKey, child)
+        parent.children.push(child)
+      }
+
+      parent = child
+    }
+
+    parent.count += 1
+  }
+}
+
+function sortFolderTree(folder) {
+  let totalCount = folder.count
+  folder.children.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }))
+
+  for (let i = 0; i < folder.children.length; i++) {
+    totalCount += sortFolderTree(folder.children[i])
+  }
+
+  folder.totalCount = totalCount
+  return totalCount
+}
+
+function collectFolderOptions(folder, options) {
+  if (folder.id && folder.id !== 'all') {
+    options.push({
+      id: folder.id,
+      title: folder.title,
+      label: folder.path.length ? folder.path.join(' / ') : folder.title,
+      depth: folder.depth,
+    })
+  }
+
+  for (let i = 0; i < folder.children.length; i++) {
+    collectFolderOptions(folder.children[i], options)
+  }
 }
 
 function compareKeepCandidates(a, b) {

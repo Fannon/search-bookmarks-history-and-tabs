@@ -5,6 +5,7 @@
   <title>Search Bookmarks, History and Tabs: Bookmark Manager</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./lib/tagify.min.css" />
   <link rel="stylesheet" href="./css/bookmarkManager.css" />
   <link rel="icon" type="image/png" href="../images/logo-32.png" />
 </head>
@@ -41,6 +42,9 @@
       <a href="#overview" data-manager-tab="overview" class="active" aria-current="page">
         <span>Overview</span>
       </a>
+      <a href="#bookmarks" data-manager-tab="bookmarks">
+        <span>Bookmarks</span>
+      </a>
       <a href="#duplicates" data-manager-tab="duplicates">
         <span>Bookmark Duplicates</span>
         <strong id="duplicate-count"></strong>
@@ -53,6 +57,69 @@
 
     <section class="manager-content">
       <div id="manager-load" class="loading">Loading...</div>
+
+      <section data-manager-panel="bookmarks" class="manager-panel" hidden>
+        <div class="bookmarks-workspace">
+          <aside class="bookmark-tree-panel" aria-label="Bookmark folders">
+            <div class="manager-panel-header compact">
+              <h2>Folders</h2>
+            </div>
+            <div id="bookmark-folder-tree" class="bookmark-folder-tree"></div>
+          </aside>
+
+          <section class="bookmark-browser-panel">
+            <div class="bookmark-browser-toolbar">
+              <input id="bookmark-manager-search" type="search" placeholder="Search bookmarks" autocomplete="off"
+                spellcheck="false" />
+              <div class="bookmark-browser-actions">
+                <button id="select-visible-bookmarks" class="button secondary" type="button">Select Visible</button>
+                <button id="clear-managed-selection" class="button secondary" type="button">Clear</button>
+              </div>
+            </div>
+
+            <div id="bookmark-browser-summary" class="bookmark-browser-summary"></div>
+
+            <div class="bookmark-browser-grid">
+              <div id="managed-bookmark-list" class="managed-bookmark-list"></div>
+
+              <aside class="bookmark-edit-panel" aria-label="Bookmark editing">
+                <section class="selection-panel">
+                  <h2>Selection</h2>
+                  <p id="bookmark-selection-summary">No bookmarks selected.</p>
+
+                  <label for="bookmark-move-folder">Move to folder</label>
+                  <select id="bookmark-move-folder"></select>
+                  <button id="move-selected-bookmarks" class="button" type="button" disabled>Move Selected</button>
+
+                  <label for="bookmark-bulk-tags">Bulk tags</label>
+                  <input id="bookmark-bulk-tags" type="text" placeholder="Add, replace or remove tags" />
+                  <div class="bulk-tag-actions">
+                    <button id="suggest-tags-selected" class="button secondary" type="button" disabled>Suggest</button>
+                    <button id="add-tags-selected" class="button secondary" type="button" disabled>Add</button>
+                    <button id="replace-tags-selected" class="button secondary" type="button" disabled>Replace</button>
+                    <button id="remove-tags-selected" class="button secondary" type="button" disabled>Remove</button>
+                  </div>
+                  <button id="add-tags-visible" class="button secondary full-width" type="button" disabled>
+                    Add Tags to Visible
+                  </button>
+                </section>
+
+                <section class="single-edit-panel">
+                  <h2>Bookmark</h2>
+                  <label for="bookmark-edit-title">Title</label>
+                  <input id="bookmark-edit-title" type="text" autocomplete="off" disabled />
+                  <label for="bookmark-edit-url">URL</label>
+                  <input id="bookmark-edit-url" type="url" autocomplete="off" disabled />
+                  <label for="bookmark-edit-tags">Tags</label>
+                  <input id="bookmark-edit-tags" type="text" disabled />
+                  <button id="suggest-tags-bookmark" class="button secondary" type="button" disabled>Suggest Tags</button>
+                  <button id="save-managed-bookmark" class="button" type="button" disabled>Save Bookmark</button>
+                </section>
+              </aside>
+            </div>
+          </section>
+        </div>
+      </section>
 
       <section data-manager-panel="overview" class="manager-panel">
         <div id="stats-grid" class="stats-grid"></div>
@@ -109,6 +176,7 @@
   </main>
 
   <div id="error-overlay" class="error-overlay" style="display: none"></div>
+  <script defer src="./lib/tagify.min.js"></script>
   <script defer type="module" src="./js/initBookmarkManager.js"></script>
 </body>
 

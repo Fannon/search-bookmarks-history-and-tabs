@@ -259,6 +259,207 @@ button {
   display: none;
 }
 
+.bookmarks-workspace {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.bookmark-tree-panel {
+  position: sticky;
+  top: 10px;
+  max-height: calc(100vh - 96px);
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.manager-panel-header.compact h2 {
+  margin-top: 0;
+}
+
+.bookmark-browser-panel {
+  min-width: 0;
+}
+
+.bookmark-browser-toolbar {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.bookmark-browser-toolbar input,
+.bookmark-edit-panel input,
+.bookmark-edit-panel select,
+#tag-filter {
+  width: 100%;
+  min-height: 32px;
+  border: 1px solid var(--input-border);
+  border-radius: 3px;
+  background: var(--input-bg);
+  color: var(--input-fg);
+  padding: 4px 8px 5px;
+  font: inherit;
+  font-size: 15px;
+}
+
+.bookmark-browser-actions,
+.bulk-tag-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.bookmark-browser-summary {
+  min-height: 20px;
+  color: var(--fg);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.bookmark-browser-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 14px;
+  align-items: start;
+}
+
+.managed-bookmark-list {
+  min-width: 0;
+}
+
+.folder-tree-list,
+.folder-tree-list ul,
+.managed-bookmarks {
+  list-style: none;
+  padding: 0;
+}
+
+.folder-tree-list ul {
+  margin: 1px 0 0;
+}
+
+.folder-tree-button {
+  width: 100%;
+  min-height: 30px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--nav-fg);
+  padding: 3px 7px 4px calc(7px + var(--folder-depth, 0) * 14px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.folder-tree-button:hover {
+  background: var(--nav-hover);
+  color: var(--li-title);
+}
+
+.folder-tree-button.active {
+  background: var(--nav-active-bg);
+  color: var(--nav-active-fg);
+  box-shadow: inset 2px 0 0 0 var(--nav-active-fg);
+}
+
+.folder-tree-button span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-tree-button small {
+  color: var(--counter);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.managed-bookmark {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.managed-bookmark-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.managed-bookmark-check input {
+  width: 16px;
+  height: 16px;
+}
+
+.managed-bookmark-main {
+  min-width: 0;
+}
+
+.bookmark-edit-panel {
+  position: sticky;
+  top: 10px;
+  display: grid;
+  gap: 14px;
+}
+
+.selection-panel,
+.single-edit-panel {
+  background: var(--li-bg);
+  border-radius: 3px;
+  padding: 10px;
+  display: grid;
+  gap: 7px;
+}
+
+.selection-panel h2,
+.single-edit-panel h2 {
+  margin: 0 0 2px;
+  font-size: 18px;
+}
+
+.selection-panel p {
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.bookmark-edit-panel label {
+  color: var(--li-title);
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.bookmark-edit-panel .tagify {
+  width: 100%;
+  min-height: 32px;
+  border-color: var(--input-border);
+  border-radius: 3px;
+  background: var(--input-bg);
+  color: var(--input-fg);
+  --tag-bg: var(--badge-tag);
+  --tag-text-color: #fff;
+  --tag-hover: #66839f;
+  --tag-remove-btn-color: #fff;
+  --tagify-dd-color-primary: var(--badge-tag);
+}
+
+.tagify__dropdown {
+  z-index: 1000;
+}
+
 .loading,
 .empty-state,
 .manager-note {
@@ -809,6 +1010,17 @@ h3 {
   .overview-grid {
     grid-template-columns: 1fr;
   }
+
+  .bookmarks-workspace,
+  .bookmark-browser-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bookmark-tree-panel,
+  .bookmark-edit-panel {
+    position: static;
+    max-height: none;
+  }
 }
 
 @media (max-width: 760px) {
@@ -861,6 +1073,19 @@ h3 {
 
   .manager-content {
     padding: 6px;
+  }
+
+  .bookmark-browser-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .managed-bookmark {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .managed-bookmark .recent-bookmark-edit {
+    grid-column: 2;
+    justify-self: start;
   }
 
   .stats-grid {
