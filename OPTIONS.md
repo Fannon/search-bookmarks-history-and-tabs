@@ -160,7 +160,7 @@ For a detailed explanation, see the [Scoring System section in README.md](https:
 | `scoreVisitedBonusScoreMaximum` | number | `20` | Cap on visit count bonus. |
 | `scoreRecentBonusScoreMaximum` | number | `20` | Max bonus for recently visited items. Scales linearly: just visited = max, `historyDaysAgo` old = 0. |
 | `scoreBookmarkOpenTabBonus` | number | `10` | Bonus when a bookmark is also open as a tab. |
-| `scoreFavoriteBookmarkBonus` | number | `50` | Bonus added when a bookmark is favorited. Favorites are stored as ` +★` before tags (e.g., `My Site +★ #work`). |
+| `scoreFavoriteBookmarkBonus` | integer | `50` | Bonus added when a bookmark is favorited. Favorites are stored as ` +★` before tags (e.g., `My Site +★ #work`). |
 
 ## Power User Options
 

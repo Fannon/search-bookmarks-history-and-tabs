@@ -113,6 +113,8 @@ const installChromeMock = async (page) => {
         sessionStorage.setItem(storageKey, initialTreeJson)
       }
 
+      window.__getMockBookmarkTitle = (id) => findNode(readTree(), id)?.title
+
       const bookmarksApi = {
         async getTree() {
           return clone(readTree())
@@ -187,6 +189,9 @@ const addTag = async (page, tag) => {
   }, tag)
 }
 
+const getStoredBookmarkTitle = (page, id) =>
+  page.evaluate((bookmarkId) => window.__getMockBookmarkTitle(bookmarkId), id)
+
 test.describe('Edit Bookmark View', () => {
   test.beforeEach(async ({ page }) => {
     await installChromeMock(page)
@@ -220,6 +225,31 @@ test.describe('Edit Bookmark View', () => {
     await expect(bookmarkRow.locator('.badge.tags').nth(0)).toContainText('#markdown')
     await expect(bookmarkRow.locator('.badge.tags').nth(1)).toContainText('#docs')
     await expect(bookmarkRow).not.toContainText('#md')
+    await expectNoClientErrors(page)
+  })
+
+  test('saves favorite state and renders the favorite star in search results', async ({ page }) => {
+    const favoriteButton = page.locator('#bm-favorite')
+
+    await expect(favoriteButton).toHaveAttribute('aria-pressed', 'false')
+    await favoriteButton.click()
+    await expect(favoriteButton).toHaveAttribute('aria-pressed', 'true')
+
+    await Promise.all([page.waitForURL(/#search\/t$/), page.locator('#bm-save').click()])
+
+    expect(await getStoredBookmarkTitle(page, BOOKMARK_ID)).toBe('Try pandoc! +★ #md')
+    const bookmarkRow = page.locator('#results [x-original-id="23"]')
+    await expect(bookmarkRow.locator('.favorite-star')).toHaveCount(1)
+
+    await gotoEditBookmark(page, DEFAULT_HASH)
+    await expect(favoriteButton).toHaveAttribute('aria-pressed', 'true')
+    await favoriteButton.click()
+    await expect(favoriteButton).toHaveAttribute('aria-pressed', 'false')
+
+    await Promise.all([page.waitForURL(/#search\/t$/), page.locator('#bm-save').click()])
+
+    expect(await getStoredBookmarkTitle(page, BOOKMARK_ID)).toBe('Try pandoc! #md')
+    await expect(bookmarkRow.locator('.favorite-star')).toHaveCount(0)
     await expectNoClientErrors(page)
   })
 
