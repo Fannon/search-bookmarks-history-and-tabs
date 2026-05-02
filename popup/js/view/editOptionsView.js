@@ -20,6 +20,8 @@ import { validateOptions } from '../model/validateOptions.js'
  * @returns {Promise<void>}
  */
 export async function initOptions() {
+  const configEl = document.getElementById('config')
+
   if (!optionsSchema) {
     try {
       optionsSchema = (await import('../../json/options.schema.json', { with: { type: 'json' } })).default
@@ -33,9 +35,13 @@ export async function initOptions() {
   const userOptionsYaml = window.jsyaml.dump(userOptions)
 
   if (userOptionsYaml.trim() === '{}') {
-    document.getElementById('config').value = ''
+    configEl.value = ''
   } else {
-    document.getElementById('config').value = userOptionsYaml
+    configEl.value = userOptionsYaml
+  }
+
+  if (document.activeElement === document.body) {
+    configEl.focus()
   }
 
   // Ensure event listeners are only attached once to prevent duplicates
@@ -44,7 +50,7 @@ export async function initOptions() {
     document.getElementById('opt-save').addEventListener('click', saveOptions)
 
     // Hide error overlay when focusing the textarea
-    document.getElementById('config').addEventListener('focus', hideErrors)
+    configEl.addEventListener('focus', hideErrors)
 
     // Use event delegation for the error overlay buttons
     const errorMessageEl = document.getElementById('error-message')
