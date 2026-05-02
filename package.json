@@ -10,7 +10,7 @@
     "js-yaml": "^4.1.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.13",
+    "@biomejs/biome": "^2.4.14",
     "@jest/globals": "^30.3.0",
     "@playwright/test": "^1.59.1",
     "archiver": "^7.0.1",
