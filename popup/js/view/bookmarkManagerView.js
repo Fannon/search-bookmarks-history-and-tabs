@@ -106,6 +106,7 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
  * @param {Function} handlers.onBulkTagSelected Bulk tag selected handler.
  * @param {Function} handlers.onRenameTag Tag rename handler.
  * @param {Function} handlers.onRemoveTag Tag removal handler.
+ * @param {Function} handlers.onOpenBookmark Open bookmark in the editable bookmark browser.
  */
 export function bindBookmarkManagerEvents({
   onRefresh,
@@ -119,6 +120,7 @@ export function bindBookmarkManagerEvents({
   onBulkTagSelected,
   onRenameTag,
   onRemoveTag,
+  onOpenBookmark,
 }) {
   const dom = ext.dom.manager
 
@@ -173,23 +175,28 @@ export function bindBookmarkManagerEvents({
   dom.selectNone.addEventListener('click', clearDuplicateSelection)
   dom.recentBookmarks.addEventListener('click', (event) => {
     const button = event.target.closest('[data-recent-page]')
-    if (!button) {
+    if (button) {
+      const page = Number(button.dataset.recentPage)
+      if (!Number.isFinite(page)) {
+        return
+      }
+
+      ext.model.bookmarkManagerRecentPage = page
+      renderRecentBookmarksIntoDom()
       return
     }
 
-    const page = Number(button.dataset.recentPage)
-    if (!Number.isFinite(page)) {
-      return
-    }
-
-    ext.model.bookmarkManagerRecentPage = page
-    renderRecentBookmarksIntoDom()
+    openBookmarkFromList(event, onOpenBookmark)
   })
   dom.tagFilter.addEventListener('input', () => {
     ext.model.bookmarkManagerTagFilter = dom.tagFilter.value.trim().toLowerCase()
     renderTagManagerIntoDom(ext.model.bookmarkManagerCanUpdateBookmarks)
   })
   dom.tagList.addEventListener('click', (event) => {
+    if (openBookmarkFromList(event, onOpenBookmark)) {
+      return
+    }
+
     const selectButton = event.target.closest('[data-select-tag]')
     if (selectButton) {
       ext.model.bookmarkManagerSelectedTag = selectButton.dataset.selectTag
@@ -234,6 +241,17 @@ export function bindBookmarkManagerEvents({
 
   window.addEventListener('hashchange', renderActiveManagerScreen)
   renderActiveManagerScreen()
+}
+
+function openBookmarkFromList(event, onOpenBookmark) {
+  const bookmark = event.target.closest('[data-open-managed-bookmark-id]')
+  if (!bookmark) {
+    return false
+  }
+
+  event.preventDefault()
+  onOpenBookmark(bookmark.dataset.openManagedBookmarkId)
+  return true
 }
 
 /**
@@ -931,12 +949,13 @@ function renderRecentBookmarks(bookmarks) {
 
 function renderBookmarkListItem(bookmark) {
   const displayUrl = bookmark.originalUrl || bookmark.url || ''
-  const originalId =
-    bookmark.originalId !== undefined ? ` x-original-id="${escapeHtml(String(bookmark.originalId))}"` : ''
+  const bookmarkId = bookmark.originalId !== undefined ? String(bookmark.originalId) : ''
+  const originalId = bookmarkId ? ` x-original-id="${escapeHtml(bookmarkId)}"` : ''
+  const openBookmark = bookmarkId ? ` data-open-managed-bookmark-id="${escapeHtml(bookmarkId)}"` : ''
   const openUrl = displayUrl ? ` x-open-url="${escapeHtml(displayUrl)}"` : ''
 
   return `
-    <li class="bookmark"${openUrl}${originalId}>
+    <li class="bookmark"${openUrl}${originalId}${openBookmark}>
       <div class="recent-bookmark-main">
         <div class="title">
           <span class="title-text">${renderBookmarkTitle(bookmark)} </span>

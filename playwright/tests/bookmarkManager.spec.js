@@ -15,6 +15,35 @@ test.describe('Bookmark Manager', () => {
     await expectNoClientErrors(page)
   })
 
+  test('opens passive bookmark rows in the editable bookmark browser', async ({ page }) => {
+    await page.locator('#recent-bookmarks [data-open-managed-bookmark-id]').first().click()
+
+    await expect(page).toHaveURL(/\?folder=[^&]+&bookmark=[^#]+#bookmarks$/)
+    const linkedFolderId = new URL(page.url()).searchParams.get('folder')
+    await expect(page.locator('[data-managed-bookmark-row-id].current')).toHaveCount(1)
+    await expect(page.locator('.folder-tree-button.active')).toHaveAttribute('data-manager-folder-id', linkedFolderId)
+
+    const currentBookmarkId = await page
+      .locator('[data-managed-bookmark-row-id].current')
+      .getAttribute('data-managed-bookmark-row-id')
+    await page.reload()
+    await expect(page.locator(`[data-managed-bookmark-row-id="${currentBookmarkId}"]`)).toHaveClass(/current/)
+    await expect(page.locator('.folder-tree-button.active')).toHaveAttribute('data-manager-folder-id', linkedFolderId)
+
+    await page.locator('[data-manager-tab="tags"]').click()
+    const taggedBookmark = page.locator('.tag-bookmark-list [data-open-managed-bookmark-id]').first()
+    const taggedBookmarkId = await taggedBookmark.getAttribute('data-open-managed-bookmark-id')
+
+    await taggedBookmark.click()
+
+    await expect(page).toHaveURL(/\?folder=[^&]+&bookmark=[^#]+#bookmarks$/)
+    const taggedFolderId = new URL(page.url()).searchParams.get('folder')
+    await expect(page.locator(`[data-managed-bookmark-row-id="${taggedBookmarkId}"]`)).toHaveClass(/current/)
+    await expect(page.locator('.folder-tree-button.active')).toHaveAttribute('data-manager-folder-id', taggedFolderId)
+    await expect(page.locator('#bookmark-manager-search')).toHaveValue('')
+    await expectNoClientErrors(page)
+  })
+
   test('separates the current editable bookmark from checked bulk selection', async ({ page }) => {
     await page.locator('[data-manager-tab="bookmarks"]').click()
 

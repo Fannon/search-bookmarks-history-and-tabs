@@ -23,6 +23,7 @@ import {
   getManagedBookmarkEditValues,
   getManagerTagInputValues,
   getSelectedDuplicateIds,
+  renderActiveManagerScreen,
   renderBookmarkManager,
   renderBookmarkWorkspace,
   setManagedBookmarkSelected,
@@ -66,6 +67,7 @@ export async function initBookmarkManager() {
     onBulkTagSelected: bulkTagSelectedBookmarks,
     onRenameTag: renameTag,
     onRemoveTag: removeTag,
+    onOpenBookmark: openBookmarkInManager,
   })
 
   await reloadBookmarkManager()
@@ -88,10 +90,13 @@ export async function reloadBookmarkManager() {
     ext.model.bookmarkManagerCurrentId = ''
     ext.model.bookmarkManagerSuggestedTagsReady = false
     ext.model.bookmarkManagerFolderId ||= 'all'
+    applyBookmarkDeepLinkState()
 
     renderBookmarkManager(ext.model.bookmarkManager, canModifyBookmarks(), canUpdateBookmarks())
     clearManagerSuggestedTags()
     await updateBookmarkBrowser()
+    scrollManagedBookmarkIntoView(ext.model.bookmarkManagerCurrentId)
+    scrollActiveFolderIntoView()
     showManagerStatus('Loaded')
   } catch (error) {
     showManagerStatus('Load failed', 'error')
@@ -109,6 +114,134 @@ async function updateBookmarkBrowser() {
     showManagerStatus('Search failed', 'error')
     printError(error, 'Could not search bookmark manager data.')
   }
+}
+
+async function openBookmarkInManager(bookmarkId) {
+  const bookmark = findBookmarkById(bookmarkId)
+  if (!bookmark) {
+    return
+  }
+
+  ext.model.bookmarkManagerSelectedIds = new Set()
+  ext.model.bookmarkManagerCurrentId = String(bookmark.originalId)
+  ext.model.bookmarkManagerFolderId = getMostPreciseBookmarkFolderId(bookmark)
+  ext.dom.manager.bookmarkSearch.value = ''
+  writeBookmarkDeepLink(bookmark)
+
+  renderActiveManagerScreen()
+  await updateBookmarkBrowser()
+  scrollManagedBookmarkIntoView(bookmark.originalId)
+  scrollActiveFolderIntoView()
+}
+
+function applyBookmarkDeepLinkState() {
+  if (window.location.hash !== '#bookmarks') {
+    return
+  }
+
+  const params = new URLSearchParams(window.location.search)
+  const bookmarkId = params.get('bookmark')
+  const folderId = params.get('folder')
+  const folder = folderId ? findFolderById(ext.model.bookmarkManager?.folderTree, folderId) : null
+
+  if (folder) {
+    ext.model.bookmarkManagerFolderId = folderId
+  }
+
+  if (!bookmarkId) {
+    return
+  }
+
+  const bookmark = findBookmarkById(bookmarkId)
+  if (!bookmark) {
+    return
+  }
+
+  ext.model.bookmarkManagerSelectedIds = new Set()
+  ext.model.bookmarkManagerCurrentId = String(bookmark.originalId)
+  ext.model.bookmarkManagerFolderId = folder ? folderId : getMostPreciseBookmarkFolderId(bookmark)
+  ext.dom.manager.bookmarkSearch.value = ''
+}
+
+function writeBookmarkDeepLink(bookmark) {
+  const folderId = getMostPreciseBookmarkFolderId(bookmark)
+  const url = new URL(window.location.href)
+  url.searchParams.set('folder', folderId)
+  url.searchParams.set('bookmark', String(bookmark.originalId))
+  url.hash = 'bookmarks'
+  window.history.pushState(null, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
+function getMostPreciseBookmarkFolderId(bookmark) {
+  const folder = findMostPreciseBookmarkFolder(bookmark)
+  return folder?.id || bookmark.folderId || 'all'
+}
+
+function findMostPreciseBookmarkFolder(bookmark) {
+  const folderTree = ext.model.bookmarkManager?.folderTree
+  const directFolder = bookmark.folderId ? findFolderById(folderTree, bookmark.folderId) : null
+  const pathFolder = findDeepestFolderByPath(folderTree, bookmark.folderArray || [])
+
+  if (directFolder && pathFolder) {
+    return (pathFolder.path || []).length > (directFolder.path || []).length ? pathFolder : directFolder
+  }
+
+  return directFolder || pathFolder
+}
+
+function findDeepestFolderByPath(folder, path) {
+  if (!folder || !path.length) {
+    return null
+  }
+
+  let bestMatch = pathMatchesFolder(folder.path || [], path) ? folder : null
+  const children = folder.children || []
+
+  for (let i = 0; i < children.length; i++) {
+    const childMatch = findDeepestFolderByPath(children[i], path)
+    if (childMatch && (!bestMatch || childMatch.path.length > bestMatch.path.length)) {
+      bestMatch = childMatch
+    }
+  }
+
+  return bestMatch
+}
+
+function pathMatchesFolder(folderPath, bookmarkPath) {
+  if (!folderPath.length || folderPath.length > bookmarkPath.length) {
+    return false
+  }
+
+  for (let i = 0; i < folderPath.length; i++) {
+    if (folderPath[i] !== bookmarkPath[i]) {
+      return false
+    }
+  }
+
+  return true
+}
+
+function scrollManagedBookmarkIntoView(bookmarkId) {
+  if (!bookmarkId) {
+    return
+  }
+
+  const row = document.querySelector(`[data-managed-bookmark-row-id="${CSS.escape(String(bookmarkId))}"]`)
+  if (!row) {
+    return
+  }
+
+  row.scrollIntoView({ block: 'center' })
+}
+
+function scrollActiveFolderIntoView() {
+  const folderId = ext.model.bookmarkManagerFolderId || 'all'
+  const folderButton = document.querySelector(`[data-manager-folder-id="${CSS.escape(String(folderId))}"]`)
+  if (!folderButton) {
+    return
+  }
+
+  folderButton.scrollIntoView({ block: 'center' })
 }
 
 async function getVisibleBookmarks() {

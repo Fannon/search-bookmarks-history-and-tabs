@@ -239,7 +239,6 @@ button {
   justify-content: center;
   padding: 0 9px;
   gap: 6px;
-  border-radius: 4px;
   color: var(--nav-fg);
   text-align: center;
   white-space: nowrap;
@@ -428,7 +427,7 @@ button {
 .managed-bookmark {
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
-  align-items: start;
+  align-items: center;
   gap: 9px;
   cursor: pointer;
   transition:
@@ -817,6 +816,14 @@ h3 {
 
 .recent-bookmark-list li {
   display: block;
+}
+
+.bookmark-list li[data-open-managed-bookmark-id] {
+  cursor: pointer;
+}
+
+.bookmark-list li[data-open-managed-bookmark-id]:hover {
+  background-color: var(--nav-hover);
 }
 
 .recent-bookmark-main {
