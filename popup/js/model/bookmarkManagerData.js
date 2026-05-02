@@ -18,7 +18,7 @@ export function createBookmarkManagerModel(bookmarks = [], bookmarkTree = []) {
   const tagGroups = getTagGroups(bookmarks)
   const folderTree = getFolderTree(bookmarkTree, bookmarks)
   const folderOptions = getFolderOptions(folderTree)
-  const stats = getBookmarkStats(bookmarks, duplicateGroups)
+  const stats = getBookmarkStats(bookmarks, duplicateGroups, folderOptions)
 
   return {
     bookmarks,
@@ -120,12 +120,14 @@ export function getDuplicateGroups(bookmarks = []) {
  *
  * @param {Array<Object>} bookmarks Normalized bookmark entries.
  * @param {Array<Object>} duplicateGroups Duplicate URL groups.
+ * @param {Array<Object>} folderOptions Folder options with labels and ids.
  * @returns {Object} Aggregate statistics.
  */
-export function getBookmarkStats(bookmarks = [], duplicateGroups = []) {
+export function getBookmarkStats(bookmarks = [], duplicateGroups = [], folderOptions = []) {
   const tagCounts = new Map()
   const domainCounts = new Map()
   const folderCounts = new Map()
+  const folderIdsByLabel = getFolderIdsByLabel(folderOptions)
   const bookmarkCount = bookmarks.length
   let taggedBookmarkCount = 0
   let tagAssignmentCount = 0
@@ -148,7 +150,7 @@ export function getBookmarkStats(bookmarks = [], duplicateGroups = []) {
     }
 
     incrementNamedCount(domainCounts, getDomainLabel(bookmark.originalUrl || bookmark.url))
-    incrementNamedCount(folderCounts, getFolderLabel(bookmark.folderArray))
+    incrementFolderCount(folderCounts, bookmark, folderIdsByLabel)
 
     if (Number.isFinite(bookmark.dateAdded)) {
       if (bookmark.dateAdded < oldestDateAdded) {
@@ -461,6 +463,38 @@ function incrementNamedCount(map, name) {
       count: 1,
     })
   }
+}
+
+function incrementFolderCount(map, bookmark, folderIdsByLabel) {
+  const name = getFolderLabel(bookmark.folderArray)
+  const id = bookmark.folderId || folderIdsByLabel.get(name.toLowerCase()) || ''
+  const key = name.toLowerCase()
+  const current = map.get(key)
+
+  if (current) {
+    current.count += 1
+  } else {
+    map.set(key, {
+      name,
+      id,
+      count: 1,
+    })
+  }
+}
+
+function getFolderIdsByLabel(folderOptions) {
+  const result = new Map()
+
+  for (let i = 0; i < folderOptions.length; i++) {
+    const folder = folderOptions[i]
+    const label = String(folder.label || '').trim()
+
+    if (label) {
+      result.set(label.toLowerCase(), folder.id)
+    }
+  }
+
+  return result
 }
 
 function getDomainLabel(url) {

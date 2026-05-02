@@ -5,8 +5,10 @@ import {
   getBookmarkManagerDom,
   getManagedActionTargetIds,
   getSelectedManagedBookmarkIds,
+  renderActiveManagerScreen,
   renderBookmarkWorkspace,
   setManagedBookmarkSelected,
+  showTagSuggestionBusy,
   showTagSuggestionStatus,
 } from '../bookmarkManagerView.js'
 
@@ -30,6 +32,7 @@ const BOOKMARKS = [
 ]
 
 function setupDom() {
+  window.history.replaceState(null, '', '/')
   document.body.innerHTML = `
     <div id="manager-status"></div>
     <input id="bookmark-manager-search" />
@@ -70,7 +73,9 @@ function setupDom() {
     <button id="refresh-bookmarks"></button>
     <div id="manager-load"></div>
     <a data-manager-tab="bookmarks"></a>
+    <a data-manager-tab="tags"></a>
     <section data-manager-panel="bookmarks"></section>
+    <section data-manager-panel="tags"></section>
   `
 }
 
@@ -196,5 +201,74 @@ describe('bookmarkManagerView selection', () => {
     expect(status.textContent).toBe('No tags suggested')
     expect(status.dataset.tone).toBe('error')
     expect(document.getElementById('manager-status').textContent).toBe('')
+  })
+
+  test('labels suggestion retry only while the target selection is unchanged', () => {
+    ext.model.bookmarkManagerLocalAiAvailable = true
+    const rows = document.querySelectorAll('[data-managed-bookmark-row-id]')
+    const button = document.getElementById('suggest-tags-selected')
+
+    rows[0].querySelector('.url').click()
+    ext.model.bookmarkManagerTagSuggestionRetryKey = 'bookmark-1'
+    ext.model.bookmarkManagerTagSuggestionRetryCount = 1
+    showTagSuggestionBusy(false)
+
+    expect(button.textContent).toBe('Suggest tags (try again)')
+
+    rows[1].querySelector('.url').click()
+
+    expect(button.textContent).toBe('Suggest tags')
+  })
+
+  test('enables manual bulk tags without suggested tags', () => {
+    const rows = document.querySelectorAll('[data-managed-bookmark-row-id]')
+    const bulkTags = document.getElementById('bookmark-bulk-tags')
+    const addButton = document.getElementById('add-tags-selected')
+
+    rows[0].querySelector('.url').click()
+
+    expect(ext.model.bookmarkManagerSuggestedTagsReady).toBeFalsy()
+    expect(bulkTags.disabled).toBe(false)
+    expect(addButton.disabled).toBe(true)
+
+    bulkTags.value = 'manual'
+    bulkTags.dispatchEvent(new Event('input'))
+
+    expect(addButton.disabled).toBe(false)
+  })
+
+  test('renders move folder options as indented folder names without repeated parent trails', () => {
+    ext.model.bookmarkManager.folderOptions = [
+      { id: 'parent', title: 'Parent', label: 'Parent', depth: 1 },
+      { id: 'child', title: 'Child', label: 'Parent / Child', depth: 2 },
+    ]
+
+    renderWorkspace()
+
+    const options = [...document.getElementById('bookmark-move-folder').options]
+    expect(options[0].textContent).toBe('Parent')
+    expect(options[1].textContent).toBe('\u00a0\u00a0\u00a0\u00a0Child')
+    expect(options[1].textContent).not.toContain('Parent / Child')
+    expect(options[1].title).toBe('Parent / Child')
+  })
+
+  test('selects and scrolls a tag from the tag manager URL', () => {
+    const scrollIntoView = jest.fn()
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoView
+    ext.model.bookmarkManager.tagGroups = [
+      { name: 'one', count: 1, bookmarkIds: ['bookmark-1'] },
+      { name: 'two', count: 1, bookmarkIds: ['bookmark-2'] },
+    ]
+    ext.model.bookmarkManagerTagFilter = 'missing'
+    document.getElementById('tag-filter').value = 'missing'
+    window.history.replaceState(null, '', '/bookmarkManager.html?tag=two#tags')
+
+    renderActiveManagerScreen()
+
+    expect(ext.model.bookmarkManagerSelectedTag).toBe('two')
+    expect(document.getElementById('tag-filter').value).toBe('')
+    expect(document.querySelector('.tag-manager-list .active .badge').textContent).toBe('#two')
+    expect(document.querySelector('[data-manager-panel="tags"]').hidden).toBe(false)
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' })
   })
 })

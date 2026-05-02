@@ -2,6 +2,8 @@ import { describe, expect, test } from '@jest/globals'
 
 import {
   createDomainBookmarkHref,
+  createFolderBookmarkHref,
+  createTagManagerHref,
   renderRecentBookmarks,
   renderStats,
   renderTagSummary,
@@ -44,6 +46,12 @@ describe('bookmark manager overview rendering', () => {
     expect(renderTopList([], 'No domains found')).toContain('No domains found')
     expect(renderTopList([{ name: 'example.test', count: 2 }], 'No domains found', createDomainBookmarkHref)).toContain(
       '?folder=all&amp;search=example.test#bookmarks',
+    )
+    expect(
+      renderTopList([{ name: 'Work', id: 'work-folder', count: 2 }], 'No folders found', createFolderBookmarkHref),
+    ).toContain('?folder=work-folder#bookmarks')
+    expect(renderTopList([{ name: 'work docs', count: 2 }], 'No tags found', createTagManagerHref)).toContain(
+      '?tag=work+docs#tags',
     )
   })
 

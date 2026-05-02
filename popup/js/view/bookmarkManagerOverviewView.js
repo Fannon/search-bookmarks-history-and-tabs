@@ -76,6 +76,18 @@ export function createDomainBookmarkHref(item) {
   return `?${params.toString()}#bookmarks`
 }
 
+export function createTagManagerHref(item) {
+  const params = new URLSearchParams()
+  params.set('tag', item.name)
+  return `?${params.toString()}#tags`
+}
+
+export function createFolderBookmarkHref(item) {
+  const params = new URLSearchParams()
+  params.set('folder', item.id || 'all')
+  return `?${params.toString()}#bookmarks`
+}
+
 export function renderRecentBookmarks(bookmarks, requestedPage = 1) {
   const recentBookmarks = bookmarks
     .filter((bookmark) => Number.isFinite(bookmark.dateAdded))

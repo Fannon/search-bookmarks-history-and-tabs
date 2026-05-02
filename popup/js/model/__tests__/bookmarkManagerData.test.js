@@ -10,6 +10,7 @@ const bookmarks = [
     dateAdded: 1000,
     tagsArray: ['work', 'docs'],
     folderArray: ['Work'],
+    folderId: 'work',
   },
   {
     originalId: '2',
@@ -19,6 +20,7 @@ const bookmarks = [
     dateAdded: 2000,
     tagsArray: ['work'],
     folderArray: ['Inbox'],
+    folderId: 'inbox',
   },
   {
     originalId: '3',
@@ -28,6 +30,7 @@ const bookmarks = [
     dateAdded: 3000,
     tagsArray: [],
     folderArray: ['Work'],
+    folderId: 'work',
   },
   {
     originalId: '4',
@@ -134,6 +137,7 @@ describe('bookmark manager data', () => {
     expect(model.stats.folderCount).toBe(3)
     expect(model.stats.topTags[0]).toEqual({ name: 'work', count: 2 })
     expect(model.stats.topDomains[0]).toEqual({ name: 'example.com', count: 2 })
+    expect(model.stats.topFolders[0]).toEqual({ name: 'Work', id: 'work', count: 2 })
     expect(model.tagGroups[0]).toEqual({ name: 'work', count: 2, bookmarkIds: ['1', '2'] })
   })
 

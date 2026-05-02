@@ -90,8 +90,13 @@ export async function initBookmarkManager() {
 
 /**
  * Reload bookmark data and rerender the manager.
+ *
+ * @param {Object} [options] Reload options.
+ * @param {boolean} [options.preserveBookmarkSelection=false] Keep the current bookmark action target.
  */
-export async function reloadBookmarkManager() {
+export async function reloadBookmarkManager(options = {}) {
+  const preservedSelection = options.preserveBookmarkSelection ? getBookmarkSelectionState() : null
+
   try {
     showManagerStatus('Loading bookmarks...')
     const { bookmarks, bookmarkTree } = await getSearchData()
@@ -99,20 +104,28 @@ export async function reloadBookmarkManager() {
     ext.model.bookmarkManager = createBookmarkManagerModel(bookmarks, bookmarkTree)
     ext.searchCache = new Map()
     ext.model.searchMode = 'bookmarks'
+    resetBookmarkSearchCaches()
     ext.model.bookmarkManagerSelectedIds = new Set()
     ext.model.bookmarkManagerCurrentId = ''
     ext.model.bookmarkManagerHasManualSelection = false
+    if (preservedSelection) {
+      restoreBookmarkSelectionState(preservedSelection, bookmarks)
+    }
     ext.model.bookmarkManagerSuggestedTagsReady = false
     resetTagSuggestionRetry()
     ext.model.bookmarkManagerFolderId ||= 'all'
-    applyBookmarkDeepLinkState()
+    if (!preservedSelection) {
+      applyBookmarkDeepLinkState()
+    }
 
     renderBookmarkManager(ext.model.bookmarkManager, canModifyBookmarks(), canUpdateBookmarks())
     clearManagerSuggestedTags()
     await updateBookmarkBrowser()
     scrollManagedBookmarkIntoView(ext.model.bookmarkManagerCurrentId)
     scrollActiveFolderIntoView()
-    showManagerStatus('Loaded')
+    if (!preservedSelection) {
+      showManagerStatus('Loaded')
+    }
   } catch (error) {
     showManagerStatus('Load failed', 'error')
     printError(error, 'Could not load bookmark manager data.')
@@ -424,6 +437,38 @@ function resetTagSuggestionRetry() {
   ext.model.bookmarkManagerTagSuggestionRetryCount = 0
 }
 
+function getBookmarkSelectionState() {
+  return {
+    selectedIds: [...(ext.model.bookmarkManagerSelectedIds || new Set())],
+    currentId: ext.model.bookmarkManagerCurrentId || '',
+    hasManualSelection: Boolean(ext.model.bookmarkManagerHasManualSelection),
+    folderId: ext.model.bookmarkManagerFolderId || 'all',
+    searchTerm: ext.dom.manager?.bookmarkSearch?.value || '',
+  }
+}
+
+function restoreBookmarkSelectionState(selection, bookmarks) {
+  const existingIds = new Set(bookmarks.map((bookmark) => String(bookmark.originalId)))
+  const selectedIds = new Set()
+
+  for (let i = 0; i < selection.selectedIds.length; i++) {
+    const bookmarkId = String(selection.selectedIds[i])
+    if (existingIds.has(bookmarkId)) {
+      selectedIds.add(bookmarkId)
+    }
+  }
+
+  const currentId = String(selection.currentId || '')
+  ext.model.bookmarkManagerSelectedIds = selectedIds
+  ext.model.bookmarkManagerCurrentId = existingIds.has(currentId) ? currentId : ''
+  ext.model.bookmarkManagerHasManualSelection = Boolean(selection.hasManualSelection && selectedIds.size)
+  ext.model.bookmarkManagerFolderId = selection.folderId || 'all'
+
+  if (ext.dom.manager?.bookmarkSearch) {
+    ext.dom.manager.bookmarkSearch.value = selection.searchTerm || ''
+  }
+}
+
 async function bulkTagBookmarks(bookmarkIds, mode) {
   if (!bookmarkIds.length || !canUpdateBookmarks()) {
     return
@@ -442,9 +487,9 @@ async function bulkTagBookmarks(bookmarkIds, mode) {
       bookmarkIdSet.has(String(bookmark.originalId)),
     )
     await updateTaggedBookmarks(bookmarks, (currentTags) => mergeBulkTags(currentTags, tags, mode))
-    showManagerStatus(`Updated ${bookmarkIds.length} bookmark(s)`, 'success')
     clearBulkTagInput()
-    await reloadBookmarkManager()
+    await reloadBookmarkManager({ preserveBookmarkSelection: true })
+    showManagerStatus(`Updated ${bookmarkIds.length} bookmark(s)`, 'success')
   } catch (error) {
     showManagerStatus('Tag update failed', 'error')
     printError(error, 'Could not update bookmark tags.')

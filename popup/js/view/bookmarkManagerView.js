@@ -14,6 +14,8 @@ import {
 import { renderDuplicateSummary, renderDuplicates } from './bookmarkManagerDuplicatesView.js'
 import {
   createDomainBookmarkHref,
+  createFolderBookmarkHref,
+  createTagManagerHref,
   renderRecentBookmarks,
   renderStats,
   renderTagSummary,
@@ -94,9 +96,9 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
   const stats = model.stats
 
   dom.statsGrid.innerHTML = renderStats(stats)
-  dom.topTags.innerHTML = renderTopList(stats.topTags, 'No tags found')
+  dom.topTags.innerHTML = renderTopList(stats.topTags, 'No tags found', createTagManagerHref)
   dom.topDomains.innerHTML = renderTopList(stats.topDomains, 'No domains found', createDomainBookmarkHref)
-  dom.topFolders.innerHTML = renderTopList(stats.topFolders, 'No folders found')
+  dom.topFolders.innerHTML = renderTopList(stats.topFolders, 'No folders found', createFolderBookmarkHref)
   renderRecentBookmarksIntoDom()
   dom.bookmarkCount.textContent = stats.bookmarkCount ? String(stats.bookmarkCount) : ''
   dom.duplicateSummary.innerHTML = renderDuplicateSummary(stats)
@@ -349,7 +351,6 @@ export function showTagSuggestionBusy(busy, message = '') {
     return
   }
 
-  dom.suggestTagsSelected.textContent = busy ? 'Suggesting...' : 'Suggest tags'
   dom.suggestTagsSelected.setAttribute('aria-busy', busy ? 'true' : 'false')
   dom.suggestTagsSelected.title = busy
     ? message || 'Suggesting tags with local AI'
@@ -562,6 +563,11 @@ export function renderActiveManagerScreen() {
   for (const panel of panels) {
     panel.hidden = panel.dataset.managerPanel !== screen
   }
+
+  if (screen === 'tags') {
+    applyTagManagerUrlState()
+    renderTagManagerIntoDom(Boolean(ext.model.bookmarkManagerCanUpdateBookmarks))
+  }
 }
 
 function renderFolderTree(folder, activeFolderId) {
@@ -609,8 +615,10 @@ function renderFolderOptions(folderOptions) {
 
   return folderOptions
     .map((folder) => {
-      const indent = '\u00a0\u00a0'.repeat(Math.max(0, folder.depth - 1))
-      return `<option value="${escapeHtml(folder.id)}">${indent}${escapeHtml(folder.label)}</option>`
+      const indent = '\u00a0\u00a0\u00a0\u00a0'.repeat(Math.max(0, folder.depth - 1))
+      return `<option value="${escapeHtml(folder.id)}" title="${escapeHtml(folder.label)}">${indent}${escapeHtml(
+        folder.title,
+      )}</option>`
     })
     .join('')
 }
@@ -684,11 +692,9 @@ function updateManagedSelectionUi() {
   const canMoveBookmarks = Boolean(ext.model.bookmarkManagerCanMoveBookmarks)
   const canEditCurrentBookmark = canEditCurrentManagedBookmark(currentBookmark, selectedIds, canUpdateBookmarks)
   const isSuggestingTags = Boolean(ext.model.bookmarkManagerSuggestingTags)
-  const hasSuggestedTags = getManagerTagInputValues('bulk').length > 0
-  const suggestedTagsReady = Boolean(ext.model.bookmarkManagerSuggestedTagsReady && hasSuggestedTags)
-  const canApplySuggestedTags = Boolean(
-    targetIds.length && canUpdateBookmarks && suggestedTagsReady && !isSuggestingTags,
-  )
+  const hasBulkTags = getManagerTagInputValues('bulk').length > 0
+  const canApplyBulkTags = Boolean(targetIds.length && canUpdateBookmarks && hasBulkTags && !isSuggestingTags)
+  const canEditBulkTags = Boolean(targetIds.length && canUpdateBookmarks && !isSuggestingTags)
 
   dom.bookmarkBrowserSummary.textContent = renderBrowserSummary(
     ext.model.bookmarkManagerVisibleBookmarks?.length || 0,
@@ -696,15 +702,16 @@ function updateManagedSelectionUi() {
   )
   dom.bookmarkSelectionSummary.textContent = renderActionTargetSummary(selectedCount, currentBookmark)
   dom.moveSelectedBookmarks.disabled = !targetIds.length || !canMoveBookmarks || !dom.bookmarkMoveFolder.value
-  dom.addTagsSelected.disabled = !canApplySuggestedTags
-  dom.replaceTagsSelected.disabled = !canApplySuggestedTags
-  dom.removeTagsSelected.disabled = !canApplySuggestedTags
+  dom.addTagsSelected.disabled = !canApplyBulkTags
+  dom.replaceTagsSelected.disabled = !canApplyBulkTags
+  dom.removeTagsSelected.disabled = !canApplyBulkTags
+  dom.suggestTagsSelected.textContent = getTagSuggestionButtonLabel(targetIds, isSuggestingTags)
   dom.suggestTagsSelected.disabled = isSuggestingTags || !targetIds.length || !ext.model.bookmarkManagerLocalAiAvailable
   dom.saveManagedBookmark.disabled = !canEditCurrentBookmark
   dom.bookmarkEditTitle.disabled = !canEditCurrentBookmark
   dom.bookmarkEditUrl.disabled = !canEditCurrentBookmark
   dom.bookmarkEditTags.disabled = !canEditCurrentBookmark
-  dom.bulkTagsInput.disabled = !suggestedTagsReady || isSuggestingTags
+  dom.bulkTagsInput.disabled = !canEditBulkTags
 
   if (selectedCount > 1) {
     dom.bookmarkEditTitle.value = '<< multiple selection >>'
@@ -721,9 +728,24 @@ function updateManagedSelectionUi() {
   }
 
   setManagerTagControlDisabled(ext, 'edit', !canEditCurrentBookmark)
-  setManagerTagControlDisabled(ext, 'bulk', !suggestedTagsReady || isSuggestingTags)
+  setManagerTagControlDisabled(ext, 'bulk', !canEditBulkTags)
   syncManagedBookmarkCheckboxes()
   syncManagedBookmarkSelectionRows()
+}
+
+function getTagSuggestionButtonLabel(targetIds, isSuggestingTags) {
+  if (isSuggestingTags) {
+    return 'Suggesting...'
+  }
+
+  const targetKey = targetIds.join('|')
+  const canRetry = Boolean(
+    targetKey &&
+      ext.model.bookmarkManagerTagSuggestionRetryCount > 0 &&
+      ext.model.bookmarkManagerTagSuggestionRetryKey === targetKey,
+  )
+
+  return canRetry ? 'Suggest tags (try again)' : 'Suggest tags'
 }
 
 function renderActionTargetSummary(selectedCount, currentBookmark) {
@@ -947,6 +969,32 @@ function renderTagManagerIntoDom(canUpdateBookmarks) {
   }
 
   tagList.innerHTML = renderTagManager(canUpdateBookmarks)
+  scrollSelectedTagIntoView()
+}
+
+function applyTagManagerUrlState() {
+  if (window.location.hash !== '#tags') {
+    return
+  }
+
+  const tagName = new URLSearchParams(window.location.search).get('tag')
+  if (!tagName) {
+    return
+  }
+
+  ext.model.bookmarkManagerSelectedTag = tagName
+  ext.model.bookmarkManagerTagFilter = ''
+
+  if (ext.dom.manager?.tagFilter) {
+    ext.dom.manager.tagFilter.value = ''
+  }
+}
+
+function scrollSelectedTagIntoView() {
+  const activeTag = ext.dom.manager?.tagList?.querySelector('.tag-manager-list .active .tag-manager-select')
+  if (typeof activeTag?.scrollIntoView === 'function') {
+    activeTag.scrollIntoView({ block: 'nearest' })
+  }
 }
 
 function renderRecentBookmarksIntoDom() {
