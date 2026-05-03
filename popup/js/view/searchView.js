@@ -166,13 +166,16 @@ export async function renderSearchResults() {
         faviconHtml = `<span class="favicon-col"><img class="favicon${isLoaded ? ' loaded' : ''}" src="${escapeHtml(iconUrl)}" alt=""></span>`
       }
 
-      // Build favorite star HTML for yellow (+25) and orange (+50) starred bookmarks
+      // Build favorite star HTML for starred bookmarks
       let favoriteHtml = ''
-      if (type === 'bookmark') {
-        if (entry.customBonusScore >= 50) {
-          favoriteHtml = '<img class="favorite-star" title="Favorite (orange +50)" src="./img/star-orange.svg" alt="">'
-        } else if (entry.customBonusScore >= 25) {
-          favoriteHtml = '<img class="favorite-star" title="Favorite (yellow +25)" src="./img/star-yellow.svg" alt="">'
+      if (type === 'bookmark' && entry.customBonusScore > 0) {
+        const score = entry.customBonusScore
+        if (score >= 51) {
+          favoriteHtml = `<img class="favorite-star" title="Favorite (+${score})" src="./img/star-red.svg" alt="">`
+        } else if (score >= 26) {
+          favoriteHtml = `<img class="favorite-star" title="Favorite (+${score})" src="./img/star-orange.svg" alt="">`
+        } else {
+          favoriteHtml = `<img class="favorite-star" title="Favorite (+${score})" src="./img/star.svg" alt="">`
         }
       }
 

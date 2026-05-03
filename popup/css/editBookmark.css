@@ -43,6 +43,14 @@
   fill: #ff8c00;
   stroke: #7a4a00;
 }
+#bm-favorite[data-favorite="red"] {
+  background: #ffcccc;
+  color: #8b0000;
+}
+#bm-favorite[data-favorite="red"] svg {
+  fill: #ee4343;
+  stroke: #8b0000;
+}
 #bm-favorite:hover {
   filter: brightness(110%);
 }

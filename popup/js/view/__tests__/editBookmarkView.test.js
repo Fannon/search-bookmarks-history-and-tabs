@@ -451,25 +451,29 @@ describe('editBookmarkView', () => {
   })
 
   describe('getStarState', () => {
-    it('returns "yellow" for customBonusScore 25', async () => {
+    it('returns "yellow" for customBonusScore 1 through 25', async () => {
       const { module } = await loadEditBookmarkView()
+      expect(module.getStarState(1)).toBe('yellow')
+      expect(module.getStarState(10)).toBe('yellow')
       expect(module.getStarState(25)).toBe('yellow')
     })
 
-    it('returns "orange" for customBonusScore 50', async () => {
+    it('returns "orange" for customBonusScore 26 through 50', async () => {
       const { module } = await loadEditBookmarkView()
+      expect(module.getStarState(26)).toBe('orange')
       expect(module.getStarState(50)).toBe('orange')
+    })
+
+    it('returns "red" for customBonusScore 51 and above', async () => {
+      const { module } = await loadEditBookmarkView()
+      expect(module.getStarState(51)).toBe('red')
+      expect(module.getStarState(75)).toBe('red')
+      expect(module.getStarState(100)).toBe('red')
     })
 
     it('returns "" for customBonusScore 0', async () => {
       const { module } = await loadEditBookmarkView()
       expect(module.getStarState(0)).toBe('')
-    })
-
-    it('returns "" for other customBonusScore values', async () => {
-      const { module } = await loadEditBookmarkView()
-      expect(module.getStarState(10)).toBe('')
-      expect(module.getStarState(100)).toBe('')
     })
   })
 
@@ -503,8 +507,17 @@ describe('editBookmarkView', () => {
       module.updateFavoriteButton(button, 'yellow')
       expect(label.textContent).toBe('★ (+25)')
 
+      module.updateFavoriteButton(button, 'yellow', 15)
+      expect(label.textContent).toBe('★ (+15)')
+
       module.updateFavoriteButton(button, 'orange')
       expect(label.textContent).toBe('★★ (+50)')
+
+      module.updateFavoriteButton(button, 'orange', 30)
+      expect(label.textContent).toBe('★★ (+30)')
+
+      module.updateFavoriteButton(button, 'red')
+      expect(label.textContent).toBe('★★★ (+75)')
 
       module.updateFavoriteButton(button, '')
       expect(label.textContent).toBe('FAVORITE')
@@ -539,12 +552,23 @@ describe('editBookmarkView', () => {
       expect(button.dataset.favorite).toBe('orange')
     })
 
-    it('cycles from orange back to empty', async () => {
+    it('cycles from orange to red', async () => {
       setupDom()
       setupExt([])
       const { module } = await loadEditBookmarkView()
       const button = document.getElementById('bm-favorite')
       button.dataset.favorite = 'orange'
+
+      module.cycleFavoriteButton(button)
+      expect(button.dataset.favorite).toBe('red')
+    })
+
+    it('cycles from red back to empty', async () => {
+      setupDom()
+      setupExt([])
+      const { module } = await loadEditBookmarkView()
+      const button = document.getElementById('bm-favorite')
+      button.dataset.favorite = 'red'
 
       module.cycleFavoriteButton(button)
       expect(button.dataset.favorite).toBe('')
@@ -602,7 +626,29 @@ describe('editBookmarkView', () => {
       expect(favoriteButton.dataset.favorite).toBe('orange')
     })
 
-    it('leaves favorite button empty when customBonusScore is not 25 or 50', async () => {
+    it('initializes favorite button to red when customBonusScore is 75', async () => {
+      setupDom()
+      setupExt([
+        {
+          originalId: BOOKMARK_ID,
+          title: 'Starred Title',
+          originalUrl: 'http://example.com',
+          tags: '',
+          folder: '',
+          customBonusScore: 75,
+        },
+      ])
+      const { module } = await loadEditBookmarkView({
+        uniqueTags: {},
+      })
+
+      await module.editBookmark(BOOKMARK_ID)
+
+      const favoriteButton = document.getElementById('bm-favorite')
+      expect(favoriteButton.dataset.favorite).toBe('red')
+    })
+
+    it('leaves favorite button empty when customBonusScore is 0', async () => {
       setupDom()
       setupExt([
         {
@@ -622,6 +668,53 @@ describe('editBookmarkView', () => {
 
       const favoriteButton = document.getElementById('bm-favorite')
       expect(favoriteButton.dataset.favorite).toBe('')
+      expect(favoriteButton.querySelector('.favorite-label').textContent).toBe('FAVORITE')
+    })
+
+    it('initializes favorite button to yellow with actual score for non-standard bonus', async () => {
+      setupDom()
+      setupExt([
+        {
+          originalId: BOOKMARK_ID,
+          title: 'Tweaked',
+          originalUrl: 'http://example.com',
+          tags: '',
+          folder: '',
+          customBonusScore: 20,
+        },
+      ])
+      const { module } = await loadEditBookmarkView({
+        uniqueTags: {},
+      })
+
+      await module.editBookmark(BOOKMARK_ID)
+
+      const favoriteButton = document.getElementById('bm-favorite')
+      expect(favoriteButton.dataset.favorite).toBe('yellow')
+      expect(favoriteButton.querySelector('.favorite-label').textContent).toBe('★ (+20)')
+    })
+
+    it('initializes favorite button to orange with actual score for score 35', async () => {
+      setupDom()
+      setupExt([
+        {
+          originalId: BOOKMARK_ID,
+          title: 'Tweaked',
+          originalUrl: 'http://example.com',
+          tags: '',
+          folder: '',
+          customBonusScore: 35,
+        },
+      ])
+      const { module } = await loadEditBookmarkView({
+        uniqueTags: {},
+      })
+
+      await module.editBookmark(BOOKMARK_ID)
+
+      const favoriteButton = document.getElementById('bm-favorite')
+      expect(favoriteButton.dataset.favorite).toBe('orange')
+      expect(favoriteButton.querySelector('.favorite-label').textContent).toBe('★★ (+35)')
     })
   })
 })

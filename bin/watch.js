@@ -11,6 +11,7 @@ import process from 'node:process'
 import chokidar from 'chokidar'
 import { bundleAll } from './bundle.js'
 import { createDist } from './createDist.js'
+import { syncDevDist } from './syncDevDist.js'
 
 /**
  * Determine whether a changed file should be ignored by the watcher.
@@ -55,6 +56,7 @@ async function buildOnce() {
   const startedAt = performance.now()
   await bundleAll()
   await createDist(false)
+  await syncDevDist()
   const finishedAt = performance.now()
   const durationMs = Math.round(finishedAt - startedAt)
   console.info(`Build complete in ${durationMs}ms`)
