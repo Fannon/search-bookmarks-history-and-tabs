@@ -18,6 +18,10 @@ function setupDom() {
     <input id="bm-tags" />
     <a id="bm-save" href="#"></a>
     <button id="bm-del"></button>
+    <button id="bm-favorite" type="button" data-favorite="" aria-pressed="false" title="Favorite bookmark">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a8a8a" stroke-width="2"><path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245" /></svg>
+      <span class="favorite-label">FAVORITE</span>
+    </button>
     <div id="errors" style="display:none"></div>
   `
 }
@@ -250,6 +254,68 @@ describe('editBookmarkView', () => {
     })
   })
 
+  it('includes bonus score in bookmark title when favorite is set', async () => {
+    setupDom()
+    const bookmark = {
+      originalId: BOOKMARK_ID,
+      title: 'Original Title',
+      originalUrl: 'http://example.com',
+      tags: '#old',
+      folder: '~Work',
+      customBonusScore: 25,
+      searchStringLower: 'old',
+    }
+    setupExt([bookmark])
+    const { module, mocks } = await loadEditBookmarkView()
+    global.ext.returnHash = '#search/'
+
+    document.getElementById('bm-title').value = 'Updated Title'
+    document.getElementById('bm-url').value = 'http://updated.com'
+    global.ext.tagify = {
+      value: [{ value: 'star' }],
+    }
+    document.getElementById('bm-favorite').dataset.favorite = 'yellow'
+
+    module.updateBookmark(BOOKMARK_ID)
+
+    expect(mocks.browserApi.bookmarks.update).toHaveBeenCalledWith(BOOKMARK_ID, {
+      title: 'Updated Title +25 #star',
+      url: 'http://updated.com',
+    })
+    expect(bookmark.customBonusScore).toBe(25)
+  })
+
+  it('sets customBonusScore to 0 when favorite is not set', async () => {
+    setupDom()
+    const bookmark = {
+      originalId: BOOKMARK_ID,
+      title: 'Original Title',
+      originalUrl: 'http://example.com',
+      tags: '#old',
+      folder: '~Work',
+      customBonusScore: 50,
+      searchStringLower: 'old',
+    }
+    setupExt([bookmark])
+    const { module, mocks } = await loadEditBookmarkView()
+    global.ext.returnHash = '#search/'
+
+    document.getElementById('bm-title').value = 'Updated Title'
+    document.getElementById('bm-url').value = 'http://updated.com'
+    global.ext.tagify = {
+      value: [],
+    }
+    document.getElementById('bm-favorite').dataset.favorite = ''
+
+    module.updateBookmark(BOOKMARK_ID)
+
+    expect(mocks.browserApi.bookmarks.update).toHaveBeenCalledWith(BOOKMARK_ID, {
+      title: 'Updated Title',
+      url: 'http://updated.com',
+    })
+    expect(bookmark.customBonusScore).toBe(0)
+  })
+
   it('handles missing browser API and empty tag selection during update', async () => {
     setupDom()
     const bookmark = {
@@ -382,5 +448,180 @@ describe('editBookmarkView', () => {
 
     expect(warnSpy).toHaveBeenCalledWith('Tried to edit bookmark id="missing-id", but could not find it in searchData.')
     warnSpy.mockRestore()
+  })
+
+  describe('getStarState', () => {
+    it('returns "yellow" for customBonusScore 25', async () => {
+      const { module } = await loadEditBookmarkView()
+      expect(module.getStarState(25)).toBe('yellow')
+    })
+
+    it('returns "orange" for customBonusScore 50', async () => {
+      const { module } = await loadEditBookmarkView()
+      expect(module.getStarState(50)).toBe('orange')
+    })
+
+    it('returns "" for customBonusScore 0', async () => {
+      const { module } = await loadEditBookmarkView()
+      expect(module.getStarState(0)).toBe('')
+    })
+
+    it('returns "" for other customBonusScore values', async () => {
+      const { module } = await loadEditBookmarkView()
+      expect(module.getStarState(10)).toBe('')
+      expect(module.getStarState(100)).toBe('')
+    })
+  })
+
+  describe('updateFavoriteButton', () => {
+    it('sets data-favorite and aria-pressed attributes', async () => {
+      setupDom()
+      setupExt([])
+      const { module } = await loadEditBookmarkView()
+      const button = document.getElementById('bm-favorite')
+
+      module.updateFavoriteButton(button, 'yellow')
+      expect(button.dataset.favorite).toBe('yellow')
+      expect(button.getAttribute('aria-pressed')).toBe('true')
+
+      module.updateFavoriteButton(button, '')
+      expect(button.dataset.favorite).toBe('')
+      expect(button.getAttribute('aria-pressed')).toBe('false')
+
+      module.updateFavoriteButton(button, 'orange')
+      expect(button.dataset.favorite).toBe('orange')
+      expect(button.getAttribute('aria-pressed')).toBe('true')
+    })
+
+    it('updates label text based on state', async () => {
+      setupDom()
+      setupExt([])
+      const { module } = await loadEditBookmarkView()
+      const button = document.getElementById('bm-favorite')
+      const label = button.querySelector('.favorite-label')
+
+      module.updateFavoriteButton(button, 'yellow')
+      expect(label.textContent).toBe('★ (+25)')
+
+      module.updateFavoriteButton(button, 'orange')
+      expect(label.textContent).toBe('★★ (+50)')
+
+      module.updateFavoriteButton(button, '')
+      expect(label.textContent).toBe('FAVORITE')
+    })
+
+    it('does nothing if button is null', async () => {
+      const { module } = await loadEditBookmarkView()
+      expect(() => module.updateFavoriteButton(null, 'yellow')).not.toThrow()
+    })
+  })
+
+  describe('cycleFavoriteButton', () => {
+    it('cycles from empty to yellow', async () => {
+      setupDom()
+      setupExt([])
+      const { module } = await loadEditBookmarkView()
+      const button = document.getElementById('bm-favorite')
+      button.dataset.favorite = ''
+
+      module.cycleFavoriteButton(button)
+      expect(button.dataset.favorite).toBe('yellow')
+    })
+
+    it('cycles from yellow to orange', async () => {
+      setupDom()
+      setupExt([])
+      const { module } = await loadEditBookmarkView()
+      const button = document.getElementById('bm-favorite')
+      button.dataset.favorite = 'yellow'
+
+      module.cycleFavoriteButton(button)
+      expect(button.dataset.favorite).toBe('orange')
+    })
+
+    it('cycles from orange back to empty', async () => {
+      setupDom()
+      setupExt([])
+      const { module } = await loadEditBookmarkView()
+      const button = document.getElementById('bm-favorite')
+      button.dataset.favorite = 'orange'
+
+      module.cycleFavoriteButton(button)
+      expect(button.dataset.favorite).toBe('')
+    })
+
+    it('does nothing if button is null', async () => {
+      const { module } = await loadEditBookmarkView()
+      expect(() => module.cycleFavoriteButton(null)).not.toThrow()
+    })
+  })
+
+  describe('editBookmark favorite initialization', () => {
+    it('initializes favorite button to yellow when customBonusScore is 25', async () => {
+      setupDom()
+      setupExt([
+        {
+          originalId: BOOKMARK_ID,
+          title: 'Starred Title',
+          originalUrl: 'http://example.com',
+          tags: '',
+          folder: '',
+          customBonusScore: 25,
+        },
+      ])
+      const { module } = await loadEditBookmarkView({
+        uniqueTags: {},
+      })
+
+      await module.editBookmark(BOOKMARK_ID)
+
+      const favoriteButton = document.getElementById('bm-favorite')
+      expect(favoriteButton.dataset.favorite).toBe('yellow')
+      expect(favoriteButton.getAttribute('aria-pressed')).toBe('true')
+    })
+
+    it('initializes favorite button to orange when customBonusScore is 50', async () => {
+      setupDom()
+      setupExt([
+        {
+          originalId: BOOKMARK_ID,
+          title: 'Starred Title',
+          originalUrl: 'http://example.com',
+          tags: '',
+          folder: '',
+          customBonusScore: 50,
+        },
+      ])
+      const { module } = await loadEditBookmarkView({
+        uniqueTags: {},
+      })
+
+      await module.editBookmark(BOOKMARK_ID)
+
+      const favoriteButton = document.getElementById('bm-favorite')
+      expect(favoriteButton.dataset.favorite).toBe('orange')
+    })
+
+    it('leaves favorite button empty when customBonusScore is not 25 or 50', async () => {
+      setupDom()
+      setupExt([
+        {
+          originalId: BOOKMARK_ID,
+          title: 'Regular Title',
+          originalUrl: 'http://example.com',
+          tags: '',
+          folder: '',
+          customBonusScore: 0,
+        },
+      ])
+      const { module } = await loadEditBookmarkView({
+        uniqueTags: {},
+      })
+
+      await module.editBookmark(BOOKMARK_ID)
+
+      const favoriteButton = document.getElementById('bm-favorite')
+      expect(favoriteButton.dataset.favorite).toBe('')
+    })
   })
 })

@@ -166,8 +166,18 @@ export async function renderSearchResults() {
         faviconHtml = `<span class="favicon-col"><img class="favicon${isLoaded ? ' loaded' : ''}" src="${escapeHtml(iconUrl)}" alt=""></span>`
       }
 
+      // Build favorite star HTML for yellow (+25) and orange (+50) starred bookmarks
+      let favoriteHtml = ''
+      if (type === 'bookmark') {
+        if (entry.customBonusScore >= 50) {
+          favoriteHtml = '<img class="favorite-star" title="Favorite (orange +50)" src="./img/star-orange.svg" alt="">'
+        } else if (entry.customBonusScore >= 25) {
+          favoriteHtml = '<img class="favorite-star" title="Favorite (yellow +25)" src="./img/star-yellow.svg" alt="">'
+        }
+      }
+
       itemsHTML.push(
-        `<li class="${escapeHtml(type)}"${originalUrl} x-index="${i}"${originalId} style="${colorStyle}">${type === 'bookmark' ? `<img class="edit" x-link="./editBookmark.html#bookmark/${encodeURIComponent(entry.originalId)}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">` : ''}${type === 'tab' ? '<img class="close" title="Close Tab" src="./img/x.svg">' : ''}<div class="title">${faviconHtml}<span class="title-text">${title} </span>${badges.join('')}</div><div class="url" title="${escapeHtml(displayUrl)}">${url}</div></li>`,
+        `<li class="${escapeHtml(type)}"${originalUrl} x-index="${i}"${originalId} style="${colorStyle}">${type === 'bookmark' ? `<img class="edit" x-link="./editBookmark.html#bookmark/${encodeURIComponent(entry.originalId)}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">` : ''}${type === 'tab' ? '<img class="close" title="Close Tab" src="./img/x.svg">' : ''}<div class="title">${faviconHtml}${favoriteHtml}<span class="title-text">${title} </span>${badges.join('')}</div><div class="url" title="${escapeHtml(displayUrl)}">${url}</div></li>`,
       )
     }
 

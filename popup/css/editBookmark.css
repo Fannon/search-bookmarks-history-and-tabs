@@ -22,6 +22,30 @@
   background: #ee4343;
   float: left;
 }
+#bm-favorite {
+  background: #929292;
+  cursor: pointer;
+  float: left;
+}
+#bm-favorite[data-favorite="yellow"] {
+  background: #ffe8a3;
+  color: #6f5200;
+}
+#bm-favorite[data-favorite="yellow"] svg {
+  fill: #f4c430;
+  stroke: #6f5200;
+}
+#bm-favorite[data-favorite="orange"] {
+  background: #ffd699;
+  color: #7a4a00;
+}
+#bm-favorite[data-favorite="orange"] svg {
+  fill: #ff8c00;
+  stroke: #7a4a00;
+}
+#bm-favorite:hover {
+  filter: brightness(110%);
+}
 #bm-cancel {
   background: #929292;
 }
