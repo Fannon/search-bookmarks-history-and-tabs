@@ -2,7 +2,15 @@
 
 🔎 Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.
 
-Available as [Chrome Extension](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0), [Microsoft Edge Addon](https://microsoftedge.microsoft.com/addons/detail/search-tabs-bookmarks-an/ldmbegkendnchhjppahaadhhakgfbfpo), [Firefox Addon](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/) and  [Opera Addon](https://addons.opera.com/en/extensions/details/search-bookmarks-history-and-tabs/) (only an old version).
+Available as [Chrome Extension](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0), [Microsoft Edge Addon](https://microsoftedge.microsoft.com/addons/detail/search-tabs-bookmarks-an/ldmbegkendnchhjppahaadhhakgfbfpo), [Firefox Addon](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/) and [Opera Addon](https://addons.opera.com/en/extensions/details/search-bookmarks-history-and-tabs/) (only an old version).
+
+## Quick Start
+
+- Open the extension popup and type to search bookmarks, history, and open tabs.
+- Press `Enter` to open the selected result, or right-click a result to copy its URL.
+- Use prefixes to narrow the search: `b ` for bookmarks, `t ` for tabs, `h ` for history and tabs, `#tag`, `~folder`, or `@group`.
+- Type `g search term` or `d word` to use the default custom search aliases.
+- Click the edit icon on a bookmark result to edit its title, URL, tags, and favorite score.
 
 ## Features
 
@@ -10,11 +18,11 @@ Available as [Chrome Extension](https://chrome.google.com/webstore/detail/tabs-b
 
 It supports two different search approaches:
 
-- **Exact search** (case-insensitive, but exact matching): Faster, but only exact matching results.
+- **Precise search** (case-insensitive, but exact matching): Faster, but only exact matching results.
 - **Fuzzy search** (approximate matching): Slower, but also includes inexact (fuzzy) matches.
 
 With this extension you can also **tag your bookmarks** including auto completions.
-The tags are considered when searching and can be used for navigation. 
+The tags are considered when searching and can be used for navigation.
 Tabs support now the tab grouping feature by the browser.
 
 The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). It's also very lightweight (< 120kb JavaScript, only ~30-40kb need to load initially - including dependencies).
@@ -31,9 +39,18 @@ Press play to start the GIF animation:
 
 ![Demo Animation](/images/bookmark-and-history-search.gif 'Demo Animation')
 
+## Browser Support
+
+| Browser | Main extension | Tab groups | Website favicons |
+| :--- | :--- | :--- | :--- |
+| Chrome | Yes | Yes | Yes, with optional `favicon` permission |
+| Edge | Yes | Yes | Yes, with optional `favicon` permission |
+| Firefox | Yes | Graceful fallback if unavailable | Uses placeholder icons for bookmarks/history |
+| Opera | Old version only | Depends on the installed version | Depends on the installed version |
+
 ## User Documentation
 
-- **Search Strategies**: Switch between precise and fuzzy approach by clicking on the FUZZY or PRECISE button in the search bar (top right).
+- **Search Strategies**: Switch between precise and fuzzy approach by clicking on the FUZZY or PRECISE button in the search bar (top right), or by pressing `Ctrl+F`.
 - **Keyboard Shortcut**: Trigger the extension via keyboard.
   - The default is `CTRL` + `Shift` + `.`, but you can customize this (I personally use `Ctrl+J`).
 - **Open selected results**: By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target URL.
@@ -71,6 +88,7 @@ Press play to start the GIF animation:
 - **Special Browser Pages**: You can add special browser pages to your bookmarks, like `chrome://downloads`.
 - **Custom Scores**: Add custom bonus scores by putting ` +<whole number>` to your bookmark title (before tags)
   - Examples: `Bookmark Title +20` or `Another Bookmark +10 #tag1 #tag2`
+- **Favorites**: In the bookmark editor, the FAVORITE button cycles between no favorite, yellow star (`+25`), orange star (`+50`), and red star (`+75`). Favorite scores use the same `+<number>` title format as custom scores.
 - **Tags**:
   - A bookmark title cannot start with a tag, it needs a title
   - Tags cannot start with a number. This is how the extension filters out issue / ticket numbers.
@@ -162,29 +180,9 @@ uFuzzyOptions:
 
 ## Scoring System
 
-The scoring system calculates a relevance score for each search result using a 5-step process:
+Results are ranked by a relevance score. Each result starts with a base score by type, then search quality, exact-match bonuses, usage signals, open-tab state, and optional custom bookmark bonuses can adjust the final order. Bookmarks can also be boosted with `+<number>` in the title or via the bookmark editor's FAVORITE button.
 
-1. **Base Score** — Each result type starts with a different base score:
-   - Bookmark: `100`, Tab: `70`, History: `45`, Search Engine: `30`
-   - Custom search aliases and direct URLs score higher (`400`, `500`) to appear at the top
-
-2. **Search Quality Multiplier** — The base score is multiplied by the search algorithm's match quality (0–1). Poor fuzzy matches get reduced scores.
-
-3. **Match Bonuses** — Additional points for how the search term matches:
-   - **Starts-with bonus**: Title or URL begins with the search term (`scoreExactStartsWithBonus`)
-   - **Equals bonus**: Title exactly matches the search term (`scoreExactEqualsBonus`)
-   - **Tag/folder/group match**: Search term matches a tag, folder, or tab group name exactly (`scoreExactTagMatchBonus`, `scoreExactFolderMatchBonus`, `scoreExactGroupMatchBonus`)
-   - **Substring match**: Each search word found in title/url/tag/folder/group adds points (`scoreExactIncludesBonus`), weighted by field (title=1.0 > tag=0.7 > group=0.7 > url=0.6 > folder=0.5), capped at 3 bonuses per result
-   - **Phrase match**: Multi-word searches get bonus when the full phrase appears in title or URL (`scoreExactPhraseTitleBonus`, `scoreExactPhraseUrlBonus`)
-
-4. **Usage Signals** — Points based on browsing behavior:
-   - **Visit count**: Points per visit from history (`scoreVisitedBonusScore`, up to `scoreVisitedBonusScoreMaximum`)
-   - **Recency**: Recently visited items get higher scores, scaling linearly from max to 0 over `historyDaysAgo`
-   - **Open tab**: Bookmarks that are currently open in a tab get a bonus (`scoreBookmarkOpenTabBonus`)
-
-5. **Custom Bonus** — User-defined boost via `+<number>` in bookmark titles (e.g., `Important Site +50 #work`)
-
-For detailed implementation and all scoring configuration options, see:
+For the full scoring reference and all scoring configuration options, see:
 - **[scoring.js](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/search/scoring.js)** — Core scoring algorithm with comprehensive documentation
 - **[OPTIONS.md](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/OPTIONS.md)** — Complete list of scoring configuration options
 
@@ -193,6 +191,7 @@ For detailed implementation and all scoring configuration options, see:
 This extension is built to respect your privacy:
 
 - It does not have permissions for outside communication, so none of your data is shared or exposed externally.
+- It does not use external favicon services. Website favicons are read from browser-local APIs or caches where supported.
 - The extension does not even store any information except your user settings.
   Every time the extension popup is closed, it "forgets" everything and starts from a blank slate next time you open it.
 - There is no background job / processing. If the popup is not explicitly opened by the user, the extension is not executed.
@@ -206,6 +205,13 @@ This extension is built to respect your privacy:
   - **tabGroups**: Necessary to read tab group names for the tab group search feature. The feature degrades gracefully if unavailable.
   - **favicon**: Optional permission, but needed if `displayFavicons` is enabled: Used for Chrome's native favicon API to retrieve icons for bookmarks and history. This only accesses local data.
 - The extension is open source, so feel free to convince yourself :)
+
+### Privacy FAQ
+
+- **Does the extension send my bookmarks, history, tabs, or searches anywhere?** No. The extension has no network or telemetry code.
+- **What is stored?** Only your user options are stored. Bookmark edits are saved through the browser's bookmark API because they intentionally change your browser bookmarks.
+- **Why does it need bookmark, history, and tab permissions?** Those permissions are required to search and navigate those browser data sources. You can disable bookmarks, history, or tabs in the user configuration if you do not want a source included.
+- **Why is `favicon` optional?** The permission is only requested if you enable `displayFavicons: true`.
 
 ## Local Development
 

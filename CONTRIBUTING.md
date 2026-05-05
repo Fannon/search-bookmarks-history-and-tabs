@@ -89,7 +89,7 @@ npm install
 
 - Follow the module layout and naming rules in [AGENTS.md](./AGENTS.md).
 - Place search logic in `popup/js/search/`, views in `popup/js/view/`, models in `popup/js/model/`, and helpers in `popup/js/helper/`.
-- Use bundled libraries from `popup/lib/` (see README for details).
+- Avoid new dependencies unless they are clearly justified and approved first; keep shared code small and browser-extension friendly.
 
 6. **Adding Features:**
 
