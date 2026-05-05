@@ -73,7 +73,7 @@ export async function fuzzySearch(searchMode, searchTerm, data, options) {
  * @returns {Array<Object>} Fuzzy search matches with scores.
  */
 function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
-  if (!data || !data.length) {
+  if (!data?.length) {
     return [] // early return
   }
 

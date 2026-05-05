@@ -104,7 +104,7 @@ export function simpleSearch(searchMode, searchTerm, data) {
  * @returns {Array<Object>} Matching items cloned with `searchApproach: 'precise'`.
  */
 function simpleSearchWithScoring(searchTerm, searchMode, data) {
-  if (!data || !data.length) {
+  if (!data?.length) {
     return []
   }
 
