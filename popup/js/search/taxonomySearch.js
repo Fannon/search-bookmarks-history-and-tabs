@@ -114,7 +114,7 @@ export function getUniqueTags() {
  */
 export function getUniqueFolders() {
   // This function is memoized, as the folders don't change while the extension is open
-  if (!ext || !ext.index.taxonomy.folders) {
+  if (!ext?.index.taxonomy.folders) {
     const foldersDictionary = {}
     for (const el of ext.model.bookmarks) {
       if (el.folder) {

@@ -297,7 +297,7 @@ describe('fuzzySearch', () => {
     expect(instancesAfterWarm.length).toBeGreaterThan(0)
 
     // Find the top-level instance (not nested)
-    const topLevelInstance = instancesAfterWarm.find((instance) => !instance.uf || !instance.uf.instanceId)
+    const topLevelInstance = instancesAfterWarm.find((instance) => !instance.uf?.instanceId)
     expect(topLevelInstance).toBeDefined()
     expect(topLevelInstance.options).toMatchObject({
       intraIns: Math.round(0.85 * 4.2),
