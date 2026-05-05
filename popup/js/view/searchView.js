@@ -175,12 +175,12 @@ export async function renderSearchResults() {
         } else if (score >= 26) {
           favoriteHtml = `<img class="favorite-star" title="Favorite (+${score})" src="./img/star-orange.svg" alt="">`
         } else {
-          favoriteHtml = `<img class="favorite-star" title="Favorite (+${score})" src="./img/star.svg" alt="">`
+          favoriteHtml = `<img class="favorite-star" title="Favorite (+${score})" src="./img/star-yellow.svg" alt="">`
         }
       }
 
       itemsHTML.push(
-        `<li class="${escapeHtml(type)}"${originalUrl} x-index="${i}"${originalId} style="${colorStyle}">${type === 'bookmark' ? `<img class="edit" x-link="./editBookmark.html#bookmark/${encodeURIComponent(entry.originalId)}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">` : ''}${type === 'tab' ? '<img class="close" title="Close Tab" src="./img/x.svg">' : ''}<div class="title">${faviconHtml}${favoriteHtml}<span class="title-text">${title} </span>${badges.join('')}</div><div class="url" title="${escapeHtml(displayUrl)}">${url}</div></li>`,
+        `<li class="${escapeHtml(type)}"${originalUrl} x-index="${i}"${originalId} style="${colorStyle}">${type === 'bookmark' ? `<img class="edit" x-link="./editBookmark.html#bookmark/${encodeURIComponent(entry.originalId)}${searchTermSuffix}" title="Edit Bookmark" src="./img/edit.svg">` : ''}${type === 'tab' ? '<img class="close" title="Close Tab" src="./img/x.svg">' : ''}${favoriteHtml}<div class="title">${faviconHtml}<span class="title-text">${title} </span>${badges.join('')}</div><div class="url" title="${escapeHtml(displayUrl)}">${url}</div></li>`,
       )
     }
 

@@ -244,11 +244,13 @@ code {
   white-space: nowrap;
 }
 .edit,
-.close {
+.close,
+.favorite-star {
   float: right;
 }
 .edit:hover,
-.close:hover {
+.close:hover,
+.favorite-star:hover {
   background: rgba(255, 255, 255, 0.12);
   border-radius: 4px;
   filter: brightness(135%);
@@ -280,11 +282,11 @@ code {
 }
 
 .favorite-star {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  margin: -2px 3px 0 0;
-  vertical-align: middle;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  margin-right: 2px;
+  pointer-events: none;
 }
 
 /* Default Icons (Tabler SVGs) */
