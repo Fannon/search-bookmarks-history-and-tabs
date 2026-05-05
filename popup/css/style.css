@@ -287,6 +287,17 @@ code {
   margin-top: 3px;
   margin-right: 2px;
   pointer-events: none;
+  background: #f4c430;
+  mask: url("../img/star.svg") center / contain no-repeat;
+  -webkit-mask: url("../img/star.svg") center / contain no-repeat;
+}
+
+.favorite-star.orange {
+  background: #ff8c00;
+}
+
+.favorite-star.red {
+  background: #ee4343;
 }
 
 /* Default Icons (Tabler SVGs) */

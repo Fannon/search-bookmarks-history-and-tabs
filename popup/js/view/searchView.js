@@ -172,11 +172,11 @@ export async function renderSearchResults() {
         const score = Number(entry.customBonusScore) || 0
         const scoreText = escapeHtml(String(score))
         if (score >= 51) {
-          favoriteHtml = `<img class="favorite-star" title="Favorite (+${scoreText})" src="./img/star-red.svg" alt="">`
+          favoriteHtml = `<span class="favorite-star red" title="Favorite (+${scoreText})"></span>`
         } else if (score >= 26) {
-          favoriteHtml = `<img class="favorite-star" title="Favorite (+${scoreText})" src="./img/star-orange.svg" alt="">`
+          favoriteHtml = `<span class="favorite-star orange" title="Favorite (+${scoreText})"></span>`
         } else {
-          favoriteHtml = `<img class="favorite-star" title="Favorite (+${scoreText})" src="./img/star-yellow.svg" alt="">`
+          favoriteHtml = `<span class="favorite-star" title="Favorite (+${scoreText})"></span>`
         }
       }
 
