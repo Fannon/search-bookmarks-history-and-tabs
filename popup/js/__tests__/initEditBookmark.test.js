@@ -10,6 +10,7 @@ function setupDom() {
     <a id="bm-save" href="#"></a>
     <a id="bm-del" href="#"></a>
     <a id="bm-cancel" href="#"></a>
+    <button id="bm-favorite" type="button" data-favorite="" aria-pressed="false" title="Favorite bookmark"></button>
     <div id="bm-load">Loading...</div>
     <ul id="errors"></ul>
   `
@@ -36,6 +37,7 @@ describe('initEditBookmark entry point', () => {
     })
     const updateBookmark = jest.fn()
     const deleteBookmark = jest.fn(() => Promise.resolve())
+    const cycleFavoriteButton = jest.fn()
     const getEffectiveOptions = jest.fn(() => Promise.resolve({}))
     const getSearchData = jest.fn(() => Promise.resolve({ bookmarks: [{ originalId: 'bookmark-1' }] }))
     const printError = jest.fn()
@@ -45,6 +47,7 @@ describe('initEditBookmark entry point', () => {
       editBookmark,
       updateBookmark,
       deleteBookmark,
+      cycleFavoriteButton,
     }))
     await jest.unstable_mockModule('../model/options.js', () => ({
       __esModule: true,
@@ -82,6 +85,10 @@ describe('initEditBookmark entry point', () => {
     document.getElementById('bm-del').dispatchEvent(new MouseEvent('click', { bubbles: true }))
     await flushPromises()
     expect(deleteBookmark).toHaveBeenCalledWith('bookmark-1')
+
+    const favoriteButton = document.getElementById('bm-favorite')
+    favoriteButton.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(cycleFavoriteButton).toHaveBeenCalledWith(favoriteButton)
   })
 
   test('supports legacy #id hash format for backwards compatibility', async () => {
@@ -101,6 +108,7 @@ describe('initEditBookmark entry point', () => {
       editBookmark,
       updateBookmark,
       deleteBookmark,
+      cycleFavoriteButton: jest.fn(),
     }))
     await jest.unstable_mockModule('../model/options.js', () => ({
       __esModule: true,
@@ -136,6 +144,7 @@ describe('initEditBookmark entry point', () => {
       editBookmark: jest.fn(),
       updateBookmark: jest.fn(),
       deleteBookmark: jest.fn(),
+      cycleFavoriteButton: jest.fn(),
     }))
     await jest.unstable_mockModule('../model/options.js', () => ({
       __esModule: true,
@@ -174,6 +183,7 @@ describe('initEditBookmark entry point', () => {
       editBookmark,
       updateBookmark: jest.fn(),
       deleteBookmark: jest.fn(),
+      cycleFavoriteButton: jest.fn(),
     }))
     await jest.unstable_mockModule('../model/options.js', () => ({
       __esModule: true,

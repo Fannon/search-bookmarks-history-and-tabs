@@ -3,6 +3,7 @@
 #options {
   width: var(--w);
   height: calc(var(--h) - 44px);
+  overflow: hidden;
   position: relative;
 }
 #options .heading {

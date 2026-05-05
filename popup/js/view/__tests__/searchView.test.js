@@ -312,6 +312,26 @@ describe('searchView renderSearchResults', () => {
     expect(listItem.querySelector('.badge.score')).toBeNull()
   })
 
+  it('renders favorite stars with score-specific color classes', async () => {
+    const { module, elements } = await setupSearchView({
+      results: [
+        {
+          ...createResults()[0],
+          customBonusScore: 60,
+        },
+      ],
+    })
+
+    await module.renderSearchResults()
+
+    const favoriteStar = elements.resultList.querySelector('.favorite-star')
+    expect(favoriteStar).not.toBeNull()
+    expect(favoriteStar.tagName).toBe('SPAN')
+    expect(favoriteStar.className).toBe('favorite-star red')
+    expect(favoriteStar.getAttribute('title')).toBe('Favorite (+60)')
+    expect(elements.resultList.querySelector('img.favorite-star')).toBeNull()
+  })
+
   it('encodes special characters in URLs for edit links', async () => {
     const specialResults = [
       {
