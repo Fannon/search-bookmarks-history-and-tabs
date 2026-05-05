@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **NEW**: Added a star-based favorite system for bookmark scoring. In the bookmark editor, a new "FAVORITE" button left of CANCEL cycles through four states: no favorite, yellow star (+25), orange star (+50), and red star (+75). The bonus score is persisted in the bookmark title via the existing `+N` pattern. Favorited bookmarks display their star icon in search results.
+- **NEW**: Added a star-based favorite system for bookmark scoring. In the bookmark editor, a new "FAVORITE" button cycles through four states: no favorite, yellow star (+25), orange star (+50), and red star (+75). The bonus score is persisted in the bookmark title via the existing `+N` pattern. Favorited bookmarks display their star icon in search results.
 - **FIXED**: Ignore keyboard navigation shortcuts (Enter, arrow keys) during IME composition, preventing accidental result activation for CJK input users ([#328](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/328)).
 - **FIXED**: Preserve original bookmark, tab, and history URLs for display and opening, while keeping normalized URL matching for search and deduplication.
 

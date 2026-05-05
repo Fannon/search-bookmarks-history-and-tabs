@@ -169,13 +169,14 @@ export async function renderSearchResults() {
       // Build favorite star HTML for starred bookmarks
       let favoriteHtml = ''
       if (type === 'bookmark' && entry.customBonusScore > 0) {
-        const score = entry.customBonusScore
+        const score = Number(entry.customBonusScore) || 0
+        const scoreText = escapeHtml(String(score))
         if (score >= 51) {
-          favoriteHtml = `<img class="favorite-star" title="Favorite (+${score})" src="./img/star-red.svg" alt="">`
+          favoriteHtml = `<img class="favorite-star" title="Favorite (+${scoreText})" src="./img/star-red.svg" alt="">`
         } else if (score >= 26) {
-          favoriteHtml = `<img class="favorite-star" title="Favorite (+${score})" src="./img/star-orange.svg" alt="">`
+          favoriteHtml = `<img class="favorite-star" title="Favorite (+${scoreText})" src="./img/star-orange.svg" alt="">`
         } else {
-          favoriteHtml = `<img class="favorite-star" title="Favorite (+${score})" src="./img/star-yellow.svg" alt="">`
+          favoriteHtml = `<img class="favorite-star" title="Favorite (+${scoreText})" src="./img/star-yellow.svg" alt="">`
         }
       }
 

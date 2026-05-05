@@ -37,6 +37,7 @@ describe('initEditBookmark entry point', () => {
     })
     const updateBookmark = jest.fn()
     const deleteBookmark = jest.fn(() => Promise.resolve())
+    const cycleFavoriteButton = jest.fn()
     const getEffectiveOptions = jest.fn(() => Promise.resolve({}))
     const getSearchData = jest.fn(() => Promise.resolve({ bookmarks: [{ originalId: 'bookmark-1' }] }))
     const printError = jest.fn()
@@ -46,7 +47,7 @@ describe('initEditBookmark entry point', () => {
       editBookmark,
       updateBookmark,
       deleteBookmark,
-      cycleFavoriteButton: jest.fn(),
+      cycleFavoriteButton,
     }))
     await jest.unstable_mockModule('../model/options.js', () => ({
       __esModule: true,
@@ -84,6 +85,10 @@ describe('initEditBookmark entry point', () => {
     document.getElementById('bm-del').dispatchEvent(new MouseEvent('click', { bubbles: true }))
     await flushPromises()
     expect(deleteBookmark).toHaveBeenCalledWith('bookmark-1')
+
+    const favoriteButton = document.getElementById('bm-favorite')
+    favoriteButton.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(cycleFavoriteButton).toHaveBeenCalledWith(favoriteButton)
   })
 
   test('supports legacy #id hash format for backwards compatibility', async () => {

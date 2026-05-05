@@ -274,7 +274,7 @@ describe('editBookmarkView', () => {
     global.ext.tagify = {
       value: [{ value: 'star' }],
     }
-    document.getElementById('bm-favorite').dataset.favorite = 'yellow'
+    module.updateFavoriteButton(document.getElementById('bm-favorite'), 'yellow')
 
     module.updateBookmark(BOOKMARK_ID)
 
@@ -305,7 +305,7 @@ describe('editBookmarkView', () => {
     global.ext.tagify = {
       value: [],
     }
-    document.getElementById('bm-favorite').dataset.favorite = ''
+    module.updateFavoriteButton(document.getElementById('bm-favorite'), '')
 
     module.updateBookmark(BOOKMARK_ID)
 
@@ -314,6 +314,41 @@ describe('editBookmarkView', () => {
       url: 'http://updated.com',
     })
     expect(bookmark.customBonusScore).toBe(0)
+  })
+
+  it('preserves a custom bonus score when the favorite button was not cycled', async () => {
+    setupDom()
+    const bookmark = {
+      originalId: BOOKMARK_ID,
+      title: 'Original Title',
+      originalUrl: 'http://example.com',
+      tags: '#old',
+      folder: '~Work',
+      customBonusScore: 60,
+      searchStringLower: 'old',
+    }
+    setupExt([bookmark])
+    const { module, mocks } = await loadEditBookmarkView()
+    global.ext.returnHash = '#search/'
+
+    await module.editBookmark(BOOKMARK_ID)
+    const favoriteButton = document.getElementById('bm-favorite')
+    expect(favoriteButton.dataset.favorite).toBe('red')
+    expect(favoriteButton.dataset.bonusScore).toBe('60')
+    expect(favoriteButton.querySelector('.favorite-label').textContent).toBe('★★★ (+60)')
+    document.getElementById('bm-title').value = 'Updated Title'
+    document.getElementById('bm-url').value = 'http://updated.com'
+    global.ext.tagify = {
+      value: [{ value: 'star' }],
+    }
+
+    module.updateBookmark(BOOKMARK_ID)
+
+    expect(mocks.browserApi.bookmarks.update).toHaveBeenCalledWith(BOOKMARK_ID, {
+      title: 'Updated Title +60 #star',
+      url: 'http://updated.com',
+    })
+    expect(bookmark.customBonusScore).toBe(60)
   })
 
   it('handles missing browser API and empty tag selection during update', async () => {
@@ -486,14 +521,17 @@ describe('editBookmarkView', () => {
 
       module.updateFavoriteButton(button, 'yellow')
       expect(button.dataset.favorite).toBe('yellow')
+      expect(button.dataset.bonusScore).toBe('25')
       expect(button.getAttribute('aria-pressed')).toBe('true')
 
       module.updateFavoriteButton(button, '')
       expect(button.dataset.favorite).toBe('')
+      expect(button.dataset.bonusScore).toBe('0')
       expect(button.getAttribute('aria-pressed')).toBe('false')
 
       module.updateFavoriteButton(button, 'orange')
       expect(button.dataset.favorite).toBe('orange')
+      expect(button.dataset.bonusScore).toBe('50')
       expect(button.getAttribute('aria-pressed')).toBe('true')
     })
 
@@ -539,6 +577,7 @@ describe('editBookmarkView', () => {
 
       module.cycleFavoriteButton(button)
       expect(button.dataset.favorite).toBe('yellow')
+      expect(button.dataset.bonusScore).toBe('25')
     })
 
     it('cycles from yellow to orange', async () => {
@@ -550,6 +589,7 @@ describe('editBookmarkView', () => {
 
       module.cycleFavoriteButton(button)
       expect(button.dataset.favorite).toBe('orange')
+      expect(button.dataset.bonusScore).toBe('50')
     })
 
     it('cycles from orange to red', async () => {
@@ -561,6 +601,7 @@ describe('editBookmarkView', () => {
 
       module.cycleFavoriteButton(button)
       expect(button.dataset.favorite).toBe('red')
+      expect(button.dataset.bonusScore).toBe('75')
     })
 
     it('cycles from red back to empty', async () => {
@@ -572,6 +613,7 @@ describe('editBookmarkView', () => {
 
       module.cycleFavoriteButton(button)
       expect(button.dataset.favorite).toBe('')
+      expect(button.dataset.bonusScore).toBe('0')
     })
 
     it('does nothing if button is null', async () => {
@@ -601,6 +643,7 @@ describe('editBookmarkView', () => {
 
       const favoriteButton = document.getElementById('bm-favorite')
       expect(favoriteButton.dataset.favorite).toBe('yellow')
+      expect(favoriteButton.dataset.bonusScore).toBe('25')
       expect(favoriteButton.getAttribute('aria-pressed')).toBe('true')
     })
 
@@ -691,6 +734,7 @@ describe('editBookmarkView', () => {
 
       const favoriteButton = document.getElementById('bm-favorite')
       expect(favoriteButton.dataset.favorite).toBe('yellow')
+      expect(favoriteButton.dataset.bonusScore).toBe('20')
       expect(favoriteButton.querySelector('.favorite-label').textContent).toBe('★ (+20)')
     })
 
@@ -714,6 +758,7 @@ describe('editBookmarkView', () => {
 
       const favoriteButton = document.getElementById('bm-favorite')
       expect(favoriteButton.dataset.favorite).toBe('orange')
+      expect(favoriteButton.dataset.bonusScore).toBe('35')
       expect(favoriteButton.querySelector('.favorite-label').textContent).toBe('★★ (+35)')
     })
   })
