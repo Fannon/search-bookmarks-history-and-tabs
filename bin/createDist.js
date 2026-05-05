@@ -14,7 +14,13 @@ import archiver from 'archiver'
 import fs from 'fs-extra'
 
 // Track CSS files that receive minified companions so we can prune originals
-const CSS_BUNDLED_FILENAMES = new Set(['style.css', 'options.css', 'taxonomy.css', 'editBookmark.css'])
+const CSS_BUNDLED_FILENAMES = new Set([
+  'style.css',
+  'options.css',
+  'taxonomy.css',
+  'editBookmark.css',
+  'bookmarkManager.css',
+])
 
 /**
  * Build the Chrome distribution directory and accompanying archive.
@@ -47,6 +53,7 @@ export async function createDist(clean = true) {
   await modifyHtmlFile('dist/chrome/popup/folders.html')
   await modifyHtmlFile('dist/chrome/popup/groups.html')
   await modifyHtmlFile('dist/chrome/popup/editBookmark.html')
+  await modifyHtmlFile('dist/chrome/popup/bookmarkManager.html')
 
   // Remove mock data and test artifacts
   await fs.rm('dist/chrome/popup/mockData', { recursive: true, force: true })

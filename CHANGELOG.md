@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **NEW**: Added a beta Bookmark Manager as a complementary full-page view for reviewing bookmark statistics, browsing folders, editing bookmark metadata, managing tags, and cleaning up duplicate bookmark URLs. It includes local undo snapshots for bookmark mutations and optional local browser AI tag suggestions when the browser supports the local `LanguageModel` API.
+
 ## [v2.2.0] - 2026-05-05
 
 - **NEW**: Added a star-based favorite system for bookmark scoring. In the bookmark editor, a new "FAVORITE" button cycles through four states: no favorite, yellow star (+25), orange star (+50), and red star (+75). The bonus score is persisted in the bookmark title via the existing `+N` pattern. Favorited bookmarks display their star icon in search results.

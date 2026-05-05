@@ -39,6 +39,41 @@ Press play to start the GIF animation:
 
 ![Demo Animation](/images/bookmark-and-history-search.gif 'Demo Animation')
 
+### Optional Bookmark Manager
+
+The main purpose of this extension remains the fast search popup. As a complementary beta feature, there is also a full-page Bookmark Manager for reviewing bookmark statistics, browsing folders, cleaning up duplicate bookmark URLs, and managing tags. Where supported by the browser, it can suggest tags with a local (privacy respecting) browser AI model; suggestions are reviewed before they are written to bookmarks.
+
+Before using the Bookmark Manager, creating a backup/export of your browser bookmarks is highly recommended, especially before moving bookmarks, changing tags in bulk, or deleting duplicates.
+
+Click a screenshot to open it full size:
+
+<table>
+  <tr>
+    <td width="50%">
+      <a href="./images/manager/overview.png">
+        <img src="./images/manager/overview.png" alt="Bookmark Manager overview" width="100%">
+      </a>
+    </td>
+    <td width="50%">
+      <a href="./images/manager/bookmark-manager.png">
+        <img src="./images/manager/bookmark-manager.png" alt="Bookmark browser and editor" width="100%">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <a href="./images/manager/bookmark-duplicates.png">
+        <img src="./images/manager/bookmark-duplicates.png" alt="Duplicate bookmark cleanup" width="100%">
+      </a>
+    </td>
+    <td width="50%">
+      <a href="./images/manager/tag-manager.png">
+        <img src="./images/manager/tag-manager.png" alt="Tag manager" width="100%">
+      </a>
+    </td>
+  </tr>
+</table>
+
 ## Browser Support
 
 | Browser | Main extension | Tab groups | Website favicons |
@@ -191,6 +226,7 @@ For the full scoring reference and all scoring configuration options, see:
 This extension is built to respect your privacy:
 
 - It does not have permissions for outside communication, so none of your data is shared or exposed externally.
+- Local AI tag suggestions in the optional Bookmark Manager use the browser's local `LanguageModel` API when available; selected bookmark metadata is sent only to that browser-managed local model.
 - It does not use external favicon services. Website favicons are read from browser-local APIs or caches where supported.
 - The extension does not even store any information except your user settings.
   Every time the extension popup is closed, it "forgets" everything and starts from a blank slate next time you open it.
