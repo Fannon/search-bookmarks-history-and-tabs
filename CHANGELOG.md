@@ -472,3 +472,35 @@ This release is mostly about performance improvements, partially due to simplifi
 ## v0.9.6 - 2021-08-16
 
 - Renamed extension to "Search Bookmarks, History and Tabs"
+
+## v0.9.4 - 2021-08-13
+
+- Refactored search and indexing around FlexSearch, with better tag/folder search and result navigation.
+
+## v0.9.0 - 2021-08-05
+
+- Added FlexSearch-based search, match highlighting, and search-mode shortcuts.
+
+## v0.8.0 - 2021-08-03
+
+- Added Firefox compatibility and custom search engine fallback entries.
+
+## v0.7.4 - 2021-08-01
+
+- Added result counter, user option refinements, and default-result fixes.
+
+## v0.4.0 - 2021-07-30
+
+- Added custom scoring, bookmark tag extraction, bookmark editing, and taxonomy overview pages.
+
+## v0.3.0 - 2021-07-27
+
+- Added search and navigation for open browser tabs.
+
+## v0.2.0 - 2021-07-25
+
+- Added bookmark/history search modes, result highlighting, and checked-in mock data for development.
+
+## v0.1.0 - 2021-07-25
+
+- Initial publishable browser extension for searching and navigating bookmarks and history.
