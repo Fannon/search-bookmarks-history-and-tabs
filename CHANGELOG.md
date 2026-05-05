@@ -3,17 +3,21 @@
 ## [Unreleased]
 
 - **NEW**: Added a beta Bookmark Manager as a complementary full-page view for reviewing bookmark statistics, browsing folders, editing bookmark metadata, managing tags, and cleaning up duplicate bookmark URLs. It includes local undo snapshots for bookmark mutations and optional local browser AI tag suggestions when the browser supports the local `LanguageModel` API.
+
+## [v2.2.0] - 2026-05-05
+
+- **NEW**: Added a star-based favorite system for bookmark scoring. In the bookmark editor, a new "FAVORITE" button cycles through four states: no favorite, yellow star (+25), orange star (+50), and red star (+75). The bonus score is persisted in the bookmark title via the existing `+N` pattern. Favorited bookmarks display their star icon in search results.
 - **FIXED**: Ignore keyboard navigation shortcuts (Enter, arrow keys) during IME composition, preventing accidental result activation for CJK input users ([#328](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/328)).
 - **FIXED**: Preserve original bookmark, tab, and history URLs for display and opening, while keeping normalized URL matching for search and deduplication.
 
-## [v2.1.1]
+## [v2.1.1] - 2026-03-24
 
 - **IMPROVED**: Performance: Reduced repeated work in precise incremental search by skipping unchanged leading terms when a query is extended.
 - **IMPROVED**: Performance: Replaced full score sorting for limited search modes with a top-k selection path that keeps only the best `searchMaxResults` items.
 - **IMPROVED**: Performance: Disabled highlight generation work when `displaySearchMatchHighlight` is turned off, and skip tag/folder/group highlight markup when those badges are hidden.
 - **REMOVED**: Removed dead user options `debug`, `searchDebounceMs`, and `enableHelp`.
 
-## [v2.1.0]
+## [v2.1.0] - 2026-01-05
 
 - **NEW**: Added support for website favicons and result type icons for search results.
   - **Customizable**: Two new options added: `displayIcons` (shows default result type icons, default: `false`) and `displayFavicons` (shows real website favicons, default: `false`).
@@ -26,7 +30,7 @@
 - **REMOVED**: Removed several dead configuration keys (`searchMinMatchCharLength`, `colorStripeWidth`, `scoreMinScore`, `scoreMinSearchTermMatchRatio`, etc.) that are now fixed at sensible defaults or no longer used.
 - **REMOVED**: Removed `detectBookmarksWithOpenTabs` option. This feature is now always active.
 
-## [v2.0.1]
+## [v2.0.1] - 2026-01-04
 
 - **IMPROVED**: Bookmarks with open tabs now also display the tab's group badge (if the tab belongs to a named group).
 - **IMPROVED**: Replaced the lilac "T" badge for bookmarks with open tabs with a vertical color gradient on the left border (transitioning from bookmark to tab color). This reduces visual noise while keeping the information easily discoverable.
@@ -34,7 +38,7 @@
 - **REMOVED**: Removed dead `scoreMinScore` filtering code. Since all result types have base scores ≥30 and scoring only adds bonuses, no results were ever filtered out.
 - **FIXED**: Potential memory leak in event delegation tracking for search results, now using module-level state instead of DOM properties.
 
-## [v2.0.0]
+## [v2.0.0] - 2026-01-03
 
 This is a major release with new features, a refreshed UI, and improved search capabilities.
 
@@ -86,7 +90,7 @@ This is a major release with new features, a refreshed UI, and improved search c
 
 - Potential fix for zoom level issues on some systems where controls at the bottom were cut off.
 
-## [v1.18.0]
+## [v1.18.0] - 2026-01-01
 
 This release is mostly about performance improvements, partially due to simplification of the codebase and potential config options.
 
@@ -115,7 +119,7 @@ This release is mostly about performance improvements, partially due to simplifi
   - Added Jest-based benchmarks for core algorithms with datasets of 5,000+ items.
   - Added Playwright end-to-end performance tests to verify real-world rendering latency.
 
-## [v1.17.3]
+## [v1.17.3] - 2025-12-27
 
 - **IMPROVED**: Significant search and ranking performance through data pre-normalization
   - Normalized fields are now pre-calculated during ingestion, avoiding redundant computations during search and scoring
@@ -127,7 +131,7 @@ This release is mostly about performance improvements, partially due to simplifi
 - **CHANGED**: By default only 24 search results are shown to improve performance, this can be adjusted via `searchMaxResults` in the options
 - **FIXED**: Bookmark titles now correctly respect the `titleLengthRestrictionForUrls` user option
 
-## [v1.17.2]
+## [v1.17.2] - 2025-11-18
 
 - **FIXED**: Hover selection no longer triggers when popup opens with cursor already over a result item
   - Previously, if the mouse cursor happened to be positioned where a result item would render when opening the popup, that item would be incorrectly selected instead of the top result
@@ -136,7 +140,7 @@ This release is mostly about performance improvements, partially due to simplifi
 - **CHANGED**: Simplified highlighting logic to always use mark.js for consistent behavior
 - **IMPROVED**: Runtime performance with micro-optimizations
 
-## [v1.17.1]
+## [v1.17.1] - 2025-11-09
 
 - **IMPROVED**: Startup performance with parallelized browser API calls
 
@@ -150,7 +154,7 @@ This release is mostly about performance improvements, partially due to simplifi
   - Added `detectBookmarksWithOpenTabs` option (default: `true`) to optionally disable bookmark-tab matching
   - Users with large bookmark/tab collections who don't need these features can disable them for faster startup
 
-## [v1.17.0]
+## [v1.17.0] - 2025-10-30
 
 - **NEW**: Duplicate bookmark detection and indication
 
@@ -181,7 +185,7 @@ This release is mostly about performance improvements, partially due to simplifi
 
 - **DEV**: Replaced the ESLint + Prettier toolchain with Biome (config, scripts, and editor defaults) for a single-source formatter and linter.
 
-## [v1.16.0]
+## [v1.16.0] - 2025-10-23
 
 - **IMPROVED**: Search scoring precision and reliability
   - **Higher bonuses for perfect matches**: Exact matches on titles, tags, and folders now receive +20, +15, and +10 points respectively (previously +15, +10, +5), so precise results appear ahead of partial matches by default.
@@ -192,7 +196,7 @@ This release is mostly about performance improvements, partially due to simplifi
 - **FIXED**: When editing a bookmark and saving, the search state was sometimes not properly updated. Now the search is completely reset, but remembers the search term.
 - **FIXED**: Search debounce logic was creating race-condition issues when pressing ENTER too quickly after typing the search string. Removed the debounce logic to fix this issue.
 
-## [v1.15.0]
+## [v1.15.0] - 2025-10-15
 
 - **IMPROVED**: Various performance improvements:
   - Creating a single minified production bundle, should speed up initial loading time significantly when IO is slow.
@@ -205,38 +209,38 @@ This release is mostly about performance improvements, partially due to simplifi
 - **CHANGED**: Renamed some options for clarity, e.g. `scoreBookmarkBaseScore` to `scoreBookmarkBase`. Custom configuration keys for base bookmark, history, and tab weights no longer include the trailing "Score" word, so existing overrides must adopt the shorter names to keep working.
 - **REMOVED**: Removed `debug` option, as debug logging will now always take place if console is loaded - and the performance.\* logging has been removed to clean up the code.
 
-## [v1.14.0]
+## [v1.14.0] - 2025-10-15
 
 - **ADDED**: Default result on startup will include most recent tabs.
   - Added a new option `maxRecentTabsToShow`, which can be set to 0 to disable this feature
   - Contributed by [@robertjmason](https://github.com/robertjmason) via [#183](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/183). Thanks!
 - **FIXED**: Filtering out browser tabs that start not with `http:` or `https:`, e.g. chrome extensions.
 
-## [v1.13.1]
+## [v1.13.1] - 2025-06-02
 
 - **FIXED**: Fixed init result not showing current bookmark anymore
 
-## [v1.13.0]
+## [v1.13.0] - 2025-06-01
 
 - **ADDED**: Support for direct URL navigation, contributed by [@berdon](https://github.com/berdon) via [#171](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/171)
 - **ADDED**: The folder and tags label on a bookmark search result are now clickable and will lead to a new search, looking for all bookmarks with the same folder / tags.
 - **IMPROVED**: Folders and Tags are now rendered with a badge for each value, now also clickable for navigation
 
-## [v1.12.0]
+## [v1.12.0] - 2025-03-30
 
 - **CHANGED**: History cache has been removed as it caused issues with local storage size on some browser and performance gains were not clear enough.
 - **FIXED**: Dark mode button hover text color contrast was bad
 - **IMPROVED**: Internal code cleanup which leads to less code to load (minimal performance improvement)
 - **IMPROVED**: Trying out a potential fix for [#164](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/164) (Searching too quickly after opening leads to no results found)
 
-## [v1.11.0]
+## [v1.11.0] - 2025-01-21
 
 - **FIXED**: Highlight of selected result in light-mode
 - **IMPROVED**: Firefox build is now using the browser extension Manifest v3, like Chrome or Edge.
 - **REMOVED**: Removed special build for Firefox, using Manifest v2.
 - **REMOVED**: Removed special build for Opera (they did not apply updates to the extension in their store anyway).
 
-## [v1.10.4]
+## [v1.10.4] - 2025-01-14
 
 - **IMPROVED**: Performance of initial load
   - Cleaned up and simplified CSS
@@ -249,18 +253,18 @@ This release is mostly about performance improvements, partially due to simplifi
 - **FIXED**: Re-apply search when switching search mode between precise and fuzzy
 - **REMOVED**: Removed `tabsDisplayWindowId` option, as it didn't work very well (tab IDs are long numbers and not very helpful). This was disabled by default anyway.
 
-## [v1.10.3]
+## [v1.10.3] - 2024-10-08
 
 - **FIXED**: Deleting a bookmark via popup accidentally removed all bookmarks from index (temporarily)
 - **FIXED**: Disable browsers inbuilt "autocomplete" / "Saved Data" for the search input field
 - **FIXED**: Fixed potential crash when browser returns empty history entries (which it shouldn't do).
 
-## [v1.10.2]
+## [v1.10.2] - 2024-09-02
 
 - **FIXED**: Bookmark tagging autocomplete was partly broken. Fixed update of dependency.
 - **CHANGED**: Moved the tips & tricks to markdown file and just link it, instead of random tips on startup.
 
-## [v1.10.0]
+## [v1.10.0] - 2024-08-25
 
 - **NEW**: Show random tips on startup
   - Can be disabled via option `enableHelp: false`
@@ -273,53 +277,53 @@ This release is mostly about performance improvements, partially due to simplifi
 - **CHORE**: Minor refactoring and cleanups, maybe with a little bit performance improvements.
 - **CHORE**: Removed SCSS build step, now it's just vanilla CSS
 
-## [v1.9.7]
+## [v1.9.7] - 2024-06-01
 
 - **FIXED**: Fixed missing CSS font style for tagging view
 
-## [v1.9.6]
+## [v1.9.6] - 2024-05-19
 
 - **IMPROVED**: Removed Bulma CSS as dependency, instead just use [minireset.css](https://github.com/jgthms/minireset.css) for CSS reset.
 - **CHORE**: Updated dependencies and moved this project to ESM (EcmaScript Modules)
 
-## [v1.9.5]
+## [v1.9.5] - 2023-12-14
 
 - **FIXED**: Open result in new tab (when holding SHIFT / ALT) was not working when there are multiple browser windows
   - Reported in [#111](https://github.com/Fannon/search-bookmarks-history-and-tabs/discussions/111) and [#112](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/112)
 
-## [v1.9.4]
+## [v1.9.4] - 2023-11-15
 
 - **NEW**: Added option `bookmarksIgnoreFolderList`, that excludes all bookmarks from the search that are within the listed folder(s)
   - This includes sub-folders and their bookmarks
 
-## [v1.9.3]
+## [v1.9.3] - 2023-10-14
 
 - **NEW**: Search results can now also be navigated Emacs or Vim style (feature request [#106](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/106))
   - `Ctrl+N` and `Ctrl+J` for downward navigation
   - `Ctrl+P` and `Ctrl+K` for upward navigation
 - **FIXED**: If `debug: true` has been set, the extension crashed on a performance measurement analysis
 
-## [v1.9.1]
+## [v1.9.1] - 2023-06-13
 
 - **IMPROVED**: Better handling of long bookmark titles. Some titles are now abbreviated, especially if they are a subpart of the URL anyway.
 
-## [v1.9.0]
+## [v1.9.0] - 2023-04-29
 
 - **FIXED**: Fuzzy search now also works with non-ASCII characters like CJK chars by default
 - **FIXED**: Option `bookmarkColor` now also applies to the bookmark folder badge in the search results
 - **REMOVED**: Removed hybrid search as the benefits / differences against new fuzzy search are negligible.
 
-## [v1.8.7]
+## [v1.8.7] - 2023-03-29
 
 - **NEW**: New option `uFuzzyOptions` that allows to configure the fuzzy search library used by this extension
   - This can be used, e.g. that fuzzy search supports CJK characters (see README)
 
-## [v1.8.5]
+## [v1.8.5] - 2023-02-27
 
 - **CHANGED**: Extension does not log or do performance measurements by default.
   - If you want to enable this, use the option: `debug: true`
 
-## [v1.8.4]
+## [v1.8.4] - 2023-02-22
 
 - **NEW**: Added options to configure the color and the width of the color stripe of search results
   - `colorStripeWidth` to set the width
@@ -327,30 +331,30 @@ This release is mostly about performance improvements, partially due to simplifi
 - **NEW**: When hovering over an URL, the full URL is displayed as a hover. Requested via [#74](https://github.com/Fannon/search-bookmarks-history-and-tabs/issues/74)
 - **IMPROVED**: Updated dependencies
 
-## [v1.8.3]
+## [v1.8.3] - 2023-02-22
 
 - **FIXED**: When navigating result items via arrow up, the search text input box curser moved to the beginning of the search string
   - Fix contributed by [@c0001](https://github.com/c0001) in [PR #71](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/71). Thanks!
 
-## [v1.8.2]
+## [v1.8.2] - 2023-01-04
 
 - **FIXED**: Used wrong icon (edit) for closing tabs
 - **IMPROVED**: Hover over edit and close icon is now indicated
 
-## [v1.8.1]
+## [v1.8.1] - 2022-12-31
 
 - **FIXED**: Missing icon for closing open tabs
   - Tip: This is especially useful if you enter tab search mode via searching `t `
 - **FIXED**: Improved very buggy logic to close tabs and update search results
 
-## [v1.8.0]
+## [v1.8.0] - 2022-11-15
 
 - **NEW**: Allow definition of custom search engines that are triggered by custom alias
   - New option: `customSearchEngines`, with one default entry: `g ` for executing a google search.
   - Also added `blank` option when no search string is given
   - Allowing for multiple aliases, if defined as an array (`['alias1', 'alias`]`)
 
-## [v1.7.0]
+## [v1.7.0] - 2022-11-10
 
 - **CHANGED**: Replaced fuzzy search library fuzzysort with [uFuzzy](https://github.com/leeoniya/uFuzzy)
   - This should give more reliable and relevant search results
@@ -360,17 +364,17 @@ This release is mostly about performance improvements, partially due to simplifi
   - Interim search results are now cached so the search haystack gets smaller when search term is only expanded
 - **FIXED**: Custom Bonus Score was sometimes shown in search result title.
 
-## [v1.6.3]
+## [v1.6.3] - 2022-11-02
 
 - **CHANGED**: No bundling of external libraries into vendor.min.js as Firefox store objected to this
 
-## [v1.6.1]
+## [v1.6.1] - 2022-09-01
 
 - **IMPROVED**: Improved error handling
   - Errors and warnings are now displayed in a dedicated overlay, with more space to show complete context
   - Error handling is more robust, e.g. when failing to load user settings we now display error but fall back to default options
 
-## [v1.6.0]
+## [v1.6.0] - 2022-07-26
 
 - **NEW**: Removed indexing phase entirely, which leads to faster load times
 - **NEW**: Added close tab functionality
@@ -381,7 +385,7 @@ This release is mostly about performance improvements, partially due to simplifi
 - **CHANGED**: Removed fuse.js for fuzzy search and replaced it with https://github.com/farzher/fuzzysort, which requires no indexing
 - **IMPROVED**: Code cleanups and better minimized output, which makes the extension smaller.
 
-## [v1.5.0]
+## [v1.5.0] - 2022-02-06
 
 - **NEW**: Added hybrid search approach
   - This combines precise and fuzzy search results
@@ -390,7 +394,7 @@ This release is mostly about performance improvements, partially due to simplifi
     - `scoreHybridPreciseBonus`
     - `scoreHybridFuzzyBonus`
 
-## [v1.4.0]
+## [v1.4.0] - 2022-02-06
 
 - **NEW**: Bookmark edit now supports:
   - Deleting bookmarks through popup
@@ -403,19 +407,19 @@ This release is mostly about performance improvements, partially due to simplifi
 - **NEW**: Rudimentary user option validation, to ensure it at least is a proper YAML / JSON object
 - **REMOVED**: Legacy option migration
 
-## [v1.3.0]
+## [v1.3.0] - 2021-12-24
 
 - Simplified the user options
   - The options can now be written in YAML or JSON (instead of JSON5 / JSON before)
   - The structure is now flat, so there is no need for object nesting except for advanced options
   - Added inline help to option screen
 
-## v1.2.1
+## v1.2.1 - 2021-12-19
 
 - Added inline tips to popup [#27](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/27).
 - New option: `tabs.displayLastVisited` allows to display the last accessed tabs in the default results when popup is opened [#22](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/22).
 
-## v1.2.0
+## v1.2.0 - 2021-10-11
 
 - NEW: Results can now be opened in current tab or background tab [#18](https://github.com/Fannon/search-bookmarks-history-and-tabs/pull/18).
   - By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target url.
@@ -427,7 +431,7 @@ This release is mostly about performance improvements, partially due to simplifi
 - FIX: Tag edit text was not well readable in dark mode
 - FIX: Disabling `general.tags` was not fully implemented.
 
-## v1.1.0
+## v1.1.0 - 2021-09-15
 
 - Adjusted default options
   - precise search is now standard
@@ -435,21 +439,21 @@ This release is mostly about performance improvements, partially due to simplifi
   - search engines are disabled by default
   - Reduced default base score for open tabs
 
-## v1.0.3
+## v1.0.3 - 2021-09-12
 
 - Support for Opera when delivered through Opera addons
 - Burned v1.0.2 on the way :)
 
-## v1.0.1
+## v1.0.1 - 2021-08-28
 
 - Changed icon to dark icon and improved display at small size
 
-## v1.0.0
+## v1.0.0 - 2021-08-27
 
 - Official 1.0 stable release
 - No feature changes, just adding tests and ensuring stability
 
-## v0.9.9
+## v0.9.9 - 2021-08-24
 
 - NEW: Show default results when in bookmark, tab or history search mode
   - Tab search mode: Shows all open tabs, sorted by last visit
@@ -457,16 +461,48 @@ This release is mostly about performance improvements, partially due to simplifi
   - Bookmark search mode: Shows highest ranked bookmarks, sorted by score
 - Minor bug fixes and improvements
 
-## v0.9.8
+## v0.9.8 - 2021-08-23
 
 - NEW: Allow custom bonus score by adding it directly to a bookmark title (see documentation)
 - NEW: Optionally display bookmark added date in search result
 - NEW: Bookmark recently added can affect score (incl. two options to fine-tune it).
 
-## v0.9.7
+## v0.9.7 - 2021-08-22
 
 - NEW: Score now also considers how recently a page was visited (incl. two options to fine-tune it).
 
-## v0.9.6
+## v0.9.6 - 2021-08-16
 
 - Renamed extension to "Search Bookmarks, History and Tabs"
+
+## v0.9.4 - 2021-08-13
+
+- Refactored search and indexing around FlexSearch, with better tag/folder search and result navigation.
+
+## v0.9.0 - 2021-08-05
+
+- Added FlexSearch-based search, match highlighting, and search-mode shortcuts.
+
+## v0.8.0 - 2021-08-03
+
+- Added Firefox compatibility and custom search engine fallback entries.
+
+## v0.7.4 - 2021-08-01
+
+- Added result counter, user option refinements, and default-result fixes.
+
+## v0.4.0 - 2021-07-30
+
+- Added custom scoring, bookmark tag extraction, bookmark editing, and taxonomy overview pages.
+
+## v0.3.0 - 2021-07-27
+
+- Added search and navigation for open browser tabs.
+
+## v0.2.0 - 2021-07-25
+
+- Added bookmark/history search modes, result highlighting, and checked-in mock data for development.
+
+## v0.1.0 - 2021-07-25
+
+- Initial publishable browser extension for searching and navigating bookmarks and history.

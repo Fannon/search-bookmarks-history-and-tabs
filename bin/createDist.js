@@ -40,6 +40,10 @@ export async function createDist(clean = true) {
   const images = ['logo-16.png', 'logo-32.png', 'logo-48.png', 'logo-128.png']
   await Promise.all(images.map((img) => fs.copy(`images/${img}`, `dist/chrome/images/${img}`)))
 
+  // Always remove the popup destination before copying so stale
+  // files removed from popup/ are not left behind (e.g. during watch).
+  await fs.remove('dist/chrome/popup')
+
   // Copy popup directory
   await fs.copy('popup/', 'dist/chrome/popup/', { recursive: true })
 

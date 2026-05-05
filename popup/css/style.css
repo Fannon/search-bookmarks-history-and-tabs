@@ -244,11 +244,13 @@ code {
   white-space: nowrap;
 }
 .edit,
-.close {
+.close,
+.favorite-star {
   float: right;
 }
 .edit:hover,
-.close:hover {
+.close:hover,
+.favorite-star:hover {
   background: rgba(255, 255, 255, 0.12);
   border-radius: 4px;
   filter: brightness(135%);
@@ -277,6 +279,25 @@ code {
   background-color: transparent;
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
+}
+
+.favorite-star {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  margin-right: 2px;
+  pointer-events: none;
+  background: #f4c430;
+  mask: url("../img/star.svg") center / contain no-repeat;
+  -webkit-mask: url("../img/star.svg") center / contain no-repeat;
+}
+
+.favorite-star.orange {
+  background: #ff8c00;
+}
+
+.favorite-star.red {
+  background: #ee4343;
 }
 
 /* Default Icons (Tabler SVGs) */

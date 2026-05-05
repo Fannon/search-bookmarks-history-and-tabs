@@ -12,7 +12,7 @@ import { createExtensionContext } from './helper/extensionContext.js'
 
 import { getEffectiveOptions } from './model/options.js'
 import { getSearchData } from './model/searchData.js'
-import { deleteBookmark, editBookmark, updateBookmark } from './view/editBookmarkView.js'
+import { cycleFavoriteButton, deleteBookmark, editBookmark, updateBookmark } from './view/editBookmarkView.js'
 
 import { printError } from './view/errorView.js'
 
@@ -167,6 +167,7 @@ function setupEventHandlers() {
   const saveButton = document.getElementById('bm-save')
   const deleteButton = document.getElementById('bm-del')
   const cancelButton = document.getElementById('bm-cancel')
+  const favoriteButton = document.getElementById('bm-favorite')
 
   if (saveButton && !saveButton.dataset.listenerAttached) {
     saveButton.addEventListener('click', (event) => {
@@ -190,6 +191,14 @@ function setupEventHandlers() {
       }
     })
     deleteButton.dataset.listenerAttached = 'true'
+  }
+
+  if (favoriteButton && !favoriteButton.dataset.listenerAttached) {
+    favoriteButton.addEventListener('click', (event) => {
+      event.preventDefault()
+      cycleFavoriteButton(favoriteButton)
+    })
+    favoriteButton.dataset.listenerAttached = 'true'
   }
 
   if (cancelButton) {

@@ -27,7 +27,8 @@
     "rules": {
       "recommended": true,
       "a11y": {
-        "noAutofocus": "off"
+        "noAutofocus": "off",
+        "noSvgWithoutTitle": "off"
       }
     }
   },
