@@ -172,6 +172,12 @@ button {
   opacity: 0.55;
 }
 
+.button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .button svg {
   width: 16px;
   height: 16px;
@@ -524,6 +530,12 @@ button {
 .bookmark-tools-panel .field-description {
   margin-top: -4px;
   min-height: 0;
+}
+
+.bookmark-edit-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .suggested-tags-section {
@@ -917,11 +929,13 @@ h3 {
 .bookmark-backup-note {
   margin: 0 0 12px;
   padding: 8px 10px;
-  background: #fff8df;
-  border-left: 4px solid var(--badge-date);
+  background: #fff1b8;
+  border: 1px solid #d39b19;
+  border-left: 4px solid #9a6500;
   border-radius: 4px;
-  color: var(--input-fg);
+  color: #3d2a00;
   font-size: 14px;
+  font-weight: 600;
   line-height: 1.4;
 }
 
@@ -1390,6 +1404,13 @@ h3 {
 
   ::-webkit-scrollbar-track {
     background: #414141;
+  }
+
+  .bookmark-backup-note {
+    background: #3a2b06;
+    border-color: #9a6500;
+    border-left-color: #d39b19;
+    color: #ffe7a3;
   }
 
   ::-webkit-scrollbar-thumb {

@@ -62,6 +62,8 @@ export function getBookmarkManagerDom() {
     bookmarkEditTitle: document.getElementById('bookmark-edit-title'),
     bookmarkEditUrl: document.getElementById('bookmark-edit-url'),
     bookmarkEditTags: document.getElementById('bookmark-edit-tags'),
+    bookmarkEditScore: document.getElementById('bookmark-edit-score'),
+    openBookmarkEditor: document.getElementById('open-bookmark-editor'),
     saveManagedBookmark: document.getElementById('save-managed-bookmark'),
     statsGrid: document.getElementById('stats-grid'),
     topTags: document.getElementById('top-tags'),
@@ -479,14 +481,16 @@ export function getManagerTagInputValues(_source) {
 /**
  * Read the single-edit form values.
  *
- * @returns {{title: string, url: string, tags: Array<string>}} Form values.
+ * @returns {{title: string, url: string, tags: Array<string>, customBonusScore: number}} Form values.
  */
 export function getManagedBookmarkEditValues() {
   const dom = ext.dom.manager
+  const customBonusScore = Number.parseInt(dom.bookmarkEditScore.value, 10) || 0
   return {
     title: dom.bookmarkEditTitle.value.trim(),
     url: dom.bookmarkEditUrl.value.trim(),
     tags: getManagerTagInputValues('edit'),
+    customBonusScore: Math.max(0, customBonusScore),
   }
 }
 
@@ -732,6 +736,7 @@ function updateManagedSelectionUi() {
   const canUpdateBookmarks = Boolean(ext.model.bookmarkManagerCanUpdateBookmarks)
   const canMoveBookmarks = Boolean(ext.model.bookmarkManagerCanMoveBookmarks)
   const canEditCurrentBookmark = canEditCurrentManagedBookmark(currentBookmark, selectedIds, canUpdateBookmarks)
+  const canOpenBookmarkEditor = canEditCurrentBookmark
   const isSuggestingTags = Boolean(ext.model.bookmarkManagerSuggestingTags)
   const hasBulkTags = getManagerTagInputValues('bulk').length > 0
   const canApplyBulkTags = Boolean(targetIds.length && canUpdateBookmarks && hasBulkTags && !isSuggestingTags)
@@ -752,19 +757,28 @@ function updateManagedSelectionUi() {
   dom.bookmarkEditTitle.disabled = !canEditCurrentBookmark
   dom.bookmarkEditUrl.disabled = !canEditCurrentBookmark
   dom.bookmarkEditTags.disabled = !canEditCurrentBookmark
+  dom.bookmarkEditScore.disabled = !canEditCurrentBookmark
+  dom.openBookmarkEditor.href = canOpenBookmarkEditor
+    ? `./editBookmark.html#bookmark/${encodeURIComponent(String(currentBookmark.originalId))}`
+    : './editBookmark.html'
+  dom.openBookmarkEditor.setAttribute('aria-disabled', canOpenBookmarkEditor ? 'false' : 'true')
+  dom.openBookmarkEditor.tabIndex = canOpenBookmarkEditor ? 0 : -1
   dom.bulkTagsInput.disabled = !canEditBulkTags
 
   if (selectedCount > 1) {
     dom.bookmarkEditTitle.value = '<< multiple selection >>'
     dom.bookmarkEditUrl.value = '<< multiple selection >>'
+    dom.bookmarkEditScore.value = ''
     setManagerTagControlValues(ext, 'edit', [])
   } else if (currentBookmark) {
     dom.bookmarkEditTitle.value = currentBookmark.title || ''
     dom.bookmarkEditUrl.value = currentBookmark.originalUrl || ''
+    dom.bookmarkEditScore.value = String(currentBookmark.customBonusScore || 0)
     setManagerTagControlValues(ext, 'edit', currentBookmark.tagsArray || [])
   } else {
     dom.bookmarkEditTitle.value = ''
     dom.bookmarkEditUrl.value = ''
+    dom.bookmarkEditScore.value = ''
     setManagerTagControlValues(ext, 'edit', [])
   }
 

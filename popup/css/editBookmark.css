@@ -25,7 +25,16 @@
 #bm-favorite {
   background: #929292;
   cursor: pointer;
-  float: left;
+  min-width: 46px;
+  padding-right: 7px;
+  padding-left: 7px;
+  justify-content: center;
+}
+
+#bm-favorite .favorite-score {
+  min-width: 1.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 #bm-favorite[data-favorite="yellow"] {
   background: #ffe8a3;
@@ -57,8 +66,37 @@
 #bm-cancel {
   background: #929292;
 }
+#bm-manager {
+  background: #557292;
+}
 #bm-save {
   background: #5fc944;
+}
+
+#edit-bm .controls {
+  user-select: none;
+}
+
+#edit-bm .controls .button {
+  margin: 0 2px;
+}
+
+#edit-bm .controls .button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+#edit-bm .controls .button:focus-visible {
+  outline: 2px solid var(--a);
+  outline-offset: 2px;
+}
+
+#edit-bm .controls #bm-favorite:focus,
+#edit-bm .controls #bm-favorite:focus-visible {
+  outline: none;
+}
+
+#edit-bm .controls #bm-favorite:focus-visible {
+  box-shadow: 0 0 0 2px var(--a);
 }
 
 /* Form Fields */

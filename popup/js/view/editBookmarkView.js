@@ -50,8 +50,8 @@ export function updateFavoriteButton(button, state, bonusScore) {
   button.setAttribute('aria-pressed', state ? 'true' : 'false')
   const score = bonusScore != null ? bonusScore : STAR_BONUS[state] || 0
   button.dataset.bonusScore = String(score)
-  const label = state ? `★${state === 'orange' ? '★' : state === 'red' ? '★★' : ''} (+${score})` : 'FAVORITE'
   button.title = state ? `Favorite (+${score})` : 'Favorite bookmark'
+  button.setAttribute('aria-label', button.title)
   const icon = button.querySelector('svg')
   if (icon) {
     const container = document.createElement('span')
@@ -59,9 +59,9 @@ export function updateFavoriteButton(button, state, bonusScore) {
     const newSvg = container.firstElementChild
     icon.replaceWith(newSvg)
   }
-  const textNode = button.querySelector('.favorite-label')
-  if (textNode) {
-    textNode.textContent = label
+  const scoreNode = button.querySelector('.favorite-score')
+  if (scoreNode) {
+    scoreNode.textContent = `+${score}`
   }
 }
 
@@ -94,6 +94,7 @@ export async function editBookmark(bookmarkId) {
   const tagsInput = document.getElementById('bm-tags')
   const saveButton = document.getElementById('bm-save')
   const deleteButton = document.getElementById('bm-del')
+  const managerLink = document.getElementById('bm-manager')
 
   if (bookmark) {
     editContainer.style = ''
@@ -136,6 +137,7 @@ export async function editBookmark(bookmarkId) {
 
     saveButton.dataset.bookmarkId = bookmarkId
     deleteButton.dataset.bookmarkId = bookmarkId
+    managerLink.href = `./bookmarkManager.html?bookmark=${encodeURIComponent(bookmarkId)}#bookmarks`
     ext.currentBookmarkId = bookmarkId
   } else {
     console.warn(`Tried to edit bookmark id="${bookmarkId}", but could not find it in searchData.`)

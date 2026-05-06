@@ -303,10 +303,10 @@ async function saveManagedBookmark() {
       return
     }
     await ext.browserApi.bookmarks.update(bookmarkId, {
-      title: createTaggedBookmarkTitle(values.title, values.tags, bookmark.customBonusScore),
+      title: createTaggedBookmarkTitle(values.title, values.tags, values.customBonusScore),
       url: values.url,
     })
-    updateBookmarkInMemory(bookmark, values.title, values.url, values.tags)
+    updateBookmarkInMemory(bookmark, values.title, values.url, values.tags, values.customBonusScore)
     resetBookmarkSearchCaches()
     showManagerStatus('Saved bookmark', 'success')
     await reloadBookmarkManager()
@@ -858,11 +858,12 @@ async function updateTaggedBookmarks(bookmarks, getNextTags) {
   }
 }
 
-function updateBookmarkInMemory(bookmark, title, url, tags) {
+function updateBookmarkInMemory(bookmark, title, url, tags, customBonusScore) {
   bookmark.title = title
   bookmark.titleLower = title.toLowerCase().trim()
   bookmark.originalUrl = url
   bookmark.url = cleanUpUrl(url)
+  bookmark.customBonusScore = customBonusScore
   bookmark.tagsArray = tags
   bookmark.tagsArrayLower = tags.map((tag) => tag.toLowerCase())
   bookmark.tags = tags.length ? `#${tags.join(' #')}` : ''

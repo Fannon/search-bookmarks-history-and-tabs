@@ -4,6 +4,7 @@ import {
   bindBookmarkManagerEvents,
   getBookmarkManagerDom,
   getManagedActionTargetIds,
+  getManagedBookmarkEditValues,
   getSelectedManagedBookmarkIds,
   renderActiveManagerScreen,
   renderBookmarkWorkspace,
@@ -20,6 +21,7 @@ const BOOKMARKS = [
     originalUrl: 'https://example.com/first',
     folderArray: ['Folder'],
     tagsArray: ['one'],
+    customBonusScore: 25,
   },
   {
     originalId: 'bookmark-2',
@@ -53,6 +55,8 @@ function setupDom() {
     <input id="bookmark-edit-title" />
     <input id="bookmark-edit-url" />
     <input id="bookmark-edit-tags" />
+    <input id="bookmark-edit-score" />
+    <a id="open-bookmark-editor" href="./editBookmark.html" aria-disabled="true"></a>
     <button id="save-managed-bookmark"></button>
     <div id="stats-grid"></div>
     <div id="top-tags"></div>
@@ -156,7 +160,18 @@ describe('bookmarkManagerView selection', () => {
     expect(rows[0].classList.contains('selected')).toBe(true)
     expect(inputs[0].checked).toBe(true)
     expect(document.getElementById('bookmark-edit-title').disabled).toBe(false)
+    expect(document.getElementById('bookmark-edit-score').disabled).toBe(false)
+    expect(document.getElementById('bookmark-edit-score').value).toBe('25')
+    expect(document.getElementById('open-bookmark-editor').getAttribute('href')).toBe(
+      './editBookmark.html#bookmark/bookmark-1',
+    )
+    expect(document.getElementById('open-bookmark-editor').getAttribute('aria-disabled')).toBe('false')
     expect(getSelectedManagedBookmarkIds()).toEqual([])
+
+    document.getElementById('bookmark-edit-score').value = '42'
+    expect(getManagedBookmarkEditValues().customBonusScore).toBe(42)
+    document.getElementById('bookmark-edit-score').value = '-5'
+    expect(getManagedBookmarkEditValues().customBonusScore).toBe(0)
 
     rows[1].querySelector('.url').click()
 
@@ -187,6 +202,8 @@ describe('bookmarkManagerView selection', () => {
     expect(inputs[1].checked).toBe(false)
     expect(document.getElementById('bookmark-edit-title').disabled).toBe(true)
     expect(document.getElementById('bookmark-edit-url').disabled).toBe(true)
+    expect(document.getElementById('bookmark-edit-score').disabled).toBe(true)
+    expect(document.getElementById('open-bookmark-editor').getAttribute('aria-disabled')).toBe('true')
     expect(getManagedActionTargetIds()).toEqual(['bookmark-1'])
 
     inputs[1].click()

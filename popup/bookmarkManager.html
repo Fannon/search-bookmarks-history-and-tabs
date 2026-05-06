@@ -99,8 +99,24 @@
                   <input id="bookmark-edit-url" type="url" autocomplete="off" disabled />
                   <label for="bookmark-edit-tags">Existing Tags</label>
                   <input id="bookmark-edit-tags" type="text" disabled />
-                  <button id="save-managed-bookmark" class="button success" type="button"
-                    title="Save the current bookmark title, URL, and existing tags" disabled>Save Bookmark</button>
+                  <label for="bookmark-edit-score">Bonus Score</label>
+                  <input id="bookmark-edit-score" type="number" min="0" step="1" inputmode="numeric" disabled />
+                  <div class="bookmark-edit-actions">
+                    <a id="open-bookmark-editor" class="button secondary" href="./editBookmark.html" target="_blank"
+                      rel="noreferrer" title="Open the current bookmark in the popup editor" aria-disabled="true"
+                      tabindex="-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                        <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                        <path d="M16 5l3 3" />
+                      </svg>
+                      Editor
+                    </a>
+                    <button id="save-managed-bookmark" class="button success" type="button"
+                      title="Save the current bookmark title, URL, and existing tags" disabled>Save Bookmark</button>
+                  </div>
 
                   <div class="suggested-tags-section">
                     <h3>Add suggested tags</h3>
