@@ -37,6 +37,7 @@ import {
 } from './bookmarkManagerTagControls.js'
 
 const MANAGED_BOOKMARK_RENDER_LIMIT = 500
+const TAG_BOOKMARK_RENDER_LIMIT = 500
 
 /**
  * Cache bookmark manager DOM references.
@@ -983,11 +984,21 @@ function renderTagBookmarkPanel(tag, canUpdateBookmarks) {
     `
   }
 
+  const renderCount = Math.min(bookmarks.length, TAG_BOOKMARK_RENDER_LIMIT)
+  const renderedBookmarks = renderCount === bookmarks.length ? bookmarks : bookmarks.slice(0, renderCount)
+  const limitNotice =
+    bookmarks.length > renderCount
+      ? `<p class="manager-note">Showing first ${formatInteger(renderCount)} of ${formatInteger(
+          bookmarks.length,
+        )} bookmarks for this tag.</p>`
+      : ''
+
   return `
     <section class="tag-bookmark-panel">
       ${renderTagBookmarkPanelHeader(tag, bookmarks.length, disabled)}
+      ${limitNotice}
       <ul class="bookmark-list tag-bookmark-list">
-        ${bookmarks.map(renderBookmarkListItem).join('')}
+        ${renderedBookmarks.map(renderBookmarkListItem).join('')}
       </ul>
     </section>
   `

@@ -331,7 +331,8 @@ test.describe('Performance Benchmarks', () => {
         }),
     )
     await expect(page.locator('[data-manager-panel="tags"]')).toBeVisible()
-    await expect(page.locator('.tag-bookmark-list .bookmark')).not.toHaveCount(0)
+    await expect(page.locator('.tag-bookmark-panel')).toContainText('Showing first 500')
+    await expect(page.locator('.tag-bookmark-list .bookmark')).toHaveCount(500)
 
     console.log(
       `Playwright: Bookmark Manager 10k render=${initialRenderMs.toFixed(2)}ms search=${searchRenderMs.toFixed(
@@ -345,6 +346,6 @@ test.describe('Performance Benchmarks', () => {
     expect(searchRenderMs).toBeLessThan(1000)
     expect(selectVisibleMs).toBeLessThan(1500)
     expect(folderSwitchMs).toBeLessThan(5000)
-    expect(tagPanelMs).toBeLessThan(1500)
+    expect(tagPanelMs).toBeLessThan(500)
   })
 })
