@@ -36,6 +36,8 @@ import {
   setManagerTagControlValues,
 } from './bookmarkManagerTagControls.js'
 
+const MANAGED_BOOKMARK_RENDER_LIMIT = 500
+
 /**
  * Cache bookmark manager DOM references.
  *
@@ -113,8 +115,6 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
   ext.model.bookmarkManagerCanUpdateBookmarks = canUpdateBookmarks
   ext.model.bookmarkManagerCanMoveBookmarks = typeof ext.browserApi.bookmarks?.move === 'function'
   ext.model.bookmarkManagerSelectedIds ||= new Set()
-  ext.model.bookmarkManagerVisibleBookmarks = model.bookmarks
-  renderBookmarkWorkspace(model.bookmarks, canUpdateBookmarks, ext.model.bookmarkManagerCanMoveBookmarks)
   renderTagManagerIntoDom(canUpdateBookmarks)
 
   updateDuplicateActions()
@@ -673,14 +673,25 @@ function renderManagedBookmarkList(bookmarks, canUpdateBookmarks) {
     return '<p class="empty-state">No bookmarks match this view.</p>'
   }
 
+  const renderCount = Math.min(bookmarks.length, MANAGED_BOOKMARK_RENDER_LIMIT)
+  const renderedBookmarks = renderCount === bookmarks.length ? bookmarks : bookmarks.slice(0, renderCount)
+  const limitNotice =
+    bookmarks.length > renderCount
+      ? `<p class="manager-note">Showing first ${formatInteger(renderCount)} of ${formatInteger(
+          bookmarks.length,
+        )} bookmarks. Search or choose a folder to narrow the list; Select Visible still selects all ${formatInteger(
+          bookmarks.length,
+        )} matching bookmarks.</p>`
+      : ''
   const updateNotice = canUpdateBookmarks
     ? ''
     : '<p class="manager-note">Bookmark updates are unavailable in this preview context.</p>'
 
   return `
     ${updateNotice}
+    ${limitNotice}
     <ul class="bookmark-list managed-bookmarks">
-      ${bookmarks.map((bookmark) => renderManagedBookmarkRow(bookmark, canUpdateBookmarks)).join('')}
+      ${renderedBookmarks.map((bookmark) => renderManagedBookmarkRow(bookmark, canUpdateBookmarks)).join('')}
     </ul>
   `
 }

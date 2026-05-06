@@ -263,7 +263,8 @@ test.describe('Performance Benchmarks', () => {
     const renderedBookmarkCount = await page.evaluate(
       () => document.querySelectorAll('[data-managed-bookmark-row-id]').length,
     )
-    expect(renderedBookmarkCount).toBe(10000)
+    expect(renderedBookmarkCount).toBe(500)
+    await expect(page.locator('#managed-bookmark-list')).toContainText('Showing first 500 of 10,000')
 
     const selectVisibleMs = await page.evaluate(
       () =>
@@ -278,6 +279,7 @@ test.describe('Performance Benchmarks', () => {
           document.getElementById('select-visible-bookmarks').click()
         }),
     )
+    await expect(page.locator('#bookmark-selection-summary')).toHaveText('10,000 selected bookmarks')
 
     await page.evaluate(() => document.getElementById('clear-managed-selection').click())
 
