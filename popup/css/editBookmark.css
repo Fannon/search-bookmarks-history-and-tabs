@@ -63,6 +63,18 @@
 #bm-favorite:hover {
   filter: brightness(110%);
 }
+#edit-bm #bm-favorite:hover {
+  color: #fff;
+}
+#edit-bm #bm-favorite[data-favorite="yellow"]:hover {
+  color: #6f5200;
+}
+#edit-bm #bm-favorite[data-favorite="orange"]:hover {
+  color: #7a4a00;
+}
+#edit-bm #bm-favorite[data-favorite="red"]:hover {
+  color: #8b0000;
+}
 #bm-cancel {
   background: #929292;
 }
@@ -79,6 +91,10 @@
 
 #edit-bm .controls .button {
   margin: 0 2px;
+}
+
+#edit-bm .controls .button svg {
+  transform: translateY(1px);
 }
 
 #edit-bm .controls .button:focus:not(:focus-visible) {
