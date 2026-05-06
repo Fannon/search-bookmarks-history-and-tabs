@@ -303,7 +303,7 @@ async function saveManagedBookmark() {
       return
     }
     await ext.browserApi.bookmarks.update(bookmarkId, {
-      title: createTaggedBookmarkTitle(values.title, values.tags),
+      title: createTaggedBookmarkTitle(values.title, values.tags, bookmark.customBonusScore),
       url: values.url,
     })
     updateBookmarkInMemory(bookmark, values.title, values.url, values.tags)
@@ -730,7 +730,7 @@ function createFallbackBookmarkNode(bookmark) {
     id: String(bookmark.originalId),
     parentId: bookmark.parentId || bookmark.folderId || '',
     index: bookmark.index,
-    title: createTaggedBookmarkTitle(bookmark.title, bookmark.tagsArray || []),
+    title: createTaggedBookmarkTitle(bookmark.title, bookmark.tagsArray || [], bookmark.customBonusScore),
     url: bookmark.originalUrl || bookmark.url,
   }
 }
@@ -853,7 +853,7 @@ async function updateTaggedBookmarks(bookmarks, getNextTags) {
     const bookmark = bookmarks[i]
     const nextTags = getNextTags(bookmark.tagsArray || [])
     await ext.browserApi.bookmarks.update(String(bookmark.originalId), {
-      title: createTaggedBookmarkTitle(bookmark.title, nextTags),
+      title: createTaggedBookmarkTitle(bookmark.title, nextTags, bookmark.customBonusScore),
     })
   }
 }

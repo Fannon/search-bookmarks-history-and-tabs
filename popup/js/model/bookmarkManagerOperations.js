@@ -130,12 +130,15 @@ export function canEditCurrentManagedBookmark(currentBookmark, selectedIds = [],
  *
  * @param {string} title Bookmark title without tags.
  * @param {Array<string>} tags Tags to append.
+ * @param {number} [customBonusScore=0] Favorite/custom score to preserve.
  * @returns {string} Tagged bookmark title.
  */
-export function createTaggedBookmarkTitle(title, tags = []) {
+export function createTaggedBookmarkTitle(title, tags = [], customBonusScore = 0) {
   const titleText = String(title || '').trim()
+  const score = Number(customBonusScore) || 0
+  const scoreText = score > 0 ? `+${score}` : ''
   const tagsText = tags.length ? `#${tags.join(' #')}` : ''
-  return `${titleText}${tagsText ? ` ${tagsText}` : ''}`.trim()
+  return `${titleText}${scoreText ? ` ${scoreText}` : ''}${tagsText ? ` ${tagsText}` : ''}`.trim()
 }
 
 /**

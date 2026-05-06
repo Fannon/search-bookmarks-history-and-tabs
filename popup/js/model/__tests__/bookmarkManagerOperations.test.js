@@ -95,4 +95,42 @@ describe('bookmark manager operations', () => {
     expect(createTaggedBookmarkTitle(' Title ', ['Docs', 'Read'])).toBe('Title #Docs #Read')
     expect(getCommonTags(bookmarks)).toEqual(['Read'])
   })
+
+  test('preserves favorite score metadata before tags when rebuilding titles', () => {
+    expect(createTaggedBookmarkTitle(' Title ', ['Docs', 'Read'], 50)).toBe('Title +50 #Docs #Read')
+    expect(createTaggedBookmarkTitle(' Title ', [], 75)).toBe('Title +75')
+    expect(createTaggedBookmarkTitle(' Title ', ['Docs'], 0)).toBe('Title #Docs')
+  })
+
+  test('preserves favorite score metadata across manager tag mutation modes', () => {
+    const bookmark = {
+      title: 'Reference',
+      tagsArray: ['Docs', 'Read'],
+      customBonusScore: 25,
+    }
+
+    expect(createTaggedBookmarkTitle(bookmark.title, mergeBulkTags(bookmark.tagsArray, ['New'], 'add'), 25)).toBe(
+      'Reference +25 #Docs #Read #New',
+    )
+    expect(createTaggedBookmarkTitle(bookmark.title, mergeBulkTags(bookmark.tagsArray, ['New'], 'replace'), 25)).toBe(
+      'Reference +25 #New',
+    )
+    expect(createTaggedBookmarkTitle(bookmark.title, mergeBulkTags(bookmark.tagsArray, ['docs'], 'remove'), 25)).toBe(
+      'Reference +25 #Read',
+    )
+    expect(
+      createTaggedBookmarkTitle(
+        bookmark.title,
+        uniqueTags(bookmark.tagsArray.map((tag) => (tag === 'Docs' ? 'Guides' : tag))),
+        25,
+      ),
+    ).toBe('Reference +25 #Guides #Read')
+    expect(
+      createTaggedBookmarkTitle(
+        bookmark.title,
+        bookmark.tagsArray.filter((tag) => tag !== 'Docs'),
+        25,
+      ),
+    ).toBe('Reference +25 #Read')
+  })
 })

@@ -4,6 +4,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
+import { createTaggedBookmarkTitle, mergeBulkTags } from '../model/bookmarkManagerOperations.js'
 import {
   clearTestExt,
   createBookmarksTestData,
@@ -121,6 +122,25 @@ describe('Extension Integration Tests', () => {
     expect(bookmark.title).toBe('JavaScript Guide')
     expect(bookmark.searchStringLower).toContain('javascript guide')
     expect(bookmark.type).toBe('bookmark')
+  })
+
+  test('bookmark manager title rewrites preserve parsed favorite scores from browser bookmark titles', () => {
+    const [bookmark] = createBookmarksTestData([
+      {
+        id: 'favorite-bookmark',
+        title: 'Favorite Reference +75 #Docs',
+        url: 'https://example.com/favorite',
+      },
+    ])
+
+    expect(bookmark).toMatchObject({
+      title: 'Favorite Reference',
+      tagsArray: ['Docs'],
+      customBonusScore: 75,
+    })
+    expect(createTaggedBookmarkTitle(bookmark.title, mergeBulkTags(bookmark.tagsArray, ['Read'], 'add'), 75)).toBe(
+      'Favorite Reference +75 #Docs #Read',
+    )
   })
 
   test('error handling across multiple components', async () => {
