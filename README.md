@@ -44,6 +44,7 @@ Press play to start the GIF animation:
 The main purpose of this extension remains the fast search popup. As a complementary beta feature, there is also a full-page Bookmark Manager for reviewing bookmark statistics, browsing folders, cleaning up duplicate bookmark URLs, and managing tags. Where supported by the browser, it can suggest tags with a local (privacy respecting) browser AI model; suggestions are reviewed before they are written to bookmarks.
 
 Before using the Bookmark Manager, creating a backup/export of your browser bookmarks is highly recommended, especially before moving bookmarks, changing tags in bulk, or deleting duplicates.
+The manager keeps the latest 20 local undo snapshots for bookmark changes, but those snapshots are not a substitute for a full browser bookmark export.
 
 Click a screenshot to open it full size:
 
@@ -228,8 +229,8 @@ This extension is built to respect your privacy:
 - It does not have permissions for outside communication, so none of your data is shared or exposed externally.
 - Local AI tag suggestions in the optional Bookmark Manager use the browser's local `LanguageModel` API when available; selected bookmark metadata is sent only to that browser-managed local model.
 - It does not use external favicon services. Website favicons are read from browser-local APIs or caches where supported.
-- The extension does not even store any information except your user settings.
-  Every time the extension popup is closed, it "forgets" everything and starts from a blank slate next time you open it.
+- The extension uses [local storage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) to stores user settings and, if you use the optional Bookmark Manager, the latest 20 local undo snapshots for bookmark changes.
+  Every time the search popup is closed, it "forgets" search data and starts from a blank slate next time you open it.
 - There is no background job / processing. If the popup is not explicitly opened by the user, the extension is not executed.
 - The extension only requests the following permissions for the given reasons:
   - **bookmarks**: Necessary to read and edit the bookmarks. Can be disabled via [user configuration](#user-configuration).
@@ -245,7 +246,7 @@ This extension is built to respect your privacy:
 ### Privacy FAQ
 
 - **Does the extension send my bookmarks, history, tabs, or searches anywhere?** No. The extension has no network or telemetry code.
-- **What is stored?** Only your user options are stored. Bookmark edits are saved through the browser's bookmark API because they intentionally change your browser bookmarks.
+- **What is stored?** User options are stored. The optional Bookmark Manager also stores the latest 20 local undo snapshots, including bookmark titles, URLs, folder IDs, and positions, so recent manager changes can be restored. Bookmark edits are saved through the browser's bookmark API because they intentionally change your browser bookmarks.
 - **Why does it need bookmark, history, and tab permissions?** Those permissions are required to search and navigate those browser data sources. You can disable bookmarks, history, or tabs in the user configuration if you do not want a source included.
 - **Why is `favicon` optional?** The permission is only requested if you enable `displayFavicons: true`.
 

@@ -914,6 +914,17 @@ h3 {
   font-size: 13px;
 }
 
+.bookmark-backup-note {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  background: #fff8df;
+  border-left: 4px solid var(--badge-date);
+  border-radius: 4px;
+  color: var(--input-fg);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
 .bookmark-undo-list {
   list-style: none;
   padding: 0;

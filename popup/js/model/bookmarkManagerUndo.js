@@ -3,7 +3,7 @@
  */
 
 export const BOOKMARK_MANAGER_UNDO_KEY = 'bookmarkManagerUndoSnapshots'
-export const BOOKMARK_MANAGER_UNDO_LIMIT = 10
+export const BOOKMARK_MANAGER_UNDO_LIMIT = 20
 
 /**
  * Load recent bookmark manager undo snapshots.
