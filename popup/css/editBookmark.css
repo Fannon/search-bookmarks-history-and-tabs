@@ -90,15 +90,6 @@
   outline-offset: 2px;
 }
 
-#edit-bm .controls #bm-favorite:focus,
-#edit-bm .controls #bm-favorite:focus-visible {
-  outline: none;
-}
-
-#edit-bm .controls #bm-favorite:focus-visible {
-  box-shadow: 0 0 0 2px var(--a);
-}
-
 /* Form Fields */
 #bm-title {
   height: 142px; /* 5 lines without scrollbar */
