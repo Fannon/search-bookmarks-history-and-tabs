@@ -15,7 +15,7 @@
     "changes": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["addTags", "removeTags", "renameTags", "moveBookmarks", "deleteBookmarks"],
+      "required": ["addTags", "removeTags", "renameTags", "moveBookmarks", "deleteBookmarks", "rewriteTitles"],
       "properties": {
         "addTags": {
           "type": "array",
@@ -45,6 +45,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/deleteBookmarkChange"
+          }
+        },
+        "rewriteTitles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rewriteTitleChange"
           }
         }
       }
@@ -132,6 +138,25 @@
           "type": "string"
         },
         "duplicateOfBookmarkId": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "rewriteTitleChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "bookmarkId", "title", "reason"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "bookmarkId": {
+          "type": "string"
+        },
+        "title": {
           "type": "string"
         },
         "reason": {

@@ -105,6 +105,7 @@ export async function initBookmarkManager() {
     onExportUndoHistory: exportUndoHistory,
     onImportUndoHistory: importUndoHistory,
     onGenerateCleanupPrompt: generateCleanupPrompt,
+    onGenerateCleanupPromptFull: generateCleanupPromptFull,
     onCleanupScopeChange: resetCleanupPrompt,
     onRunLocalCleanup: runLocalCleanup,
     onCopyCleanupPrompt: copyCleanupPrompt,
@@ -401,7 +402,6 @@ async function suggestTagsForBookmarks(bookmarks, target) {
   try {
     showTagSuggestionBusy(true, 'Checking local AI...')
     showTagSuggestionStatus(liberal ? 'Trying broader suggestions...' : 'Checking local AI...')
-    showManagerStatus('Checking local AI...')
     const availability = await getLocalAiTagAvailability()
     showLocalAiTagAvailability(availability)
 
@@ -411,7 +411,6 @@ async function suggestTagsForBookmarks(bookmarks, target) {
       return
     }
 
-    showManagerStatus(availability === 'available' ? 'Suggesting tags...' : 'Downloading local AI model...')
     showTagSuggestionBusy(true, availability === 'available' ? 'Suggesting tags...' : 'Downloading local AI model...')
     showTagSuggestionStatus(liberal ? 'Trying broader suggestions...' : 'Suggesting tags...')
     const aiTags = await suggestBookmarkTags(
@@ -419,7 +418,6 @@ async function suggestTagsForBookmarks(bookmarks, target) {
       getKnownBookmarkTags(),
       (progress) => {
         const message = `Downloading local AI model ${Math.round(progress * 100)}%`
-        showManagerStatus(message)
         showTagSuggestionBusy(true, message)
         showTagSuggestionStatus(message)
       },
@@ -673,14 +671,21 @@ async function removeTag(tagName) {
 }
 
 function generateCleanupPrompt() {
-  const prompt = createBookmarkCleanupPrompt(getScopedCleanupModel())
+  const prompt = createBookmarkCleanupPrompt(getScopedCleanupModel(), 'lite')
   ext.model.bookmarkCleanupPrompt = prompt
   renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
-  showCleanupStatus('Prompt generated', 'success')
+  showCleanupStatus('Lite prompt generated', 'success')
+}
+
+function generateCleanupPromptFull() {
+  const prompt = createBookmarkCleanupPrompt(getScopedCleanupModel(), 'full')
+  ext.model.bookmarkCleanupPrompt = prompt
+  renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
+  showCleanupStatus('Full prompt generated', 'success')
 }
 
 async function runLocalCleanup() {
-  const prompt = ext.model.bookmarkCleanupPrompt || createBookmarkCleanupPrompt(getScopedCleanupModel())
+  const prompt = ext.model.bookmarkCleanupPrompt || createBookmarkCleanupPrompt(getScopedCleanupModel(), 'lite')
   const languageModel = globalThis.LanguageModel
 
   if (!languageModel?.create) {
@@ -692,7 +697,6 @@ async function runLocalCleanup() {
   try {
     renderBookmarkCleanupPrompt(prompt, false)
     showCleanupStatus('Running local AI...')
-    showManagerStatus('Running cleanup proposal...')
     session = await languageModel.create({
       expectedInputs: [{ type: 'text', languages: ['en'] }],
       expectedOutputs: [{ type: 'text', languages: ['en'] }],
@@ -878,6 +882,8 @@ async function applyCleanupChanges(changes, description) {
       await applyCleanupMoveBookmark(change)
     } else if (type === 'deleteBookmarks') {
       await applyCleanupDeleteBookmark(change)
+    } else if (type === 'rewriteTitles') {
+      await applyCleanupRewriteTitle(change)
     }
   }
 
@@ -930,11 +936,25 @@ async function applyCleanupDeleteBookmark(change) {
   await ext.browserApi.bookmarks.remove(change.bookmarkId)
 }
 
+async function applyCleanupRewriteTitle(change) {
+  if (!canUpdateBookmarks()) {
+    throw new Error('Bookmark updates are unavailable.')
+  }
+  const bookmark = findBookmarkById(ext.model.bookmarkManager?.bookmarks || [], change.bookmarkId)
+  if (!bookmark) {
+    return
+  }
+
+  await ext.browserApi.bookmarks.update(change.bookmarkId, {
+    title: createTaggedBookmarkTitle(change.title, bookmark.tagsArray || [], bookmark.customBonusScore),
+  })
+}
+
 function getPendingCleanupChanges(proposal) {
   const result = []
   const appliedIds = ext.model.bookmarkCleanupAppliedChangeIds || new Set()
   const groups = proposal?.changes || {}
-  const types = ['addTags', 'removeTags', 'renameTags', 'moveBookmarks', 'deleteBookmarks']
+  const types = ['addTags', 'removeTags', 'renameTags', 'moveBookmarks', 'rewriteTitles', 'deleteBookmarks']
 
   for (let i = 0; i < types.length; i++) {
     const type = types[i]
@@ -1053,6 +1073,9 @@ function describeCleanupChange(type, change) {
   }
   if (type === 'moveBookmarks') {
     return `moved ${label}`
+  }
+  if (type === 'rewriteTitles') {
+    return `rewrote title for ${label}`
   }
   return `deleted ${label}`
 }

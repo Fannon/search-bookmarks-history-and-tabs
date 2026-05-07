@@ -92,6 +92,7 @@ export function getBookmarkManagerDom() {
     cleanupProposalList: document.getElementById('cleanup-proposal-list'),
     cleanupStatus: document.getElementById('cleanup-status'),
     generateCleanupPrompt: document.getElementById('generate-cleanup-prompt'),
+    generateCleanupPromptFull: document.getElementById('generate-cleanup-prompt-full'),
     runLocalCleanup: document.getElementById('run-local-cleanup'),
     copyCleanupPrompt: document.getElementById('copy-cleanup-prompt'),
     applyAllCleanupChanges: document.getElementById('apply-all-cleanup-changes'),
@@ -162,6 +163,7 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
  * @param {Function} handlers.onExportUndoHistory Export undo snapshot history.
  * @param {Function} handlers.onImportUndoHistory Import undo snapshot history.
  * @param {Function} handlers.onGenerateCleanupPrompt Generate cleanup prompt.
+ * @param {Function} handlers.onGenerateCleanupPromptFull Generate full cleanup prompt.
  * @param {Function} handlers.onCleanupScopeChange Cleanup prompt scope change.
  * @param {Function} handlers.onRunLocalCleanup Run local AI cleanup proposal.
  * @param {Function} handlers.onCopyCleanupPrompt Copy cleanup prompt.
@@ -189,6 +191,7 @@ export function bindBookmarkManagerEvents({
   onExportUndoHistory,
   onImportUndoHistory,
   onGenerateCleanupPrompt,
+  onGenerateCleanupPromptFull,
   onCleanupScopeChange,
   onRunLocalCleanup,
   onCopyCleanupPrompt,
@@ -206,6 +209,7 @@ export function bindBookmarkManagerEvents({
   dom.importUndoHistoryFile.addEventListener('change', () => onImportUndoHistory(dom.importUndoHistoryFile.files?.[0]))
   dom.exportBookmarks.addEventListener('click', onExportBookmarks)
   dom.generateCleanupPrompt.addEventListener('click', onGenerateCleanupPrompt)
+  dom.generateCleanupPromptFull.addEventListener('click', onGenerateCleanupPromptFull)
   dom.cleanupFolderScope.addEventListener('change', onCleanupScopeChange)
   dom.runLocalCleanup.addEventListener('click', onRunLocalCleanup)
   dom.copyCleanupPrompt.addEventListener('click', onCopyCleanupPrompt)
@@ -855,6 +859,7 @@ function renderCleanupChangeGroups(proposal, managerModel, appliedChangeIds) {
     ['removeTags', 'Remove Tags', proposal.changes.removeTags],
     ['renameTags', 'Rename or Merge Tags', proposal.changes.renameTags],
     ['moveBookmarks', 'Move Bookmarks', proposal.changes.moveBookmarks],
+    ['rewriteTitles', 'Rewrite Titles', proposal.changes.rewriteTitles],
     ['deleteBookmarks', 'Delete Duplicate Bookmarks', proposal.changes.deleteBookmarks],
   ]
 
@@ -966,6 +971,9 @@ function renderCleanupChangeTitle(type, change, bookmark, managerModel) {
       folderLabel,
       managerModel,
     )}`
+  }
+  if (type === 'rewriteTitles') {
+    return `Rewrite to ${renderCleanupBookmarkLabel({ title: change.title }, change.bookmarkId)}`
   }
   return renderCleanupBookmarkLabel(bookmark, change.bookmarkId)
 }
@@ -1104,7 +1112,8 @@ function countCleanupProposalChanges(proposal) {
     (changes.removeTags?.length || 0) +
     (changes.renameTags?.length || 0) +
     (changes.moveBookmarks?.length || 0) +
-    (changes.deleteBookmarks?.length || 0)
+    (changes.deleteBookmarks?.length || 0) +
+    (changes.rewriteTitles?.length || 0)
   )
 }
 

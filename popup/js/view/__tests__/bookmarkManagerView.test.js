@@ -80,6 +80,7 @@ function setupDom() {
     <div id="cleanup-proposal-list"></div>
     <div id="cleanup-status"></div>
     <button id="generate-cleanup-prompt"></button>
+    <button id="generate-cleanup-prompt-full"></button>
     <button id="run-local-cleanup"></button>
     <button id="copy-cleanup-prompt"></button>
     <button id="apply-all-cleanup-changes"></button>
@@ -160,6 +161,7 @@ function bindEvents() {
     onExportUndoHistory: jest.fn(),
     onImportUndoHistory: jest.fn(),
     onGenerateCleanupPrompt: jest.fn(),
+    onGenerateCleanupPromptFull: jest.fn(),
     onCleanupScopeChange: jest.fn(),
     onRunLocalCleanup: jest.fn(),
     onCopyCleanupPrompt: jest.fn(),
