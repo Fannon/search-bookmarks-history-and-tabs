@@ -801,11 +801,6 @@ async function applyCleanupChange(type, index) {
     return
   }
 
-  const confirmed = window.confirm('Apply this cleanup change?')
-  if (!confirmed) {
-    return
-  }
-
   try {
     showManagerStatus('Applying cleanup change...')
     const applied = await applyCleanupChanges([{ type, change }], `AI cleanup: ${describeCleanupChange(type, change)}`)
@@ -833,14 +828,9 @@ async function applyCleanupCategory(type) {
     return
   }
 
-  const confirmed = window.confirm(`Apply ${changes.length} "${formatCleanupCategory(type)}" cleanup change(s)?`)
-  if (!confirmed) {
-    return
-  }
-
   try {
     showManagerStatus('Applying cleanup category...')
-    const applied = await applyCleanupChanges(changes, `AI cleanup: ${formatCleanupCategory(type)}`)
+    const applied = await applyCleanupChanges(changes, `AI cleanup: ${describeCleanupChanges(changes)}`)
     if (!applied) {
       return
     }
@@ -863,14 +853,9 @@ async function applyAllCleanupChanges() {
     return
   }
 
-  const confirmed = window.confirm(`Apply ${changes.length} cleanup change(s)?`)
-  if (!confirmed) {
-    return
-  }
-
   try {
     showManagerStatus('Applying cleanup changes...')
-    const applied = await applyCleanupChanges(changes, `AI cleanup: ${changes.length} change(s)`)
+    const applied = await applyCleanupChanges(changes, `AI cleanup: ${describeCleanupChanges(changes)}`)
     if (!applied) {
       return
     }
@@ -1059,36 +1044,36 @@ function getScopedCleanupModel() {
   }
 }
 
-function describeCleanupChange(type, change) {
-  if (type === 'addTags') {
-    return `add tags to bookmark ${change.bookmarkId}`
-  }
-  if (type === 'removeTags') {
-    return `remove tags from bookmark ${change.bookmarkId}`
-  }
-  if (type === 'renameTags') {
-    return `rename tag ${change.from} to ${change.to}`
-  }
-  if (type === 'moveBookmarks') {
-    return `move bookmark ${change.bookmarkId}`
-  }
-  return `delete duplicate bookmark ${change.bookmarkId}`
+function getCleanupBookmarkLabel(bookmarkId) {
+  const bookmark = findBookmarkById(ext.model.bookmarkManager?.bookmarks || [], bookmarkId)
+  const title = bookmark?.title?.trim() || bookmark?.url || `bookmark ${bookmarkId}`
+  return `"${title}"`
 }
 
-function formatCleanupCategory(type) {
+function describeCleanupChange(type, change) {
+  const label = getCleanupBookmarkLabel(change.bookmarkId)
   if (type === 'addTags') {
-    return 'add tags'
+    const tags = (change.tags || []).map((tag) => `"#${tag}"`).join(', ')
+    return `added tags ${tags} to ${label}`
   }
   if (type === 'removeTags') {
-    return 'remove tags'
+    const tags = (change.tags || []).map((tag) => `"#${tag}"`).join(', ')
+    return `removed tags ${tags} from ${label}`
   }
   if (type === 'renameTags') {
-    return 'rename tags'
+    return `renamed tag "${change.from}" to "${change.to}"`
   }
   if (type === 'moveBookmarks') {
-    return 'move bookmarks'
+    return `moved ${label}`
   }
-  return 'delete duplicate bookmarks'
+  return `deleted ${label}`
+}
+
+function describeCleanupChanges(changes) {
+  if (!changes.length) return '0 changes'
+  const first = describeCleanupChange(changes[0].type, changes[0].change)
+  if (changes.length === 1) return first
+  return `${first} and ${changes.length - 1} more`
 }
 
 function canModifyBookmarks() {

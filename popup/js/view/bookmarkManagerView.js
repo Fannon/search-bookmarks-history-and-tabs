@@ -1550,11 +1550,13 @@ function updateDuplicateActions() {
 function renderBookmarkUndoItem(snapshot, canRestore) {
   const timestamp = Number.isFinite(snapshot.createdAt) ? formatUndoTimestamp(snapshot.createdAt) : ''
   const disabled = canRestore ? '' : ' disabled'
+  const affectedHtml = renderUndoSnapshotBookmarks(snapshot.bookmarks || [])
 
   return `
     <li class="bookmark-undo-item">
       <div class="bookmark-undo-description">
         <div>${escapeHtml(snapshot.description)}</div>
+        ${affectedHtml}
         ${timestamp ? `<div class="bookmark-undo-time">${escapeHtml(timestamp)}</div>` : ''}
       </div>
       <button class="button secondary" type="button" data-undo-snapshot-id="${escapeHtml(snapshot.id)}"${disabled}>
@@ -1562,6 +1564,27 @@ function renderBookmarkUndoItem(snapshot, canRestore) {
       </button>
     </li>
   `
+}
+
+function renderUndoSnapshotBookmarks(bookmarks) {
+  if (!bookmarks.length) return ''
+
+  const limit = 3
+  const titles = []
+
+  for (let i = 0; i < bookmarks.length && i < limit; i++) {
+    const label = bookmarks[i].title || bookmarks[i].url || ''
+    if (label) {
+      titles.push(escapeHtml(`"${label}"`))
+    }
+  }
+
+  if (!titles.length) return ''
+
+  const remaining = bookmarks.length - limit
+  const suffix = remaining > 0 ? ` and ${remaining} more` : ''
+
+  return `<div class="bookmark-undo-bookmarks">${titles.join(', ')}${suffix}</div>`
 }
 
 function formatUndoTimestamp(timestamp) {

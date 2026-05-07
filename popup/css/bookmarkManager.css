@@ -304,6 +304,11 @@ button {
   background: var(--badge-tag);
 }
 
+.manager-tabs a[data-manager-tab="cleanup"] strong,
+.manager-tabs a[data-manager-tab="undo"] strong {
+  background: var(--badge-tag);
+}
+
 .manager-tabs a[data-manager-tab="bookmarks"] strong {
   background: var(--bookmark-color);
 }
@@ -1010,6 +1015,14 @@ h3 {
 .bookmark-undo-time {
   color: var(--fg);
   font-size: 12px;
+}
+
+.bookmark-undo-bookmarks {
+  color: var(--fg);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .bookmark-undo-item .button {
