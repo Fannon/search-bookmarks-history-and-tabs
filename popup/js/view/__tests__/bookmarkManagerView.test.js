@@ -71,18 +71,38 @@ function setupDom() {
     <div id="tag-count"></div>
     <div id="tag-list"></div>
     <input id="tag-filter" />
+    <div id="cleanup-count"></div>
+    <select id="cleanup-folder-scope"></select>
+    <textarea id="cleanup-prompt"></textarea>
+    <span id="cleanup-prompt-size"></span>
+    <textarea id="cleanup-proposal-json"></textarea>
+    <div id="cleanup-proposal-summary"></div>
+    <div id="cleanup-proposal-list"></div>
+    <div id="cleanup-status"></div>
+    <button id="generate-cleanup-prompt"></button>
+    <button id="run-local-cleanup"></button>
+    <button id="copy-cleanup-prompt"></button>
+    <button id="apply-all-cleanup-changes"></button>
     <button id="delete-selected"><span data-selected-count></span></button>
     <button id="select-suggested"></button>
     <button id="select-none"></button>
     <div id="bookmark-undo-history"></div>
+    <div id="undo-count"></div>
     <button id="undo-bookmark-change"></button>
+    <button id="export-undo-history"></button>
+    <button id="import-undo-history"></button>
+    <input id="import-undo-history-file" type="file" />
     <button id="export-bookmarks"></button>
     <button id="refresh-bookmarks"></button>
     <div id="manager-load"></div>
     <a data-manager-tab="bookmarks"></a>
     <a data-manager-tab="tags"></a>
+    <a data-manager-tab="cleanup"></a>
+    <a data-manager-tab="undo"></a>
     <section data-manager-panel="bookmarks"></section>
     <section data-manager-panel="tags"></section>
+    <section data-manager-panel="cleanup"></section>
+    <section data-manager-panel="undo"></section>
   `
 }
 
@@ -137,6 +157,16 @@ function bindEvents() {
     onBookmarkNavigation: jest.fn(),
     onUndoBookmarkChange: jest.fn(),
     onExportBookmarks: jest.fn(),
+    onExportUndoHistory: jest.fn(),
+    onImportUndoHistory: jest.fn(),
+    onGenerateCleanupPrompt: jest.fn(),
+    onCleanupScopeChange: jest.fn(),
+    onRunLocalCleanup: jest.fn(),
+    onCopyCleanupPrompt: jest.fn(),
+    onCleanupProposalInput: jest.fn(),
+    onApplyCleanupChange: jest.fn(),
+    onApplyCleanupCategory: jest.fn(),
+    onApplyAllCleanupChanges: jest.fn(),
   })
 }
 

@@ -6,6 +6,12 @@ import { createSearchStringLower } from './helper/browserApi.js'
 import { createExtensionContext } from './helper/extensionContext.js'
 import { getLocalAiTagAvailability, suggestBookmarkTags } from './helper/localAiTags.js'
 import { cleanUpUrl } from './helper/utils.js'
+import {
+  bookmarkCleanupProposalSchema,
+  countBookmarkCleanupChanges,
+  createBookmarkCleanupPrompt,
+  parseBookmarkCleanupProposalWithIssues,
+} from './model/bookmarkCleanupProposal.js'
 import { createBookmarkExportFilename, createBookmarkExportHtml } from './model/bookmarkExport.js'
 import { createBookmarkManagerModel } from './model/bookmarkManagerData.js'
 import {
@@ -42,10 +48,15 @@ import {
   getManagerTagInputValues,
   getSelectedDuplicateIds,
   renderActiveManagerScreen,
+  renderBookmarkCleanupPrompt,
+  renderBookmarkCleanupProposal,
+  renderBookmarkCleanupScopeOptions,
   renderBookmarkManager,
   renderBookmarkUndoHistory,
   renderBookmarkWorkspace,
   setManagedBookmarkSelected,
+  showCleanupIssues,
+  showCleanupStatus,
   showLocalAiTagAvailability,
   showManagerStatus,
   showTagSuggestionBusy,
@@ -91,6 +102,16 @@ export async function initBookmarkManager() {
     onBookmarkNavigation: writeBookmarkBrowserUrl,
     onUndoBookmarkChange: undoBookmarkChange,
     onExportBookmarks: exportBookmarks,
+    onExportUndoHistory: exportUndoHistory,
+    onImportUndoHistory: importUndoHistory,
+    onGenerateCleanupPrompt: generateCleanupPrompt,
+    onCleanupScopeChange: resetCleanupPrompt,
+    onRunLocalCleanup: runLocalCleanup,
+    onCopyCleanupPrompt: copyCleanupPrompt,
+    onCleanupProposalInput: parseCleanupProposalInput,
+    onApplyCleanupChange: applyCleanupChange,
+    onApplyCleanupCategory: applyCleanupCategory,
+    onApplyAllCleanupChanges: applyAllCleanupChanges,
   })
 
   await reloadBookmarkManager()
@@ -130,6 +151,11 @@ export async function reloadBookmarkManager(options = {}) {
     }
 
     renderBookmarkManager(ext.model.bookmarkManager, canModifyBookmarks(), canUpdateBookmarks())
+    renderBookmarkCleanupScopeOptions(
+      ext.model.bookmarkManager.folderTree,
+      ext.model.bookmarkCleanupFolderId || ext.dom.manager.cleanupFolderScope.value || 'all',
+    )
+    renderCleanupProposal()
     updateBookmarkUndoHistory()
     clearManagerSuggestedTags()
     await updateBookmarkBrowser()
@@ -655,6 +681,416 @@ async function removeTag(tagName) {
   }
 }
 
+function generateCleanupPrompt() {
+  const prompt = createBookmarkCleanupPrompt(getScopedCleanupModel())
+  ext.model.bookmarkCleanupPrompt = prompt
+  renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
+  showCleanupStatus('Prompt generated', 'success')
+}
+
+async function runLocalCleanup() {
+  const prompt = ext.model.bookmarkCleanupPrompt || createBookmarkCleanupPrompt(getScopedCleanupModel())
+  const languageModel = globalThis.LanguageModel
+
+  if (!languageModel?.create) {
+    showCleanupStatus('Local AI is unavailable in this browser.', 'error')
+    return
+  }
+
+  let session
+  try {
+    renderBookmarkCleanupPrompt(prompt, false)
+    showCleanupStatus('Running local AI...')
+    showManagerStatus('Running cleanup proposal...')
+    session = await languageModel.create({
+      expectedInputs: [{ type: 'text', languages: ['en'] }],
+      expectedOutputs: [{ type: 'text', languages: ['en'] }],
+    })
+    const response = await session.prompt(prompt, {
+      responseConstraint: bookmarkCleanupProposalSchema,
+    })
+    setCleanupProposalJson(response)
+    parseCleanupProposalText()
+  } catch (error) {
+    showCleanupStatus('Local cleanup proposal failed', 'error')
+    showManagerStatus('Cleanup proposal failed', 'error')
+    printError(error, 'Could not create bookmark cleanup proposal with local AI.')
+  } finally {
+    if (typeof session?.destroy === 'function') {
+      session.destroy()
+    }
+    renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
+  }
+}
+
+function resetCleanupPrompt() {
+  ext.model.bookmarkCleanupFolderId = ext.dom.manager.cleanupFolderScope.value || 'all'
+  ext.model.bookmarkCleanupPrompt = ''
+  renderBookmarkCleanupPrompt('', Boolean(ext.model.bookmarkManagerLocalAiAvailable))
+  showCleanupStatus('')
+}
+
+async function copyCleanupPrompt() {
+  const prompt = ext.dom.manager.cleanupPrompt.value
+  if (!prompt) {
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(prompt)
+    showCleanupStatus('Prompt copied', 'success')
+  } catch (error) {
+    showCleanupStatus('Could not copy prompt', 'error')
+    printError(error, 'Could not copy cleanup prompt.')
+  }
+}
+
+function parseCleanupProposalInput() {
+  if (ext.model.bookmarkCleanupFormattingProposal) {
+    return
+  }
+  if (!ext.dom.manager.cleanupProposalJson.value.trim()) {
+    window.clearTimeout(ext.model.bookmarkCleanupParseTimer)
+    ext.model.bookmarkCleanupProposal = null
+    ext.model.bookmarkCleanupAppliedChangeIds = new Set()
+    renderCleanupProposal()
+    showCleanupIssues([], [])
+    return
+  }
+  window.clearTimeout(ext.model.bookmarkCleanupParseTimer)
+  ext.model.bookmarkCleanupParseTimer = window.setTimeout(parseCleanupProposalText, 180)
+}
+
+function parseCleanupProposalText() {
+  window.clearTimeout(ext.model.bookmarkCleanupParseTimer)
+  const result = parseBookmarkCleanupProposalWithIssues(
+    ext.dom.manager.cleanupProposalJson.value,
+    ext.model.bookmarkManager,
+  )
+
+  if (result.proposal) {
+    setCleanupProposalJson(JSON.stringify(result.proposal, null, 2))
+    ext.model.bookmarkCleanupProposal = result.proposal
+    ext.model.bookmarkCleanupAppliedChangeIds = new Set()
+    renderCleanupProposal()
+    const message = `Loaded ${countBookmarkCleanupChanges(result.proposal)} proposed change(s)`
+    if (result.errors.length || result.warnings.length) {
+      showCleanupIssues(result.errors, result.warnings, message)
+    } else {
+      showCleanupIssues([], [])
+      showCleanupStatus(message, 'success')
+    }
+    return
+  }
+  ext.model.bookmarkCleanupProposal = null
+  ext.model.bookmarkCleanupAppliedChangeIds = new Set()
+  renderCleanupProposal()
+  showCleanupIssues(result.errors, result.warnings, 'Proposal JSON is invalid')
+}
+
+function setCleanupProposalJson(value) {
+  ext.model.bookmarkCleanupFormattingProposal = true
+  ext.dom.manager.cleanupProposalJson.value = value
+  ext.model.bookmarkCleanupFormattingProposal = false
+}
+
+async function applyCleanupChange(type, index) {
+  const proposal = ext.model.bookmarkCleanupProposal
+  const change = proposal?.changes?.[type]?.[index]
+  if (!change || ext.model.bookmarkCleanupAppliedChangeIds?.has(change.id)) {
+    return
+  }
+
+  const confirmed = window.confirm('Apply this cleanup change?')
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    showManagerStatus('Applying cleanup change...')
+    const applied = await applyCleanupChanges([{ type, change }], `AI cleanup: ${describeCleanupChange(type, change)}`)
+    if (!applied) {
+      return
+    }
+    markCleanupChangeApplied(change.id)
+    renderCleanupProposal()
+    showManagerStatus('Applied cleanup change', 'success')
+    await reloadBookmarkManager({ preserveBookmarkSelection: true })
+  } catch (error) {
+    showManagerStatus('Cleanup change failed', 'error')
+    printError(error, 'Could not apply cleanup change.')
+  }
+}
+
+async function applyCleanupCategory(type) {
+  const proposal = ext.model.bookmarkCleanupProposal
+  const appliedIds = ext.model.bookmarkCleanupAppliedChangeIds || new Set()
+  const changes = (proposal?.changes?.[type] || [])
+    .filter((change) => !appliedIds.has(change.id))
+    .map((change) => ({ type, change }))
+
+  if (!changes.length) {
+    return
+  }
+
+  const confirmed = window.confirm(`Apply ${changes.length} "${formatCleanupCategory(type)}" cleanup change(s)?`)
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    showManagerStatus('Applying cleanup category...')
+    const applied = await applyCleanupChanges(changes, `AI cleanup: ${formatCleanupCategory(type)}`)
+    if (!applied) {
+      return
+    }
+    for (let i = 0; i < changes.length; i++) {
+      markCleanupChangeApplied(changes[i].change.id)
+    }
+    renderCleanupProposal()
+    showManagerStatus(`Applied ${changes.length} cleanup change(s)`, 'success')
+    await reloadBookmarkManager({ preserveBookmarkSelection: true })
+  } catch (error) {
+    showManagerStatus('Cleanup category failed', 'error')
+    printError(error, 'Could not apply cleanup category.')
+  }
+}
+
+async function applyAllCleanupChanges() {
+  const proposal = ext.model.bookmarkCleanupProposal
+  const changes = getPendingCleanupChanges(proposal)
+  if (!changes.length) {
+    return
+  }
+
+  const confirmed = window.confirm(`Apply ${changes.length} cleanup change(s)?`)
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    showManagerStatus('Applying cleanup changes...')
+    const applied = await applyCleanupChanges(changes, `AI cleanup: ${changes.length} change(s)`)
+    if (!applied) {
+      return
+    }
+    for (let i = 0; i < changes.length; i++) {
+      markCleanupChangeApplied(changes[i].change.id)
+    }
+    renderCleanupProposal()
+    showManagerStatus(`Applied ${changes.length} cleanup change(s)`, 'success')
+    await reloadBookmarkManager({ preserveBookmarkSelection: true })
+  } catch (error) {
+    showManagerStatus('Cleanup changes failed', 'error')
+    printError(error, 'Could not apply cleanup changes.')
+  }
+}
+
+async function applyCleanupChanges(changes, description) {
+  const affectedBookmarks = getCleanupAffectedBookmarks(changes)
+  const snapshotCreated = await createUndoSnapshot(description, affectedBookmarks)
+  if (!snapshotCreated) {
+    return false
+  }
+
+  for (let i = 0; i < changes.length; i++) {
+    const { type, change } = changes[i]
+    if (type === 'addTags') {
+      await applyCleanupAddTags(change)
+    } else if (type === 'removeTags') {
+      await applyCleanupRemoveTags(change)
+    } else if (type === 'renameTags') {
+      await applyCleanupRenameTag(change)
+    } else if (type === 'moveBookmarks') {
+      await applyCleanupMoveBookmark(change)
+    } else if (type === 'deleteBookmarks') {
+      await applyCleanupDeleteBookmark(change)
+    }
+  }
+
+  return true
+}
+
+async function applyCleanupAddTags(change) {
+  if (!canUpdateBookmarks()) {
+    throw new Error('Bookmark updates are unavailable.')
+  }
+  const bookmark = findBookmarkById(ext.model.bookmarkManager?.bookmarks || [], change.bookmarkId)
+  if (!bookmark) {
+    return
+  }
+  await updateTaggedBookmarks([bookmark], (tags) => mergeBulkTags(tags, change.tags, 'add'))
+}
+
+async function applyCleanupRemoveTags(change) {
+  if (!canUpdateBookmarks()) {
+    throw new Error('Bookmark updates are unavailable.')
+  }
+  const bookmark = findBookmarkById(ext.model.bookmarkManager?.bookmarks || [], change.bookmarkId)
+  if (!bookmark) {
+    return
+  }
+  await updateTaggedBookmarks([bookmark], (tags) => mergeBulkTags(tags, change.tags, 'remove'))
+}
+
+async function applyCleanupRenameTag(change) {
+  if (!canUpdateBookmarks()) {
+    throw new Error('Bookmark updates are unavailable.')
+  }
+  const bookmarks = getCleanupRenameTagBookmarks(change)
+  await updateTaggedBookmarks(bookmarks, (tags) =>
+    uniqueTags(tags.map((tag) => (tag.toLowerCase() === change.from.toLowerCase() ? change.to : tag))),
+  )
+}
+
+async function applyCleanupMoveBookmark(change) {
+  if (!canMoveBookmarks()) {
+    throw new Error('Bookmark moves are unavailable.')
+  }
+  await ext.browserApi.bookmarks.move(change.bookmarkId, { parentId: change.targetFolderId })
+}
+
+async function applyCleanupDeleteBookmark(change) {
+  if (!canModifyBookmarks()) {
+    throw new Error('Bookmark deletion is unavailable.')
+  }
+  await ext.browserApi.bookmarks.remove(change.bookmarkId)
+}
+
+function getPendingCleanupChanges(proposal) {
+  const result = []
+  const appliedIds = ext.model.bookmarkCleanupAppliedChangeIds || new Set()
+  const groups = proposal?.changes || {}
+  const types = ['addTags', 'removeTags', 'renameTags', 'moveBookmarks', 'deleteBookmarks']
+
+  for (let i = 0; i < types.length; i++) {
+    const type = types[i]
+    const changes = groups[type] || []
+    for (let j = 0; j < changes.length; j++) {
+      if (!appliedIds.has(changes[j].id)) {
+        result.push({ type, change: changes[j] })
+      }
+    }
+  }
+
+  return result
+}
+
+function getCleanupAffectedBookmarks(changes) {
+  const ids = new Set()
+
+  for (let i = 0; i < changes.length; i++) {
+    const { type, change } = changes[i]
+    if (type === 'renameTags') {
+      const bookmarks = getCleanupRenameTagBookmarks(change)
+      for (let j = 0; j < bookmarks.length; j++) {
+        ids.add(String(bookmarks[j].originalId))
+      }
+    } else {
+      ids.add(String(change.bookmarkId))
+    }
+  }
+
+  return getBookmarksByIds([...ids])
+}
+
+function getCleanupRenameTagBookmarks(change) {
+  const bookmarks = ext.model.bookmarkManager?.bookmarks || []
+  const targetIds = new Set((change.bookmarkIds || []).map(String))
+  const from = change.from.toLowerCase()
+
+  return bookmarks.filter((bookmark) => {
+    if (targetIds.size && !targetIds.has(String(bookmark.originalId))) {
+      return false
+    }
+    return (bookmark.tagsArray || []).some((tag) => tag.toLowerCase() === from)
+  })
+}
+
+function markCleanupChangeApplied(changeId) {
+  ext.model.bookmarkCleanupAppliedChangeIds ||= new Set()
+  ext.model.bookmarkCleanupAppliedChangeIds.add(changeId)
+}
+
+function renderCleanupProposal() {
+  renderBookmarkCleanupProposal(
+    ext.model.bookmarkCleanupProposal,
+    ext.model.bookmarkManager,
+    ext.model.bookmarkCleanupAppliedChangeIds || new Set(),
+  )
+}
+
+function getScopedCleanupModel() {
+  const managerModel = ext.model.bookmarkManager
+  const folderId = ext.dom.manager.cleanupFolderScope.value || 'all'
+  const bookmarks = filterBookmarksByFolder(managerModel?.bookmarks || [], managerModel?.folderTree, folderId)
+  const bookmarkIds = new Set(bookmarks.map((bookmark) => String(bookmark.originalId)))
+  const tagCounts = new Map()
+
+  for (let i = 0; i < bookmarks.length; i++) {
+    const tags = bookmarks[i].tagsArray || []
+    for (let j = 0; j < tags.length; j++) {
+      const tag = tags[j]
+      const key = tag.toLowerCase()
+      const existing = tagCounts.get(key)
+      if (existing) {
+        existing.count += 1
+      } else {
+        tagCounts.set(key, { name: tag, count: 1 })
+      }
+    }
+  }
+
+  return {
+    ...managerModel,
+    bookmarks,
+    duplicateGroups: (managerModel?.duplicateGroups || [])
+      .map((group) => ({
+        ...group,
+        bookmarks: group.bookmarks.filter((bookmark) => bookmarkIds.has(String(bookmark.originalId))),
+      }))
+      .filter((group) => group.bookmarks.length > 1),
+    tagGroups: [...tagCounts.values()].sort((a, b) => {
+      if (a.count !== b.count) {
+        return b.count - a.count
+      }
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    }),
+  }
+}
+
+function describeCleanupChange(type, change) {
+  if (type === 'addTags') {
+    return `add tags to bookmark ${change.bookmarkId}`
+  }
+  if (type === 'removeTags') {
+    return `remove tags from bookmark ${change.bookmarkId}`
+  }
+  if (type === 'renameTags') {
+    return `rename tag ${change.from} to ${change.to}`
+  }
+  if (type === 'moveBookmarks') {
+    return `move bookmark ${change.bookmarkId}`
+  }
+  return `delete duplicate bookmark ${change.bookmarkId}`
+}
+
+function formatCleanupCategory(type) {
+  if (type === 'addTags') {
+    return 'add tags'
+  }
+  if (type === 'removeTags') {
+    return 'remove tags'
+  }
+  if (type === 'renameTags') {
+    return 'rename tags'
+  }
+  if (type === 'moveBookmarks') {
+    return 'move bookmarks'
+  }
+  return 'delete duplicate bookmarks'
+}
+
 function canModifyBookmarks() {
   return typeof ext.browserApi.bookmarks?.remove === 'function'
 }
@@ -679,6 +1115,7 @@ function canRestoreBookmarkSnapshots() {
 async function checkLocalAiTagSupport() {
   const availability = await getLocalAiTagAvailability()
   showLocalAiTagAvailability(availability)
+  renderBookmarkCleanupPrompt(ext.model.bookmarkCleanupPrompt || '', Boolean(ext.model.bookmarkManagerLocalAiAvailable))
   await updateBookmarkBrowser()
 }
 
@@ -792,6 +1229,62 @@ function exportBookmarks() {
   }
 }
 
+function exportUndoHistory() {
+  const snapshots = getBookmarkUndoSnapshots()
+  if (!snapshots.length) {
+    showManagerStatus('No undo history to export', 'error')
+    return
+  }
+
+  try {
+    const payload = createUndoHistoryExport(snapshots)
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+
+    link.href = url
+    link.download = createUndoHistoryExportFilename()
+    document.body.append(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+    showManagerStatus('Exported undo history', 'success')
+  } catch (error) {
+    showManagerStatus('Undo export failed', 'error')
+    printError(error, 'Could not export bookmark undo history.')
+  }
+}
+
+async function importUndoHistory(file) {
+  if (!file) {
+    return
+  }
+
+  try {
+    const text = await file.text()
+    const payload = JSON.parse(text)
+    const snapshots = parseUndoHistoryImport(payload)
+
+    if (!snapshots.length) {
+      showManagerStatus('No undo snapshots found', 'error')
+      return
+    }
+
+    for (let i = snapshots.length - 1; i >= 0; i--) {
+      saveBookmarkUndoSnapshot(snapshots[i])
+    }
+    updateBookmarkUndoHistory()
+    showManagerStatus(`Imported ${snapshots.length} undo snapshot(s)`, 'success')
+  } catch (error) {
+    showManagerStatus('Undo import failed', 'error')
+    printError(error, 'Could not import bookmark undo history.')
+  } finally {
+    if (ext.dom.manager?.importUndoHistoryFile) {
+      ext.dom.manager.importUndoHistoryFile.value = ''
+    }
+  }
+}
+
 async function restoreBookmarkSnapshot(snapshot) {
   const bookmarks = snapshot.bookmarks.slice().sort(compareSnapshotBookmarks)
 
@@ -840,6 +1333,64 @@ async function recreateDeletedBookmark(bookmark) {
 
 function updateBookmarkUndoHistory() {
   renderBookmarkUndoHistory(getBookmarkUndoSnapshots(), canRestoreBookmarkSnapshots())
+}
+
+function createUndoHistoryExport(snapshots) {
+  return {
+    version: 'bookmark-undo-history/v1',
+    exportedAt: new Date().toISOString(),
+    note: 'Undo snapshots restore previous bookmark state. They are not change proposals because they need prior title, URL, parent folder, and index data.',
+    snapshots: snapshots.map((snapshot) => ({
+      id: snapshot.id,
+      createdAt: new Date(snapshot.createdAt).toISOString(),
+      description: snapshot.description,
+      bookmarks: snapshot.bookmarks.map((bookmark) => ({
+        id: bookmark.id,
+        parentId: bookmark.parentId || '',
+        index: Number.isInteger(bookmark.index) ? bookmark.index : undefined,
+        title: bookmark.title,
+        url: bookmark.url,
+      })),
+    })),
+  }
+}
+
+function parseUndoHistoryImport(payload) {
+  if (!payload || typeof payload !== 'object' || payload.version !== 'bookmark-undo-history/v1') {
+    throw new Error('Undo history JSON must use version "bookmark-undo-history/v1".')
+  }
+  if (!Array.isArray(payload.snapshots)) {
+    throw new Error('Undo history JSON must include a snapshots array.')
+  }
+
+  const snapshots = []
+  for (let i = 0; i < payload.snapshots.length; i++) {
+    const snapshot = normalizeImportedUndoSnapshot(payload.snapshots[i], i)
+    if (snapshot) {
+      snapshots.push(snapshot)
+    }
+  }
+  return snapshots
+}
+
+function normalizeImportedUndoSnapshot(snapshot, index) {
+  if (!snapshot || typeof snapshot !== 'object' || !Array.isArray(snapshot.bookmarks) || !snapshot.bookmarks.length) {
+    return null
+  }
+
+  const createdAt = Number.isFinite(Date.parse(snapshot.createdAt)) ? Date.parse(snapshot.createdAt) : Date.now()
+  return createBookmarkUndoSnapshot(
+    snapshot.description || `Imported undo snapshot ${index + 1}`,
+    snapshot.bookmarks,
+    createdAt,
+  )
+}
+
+function createUndoHistoryExportFilename() {
+  const now = new Date()
+  const date = now.toISOString().slice(0, 10)
+  const time = now.toTimeString().slice(0, 8).replaceAll(':', '-')
+  return `bookmark-manager-undo-history-${date}-${time}.json`
 }
 
 function compareSnapshotBookmarks(a, b) {

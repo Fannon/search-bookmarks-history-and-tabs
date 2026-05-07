@@ -25,8 +25,10 @@ import {
   formatInteger,
   renderBookmarkListItem,
   renderBookmarkTitle,
+  renderDateBadge,
   renderFolderBadge,
   renderTagBadges,
+  renderTrashIcon,
 } from './bookmarkManagerRenderHelpers.js'
 import {
   ensureManagerTagControls,
@@ -81,11 +83,27 @@ export function getBookmarkManagerDom() {
     tagCount: document.getElementById('tag-count'),
     tagList: document.getElementById('tag-list'),
     tagFilter: document.getElementById('tag-filter'),
+    cleanupCount: document.getElementById('cleanup-count'),
+    cleanupFolderScope: document.getElementById('cleanup-folder-scope'),
+    cleanupPrompt: document.getElementById('cleanup-prompt'),
+    cleanupPromptSize: document.getElementById('cleanup-prompt-size'),
+    cleanupProposalJson: document.getElementById('cleanup-proposal-json'),
+    cleanupProposalSummary: document.getElementById('cleanup-proposal-summary'),
+    cleanupProposalList: document.getElementById('cleanup-proposal-list'),
+    cleanupStatus: document.getElementById('cleanup-status'),
+    generateCleanupPrompt: document.getElementById('generate-cleanup-prompt'),
+    runLocalCleanup: document.getElementById('run-local-cleanup'),
+    copyCleanupPrompt: document.getElementById('copy-cleanup-prompt'),
+    applyAllCleanupChanges: document.getElementById('apply-all-cleanup-changes'),
     deleteSelected: document.getElementById('delete-selected'),
     selectSuggested: document.getElementById('select-suggested'),
     selectNone: document.getElementById('select-none'),
     bookmarkUndoHistory: document.getElementById('bookmark-undo-history'),
+    undoCount: document.getElementById('undo-count'),
     undoBookmarkChange: document.getElementById('undo-bookmark-change'),
+    exportUndoHistory: document.getElementById('export-undo-history'),
+    importUndoHistory: document.getElementById('import-undo-history'),
+    importUndoHistoryFile: document.getElementById('import-undo-history-file'),
     exportBookmarks: document.getElementById('export-bookmarks'),
     refreshBookmarks: document.getElementById('refresh-bookmarks'),
     loadingIndicator: document.getElementById('manager-load'),
@@ -141,6 +159,16 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
  * @param {Function} handlers.onBookmarkNavigation Bookmark browser URL state handler.
  * @param {Function} handlers.onUndoBookmarkChange Restore an undo snapshot.
  * @param {Function} handlers.onExportBookmarks Export bookmarks as browser-compatible HTML.
+ * @param {Function} handlers.onExportUndoHistory Export undo snapshot history.
+ * @param {Function} handlers.onImportUndoHistory Import undo snapshot history.
+ * @param {Function} handlers.onGenerateCleanupPrompt Generate cleanup prompt.
+ * @param {Function} handlers.onCleanupScopeChange Cleanup prompt scope change.
+ * @param {Function} handlers.onRunLocalCleanup Run local AI cleanup proposal.
+ * @param {Function} handlers.onCopyCleanupPrompt Copy cleanup prompt.
+ * @param {Function} handlers.onCleanupProposalInput Parse proposal JSON after textarea edits.
+ * @param {Function} handlers.onApplyCleanupChange Apply one cleanup proposal change.
+ * @param {Function} handlers.onApplyCleanupCategory Apply one cleanup proposal category.
+ * @param {Function} handlers.onApplyAllCleanupChanges Apply all cleanup proposal changes.
  */
 export function bindBookmarkManagerEvents({
   onRefresh,
@@ -158,12 +186,44 @@ export function bindBookmarkManagerEvents({
   onBookmarkNavigation,
   onUndoBookmarkChange,
   onExportBookmarks,
+  onExportUndoHistory,
+  onImportUndoHistory,
+  onGenerateCleanupPrompt,
+  onCleanupScopeChange,
+  onRunLocalCleanup,
+  onCopyCleanupPrompt,
+  onCleanupProposalInput,
+  onApplyCleanupChange,
+  onApplyCleanupCategory,
+  onApplyAllCleanupChanges,
 }) {
   const dom = ext.dom.manager
 
   dom.refreshBookmarks.addEventListener('click', onRefresh)
   dom.undoBookmarkChange.addEventListener('click', () => onUndoBookmarkChange())
+  dom.exportUndoHistory.addEventListener('click', onExportUndoHistory)
+  dom.importUndoHistory.addEventListener('click', () => dom.importUndoHistoryFile.click())
+  dom.importUndoHistoryFile.addEventListener('change', () => onImportUndoHistory(dom.importUndoHistoryFile.files?.[0]))
   dom.exportBookmarks.addEventListener('click', onExportBookmarks)
+  dom.generateCleanupPrompt.addEventListener('click', onGenerateCleanupPrompt)
+  dom.cleanupFolderScope.addEventListener('change', onCleanupScopeChange)
+  dom.runLocalCleanup.addEventListener('click', onRunLocalCleanup)
+  dom.copyCleanupPrompt.addEventListener('click', onCopyCleanupPrompt)
+  dom.cleanupProposalJson.addEventListener('input', onCleanupProposalInput)
+  dom.applyAllCleanupChanges.addEventListener('click', onApplyAllCleanupChanges)
+  dom.cleanupProposalList.addEventListener('click', (event) => {
+    const categoryButton = event.target.closest('[data-cleanup-category-type]')
+    if (categoryButton) {
+      onApplyCleanupCategory(categoryButton.dataset.cleanupCategoryType)
+      return
+    }
+
+    const button = event.target.closest('[data-cleanup-change-type][data-cleanup-change-index]')
+    if (!button) {
+      return
+    }
+    onApplyCleanupChange(button.dataset.cleanupChangeType, Number(button.dataset.cleanupChangeIndex))
+  })
   dom.bookmarkSearch.addEventListener('input', () => {
     onBookmarkNavigation()
     onBookmarkSearch()
@@ -320,13 +380,18 @@ function openBookmarkFromList(event, onOpenBookmark) {
  * @param {'info'|'error'|'success'} [tone='info'] Message tone.
  */
 export function showManagerStatus(message, tone = 'info') {
-  const status = ext.dom.manager?.status
+  const status = getActivePageStatus() || ext.dom.manager?.status
   if (!status) {
     return
   }
 
   status.textContent = message
   status.dataset.tone = tone
+}
+
+function getActivePageStatus() {
+  const activePanel = document.querySelector('[data-manager-panel]:not([hidden])')
+  return activePanel?.querySelector('[data-page-status]') || null
 }
 
 /**
@@ -406,7 +471,9 @@ export function renderBookmarkUndoHistory(snapshots = [], canRestore = false) {
 
   if (!snapshots.length) {
     dom.bookmarkUndoHistory.innerHTML = '<p class="empty-state">No bookmark manager changes to undo yet.</p>'
+    dom.undoCount.textContent = ''
     dom.undoBookmarkChange.disabled = true
+    dom.exportUndoHistory.disabled = true
     dom.undoBookmarkChange.title = 'No bookmark manager changes are available to undo'
     return
   }
@@ -416,7 +483,9 @@ export function renderBookmarkUndoHistory(snapshots = [], canRestore = false) {
       ${snapshots.map((snapshot) => renderBookmarkUndoItem(snapshot, canRestore)).join('')}
     </ol>
   `
+  dom.undoCount.textContent = String(snapshots.length)
   dom.undoBookmarkChange.disabled = !canRestore
+  dom.exportUndoHistory.disabled = false
   dom.undoBookmarkChange.title = canRestore
     ? `Undo latest: ${snapshots[0].description}`
     : 'Bookmark undo is unavailable in this context'
@@ -594,7 +663,12 @@ export function clearManagedBookmarkSelection() {
 export function renderActiveManagerScreen() {
   const hash = window.location.hash
   const screen =
-    hash === '#bookmarks' || hash === '#duplicates' || hash === '#tags' || hash === '#overview'
+    hash === '#bookmarks' ||
+    hash === '#duplicates' ||
+    hash === '#tags' ||
+    hash === '#cleanup' ||
+    hash === '#undo' ||
+    hash === '#overview'
       ? hash.slice(1)
       : 'overview'
   const tabs = document.querySelectorAll('[data-manager-tab]')
@@ -618,6 +692,380 @@ export function renderActiveManagerScreen() {
     applyTagManagerUrlState()
     renderTagManagerIntoDom(Boolean(ext.model.bookmarkManagerCanUpdateBookmarks))
   }
+}
+
+/**
+ * Render cleanup prompt and control state.
+ *
+ * @param {string} prompt Prompt text.
+ * @param {boolean} localAiAvailable Whether local AI can be used.
+ */
+export function renderBookmarkCleanupPrompt(prompt, localAiAvailable) {
+  const dom = ext.dom.manager
+  dom.cleanupPrompt.value = prompt || ''
+  dom.cleanupPromptSize.textContent = prompt ? formatPromptSize(prompt) : ''
+  dom.copyCleanupPrompt.disabled = !prompt
+  dom.runLocalCleanup.disabled = !prompt || !localAiAvailable
+}
+
+/**
+ * Render first-level cleanup prompt scope options.
+ *
+ * @param {Object} folderTree Bookmark manager folder tree.
+ * @param {string} selectedFolderId Selected folder id.
+ */
+export function renderBookmarkCleanupScopeOptions(folderTree, selectedFolderId = 'all') {
+  const select = ext.dom.manager?.cleanupFolderScope
+  if (!select) {
+    return
+  }
+
+  const folders = getBookmarkCleanupScopeFolders(folderTree)
+  select.innerHTML = `
+    <option value="all">All bookmarks</option>
+    ${folders.map(renderBookmarkCleanupScopeOption).join('')}
+  `
+  select.value = folders.some((folder) => String(folder.id) === String(selectedFolderId)) ? selectedFolderId : 'all'
+}
+
+/**
+ * Render parsed cleanup proposal changes.
+ *
+ * @param {Object|null} proposal Cleanup proposal.
+ * @param {Object} managerModel Bookmark manager model.
+ * @param {Set<string>} appliedChangeIds Applied proposal change IDs.
+ */
+export function renderBookmarkCleanupProposal(proposal, managerModel, appliedChangeIds = new Set()) {
+  const dom = ext.dom.manager
+  const changeCount = countCleanupProposalChanges(proposal)
+
+  dom.cleanupCount.textContent = changeCount ? String(changeCount) : ''
+  dom.applyAllCleanupChanges.disabled = !changeCount
+  dom.cleanupProposalSummary.textContent = proposal?.summary || (changeCount ? '' : 'No cleanup proposal loaded.')
+  dom.cleanupProposalList.innerHTML = proposal
+    ? renderCleanupChangeGroups(proposal, managerModel, appliedChangeIds)
+    : '<p class="empty-state">Generate or paste a proposal to review changes here.</p>'
+}
+
+/**
+ * Display cleanup page status.
+ *
+ * @param {string} message Status message.
+ * @param {'info'|'error'|'success'} [tone='info'] Message tone.
+ */
+export function showCleanupStatus(message, tone = 'info') {
+  const status = ext.dom.manager?.cleanupStatus
+  if (!status) {
+    return
+  }
+
+  status.textContent = message
+  status.dataset.tone = tone
+}
+
+/**
+ * Display cleanup proposal parser errors and warnings.
+ *
+ * @param {Array<string>} errors Hard parse errors.
+ * @param {Array<string>} warnings Recoverable proposal warnings.
+ * @param {string} [message=''] Optional leading status message.
+ */
+export function showCleanupIssues(errors = [], warnings = [], message = '') {
+  const status = ext.dom.manager?.cleanupStatus
+  if (!status) {
+    return
+  }
+
+  if (!errors.length && !warnings.length && !message) {
+    status.innerHTML = ''
+    status.dataset.tone = 'info'
+    return
+  }
+
+  status.innerHTML = `
+    ${message ? `<div class="cleanup-status-message">${escapeHtml(message)}</div>` : ''}
+    ${errors.length ? renderCleanupIssueList('Errors', errors, 'error') : ''}
+    ${warnings.length ? renderCleanupIssueList('Warnings', warnings, 'warning') : ''}
+  `
+  status.dataset.tone = errors.length ? 'error' : 'warning'
+}
+
+function renderCleanupIssueList(title, issues, tone) {
+  return `
+    <section class="cleanup-issues cleanup-issues-${tone}">
+      <h3>${escapeHtml(title)}</h3>
+      <ul>
+        ${issues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join('')}
+      </ul>
+    </section>
+  `
+}
+
+function renderCleanupChangeGroups(proposal, managerModel, appliedChangeIds) {
+  const groups = [
+    ['addTags', 'Add Tags', proposal.changes.addTags],
+    ['removeTags', 'Remove Tags', proposal.changes.removeTags],
+    ['renameTags', 'Rename or Merge Tags', proposal.changes.renameTags],
+    ['moveBookmarks', 'Move Bookmarks', proposal.changes.moveBookmarks],
+    ['deleteBookmarks', 'Delete Duplicate Bookmarks', proposal.changes.deleteBookmarks],
+  ]
+
+  return groups
+    .map(([type, title, changes]) => renderCleanupChangeGroup(type, title, changes, managerModel, appliedChangeIds))
+    .join('')
+}
+
+function renderBookmarkCleanupScopeOption(folder) {
+  const folderId = String(folder.id)
+  const label = folder.path?.length ? folder.path.join(' / ') : folder.title
+  const count = formatInteger(folder.totalCount || folder.count || 0)
+  const indent = '\u00a0\u00a0\u00a0\u00a0'.repeat(Math.max(0, (folder.path?.length || 1) - 1))
+  return `<option value="${escapeHtml(folderId)}">${indent}${escapeHtml(label)} (${count})</option>`
+}
+
+function getBookmarkCleanupScopeFolders(folderTree) {
+  const result = []
+  const children = folderTree?.children || []
+
+  for (let i = 0; i < children.length; i++) {
+    collectBookmarkCleanupScopeFolders(children[i], result)
+  }
+
+  return result
+}
+
+function collectBookmarkCleanupScopeFolders(folder, result) {
+  if (!folder || (folder.path?.length || 0) > 2) {
+    return
+  }
+
+  result.push(folder)
+
+  const children = folder.children || []
+  for (let i = 0; i < children.length; i++) {
+    collectBookmarkCleanupScopeFolders(children[i], result)
+  }
+}
+
+function renderCleanupChangeGroup(type, title, changes, managerModel, appliedChangeIds) {
+  const pendingCount = changes.filter((change) => !appliedChangeIds.has(change.id)).length
+  const disabled = pendingCount ? '' : ' disabled'
+
+  if (!changes.length) {
+    return `
+      <section class="cleanup-change-group">
+        <h3>${escapeHtml(title)}</h3>
+        <p class="empty-state">No changes proposed.</p>
+      </section>
+    `
+  }
+
+  return `
+    <section class="cleanup-change-group">
+      <header class="cleanup-change-group-header">
+        <h3>${escapeHtml(title)} <span>${formatInteger(changes.length)}</span></h3>
+        <button class="button success" type="button" data-cleanup-category-type="${escapeHtml(type)}"${disabled}>
+          Accept All${pendingCount === changes.length ? '' : ` (${formatInteger(pendingCount)})`}
+        </button>
+      </header>
+      <ol class="cleanup-change-list">
+        ${changes.map((change, index) => renderCleanupChange(type, change, index, managerModel, appliedChangeIds)).join('')}
+      </ol>
+    </section>
+  `
+}
+
+function renderCleanupChange(type, change, index, managerModel, appliedChangeIds) {
+  const applied = appliedChangeIds.has(change.id)
+  const bookmark = findBookmarkById(managerModel?.bookmarks || [], change.bookmarkId)
+  const keepBookmark = findBookmarkById(managerModel?.bookmarks || [], change.duplicateOfBookmarkId)
+  const disabled = applied ? ' disabled' : ''
+  const appliedClass = applied ? ' applied' : ''
+
+  if (type === 'deleteBookmarks') {
+    return renderCleanupDuplicateChange(change, index, bookmark, keepBookmark, managerModel, applied)
+  }
+
+  return `
+    <li class="cleanup-change${appliedClass}">
+      <div class="cleanup-bookmark-card">
+        ${renderCleanupBookmarkCard(bookmark, change.bookmarkId, managerModel)}
+      </div>
+      <div class="cleanup-proposal-card">
+        <div class="cleanup-change-title">${renderCleanupChangeTitle(type, change, bookmark, managerModel)}</div>
+        <p>${escapeHtml(change.reason)}</p>
+      </div>
+      <button class="button success" type="button" data-cleanup-change-type="${escapeHtml(type)}"
+        data-cleanup-change-index="${index}"${disabled}>${applied ? 'Applied' : 'Accept'}</button>
+    </li>
+  `
+}
+
+function renderCleanupChangeTitle(type, change, bookmark, managerModel) {
+  if (type === 'addTags') {
+    return `Add ${renderCleanupTags(change.tags)}`
+  }
+  if (type === 'removeTags') {
+    return `Remove ${renderCleanupTags(change.tags)}`
+  }
+  if (type === 'renameTags') {
+    return `Rename ${renderCleanupTagLink(change.from)} to ${renderCleanupTagLink(change.to)}`
+  }
+  if (type === 'moveBookmarks') {
+    const folderLabel = change.targetFolderPath || change.targetFolderId
+    return `Move to ${renderCleanupFolderLink(
+      { id: change.targetFolderId, label: folderLabel },
+      folderLabel,
+      managerModel,
+    )}`
+  }
+  return renderCleanupBookmarkLabel(bookmark, change.bookmarkId)
+}
+
+function renderCleanupBookmarkLabel(bookmark, fallbackId) {
+  const title = bookmark?.title || `Bookmark ${fallbackId}`
+  return `<span class="cleanup-bookmark-title">${escapeHtml(title)}</span>`
+}
+
+function renderCleanupBookmarkCard(bookmark, fallbackId, managerModel) {
+  if (!bookmark) {
+    return `
+      <div class="bookmark-title">${renderCleanupBookmarkLabel(null, fallbackId)}</div>
+      <p class="empty-state">Bookmark not found.</p>
+    `
+  }
+
+  const displayUrl = bookmark.originalUrl || bookmark.url || ''
+  return `
+    <div class="bookmark-title">${renderBookmarkTitle(bookmark)}</div>
+    <div class="bookmark-meta">
+      ${renderCleanupFolderForBookmark(bookmark, managerModel)}
+      ${renderDateBadge(bookmark.dateAdded)}
+      ${renderCleanupTags(bookmark.tagsArray || [])}
+    </div>
+    <div class="bookmark-url" title="${escapeHtml(displayUrl)}">${escapeHtml(displayUrl)}</div>
+  `
+}
+
+function renderCleanupDuplicateChange(change, index, bookmark, keepBookmark, managerModel, applied) {
+  const disabled = applied ? ' disabled' : ''
+  const appliedClass = applied ? ' applied' : ''
+
+  return `
+    <li class="cleanup-change cleanup-duplicate-change${appliedClass}">
+      <section class="duplicate-group cleanup-duplicate-group">
+        <header class="duplicate-header">
+          <div>
+            <h3>${escapeHtml(bookmark?.originalUrl || bookmark?.url || keepBookmark?.originalUrl || keepBookmark?.url || 'Duplicate bookmark')}</h3>
+            <p>${escapeHtml(change.reason)}</p>
+          </div>
+        </header>
+        <ul class="duplicate-bookmarks">
+          ${renderCleanupDuplicateBookmark(keepBookmark, true, managerModel)}
+          ${renderCleanupDuplicateBookmark(bookmark, false, managerModel)}
+        </ul>
+      </section>
+      <button class="button danger duplicate-delete-button" type="button" data-cleanup-change-type="deleteBookmarks"
+        data-cleanup-change-index="${index}"${disabled}>
+        ${renderTrashIcon()}
+        <span>${applied ? 'Applied' : 'Accept Delete'}</span>
+      </button>
+    </li>
+  `
+}
+
+function renderCleanupDuplicateBookmark(bookmark, isKeep, managerModel) {
+  if (!bookmark) {
+    return `
+      <li class="duplicate-bookmark${isKeep ? ' keep-bookmark' : ''}">
+        <div class="duplicate-details">
+          <div class="duplicate-suggestion">
+            <span class="badge ${isKeep ? 'suggestion-best' : 'suggestion-copy'}">${isKeep ? 'Keep' : 'Delete'}</span>
+            <span>Bookmark not found</span>
+          </div>
+        </div>
+      </li>
+    `
+  }
+
+  const displayUrl = bookmark.originalUrl || bookmark.url || ''
+  return `
+    <li class="duplicate-bookmark${isKeep ? ' keep-bookmark' : ''}">
+      <div class="duplicate-details">
+        <div class="duplicate-suggestion">
+          <span class="badge ${isKeep ? 'suggestion-best' : 'suggestion-copy'}">${isKeep ? 'Keep' : 'Delete'}</span>
+          <span>${isKeep ? 'Bookmark to keep' : 'Proposed duplicate copy'}</span>
+        </div>
+        <div class="bookmark-title">${renderBookmarkTitle(bookmark)}</div>
+        <div class="bookmark-meta">
+          ${renderCleanupFolderForBookmark(bookmark, managerModel)}
+          ${renderDateBadge(bookmark.dateAdded)}
+          ${renderCleanupTags(bookmark.tagsArray || [])}
+        </div>
+        <div class="bookmark-url" title="${escapeHtml(displayUrl)}">${escapeHtml(displayUrl)}</div>
+      </div>
+    </li>
+  `
+}
+
+function renderCleanupTags(tags) {
+  return tags.map(renderCleanupTagLink).join(' ')
+}
+
+function renderCleanupTagLink(tag) {
+  const href = createTagManagerHref({ name: tag })
+  return `<a class="badge tags cleanup-badge-link" href="${escapeHtml(href)}" title="Open tag in Tag Manager">#${escapeHtml(
+    tag,
+  )}</a>`
+}
+
+function renderCleanupFolderForBookmark(bookmark, managerModel) {
+  const label = bookmark.folderArray?.length ? bookmark.folderArray.join(' / ') : 'Root'
+  const folder = {
+    id: bookmark.folderId || findFolderOptionIdByLabel(managerModel, label),
+    label,
+  }
+  return renderCleanupFolderLink(folder, label, managerModel)
+}
+
+function renderCleanupFolderLink(folder, label, managerModel) {
+  const folderId = folder.id || findFolderOptionIdByLabel(managerModel, label) || 'all'
+  const href = createFolderBookmarkHref({ id: folderId, name: label })
+  return `<a class="badge folder cleanup-badge-link" href="${escapeHtml(
+    href,
+  )}" title="Open folder in Bookmark Manager">~${escapeHtml(label)}</a>`
+}
+
+function findFolderOptionIdByLabel(managerModel, label) {
+  const folderOptions = managerModel?.folderOptions || []
+  const key = String(label || '').toLowerCase()
+
+  for (let i = 0; i < folderOptions.length; i++) {
+    if (String(folderOptions[i].label || '').toLowerCase() === key) {
+      return folderOptions[i].id
+    }
+  }
+
+  return ''
+}
+
+function countCleanupProposalChanges(proposal) {
+  const changes = proposal?.changes || {}
+  return (
+    (changes.addTags?.length || 0) +
+    (changes.removeTags?.length || 0) +
+    (changes.renameTags?.length || 0) +
+    (changes.moveBookmarks?.length || 0) +
+    (changes.deleteBookmarks?.length || 0)
+  )
+}
+
+function formatPromptSize(prompt) {
+  const bytes = new Blob([prompt]).size
+  if (bytes < 1024) {
+    return `${formatInteger(bytes)} B`
+  }
+  return `${(bytes / 1024).toLocaleString('en-US', { maximumFractionDigits: 1 })} KB`
 }
 
 function renderFolderTree(folder, activeFolderId) {

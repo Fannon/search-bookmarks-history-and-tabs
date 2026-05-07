@@ -32,9 +32,16 @@
         <span>Tag Manager</span>
         <strong id="tag-count"></strong>
       </a>
+      <a href="#cleanup" data-manager-tab="cleanup">
+        <span>AI Cleanup</span>
+        <strong id="cleanup-count"></strong>
+      </a>
+      <a href="#undo" data-manager-tab="undo">
+        <span>Undo History</span>
+        <strong id="undo-count"></strong>
+      </a>
     </nav>
     <div class="manager-actions">
-      <span id="manager-status" data-tone="info">Loading</span>
       <button id="undo-bookmark-change" class="button secondary" type="button"
         title="Undo the latest bookmark manager change" disabled>Undo</button>
       <button id="refresh-bookmarks" class="button" type="button" title="Refresh bookmarks">
@@ -46,21 +53,22 @@
         Refresh
       </button>
     </div>
+    <div class="bookmark-backup-note">
+      <span>
+        Backup bookmarks before bulk changes. Undo keeps 50 changes only until this page closes or reloads.
+      </span>
+      <button id="export-bookmarks" class="button secondary" type="button">Export Bookmarks</button>
+    </div>
   </header>
 
   <main class="manager-layout">
     <section class="manager-content">
       <div id="manager-load" class="loading">Loading...</div>
-      <div class="bookmark-backup-note">
-        <span>
-          Backup bookmarks before bulk changes. Undo keeps 50 changes only until this page closes or reloads.
-        </span>
-        <button id="export-bookmarks" class="button secondary" type="button">Export Bookmarks</button>
-      </div>
 
       <section data-manager-panel="bookmarks" class="manager-panel" hidden>
         <header class="manager-panel-header bookmark-page-header">
           <h2>Bookmarks</h2>
+          <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
           <p>
             Click a bookmark to edit its title and URL. Check one or more bookmarks to apply tag and move actions to
             that selection.
@@ -156,6 +164,7 @@
       </section>
 
       <section data-manager-panel="overview" class="manager-panel">
+        <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
         <div id="stats-grid" class="stats-grid"></div>
 
         <div class="overview-grid">
@@ -178,15 +187,29 @@
           <div id="recent-bookmarks"></div>
         </section>
 
-        <section>
-          <h2>Change History</h2>
-          <div id="bookmark-undo-history" class="bookmark-undo-history"></div>
-        </section>
+      </section>
+
+      <section data-manager-panel="undo" class="manager-panel" hidden>
+        <header class="manager-panel-header undo-page-header">
+          <h2>Undo History</h2>
+          <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
+          <p>
+            Undo snapshots store the previous bookmark title, URL, parent folder, and position for each affected
+            bookmark. They stay in memory only until this page closes or reloads.
+          </p>
+        </header>
+        <div class="undo-toolbar">
+          <button id="export-undo-history" class="button secondary" type="button" disabled>Export Undo History</button>
+          <button id="import-undo-history" class="button secondary" type="button">Import Undo History</button>
+          <input id="import-undo-history-file" type="file" accept="application/json,.json" hidden />
+        </div>
+        <div id="bookmark-undo-history" class="bookmark-undo-history"></div>
       </section>
 
       <section data-manager-panel="duplicates" class="manager-panel" hidden>
         <header class="manager-panel-header duplicate-page-header">
           <h2>Duplicate Bookmarks</h2>
+          <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
           <div id="duplicate-summary"></div>
         </header>
         <div class="duplicate-toolbar">
@@ -204,12 +227,55 @@
       <section data-manager-panel="tags" class="manager-panel" hidden>
         <header class="manager-panel-header tag-page-header">
           <h2>Tag Manager</h2>
+          <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
           <div id="tag-summary"></div>
         </header>
         <div class="tag-toolbar">
           <input id="tag-filter" type="search" placeholder="Filter tags" autocomplete="off" spellcheck="false" />
         </div>
         <div id="tag-list"></div>
+      </section>
+
+      <section data-manager-panel="cleanup" class="manager-panel" hidden>
+        <header class="manager-panel-header cleanup-page-header">
+          <h2>AI Bookmark Cleanup</h2>
+          <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
+          <p>
+            Generate a prompt for external review or ask the browser's local LLM for a JSON proposal. Review every
+            proposed change before applying it.
+          </p>
+        </header>
+
+        <div class="cleanup-workspace">
+          <section class="cleanup-prompt-panel">
+            <div class="cleanup-toolbar">
+              <button id="generate-cleanup-prompt" class="button secondary" type="button">Generate Prompt</button>
+              <button id="run-local-cleanup" class="button secondary" type="button" disabled>Run Local AI</button>
+              <button id="copy-cleanup-prompt" class="button secondary" type="button" disabled>Copy Prompt</button>
+              <span id="cleanup-prompt-size" class="cleanup-prompt-size"></span>
+            </div>
+            <label for="cleanup-prompt">Prompt and JSON Schema</label>
+            <textarea id="cleanup-prompt" spellcheck="false" rows="16" readonly></textarea>
+            <label for="cleanup-folder-scope">Scope</label>
+            <select id="cleanup-folder-scope"></select>
+          </section>
+
+          <section class="cleanup-result-panel">
+            <div class="cleanup-toolbar">
+              <button id="apply-all-cleanup-changes" class="button success" type="button" disabled>Apply All</button>
+            </div>
+            <label for="cleanup-proposal-json">Proposal JSON</label>
+            <textarea id="cleanup-proposal-json" spellcheck="false" rows="16"
+              placeholder="Paste the LLM JSON response here"></textarea>
+            <div id="cleanup-status" class="cleanup-status" aria-live="polite"></div>
+          </section>
+        </div>
+
+        <section class="cleanup-review-section">
+          <h2>Proposed Changes</h2>
+          <div id="cleanup-proposal-summary" class="cleanup-proposal-summary"></div>
+          <div id="cleanup-proposal-list"></div>
+        </section>
       </section>
     </section>
   </main>

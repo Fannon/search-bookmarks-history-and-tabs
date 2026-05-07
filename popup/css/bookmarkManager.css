@@ -77,12 +77,24 @@ button {
   min-height: 56px;
   padding: 9px 22px 10px;
   background: var(--input-bg);
-  border-bottom: 1px solid var(--input-border);
+  border-bottom: 1px solid #7d7d7d;
   color: var(--input-fg);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px 18px;
+}
+
+.manager-header .bookmark-backup-note {
+  grid-column: 1 / -1;
+  margin: 0 -22px -10px;
+  padding-inline: 22px;
+  border: none;
+  border-top: 1px solid #b38c30;
+  border-radius: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  justify-content: stretch;
 }
 
 .manager-header h1 {
@@ -129,19 +141,31 @@ button {
   justify-content: flex-end;
 }
 
-#manager-status {
+#manager-status,
+.manager-page-status {
   min-width: 70px;
   color: var(--counter);
   font-size: 12px;
-  text-align: right;
+  text-align: left;
 }
 
-#manager-status[data-tone="error"] {
+#manager-status[data-tone="error"],
+.manager-page-status[data-tone="error"] {
   color: var(--danger);
 }
 
-#manager-status[data-tone="success"] {
+#manager-status[data-tone="success"],
+.manager-page-status[data-tone="success"] {
   color: #8ebb26;
+}
+
+.manager-page-status {
+  min-height: 18px;
+  margin: 2px 0 6px;
+}
+
+.manager-page-status:empty {
+  display: none;
 }
 
 .button {
@@ -340,6 +364,8 @@ button {
 .bookmark-browser-toolbar input,
 .bookmark-edit-panel input,
 .bookmark-edit-panel select,
+.cleanup-workspace select,
+.cleanup-workspace textarea,
 #tag-filter {
   width: 100%;
   min-height: 34px;
@@ -360,7 +386,8 @@ button {
 }
 
 .bookmark-browser-actions,
-.bulk-tag-actions {
+.bulk-tag-actions,
+.cleanup-toolbar {
   display: flex;
   gap: 6px;
   align-items: center;
@@ -562,7 +589,8 @@ button {
   color: #8ebb26;
 }
 
-.bookmark-edit-panel label {
+.bookmark-edit-panel label,
+.cleanup-workspace label {
   color: var(--li-title);
   font-size: 13px;
   line-height: 1.2;
@@ -930,9 +958,8 @@ h3 {
   margin: 0 0 12px;
   padding: 8px 10px;
   background: #fff1b8;
-  border: 1px solid #d39b19;
-  border-left: 4px solid #9a6500;
-  border-radius: 4px;
+  border: none;
+  border-radius: 0;
   color: #3d2a00;
   font-size: 14px;
   font-weight: 600;
@@ -945,7 +972,15 @@ h3 {
 }
 
 .bookmark-backup-note span {
-  flex: 1 1 340px;
+  min-width: 0;
+}
+
+.undo-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0 0 14px;
 }
 
 .bookmark-undo-list {
@@ -979,6 +1014,197 @@ h3 {
 
 .bookmark-undo-item .button {
   flex: 0 0 auto;
+}
+
+.cleanup-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.cleanup-prompt-panel,
+.cleanup-result-panel {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.cleanup-workspace textarea {
+  min-height: 360px;
+  resize: vertical;
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.cleanup-prompt-size {
+  color: var(--counter);
+  font-size: 13px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.cleanup-status {
+  min-height: 18px;
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.cleanup-status[data-tone="error"] {
+  color: var(--danger);
+}
+
+.cleanup-status[data-tone="warning"] {
+  color: #9a6500;
+}
+
+.cleanup-status[data-tone="success"] {
+  color: #4f8a10;
+}
+
+.cleanup-status-message {
+  margin-bottom: 6px;
+}
+
+.cleanup-issues {
+  margin: 6px 0 0;
+}
+
+.cleanup-issues h3 {
+  font-size: 14px;
+  line-height: 1.2;
+  margin: 0 0 4px;
+}
+
+.cleanup-issues ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.cleanup-issues li {
+  margin-bottom: 2px;
+}
+
+.cleanup-issues-error {
+  color: var(--danger);
+}
+
+.cleanup-issues-warning {
+  color: #9a6500;
+}
+
+.cleanup-review-section {
+  margin-top: 16px;
+}
+
+.cleanup-proposal-summary {
+  color: var(--fg);
+  font-size: 14px;
+  margin-bottom: 10px;
+  overflow-wrap: anywhere;
+}
+
+.cleanup-change-group {
+  margin-bottom: 16px;
+}
+
+.cleanup-change-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 12px 0 8px;
+}
+
+.cleanup-change-group h3 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.cleanup-change-group h3 span {
+  color: var(--counter);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.cleanup-change-list {
+  list-style: none;
+  padding: 0;
+}
+
+.cleanup-change {
+  min-height: 48px;
+  background-color: var(--li-bg);
+  margin: 0 0 4px;
+  padding: 7px 8px 8px;
+  border-radius: 4px;
+  border-left: 4px solid var(--badge-tag);
+  display: grid;
+  grid-template-columns: minmax(260px, 0.95fr) minmax(260px, 1.05fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.cleanup-change.applied {
+  opacity: 0.68;
+  border-left-color: var(--success);
+}
+
+.cleanup-bookmark-card,
+.cleanup-proposal-card {
+  min-width: 0;
+}
+
+.cleanup-bookmark-card {
+  border-right: 1px solid var(--footer-border);
+  padding-right: 10px;
+}
+
+.cleanup-proposal-card {
+  padding-left: 2px;
+}
+
+.cleanup-change-title {
+  color: var(--li-title);
+  font-size: 15px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.cleanup-change p {
+  color: var(--fg);
+  font-size: 13px;
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+.cleanup-bookmark-title {
+  font-weight: 500;
+}
+
+.cleanup-badge-link {
+  text-decoration: none;
+}
+
+.cleanup-badge-link:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.cleanup-duplicate-change {
+  grid-template-columns: minmax(0, 1fr) auto;
+  background: transparent;
+  border-left: none;
+  padding: 0;
+}
+
+.cleanup-duplicate-group {
+  margin-bottom: 4px;
+}
+
+.cleanup-duplicate-group .duplicate-bookmark {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .manager-panel-header {
@@ -1300,6 +1526,10 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  .cleanup-workspace {
+    grid-template-columns: 1fr;
+  }
+
   .overview-grid {
     grid-template-columns: 1fr;
   }
@@ -1380,6 +1610,10 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  .cleanup-change {
+    grid-template-columns: 1fr;
+  }
+
   .tag-manager-actions {
     justify-content: flex-start;
   }
@@ -1417,8 +1651,7 @@ h3 {
 
   .bookmark-backup-note {
     background: #3a2b06;
-    border-color: #9a6500;
-    border-left-color: #d39b19;
+    border-top: 1px solid #9a6500;
     color: #ffe7a3;
   }
 
