@@ -373,8 +373,11 @@ function openBookmarkFromList(event, onOpenBookmark) {
   return true
 }
 
+let managerStatusDismissId = 0
+
 /**
  * Display a small status message in the manager toolbar.
+ * Non-error messages auto-dismiss after 2.5 seconds.
  *
  * @param {string} message Status message.
  * @param {'info'|'error'|'success'} [tone='info'] Message tone.
@@ -385,8 +388,21 @@ export function showManagerStatus(message, tone = 'info') {
     return
   }
 
+  if (managerStatusDismissId) {
+    clearTimeout(managerStatusDismissId)
+    managerStatusDismissId = 0
+  }
+
   status.textContent = message
   status.dataset.tone = tone
+
+  if (tone !== 'error') {
+    managerStatusDismissId = setTimeout(() => {
+      status.textContent = ''
+      status.dataset.tone = 'info'
+      managerStatusDismissId = 0
+    }, 2500)
+  }
 }
 
 function getActivePageStatus() {
@@ -441,8 +457,11 @@ export function showTagSuggestionBusy(busy, message = '') {
   updateManagedSelectionUi()
 }
 
+let tagSuggestionStatusDismissId = 0
+
 /**
  * Display a small status message next to tag suggestion controls.
+ * Non-error messages auto-dismiss after 2.5 seconds.
  *
  * @param {string} message Status message.
  * @param {'info'|'error'|'success'} [tone='info'] Message tone.
@@ -453,8 +472,21 @@ export function showTagSuggestionStatus(message, tone = 'info') {
     return
   }
 
+  if (tagSuggestionStatusDismissId) {
+    clearTimeout(tagSuggestionStatusDismissId)
+    tagSuggestionStatusDismissId = 0
+  }
+
   status.textContent = message
   status.dataset.tone = tone
+
+  if (tone !== 'error') {
+    tagSuggestionStatusDismissId = setTimeout(() => {
+      status.textContent = ''
+      status.dataset.tone = 'info'
+      tagSuggestionStatusDismissId = 0
+    }, 2500)
+  }
 }
 
 /**
@@ -747,8 +779,11 @@ export function renderBookmarkCleanupProposal(proposal, managerModel, appliedCha
     : '<p class="empty-state">Generate or paste a proposal to review changes here.</p>'
 }
 
+let cleanupStatusDismissId = 0
+
 /**
  * Display cleanup page status.
+ * Non-error messages auto-dismiss after 2.5 seconds.
  *
  * @param {string} message Status message.
  * @param {'info'|'error'|'success'} [tone='info'] Message tone.
@@ -759,8 +794,21 @@ export function showCleanupStatus(message, tone = 'info') {
     return
   }
 
+  if (cleanupStatusDismissId) {
+    clearTimeout(cleanupStatusDismissId)
+    cleanupStatusDismissId = 0
+  }
+
   status.textContent = message
   status.dataset.tone = tone
+
+  if (tone !== 'error') {
+    cleanupStatusDismissId = setTimeout(() => {
+      status.textContent = ''
+      status.dataset.tone = 'info'
+      cleanupStatusDismissId = 0
+    }, 2500)
+  }
 }
 
 /**

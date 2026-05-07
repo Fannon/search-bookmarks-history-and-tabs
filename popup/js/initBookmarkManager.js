@@ -129,7 +129,6 @@ export async function reloadBookmarkManager(options = {}) {
   const preservedSelection = options.preserveBookmarkSelection ? getBookmarkSelectionState() : null
 
   try {
-    showManagerStatus('Loading bookmarks...')
     const { bookmarks, bookmarkTree } = await getSearchData()
     ext.model.bookmarks = bookmarks
     ext.model.bookmarkTree = bookmarkTree
@@ -162,7 +161,6 @@ export async function reloadBookmarkManager(options = {}) {
     scrollManagedBookmarkIntoView(ext.model.bookmarkManagerCurrentId)
     scrollActiveFolderIntoView()
     if (!preservedSelection) {
-      showManagerStatus('Loaded')
     }
   } catch (error) {
     showManagerStatus('Load failed', 'error')
@@ -326,7 +324,6 @@ async function saveManagedBookmark() {
   }
 
   try {
-    showManagerStatus('Saving bookmark...')
     const snapshotCreated = await createUndoSnapshot(`Edited bookmark "${bookmark.title || values.title}"`, [bookmark])
     if (!snapshotCreated) {
       return
@@ -358,7 +355,6 @@ async function moveSelectedBookmarks() {
   }
 
   try {
-    showManagerStatus('Moving bookmarks...')
     const bookmarks = getBookmarksByIds(selectedIds)
     const snapshotCreated = await createUndoSnapshot(createMoveDescription(bookmarks, parentId), bookmarks)
     if (!snapshotCreated) {
@@ -528,7 +524,6 @@ async function bulkTagBookmarks(bookmarkIds, mode) {
   }
 
   try {
-    showManagerStatus('Updating tags...')
     const bookmarkIdSet = new Set(bookmarkIds.map(String))
     const bookmarks = (ext.model.bookmarkManager?.bookmarks || []).filter((bookmark) =>
       bookmarkIdSet.has(String(bookmark.originalId)),
@@ -564,7 +559,6 @@ async function deleteSelectedDuplicates() {
   }
 
   try {
-    showManagerStatus('Deleting duplicates...')
     const bookmarks = getBookmarksByIds(selectedIds)
     const snapshotCreated = await createUndoSnapshot(createDeletedDescription(bookmarks.length), bookmarks)
     if (!snapshotCreated) {
@@ -593,7 +587,6 @@ async function deleteSingleDuplicate(bookmarkId) {
   }
 
   try {
-    showManagerStatus('Deleting bookmark...')
     const bookmarks = getBookmarksByIds([bookmarkId])
     const snapshotCreated = await createUndoSnapshot(createDeletedDescription(1), bookmarks)
     if (!snapshotCreated) {
@@ -630,7 +623,6 @@ async function renameTag(oldTag) {
   }
 
   try {
-    showManagerStatus('Renaming tag...')
     const snapshotCreated = await createUndoSnapshot(
       `Renamed tag "${oldTag}" to "${newTag}" on ${formatBookmarkCount(bookmarks.length)}`,
       bookmarks,
@@ -664,7 +656,6 @@ async function removeTag(tagName) {
   }
 
   try {
-    showManagerStatus('Removing tag...')
     const snapshotCreated = await createUndoSnapshot(
       `Removed tag "${tagName}" from ${formatBookmarkCount(bookmarks.length)}`,
       bookmarks,
@@ -802,7 +793,6 @@ async function applyCleanupChange(type, index) {
   }
 
   try {
-    showManagerStatus('Applying cleanup change...')
     const applied = await applyCleanupChanges([{ type, change }], `AI cleanup: ${describeCleanupChange(type, change)}`)
     if (!applied) {
       return
@@ -829,7 +819,6 @@ async function applyCleanupCategory(type) {
   }
 
   try {
-    showManagerStatus('Applying cleanup category...')
     const applied = await applyCleanupChanges(changes, `AI cleanup: ${describeCleanupChanges(changes)}`)
     if (!applied) {
       return
@@ -854,7 +843,6 @@ async function applyAllCleanupChanges() {
   }
 
   try {
-    showManagerStatus('Applying cleanup changes...')
     const applied = await applyCleanupChanges(changes, `AI cleanup: ${describeCleanupChanges(changes)}`)
     if (!applied) {
       return
@@ -1180,7 +1168,6 @@ async function undoBookmarkChange(snapshotId) {
   }
 
   try {
-    showManagerStatus('Restoring bookmark snapshot...')
     await restoreBookmarkSnapshot(snapshot)
     removeBookmarkUndoSnapshot(snapshot.id)
     updateBookmarkUndoHistory()
