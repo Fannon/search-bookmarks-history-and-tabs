@@ -1043,6 +1043,12 @@ h3 {
   gap: 8px;
 }
 
+.cleanup-control-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
 .cleanup-workspace textarea {
   min-height: 360px;
   resize: vertical;

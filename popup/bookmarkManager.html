@@ -253,17 +253,31 @@
               <button id="copy-cleanup-prompt" class="button secondary" type="button" disabled>Copy Prompt</button>
               <span id="cleanup-prompt-size" class="cleanup-prompt-size"></span>
             </div>
-            <label for="cleanup-change-limit">Proposal Limit</label>
-            <select id="cleanup-change-limit">
-              <option value="10">10 changes</option>
-              <option value="25">25 changes</option>
-              <option value="50" selected>50 changes</option>
-              <option value="100">100 changes</option>
-              <option value="500">500 changes</option>
-              <option value="unlimited">Unlimited</option>
-            </select>
             <label for="cleanup-prompt">Prompt and JSON Schema</label>
             <textarea id="cleanup-prompt" spellcheck="false" rows="16" readonly></textarea>
+            <div class="cleanup-control-row">
+              <div>
+                <label for="cleanup-change-limit">Proposal Limit</label>
+                <select id="cleanup-change-limit">
+                  <option value="10">10 changes</option>
+                  <option value="25">25 changes</option>
+                  <option value="50" selected>50 changes</option>
+                  <option value="100">100 changes</option>
+                  <option value="500">500 changes</option>
+                  <option value="unlimited">Unlimited</option>
+                </select>
+              </div>
+              <div>
+                <label for="cleanup-change-focus">Change Type</label>
+                <select id="cleanup-change-focus">
+                  <option value="everything" selected>Everything</option>
+                  <option value="tags">Tags</option>
+                  <option value="title">Title</option>
+                  <option value="folder">Folder Structure</option>
+                  <option value="duplicates">Duplicates</option>
+                </select>
+              </div>
+            </div>
             <label for="cleanup-folder-scope">Scope</label>
             <select id="cleanup-folder-scope"></select>
           </section>

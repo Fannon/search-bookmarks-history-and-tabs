@@ -57,13 +57,15 @@ describe('bookmark cleanup proposal', () => {
   test('creates a lite prompt without embedding the full JSON schema', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'lite')
 
-    expect(prompt).toContain('"rewriteTitles":[]')
+    expect(prompt).toContain('"changes":{')
     expect(prompt).toContain('id | title | url | tags')
-    expect(prompt).toContain('Keep moveBookmarks and deleteBookmarks empty.')
+    expect(prompt).toContain('Do not propose bookmark moves or deletions.')
+    expect(prompt).toContain('Change type focus: Everything')
     expect(prompt).toContain('Focus on addTags and rewriteTitles first')
     expect(prompt).toContain('Example output format only')
     expect(prompt).toContain('"addTags":[{"id":"add-1","bookmarkId":"bookmark-id-from-data"')
-    expect(prompt).toContain('"moveBookmarks":[],"deleteBookmarks":[]')
+    expect(prompt).not.toContain('"moveBookmarks"')
+    expect(prompt).not.toContain('"deleteBookmarks"')
     expect(prompt).not.toContain('Existing folders')
     expect(prompt).not.toContain('dev | Development')
     expect(prompt).not.toContain('"$schema"')
@@ -76,10 +78,47 @@ describe('bookmark cleanup proposal', () => {
     expect(prompt).not.toContain('Return at most 50 total changes')
   })
 
+  test('can focus a prompt on title changes', () => {
+    const prompt = createBookmarkCleanupPrompt(managerModel, 'full', { changeFocus: 'title' })
+
+    expect(prompt).toContain('Change type focus: Title')
+    expect(prompt).toContain('Include only these change arrays when they have proposals: rewriteTitles')
+    expect(prompt).toContain('"changes":{"rewriteTitles"')
+    expect(prompt).toContain('"rewriteTitles":[{"id":"rewrite-1"')
+  })
+
+  test('omits folder context when advanced prompt only focuses tags', () => {
+    const prompt = createBookmarkCleanupPrompt(managerModel, 'full', { changeFocus: 'tags' })
+
+    expect(prompt).toContain('Change type focus: Tags')
+    expect(prompt).toContain('id | title | url | tags')
+    expect(prompt).not.toContain('Existing folders')
+    expect(prompt).not.toContain('dev | Development')
+  })
+
+  test('keeps folder context when advanced prompt focuses folder structure', () => {
+    const prompt = createBookmarkCleanupPrompt(managerModel, 'full', { changeFocus: 'folder' })
+
+    expect(prompt).toContain('Change type focus: Folder Structure')
+    expect(prompt).toContain('id | title | url | folderId | folderPath | tags')
+    expect(prompt).toContain('Existing folders')
+    expect(prompt).toContain('dev | Development')
+  })
+
+  test('can focus an advanced prompt on duplicate cleanup', () => {
+    const prompt = createBookmarkCleanupPrompt(managerModel, 'full', { changeFocus: 'duplicates' })
+
+    expect(prompt).toContain('Change type focus: Duplicates')
+    expect(prompt).toContain('Include only these change arrays when they have proposals: deleteBookmarks')
+    expect(prompt).toContain('"changes":{"deleteBookmarks"')
+    expect(prompt).toContain('"deleteBookmarks":[{"id":"delete-1"')
+  })
+
   test('uses a flat schema for local AI constrained generation', () => {
     const schema = JSON.stringify(localAiBookmarkCleanupProposalSchema)
 
     expect(schema).toContain('"rewriteTitles"')
+    expect(schema).not.toContain('"required":["addTags"')
     expect(schema).not.toContain('"$ref"')
     expect(schema).not.toContain('"$defs"')
     expect(schema).not.toContain('"allOf"')
@@ -107,6 +146,21 @@ describe('bookmark cleanup proposal', () => {
     expect(proposal.changes.addTags[0].tags).toEqual(['Docs', 'AI'])
     expect(proposal.changes.rewriteTitles[0].title).toBe('OpenAI Docs Reference')
     expect(countBookmarkCleanupChanges(proposal)).toBe(5)
+  })
+
+  test('allows omitted change arrays and normalizes them to empty arrays', () => {
+    const proposal = parseBookmarkCleanupProposal(
+      JSON.stringify({
+        bookmarkChangeProposal: '1.0',
+        changes: {
+          rewriteTitles: [{ id: 'rewrite-1', bookmarkId: '1', title: 'OpenAI Docs Reference', reason: 'Clearer.' }],
+        },
+      }),
+      managerModel,
+    )
+
+    expect(proposal.changes.addTags).toEqual([])
+    expect(proposal.changes.rewriteTitles).toHaveLength(1)
   })
 
   test('rejects references outside the current bookmark data', () => {

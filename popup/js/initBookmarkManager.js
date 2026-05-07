@@ -871,6 +871,7 @@ function resetCleanupPrompt() {
 function getCleanupPromptOptions() {
   return {
     changeLimit: ext.dom.manager.cleanupChangeLimit.value || '50',
+    changeFocus: ext.dom.manager.cleanupChangeFocus.value || 'everything',
   }
 }
 

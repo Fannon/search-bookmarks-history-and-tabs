@@ -75,6 +75,7 @@ function setupDom() {
     <div id="cleanup-count"></div>
     <select id="cleanup-folder-scope"></select>
     <select id="cleanup-change-limit"><option value="50">50 changes</option></select>
+    <select id="cleanup-change-focus"><option value="everything">Everything</option></select>
     <textarea id="cleanup-prompt"></textarea>
     <span id="cleanup-prompt-size"></span>
     <textarea id="cleanup-proposal-json"></textarea>

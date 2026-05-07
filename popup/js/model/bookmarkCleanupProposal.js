@@ -7,10 +7,6 @@ const PROMPT_TEXT_LIMIT = 180
 const PROPOSAL_VERSION = '1.0'
 const PROMPT_FULL = 'full'
 const PROMPT_LITE = 'lite'
-const PROMPT_FULL_EXAMPLE = `Example output format only. Do not copy example IDs; use IDs from the provided data:
-{"bookmarkChangeProposal":"1.0","summary":"Short summary.","changes":{"addTags":[{"id":"add-1","bookmarkId":"bookmark-id-from-data","tags":["example-tag"],"reason":"Why this tag fits."}],"removeTags":[{"id":"remove-1","bookmarkId":"bookmark-id-from-data","tags":["old-tag"],"reason":"Why this tag should be removed."}],"renameTags":[{"id":"rename-1","from":"old-tag","to":"better-tag","reason":"Why these tags should merge."}],"moveBookmarks":[{"id":"move-1","bookmarkId":"bookmark-id-from-data","targetFolderId":"folder-id-from-data","reason":"Why this folder is better."}],"deleteBookmarks":[{"id":"delete-1","bookmarkId":"duplicate-bookmark-id","duplicateOfBookmarkId":"bookmark-id-to-keep","reason":"Why this is a duplicate."}],"rewriteTitles":[{"id":"rewrite-1","bookmarkId":"bookmark-id-from-data","title":"Clear Bookmark Title","reason":"Why this title is clearer."}]}}`
-const PROMPT_LITE_EXAMPLE = `Example output format only. Do not copy example IDs; use IDs from the provided data:
-{"bookmarkChangeProposal":"1.0","summary":"Short summary.","changes":{"addTags":[{"id":"add-1","bookmarkId":"bookmark-id-from-data","tags":["example-tag"],"reason":"Why this tag fits."}],"removeTags":[{"id":"remove-1","bookmarkId":"bookmark-id-from-data","tags":["old-tag"],"reason":"Why this tag should be removed."}],"renameTags":[{"id":"rename-1","from":"old-tag","to":"better-tag","reason":"Why these tags should merge."}],"moveBookmarks":[],"deleteBookmarks":[],"rewriteTitles":[{"id":"rewrite-1","bookmarkId":"bookmark-id-from-data","title":"Clear Bookmark Title","reason":"Why this title is clearer."}]}}`
 
 export const bookmarkCleanupProposalSchema = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -29,7 +25,6 @@ export const bookmarkCleanupProposalSchema = {
     changes: {
       type: 'object',
       additionalProperties: false,
-      required: ['addTags', 'removeTags', 'renameTags', 'moveBookmarks', 'deleteBookmarks', 'rewriteTitles'],
       properties: {
         addTags: {
           type: 'array',
@@ -61,7 +56,7 @@ export const bookmarkCleanupProposalSchema = {
   $defs: {
     changeBase: {
       type: 'object',
-      required: ['id', 'reason'],
+      required: ['id'],
       properties: {
         id: {
           type: 'string',
@@ -77,7 +72,7 @@ export const bookmarkCleanupProposalSchema = {
         {
           type: 'object',
           additionalProperties: false,
-          required: ['id', 'bookmarkId', 'tags', 'reason'],
+          required: ['id', 'bookmarkId', 'tags'],
           properties: {
             id: { type: 'string' },
             bookmarkId: { type: 'string' },
@@ -98,7 +93,7 @@ export const bookmarkCleanupProposalSchema = {
         {
           type: 'object',
           additionalProperties: false,
-          required: ['id', 'from', 'to', 'reason'],
+          required: ['id', 'from', 'to'],
           properties: {
             id: { type: 'string' },
             from: { type: 'string' },
@@ -118,7 +113,7 @@ export const bookmarkCleanupProposalSchema = {
         {
           type: 'object',
           additionalProperties: false,
-          required: ['id', 'bookmarkId', 'targetFolderId', 'reason'],
+          required: ['id', 'bookmarkId', 'targetFolderId'],
           properties: {
             id: { type: 'string' },
             bookmarkId: { type: 'string' },
@@ -135,7 +130,7 @@ export const bookmarkCleanupProposalSchema = {
         {
           type: 'object',
           additionalProperties: false,
-          required: ['id', 'bookmarkId', 'duplicateOfBookmarkId', 'reason'],
+          required: ['id', 'bookmarkId', 'duplicateOfBookmarkId'],
           properties: {
             id: { type: 'string' },
             bookmarkId: { type: 'string' },
@@ -151,7 +146,7 @@ export const bookmarkCleanupProposalSchema = {
         {
           type: 'object',
           additionalProperties: false,
-          required: ['id', 'bookmarkId', 'title', 'reason'],
+          required: ['id', 'bookmarkId', 'title'],
           properties: {
             id: { type: 'string' },
             bookmarkId: { type: 'string' },
@@ -178,14 +173,13 @@ export const localAiBookmarkCleanupProposalSchema = {
     changes: {
       type: 'object',
       additionalProperties: false,
-      required: ['addTags', 'removeTags', 'renameTags', 'moveBookmarks', 'deleteBookmarks', 'rewriteTitles'],
       properties: {
         addTags: {
           type: 'array',
           items: {
             type: 'object',
             additionalProperties: false,
-            required: ['id', 'bookmarkId', 'tags', 'reason'],
+            required: ['id', 'bookmarkId', 'tags'],
             properties: {
               id: { type: 'string' },
               bookmarkId: { type: 'string' },
@@ -199,7 +193,7 @@ export const localAiBookmarkCleanupProposalSchema = {
           items: {
             type: 'object',
             additionalProperties: false,
-            required: ['id', 'bookmarkId', 'tags', 'reason'],
+            required: ['id', 'bookmarkId', 'tags'],
             properties: {
               id: { type: 'string' },
               bookmarkId: { type: 'string' },
@@ -213,7 +207,7 @@ export const localAiBookmarkCleanupProposalSchema = {
           items: {
             type: 'object',
             additionalProperties: false,
-            required: ['id', 'from', 'to', 'reason'],
+            required: ['id', 'from', 'to'],
             properties: {
               id: { type: 'string' },
               from: { type: 'string' },
@@ -227,7 +221,7 @@ export const localAiBookmarkCleanupProposalSchema = {
           items: {
             type: 'object',
             additionalProperties: false,
-            required: ['id', 'bookmarkId', 'targetFolderId', 'reason'],
+            required: ['id', 'bookmarkId', 'targetFolderId'],
             properties: {
               id: { type: 'string' },
               bookmarkId: { type: 'string' },
@@ -241,7 +235,7 @@ export const localAiBookmarkCleanupProposalSchema = {
           items: {
             type: 'object',
             additionalProperties: false,
-            required: ['id', 'bookmarkId', 'duplicateOfBookmarkId', 'reason'],
+            required: ['id', 'bookmarkId', 'duplicateOfBookmarkId'],
             properties: {
               id: { type: 'string' },
               bookmarkId: { type: 'string' },
@@ -255,7 +249,7 @@ export const localAiBookmarkCleanupProposalSchema = {
           items: {
             type: 'object',
             additionalProperties: false,
-            required: ['id', 'bookmarkId', 'title', 'reason'],
+            required: ['id', 'bookmarkId', 'title'],
             properties: {
               id: { type: 'string' },
               bookmarkId: { type: 'string' },
@@ -276,12 +270,16 @@ export const localAiBookmarkCleanupProposalSchema = {
  * @param {'lite'|'full'} [mode='full'] Prompt detail mode.
  * @param {Object} [options] Prompt options.
  * @param {string|number} [options.changeLimit=50] Maximum proposed changes, or 'unlimited'.
+ * @param {'everything'|'tags'|'title'|'folder'|'duplicates'} [options.changeFocus='everything'] Change type focus.
  * @returns {string} Prompt text.
  */
 export function createBookmarkCleanupPrompt(managerModel, mode = PROMPT_FULL, options = {}) {
   const isLite = mode === PROMPT_LITE
-  const payload = createBookmarkCleanupPromptPayload(managerModel, mode)
   const changeLimit = normalizePromptChangeLimit(options.changeLimit)
+  const changeFocus = normalizePromptChangeFocus(options.changeFocus)
+  const allowedChangeTypes = getAllowedPromptChangeTypes(isLite, changeFocus)
+  const needsFolders = allowedChangeTypes.includes('moveBookmarks')
+  const payload = createBookmarkCleanupPromptPayload(managerModel, { includeFolders: needsFolders })
 
   return `
 You are helping clean up a browser bookmark collection.
@@ -290,6 +288,7 @@ Use world knowledge plus the titles, URLs, and current tags below to propose use
 Prefer conservative, reviewable changes over large speculative rewrites.
 Only propose a change when confidence is high. Prefer an empty array over a weak or speculative suggestion.
 ${changeLimit ? `Return at most ${changeLimit} total changes, prioritizing highest-impact changes first.` : 'No total change limit is set, but still prioritize higher-impact changes first.'}
+${formatPromptFocusInstruction(isLite, changeFocus, allowedChangeTypes)}
 
 Goals:
 - Add useful, specific tags where existing bookmark data strongly supports them.
@@ -304,6 +303,7 @@ Rules:
 - Use only bookmark IDs from the provided data.
 ${isLite ? '- Keep moveBookmarks and deleteBookmarks empty.' : '- Use only folder IDs from the provided data.\n- Do not invent folders. Use targetFolderId from existingFolders for moves.'}
 - If unsure about a required field, omit that change instead of using placeholders.
+- Include reason only when it adds useful review context.
 - Prefer existing tag conventions, but add concise lowercase tags when they improve organization.
 - Do not remove a tag just because it is redundant or generic; tags can intentionally improve search scoring as keywords.
 - Use renameTags for tag merges, for example "ai", "llm", and "genai" into one chosen tag.
@@ -312,15 +312,15 @@ ${isLite ? '' : '- Do not delete a bookmark unless duplicateOfBookmarkId identif
 ${isLite ? '' : '- Do not propose a move when the current folder already seems reasonable; only move when the target folder is clearly more specific or more accurate.'}
 - Do not rewrite titles for style alone. Do not add tags, scores, folder names, domains, or invented details to rewritten titles.
 - Return JSON only. No markdown, comments, or explanation outside JSON.
-- Output shape: {"bookmarkChangeProposal":"1.0","summary":"","changes":{"addTags":[],"removeTags":[],"renameTags":[],"moveBookmarks":[],"deleteBookmarks":[],"rewriteTitles":[]}}
-${isLite ? PROMPT_LITE_EXAMPLE : PROMPT_FULL_EXAMPLE}
+- Output base shape: {"bookmarkChangeProposal":"1.0","summary":"","changes":{}}
+${createPromptExample(allowedChangeTypes)}
 ${isLite ? '' : `- The JSON must validate against this schema:\n${JSON.stringify(bookmarkCleanupProposalSchema)}`}
 
 Existing tags:
 ${payload.existingTags}
 
-${isLite ? '' : `Existing folders:\n${payload.existingFolders}\n`}
-Bookmarks, one per line as: ${isLite ? 'id | title | url | tags' : 'id | title | url | folderId | folderPath | tags'}
+${needsFolders ? `Existing folders:\n${payload.existingFolders}\n` : ''}
+Bookmarks, one per line as: ${needsFolders ? 'id | title | url | folderId | folderPath | tags' : 'id | title | url | tags'}
 ${payload.bookmarks}
   `.trim()
 }
@@ -329,19 +329,20 @@ ${payload.bookmarks}
  * Create compact bookmark manager data for prompt input.
  *
  * @param {Object} managerModel Bookmark manager model.
- * @param {'lite'|'full'} [mode='full'] Prompt detail mode.
+ * @param {Object} [options] Payload options.
+ * @param {boolean} [options.includeFolders=true] Include folder fields and folder list.
  * @returns {Object} Prompt payload.
  */
-export function createBookmarkCleanupPromptPayload(managerModel, mode = PROMPT_FULL) {
+export function createBookmarkCleanupPromptPayload(managerModel, options = {}) {
   const bookmarks = managerModel?.bookmarks || []
   const folderOptions = managerModel?.folderOptions || []
   const tagGroups = managerModel?.tagGroups || []
-  const isLite = mode === PROMPT_LITE
+  const includeFolders = options.includeFolders !== false
 
   return {
     bookmarks: bookmarks
       .slice(0, PROMPT_BOOKMARK_LIMIT)
-      .map(isLite ? formatBookmarkForLitePrompt : formatBookmarkForPrompt)
+      .map(includeFolders ? formatBookmarkForPrompt : formatBookmarkForLitePrompt)
       .join('\n'),
     existingTags: tagGroups.map((tag) => `${tag.name} (${tag.count})`).join(', '),
     existingFolders: folderOptions
@@ -357,6 +358,105 @@ function normalizePromptChangeLimit(changeLimit) {
 
   const limit = Number.parseInt(changeLimit || 50, 10)
   return Number.isFinite(limit) && limit > 0 ? limit : 50
+}
+
+function normalizePromptChangeFocus(changeFocus) {
+  if (changeFocus === 'tags' || changeFocus === 'title' || changeFocus === 'folder' || changeFocus === 'duplicates') {
+    return changeFocus
+  }
+  return 'everything'
+}
+
+function getAllowedPromptChangeTypes(isLite, changeFocus) {
+  if (changeFocus === 'tags') {
+    return ['addTags', 'removeTags', 'renameTags']
+  }
+  if (changeFocus === 'title') {
+    return ['rewriteTitles']
+  }
+  if (changeFocus === 'folder') {
+    return isLite ? [] : ['moveBookmarks']
+  }
+  if (changeFocus === 'duplicates') {
+    return isLite ? [] : ['deleteBookmarks']
+  }
+  return isLite
+    ? ['addTags', 'removeTags', 'renameTags', 'rewriteTitles']
+    : ['addTags', 'removeTags', 'renameTags', 'moveBookmarks', 'deleteBookmarks', 'rewriteTitles']
+}
+
+function formatPromptFocusInstruction(isLite, changeFocus, allowedChangeTypes) {
+  if (isLite && changeFocus === 'folder') {
+    return 'Change type focus: Folder Structure. Lite mode has no folder data, so return an empty changes object. Use Advanced for folder structure proposals.'
+  }
+  if (isLite && changeFocus === 'duplicates') {
+    return 'Change type focus: Duplicates. Lite mode does not include duplicate-cleanup context, so return an empty changes object. Use Advanced for duplicate proposals.'
+  }
+
+  const label =
+    changeFocus === 'tags'
+      ? 'Tags'
+      : changeFocus === 'title'
+        ? 'Title'
+        : changeFocus === 'folder'
+          ? 'Folder Structure'
+          : changeFocus === 'duplicates'
+            ? 'Duplicates'
+            : 'Everything'
+  return `Change type focus: ${label}. Include only these change arrays when they have proposals: ${allowedChangeTypes.join(', ')}. Omit other change arrays.`
+}
+
+function createPromptExample(allowedChangeTypes) {
+  const changes = {}
+
+  if (allowedChangeTypes.includes('addTags')) {
+    changes.addTags = [{ id: 'add-1', bookmarkId: 'bookmark-id-from-data', tags: ['example-tag'] }]
+  }
+  if (allowedChangeTypes.includes('removeTags')) {
+    changes.removeTags = [
+      {
+        id: 'remove-1',
+        bookmarkId: 'bookmark-id-from-data',
+        tags: ['old-tag'],
+      },
+    ]
+  }
+  if (allowedChangeTypes.includes('renameTags')) {
+    changes.renameTags = [{ id: 'rename-1', from: 'old-tag', to: 'better-tag' }]
+  }
+  if (allowedChangeTypes.includes('moveBookmarks')) {
+    changes.moveBookmarks = [
+      {
+        id: 'move-1',
+        bookmarkId: 'bookmark-id-from-data',
+        targetFolderId: 'folder-id-from-data',
+      },
+    ]
+  }
+  if (allowedChangeTypes.includes('deleteBookmarks')) {
+    changes.deleteBookmarks = [
+      {
+        id: 'delete-1',
+        bookmarkId: 'duplicate-bookmark-id',
+        duplicateOfBookmarkId: 'bookmark-id-to-keep',
+      },
+    ]
+  }
+  if (allowedChangeTypes.includes('rewriteTitles')) {
+    changes.rewriteTitles = [
+      {
+        id: 'rewrite-1',
+        bookmarkId: 'bookmark-id-from-data',
+        title: 'Clear Bookmark Title',
+      },
+    ]
+  }
+
+  return `Example output format only. Do not copy example IDs; use IDs from the provided data:\n${JSON.stringify({
+    bookmarkChangeProposal: PROPOSAL_VERSION,
+    summary: 'Short summary.',
+    changes,
+  })}`
 }
 
 /**
@@ -508,6 +608,9 @@ function formatBookmarkForPrompt(bookmark) {
 }
 
 function validateTagChanges(errors, changes, name, bookmarkIds) {
+  if (typeof changes === 'undefined') {
+    return
+  }
   if (!Array.isArray(changes)) {
     errors.push(`changes.${name} must be an array.`)
     return
@@ -526,6 +629,9 @@ function validateTagChanges(errors, changes, name, bookmarkIds) {
 }
 
 function validateRenameTagChanges(errors, changes, existingTags, bookmarkIds) {
+  if (typeof changes === 'undefined') {
+    return
+  }
   if (!Array.isArray(changes)) {
     errors.push('changes.renameTags must be an array.')
     return
@@ -551,6 +657,9 @@ function validateRenameTagChanges(errors, changes, existingTags, bookmarkIds) {
 }
 
 function validateMoveChanges(errors, changes, bookmarkIds, folderIds) {
+  if (typeof changes === 'undefined') {
+    return
+  }
   if (!Array.isArray(changes)) {
     errors.push('changes.moveBookmarks must be an array.')
     return
@@ -569,6 +678,9 @@ function validateMoveChanges(errors, changes, bookmarkIds, folderIds) {
 }
 
 function validateDeleteChanges(errors, changes, bookmarkIds) {
+  if (typeof changes === 'undefined') {
+    return
+  }
   if (!Array.isArray(changes)) {
     errors.push('changes.deleteBookmarks must be an array.')
     return
@@ -590,6 +702,9 @@ function validateDeleteChanges(errors, changes, bookmarkIds) {
 }
 
 function validateRewriteTitleChanges(errors, changes, bookmarkIds) {
+  if (typeof changes === 'undefined') {
+    return
+  }
   if (!Array.isArray(changes)) {
     errors.push('changes.rewriteTitles must be an array.')
     return
@@ -615,9 +730,6 @@ function validateChangeBase(errors, change, name, index) {
   if (!String(change.id || '').trim()) {
     errors.push(`changes.${name}[${index}].id is required.`)
   }
-  if (!String(change.reason || '').trim()) {
-    errors.push(`changes.${name}[${index}].reason is required.`)
-  }
 }
 
 function normalizeBookmarkCleanupProposal(proposal) {
@@ -625,33 +737,33 @@ function normalizeBookmarkCleanupProposal(proposal) {
     bookmarkChangeProposal: PROPOSAL_VERSION,
     summary: String(proposal.summary || '').trim(),
     changes: {
-      addTags: normalizeTagChanges(proposal.changes.addTags),
-      removeTags: normalizeTagChanges(proposal.changes.removeTags),
-      renameTags: proposal.changes.renameTags.map((change) => ({
+      addTags: normalizeTagChanges(proposal.changes.addTags || []),
+      removeTags: normalizeTagChanges(proposal.changes.removeTags || []),
+      renameTags: (proposal.changes.renameTags || []).map((change) => ({
         id: String(change.id).trim(),
         from: normalizePromptTag(change.from),
         to: normalizePromptTag(change.to),
         bookmarkIds: Array.isArray(change.bookmarkIds) ? change.bookmarkIds.map((id) => String(id)) : [],
-        reason: String(change.reason).trim(),
+        reason: String(change.reason || '').trim(),
       })),
-      moveBookmarks: proposal.changes.moveBookmarks.map((change) => ({
+      moveBookmarks: (proposal.changes.moveBookmarks || []).map((change) => ({
         id: String(change.id).trim(),
         bookmarkId: String(change.bookmarkId),
         targetFolderId: String(change.targetFolderId),
         targetFolderPath: String(change.targetFolderPath || '').trim(),
-        reason: String(change.reason).trim(),
+        reason: String(change.reason || '').trim(),
       })),
-      deleteBookmarks: proposal.changes.deleteBookmarks.map((change) => ({
+      deleteBookmarks: (proposal.changes.deleteBookmarks || []).map((change) => ({
         id: String(change.id).trim(),
         bookmarkId: String(change.bookmarkId),
         duplicateOfBookmarkId: String(change.duplicateOfBookmarkId),
-        reason: String(change.reason).trim(),
+        reason: String(change.reason || '').trim(),
       })),
-      rewriteTitles: proposal.changes.rewriteTitles.map((change) => ({
+      rewriteTitles: (proposal.changes.rewriteTitles || []).map((change) => ({
         id: String(change.id).trim(),
         bookmarkId: String(change.bookmarkId),
         title: normalizePromptTitle(change.title),
-        reason: String(change.reason).trim(),
+        reason: String(change.reason || '').trim(),
       })),
     },
   }
@@ -678,8 +790,11 @@ function normalizeBookmarkCleanupProposalWithIssues(proposal, managerModel, warn
 }
 
 function normalizeTagChangesWithIssues(changes, name, bookmarkIds, warnings) {
+  if (typeof changes === 'undefined') {
+    return []
+  }
   if (!Array.isArray(changes)) {
-    warnings.push(`changes.${name} was missing or not an array; treated as empty.`)
+    warnings.push(`changes.${name} was not an array; treated as empty.`)
     return []
   }
 
@@ -706,7 +821,7 @@ function normalizeTagChangesWithIssues(changes, name, bookmarkIds, warnings) {
       id: normalizeChangeId(change.id, name, i),
       bookmarkId,
       tags,
-      reason: String(change.reason || 'No reason provided.').trim(),
+      reason: String(change.reason || '').trim(),
     })
   }
 
@@ -714,8 +829,11 @@ function normalizeTagChangesWithIssues(changes, name, bookmarkIds, warnings) {
 }
 
 function normalizeRenameTagChangesWithIssues(changes, existingTags, bookmarkIds, warnings) {
+  if (typeof changes === 'undefined') {
+    return []
+  }
   if (!Array.isArray(changes)) {
-    warnings.push('changes.renameTags was missing or not an array; treated as empty.')
+    warnings.push('changes.renameTags was not an array; treated as empty.')
     return []
   }
 
@@ -743,7 +861,7 @@ function normalizeRenameTagChangesWithIssues(changes, existingTags, bookmarkIds,
       from,
       to,
       bookmarkIds: normalizeOptionalBookmarkIds(change.bookmarkIds, bookmarkIds, context, warnings),
-      reason: String(change.reason || 'No reason provided.').trim(),
+      reason: String(change.reason || '').trim(),
     })
   }
 
@@ -751,8 +869,11 @@ function normalizeRenameTagChangesWithIssues(changes, existingTags, bookmarkIds,
 }
 
 function normalizeMoveChangesWithIssues(changes, bookmarkIds, folderIds, warnings) {
+  if (typeof changes === 'undefined') {
+    return []
+  }
   if (!Array.isArray(changes)) {
-    warnings.push('changes.moveBookmarks was missing or not an array; treated as empty.')
+    warnings.push('changes.moveBookmarks was not an array; treated as empty.')
     return []
   }
 
@@ -780,7 +901,7 @@ function normalizeMoveChangesWithIssues(changes, bookmarkIds, folderIds, warning
       bookmarkId,
       targetFolderId,
       targetFolderPath: String(change.targetFolderPath || '').trim(),
-      reason: String(change.reason || 'No reason provided.').trim(),
+      reason: String(change.reason || '').trim(),
     })
   }
 
@@ -788,8 +909,11 @@ function normalizeMoveChangesWithIssues(changes, bookmarkIds, folderIds, warning
 }
 
 function normalizeDeleteChangesWithIssues(changes, bookmarkIds, warnings) {
+  if (typeof changes === 'undefined') {
+    return []
+  }
   if (!Array.isArray(changes)) {
-    warnings.push('changes.deleteBookmarks was missing or not an array; treated as empty.')
+    warnings.push('changes.deleteBookmarks was not an array; treated as empty.')
     return []
   }
 
@@ -822,7 +946,7 @@ function normalizeDeleteChangesWithIssues(changes, bookmarkIds, warnings) {
       id: normalizeChangeId(change.id, 'deleteBookmarks', i),
       bookmarkId,
       duplicateOfBookmarkId,
-      reason: String(change.reason || 'No reason provided.').trim(),
+      reason: String(change.reason || '').trim(),
     })
   }
 
@@ -830,8 +954,11 @@ function normalizeDeleteChangesWithIssues(changes, bookmarkIds, warnings) {
 }
 
 function normalizeRewriteTitleChangesWithIssues(changes, bookmarkIds, warnings) {
+  if (typeof changes === 'undefined') {
+    return []
+  }
   if (!Array.isArray(changes)) {
-    warnings.push('changes.rewriteTitles was missing or not an array; treated as empty.')
+    warnings.push('changes.rewriteTitles was not an array; treated as empty.')
     return []
   }
 
@@ -858,7 +985,7 @@ function normalizeRewriteTitleChangesWithIssues(changes, bookmarkIds, warnings) 
       id: normalizeChangeId(change.id, 'rewriteTitles', i),
       bookmarkId,
       title,
-      reason: String(change.reason || 'No reason provided.').trim(),
+      reason: String(change.reason || '').trim(),
     })
   }
 
@@ -899,7 +1026,7 @@ function normalizeTagChanges(changes) {
     id: String(change.id).trim(),
     bookmarkId: String(change.bookmarkId),
     tags: normalizePromptTags(change.tags),
-    reason: String(change.reason).trim(),
+    reason: String(change.reason || '').trim(),
   }))
 }
 

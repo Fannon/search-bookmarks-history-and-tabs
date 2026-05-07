@@ -15,7 +15,6 @@
     "changes": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["addTags", "removeTags", "renameTags", "moveBookmarks", "deleteBookmarks", "rewriteTitles"],
       "properties": {
         "addTags": {
           "type": "array",
@@ -60,7 +59,7 @@
     "tagChange": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "bookmarkId", "tags", "reason"],
+      "required": ["id", "bookmarkId", "tags"],
       "properties": {
         "id": {
           "type": "string"
@@ -82,7 +81,7 @@
     "renameTagChange": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "from", "to", "reason"],
+      "required": ["id", "from", "to"],
       "properties": {
         "id": {
           "type": "string"
@@ -107,7 +106,7 @@
     "moveBookmarkChange": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "bookmarkId", "targetFolderId", "reason"],
+      "required": ["id", "bookmarkId", "targetFolderId"],
       "properties": {
         "id": {
           "type": "string"
@@ -129,7 +128,7 @@
     "deleteBookmarkChange": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "bookmarkId", "duplicateOfBookmarkId", "reason"],
+      "required": ["id", "bookmarkId", "duplicateOfBookmarkId"],
       "properties": {
         "id": {
           "type": "string"
@@ -148,7 +147,7 @@
     "rewriteTitleChange": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "bookmarkId", "title", "reason"],
+      "required": ["id", "bookmarkId", "title"],
       "properties": {
         "id": {
           "type": "string"

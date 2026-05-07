@@ -86,6 +86,7 @@ export function getBookmarkManagerDom() {
     cleanupCount: document.getElementById('cleanup-count'),
     cleanupFolderScope: document.getElementById('cleanup-folder-scope'),
     cleanupChangeLimit: document.getElementById('cleanup-change-limit'),
+    cleanupChangeFocus: document.getElementById('cleanup-change-focus'),
     cleanupPrompt: document.getElementById('cleanup-prompt'),
     cleanupPromptSize: document.getElementById('cleanup-prompt-size'),
     cleanupProposalJson: document.getElementById('cleanup-proposal-json'),
@@ -213,6 +214,7 @@ export function bindBookmarkManagerEvents({
   dom.generateCleanupPromptFull.addEventListener('click', onGenerateCleanupPromptFull)
   dom.cleanupFolderScope.addEventListener('change', onCleanupScopeChange)
   dom.cleanupChangeLimit.addEventListener('change', onCleanupScopeChange)
+  dom.cleanupChangeFocus.addEventListener('change', onCleanupScopeChange)
   dom.runLocalCleanup.addEventListener('click', onRunLocalCleanup)
   dom.copyCleanupPrompt.addEventListener('click', onCopyCleanupPrompt)
   dom.cleanupProposalJson.addEventListener('input', onCleanupProposalInput)
@@ -950,12 +952,17 @@ function renderCleanupChange(type, change, index, managerModel, appliedChangeIds
       </div>
       <div class="cleanup-proposal-card">
         <div class="cleanup-change-title">${renderCleanupChangeTitle(type, change, bookmark, managerModel)}</div>
-        <p>${escapeHtml(change.reason)}</p>
+        ${renderCleanupReason(change.reason)}
       </div>
       <button class="button success" type="button" data-cleanup-change-type="${escapeHtml(type)}"
         data-cleanup-change-index="${index}"${disabled}>${applied ? 'Applied' : 'Accept'}</button>
     </li>
   `
+}
+
+function renderCleanupReason(reason) {
+  const text = String(reason || '').trim()
+  return text ? `<p>${escapeHtml(text)}</p>` : ''
 }
 
 function renderCleanupChangeTitle(type, change, bookmark, managerModel) {
@@ -1018,7 +1025,7 @@ function renderCleanupDuplicateChange(change, index, bookmark, keepBookmark, man
         <header class="duplicate-header">
           <div>
             <h3>${escapeHtml(bookmark?.originalUrl || bookmark?.url || keepBookmark?.originalUrl || keepBookmark?.url || 'Duplicate bookmark')}</h3>
-            <p>${escapeHtml(change.reason)}</p>
+            ${renderCleanupReason(change.reason)}
           </div>
         </header>
         <ul class="duplicate-bookmarks">
