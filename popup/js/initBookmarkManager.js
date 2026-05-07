@@ -7,9 +7,9 @@ import { createExtensionContext } from './helper/extensionContext.js'
 import { getLocalAiTagAvailability, suggestBookmarkTags } from './helper/localAiTags.js'
 import { cleanUpUrl } from './helper/utils.js'
 import {
-  bookmarkCleanupProposalSchema,
   countBookmarkCleanupChanges,
   createBookmarkCleanupPrompt,
+  localAiBookmarkCleanupProposalSchema,
   parseBookmarkCleanupProposalWithIssues,
 } from './model/bookmarkCleanupProposal.js'
 import { createBookmarkExportFilename, createBookmarkExportHtml } from './model/bookmarkExport.js'
@@ -63,6 +63,8 @@ import {
   showTagSuggestionStatus,
 } from './view/bookmarkManagerView.js'
 import { printError } from './view/errorView.js'
+
+const LOCAL_AI_PROMPT_TIMEOUT_MS = 45000
 
 export const ext = createExtensionContext()
 window.ext = ext
@@ -526,14 +528,22 @@ async function bulkTagBookmarks(bookmarkIds, mode) {
     const bookmarks = (ext.model.bookmarkManager?.bookmarks || []).filter((bookmark) =>
       bookmarkIdSet.has(String(bookmark.originalId)),
     )
-    const snapshotCreated = await createUndoSnapshot(createBulkTagDescription(mode, tags, bookmarks.length), bookmarks)
+    const tagPlans = createTagUpdatePlans(bookmarks, (currentTags) => mergeBulkTags(currentTags, tags, mode))
+    if (!tagPlans.length) {
+      clearBulkTagInput()
+      showManagerStatus('No tag changes to apply.', 'success')
+      return
+    }
+
+    const changedBookmarks = tagPlans.map((plan) => plan.bookmark)
+    const snapshotCreated = await createUndoSnapshot(createBulkTagDescription(tagPlans), changedBookmarks)
     if (!snapshotCreated) {
       return
     }
-    await updateTaggedBookmarks(bookmarks, (currentTags) => mergeBulkTags(currentTags, tags, mode))
+    await updateTaggedBookmarkPlans(tagPlans)
     clearBulkTagInput()
     await reloadBookmarkManager({ preserveBookmarkSelection: true })
-    showManagerStatus(`Updated ${bookmarkIds.length} bookmark(s)`, 'success')
+    showManagerStatus(`Updated ${tagPlans.length} bookmark(s)`, 'success')
   } catch (error) {
     showManagerStatus('Tag update failed', 'error')
     printError(error, 'Could not update bookmark tags.')
@@ -671,24 +681,35 @@ async function removeTag(tagName) {
 }
 
 function generateCleanupPrompt() {
-  const prompt = createBookmarkCleanupPrompt(getScopedCleanupModel(), 'lite')
+  const prompt = createBookmarkCleanupPrompt(getScopedCleanupModel(), 'lite', getCleanupPromptOptions()).trim()
   ext.model.bookmarkCleanupPrompt = prompt
   renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
   showCleanupStatus('Lite prompt generated', 'success')
 }
 
 function generateCleanupPromptFull() {
-  const prompt = createBookmarkCleanupPrompt(getScopedCleanupModel(), 'full')
+  const prompt = createBookmarkCleanupPrompt(getScopedCleanupModel(), 'full', getCleanupPromptOptions()).trim()
   ext.model.bookmarkCleanupPrompt = prompt
   renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
   showCleanupStatus('Full prompt generated', 'success')
 }
 
 async function runLocalCleanup() {
-  const prompt = ext.model.bookmarkCleanupPrompt || createBookmarkCleanupPrompt(getScopedCleanupModel(), 'lite')
+  const prompt = (
+    ext.model.bookmarkCleanupPrompt ||
+    createBookmarkCleanupPrompt(getScopedCleanupModel(), 'lite', getCleanupPromptOptions())
+  ).trim()
   const languageModel = globalThis.LanguageModel
+  const startedAt = performance.now()
+
+  debugLocalCleanup('start', {
+    promptSize: formatCleanupResponseSize(prompt),
+    availability: ext.model.bookmarkManagerLocalAiAvailability || 'unknown',
+    hasCreate: Boolean(languageModel?.create),
+  })
 
   if (!languageModel?.create) {
+    debugLocalCleanup('unavailable', { elapsedMs: getElapsedMs(startedAt) })
     showCleanupStatus('Local AI is unavailable in this browser.', 'error')
     return
   }
@@ -696,26 +717,148 @@ async function runLocalCleanup() {
   let session
   try {
     renderBookmarkCleanupPrompt(prompt, false)
-    showCleanupStatus('Running local AI...')
-    session = await languageModel.create({
-      expectedInputs: [{ type: 'text', languages: ['en'] }],
-      expectedOutputs: [{ type: 'text', languages: ['en'] }],
+    showCleanupStatus('Starting local AI...', 'info', false)
+    session = await createLocalCleanupSession(languageModel, startedAt)
+    debugLocalCleanup('session created', {
+      elapsedMs: getElapsedMs(startedAt),
+      hasPrompt: typeof session?.prompt === 'function',
+      hasDestroy: typeof session?.destroy === 'function',
     })
-    const response = await session.prompt(prompt, {
-      responseConstraint: bookmarkCleanupProposalSchema,
+    let response
+    try {
+      response = await promptLocalCleanupWithTimeout(
+        session,
+        prompt,
+        {
+          responseConstraint: localAiBookmarkCleanupProposalSchema,
+        },
+        'session.prompt constrained',
+        startedAt,
+      )
+    } catch (error) {
+      if (error?.name !== 'TimeoutError') {
+        throw error
+      }
+
+      debugLocalCleanup('constrained prompt timed out; retrying without responseConstraint', {
+        elapsedMs: getElapsedMs(startedAt),
+        timeoutMs: LOCAL_AI_PROMPT_TIMEOUT_MS,
+      })
+      showCleanupStatus('Constrained generation timed out. Retrying without schema...', 'info', false)
+      destroyLocalCleanupSession(session, startedAt)
+      session = await createLocalCleanupSession(languageModel, startedAt)
+      response = await promptLocalCleanupWithTimeout(session, prompt, {}, 'session.prompt unconstrained', startedAt)
+    }
+    debugLocalCleanup('response returned', {
+      elapsedMs: getElapsedMs(startedAt),
+      responseType: response == null ? 'null' : typeof response,
+      responseSize: formatCleanupResponseSize(formatLocalAiCleanupResponse(response)),
     })
-    setCleanupProposalJson(response)
+    const responseText = formatLocalAiCleanupResponse(response)
+    setCleanupProposalJson(responseText)
+    showCleanupStatus(
+      `Local AI returned ${formatCleanupResponseSize(responseText)}. Parsing proposal...`,
+      'info',
+      false,
+    )
     parseCleanupProposalText()
+    debugLocalCleanup('parsed response', { elapsedMs: getElapsedMs(startedAt) })
   } catch (error) {
+    debugLocalCleanup('failed', {
+      elapsedMs: getElapsedMs(startedAt),
+      name: error?.name || 'Error',
+      message: error?.message || String(error),
+    })
     showCleanupStatus('Local cleanup proposal failed', 'error')
     showManagerStatus('Cleanup proposal failed', 'error')
     printError(error, 'Could not create bookmark cleanup proposal with local AI.')
   } finally {
-    if (typeof session?.destroy === 'function') {
-      session.destroy()
-    }
+    destroyLocalCleanupSession(session, startedAt)
     renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
+    debugLocalCleanup('finish', { elapsedMs: getElapsedMs(startedAt) })
   }
+}
+
+async function createLocalCleanupSession(languageModel, startedAt) {
+  const waitingTimer = startLocalAiWaitingLog('session.create', startedAt)
+  try {
+    return await languageModel.create({
+      expectedInputs: [{ type: 'text', languages: ['en'] }],
+      expectedOutputs: [{ type: 'text', languages: ['en'] }],
+      monitor(monitorTarget) {
+        debugLocalCleanup('monitor attached', { elapsedMs: getElapsedMs(startedAt) })
+        monitorTarget.addEventListener('downloadprogress', (event) => {
+          const progress = Math.round((event.loaded || 0) * 100)
+          debugLocalCleanup('download progress', { progress, elapsedMs: getElapsedMs(startedAt) })
+          showCleanupStatus(`Downloading local AI model ${progress}%`, 'info', false)
+        })
+      },
+    })
+  } finally {
+    stopLocalAiWaitingLog(waitingTimer)
+  }
+}
+
+async function promptLocalCleanupWithTimeout(session, prompt, options, stage, startedAt) {
+  const waitingTimer = startLocalAiWaitingLog(stage, startedAt)
+  try {
+    showCleanupStatus('Generating cleanup proposal...', 'info', false)
+    return await Promise.race([session.prompt(prompt, options), createLocalAiTimeout(stage)])
+  } finally {
+    stopLocalAiWaitingLog(waitingTimer)
+  }
+}
+
+function destroyLocalCleanupSession(session, startedAt) {
+  if (typeof session?.destroy === 'function') {
+    debugLocalCleanup('destroy session', { elapsedMs: getElapsedMs(startedAt) })
+    session.destroy()
+  }
+}
+
+function createLocalAiTimeout(stage) {
+  return new Promise((_, reject) => {
+    window.setTimeout(() => {
+      const error = new Error(`${stage} timed out after ${LOCAL_AI_PROMPT_TIMEOUT_MS}ms.`)
+      error.name = 'TimeoutError'
+      reject(error)
+    }, LOCAL_AI_PROMPT_TIMEOUT_MS)
+  })
+}
+
+function debugLocalCleanup(message, details = {}) {
+  console.debug('[bookmark-cleanup local-ai]', message, details)
+}
+
+function startLocalAiWaitingLog(stage, startedAt) {
+  return window.setTimeout(() => {
+    debugLocalCleanup(`${stage} still waiting`, { elapsedMs: getElapsedMs(startedAt) })
+  }, 30000)
+}
+
+function stopLocalAiWaitingLog(timer) {
+  if (timer) {
+    window.clearTimeout(timer)
+  }
+}
+
+function getElapsedMs(startedAt) {
+  return Math.round(performance.now() - startedAt)
+}
+
+function formatLocalAiCleanupResponse(response) {
+  if (typeof response === 'string') {
+    return response
+  }
+  if (response == null) {
+    return ''
+  }
+  return JSON.stringify(response, null, 2)
+}
+
+function formatCleanupResponseSize(responseText) {
+  const bytes = new Blob([responseText]).size
+  return bytes < 1024 ? `${bytes} B` : `${Math.round(bytes / 102.4) / 10} KB`
 }
 
 function resetCleanupPrompt() {
@@ -723,6 +866,12 @@ function resetCleanupPrompt() {
   ext.model.bookmarkCleanupPrompt = ''
   renderBookmarkCleanupPrompt('', Boolean(ext.model.bookmarkManagerLocalAiAvailable))
   showCleanupStatus('')
+}
+
+function getCleanupPromptOptions() {
+  return {
+    changeLimit: ext.dom.manager.cleanupChangeLimit.value || '50',
+  }
 }
 
 async function copyCleanupPrompt() {
@@ -1420,9 +1569,29 @@ function getBookmarksWithTag(tagName) {
 }
 
 async function updateTaggedBookmarks(bookmarks, getNextTags) {
+  const tagPlans = createTagUpdatePlans(bookmarks, getNextTags)
+  await updateTaggedBookmarkPlans(tagPlans)
+}
+
+function createTagUpdatePlans(bookmarks, getNextTags) {
+  const tagPlans = []
+
   for (let i = 0; i < bookmarks.length; i++) {
     const bookmark = bookmarks[i]
-    const nextTags = getNextTags(bookmark.tagsArray || [])
+    const currentTags = bookmark.tagsArray || []
+    const nextTags = getNextTags(currentTags)
+    if (areSameTags(currentTags, nextTags)) {
+      continue
+    }
+    tagPlans.push({ bookmark, currentTags, nextTags })
+  }
+
+  return tagPlans
+}
+
+async function updateTaggedBookmarkPlans(tagPlans) {
+  for (let i = 0; i < tagPlans.length; i++) {
+    const { bookmark, nextTags } = tagPlans[i]
     await ext.browserApi.bookmarks.update(String(bookmark.originalId), {
       title: createTaggedBookmarkTitle(bookmark.title, nextTags, bookmark.customBonusScore),
     })
@@ -1457,15 +1626,55 @@ function createDeletedDescription(bookmarkCount) {
   return `Deleted ${formatBookmarkCount(bookmarkCount)}`
 }
 
-function createBulkTagDescription(mode, tags, bookmarkCount) {
-  const tagText = tags.join(', ')
-  if (mode === 'replace') {
-    return `Replaced tags with "${tagText}" on ${formatBookmarkCount(bookmarkCount)}`
+function createBulkTagDescription(tagPlans) {
+  const addedTags = []
+  const removedTags = []
+
+  for (let i = 0; i < tagPlans.length; i++) {
+    const { currentTags, nextTags } = tagPlans[i]
+    appendTagDiff(addedTags, nextTags, currentTags)
+    appendTagDiff(removedTags, currentTags, nextTags)
   }
-  if (mode === 'remove') {
-    return `Removed tags "${tagText}" from ${formatBookmarkCount(bookmarkCount)}`
+
+  const bookmarkText = formatBookmarkCount(tagPlans.length)
+  if (addedTags.length && removedTags.length) {
+    return `Changed tags on ${bookmarkText}: added "${addedTags.join(', ')}"; removed "${removedTags.join(', ')}"`
   }
-  return `Added tags "${tagText}" to ${formatBookmarkCount(bookmarkCount)}`
+  if (addedTags.length) {
+    return `Added tags "${addedTags.join(', ')}" to ${bookmarkText}`
+  }
+  if (removedTags.length) {
+    return `Removed tags "${removedTags.join(', ')}" from ${bookmarkText}`
+  }
+  return `Updated tags on ${bookmarkText}`
+}
+
+function appendTagDiff(result, sourceTags, compareTags) {
+  const compareKeys = new Set(compareTags.map((tag) => tag.toLowerCase()))
+  const resultKeys = new Set(result.map((tag) => tag.toLowerCase()))
+
+  for (let i = 0; i < sourceTags.length; i++) {
+    const tag = sourceTags[i]
+    const key = tag.toLowerCase()
+    if (!compareKeys.has(key) && !resultKeys.has(key)) {
+      result.push(tag)
+      resultKeys.add(key)
+    }
+  }
+}
+
+function areSameTags(firstTags, secondTags) {
+  if (firstTags.length !== secondTags.length) {
+    return false
+  }
+
+  const firstKeys = new Set(firstTags.map((tag) => tag.toLowerCase()))
+  for (let i = 0; i < secondTags.length; i++) {
+    if (!firstKeys.has(secondTags[i].toLowerCase())) {
+      return false
+    }
+  }
+  return true
 }
 
 function createMoveDescription(bookmarks, parentId) {

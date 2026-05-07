@@ -85,6 +85,7 @@ export function getBookmarkManagerDom() {
     tagFilter: document.getElementById('tag-filter'),
     cleanupCount: document.getElementById('cleanup-count'),
     cleanupFolderScope: document.getElementById('cleanup-folder-scope'),
+    cleanupChangeLimit: document.getElementById('cleanup-change-limit'),
     cleanupPrompt: document.getElementById('cleanup-prompt'),
     cleanupPromptSize: document.getElementById('cleanup-prompt-size'),
     cleanupProposalJson: document.getElementById('cleanup-proposal-json'),
@@ -211,6 +212,7 @@ export function bindBookmarkManagerEvents({
   dom.generateCleanupPrompt.addEventListener('click', onGenerateCleanupPrompt)
   dom.generateCleanupPromptFull.addEventListener('click', onGenerateCleanupPromptFull)
   dom.cleanupFolderScope.addEventListener('change', onCleanupScopeChange)
+  dom.cleanupChangeLimit.addEventListener('change', onCleanupScopeChange)
   dom.runLocalCleanup.addEventListener('click', onRunLocalCleanup)
   dom.copyCleanupPrompt.addEventListener('click', onCopyCleanupPrompt)
   dom.cleanupProposalJson.addEventListener('input', onCleanupProposalInput)
@@ -738,10 +740,11 @@ export function renderActiveManagerScreen() {
  */
 export function renderBookmarkCleanupPrompt(prompt, localAiAvailable) {
   const dom = ext.dom.manager
-  dom.cleanupPrompt.value = prompt || ''
-  dom.cleanupPromptSize.textContent = prompt ? formatPromptSize(prompt) : ''
-  dom.copyCleanupPrompt.disabled = !prompt
-  dom.runLocalCleanup.disabled = !prompt || !localAiAvailable
+  const promptText = String(prompt || '').trim()
+  dom.cleanupPrompt.value = promptText
+  dom.cleanupPromptSize.textContent = promptText ? formatPromptSize(promptText) : ''
+  dom.copyCleanupPrompt.disabled = !promptText
+  dom.runLocalCleanup.disabled = !promptText || !localAiAvailable
 }
 
 /**
@@ -787,12 +790,13 @@ let cleanupStatusDismissId = 0
 
 /**
  * Display cleanup page status.
- * Non-error messages auto-dismiss after 2.5 seconds.
+ * Non-error messages auto-dismiss after 2.5 seconds unless autoDismiss is false.
  *
  * @param {string} message Status message.
  * @param {'info'|'error'|'success'} [tone='info'] Message tone.
+ * @param {boolean} [autoDismiss=true] Whether to clear non-error messages automatically.
  */
-export function showCleanupStatus(message, tone = 'info') {
+export function showCleanupStatus(message, tone = 'info', autoDismiss = true) {
   const status = ext.dom.manager?.cleanupStatus
   if (!status) {
     return
@@ -806,7 +810,7 @@ export function showCleanupStatus(message, tone = 'info') {
   status.textContent = message
   status.dataset.tone = tone
 
-  if (tone !== 'error') {
+  if (tone !== 'error' && autoDismiss) {
     cleanupStatusDismissId = setTimeout(() => {
       status.textContent = ''
       status.dataset.tone = 'info'
@@ -965,7 +969,8 @@ function renderCleanupChangeTitle(type, change, bookmark, managerModel) {
     return `Rename ${renderCleanupTagLink(change.from)} to ${renderCleanupTagLink(change.to)}`
   }
   if (type === 'moveBookmarks') {
-    const folderLabel = change.targetFolderPath || change.targetFolderId
+    const folderLabel =
+      getFolderLabelById(managerModel, change.targetFolderId) || change.targetFolderPath || change.targetFolderId
     return `Move to ${renderCleanupFolderLink(
       { id: change.targetFolderId, label: folderLabel },
       folderLabel,
@@ -1099,6 +1104,25 @@ function findFolderOptionIdByLabel(managerModel, label) {
   for (let i = 0; i < folderOptions.length; i++) {
     if (String(folderOptions[i].label || '').toLowerCase() === key) {
       return folderOptions[i].id
+    }
+  }
+
+  return ''
+}
+
+function getFolderLabelById(managerModel, folderId) {
+  const folder = findFolderById(managerModel?.folderTree, folderId)
+  if (folder?.path?.length) {
+    return folder.path.join(' / ')
+  }
+  if (folder?.title) {
+    return folder.title
+  }
+
+  const folderOptions = managerModel?.folderOptions || []
+  for (let i = 0; i < folderOptions.length; i++) {
+    if (String(folderOptions[i].id) === String(folderId)) {
+      return folderOptions[i].label || folderOptions[i].title || ''
     }
   }
 

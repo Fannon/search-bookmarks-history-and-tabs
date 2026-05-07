@@ -3,6 +3,7 @@ import { describe, expect, test } from '@jest/globals'
 import {
   countBookmarkCleanupChanges,
   createBookmarkCleanupPrompt,
+  localAiBookmarkCleanupProposalSchema,
   parseBookmarkCleanupProposal,
   parseBookmarkCleanupProposalWithIssues,
   validateBookmarkCleanupProposal,
@@ -45,13 +46,43 @@ describe('bookmark cleanup proposal', () => {
     expect(prompt).toContain('1 | OpenAI Docs')
     expect(prompt).toContain('dev | Development')
     expect(prompt).toContain('ai (1), llm (1)')
+    expect(prompt).toContain('Return at most 50 total changes')
+    expect(prompt).toContain(
+      'Preserve distinctive project, repository, package, product, and documentation identifiers',
+    )
+    expect(prompt).toContain('Do not remove a tag just because it is redundant or generic')
+    expect(prompt).not.toContain('Omitted bookmark count')
   })
 
   test('creates a lite prompt without embedding the full JSON schema', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'lite')
 
     expect(prompt).toContain('"rewriteTitles":[]')
+    expect(prompt).toContain('id | title | url | tags')
+    expect(prompt).toContain('Keep moveBookmarks and deleteBookmarks empty.')
+    expect(prompt).toContain('Focus on addTags and rewriteTitles first')
+    expect(prompt).toContain('Example output format only')
+    expect(prompt).toContain('"addTags":[{"id":"add-1","bookmarkId":"bookmark-id-from-data"')
+    expect(prompt).toContain('"moveBookmarks":[],"deleteBookmarks":[]')
+    expect(prompt).not.toContain('Existing folders')
+    expect(prompt).not.toContain('dev | Development')
     expect(prompt).not.toContain('"$schema"')
+  })
+
+  test('can generate an unlimited prompt', () => {
+    const prompt = createBookmarkCleanupPrompt(managerModel, 'lite', { changeLimit: 'unlimited' })
+
+    expect(prompt).toContain('No total change limit is set')
+    expect(prompt).not.toContain('Return at most 50 total changes')
+  })
+
+  test('uses a flat schema for local AI constrained generation', () => {
+    const schema = JSON.stringify(localAiBookmarkCleanupProposalSchema)
+
+    expect(schema).toContain('"rewriteTitles"')
+    expect(schema).not.toContain('"$ref"')
+    expect(schema).not.toContain('"$defs"')
+    expect(schema).not.toContain('"allOf"')
   })
 
   test('parses and normalizes a valid proposal', () => {
@@ -133,7 +164,7 @@ describe('bookmark cleanup proposal', () => {
     ])
     expect(result.warnings).toEqual([
       'changes.addTags[1] ignored because bookmarkId "missing" does not exist.',
-      'changes.renameTags[0] ignored because tag "missing-tag" does not exist.',
+      'changes.renameTags[0] ignored because source tag "missing-tag" does not exist.',
       'changes.moveBookmarks[0] ignored because targetFolderId "missing" does not exist.',
       'changes.deleteBookmarks[0] ignored because bookmarkId and duplicateOfBookmarkId are the same.',
       'changes.rewriteTitles[1] ignored because bookmarkId "missing" does not exist.',

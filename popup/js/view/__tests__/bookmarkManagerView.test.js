@@ -7,6 +7,7 @@ import {
   getManagedBookmarkEditValues,
   getSelectedManagedBookmarkIds,
   renderActiveManagerScreen,
+  renderBookmarkCleanupProposal,
   renderBookmarkWorkspace,
   setManagedBookmarkSelected,
   showTagSuggestionBusy,
@@ -73,6 +74,7 @@ function setupDom() {
     <input id="tag-filter" />
     <div id="cleanup-count"></div>
     <select id="cleanup-folder-scope"></select>
+    <select id="cleanup-change-limit"><option value="50">50 changes</option></select>
     <textarea id="cleanup-prompt"></textarea>
     <span id="cleanup-prompt-size"></span>
     <textarea id="cleanup-proposal-json"></textarea>
@@ -304,6 +306,34 @@ describe('bookmarkManagerView selection', () => {
     expect(options[1].textContent).toBe('\u00a0\u00a0\u00a0\u00a0Child')
     expect(options[1].textContent).not.toContain('Parent / Child')
     expect(options[1].title).toBe('Parent / Child')
+  })
+
+  test('renders move cleanup proposals with folder titles instead of ids', () => {
+    ext.model.bookmarkManager.folderOptions = [{ id: '1199', title: 'GitHub PR', label: 'GitHub PR', depth: 1 }]
+
+    renderBookmarkCleanupProposal(
+      {
+        changes: {
+          addTags: [],
+          removeTags: [],
+          renameTags: [],
+          moveBookmarks: [
+            {
+              id: 'move-1',
+              bookmarkId: 'bookmark-1',
+              targetFolderId: '1199',
+              reason: 'GitHub PR folder is more specific than TMP.',
+            },
+          ],
+          deleteBookmarks: [],
+          rewriteTitles: [],
+        },
+      },
+      ext.model.bookmarkManager,
+    )
+
+    expect(document.getElementById('cleanup-proposal-list').textContent).toContain('Move to ~GitHub PR')
+    expect(document.getElementById('cleanup-proposal-list').textContent).not.toContain('~1199')
   })
 
   test('selects and scrolls a tag from the tag manager URL', () => {

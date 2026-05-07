@@ -7,6 +7,10 @@ const PROMPT_TEXT_LIMIT = 180
 const PROPOSAL_VERSION = '1.0'
 const PROMPT_FULL = 'full'
 const PROMPT_LITE = 'lite'
+const PROMPT_FULL_EXAMPLE = `Example output format only. Do not copy example IDs; use IDs from the provided data:
+{"bookmarkChangeProposal":"1.0","summary":"Short summary.","changes":{"addTags":[{"id":"add-1","bookmarkId":"bookmark-id-from-data","tags":["example-tag"],"reason":"Why this tag fits."}],"removeTags":[{"id":"remove-1","bookmarkId":"bookmark-id-from-data","tags":["old-tag"],"reason":"Why this tag should be removed."}],"renameTags":[{"id":"rename-1","from":"old-tag","to":"better-tag","reason":"Why these tags should merge."}],"moveBookmarks":[{"id":"move-1","bookmarkId":"bookmark-id-from-data","targetFolderId":"folder-id-from-data","reason":"Why this folder is better."}],"deleteBookmarks":[{"id":"delete-1","bookmarkId":"duplicate-bookmark-id","duplicateOfBookmarkId":"bookmark-id-to-keep","reason":"Why this is a duplicate."}],"rewriteTitles":[{"id":"rewrite-1","bookmarkId":"bookmark-id-from-data","title":"Clear Bookmark Title","reason":"Why this title is clearer."}]}}`
+const PROMPT_LITE_EXAMPLE = `Example output format only. Do not copy example IDs; use IDs from the provided data:
+{"bookmarkChangeProposal":"1.0","summary":"Short summary.","changes":{"addTags":[{"id":"add-1","bookmarkId":"bookmark-id-from-data","tags":["example-tag"],"reason":"Why this tag fits."}],"removeTags":[{"id":"remove-1","bookmarkId":"bookmark-id-from-data","tags":["old-tag"],"reason":"Why this tag should be removed."}],"renameTags":[{"id":"rename-1","from":"old-tag","to":"better-tag","reason":"Why these tags should merge."}],"moveBookmarks":[],"deleteBookmarks":[],"rewriteTitles":[{"id":"rewrite-1","bookmarkId":"bookmark-id-from-data","title":"Clear Bookmark Title","reason":"Why this title is clearer."}]}}`
 
 export const bookmarkCleanupProposalSchema = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -160,52 +164,164 @@ export const bookmarkCleanupProposalSchema = {
   },
 }
 
+export const localAiBookmarkCleanupProposalSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['bookmarkChangeProposal', 'summary', 'changes'],
+  properties: {
+    bookmarkChangeProposal: {
+      type: 'string',
+    },
+    summary: {
+      type: 'string',
+    },
+    changes: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['addTags', 'removeTags', 'renameTags', 'moveBookmarks', 'deleteBookmarks', 'rewriteTitles'],
+      properties: {
+        addTags: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id', 'bookmarkId', 'tags', 'reason'],
+            properties: {
+              id: { type: 'string' },
+              bookmarkId: { type: 'string' },
+              tags: { type: 'array', items: { type: 'string' } },
+              reason: { type: 'string' },
+            },
+          },
+        },
+        removeTags: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id', 'bookmarkId', 'tags', 'reason'],
+            properties: {
+              id: { type: 'string' },
+              bookmarkId: { type: 'string' },
+              tags: { type: 'array', items: { type: 'string' } },
+              reason: { type: 'string' },
+            },
+          },
+        },
+        renameTags: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id', 'from', 'to', 'reason'],
+            properties: {
+              id: { type: 'string' },
+              from: { type: 'string' },
+              to: { type: 'string' },
+              reason: { type: 'string' },
+            },
+          },
+        },
+        moveBookmarks: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id', 'bookmarkId', 'targetFolderId', 'reason'],
+            properties: {
+              id: { type: 'string' },
+              bookmarkId: { type: 'string' },
+              targetFolderId: { type: 'string' },
+              reason: { type: 'string' },
+            },
+          },
+        },
+        deleteBookmarks: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id', 'bookmarkId', 'duplicateOfBookmarkId', 'reason'],
+            properties: {
+              id: { type: 'string' },
+              bookmarkId: { type: 'string' },
+              duplicateOfBookmarkId: { type: 'string' },
+              reason: { type: 'string' },
+            },
+          },
+        },
+        rewriteTitles: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id', 'bookmarkId', 'title', 'reason'],
+            properties: {
+              id: { type: 'string' },
+              bookmarkId: { type: 'string' },
+              title: { type: 'string' },
+              reason: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+
 /**
  * Build the prompt shown to users and sent to local AI.
  *
  * @param {Object} managerModel Bookmark manager model.
  * @param {'lite'|'full'} [mode='full'] Prompt detail mode.
+ * @param {Object} [options] Prompt options.
+ * @param {string|number} [options.changeLimit=50] Maximum proposed changes, or 'unlimited'.
  * @returns {string} Prompt text.
  */
-export function createBookmarkCleanupPrompt(managerModel, mode = PROMPT_FULL) {
-  const payload = createBookmarkCleanupPromptPayload(managerModel)
+export function createBookmarkCleanupPrompt(managerModel, mode = PROMPT_FULL, options = {}) {
   const isLite = mode === PROMPT_LITE
+  const payload = createBookmarkCleanupPromptPayload(managerModel, mode)
+  const changeLimit = normalizePromptChangeLimit(options.changeLimit)
 
   return `
 You are helping clean up a browser bookmark collection.
 
-Use world knowledge plus the titles, URLs, folders, and current tags below to propose useful bookmark management changes.
+Use world knowledge plus the titles, URLs, and current tags below to propose useful bookmark management changes.
 Prefer conservative, reviewable changes over large speculative rewrites.
+Only propose a change when confidence is high. Prefer an empty array over a weak or speculative suggestion.
+${changeLimit ? `Return at most ${changeLimit} total changes, prioritizing highest-impact changes first.` : 'No total change limit is set, but still prioritize higher-impact changes first.'}
 
 Goals:
 - Add useful, specific tags where existing bookmark data strongly supports them.
-- Remove misleading, redundant, or overly generic tags.
+- Remove tags only when they appear misleading, incorrect, or a poor fit for the bookmark.
 - Rename or merge near-duplicate tags across all matching bookmarks.
-- Move bookmarks to a better existing folder when the target is clearly more appropriate.
-- Delete only exact or near-exact duplicate bookmarks, keeping the better copy.
+${isLite ? '- Do not propose bookmark moves or deletions.' : '- Move bookmarks to a better existing folder when the target is clearly more appropriate.\n- Delete only exact or near-exact duplicate bookmarks, keeping the better copy.'}
 - Rewrite titles only when the current title is too long, URL-like, boilerplate-heavy, or weak for search. Keep the new title factual, short, and recognizable.
+- Preserve distinctive project, repository, package, product, and documentation identifiers in rewritten titles, for example "owner/repo" or "vendor/product".
+${isLite ? '- Focus on addTags and rewriteTitles first. Use removeTags and renameTags only when clearly beneficial.' : ''}
 
 Rules:
-- Use only bookmark IDs and folder IDs from the provided data.
-- Do not invent folders. Use targetFolderId from existingFolders for moves.
+- Use only bookmark IDs from the provided data.
+${isLite ? '- Keep moveBookmarks and deleteBookmarks empty.' : '- Use only folder IDs from the provided data.\n- Do not invent folders. Use targetFolderId from existingFolders for moves.'}
+- If unsure about a required field, omit that change instead of using placeholders.
 - Prefer existing tag conventions, but add concise lowercase tags when they improve organization.
+- Do not remove a tag just because it is redundant or generic; tags can intentionally improve search scoring as keywords.
 - Use renameTags for tag merges, for example "ai", "llm", and "genai" into one chosen tag.
-- Do not delete a bookmark unless duplicateOfBookmarkId identifies the bookmark to keep.
+${isLite ? '' : '- Do not delete a bookmark unless duplicateOfBookmarkId identifies the bookmark to keep.'}
+- Keep summary to one short sentence.
+${isLite ? '' : '- Do not propose a move when the current folder already seems reasonable; only move when the target folder is clearly more specific or more accurate.'}
 - Do not rewrite titles for style alone. Do not add tags, scores, folder names, domains, or invented details to rewritten titles.
 - Return JSON only. No markdown, comments, or explanation outside JSON.
 - Output shape: {"bookmarkChangeProposal":"1.0","summary":"","changes":{"addTags":[],"removeTags":[],"renameTags":[],"moveBookmarks":[],"deleteBookmarks":[],"rewriteTitles":[]}}
+${isLite ? PROMPT_LITE_EXAMPLE : PROMPT_FULL_EXAMPLE}
 ${isLite ? '' : `- The JSON must validate against this schema:\n${JSON.stringify(bookmarkCleanupProposalSchema)}`}
 
 Existing tags:
 ${payload.existingTags}
 
-Existing folders:
-${payload.existingFolders}
-
-Bookmarks, one per line as: id | title | url | folderId | folderPath | tags
+${isLite ? '' : `Existing folders:\n${payload.existingFolders}\n`}
+Bookmarks, one per line as: ${isLite ? 'id | title | url | tags' : 'id | title | url | folderId | folderPath | tags'}
 ${payload.bookmarks}
-
-Omitted bookmark count: ${payload.omittedBookmarkCount}
   `.trim()
 }
 
@@ -213,21 +329,34 @@ Omitted bookmark count: ${payload.omittedBookmarkCount}
  * Create compact bookmark manager data for prompt input.
  *
  * @param {Object} managerModel Bookmark manager model.
+ * @param {'lite'|'full'} [mode='full'] Prompt detail mode.
  * @returns {Object} Prompt payload.
  */
-export function createBookmarkCleanupPromptPayload(managerModel) {
+export function createBookmarkCleanupPromptPayload(managerModel, mode = PROMPT_FULL) {
   const bookmarks = managerModel?.bookmarks || []
   const folderOptions = managerModel?.folderOptions || []
   const tagGroups = managerModel?.tagGroups || []
+  const isLite = mode === PROMPT_LITE
 
   return {
-    bookmarks: bookmarks.slice(0, PROMPT_BOOKMARK_LIMIT).map(formatBookmarkForPrompt).join('\n'),
+    bookmarks: bookmarks
+      .slice(0, PROMPT_BOOKMARK_LIMIT)
+      .map(isLite ? formatBookmarkForLitePrompt : formatBookmarkForPrompt)
+      .join('\n'),
     existingTags: tagGroups.map((tag) => `${tag.name} (${tag.count})`).join(', '),
     existingFolders: folderOptions
       .map((folder) => `${folder.id} | ${folder.label || folder.title || folder.id}`)
       .join('\n'),
-    omittedBookmarkCount: Math.max(0, bookmarks.length - PROMPT_BOOKMARK_LIMIT),
   }
+}
+
+function normalizePromptChangeLimit(changeLimit) {
+  if (changeLimit === 'unlimited') {
+    return 0
+  }
+
+  const limit = Number.parseInt(changeLimit || 50, 10)
+  return Number.isFinite(limit) && limit > 0 ? limit : 50
 }
 
 /**
@@ -358,6 +487,15 @@ export function countBookmarkCleanupChanges(proposal) {
   )
 }
 
+function formatBookmarkForLitePrompt(bookmark) {
+  return [
+    String(bookmark.originalId),
+    limitPromptText(bookmark.title || ''),
+    limitPromptText(bookmark.originalUrl || bookmark.url || ''),
+    (bookmark.tagsArray || []).join(', '),
+  ].join(' | ')
+}
+
 function formatBookmarkForPrompt(bookmark) {
   return [
     String(bookmark.originalId),
@@ -397,7 +535,7 @@ function validateRenameTagChanges(errors, changes, existingTags, bookmarkIds) {
     const change = changes[i]
     validateChangeBase(errors, change, 'renameTags', i)
     if (!existingTags.has(String(change?.from || '').toLowerCase())) {
-      errors.push(`changes.renameTags[${i}].from does not match an existing tag.`)
+      errors.push(`changes.renameTags[${i}].from source tag does not match an existing tag.`)
     }
     if (!normalizePromptTag(change?.to)) {
       errors.push(`changes.renameTags[${i}].to must be a tag name.`)
@@ -592,7 +730,7 @@ function normalizeRenameTagChangesWithIssues(changes, existingTags, bookmarkIds,
     const from = normalizePromptTag(change.from)
     const to = normalizePromptTag(change.to)
     if (!existingTags.has(from.toLowerCase())) {
-      warnings.push(`${context} ignored because tag "${from || 'missing'}" does not exist.`)
+      warnings.push(`${context} ignored because source tag "${from || 'missing'}" does not exist.`)
       continue
     }
     if (!to) {
