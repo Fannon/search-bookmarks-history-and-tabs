@@ -65,6 +65,9 @@ function appendBookmarkNode(lines, node, depth, fallbackDate) {
   }
 
   if (node.children) {
+    if (!hasBookmarkDescendant(node)) {
+      return
+    }
     appendFolder(lines, node, depth, fallbackDate)
   }
 }
@@ -108,7 +111,24 @@ function isBookmarksBarFolder(folder) {
 
 function toUnixSeconds(timestamp, fallback = Date.now()) {
   const value = Number.isFinite(timestamp) ? timestamp : fallback
-  return Math.max(0, Math.floor(value / 1000))
+  const seconds = value > 100000000000 ? value / 1000 : value
+  return Math.max(0, Math.floor(seconds))
+}
+
+function hasBookmarkDescendant(folder) {
+  const children = folder.children || []
+
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i]
+    if (child?.url) {
+      return true
+    }
+    if (child?.children && hasBookmarkDescendant(child)) {
+      return true
+    }
+  }
+
+  return false
 }
 
 function getIndent(depth) {

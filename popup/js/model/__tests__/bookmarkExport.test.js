@@ -15,14 +15,19 @@ describe('bookmark export', () => {
             {
               id: '1',
               title: 'Bookmarks Bar',
-              dateAdded: 1700000001000,
-              dateGroupModified: 1700000002000,
+              dateAdded: 1700000001,
+              dateGroupModified: 1700000002,
               children: [
                 {
                   id: 'b1',
                   title: 'Example & Docs',
                   url: 'https://example.test/?a=1&b=<two>',
                   dateAdded: 1700000003000,
+                },
+                {
+                  id: 'empty',
+                  title: 'Empty Folder',
+                  children: [],
                 },
               ],
             },
@@ -40,6 +45,7 @@ describe('bookmark export', () => {
     expect(html).toContain(
       '<DT><A HREF="https://example.test/?a=1&amp;b=&lt;two&gt;" ADD_DATE="1700000003">Example &amp; Docs</A>',
     )
+    expect(html).not.toContain('Empty Folder')
   })
 
   test('creates dated html export filenames', () => {
