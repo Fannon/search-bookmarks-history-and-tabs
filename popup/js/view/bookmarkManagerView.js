@@ -86,6 +86,7 @@ export function getBookmarkManagerDom() {
     selectNone: document.getElementById('select-none'),
     bookmarkUndoHistory: document.getElementById('bookmark-undo-history'),
     undoBookmarkChange: document.getElementById('undo-bookmark-change'),
+    exportBookmarks: document.getElementById('export-bookmarks'),
     refreshBookmarks: document.getElementById('refresh-bookmarks'),
     loadingIndicator: document.getElementById('manager-load'),
   }
@@ -139,6 +140,7 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
  * @param {Function} handlers.onOpenBookmark Open bookmark in the editable bookmark browser.
  * @param {Function} handlers.onBookmarkNavigation Bookmark browser URL state handler.
  * @param {Function} handlers.onUndoBookmarkChange Restore an undo snapshot.
+ * @param {Function} handlers.onExportBookmarks Export bookmarks as browser-compatible HTML.
  */
 export function bindBookmarkManagerEvents({
   onRefresh,
@@ -155,11 +157,13 @@ export function bindBookmarkManagerEvents({
   onOpenBookmark,
   onBookmarkNavigation,
   onUndoBookmarkChange,
+  onExportBookmarks,
 }) {
   const dom = ext.dom.manager
 
   dom.refreshBookmarks.addEventListener('click', onRefresh)
   dom.undoBookmarkChange.addEventListener('click', () => onUndoBookmarkChange())
+  dom.exportBookmarks.addEventListener('click', onExportBookmarks)
   dom.bookmarkSearch.addEventListener('input', () => {
     onBookmarkNavigation()
     onBookmarkSearch()
@@ -391,7 +395,7 @@ export function showTagSuggestionStatus(message, tone = 'info') {
 /**
  * Render bookmark undo snapshot history controls.
  *
- * @param {Array<Object>} snapshots Stored undo snapshots.
+ * @param {Array<Object>} snapshots In-memory undo snapshots.
  * @param {boolean} canRestore Whether restore actions are available.
  */
 export function renderBookmarkUndoHistory(snapshots = [], canRestore = false) {
@@ -401,9 +405,9 @@ export function renderBookmarkUndoHistory(snapshots = [], canRestore = false) {
   }
 
   if (!snapshots.length) {
-    dom.bookmarkUndoHistory.innerHTML = '<p class="empty-state">No bookmark manager undo snapshots yet.</p>'
+    dom.bookmarkUndoHistory.innerHTML = '<p class="empty-state">No bookmark manager changes to undo yet.</p>'
     dom.undoBookmarkChange.disabled = true
-    dom.undoBookmarkChange.title = 'No bookmark undo snapshots are available'
+    dom.undoBookmarkChange.title = 'No bookmark manager changes are available to undo'
     return
   }
 

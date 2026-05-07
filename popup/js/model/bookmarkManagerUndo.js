@@ -1,68 +1,56 @@
 /**
- * @file Local undo snapshot storage for bookmark manager mutations.
+ * @file In-memory undo snapshot storage for bookmark manager mutations.
  */
 
-export const BOOKMARK_MANAGER_UNDO_KEY = 'bookmarkManagerUndoSnapshots'
-export const BOOKMARK_MANAGER_UNDO_LIMIT = 20
+export const BOOKMARK_MANAGER_UNDO_LIMIT = 50
+
+let bookmarkUndoSnapshots = []
 
 /**
- * Load recent bookmark manager undo snapshots.
+ * Load recent bookmark manager undo steps.
  *
- * @param {Storage} [storage=globalThis.localStorage] Web storage.
  * @returns {Array<Object>} Undo snapshots, newest first.
  */
-export function getBookmarkUndoSnapshots(storage = globalThis.localStorage) {
-  if (!storage) {
-    return []
-  }
-
-  try {
-    const rawSnapshots = storage.getItem(BOOKMARK_MANAGER_UNDO_KEY)
-    const snapshots = rawSnapshots ? JSON.parse(rawSnapshots) : []
-    return Array.isArray(snapshots) ? snapshots.filter(isValidSnapshot) : []
-  } catch (error) {
-    console.warn('Could not read bookmark manager undo snapshots.', error)
-    return []
-  }
+export function getBookmarkUndoSnapshots() {
+  return bookmarkUndoSnapshots.filter(isValidSnapshot)
 }
 
 /**
- * Store one undo snapshot, keeping only the newest snapshots.
+ * Store one undo snapshot, keeping only the newest in-memory steps.
  *
  * @param {Object} snapshot Undo snapshot.
- * @param {Storage} [storage=globalThis.localStorage] Web storage.
  * @returns {Array<Object>} Stored snapshots.
  */
-export function saveBookmarkUndoSnapshot(snapshot, storage = globalThis.localStorage) {
-  if (!storage) {
-    throw new Error('Bookmark undo storage is unavailable.')
-  }
+export function saveBookmarkUndoSnapshot(snapshot) {
   if (!isValidSnapshot(snapshot)) {
     throw new Error('Bookmark undo snapshot is empty or invalid.')
   }
 
-  const snapshots = getBookmarkUndoSnapshots(storage).filter((entry) => entry.id !== snapshot.id)
+  const snapshots = getBookmarkUndoSnapshots().filter((entry) => entry.id !== snapshot.id)
   snapshots.unshift(snapshot)
-  const limitedSnapshots = snapshots.slice(0, BOOKMARK_MANAGER_UNDO_LIMIT)
-  storage.setItem(BOOKMARK_MANAGER_UNDO_KEY, JSON.stringify(limitedSnapshots))
-  return limitedSnapshots
+  bookmarkUndoSnapshots = snapshots.slice(0, BOOKMARK_MANAGER_UNDO_LIMIT)
+  return getBookmarkUndoSnapshots()
 }
 
 /**
- * Remove one stored undo snapshot.
+ * Remove one undo snapshot.
  *
  * @param {string} snapshotId Snapshot id.
- * @param {Storage} [storage=globalThis.localStorage] Web storage.
  * @returns {Array<Object>} Remaining snapshots.
  */
-export function removeBookmarkUndoSnapshot(snapshotId, storage = globalThis.localStorage) {
-  if (!storage) {
-    return []
-  }
+export function removeBookmarkUndoSnapshot(snapshotId) {
+  bookmarkUndoSnapshots = getBookmarkUndoSnapshots().filter((snapshot) => snapshot.id !== snapshotId)
+  return getBookmarkUndoSnapshots()
+}
 
-  const snapshots = getBookmarkUndoSnapshots(storage).filter((snapshot) => snapshot.id !== snapshotId)
-  storage.setItem(BOOKMARK_MANAGER_UNDO_KEY, JSON.stringify(snapshots))
-  return snapshots
+/**
+ * Clear all in-memory undo snapshots.
+ *
+ * @returns {Array<Object>} Empty undo history.
+ */
+export function clearBookmarkUndoSnapshots() {
+  bookmarkUndoSnapshots = []
+  return bookmarkUndoSnapshots
 }
 
 /**

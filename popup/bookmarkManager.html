@@ -51,10 +51,12 @@
   <main class="manager-layout">
     <section class="manager-content">
       <div id="manager-load" class="loading">Loading...</div>
-      <p class="bookmark-backup-note">
-        Undo keeps the latest 20 local bookmark manager snapshots, but it is not a full backup. Export your browser
-        bookmarks before moving bookmarks, changing tags in bulk, or deleting duplicates.
-      </p>
+      <div class="bookmark-backup-note">
+        <span>
+          Backup bookmarks before bulk changes. Undo keeps 50 changes only until this page closes or reloads.
+        </span>
+        <button id="export-bookmarks" class="button secondary" type="button">Export Bookmarks</button>
+      </div>
 
       <section data-manager-panel="bookmarks" class="manager-panel" hidden>
         <header class="manager-panel-header bookmark-page-header">

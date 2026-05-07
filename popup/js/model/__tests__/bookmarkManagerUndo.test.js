@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
 
 import {
-  BOOKMARK_MANAGER_UNDO_KEY,
   BOOKMARK_MANAGER_UNDO_LIMIT,
+  clearBookmarkUndoSnapshots,
   createBookmarkSnapshotEntry,
   createBookmarkUndoSnapshot,
   getBookmarkUndoSnapshots,
@@ -11,7 +11,7 @@ import {
 } from '../bookmarkManagerUndo.js'
 
 beforeEach(() => {
-  localStorage.clear()
+  clearBookmarkUndoSnapshots()
   jest.spyOn(Math, 'random').mockReturnValue(0.123456)
 })
 
@@ -40,7 +40,7 @@ describe('bookmark manager undo snapshots', () => {
     expect(createBookmarkSnapshotEntry({ id: 1, title: 'Folder' })).toBe(null)
   })
 
-  test('stores newest snapshots first and limits history length', () => {
+  test('keeps newest in-memory snapshots first and limits history length', () => {
     for (let i = 0; i < BOOKMARK_MANAGER_UNDO_LIMIT + 2; i++) {
       const snapshot = createBookmarkUndoSnapshot(
         `Changed ${i}`,
@@ -64,8 +64,7 @@ describe('bookmark manager undo snapshots', () => {
     expect(snapshots.at(-1).description).toBe('Changed 2')
   })
 
-  test('removes snapshots by id and ignores malformed storage', () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+  test('removes snapshots by id and clears in-memory history', () => {
     const firstSnapshot = createBookmarkUndoSnapshot(
       'First change',
       [
@@ -96,8 +95,7 @@ describe('bookmark manager undo snapshots', () => {
       'First change',
     ])
 
-    localStorage.setItem(BOOKMARK_MANAGER_UNDO_KEY, '{broken')
+    clearBookmarkUndoSnapshots()
     expect(getBookmarkUndoSnapshots()).toEqual([])
-    expect(warnSpy).toHaveBeenCalledWith('Could not read bookmark manager undo snapshots.', expect.any(SyntaxError))
   })
 })

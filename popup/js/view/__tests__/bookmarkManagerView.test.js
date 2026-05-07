@@ -76,6 +76,7 @@ function setupDom() {
     <button id="select-none"></button>
     <div id="bookmark-undo-history"></div>
     <button id="undo-bookmark-change"></button>
+    <button id="export-bookmarks"></button>
     <button id="refresh-bookmarks"></button>
     <div id="manager-load"></div>
     <a data-manager-tab="bookmarks"></a>
@@ -135,6 +136,7 @@ function bindEvents() {
     onOpenBookmark: jest.fn(),
     onBookmarkNavigation: jest.fn(),
     onUndoBookmarkChange: jest.fn(),
+    onExportBookmarks: jest.fn(),
   })
 }
 

@@ -6,6 +6,7 @@ import { createSearchStringLower } from './helper/browserApi.js'
 import { createExtensionContext } from './helper/extensionContext.js'
 import { getLocalAiTagAvailability, suggestBookmarkTags } from './helper/localAiTags.js'
 import { cleanUpUrl } from './helper/utils.js'
+import { createBookmarkExportFilename, createBookmarkExportHtml } from './model/bookmarkExport.js'
 import { createBookmarkManagerModel } from './model/bookmarkManagerData.js'
 import {
   createTaggedBookmarkTitle,
@@ -89,6 +90,7 @@ export async function initBookmarkManager() {
     onOpenBookmark: openBookmarkInManager,
     onBookmarkNavigation: writeBookmarkBrowserUrl,
     onUndoBookmarkChange: undoBookmarkChange,
+    onExportBookmarks: exportBookmarks,
   })
 
   await reloadBookmarkManager()
@@ -109,6 +111,7 @@ export async function reloadBookmarkManager(options = {}) {
     showManagerStatus('Loading bookmarks...')
     const { bookmarks, bookmarkTree } = await getSearchData()
     ext.model.bookmarks = bookmarks
+    ext.model.bookmarkTree = bookmarkTree
     ext.model.bookmarkManager = createBookmarkManagerModel(bookmarks, bookmarkTree)
     ext.searchCache = new Map()
     ext.model.searchMode = 'bookmarks'
@@ -764,6 +767,28 @@ async function undoBookmarkChange(snapshotId) {
   } catch (error) {
     showManagerStatus('Undo failed', 'error')
     printError(error, 'Could not restore bookmark undo snapshot.')
+  }
+}
+
+function exportBookmarks() {
+  const bookmarkTree = ext.model.bookmarkTree || []
+
+  try {
+    const html = createBookmarkExportHtml(bookmarkTree)
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+
+    link.href = url
+    link.download = createBookmarkExportFilename()
+    document.body.append(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+    showManagerStatus('Exported bookmarks', 'success')
+  } catch (error) {
+    showManagerStatus('Export failed', 'error')
+    printError(error, 'Could not export bookmarks.')
   }
 }
 
