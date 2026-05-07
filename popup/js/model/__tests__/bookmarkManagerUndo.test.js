@@ -64,6 +64,40 @@ describe('bookmark manager undo snapshots', () => {
     expect(snapshots.at(-1).description).toBe('Changed 2')
   })
 
+  test('stores normalized display metadata', () => {
+    const snapshot = createBookmarkUndoSnapshot(
+      'Added tags',
+      [
+        {
+          id: 'bookmark-1',
+          title: 'Bookmark',
+          url: 'https://example.test',
+        },
+      ],
+      1,
+      {
+        action: 'addTags',
+        tagsAdded: ['Docs', 'docs', '', 'AI'],
+        tagsRemoved: ['old'],
+        tagRenames: [
+          { from: 'llm', to: 'ai' },
+          { from: '', to: 'missing' },
+        ],
+        targetFolderId: 42,
+        targetFolderLabel: 'References',
+      },
+    )
+
+    expect(snapshot.metadata).toEqual({
+      action: 'addTags',
+      tagsAdded: ['Docs', 'AI'],
+      tagsRemoved: ['old'],
+      tagRenames: [{ from: 'llm', to: 'ai' }],
+      targetFolderId: '42',
+      targetFolderLabel: 'References',
+    })
+  })
+
   test('removes snapshots by id and clears in-memory history', () => {
     const firstSnapshot = createBookmarkUndoSnapshot(
       'First change',

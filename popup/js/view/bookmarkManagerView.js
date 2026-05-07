@@ -159,6 +159,7 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
  * @param {Function} handlers.onRenameTag Tag rename handler.
  * @param {Function} handlers.onRemoveTag Tag removal handler.
  * @param {Function} handlers.onOpenBookmark Open bookmark in the editable bookmark browser.
+ * @param {Function} handlers.onOpenBookmarkEditor Open standalone bookmark editor handler.
  * @param {Function} handlers.onBookmarkNavigation Bookmark browser URL state handler.
  * @param {Function} handlers.onUndoBookmarkChange Restore an undo snapshot.
  * @param {Function} handlers.onExportBookmarks Export bookmarks as browser-compatible HTML.
@@ -187,6 +188,7 @@ export function bindBookmarkManagerEvents({
   onRenameTag,
   onRemoveTag,
   onOpenBookmark,
+  onOpenBookmarkEditor,
   onBookmarkNavigation,
   onUndoBookmarkChange,
   onExportBookmarks,
@@ -212,6 +214,13 @@ export function bindBookmarkManagerEvents({
   dom.exportBookmarks.addEventListener('click', onExportBookmarks)
   dom.generateCleanupPrompt.addEventListener('click', onGenerateCleanupPrompt)
   dom.generateCleanupPromptFull.addEventListener('click', onGenerateCleanupPromptFull)
+  dom.openBookmarkEditor.addEventListener('click', (event) => {
+    if (dom.openBookmarkEditor.getAttribute('aria-disabled') === 'true') {
+      event.preventDefault()
+      return
+    }
+    onOpenBookmarkEditor(event, dom.openBookmarkEditor.href)
+  })
   dom.cleanupFolderScope.addEventListener('change', onCleanupScopeChange)
   dom.cleanupChangeLimit.addEventListener('change', onCleanupScopeChange)
   dom.cleanupChangeFocus.addEventListener('change', onCleanupScopeChange)
@@ -1638,13 +1647,12 @@ function updateDuplicateActions() {
 function renderBookmarkUndoItem(snapshot, canRestore) {
   const timestamp = Number.isFinite(snapshot.createdAt) ? formatUndoTimestamp(snapshot.createdAt) : ''
   const disabled = canRestore ? '' : ' disabled'
-  const affectedHtml = renderUndoSnapshotBookmarks(snapshot.bookmarks || [])
+  const detailsHtml = renderUndoSnapshotDetails(snapshot)
 
   return `
     <li class="bookmark-undo-item">
       <div class="bookmark-undo-description">
-        <div>${escapeHtml(snapshot.description)}</div>
-        ${affectedHtml}
+        ${detailsHtml}
         ${timestamp ? `<div class="bookmark-undo-time">${escapeHtml(timestamp)}</div>` : ''}
       </div>
       <button class="button secondary" type="button" data-undo-snapshot-id="${escapeHtml(snapshot.id)}"${disabled}>
@@ -1652,6 +1660,63 @@ function renderBookmarkUndoItem(snapshot, canRestore) {
       </button>
     </li>
   `
+}
+
+function renderUndoSnapshotDetails(snapshot) {
+  const metadata = snapshot.metadata || {}
+  const actionLabel = getUndoActionLabel(metadata.action) || snapshot.description
+  const metadataHtml = renderUndoMetadata(metadata)
+  const affectedHtml = renderUndoSnapshotBookmarks(snapshot.bookmarks || [])
+
+  return `
+    <div class="bookmark-undo-action">${escapeHtml(actionLabel)}</div>
+    ${metadataHtml}
+    ${affectedHtml}
+  `
+}
+
+function getUndoActionLabel(action) {
+  if (action === 'editBookmark') return 'Edited bookmark'
+  if (action === 'moveBookmarks') return 'Moved bookmarks'
+  if (action === 'addTags') return 'Added tags'
+  if (action === 'removeTags') return 'Removed tags'
+  if (action === 'updateTags') return 'Changed tags'
+  if (action === 'renameTag') return 'Renamed tag'
+  if (action === 'deleteBookmarks') return 'Deleted bookmarks'
+  if (action === 'aiCleanup') return 'Applied AI cleanup'
+  return ''
+}
+
+function renderUndoMetadata(metadata) {
+  const parts = []
+
+  if (metadata.tagsAdded?.length) {
+    parts.push(`<span>Added ${renderUndoTagLinks(metadata.tagsAdded)}</span>`)
+  }
+  if (metadata.tagsRemoved?.length) {
+    parts.push(`<span>Removed ${renderUndoTagLinks(metadata.tagsRemoved)}</span>`)
+  }
+  if (metadata.tagRenames?.length) {
+    parts.push(...metadata.tagRenames.map(renderUndoTagRename))
+  }
+  if (metadata.targetFolderId || metadata.targetFolderLabel) {
+    parts.push(`<span>Folder ${renderUndoFolderLink(metadata)}</span>`)
+  }
+
+  return parts.length ? `<div class="bookmark-undo-metadata">${parts.join(' ')}</div>` : ''
+}
+
+function renderUndoTagLinks(tags) {
+  return tags.map(renderCleanupTagLink).join(' ')
+}
+
+function renderUndoTagRename(rename) {
+  return `<span>${renderCleanupTagLink(rename.from)} to ${renderCleanupTagLink(rename.to)}</span>`
+}
+
+function renderUndoFolderLink(metadata) {
+  const label = metadata.targetFolderLabel || metadata.targetFolderId || 'Unknown Folder'
+  return renderCleanupFolderLink({ id: metadata.targetFolderId, label }, label, ext.model.bookmarkManager)
 }
 
 function renderUndoSnapshotBookmarks(bookmarks) {
@@ -1663,7 +1728,7 @@ function renderUndoSnapshotBookmarks(bookmarks) {
   for (let i = 0; i < bookmarks.length && i < limit; i++) {
     const label = bookmarks[i].title || bookmarks[i].url || ''
     if (label) {
-      titles.push(escapeHtml(`"${label}"`))
+      titles.push(`<span class="bookmark-undo-bookmark">${escapeHtml(label)}</span>`)
     }
   }
 
@@ -1672,7 +1737,7 @@ function renderUndoSnapshotBookmarks(bookmarks) {
   const remaining = bookmarks.length - limit
   const suffix = remaining > 0 ? ` and ${remaining} more` : ''
 
-  return `<div class="bookmark-undo-bookmarks">${titles.join(', ')}${suffix}</div>`
+  return `<div class="bookmark-undo-bookmarks">${titles.join('')}${suffix}</div>`
 }
 
 function formatUndoTimestamp(timestamp) {

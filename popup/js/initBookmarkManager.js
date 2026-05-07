@@ -101,6 +101,7 @@ export async function initBookmarkManager() {
     onRenameTag: renameTag,
     onRemoveTag: removeTag,
     onOpenBookmark: openBookmarkInManager,
+    onOpenBookmarkEditor: openBookmarkEditorPopup,
     onBookmarkNavigation: writeBookmarkBrowserUrl,
     onUndoBookmarkChange: undoBookmarkChange,
     onExportBookmarks: exportBookmarks,
@@ -200,6 +201,31 @@ async function openBookmarkInManager(bookmarkId) {
   await updateBookmarkBrowser()
   scrollManagedBookmarkIntoView(bookmark.originalId)
   scrollActiveFolderIntoView()
+}
+
+async function openBookmarkEditorPopup(event, url) {
+  if (typeof ext.browserApi.windows?.create !== 'function') {
+    return
+  }
+
+  event.preventDefault()
+
+  try {
+    await ext.browserApi.windows.create({
+      url,
+      type: 'popup',
+      width: getPopupDimension('--w', 515),
+      height: getPopupDimension('--h', 600),
+    })
+  } catch (error) {
+    showManagerStatus('Editor popup failed', 'error')
+    printError(error, 'Could not open bookmark editor popup.')
+  }
+}
+
+function getPopupDimension(cssVariable, fallback) {
+  const value = Number.parseInt(getComputedStyle(document.documentElement).getPropertyValue(cssVariable), 10)
+  return Number.isFinite(value) && value > 0 ? value : fallback
 }
 
 function applyBookmarkDeepLinkState() {
@@ -327,7 +353,13 @@ async function saveManagedBookmark() {
   }
 
   try {
-    const snapshotCreated = await createUndoSnapshot(`Edited bookmark "${bookmark.title || values.title}"`, [bookmark])
+    const snapshotCreated = await createUndoSnapshot(
+      `Edited bookmark "${bookmark.title || values.title}"`,
+      [bookmark],
+      {
+        action: 'editBookmark',
+      },
+    )
     if (!snapshotCreated) {
       return
     }
@@ -359,7 +391,11 @@ async function moveSelectedBookmarks() {
 
   try {
     const bookmarks = getBookmarksByIds(selectedIds)
-    const snapshotCreated = await createUndoSnapshot(createMoveDescription(bookmarks, parentId), bookmarks)
+    const snapshotCreated = await createUndoSnapshot(createMoveDescription(bookmarks, parentId), bookmarks, {
+      action: 'moveBookmarks',
+      targetFolderId: parentId,
+      targetFolderLabel: getFolderLabelById(parentId),
+    })
     if (!snapshotCreated) {
       return
     }
@@ -536,7 +572,11 @@ async function bulkTagBookmarks(bookmarkIds, mode) {
     }
 
     const changedBookmarks = tagPlans.map((plan) => plan.bookmark)
-    const snapshotCreated = await createUndoSnapshot(createBulkTagDescription(tagPlans), changedBookmarks)
+    const snapshotCreated = await createUndoSnapshot(
+      createBulkTagDescription(tagPlans),
+      changedBookmarks,
+      createBulkTagMetadata(tagPlans),
+    )
     if (!snapshotCreated) {
       return
     }
@@ -568,7 +608,9 @@ async function deleteSelectedDuplicates() {
 
   try {
     const bookmarks = getBookmarksByIds(selectedIds)
-    const snapshotCreated = await createUndoSnapshot(createDeletedDescription(bookmarks.length), bookmarks)
+    const snapshotCreated = await createUndoSnapshot(createDeletedDescription(bookmarks.length), bookmarks, {
+      action: 'deleteBookmarks',
+    })
     if (!snapshotCreated) {
       return
     }
@@ -596,7 +638,9 @@ async function deleteSingleDuplicate(bookmarkId) {
 
   try {
     const bookmarks = getBookmarksByIds([bookmarkId])
-    const snapshotCreated = await createUndoSnapshot(createDeletedDescription(1), bookmarks)
+    const snapshotCreated = await createUndoSnapshot(createDeletedDescription(1), bookmarks, {
+      action: 'deleteBookmarks',
+    })
     if (!snapshotCreated) {
       return
     }
@@ -634,6 +678,10 @@ async function renameTag(oldTag) {
     const snapshotCreated = await createUndoSnapshot(
       `Renamed tag "${oldTag}" to "${newTag}" on ${formatBookmarkCount(bookmarks.length)}`,
       bookmarks,
+      {
+        action: 'renameTag',
+        tagRenames: [{ from: oldTag, to: newTag }],
+      },
     )
     if (!snapshotCreated) {
       return
@@ -667,6 +715,10 @@ async function removeTag(tagName) {
     const snapshotCreated = await createUndoSnapshot(
       `Removed tag "${tagName}" from ${formatBookmarkCount(bookmarks.length)}`,
       bookmarks,
+      {
+        action: 'removeTags',
+        tagsRemoved: [tagName],
+      },
     )
     if (!snapshotCreated) {
       return
@@ -1015,7 +1067,7 @@ async function applyAllCleanupChanges() {
 
 async function applyCleanupChanges(changes, description) {
   const affectedBookmarks = getCleanupAffectedBookmarks(changes)
-  const snapshotCreated = await createUndoSnapshot(description, affectedBookmarks)
+  const snapshotCreated = await createUndoSnapshot(description, affectedBookmarks, createCleanupUndoMetadata(changes))
   if (!snapshotCreated) {
     return false
   }
@@ -1271,10 +1323,10 @@ function getBookmarksByIds(bookmarkIds) {
   return bookmarks.filter((bookmark) => bookmarkIdSet.has(String(bookmark.originalId)))
 }
 
-async function createUndoSnapshot(description, bookmarks) {
+async function createUndoSnapshot(description, bookmarks, metadata = {}) {
   try {
     const snapshotBookmarks = await getUndoSnapshotBookmarks(bookmarks)
-    const snapshot = createBookmarkUndoSnapshot(description, snapshotBookmarks)
+    const snapshot = createBookmarkUndoSnapshot(description, snapshotBookmarks, Date.now(), metadata)
     saveBookmarkUndoSnapshot(snapshot)
     updateBookmarkUndoHistory()
     return true
@@ -1489,6 +1541,7 @@ function createUndoHistoryExport(snapshots) {
       id: snapshot.id,
       createdAt: new Date(snapshot.createdAt).toISOString(),
       description: snapshot.description,
+      metadata: snapshot.metadata || {},
       bookmarks: snapshot.bookmarks.map((bookmark) => ({
         id: bookmark.id,
         parentId: bookmark.parentId || '',
@@ -1528,6 +1581,7 @@ function normalizeImportedUndoSnapshot(snapshot, index) {
     snapshot.description || `Imported undo snapshot ${index + 1}`,
     snapshot.bookmarks,
     createdAt,
+    snapshot.metadata || {},
   )
 }
 
@@ -1648,6 +1702,60 @@ function createBulkTagDescription(tagPlans) {
     return `Removed tags "${removedTags.join(', ')}" from ${bookmarkText}`
   }
   return `Updated tags on ${bookmarkText}`
+}
+
+function createBulkTagMetadata(tagPlans) {
+  const addedTags = []
+  const removedTags = []
+
+  for (let i = 0; i < tagPlans.length; i++) {
+    const { currentTags, nextTags } = tagPlans[i]
+    appendTagDiff(addedTags, nextTags, currentTags)
+    appendTagDiff(removedTags, currentTags, nextTags)
+  }
+
+  return {
+    action: addedTags.length && removedTags.length ? 'updateTags' : addedTags.length ? 'addTags' : 'removeTags',
+    tagsAdded: addedTags,
+    tagsRemoved: removedTags,
+  }
+}
+
+function createCleanupUndoMetadata(changes) {
+  const metadata = {
+    action: 'aiCleanup',
+    tagsAdded: [],
+    tagsRemoved: [],
+    tagRenames: [],
+  }
+
+  for (let i = 0; i < changes.length; i++) {
+    const { type, change } = changes[i]
+    if (type === 'addTags') {
+      appendUniqueValues(metadata.tagsAdded, change.tags || [])
+    } else if (type === 'removeTags') {
+      appendUniqueValues(metadata.tagsRemoved, change.tags || [])
+    } else if (type === 'renameTags') {
+      metadata.tagRenames.push({ from: change.from, to: change.to })
+    } else if (type === 'moveBookmarks' && !metadata.targetFolderId) {
+      metadata.targetFolderId = change.targetFolderId
+      metadata.targetFolderLabel = change.targetFolderPath || getFolderLabelById(change.targetFolderId)
+    }
+  }
+
+  return metadata
+}
+
+function appendUniqueValues(result, values) {
+  const seen = new Set(result.map((value) => value.toLowerCase()))
+  for (let i = 0; i < values.length; i++) {
+    const value = String(values[i] || '').trim()
+    const key = value.toLowerCase()
+    if (value && !seen.has(key)) {
+      seen.add(key)
+      result.push(value)
+    }
+  }
 }
 
 function appendTagDiff(result, sourceTags, compareTags) {

@@ -1012,17 +1012,43 @@ h3 {
   overflow-wrap: anywhere;
 }
 
+.bookmark-undo-action {
+  font-weight: 700;
+}
+
 .bookmark-undo-time {
   color: var(--fg);
   font-size: 12px;
 }
 
+.bookmark-undo-metadata {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 3px;
+  font-size: 12px;
+}
+
 .bookmark-undo-bookmarks {
   color: var(--fg);
-  font-size: 11px;
-  white-space: nowrap;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  margin-top: 3px;
+  overflow: hidden;
+}
+
+.bookmark-undo-bookmark {
+  max-width: 220px;
+  padding: 1px 5px 2px;
+  border-radius: 3px;
+  background: var(--footer-bg);
+  color: var(--li-title);
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bookmark-undo-item .button {

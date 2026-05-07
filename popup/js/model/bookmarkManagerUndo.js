@@ -59,9 +59,10 @@ export function clearBookmarkUndoSnapshots() {
  * @param {string} description Human-readable change description.
  * @param {Array<Object>} bookmarks Browser bookmark nodes.
  * @param {number} [createdAt=Date.now()] Snapshot timestamp.
+ * @param {Object} [metadata={}] Structured change metadata for display.
  * @returns {Object} Undo snapshot.
  */
-export function createBookmarkUndoSnapshot(description, bookmarks = [], createdAt = Date.now()) {
+export function createBookmarkUndoSnapshot(description, bookmarks = [], createdAt = Date.now(), metadata = {}) {
   const snapshotBookmarks = []
 
   for (let i = 0; i < bookmarks.length; i++) {
@@ -75,6 +76,7 @@ export function createBookmarkUndoSnapshot(description, bookmarks = [], createdA
     id: `${createdAt}-${Math.random().toString(36).slice(2, 10)}`,
     createdAt,
     description: String(description || '').trim() || 'Changed bookmarks',
+    metadata: normalizeUndoMetadata(metadata),
     bookmarks: snapshotBookmarks,
   }
 }
@@ -100,6 +102,55 @@ export function createBookmarkSnapshotEntry(bookmark) {
     title: String(bookmark.title || ''),
     url: String(url),
   }
+}
+
+function normalizeUndoMetadata(metadata) {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+    return {}
+  }
+
+  return {
+    action: String(metadata.action || '').trim(),
+    tagsAdded: normalizeStringList(metadata.tagsAdded),
+    tagsRemoved: normalizeStringList(metadata.tagsRemoved),
+    tagRenames: normalizeTagRenames(metadata.tagRenames),
+    targetFolderId: String(metadata.targetFolderId || '').trim(),
+    targetFolderLabel: String(metadata.targetFolderLabel || '').trim(),
+  }
+}
+
+function normalizeStringList(values) {
+  if (!Array.isArray(values)) {
+    return []
+  }
+
+  const result = []
+  const seen = new Set()
+  for (let i = 0; i < values.length; i++) {
+    const value = String(values[i] || '').trim()
+    const key = value.toLowerCase()
+    if (value && !seen.has(key)) {
+      seen.add(key)
+      result.push(value)
+    }
+  }
+  return result
+}
+
+function normalizeTagRenames(renames) {
+  if (!Array.isArray(renames)) {
+    return []
+  }
+
+  const result = []
+  for (let i = 0; i < renames.length; i++) {
+    const from = String(renames[i]?.from || '').trim()
+    const to = String(renames[i]?.to || '').trim()
+    if (from && to) {
+      result.push({ from, to })
+    }
+  }
+  return result
 }
 
 function isValidSnapshot(snapshot) {

@@ -8,6 +8,7 @@ import {
   getSelectedManagedBookmarkIds,
   renderActiveManagerScreen,
   renderBookmarkCleanupProposal,
+  renderBookmarkUndoHistory,
   renderBookmarkWorkspace,
   setManagedBookmarkSelected,
   showTagSuggestionBusy,
@@ -145,6 +146,7 @@ function setupExt() {
 }
 
 function bindEvents() {
+  const onOpenBookmarkEditor = jest.fn((event) => event.preventDefault())
   bindBookmarkManagerEvents({
     onRefresh: jest.fn(),
     onDeleteSelected: jest.fn(),
@@ -158,6 +160,7 @@ function bindEvents() {
     onRenameTag: jest.fn(),
     onRemoveTag: jest.fn(),
     onOpenBookmark: jest.fn(),
+    onOpenBookmarkEditor,
     onBookmarkNavigation: jest.fn(),
     onUndoBookmarkChange: jest.fn(),
     onExportBookmarks: jest.fn(),
@@ -173,6 +176,7 @@ function bindEvents() {
     onApplyCleanupCategory: jest.fn(),
     onApplyAllCleanupChanges: jest.fn(),
   })
+  return { onOpenBookmarkEditor }
 }
 
 function renderWorkspace() {
@@ -182,7 +186,7 @@ function renderWorkspace() {
 beforeEach(() => {
   setupDom()
   setupExt()
-  bindEvents()
+  global.boundHandlers = bindEvents()
   renderWorkspace()
 })
 
@@ -294,6 +298,18 @@ describe('bookmarkManagerView selection', () => {
     expect(addButton.disabled).toBe(false)
   })
 
+  test('opens the current bookmark editor through the bound popup handler', () => {
+    const editor = document.getElementById('open-bookmark-editor')
+    document.querySelector('[data-managed-bookmark-row-id="bookmark-1"] .url').click()
+
+    editor.click()
+
+    expect(global.boundHandlers.onOpenBookmarkEditor).toHaveBeenCalledWith(
+      expect.any(MouseEvent),
+      expect.stringContaining('/editBookmark.html#bookmark/bookmark-1'),
+    )
+  })
+
   test('renders move folder options as indented folder names without repeated parent trails', () => {
     ext.model.bookmarkManager.folderOptions = [
       { id: 'parent', title: 'Parent', label: 'Parent', depth: 1 },
@@ -335,6 +351,35 @@ describe('bookmarkManagerView selection', () => {
 
     expect(document.getElementById('cleanup-proposal-list').textContent).toContain('Move to ~GitHub PR')
     expect(document.getElementById('cleanup-proposal-list').textContent).not.toContain('~1199')
+  })
+
+  test('renders undo history with structured action details', () => {
+    renderBookmarkUndoHistory(
+      [
+        {
+          id: 'undo-1',
+          createdAt: Date.UTC(2026, 0, 1, 12, 0),
+          description: 'Changed tags',
+          metadata: {
+            action: 'updateTags',
+            tagsAdded: ['ai'],
+            tagsRemoved: ['old'],
+            targetFolderId: 'folder-1',
+            targetFolderLabel: 'Folder',
+          },
+          bookmarks: [{ id: 'bookmark-1', title: 'First Bookmark', url: 'https://example.com/first' }],
+        },
+      ],
+      true,
+    )
+
+    const history = document.getElementById('bookmark-undo-history')
+    expect(history.textContent).toContain('Changed tags')
+    expect(history.textContent).toContain('#ai')
+    expect(history.textContent).toContain('#old')
+    expect(history.textContent).toContain('~Folder')
+    expect(history.textContent).toContain('First Bookmark')
+    expect(history.querySelector('[href*="tag=ai"]')).not.toBeNull()
   })
 
   test('selects and scrolls a tag from the tag manager URL', () => {
