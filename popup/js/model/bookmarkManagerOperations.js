@@ -133,8 +133,18 @@ export function canEditCurrentManagedBookmark(currentBookmark, selectedIds = [],
  * @param {number} [customBonusScore=0] Favorite/custom score to preserve.
  * @returns {string} Tagged bookmark title.
  */
+function stripEmbeddedTagTokens(title) {
+  let text = String(title || '')
+  const hasEmbeddedTags = /(^|\s)#[^\s#]+/.test(text)
+  text = text.replace(/(^|\s)#[^\s#]+/g, ' ')
+  if (hasEmbeddedTags) {
+    text = text.replace(/\s+\+\d+(?=\s*$)/g, '')
+  }
+  return text.replace(/\s+/g, ' ').trim()
+}
+
 export function createTaggedBookmarkTitle(title, tags = [], customBonusScore = 0) {
-  const titleText = String(title || '').trim()
+  const titleText = stripEmbeddedTagTokens(title)
   const score = Number(customBonusScore) || 0
   const scoreText = score > 0 ? `+${score}` : ''
   const tagsText = tags.length ? `#${tags.join(' #')}` : ''

@@ -134,4 +134,37 @@ describe('bookmark manager operations', () => {
       ),
     ).toBe('Reference +25 #Read')
   })
+
+  test('strips embedded tags from the title before appending new ones', () => {
+    expect(createTaggedBookmarkTitle('My Guide #docs #read', ['utils'])).toBe('My Guide #utils')
+    expect(createTaggedBookmarkTitle('#tag1 #tag2', ['Docs'])).toBe('#Docs')
+  })
+
+  test('strips embedded score and tags before appending new score and tags', () => {
+    expect(createTaggedBookmarkTitle('My Guide +25 #docs #read', ['utils'], 50)).toBe('My Guide +50 #utils')
+    expect(createTaggedBookmarkTitle('Title +10 #a #b', [], 75)).toBe('Title +75')
+    expect(createTaggedBookmarkTitle('Title +10 #a #b', ['c'], 0)).toBe('Title #c')
+  })
+
+  test('returns a clean title even when no new tags or score are passed', () => {
+    expect(createTaggedBookmarkTitle('My Guide #docs #read')).toBe('My Guide')
+    expect(createTaggedBookmarkTitle('#tag1 #tag2')).toBe('')
+  })
+
+  test('does not double tags for a typical undo snapshot title', () => {
+    const snapshotTitle = 'Reference +25 #Docs #Read'
+    expect(createTaggedBookmarkTitle(snapshotTitle, ['Docs', 'Read'], 25)).toBe('Reference +25 #Docs #Read')
+    expect(createTaggedBookmarkTitle(snapshotTitle, ['Docs', 'Read'], 50)).toBe('Reference +50 #Docs #Read')
+    expect(createTaggedBookmarkTitle(snapshotTitle, ['New'], 25)).toBe('Reference +25 #New')
+  })
+
+  test('does not affect titles that have no embedded tags', () => {
+    expect(createTaggedBookmarkTitle('Plain Title', ['Docs', 'Read'], 50)).toBe('Plain Title +50 #Docs #Read')
+    expect(createTaggedBookmarkTitle('Plain Title', [], 0)).toBe('Plain Title')
+  })
+
+  test('does not strip a legitimate +N in a title that lacks embedded tags', () => {
+    expect(createTaggedBookmarkTitle('C++ Tips +5', ['coding'])).toBe('C++ Tips +5 #coding')
+    expect(createTaggedBookmarkTitle('C++ Tips +5', ['coding'], 25)).toBe('C++ Tips +5 +25 #coding')
+  })
 })
