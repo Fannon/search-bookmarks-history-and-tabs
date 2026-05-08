@@ -1000,14 +1000,16 @@ async function applyCleanupChange(type, index) {
   }
 
   try {
-    const applied = await applyCleanupChanges([{ type, change }], `AI cleanup: ${describeCleanupChange(type, change)}`)
-    if (!applied) {
+    const result = await applyCleanupChanges([{ type, change }], `AI cleanup: ${describeCleanupChange(type, change)}`)
+    if (!result.snapshotCreated) {
       return
     }
-    markCleanupChangeApplied(change.id)
+    markAppliedCleanupChanges(result.applied)
     renderCleanupProposal()
-    showManagerStatus('Applied cleanup change', 'success')
-    await reloadBookmarkManager({ preserveBookmarkSelection: true })
+    showCleanupApplyResult(result, 'cleanup change')
+    if (result.applied.length) {
+      await reloadBookmarkManager({ preserveBookmarkSelection: true })
+    }
   } catch (error) {
     showManagerStatus('Cleanup change failed', 'error')
     printError(error, 'Could not apply cleanup change.')
@@ -1029,16 +1031,16 @@ async function applyCleanupCategory(type) {
   }
 
   try {
-    const applied = await applyCleanupChanges(changes, `AI cleanup: ${describeCleanupChanges(changes)}`)
-    if (!applied) {
+    const result = await applyCleanupChanges(changes, `AI cleanup: ${describeCleanupChanges(changes)}`)
+    if (!result.snapshotCreated) {
       return
     }
-    for (let i = 0; i < changes.length; i++) {
-      markCleanupChangeApplied(changes[i].change.id)
-    }
+    markAppliedCleanupChanges(result.applied)
     renderCleanupProposal()
-    showManagerStatus(`Applied ${changes.length} cleanup change(s)`, 'success')
-    await reloadBookmarkManager({ preserveBookmarkSelection: true })
+    showCleanupApplyResult(result, 'cleanup category')
+    if (result.applied.length) {
+      await reloadBookmarkManager({ preserveBookmarkSelection: true })
+    }
   } catch (error) {
     showManagerStatus('Cleanup category failed', 'error')
     printError(error, 'Could not apply cleanup category.')
@@ -1056,16 +1058,16 @@ async function applyAllCleanupChanges() {
   }
 
   try {
-    const applied = await applyCleanupChanges(changes, `AI cleanup: ${describeCleanupChanges(changes)}`)
-    if (!applied) {
+    const result = await applyCleanupChanges(changes, `AI cleanup: ${describeCleanupChanges(changes)}`)
+    if (!result.snapshotCreated) {
       return
     }
-    for (let i = 0; i < changes.length; i++) {
-      markCleanupChangeApplied(changes[i].change.id)
-    }
+    markAppliedCleanupChanges(result.applied)
     renderCleanupProposal()
-    showManagerStatus(`Applied ${changes.length} cleanup change(s)`, 'success')
-    await reloadBookmarkManager({ preserveBookmarkSelection: true })
+    showCleanupApplyResult(result, 'cleanup changes')
+    if (result.applied.length) {
+      await reloadBookmarkManager({ preserveBookmarkSelection: true })
+    }
   } catch (error) {
     showManagerStatus('Cleanup changes failed', 'error')
     printError(error, 'Could not apply cleanup changes.')
@@ -1076,27 +1078,38 @@ async function applyCleanupChanges(changes, description) {
   const affectedBookmarks = getCleanupAffectedBookmarks(changes)
   const snapshotCreated = await createUndoSnapshot(description, affectedBookmarks, createCleanupUndoMetadata(changes))
   if (!snapshotCreated) {
-    return false
+    return createCleanupApplyResult(false)
   }
 
+  const result = createCleanupApplyResult(true)
   for (let i = 0; i < changes.length; i++) {
     const { type, change } = changes[i]
-    if (type === 'addTags') {
-      await applyCleanupAddTags(change)
-    } else if (type === 'removeTags') {
-      await applyCleanupRemoveTags(change)
-    } else if (type === 'renameTags') {
-      await applyCleanupRenameTag(change)
-    } else if (type === 'moveBookmarks') {
-      await applyCleanupMoveBookmark(change)
-    } else if (type === 'deleteBookmarks') {
-      await applyCleanupDeleteBookmark(change)
-    } else if (type === 'rewriteTitles') {
-      await applyCleanupRewriteTitle(change)
+    const bookmarkIds = getCleanupChangeBookmarkIds(type, change)
+
+    try {
+      if (type === 'addTags') {
+        await applyCleanupAddTags(change)
+      } else if (type === 'removeTags') {
+        await applyCleanupRemoveTags(change)
+      } else if (type === 'renameTags') {
+        await applyCleanupRenameTag(change)
+      } else if (type === 'moveBookmarks') {
+        await applyCleanupMoveBookmark(change)
+      } else if (type === 'deleteBookmarks') {
+        await applyCleanupDeleteBookmark(change)
+      } else if (type === 'rewriteTitles') {
+        await applyCleanupRewriteTitle(change)
+      } else {
+        throw new Error(`Unknown cleanup change type "${type}".`)
+      }
+      result.applied.push(createCleanupApplyEntry(type, change, bookmarkIds))
+    } catch (error) {
+      console.warn(`Could not apply cleanup change "${change.id || type}".`, error)
+      result.failed.push(createCleanupApplyEntry(type, change, bookmarkIds, error))
     }
   }
 
-  return true
+  return result
 }
 
 async function applyCleanupAddTags(change) {
@@ -1105,7 +1118,7 @@ async function applyCleanupAddTags(change) {
   }
   const bookmark = findBookmarkById(ext.model.bookmarkManager?.bookmarks || [], change.bookmarkId)
   if (!bookmark) {
-    return
+    throw new Error(`Bookmark "${change.bookmarkId}" was not found.`)
   }
   await updateTaggedBookmarks([bookmark], (tags) => mergeBulkTags(tags, change.tags, 'add'))
 }
@@ -1116,7 +1129,7 @@ async function applyCleanupRemoveTags(change) {
   }
   const bookmark = findBookmarkById(ext.model.bookmarkManager?.bookmarks || [], change.bookmarkId)
   if (!bookmark) {
-    return
+    throw new Error(`Bookmark "${change.bookmarkId}" was not found.`)
   }
   await updateTaggedBookmarks([bookmark], (tags) => mergeBulkTags(tags, change.tags, 'remove'))
 }
@@ -1126,6 +1139,9 @@ async function applyCleanupRenameTag(change) {
     throw new Error('Bookmark updates are unavailable.')
   }
   const bookmarks = getCleanupRenameTagBookmarks(change)
+  if (!bookmarks.length) {
+    throw new Error(`No bookmarks with tag "${change.from}" were found.`)
+  }
   await updateTaggedBookmarks(bookmarks, (tags) =>
     uniqueTags(tags.map((tag) => (tag.toLowerCase() === change.from.toLowerCase() ? change.to : tag))),
   )
@@ -1151,7 +1167,7 @@ async function applyCleanupRewriteTitle(change) {
   }
   const bookmark = findBookmarkById(ext.model.bookmarkManager?.bookmarks || [], change.bookmarkId)
   if (!bookmark) {
-    return
+    throw new Error(`Bookmark "${change.bookmarkId}" was not found.`)
   }
 
   await ext.browserApi.bookmarks.update(change.bookmarkId, {
@@ -1180,6 +1196,60 @@ function getPendingCleanupChanges(proposal) {
 
 function confirmCleanupChanges(changes) {
   return window.confirm(createBookmarkCleanupApplyConfirmation(changes))
+}
+
+function createCleanupApplyResult(snapshotCreated) {
+  return {
+    snapshotCreated,
+    applied: [],
+    failed: [],
+  }
+}
+
+function createCleanupApplyEntry(type, change, bookmarkIds, error) {
+  return {
+    type,
+    changeId: String(change?.id || type),
+    bookmarkIds,
+    errorMessage: error?.message || '',
+  }
+}
+
+function markAppliedCleanupChanges(appliedChanges) {
+  for (let i = 0; i < appliedChanges.length; i++) {
+    markCleanupChangeApplied(appliedChanges[i].changeId)
+  }
+}
+
+function showCleanupApplyResult(result, label) {
+  const appliedCount = result.applied.length
+  const failedCount = result.failed.length
+
+  if (failedCount) {
+    const message = `Applied ${appliedCount}; failed ${failedCount}. Failed changes: ${formatCleanupApplyEntries(result.failed)}. Undo is available while this page stays open.`
+    showManagerStatus(appliedCount ? `${label} partially applied` : `${label} failed`, 'error')
+    showCleanupStatus(message, 'error', false)
+    return
+  }
+
+  showCleanupStatus('')
+  showManagerStatus(`Applied ${appliedCount} ${label === 'cleanup change' ? label : 'cleanup change(s)'}`, 'success')
+}
+
+function formatCleanupApplyEntries(entries) {
+  return entries
+    .map((entry) => {
+      const bookmarkIds = entry.bookmarkIds.length ? ` bookmarks ${entry.bookmarkIds.join(', ')}` : ''
+      return `${entry.changeId}${bookmarkIds}`
+    })
+    .join('; ')
+}
+
+function getCleanupChangeBookmarkIds(type, change) {
+  if (type === 'renameTags') {
+    return getCleanupRenameTagBookmarks(change).map((bookmark) => String(bookmark.originalId))
+  }
+  return change?.bookmarkId ? [String(change.bookmarkId)] : []
 }
 
 function getCleanupAffectedBookmarks(changes) {
