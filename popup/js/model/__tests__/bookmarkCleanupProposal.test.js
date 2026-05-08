@@ -192,7 +192,7 @@ describe('bookmark cleanup proposal', () => {
       managerModel,
     )
 
-    expect(proposal.changes.addTags[0].tags).toEqual(['Docs', 'AI'])
+    expect(proposal.changes.addTags[0].tags).toEqual(['docs', 'ai'])
     expect(proposal.changes.rewriteTitles[0].title).toBe('OpenAI Docs Reference')
     expect(countBookmarkCleanupChanges(proposal)).toBe(5)
   })

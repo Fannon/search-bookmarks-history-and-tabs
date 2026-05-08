@@ -2,6 +2,8 @@
  * @file Tag input helpers for the bookmark manager view.
  */
 
+import { normalizeTagName } from '../model/bookmarkManagerOperations.js'
+
 /**
  * Ensure the manager's Tagify widgets exist and have the latest tag whitelist.
  *
@@ -78,17 +80,13 @@ export function normalizeManagerTagValues(tags) {
   const result = []
 
   for (let i = 0; i < tags.length; i++) {
-    const value = String(tags[i] || '')
-      .replaceAll('#', '')
-      .replace(/\s+/g, ' ')
-      .trim()
-    const key = value.toLowerCase()
+    const value = normalizeTagName(tags[i])
 
-    if (!value || seen.has(key)) {
+    if (!value || seen.has(value)) {
       continue
     }
 
-    seen.add(key)
+    seen.add(value)
     result.push(value)
   }
 

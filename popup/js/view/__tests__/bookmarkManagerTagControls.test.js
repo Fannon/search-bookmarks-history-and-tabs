@@ -27,9 +27,9 @@ function createExt() {
 describe('bookmark manager tag controls', () => {
   test('normalizes comma, hash, whitespace, and duplicate tag values', () => {
     expect(normalizeManagerTagValues([' #Docs ', 'docs', 'Project   Notes', '', '#Read'])).toEqual([
-      'Docs',
-      'Project Notes',
-      'Read',
+      'docs',
+      'project-notes',
+      'read',
     ])
   })
 
@@ -37,7 +37,7 @@ describe('bookmark manager tag controls', () => {
     const ext = createExt()
     ext.dom.manager.bulkTagsInput.value = '#Docs, Project  Notes, docs'
 
-    expect(getManagerTagControlValues(ext, 'bulk')).toEqual(['Docs', 'Project Notes'])
+    expect(getManagerTagControlValues(ext, 'bulk')).toEqual(['docs', 'project-notes'])
 
     setManagerTagControlValues(ext, 'edit', ['Docs', 'Read'])
 

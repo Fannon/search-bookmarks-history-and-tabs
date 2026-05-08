@@ -31,7 +31,9 @@ The rest of the feature is in solid shape for a beta: the manager is popup-indep
 - [x] Duplicate ranking respects `customBonusScore`.
   - Commit: pending
   - Tests: duplicate ranking unit test proves a favorited `+50` duplicate is kept over a newer/tagged copy; duplicate rendering and Bookmark Manager E2E pass.
-- [ ] Tag normalization is consistent across manual input, local AI suggestions, and AI cleanup proposals.
+- [x] Tag normalization is consistent across manual input, local AI suggestions, and AI cleanup proposals.
+  - Commit: pending
+  - Tests: operations, tag-control, cleanup-proposal, local-AI, entrypoint, and Bookmark Manager E2E tests pass with lowercase hyphenated tags.
 - [ ] Remove noisy local AI cleanup debug logging before public beta.
 - [ ] Remove stray empty branch in `reloadBookmarkManager`.
 - [ ] Run final beta verification loop: full lint, unit tests, Chromium E2E, perf tests, size check.
@@ -118,8 +120,6 @@ Recommendation: Remove debug logging, consider improving the UI feedback for wai
 - Duplicate ranking respects `customBonusScore`.
 - Real bookmark API E2E or manual matrix for `bookmarks.update`, `bookmarks.move`, `bookmarks.remove`, `bookmarks.create`, undo restore, bookmark export/import, and API-unavailable fallback.
 - Browser matrix for Chrome, Edge, Firefox: manager load, passive read-only states, mutation actions, local AI unavailable/downloadable states.
-- Accessibility checks for tabs, folder tree, duplicate checkboxes, cleanup proposal actions, file import button, focus order, and screen-reader labels.
-- Performance regression check for a large bookmark library after AI cleanup and manager view changes: run `npm run test:perf`.
 
 ## Cleanup / Refactoring Suggestions
 

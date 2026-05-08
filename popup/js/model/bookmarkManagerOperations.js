@@ -169,8 +169,12 @@ export function mergeBulkTags(currentTags = [], nextTags = [], mode) {
 export function normalizeTagName(tagName) {
   return String(tagName || '')
     .replaceAll('#', '')
-    .replace(/\s+/g, ' ')
+    .replace(/[^a-z0-9 _.-]/gi, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
     .trim()
+    .replace(/^-|-$/g, '')
+    .toLowerCase()
 }
 
 /**

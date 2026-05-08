@@ -2,6 +2,8 @@
  * @file Prompt, schema, and validation helpers for AI bookmark cleanup proposals.
  */
 
+import { normalizeTagName } from './bookmarkManagerOperations.js'
+
 const DEFAULT_PROMPT_BOOKMARK_LIMIT = 1000
 const PROMPT_BOOKMARK_TEXT_BUDGET = 80000
 const PROMPT_TEXT_LIMIT = 180
@@ -1126,11 +1128,7 @@ function normalizePromptTags(tags) {
 }
 
 function normalizePromptTag(tag) {
-  return String(tag || '')
-    .replaceAll('#', '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim()
+  return normalizeTagName(tag)
 }
 
 function normalizePromptTitle(title) {

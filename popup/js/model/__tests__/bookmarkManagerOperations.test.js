@@ -84,7 +84,8 @@ describe('bookmark manager operations', () => {
   })
 
   test('normalizes and merges tag operations case-insensitively', () => {
-    expect(normalizeTagName(' #Project   Docs ')).toBe('Project Docs')
+    expect(normalizeTagName(' #Project   Docs ')).toBe('project-docs')
+    expect(normalizeTagName('Dev/Tools')).toBe('devtools')
     expect(uniqueTags(['Docs', 'docs', '', 'Read'])).toEqual(['Docs', 'Read'])
     expect(mergeBulkTags(['Docs'], ['docs', 'New'], 'add')).toEqual(['Docs', 'New'])
     expect(mergeBulkTags(['Docs', 'Read'], ['docs'], 'remove')).toEqual(['Read'])
