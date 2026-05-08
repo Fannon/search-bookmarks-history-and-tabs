@@ -25,7 +25,9 @@ The rest of the feature is in solid shape for a beta: the manager is popup-indep
 - [x] Large multi-select local AI tag suggestions warn/abort instead of sampling only the first 16 bookmarks.
   - Commit: pending
   - Tests: entrypoint test cancels a 21-bookmark suggestion before `LanguageModel.availability/create`; helper test covers warning copy.
-- [ ] Cleanup prompt bookmark-count control and truncation/context-budget feedback.
+- [x] Cleanup prompt bookmark-count control and truncation/context-budget feedback.
+  - Commit: pending
+  - Tests: cleanup prompt payload test covers bookmark limits and omitted counts; manager view/entrypoint tests include the new control; Bookmark Manager E2E passes.
 - [ ] Duplicate ranking respects `customBonusScore`.
 - [ ] Tag normalization is consistent across manual input, local AI suggestions, and AI cleanup proposals.
 - [ ] Remove noisy local AI cleanup debug logging before public beta.

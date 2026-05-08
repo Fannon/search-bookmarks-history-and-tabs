@@ -4,6 +4,7 @@ import {
   countBookmarkCleanupChanges,
   createBookmarkCleanupApplyConfirmation,
   createBookmarkCleanupPrompt,
+  createBookmarkCleanupPromptPayload,
   localAiBookmarkCleanupProposalSchema,
   parseBookmarkCleanupProposal,
   parseBookmarkCleanupProposalWithIssues,
@@ -65,6 +66,7 @@ describe('bookmark cleanup proposal', () => {
     expect(prompt).toContain('dev | Development')
     expect(prompt).toContain('ai (1), llm (1)')
     expect(prompt).toContain('Return at most 50 total changes')
+    expect(prompt).toContain('Bookmark context: included 3 of 3 bookmarks.')
     expect(prompt).toContain(
       'Preserve distinctive project, repository, package, product, and documentation identifiers',
     )
@@ -94,6 +96,20 @@ describe('bookmark cleanup proposal', () => {
 
     expect(prompt).toContain('No total change limit is set')
     expect(prompt).not.toContain('Return at most 50 total changes')
+  })
+
+  test('limits bookmark context and reports omitted bookmark rows', () => {
+    const prompt = createBookmarkCleanupPrompt(managerModel, 'lite', { bookmarkLimit: 2 })
+    const payload = createBookmarkCleanupPromptPayload(managerModel, { bookmarkLimit: 2, includeFolders: false })
+
+    expect(prompt).toContain('Bookmark context: included 2 of 3 bookmarks. Omitted 1')
+    expect(prompt).toContain('1 | OpenAI Docs')
+    expect(prompt).toContain('2 | Duplicate OpenAI Docs')
+    expect(prompt).not.toContain('3 | Different Docs')
+    expect(payload.includedBookmarkCount).toBe(2)
+    expect(payload.omittedBookmarkCount).toBe(1)
+    expect(payload.totalBookmarkCount).toBe(3)
+    expect(payload.truncatedByCharacterBudget).toBe(false)
   })
 
   test('can focus a prompt on title changes', () => {

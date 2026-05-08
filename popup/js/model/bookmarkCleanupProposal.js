@@ -2,7 +2,8 @@
  * @file Prompt, schema, and validation helpers for AI bookmark cleanup proposals.
  */
 
-const PROMPT_BOOKMARK_LIMIT = 2000
+const DEFAULT_PROMPT_BOOKMARK_LIMIT = 1000
+const PROMPT_BOOKMARK_TEXT_BUDGET = 80000
 const PROMPT_TEXT_LIMIT = 180
 const PROPOSAL_VERSION = '1.0'
 const PROMPT_FULL = 'full'
@@ -271,6 +272,7 @@ export const localAiBookmarkCleanupProposalSchema = {
  * @param {Object} [options] Prompt options.
  * @param {string|number} [options.changeLimit=50] Maximum proposed changes, or 'unlimited'.
  * @param {'everything'|'tags'|'title'|'folder'|'duplicates'} [options.changeFocus='everything'] Change type focus.
+ * @param {string|number} [options.bookmarkLimit=1000] Maximum bookmark rows to include, or 'unlimited'.
  * @returns {string} Prompt text.
  */
 export function createBookmarkCleanupPrompt(managerModel, mode = PROMPT_FULL, options = {}) {
@@ -279,7 +281,10 @@ export function createBookmarkCleanupPrompt(managerModel, mode = PROMPT_FULL, op
   const changeFocus = normalizePromptChangeFocus(options.changeFocus)
   const allowedChangeTypes = getAllowedPromptChangeTypes(isLite, changeFocus)
   const needsFolders = allowedChangeTypes.includes('moveBookmarks')
-  const payload = createBookmarkCleanupPromptPayload(managerModel, { includeFolders: needsFolders })
+  const payload = createBookmarkCleanupPromptPayload(managerModel, {
+    bookmarkLimit: options.bookmarkLimit,
+    includeFolders: needsFolders,
+  })
 
   return `
 You are helping clean up a browser bookmark collection.
@@ -289,6 +294,7 @@ Prefer conservative, reviewable changes over large speculative rewrites.
 Only propose a change when confidence is high. Prefer an empty array over a weak or speculative suggestion.
 ${changeLimit ? `Return at most ${changeLimit} total changes, prioritizing highest-impact changes first.` : 'No total change limit is set, but still prioritize higher-impact changes first.'}
 ${formatPromptFocusInstruction(isLite, changeFocus, allowedChangeTypes)}
+Bookmark context: included ${payload.includedBookmarkCount} of ${payload.totalBookmarkCount} bookmark${payload.totalBookmarkCount === 1 ? '' : 's'}.${payload.omittedBookmarkCount ? ` Omitted ${payload.omittedBookmarkCount} due to the selected bookmark/context limit.` : ''}${payload.truncatedByCharacterBudget ? ` Stopped at the ${PROMPT_BOOKMARK_TEXT_BUDGET} character bookmark-context budget.` : ''}
 
 Goals:
 - Add useful, specific tags where existing bookmark data strongly supports them.
@@ -330,6 +336,7 @@ ${payload.bookmarks}
  *
  * @param {Object} managerModel Bookmark manager model.
  * @param {Object} [options] Payload options.
+ * @param {string|number} [options.bookmarkLimit=1000] Maximum bookmark rows to include, or 'unlimited'.
  * @param {boolean} [options.includeFolders=true] Include folder fields and folder list.
  * @returns {Object} Prompt payload.
  */
@@ -337,17 +344,46 @@ export function createBookmarkCleanupPromptPayload(managerModel, options = {}) {
   const bookmarks = managerModel?.bookmarks || []
   const folderOptions = managerModel?.folderOptions || []
   const tagGroups = managerModel?.tagGroups || []
+  const bookmarkLimit = normalizePromptBookmarkLimit(options.bookmarkLimit)
   const includeFolders = options.includeFolders !== false
+  const bookmarkPayload = createBookmarkPromptRows(bookmarks, includeFolders, bookmarkLimit)
 
   return {
-    bookmarks: bookmarks
-      .slice(0, PROMPT_BOOKMARK_LIMIT)
-      .map(includeFolders ? formatBookmarkForPrompt : formatBookmarkForLitePrompt)
-      .join('\n'),
+    bookmarks: bookmarkPayload.bookmarks,
+    includedBookmarkCount: bookmarkPayload.includedBookmarkCount,
+    omittedBookmarkCount: bookmarkPayload.omittedBookmarkCount,
+    totalBookmarkCount: bookmarks.length,
+    truncatedByCharacterBudget: bookmarkPayload.truncatedByCharacterBudget,
     existingTags: tagGroups.map((tag) => `${tag.name} (${tag.count})`).join(', '),
     existingFolders: folderOptions
       .map((folder) => `${folder.id} | ${folder.label || folder.title || folder.id}`)
       .join('\n'),
+  }
+}
+
+function createBookmarkPromptRows(bookmarks, includeFolders, bookmarkLimit) {
+  const maxBookmarks = bookmarkLimit ? Math.min(bookmarkLimit, bookmarks.length) : bookmarks.length
+  const formatBookmark = includeFolders ? formatBookmarkForPrompt : formatBookmarkForLitePrompt
+  const rows = []
+  let textLength = 0
+  let truncatedByCharacterBudget = false
+
+  for (let i = 0; i < maxBookmarks; i++) {
+    const row = formatBookmark(bookmarks[i])
+    const nextLength = textLength + row.length + (rows.length ? 1 : 0)
+    if (nextLength > PROMPT_BOOKMARK_TEXT_BUDGET) {
+      truncatedByCharacterBudget = true
+      break
+    }
+    rows.push(row)
+    textLength = nextLength
+  }
+
+  return {
+    bookmarks: rows.join('\n'),
+    includedBookmarkCount: rows.length,
+    omittedBookmarkCount: bookmarks.length - rows.length,
+    truncatedByCharacterBudget,
   }
 }
 
@@ -358,6 +394,15 @@ function normalizePromptChangeLimit(changeLimit) {
 
   const limit = Number.parseInt(changeLimit || 50, 10)
   return Number.isFinite(limit) && limit > 0 ? limit : 50
+}
+
+function normalizePromptBookmarkLimit(bookmarkLimit) {
+  if (bookmarkLimit === 'unlimited') {
+    return 0
+  }
+
+  const limit = Number.parseInt(bookmarkLimit || DEFAULT_PROMPT_BOOKMARK_LIMIT, 10)
+  return Number.isFinite(limit) && limit > 0 ? limit : DEFAULT_PROMPT_BOOKMARK_LIMIT
 }
 
 function normalizePromptChangeFocus(changeFocus) {

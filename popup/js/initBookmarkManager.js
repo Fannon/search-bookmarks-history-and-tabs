@@ -938,6 +938,7 @@ function getCleanupPromptOptions() {
   return {
     changeLimit: ext.dom.manager.cleanupChangeLimit.value || '50',
     changeFocus: ext.dom.manager.cleanupChangeFocus.value || 'everything',
+    bookmarkLimit: ext.dom.manager.cleanupBookmarkLimit.value || '1000',
   }
 }
 

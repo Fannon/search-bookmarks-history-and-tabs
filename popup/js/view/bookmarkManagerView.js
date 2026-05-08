@@ -87,6 +87,7 @@ export function getBookmarkManagerDom() {
     cleanupFolderScope: document.getElementById('cleanup-folder-scope'),
     cleanupChangeLimit: document.getElementById('cleanup-change-limit'),
     cleanupChangeFocus: document.getElementById('cleanup-change-focus'),
+    cleanupBookmarkLimit: document.getElementById('cleanup-bookmark-limit'),
     cleanupPrompt: document.getElementById('cleanup-prompt'),
     cleanupPromptSize: document.getElementById('cleanup-prompt-size'),
     cleanupProposalJson: document.getElementById('cleanup-proposal-json'),
@@ -224,6 +225,7 @@ export function bindBookmarkManagerEvents({
   dom.cleanupFolderScope.addEventListener('change', onCleanupScopeChange)
   dom.cleanupChangeLimit.addEventListener('change', onCleanupScopeChange)
   dom.cleanupChangeFocus.addEventListener('change', onCleanupScopeChange)
+  dom.cleanupBookmarkLimit.addEventListener('change', onCleanupScopeChange)
   dom.runLocalCleanup.addEventListener('click', onRunLocalCleanup)
   dom.copyCleanupPrompt.addEventListener('click', onCopyCleanupPrompt)
   dom.cleanupProposalJson.addEventListener('input', onCleanupProposalInput)
