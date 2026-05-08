@@ -171,8 +171,6 @@ export async function reloadBookmarkManager(options = {}) {
     await updateBookmarkBrowser()
     scrollManagedBookmarkIntoView(ext.model.bookmarkManagerCurrentId)
     scrollActiveFolderIntoView()
-    if (!preservedSelection) {
-    }
   } catch (error) {
     showManagerStatus('Load failed', 'error')
     printError(error, 'Could not load bookmark manager data.')

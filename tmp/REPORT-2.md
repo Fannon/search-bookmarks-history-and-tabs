@@ -37,7 +37,9 @@ The rest of the feature is in solid shape for a beta: the manager is popup-indep
 - [x] Remove noisy local AI cleanup debug logging before public beta.
   - Commit: pending
   - Tests: entrypoint unit tests and Bookmark Manager E2E pass; debug output is gated behind `localStorage.bookmarkManagerDebugLocalAi === 'true'`.
-- [ ] Remove stray empty branch in `reloadBookmarkManager`.
+- [x] Remove stray empty branch in `reloadBookmarkManager`.
+  - Commit: pending
+  - Tests: entrypoint unit tests and Bookmark Manager E2E pass.
 - [ ] Run final beta verification loop: full lint, unit tests, Chromium E2E, perf tests, size check.
 
 ## Validation Run
