@@ -21,6 +21,8 @@ import { validateOptions } from '../model/validateOptions.js'
  */
 export async function initOptions() {
   initOptionControls()
+  const configEl = document.getElementById('config')
+  const initialConfigValue = configEl.value
 
   if (!optionsSchema) {
     try {
@@ -34,10 +36,12 @@ export async function initOptions() {
   const userOptions = await getUserOptions()
   const userOptionsYaml = window.jsyaml.dump(userOptions)
 
+  if (configEl.value !== initialConfigValue) return
+
   if (userOptionsYaml.trim() === '{}') {
-    document.getElementById('config').value = ''
+    configEl.value = ''
   } else {
-    document.getElementById('config').value = userOptionsYaml
+    configEl.value = userOptionsYaml
   }
 }
 

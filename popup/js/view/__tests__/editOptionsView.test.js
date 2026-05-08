@@ -17,6 +17,7 @@ function setupDom() {
 
 async function loadEditOptionsView({
   userOptions = {},
+  getUserOptionsImpl,
   dumpImpl,
   loadImpl,
   setUserOptionsImpl,
@@ -24,7 +25,7 @@ async function loadEditOptionsView({
 } = {}) {
   jest.resetModules()
 
-  const getUserOptions = jest.fn(() => Promise.resolve(userOptions))
+  const getUserOptions = getUserOptionsImpl || jest.fn(() => Promise.resolve(userOptions))
   const setUserOptions =
     setUserOptionsImpl ||
     jest.fn(() => {
@@ -118,6 +119,27 @@ describe('editOptionsView', () => {
 
     expect(mocks.dump).toHaveBeenCalledWith({})
     expect(document.getElementById('config').value).toBe('')
+  })
+
+  it('initOptions preserves edits made before async options finish loading', async () => {
+    setupDom()
+    let resolveUserOptions
+    const userOptionsPromise = new Promise((resolve) => {
+      resolveUserOptions = resolve
+    })
+    const getUserOptions = jest.fn(() => userOptionsPromise)
+    const { module, mocks } = await loadEditOptionsView({
+      getUserOptionsImpl: getUserOptions,
+      dumpImpl: jest.fn(() => 'searchMaxResults: 24'),
+    })
+
+    const initPromise = module.initOptions()
+    document.getElementById('config').value = 'searchMaxResults: "not-a-number"'
+    resolveUserOptions({ searchMaxResults: 24 })
+    await initPromise
+
+    expect(mocks.dump).toHaveBeenCalledWith({ searchMaxResults: 24 })
+    expect(document.getElementById('config').value).toBe('searchMaxResults: "not-a-number"')
   })
 
   it('saveOptions validates, normalizes YAML, persists options, and navigates back to search', async () => {
