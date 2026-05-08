@@ -34,7 +34,9 @@ The rest of the feature is in solid shape for a beta: the manager is popup-indep
 - [x] Tag normalization is consistent across manual input, local AI suggestions, and AI cleanup proposals.
   - Commit: pending
   - Tests: operations, tag-control, cleanup-proposal, local-AI, entrypoint, and Bookmark Manager E2E tests pass with lowercase hyphenated tags.
-- [ ] Remove noisy local AI cleanup debug logging before public beta.
+- [x] Remove noisy local AI cleanup debug logging before public beta.
+  - Commit: pending
+  - Tests: entrypoint unit tests and Bookmark Manager E2E pass; debug output is gated behind `localStorage.bookmarkManagerDebugLocalAi === 'true'`.
 - [ ] Remove stray empty branch in `reloadBookmarkManager`.
 - [ ] Run final beta verification loop: full lint, unit tests, Chromium E2E, perf tests, size check.
 

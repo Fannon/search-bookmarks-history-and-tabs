@@ -71,6 +71,7 @@ import {
 import { printError } from './view/errorView.js'
 
 const LOCAL_AI_PROMPT_TIMEOUT_MS = 45000
+const LOCAL_AI_DEBUG_STORAGE_KEY = 'bookmarkManagerDebugLocalAi'
 
 export const ext = createExtensionContext()
 window.ext = ext
@@ -893,7 +894,17 @@ function createLocalAiTimeout(stage) {
 }
 
 function debugLocalCleanup(message, details = {}) {
-  console.debug('[bookmark-cleanup local-ai]', message, details)
+  if (isLocalCleanupDebugEnabled()) {
+    console.debug('[bookmark-cleanup local-ai]', message, details)
+  }
+}
+
+function isLocalCleanupDebugEnabled() {
+  try {
+    return localStorage.getItem(LOCAL_AI_DEBUG_STORAGE_KEY) === 'true'
+  } catch {
+    return false
+  }
 }
 
 function startLocalAiWaitingLog(stage, startedAt) {
