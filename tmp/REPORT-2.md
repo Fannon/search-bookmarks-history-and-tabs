@@ -1,15 +1,15 @@
 # Bookmark Manager Beta Release Review
 
 Date: 2026-05-08
-Reviewed commit: `aec8626`
+Reviewed commit: `c7f29a3`
 
 ## Verdict
 
-The Bookmark Manager is close, but I would not ship the current implementation as a broad beta without tightening the AI Cleanup apply path first.
+The Bookmark Manager is ready for a beta release after the release-blocking cleanup items were fixed and the full verification loop passed.
 
-It is ready for an internal or very limited beta if the release notes clearly frame the manager as experimental and users are told to export bookmarks before trying bulk actions. For a public beta, fix the two high-risk AI Cleanup issues below: AI-proposed deletes are not proven to be real duplicates, and category/all apply actions run immediately without a second confirmation or dry-run summary.
+Keep the beta framing and the backup/export guidance. Bulk bookmark mutation still deserves conservative UX because undo is memory-only and recreated deleted bookmarks cannot preserve original browser IDs. That said, AI cleanup now validates duplicate deletes against actual duplicate pairs, requires final confirmation for category/all apply, handles partial failures explicitly, and has targeted tests around the highest-risk paths.
 
-The rest of the feature is in solid shape for a beta: the manager is popup-independent, uses no external network/telemetry, keeps undo memory-only, has bookmark HTML export, validates proposal IDs against the current model, degrades when bookmark APIs or local AI are unavailable, and has good unit coverage around data/model/view helpers.
+The feature is in solid shape for beta: it is popup-independent, uses no external network/telemetry, keeps undo memory-only, has bookmark HTML export, validates proposal IDs against the current model, degrades when bookmark APIs or local AI are unavailable, and now has stronger unit/E2E/perf coverage around the manager and options readiness paths.
 
 ## Beta Blocker Execution Checklist
 
@@ -23,107 +23,131 @@ The rest of the feature is in solid shape for a beta: the manager is popup-indep
   - Commit: `62e4b92` (`More transactional snapshots / apply`)
   - Tests: entrypoint test simulates one successful cleanup change and one failed change; failed change stays pending and status includes failed IDs/bookmark IDs.
 - [x] Large multi-select local AI tag suggestions warn/abort instead of sampling only the first 16 bookmarks.
-  - Commit: pending
+  - Commit: `d7c8246` (`Warn before large AI tag suggestions`)
   - Tests: entrypoint test cancels a 21-bookmark suggestion before `LanguageModel.availability/create`; helper test covers warning copy.
 - [x] Cleanup prompt bookmark-count control and truncation/context-budget feedback.
-  - Commit: pending
+  - Commit: `6ee7e77` (`Add cleanup prompt context limit`)
   - Tests: cleanup prompt payload test covers bookmark limits and omitted counts; manager view/entrypoint tests include the new control; Bookmark Manager E2E passes.
 - [x] Duplicate ranking respects `customBonusScore`.
-  - Commit: pending
+  - Commit: `301f380` (`Respect favorite score in duplicate ranking`)
   - Tests: duplicate ranking unit test proves a favorited `+50` duplicate is kept over a newer/tagged copy; duplicate rendering and Bookmark Manager E2E pass.
 - [x] Tag normalization is consistent across manual input, local AI suggestions, and AI cleanup proposals.
-  - Commit: pending
+  - Commit: `ed20c67` (`Normalize bookmark manager tags consistently`)
   - Tests: operations, tag-control, cleanup-proposal, local-AI, entrypoint, and Bookmark Manager E2E tests pass with lowercase hyphenated tags.
 - [x] Remove noisy local AI cleanup debug logging before public beta.
-  - Commit: pending
+  - Commit: `47127e8` (`Gate local cleanup debug logging`)
   - Tests: entrypoint unit tests and Bookmark Manager E2E pass; debug output is gated behind `localStorage.bookmarkManagerDebugLocalAi === 'true'`.
 - [x] Remove stray empty branch in `reloadBookmarkManager`.
-  - Commit: pending
+  - Commit: `476c968` (`Clean bookmark manager reload flow`)
   - Tests: entrypoint unit tests and Bookmark Manager E2E pass.
-- [ ] Run final beta verification loop: full lint, unit tests, Chromium E2E, perf tests, size check.
+- [x] Run final beta verification loop: full lint, unit tests, Chromium E2E, perf tests, size check.
+  - Commit: final report update.
+  - Result: all checks passed on `c7f29a3`.
 
 ## Validation Run
 
-- `npx @biomejs/biome check popup/js/initBookmarkManager.js popup/js/model/bookmarkManagerData.js popup/js/model/bookmarkManagerOperations.js popup/js/model/bookmarkCleanupProposal.js popup/js/helper/localAiTags.js popup/js/view/bookmarkManagerView.js`: passed, 6 files checked.
-- `npm run test:unit -- popup/js/model/__tests__/bookmarkManagerData.test.js popup/js/model/__tests__/bookmarkManagerOperations.test.js popup/js/model/__tests__/bookmarkManagerUndo.test.js popup/js/model/__tests__/bookmarkCleanupProposal.test.js popup/js/helper/__tests__/localAiTags.test.js popup/js/view/__tests__/bookmarkManagerView.test.js popup/js/view/__tests__/bookmarkManagerDuplicatesView.test.js popup/js/view/__tests__/bookmarkManagerDuplicateSelection.test.js popup/js/view/__tests__/bookmarkManagerOverviewView.test.js popup/js/view/__tests__/bookmarkManagerTagControls.test.js`: passed, 10 suites and 56 tests.
-- `npm run test:e2e -- playwright/tests/bookmarkManager.spec.js`: passed, 7 Chromium Playwright tests in about 2.3 minutes.
+- `npm run lint`: passed, 134 files checked.
+- `npm run test:unit`: passed, 45 suites and 499 tests.
+- `npm run test:e2e`: passed, 69 Chromium Playwright tests.
+- `npm run test:perf`: passed with no performance regressions.
+- `npm run size`: passed; `chrome.zip` is 443.3 KB and `js/initBookmarkManager.bundle.min.js` is 117.8 KB.
 
-Not rerun today: full lint, full unit suite, full E2E suite, `npm run test:perf`, `npm run size`, and real browser bookmark mutation/export/import checks.
+Additional targeted checks were run while fixing final verification failures:
+
+- `npm run test:unit -- popup/js/view/__tests__/editOptionsView.test.js`: passed, including a new async-load edit preservation test.
+- `npx playwright test --project=chromium playwright/tests/errorOverlay.spec.js playwright/tests/options.spec.js`: passed, 21 tests.
+- `npx playwright test --project=chromium playwright/tests/performance.spec.js`: passed, 5 tests.
+
+Not rerun today: manual real-browser bookmark mutation/export/import matrix across Chrome, Edge, and Firefox.
 
 ## Release-Blocking Before Broad Beta
 
 ### AI Cleanup can delete non-duplicate bookmarks
 
-`validateDeleteChanges` and liberal parsing only verify that `bookmarkId` and `duplicateOfBookmarkId` exist and differ. They do not verify that both bookmarks have the same normalized URL, belong to a known duplicate group, or match the manager's duplicate cleanup model. See [bookmarkCleanupProposal.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/model/bookmarkCleanupProposal.js:540) and [bookmarkCleanupProposal.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/model/bookmarkCleanupProposal.js:911). The apply path then calls `bookmarks.remove` directly in [initBookmarkManager.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/initBookmarkManager.js:1134).
+Status: fixed in `57ba4b1`.
+
+Original finding: `validateDeleteChanges` and liberal parsing only verified that `bookmarkId` and `duplicateOfBookmarkId` existed and differed. They did not verify that both bookmarks had the same normalized URL, belonged to a known duplicate group, or matched the manager's duplicate cleanup model.
 
 Impact: a bad local/external LLM proposal, or pasted JSON, can present an arbitrary bookmark deletion as "Delete Duplicate Bookmarks" and the parser will accept it as long as the IDs exist.
 
-Recommendation: validate delete proposals against `managerModel.duplicateGroups` or compare normalized URLs before accepting them. Add unit tests proving that a delete proposal for different URLs is rejected/dropped with a warning.
+Done: delete proposals are validated against actual duplicate pairs and tests prove different-URL pairs are rejected/dropped.
 
 ### AI Cleanup Apply All / Accept All has no final confirmation
 
-The cleanup UI correctly says users should review proposals, but `Apply All` and per-category `Accept All` execute immediately once clicked. The button is enabled by any parsed change count in [bookmarkManagerView.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/view/bookmarkManagerView.js:788), and the handlers apply changes in [initBookmarkManager.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/initBookmarkManager.js:1027) and [initBookmarkManager.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/initBookmarkManager.js:1044). This includes deletes via [initBookmarkManager.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/initBookmarkManager.js:1134).
+Status: fixed in `57ba4b1`.
+
+Original finding: the cleanup UI correctly said users should review proposals, but `Apply All` and per-category `Accept All` executed immediately once clicked. This included deletes.
 
 Impact: one accidental click can move, rename, retag, rewrite, and delete many bookmarks. Undo snapshots mitigate this, but they are memory-only and restoring recreated deleted bookmarks may not preserve original IDs.
 
-Recommendation: add a confirmation dialog or review modal that summarizes counts by action type and highlights destructive operations. For beta, disable `Apply All` when delete or move changes are present unless the user explicitly confirms.
+Done: category/all apply now requires a confirmation summary that highlights destructive and structural changes.
 
 ## Important Beta Findings
 
 ### Bulk AI cleanup is not transactional
 
-`applyCleanupChanges` creates one undo snapshot, then applies changes sequentially in [initBookmarkManager.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/initBookmarkManager.js:1068). If change 4 of 20 fails, the first 3 are already persisted. The same pattern exists in sequential bookmark update loops.
+Status: mitigated in `62e4b92`.
 
-Recommendation: track per-change success/failure and report exact applied IDs. Keep the undo snapshot, but tell the user when the result is partial and offer an immediate undo button.
+Original finding: `applyCleanupChanges` created one undo snapshot, then applied changes sequentially. If change 4 of 20 failed, the first 3 were already persisted and the UI did not report the exact partial state clearly enough.
+
+Done: the apply path keeps one undo snapshot, tracks per-change success/failure, reports partial results, and leaves failed changes pending instead of marking them applied.
 
 ### Local tag suggestions sample only 16 bookmarks
 
-Local AI tag suggestions cap prompt input at 16 bookmarks in [localAiTags.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/helper/localAiTags.js:28) and [localAiTags.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/helper/localAiTags.js:92). Strict multi-select mode filters suggested tags against all selected bookmarks, but the liberal retry skips that evidence filter in [localAiTags.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/helper/localAiTags.js:83).
+Status: fixed in `d7c8246`.
+
+Original finding: local AI tag suggestions capped prompt input at 16 bookmarks. Strict multi-select mode filtered suggested tags against all selected bookmarks, but the liberal retry skipped that evidence filter.
 
 Impact: for large selections, the second-try "broader" suggestion can be based on the first 16 bookmarks and then applied to the whole selection.
 
-Recommendation: Don't do sample size and warn the user if they selected more than 20 bookmarks with ability to abort.
+Done: large selections warn before invoking local AI and can be aborted.
 
 ### Cleanup prompt truncates large libraries silently
 
-Cleanup prompt payloads slice bookmark input to 2000 entries in [bookmarkCleanupProposal.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/model/bookmarkCleanupProposal.js:5) and [bookmarkCleanupProposal.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/model/bookmarkCleanupProposal.js:336). The generated prompt does not tell the model or user that entries were omitted.
+Status: fixed in `6ee7e77`.
 
-Recommendation: Add dropdown option how many bookmarks to include, default to 1000, offer 20, 50, 100, 500, 1000, 2000, unlimited. Add a character budget guard for local LLM context windows.
+Original finding: cleanup prompt payloads sliced bookmark input to 2000 entries and did not tell the model or user that entries were omitted.
+
+Done: cleanup prompt generation has a bookmark-context selector, omitted count feedback, and a character budget guard.
 
 ### Duplicate ranking still ignores favorite score
 
-Duplicate keep-candidate ranking uses tag count, title quality, recency, then folder depth in [bookmarkManagerData.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/model/bookmarkManagerData.js:326). It does not include `customBonusScore`.
+Status: fixed in `301f380`.
+
+Original finding: duplicate keep-candidate ranking used tag count, title quality, recency, then folder depth, but did not include `customBonusScore`.
 
 Impact: a user-favorited `+50` bookmark can still be ranked below a duplicate with more tags or a newer date.
 
-Recommendation: add `customBonusScore` as an early duplicate ranking signal and test it.
+Done: duplicate keep-candidate ranking uses `customBonusScore` and has a unit test.
 
 ### Tag normalization remains inconsistent
 
-Manual tag input normalizes whitespace to spaces, while cleanup proposals normalize whitespace to hyphens. This can split equivalent concepts into separate tag groups.
+Status: fixed in `ed20c67`.
 
-Recommendation: choose one canonical tag form for all manager paths. Hyphenated lowercase tags are probably better for search-oriented inline hashtags, but the current UI should be consistent either way.
+Original finding: manual tag input normalized whitespace to spaces, while cleanup proposals normalized whitespace to hyphens. This could split equivalent concepts into separate tag groups.
+
+Done: manager tag paths now use canonical lowercase hyphenated tags.
 
 ### Debug logging should be toned down
 
-AI cleanup emits `console.debug` diagnostics in [initBookmarkManager.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/initBookmarkManager.js:881). Debug logs are useful while stabilizing the Prompt API path, but noisy for a public beta.
+Status: fixed in `47127e8`.
 
-Recommendation: Remove debug logging, consider improving the UI feedback for waiting for local LLM to complete?
+Original finding: AI cleanup emitted unconditional `console.debug` diagnostics. Debug logs are useful while stabilizing the Prompt API path, but noisy for a public beta.
+
+Done: local AI cleanup debug logging is gated behind `localStorage.bookmarkManagerDebugLocalAi === 'true'`.
 
 ### Stray empty branch should be cleaned
 
-`reloadBookmarkManager` contains an empty `if (!preservedSelection) {}` block in [initBookmarkManager.js](/home/fannon/dev/search-bookmarks-history-and-tabs/popup/js/initBookmarkManager.js:167). It is harmless, but should be removed.
+Status: fixed in `476c968`.
+
+`reloadBookmarkManager` no longer contains the empty `if (!preservedSelection) {}` block.
 
 ## Test Gaps To Add
 
-- AI cleanup delete validation rejects different-URL bookmark pairs and only accepts known duplicate groups.
-- `Apply All` / category apply confirmation behavior, especially when proposed changes include deletes or moves.
-- Partial failure handling for cleanup/bulk tag/move/delete loops, including status text and undo availability.
-- Local AI multi-select suggestion behavior with more than 16 selected bookmarks, including liberal retry.
-- Cleanup prompt truncation and prompt-size display for libraries above 2000 bookmarks or above a character budget.
-- Duplicate ranking respects `customBonusScore`.
 - Real bookmark API E2E or manual matrix for `bookmarks.update`, `bookmarks.move`, `bookmarks.remove`, `bookmarks.create`, undo restore, bookmark export/import, and API-unavailable fallback.
 - Browser matrix for Chrome, Edge, Firefox: manager load, passive read-only states, mutation actions, local AI unavailable/downloadable states.
+- A browser-level test for local AI cleanup unavailable/downloadable/downloading states if Prompt API mocking becomes stable enough.
+- More partial-failure coverage for non-AI bulk tag, move, and delete loops. AI cleanup partial failure is now covered.
 
 ## Cleanup / Refactoring Suggestions
 
@@ -146,6 +170,6 @@ Recommendation: Remove debug logging, consider improving the UI feedback for wai
 
 ## Recommendation
 
-For an internal beta: proceed, with backup/export guidance kept prominent.
+Proceed with beta, with backup/export guidance kept prominent.
 
-For a public beta: first fix AI cleanup duplicate-delete validation and add a final confirmation/dry-run summary for bulk cleanup apply. Then run full lint, full unit tests, full Chromium E2E, perf tests, size check, and a small real-browser mutation/export/import matrix.
+Before a broader public announcement, run a small manual real-browser mutation/export/import matrix in Chrome, Edge, and Firefox. The automated release loop is green, but browser bookmark APIs and local AI availability states still deserve manual coverage.
