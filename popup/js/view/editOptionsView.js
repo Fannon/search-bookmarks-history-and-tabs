@@ -20,6 +20,8 @@ import { validateOptions } from '../model/validateOptions.js'
  * @returns {Promise<void>}
  */
 export async function initOptions() {
+  initOptionControls()
+
   if (!optionsSchema) {
     try {
       optionsSchema = (await import('../../json/options.schema.json', { with: { type: 'json' } })).default
@@ -37,30 +39,32 @@ export async function initOptions() {
   } else {
     document.getElementById('config').value = userOptionsYaml
   }
+}
 
+function initOptionControls() {
   // Ensure event listeners are only attached once to prevent duplicates
-  if (!isInitialized) {
-    document.getElementById('opt-reset').addEventListener('click', resetOptions)
-    document.getElementById('opt-save').addEventListener('click', saveOptions)
+  if (isInitialized) return
 
-    // Hide error overlay when focusing the textarea
-    document.getElementById('config').addEventListener('focus', hideErrors)
+  document.getElementById('opt-reset').addEventListener('click', resetOptions)
+  document.getElementById('opt-save').addEventListener('click', saveOptions)
 
-    // Use event delegation for the error overlay buttons
-    const errorMessageEl = document.getElementById('error-message')
-    if (errorMessageEl) {
-      errorMessageEl.addEventListener('click', (ev) => {
-        if (ev.target.id === 'btn-dismiss') {
-          hideErrors()
-        } else if (ev.target.id === 'btn-clean') {
-          ev.stopPropagation()
-          removeUnknownOptions()
-        }
-      })
-    }
+  // Hide error overlay when focusing the textarea
+  document.getElementById('config').addEventListener('focus', hideErrors)
 
-    isInitialized = true
+  // Use event delegation for the error overlay buttons
+  const errorMessageEl = document.getElementById('error-message')
+  if (errorMessageEl) {
+    errorMessageEl.addEventListener('click', (ev) => {
+      if (ev.target.id === 'btn-dismiss') {
+        hideErrors()
+      } else if (ev.target.id === 'btn-clean') {
+        ev.stopPropagation()
+        removeUnknownOptions()
+      }
+    })
   }
+
+  isInitialized = true
 }
 
 /**

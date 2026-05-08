@@ -194,7 +194,8 @@ test.describe('Performance Benchmarks', () => {
     test.setTimeout(20000)
     await page.setViewportSize({ width: 1280, height: 900 })
     await page.goto('/bookmarkManager.html#bookmarks')
-    await expect(page.locator('#manager-status')).toContainText('Loaded')
+    await expect(page.locator('#bookmark-manager-search')).toBeVisible()
+    await expect(page.locator('#managed-bookmark-list')).toBeVisible()
 
     const initialRenderMs = await page.evaluate(async () => {
       const { createBookmarkManagerModel } = await import('./js/model/bookmarkManagerData.js')
