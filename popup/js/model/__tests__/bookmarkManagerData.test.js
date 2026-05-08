@@ -122,6 +122,35 @@ describe('bookmark manager data', () => {
     expect(dateGroups[0].keepId).toBe('newer')
   })
 
+  test('prefers favorited duplicate bookmarks before other ranking signals', () => {
+    const duplicateGroups = getDuplicateGroups([
+      {
+        originalId: 'favorite',
+        title: 'Project Reference',
+        originalUrl: 'https://favorite.test/page',
+        url: 'favorite.test/page',
+        dateAdded: 1000,
+        customBonusScore: 50,
+        tagsArray: [],
+        folderArray: [],
+      },
+      {
+        originalId: 'tagged-newer',
+        title: 'Project Reference',
+        originalUrl: 'https://favorite.test/page',
+        url: 'favorite.test/page',
+        dateAdded: 3000,
+        customBonusScore: 0,
+        tagsArray: ['one', 'two'],
+        folderArray: ['Folder'],
+      },
+    ])
+
+    expect(duplicateGroups[0].keepId).toBe('favorite')
+    expect(duplicateGroups[0].bookmarks[0].duplicateSuggestion.detail).toContain('+50 favorite score')
+    expect(duplicateGroups[0].bookmarks[1].duplicateSuggestion.detail).toContain('lower favorite score')
+  })
+
   test('calculates overview statistics', () => {
     const model = createBookmarkManagerModel(bookmarks)
 

@@ -327,6 +327,11 @@ function compareKeepCandidates(a, b) {
   const aScore = a.duplicateScore || getDuplicateCandidateScore(a)
   const bScore = b.duplicateScore || getDuplicateCandidateScore(b)
 
+  const favoriteDiff = bScore.customBonusScore - aScore.customBonusScore
+  if (favoriteDiff !== 0) {
+    return favoriteDiff
+  }
+
   const tagDiff = bScore.tagCount - aScore.tagCount
   if (tagDiff !== 0) {
     return tagDiff
@@ -372,6 +377,7 @@ function addDuplicateSuggestions(sortedBookmarks) {
 
 function getDuplicateCandidateScore(bookmark) {
   return {
+    customBonusScore: Number(bookmark.customBonusScore) || 0,
     tagCount: bookmark.tagsArray?.length || 0,
     titleQuality: getTitleQuality(bookmark),
     folderDepth: bookmark.folderArray?.length || 0,
@@ -405,7 +411,7 @@ function normalizeTitle(title) {
 
 function getBestCandidateDetail(bookmark) {
   const score = bookmark.duplicateScore
-  return `Scored by ${formatTagSignal(score.tagCount)}, ${formatTitleSignal(score.titleQuality)}; newest date breaks ties.`
+  return `Scored by ${formatFavoriteSignal(score.customBonusScore)}, ${formatTagSignal(score.tagCount)}, ${formatTitleSignal(score.titleQuality)}; newest date breaks ties.`
 }
 
 function getLowerCandidateDetail(bookmark, bestBookmark) {
@@ -413,6 +419,9 @@ function getLowerCandidateDetail(bookmark, bestBookmark) {
   const bestScore = bestBookmark.duplicateScore
   const reasons = []
 
+  if (score.customBonusScore < bestScore.customBonusScore) {
+    reasons.push('lower favorite score')
+  }
   if (score.tagCount < bestScore.tagCount) {
     reasons.push('fewer tags')
   }
@@ -434,6 +443,10 @@ function getLowerCandidateDetail(bookmark, bestBookmark) {
   }
 
   return `Lower score because of ${reasons.join(', ')}.`
+}
+
+function formatFavoriteSignal(customBonusScore) {
+  return customBonusScore > 0 ? `+${customBonusScore} favorite score` : 'no favorite score'
 }
 
 function formatTagSignal(tagCount) {
