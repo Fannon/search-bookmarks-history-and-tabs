@@ -563,7 +563,7 @@ export function validateBookmarkCleanupProposal(proposal, managerModel) {
   validateTagChanges(errors, changes.removeTags, 'removeTags', bookmarkIds)
   validateRenameTagChanges(errors, changes.renameTags, existingTags, bookmarkIds)
   validateMoveChanges(errors, changes.moveBookmarks, bookmarkIds, folderIds)
-  validateDeleteChanges(errors, changes.deleteBookmarks, bookmarkIds)
+  validateDeleteChanges(errors, changes.deleteBookmarks, bookmarkIds, managerModel)
   validateRewriteTitleChanges(errors, changes.rewriteTitles, bookmarkIds)
 
   return errors
@@ -585,6 +585,33 @@ export function countBookmarkCleanupChanges(proposal) {
     (changes.deleteBookmarks?.length || 0) +
     (changes.rewriteTitles?.length || 0)
   )
+}
+
+/**
+ * Create final confirmation text for applying multiple cleanup changes.
+ *
+ * @param {Array<{type: string, change: Object}>} changes Cleanup changes.
+ * @returns {string} Confirmation text.
+ */
+export function createBookmarkCleanupApplyConfirmation(changes = []) {
+  const counts = countCleanupChangeTypes(changes)
+  const lines = [
+    `Apply ${changes.length} bookmark cleanup change${changes.length === 1 ? '' : 's'}?`,
+    '',
+    `Add tags: ${counts.addTags}`,
+    `Remove tags: ${counts.removeTags}`,
+    `Rename tags: ${counts.renameTags}`,
+    `Move bookmarks: ${counts.moveBookmarks}`,
+    `Rewrite titles: ${counts.rewriteTitles}`,
+    `Delete bookmarks: ${counts.deleteBookmarks}`,
+  ]
+
+  if (counts.moveBookmarks || counts.deleteBookmarks) {
+    lines.push('', 'This includes destructive or structural bookmark changes. Export bookmarks first if unsure.')
+  }
+
+  lines.push('', 'Undo history is memory-only and disappears when this page closes or reloads.')
+  return lines.join('\n')
 }
 
 function formatBookmarkForLitePrompt(bookmark) {
@@ -677,7 +704,7 @@ function validateMoveChanges(errors, changes, bookmarkIds, folderIds) {
   }
 }
 
-function validateDeleteChanges(errors, changes, bookmarkIds) {
+function validateDeleteChanges(errors, changes, bookmarkIds, managerModel) {
   if (typeof changes === 'undefined') {
     return
   }
@@ -697,6 +724,8 @@ function validateDeleteChanges(errors, changes, bookmarkIds) {
     }
     if (String(change?.bookmarkId) === String(change?.duplicateOfBookmarkId)) {
       errors.push(`changes.deleteBookmarks[${i}] cannot delete and keep the same bookmark.`)
+    } else if (!isDuplicateBookmarkPair(change?.bookmarkId, change?.duplicateOfBookmarkId, managerModel)) {
+      errors.push(`changes.deleteBookmarks[${i}] must reference bookmarks from the same duplicate URL group.`)
     }
   }
 }
@@ -783,7 +812,7 @@ function normalizeBookmarkCleanupProposalWithIssues(proposal, managerModel, warn
       removeTags: normalizeTagChangesWithIssues(changes.removeTags, 'removeTags', bookmarkIds, warnings),
       renameTags: normalizeRenameTagChangesWithIssues(changes.renameTags, existingTags, bookmarkIds, warnings),
       moveBookmarks: normalizeMoveChangesWithIssues(changes.moveBookmarks, bookmarkIds, folderIds, warnings),
-      deleteBookmarks: normalizeDeleteChangesWithIssues(changes.deleteBookmarks, bookmarkIds, warnings),
+      deleteBookmarks: normalizeDeleteChangesWithIssues(changes.deleteBookmarks, bookmarkIds, managerModel, warnings),
       rewriteTitles: normalizeRewriteTitleChangesWithIssues(changes.rewriteTitles, bookmarkIds, warnings),
     },
   }
@@ -908,7 +937,7 @@ function normalizeMoveChangesWithIssues(changes, bookmarkIds, folderIds, warning
   return result
 }
 
-function normalizeDeleteChangesWithIssues(changes, bookmarkIds, warnings) {
+function normalizeDeleteChangesWithIssues(changes, bookmarkIds, managerModel, warnings) {
   if (typeof changes === 'undefined') {
     return []
   }
@@ -939,6 +968,10 @@ function normalizeDeleteChangesWithIssues(changes, bookmarkIds, warnings) {
     }
     if (bookmarkId === duplicateOfBookmarkId) {
       warnings.push(`${context} ignored because bookmarkId and duplicateOfBookmarkId are the same.`)
+      continue
+    }
+    if (!isDuplicateBookmarkPair(bookmarkId, duplicateOfBookmarkId, managerModel)) {
+      warnings.push(`${context} ignored because the bookmarks are not in the same duplicate URL group.`)
       continue
     }
 
@@ -1060,6 +1093,57 @@ function normalizePromptTitle(title) {
     .replace(/(^|\s)#[^\s#]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+function isDuplicateBookmarkPair(bookmarkId, duplicateOfBookmarkId, managerModel) {
+  const firstId = String(bookmarkId || '')
+  const secondId = String(duplicateOfBookmarkId || '')
+  if (!firstId || !secondId || firstId === secondId) {
+    return false
+  }
+
+  const duplicateGroups = managerModel?.duplicateGroups || []
+  for (let i = 0; i < duplicateGroups.length; i++) {
+    const groupIds = new Set((duplicateGroups[i].bookmarks || []).map((bookmark) => String(bookmark.originalId)))
+    if (groupIds.has(firstId) && groupIds.has(secondId)) {
+      return true
+    }
+  }
+
+  const urlsByBookmarkId = new Map()
+  const bookmarks = managerModel?.bookmarks || []
+  for (let i = 0; i < bookmarks.length; i++) {
+    urlsByBookmarkId.set(String(bookmarks[i].originalId), normalizeDuplicateUrl(bookmarks[i]))
+  }
+
+  const firstUrl = urlsByBookmarkId.get(firstId)
+  const secondUrl = urlsByBookmarkId.get(secondId)
+  return Boolean(firstUrl && secondUrl && firstUrl === secondUrl)
+}
+
+function normalizeDuplicateUrl(bookmark) {
+  return String(bookmark?.url || bookmark?.originalUrl || '')
+    .trim()
+    .toLowerCase()
+}
+
+function countCleanupChangeTypes(changes) {
+  const counts = {
+    addTags: 0,
+    removeTags: 0,
+    renameTags: 0,
+    moveBookmarks: 0,
+    rewriteTitles: 0,
+    deleteBookmarks: 0,
+  }
+
+  for (let i = 0; i < changes.length; i++) {
+    if (Object.hasOwn(counts, changes[i]?.type)) {
+      counts[changes[i].type] += 1
+    }
+  }
+
+  return counts
 }
 
 function limitPromptText(text) {

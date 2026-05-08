@@ -2,6 +2,7 @@ import { describe, expect, test } from '@jest/globals'
 
 import {
   countBookmarkCleanupChanges,
+  createBookmarkCleanupApplyConfirmation,
   createBookmarkCleanupPrompt,
   localAiBookmarkCleanupProposalSchema,
   parseBookmarkCleanupProposal,
@@ -26,6 +27,23 @@ const managerModel = {
       folderId: 'read',
       folderArray: ['Read Later'],
       tagsArray: ['llm'],
+    },
+    {
+      originalId: '3',
+      title: 'Different Docs',
+      originalUrl: 'https://example.test/docs',
+      folderId: 'read',
+      folderArray: ['Read Later'],
+      tagsArray: [],
+    },
+  ],
+  duplicateGroups: [
+    {
+      url: 'https://platform.openai.com/docs',
+      bookmarks: [
+        { originalId: '1', originalUrl: 'https://platform.openai.com/docs' },
+        { originalId: '2', originalUrl: 'https://platform.openai.com/docs' },
+      ],
     },
   ],
   folderOptions: [
@@ -124,6 +142,21 @@ describe('bookmark cleanup proposal', () => {
     expect(schema).not.toContain('"allOf"')
   })
 
+  test('creates a bulk cleanup confirmation summary with destructive warnings', () => {
+    const message = createBookmarkCleanupApplyConfirmation([
+      { type: 'addTags', change: { id: 'add-1' } },
+      { type: 'moveBookmarks', change: { id: 'move-1' } },
+      { type: 'deleteBookmarks', change: { id: 'delete-1' } },
+    ])
+
+    expect(message).toContain('Apply 3 bookmark cleanup changes?')
+    expect(message).toContain('Add tags: 1')
+    expect(message).toContain('Move bookmarks: 1')
+    expect(message).toContain('Delete bookmarks: 1')
+    expect(message).toContain('destructive or structural bookmark changes')
+    expect(message).toContain('Undo history is memory-only')
+  })
+
   test('parses and normalizes a valid proposal', () => {
     const proposal = parseBookmarkCleanupProposal(
       JSON.stringify({
@@ -187,6 +220,20 @@ describe('bookmark cleanup proposal', () => {
     ])
   })
 
+  test('rejects delete proposals for bookmarks that are not duplicates', () => {
+    const errors = validateBookmarkCleanupProposal(
+      {
+        bookmarkChangeProposal: '1.0',
+        changes: {
+          deleteBookmarks: [{ id: 'delete-1', bookmarkId: '3', duplicateOfBookmarkId: '1', reason: 'Wrong pair.' }],
+        },
+      },
+      managerModel,
+    )
+
+    expect(errors).toEqual(['changes.deleteBookmarks[0] must reference bookmarks from the same duplicate URL group.'])
+  })
+
   test('liberal parsing drops invalid entries with warnings', () => {
     const result = parseBookmarkCleanupProposalWithIssues(
       JSON.stringify({
@@ -199,7 +246,10 @@ describe('bookmark cleanup proposal', () => {
           removeTags: [],
           renameTags: [{ id: 'rename-1', from: 'missing-tag', to: 'ai', reason: 'Missing tag.' }],
           moveBookmarks: [{ id: 'move-1', bookmarkId: '1', targetFolderId: 'missing', reason: 'Missing folder.' }],
-          deleteBookmarks: [{ id: 'delete-1', bookmarkId: '2', duplicateOfBookmarkId: '2', reason: 'Same id.' }],
+          deleteBookmarks: [
+            { id: 'delete-1', bookmarkId: '2', duplicateOfBookmarkId: '2', reason: 'Same id.' },
+            { id: 'delete-2', bookmarkId: '3', duplicateOfBookmarkId: '1', reason: 'Different URLs.' },
+          ],
           rewriteTitles: [
             { id: 'rewrite-1', bookmarkId: '1', title: 'OpenAI Docs', reason: 'Short title.' },
             { id: 'rewrite-2', bookmarkId: 'missing', title: 'Missing', reason: 'Missing bookmark.' },
@@ -221,6 +271,7 @@ describe('bookmark cleanup proposal', () => {
       'changes.renameTags[0] ignored because source tag "missing-tag" does not exist.',
       'changes.moveBookmarks[0] ignored because targetFolderId "missing" does not exist.',
       'changes.deleteBookmarks[0] ignored because bookmarkId and duplicateOfBookmarkId are the same.',
+      'changes.deleteBookmarks[1] ignored because the bookmarks are not in the same duplicate URL group.',
       'changes.rewriteTitles[1] ignored because bookmarkId "missing" does not exist.',
     ])
   })

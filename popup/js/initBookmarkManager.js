@@ -8,6 +8,7 @@ import { getLocalAiTagAvailability, suggestBookmarkTags } from './helper/localAi
 import { cleanUpUrl } from './helper/utils.js'
 import {
   countBookmarkCleanupChanges,
+  createBookmarkCleanupApplyConfirmation,
   createBookmarkCleanupPrompt,
   localAiBookmarkCleanupProposalSchema,
   parseBookmarkCleanupProposalWithIssues,
@@ -1023,6 +1024,9 @@ async function applyCleanupCategory(type) {
   if (!changes.length) {
     return
   }
+  if (!confirmCleanupChanges(changes)) {
+    return
+  }
 
   try {
     const applied = await applyCleanupChanges(changes, `AI cleanup: ${describeCleanupChanges(changes)}`)
@@ -1045,6 +1049,9 @@ async function applyAllCleanupChanges() {
   const proposal = ext.model.bookmarkCleanupProposal
   const changes = getPendingCleanupChanges(proposal)
   if (!changes.length) {
+    return
+  }
+  if (!confirmCleanupChanges(changes)) {
     return
   }
 
@@ -1169,6 +1176,10 @@ function getPendingCleanupChanges(proposal) {
   }
 
   return result
+}
+
+function confirmCleanupChanges(changes) {
+  return window.confirm(createBookmarkCleanupApplyConfirmation(changes))
 }
 
 function getCleanupAffectedBookmarks(changes) {
