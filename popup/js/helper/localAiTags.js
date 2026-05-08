@@ -25,8 +25,27 @@ const TAG_RESPONSE_SCHEMA = {
   required: ['tags'],
 }
 
-const MAX_BOOKMARKS_IN_PROMPT = 16
+export const LOCAL_AI_TAG_SELECTION_WARNING_LIMIT = 20
+
+const MAX_BOOKMARKS_IN_PROMPT = LOCAL_AI_TAG_SELECTION_WARNING_LIMIT
 const MAX_SUGGESTED_TAGS = 5
+
+/**
+ * Create the confirmation text shown before large multi-bookmark tag suggestions.
+ *
+ * @param {number} bookmarkCount Target bookmark count.
+ * @returns {string} Confirmation text.
+ */
+export function createLargeLocalAiTagSelectionWarning(bookmarkCount) {
+  return [
+    `Suggest tags for ${bookmarkCount} selected bookmarks?`,
+    '',
+    `Local AI tag suggestions work best with ${LOCAL_AI_TAG_SELECTION_WARNING_LIMIT} or fewer bookmarks.`,
+    `Only the first ${MAX_BOOKMARKS_IN_PROMPT} bookmarks are included in the prompt, then strict suggestions are checked against the whole selection.`,
+    '',
+    'Cancel and narrow the selection for better suggestions.',
+  ].join('\n')
+}
 
 /**
  * Check the browser-managed local LLM availability.

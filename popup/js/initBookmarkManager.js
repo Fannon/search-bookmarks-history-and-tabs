@@ -4,7 +4,12 @@
 
 import { createSearchStringLower } from './helper/browserApi.js'
 import { createExtensionContext } from './helper/extensionContext.js'
-import { getLocalAiTagAvailability, suggestBookmarkTags } from './helper/localAiTags.js'
+import {
+  createLargeLocalAiTagSelectionWarning,
+  getLocalAiTagAvailability,
+  LOCAL_AI_TAG_SELECTION_WARNING_LIMIT,
+  suggestBookmarkTags,
+} from './helper/localAiTags.js'
 import { cleanUpUrl } from './helper/utils.js'
 import {
   countBookmarkCleanupChanges,
@@ -430,6 +435,10 @@ async function suggestTagsForBookmarks(bookmarks, target) {
   if (!bookmarks.length) {
     return
   }
+  if (bookmarks.length > LOCAL_AI_TAG_SELECTION_WARNING_LIMIT && !confirmLargeLocalAiTagSelection(bookmarks.length)) {
+    showTagSuggestionStatus('Tag suggestion cancelled. Narrow the selection for better suggestions.', 'error')
+    return
+  }
 
   const suggestionKey = createTagSuggestionKey(bookmarks)
   const liberal = getTagSuggestionRetryCount(suggestionKey) > 0
@@ -488,6 +497,10 @@ async function suggestTagsForBookmarks(bookmarks, target) {
   } finally {
     showTagSuggestionBusy(false)
   }
+}
+
+function confirmLargeLocalAiTagSelection(bookmarkCount) {
+  return window.confirm(createLargeLocalAiTagSelectionWarning(bookmarkCount))
 }
 
 function createTagSuggestionKey(bookmarks) {

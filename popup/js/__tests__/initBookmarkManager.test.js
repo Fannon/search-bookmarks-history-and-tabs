@@ -205,6 +205,7 @@ describe('initBookmarkManager cleanup apply', () => {
   })
 
   afterEach(() => {
+    delete globalThis.LanguageModel
     clearBookmarkUndoSnapshots()
     clearTestExt()
   })
@@ -242,5 +243,33 @@ describe('initBookmarkManager cleanup apply', () => {
       'Could not apply cleanup change "add-fails".',
       expect.objectContaining({ message: 'simulated update failure' }),
     )
+  })
+
+  test('allows aborting local AI tag suggestions for large selections before prompting the model', async () => {
+    window.confirm = jest.fn(() => false)
+    globalThis.LanguageModel = {
+      availability: jest.fn(() => Promise.resolve('available')),
+      create: jest.fn(),
+    }
+    const largeSelection = Array.from({ length: 21 }, (_, index) => {
+      const bookmarkId = `large-${index + 1}`
+      return {
+        ...BOOKMARKS[0],
+        originalId: bookmarkId,
+        id: bookmarkId,
+        title: `Large Bookmark ${index + 1}`,
+      }
+    })
+    ext.model.bookmarkManager.bookmarks = largeSelection
+    ext.model.bookmarkManagerSelectedIds = new Set(largeSelection.map((bookmark) => bookmark.originalId))
+
+    document.getElementById('suggest-tags-selected').disabled = false
+    document.getElementById('suggest-tags-selected').click()
+    await flushPromises()
+
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('Suggest tags for 21 selected bookmarks?'))
+    expect(globalThis.LanguageModel.availability).not.toHaveBeenCalled()
+    expect(globalThis.LanguageModel.create).not.toHaveBeenCalled()
+    expect(document.getElementById('tag-suggestion-status').textContent).toContain('Tag suggestion cancelled')
   })
 })

@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, jest, test } from '@jest/globals'
-import { getLocalAiTagAvailability, suggestBookmarkTags } from '../localAiTags.js'
+import {
+  createLargeLocalAiTagSelectionWarning,
+  getLocalAiTagAvailability,
+  suggestBookmarkTags,
+} from '../localAiTags.js'
 
 describe('local AI tag suggestions', () => {
   afterEach(() => {
@@ -141,6 +145,15 @@ describe('local AI tag suggestions', () => {
     expect(promptText).toContain('Only suggest a tag when it clearly applies to EVERY provided bookmark')
     expect(promptText).toContain('A shared folder alone is not enough evidence for a multi-select tag')
     expect(promptText).toContain('do not suggest tags that fit only some bookmarks')
+  })
+
+  test('warns before suggesting tags for large multi-bookmark selections', () => {
+    const warning = createLargeLocalAiTagSelectionWarning(21)
+
+    expect(warning).toContain('Suggest tags for 21 selected bookmarks?')
+    expect(warning).toContain('20 or fewer bookmarks')
+    expect(warning).toContain('Only the first 20 bookmarks are included in the prompt')
+    expect(warning).toContain('Cancel and narrow the selection')
   })
 
   test('uses a broader prompt on second try and keeps inferred common-denominator tags', async () => {
