@@ -3,7 +3,7 @@ import { createWriteStream } from 'node:fs'
 import { join } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import archiver from 'archiver'
+import { ZipArchive } from 'archiver'
 /**
  * @file Builds the Chrome-ready distribution directory and archive.
  *
@@ -66,7 +66,7 @@ export async function createDist(clean = true) {
   console.info(`Created dist/chrome/`)
 
   // Create zip archive
-  const archive = archiver('zip', { zlib: { level: 9 } })
+  const archive = new ZipArchive({ zlib: { level: 9 } })
   const output = createWriteStream('dist/chrome.zip')
 
   return new Promise((resolve, reject) => {
