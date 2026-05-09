@@ -289,31 +289,55 @@ export function createBookmarkCleanupPrompt(managerModel, mode = PROMPT_FULL, op
   })
 
   return `
-Act as a meticulous data librarian specializing in taxonomy and repository management.
-You are helping clean up a browser bookmark collection.
+## Role
+${getPromptPersona(isLite)}
 
-Use world knowledge plus the titles, URLs, and current tags below to propose useful bookmark management changes.
-Prefer conservative, reviewable changes over large speculative rewrites.
-Only propose a change when confidence is high. Prefer an empty array over a weak or speculative suggestion.
+## Task
+Propose conservative bookmark metadata changes using the bookmark data provided at the end of this prompt.
+
+## Evidence Policy
+- Primary evidence: each bookmark's title, URL, folder path, and current tags.
+- Secondary evidence: the list of existing tags with usage counts shows the user's naming conventions.
+- World knowledge: use common web and domain knowledge only to confirm patterns already visible in the bookmark data. Do not infer niche details, repository contents, package purposes, or product categories not evident from the title, URL, folder, or tags.
+
+## Decision Policy
 ${formatPromptChangeLimit(changeLimit)}
+- Propose a change only when confidence is high.
+- High confidence: propose the change with a short reason.
+- Medium or low confidence: omit the change entirely.
+- Prefer no change over a weak or speculative change.
+- Do not optimize for the number of changes. Return the smallest set of changes that a careful human reviewer would almost certainly approve.
 ${formatPromptFocusInstruction(isLite, changeFocus, allowedChangeTypes)}
 Bookmark context: included ${payload.includedBookmarkCount} of ${payload.totalBookmarkCount} bookmark${payload.totalBookmarkCount === 1 ? '' : 's'}.${payload.omittedBookmarkCount ? ` Omitted ${payload.omittedBookmarkCount} due to the selected bookmark/context limit.` : ''}${payload.truncatedByCharacterBudget ? ` Stopped at the ${PROMPT_BOOKMARK_TEXT_BUDGET} character bookmark-context budget.` : ''}
 
-Goals:
-${formatPromptGoals(isLite, allowedChangeTypes)}
-
-Rules:
+## Rules by Change Type
 - Use only bookmark IDs from the provided data.
 - If unsure about a required field, omit that change instead of using placeholders.
 - Include reason only when it adds useful review context.
 - Keep summary to one short sentence.
+${formatPromptGoals(isLite, allowedChangeTypes)}
 ${formatPromptRules(isLite, allowedChangeTypes)}
-- Output raw JSON only. Do not include introductory text, conversational filler, comments, or markdown formatting. Do not wrap the output in code fences such as \`\`\`json. The first character of your response must be "{" and the last must be "}".
+
+## Output Requirements
+- Output raw JSON only. Do not include introductory text, conversational filler, comments, or markdown formatting. Do not wrap the output in code fences such as \`\`\`json.
+- The first character of your response must be "{" and the last character must be "}".
 - Output base shape: {"bookmarkChangeProposal":"1.0","summary":"","changes":{}}
+- Omit every change type key that has no proposals. Do not output empty arrays.
 ${createPromptExample(allowedChangeTypes)}
+
+## Internal Self-Check
+Before finalizing, verify:
+1. Valid JSON: no trailing commas, all property names double-quoted, braces balanced.
+2. Every change type that has proposals is included; every empty array is omitted.
+3. Every change object has all required fields (id, bookmarkId, and tags/title/from/to/targetFolderId/duplicateOfBookmarkId as applicable).
+4. Every bookmarkId exists in the provided bookmark data.
+5. Every targetFolderId exists in the existing folder list.
+6. The first character is "{" and the last character is "}".
 ${isLite ? '' : `- The JSON must validate against this schema:\n${JSON.stringify(bookmarkCleanupProposalSchema)}`}
 
-Existing tags:
+## Input Data
+
+Existing tags (with usage counts):
 ${payload.existingTags}
 
 ${needsFolders ? `Existing folders:\n${payload.existingFolders}\n` : ''}
@@ -378,13 +402,19 @@ function createBookmarkPromptRows(bookmarks, includeFolders, bookmarkLimit) {
   }
 }
 
+function getPromptPersona(isLite) {
+  return isLite
+    ? 'Act as a careful browser bookmark curator focused on practical tag cleanup and concise, descriptive titles.'
+    : 'Act as a careful browser bookmark curator focused on practical tag cleanup, duplicate detection, concise titles, and conservative folder organization.'
+}
+
 function normalizePromptChangeLimit(changeLimit) {
   if (changeLimit === 'unlimited') {
     return 0
   }
 
-  const limit = Number.parseInt(changeLimit || 50, 10)
-  return Number.isFinite(limit) && limit > 0 ? limit : 50
+  const limit = Number.parseInt(changeLimit || 100, 10)
+  return Number.isFinite(limit) && limit > 0 ? limit : 100
 }
 
 function formatPromptChangeLimit(changeLimit) {
@@ -433,24 +463,33 @@ function formatPromptGoals(isLite, allowedChangeTypes) {
   const goals = []
 
   if (allowedChangeTypes.includes('addTags')) {
-    goals.push('- Add useful, specific tags where existing bookmark data strongly supports them.')
+    goals.push(
+      '- addTags: Add useful, concise, lowercase tags when strongly supported by title and URL structure. Prefer tags that already exist in the collection. Introduce a new tag only when no existing tag fits and the new tag is broadly reusable. For bookmarks with no tags, add only 1–2 fundamental tags (e.g. "github", "docs", "reference") when the title/URL clearly indicate the topic. Do not add a tag simply because a word appears in the title.',
+    )
   }
   if (allowedChangeTypes.includes('removeTags')) {
-    goals.push('- Remove tags only when they appear misleading, incorrect, or a poor fit for the bookmark.')
+    goals.push(
+      '- removeTags: Remove a tag only when it is misleading, incorrect, or a clearly poor fit for the bookmark. Do not remove tags merely because they are generic or redundant; tags may intentionally improve search scoring as keywords.',
+    )
   }
   if (allowedChangeTypes.includes('renameTags')) {
-    goals.push('- Rename or merge near-duplicate tags across all matching bookmarks.')
+    goals.push(
+      '- renameTags: Use one renameTags entry per source tag being renamed or merged. Example: to merge "genai" and "llm" into "ai", create two separate entries — one from "genai" to "ai", one from "llm" to "ai". Only rename when the replacement is clearly better aligned with the collection\'s naming convention. Mutually exclusive: if you use renameTags, do not also add/remove the same tag in addTags/removeTags.',
+    )
   }
   if (allowedChangeTypes.includes('moveBookmarks')) {
-    goals.push('- Move bookmarks to a better existing folder when the target is clearly more appropriate.')
+    goals.push(
+      '- moveBookmarks: Move a bookmark only when the target folder is clearly more specific or clearly more accurate than the current folder. Do not propose a move when the current folder is already reasonable. Use only folder IDs from the provided existing folder list. Do not invent folders.',
+    )
   }
   if (allowedChangeTypes.includes('deleteBookmarks')) {
-    goals.push('- Delete only exact or near-exact duplicate bookmarks, keeping the better copy.')
+    goals.push(
+      '- deleteBookmarks: Delete only exact or near-exact duplicate bookmarks. Both must share the same canonical URL or differ only by tracking parameters, URL fragments, or minor URL variants. Every entry must include duplicateOfBookmarkId identifying the bookmark to keep. Never delete related pages, alternate documentation versions, mirrors, forks, language variants, or product pages that serve different purposes.',
+    )
   }
   if (allowedChangeTypes.includes('rewriteTitles')) {
     goals.push(
-      '- Rewrite titles only when the current title is too long, URL-like, boilerplate-heavy, or weak for search. Keep the new title factual, short, and recognizable.',
-      '- Preserve distinctive project, repository, package, product, and documentation identifiers in rewritten titles, for example "owner/repo" or "vendor/product".',
+      '- rewriteTitles: Rewrite only when the current title harms search or review quality. Do not rewrite for style alone. Strip boilerplate prefixes (e.g. "GitHub - owner/repo: description" → "owner/repo — description", "npm: package-name" → "package-name — npm package", "Home | Vendor Product" → "Vendor Product"). Preserve distinctive project, repository, package, and product identifiers. Do not add inferred categories, folder names, scores, domains, or subjective adjectives to rewritten titles.',
     )
   }
   if (isLite && hasAnyAllowedType(allowedChangeTypes, ['addTags', 'removeTags', 'renameTags', 'rewriteTitles'])) {
@@ -471,40 +510,8 @@ function formatPromptGoals(isLite, allowedChangeTypes) {
 function formatPromptRules(isLite, allowedChangeTypes) {
   const rules = []
 
-  if (hasAnyAllowedType(allowedChangeTypes, ['addTags', 'removeTags', 'renameTags'])) {
-    rules.push('- Prefer existing tag conventions, but add concise lowercase tags when they improve organization.')
-  }
-  if (allowedChangeTypes.includes('addTags')) {
-    rules.push(
-      '- For bookmarks with no existing tags, weigh the URL structure and title heavily and assign only 1-2 fundamental tags, for example "github", "music", or "hardware".',
-    )
-  }
-  if (allowedChangeTypes.includes('removeTags')) {
-    rules.push(
-      '- Do not remove a tag just because it is redundant or generic; tags can intentionally improve search scoring as keywords.',
-    )
-  }
-  if (allowedChangeTypes.includes('renameTags')) {
-    rules.push(
-      '- Use renameTags for tag merges, for example "ai", "llm", and "genai" into one chosen tag.',
-      '- Mutually exclusive tag actions: if you use renameTags to change a tag, do not include that same tag change in addTags or removeTags.',
-    )
-  }
-  if (allowedChangeTypes.includes('moveBookmarks')) {
-    rules.push(
-      '- Use only folder IDs from the provided data.',
-      '- Do not invent folders. Use targetFolderId from existingFolders for moves.',
-      '- Do not propose a move when the current folder already seems reasonable; only move when the target folder is clearly more specific or more accurate.',
-    )
-  }
   if (allowedChangeTypes.includes('deleteBookmarks')) {
     rules.push('- Do not delete a bookmark unless duplicateOfBookmarkId identifies the bookmark to keep.')
-  }
-  if (allowedChangeTypes.includes('rewriteTitles')) {
-    rules.push(
-      '- Do not rewrite titles for style alone. Do not add tags, scores, folder names, domains, or invented details to rewritten titles.',
-      '- When rewriting titles, strip boilerplate such as "GitHub - ", "npm - ", or "Home | ". Keep the core product or repository name and a very brief description.',
-    )
   }
   if (isLite && !allowedChangeTypes.includes('moveBookmarks')) {
     rules.push('- Keep moveBookmarks empty.')

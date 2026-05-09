@@ -962,6 +962,10 @@ function renderCleanupChange(type, change, index, managerModel, appliedChangeIds
   const keepBookmark = findBookmarkById(managerModel?.bookmarks || [], change.duplicateOfBookmarkId)
   const disabled = applied ? ' disabled' : ''
   const appliedClass = applied ? ' applied' : ''
+  const bookmarkCard =
+    type === 'renameTags'
+      ? renderCleanupRenameTagScopeCard(change, managerModel)
+      : renderCleanupBookmarkCard(bookmark, change.bookmarkId, managerModel)
 
   if (type === 'deleteBookmarks') {
     return renderCleanupDuplicateChange(change, index, bookmark, keepBookmark, managerModel, applied)
@@ -970,7 +974,7 @@ function renderCleanupChange(type, change, index, managerModel, appliedChangeIds
   return `
     <li class="cleanup-change${appliedClass}">
       <div class="cleanup-bookmark-card">
-        ${renderCleanupBookmarkCard(bookmark, change.bookmarkId, managerModel)}
+        ${bookmarkCard}
       </div>
       <div class="cleanup-proposal-card">
         <div class="cleanup-change-title">${renderCleanupChangeTitle(type, change, bookmark, managerModel)}</div>
@@ -980,6 +984,43 @@ function renderCleanupChange(type, change, index, managerModel, appliedChangeIds
         data-cleanup-change-index="${index}"${disabled}>${applied ? 'Applied' : 'Accept'}</button>
     </li>
   `
+}
+
+function renderCleanupRenameTagScopeCard(change, managerModel) {
+  const bookmarks = getCleanupRenameTagBookmarks(change, managerModel)
+  const tagLabel = renderCleanupTagLink(change.from)
+
+  if (!bookmarks.length) {
+    return `
+      <div class="bookmark-title">No bookmarks with ${tagLabel}</div>
+      <p class="empty-state">Source tag not found.</p>
+    `
+  }
+
+  const bookmarkText = bookmarks.length === 1 ? 'bookmark' : 'bookmarks'
+  const preview = bookmarks
+    .slice(0, 3)
+    .map((bookmark) => renderCleanupBookmarkLabel(bookmark, bookmark.originalId))
+    .join(', ')
+  const remaining = bookmarks.length > 3 ? `, +${formatInteger(bookmarks.length - 3)} more` : ''
+
+  return `
+    <div class="bookmark-title">${formatInteger(bookmarks.length)} ${bookmarkText} with ${tagLabel}</div>
+    <div class="bookmark-meta">${preview}${remaining}</div>
+  `
+}
+
+function getCleanupRenameTagBookmarks(change, managerModel) {
+  const bookmarks = managerModel?.bookmarks || []
+  const targetIds = new Set((change.bookmarkIds || []).map(String))
+  const from = String(change.from || '').toLowerCase()
+
+  return bookmarks.filter((bookmark) => {
+    if (targetIds.size && !targetIds.has(String(bookmark.originalId))) {
+      return false
+    }
+    return (bookmark.tagsArray || []).some((tag) => String(tag).toLowerCase() === from)
+  })
 }
 
 function renderCleanupReason(reason) {

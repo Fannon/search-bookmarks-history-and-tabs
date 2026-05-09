@@ -383,6 +383,36 @@ describe('bookmarkManagerView selection', () => {
     expect(document.getElementById('cleanup-proposal-list').textContent).not.toContain('~1199')
   })
 
+  test('renders rename cleanup proposals as tag scope changes', () => {
+    renderBookmarkCleanupProposal(
+      {
+        changes: {
+          addTags: [],
+          removeTags: [],
+          renameTags: [
+            {
+              id: 'rename-1',
+              from: 'one',
+              to: 'first',
+              reason: 'Use a clearer tag.',
+            },
+          ],
+          moveBookmarks: [],
+          deleteBookmarks: [],
+          rewriteTitles: [],
+        },
+      },
+      ext.model.bookmarkManager,
+    )
+
+    const text = document.getElementById('cleanup-proposal-list').textContent
+    expect(text).toContain('1 bookmark with #one')
+    expect(text).toContain('First Bookmark')
+    expect(text).toContain('Rename #one to #first')
+    expect(text).not.toContain('Bookmark undefined')
+    expect(text).not.toContain('Bookmark not found')
+  })
+
   test('places apply all with the proposed changes review controls', () => {
     const applyAll = document.getElementById('apply-all-cleanup-changes')
 
