@@ -135,8 +135,10 @@ function getIndent(depth) {
   return '    '.repeat(depth)
 }
 
+const ESCAPE_HTML_RE = /[&<>"']/g
+
 function escapeBookmarkHtml(value) {
-  return String(value || '').replace(/[&<>"']/g, (character) => {
+  return String(value || '').replace(ESCAPE_HTML_RE, (character) => {
     if (character === '&') {
       return '&amp;'
     }

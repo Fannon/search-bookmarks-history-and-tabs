@@ -49,11 +49,13 @@ function initOptionControls() {
   // Ensure event listeners are only attached once to prevent duplicates
   if (isInitialized) return
 
-  document.getElementById('opt-reset').addEventListener('click', resetOptions)
-  document.getElementById('opt-save').addEventListener('click', saveOptions)
+  const resetBtn = document.getElementById('opt-reset')
+  const saveBtn = document.getElementById('opt-save')
+  const configEl = document.getElementById('config')
 
-  // Hide error overlay when focusing the textarea
-  document.getElementById('config').addEventListener('focus', hideErrors)
+  if (resetBtn) resetBtn.addEventListener('click', resetOptions)
+  if (saveBtn) saveBtn.addEventListener('click', saveOptions)
+  if (configEl) configEl.addEventListener('focus', hideErrors)
 
   // Use event delegation for the error overlay buttons
   const errorMessageEl = document.getElementById('error-message')

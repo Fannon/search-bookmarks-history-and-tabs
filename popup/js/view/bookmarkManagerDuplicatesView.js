@@ -46,7 +46,7 @@ function renderDuplicateGroup(group, canModifyBookmarks) {
           <h3>${escapeHtml(group.displayUrl)}</h3>
           <p>${formatInteger(group.count)} bookmarks with the same normalized URL</p>
         </div>
-        <button class="text-button" type="button" data-select-group>Select lower-ranked copies</button>
+        <button class="text-button" type="button" data-select-group${canModifyBookmarks ? '' : ' disabled'}>Select lower-ranked copies</button>
       </header>
       <ul class="duplicate-bookmarks">
         ${group.bookmarks.map((bookmark) => renderDuplicateBookmark(group, bookmark, canModifyBookmarks)).join('')}

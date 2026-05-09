@@ -1434,15 +1434,12 @@ async function createUndoSnapshot(description, bookmarks, metadata = {}) {
 }
 
 async function getUndoSnapshotBookmarks(bookmarks) {
-  const snapshotBookmarks = []
-
-  for (let i = 0; i < bookmarks.length; i++) {
-    const bookmark = bookmarks[i]
-    const browserBookmark = await getBrowserBookmarkNode(bookmark.originalId)
-    snapshotBookmarks.push(browserBookmark || createFallbackBookmarkNode(bookmark))
-  }
-
-  return snapshotBookmarks
+  return Promise.all(
+    bookmarks.map(async (bookmark) => {
+      const browserBookmark = await getBrowserBookmarkNode(bookmark.originalId)
+      return browserBookmark || createFallbackBookmarkNode(bookmark)
+    }),
+  )
 }
 
 async function getBrowserBookmarkNode(bookmarkId) {

@@ -79,21 +79,23 @@ export async function getLocalAiTagAvailability() {
 export async function suggestBookmarkTags(bookmarks, existingTags = [], onDownloadProgress, options = {}) {
   const languageModel = globalThis.LanguageModel
   if (!languageModel?.create) {
-    throw new Error('Local AI is not available in this browser.')
+    console.warn('Local AI is not available in this browser.')
+    return []
   }
 
   let session
   try {
-    session = await languageModel.create({
-      ...LANGUAGE_MODEL_OPTIONS,
-      monitor(monitorTarget) {
-        monitorTarget.addEventListener('downloadprogress', (event) => {
-          if (onDownloadProgress) {
-            onDownloadProgress(event.loaded || 0)
-          }
-        })
-      },
-    })
+    session = await languageModel.create(
+      Object.assign({}, LANGUAGE_MODEL_OPTIONS, {
+        monitor(monitorTarget) {
+          monitorTarget.addEventListener('downloadprogress', (event) => {
+            if (onDownloadProgress) {
+              onDownloadProgress(event.loaded || 0)
+            }
+          })
+        },
+      }),
+    )
 
     const response = await session.prompt(createTagPrompt(bookmarks, existingTags, options), {
       responseConstraint: TAG_RESPONSE_SCHEMA,
@@ -101,6 +103,9 @@ export async function suggestBookmarkTags(bookmarks, existingTags = [], onDownlo
 
     const tags = parseTagResponse(response)
     return shouldFilterTagsForEveryBookmark(bookmarks, options) ? filterTagsForEveryBookmark(tags, bookmarks) : tags
+  } catch (error) {
+    console.warn('Local AI tag suggestion failed:', error)
+    return []
   } finally {
     if (typeof session?.destroy === 'function') {
       session.destroy()

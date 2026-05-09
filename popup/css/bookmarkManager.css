@@ -1519,7 +1519,7 @@ h3 {
   font-size: 14px;
   padding: 12px;
   overflow-y: auto;
-  word-break: break-word;
+  overflow-wrap: anywhere;
   line-height: 1.4;
   z-index: 1000;
   border-left: 4px solid #cc5858;

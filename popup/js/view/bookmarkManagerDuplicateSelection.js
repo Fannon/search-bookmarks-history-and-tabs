@@ -48,7 +48,10 @@ export function updateDuplicateSelectionAction(deleteButton, root = document) {
   const selectedCount = getSelectedDuplicateBookmarkIds(root).length
 
   deleteButton.disabled = selectedCount === 0
-  deleteButton.querySelector('[data-selected-count]').textContent = String(selectedCount)
+  const countEl = deleteButton.querySelector('[data-selected-count]')
+  if (countEl) {
+    countEl.textContent = String(selectedCount)
+  }
 }
 
 /**

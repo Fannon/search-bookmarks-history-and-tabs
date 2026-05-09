@@ -37,8 +37,11 @@ export function createBulkTagDescription(tagPlans) {
 export function createBulkTagMetadata(tagPlans) {
   const { addedTags, removedTags } = getBulkTagDiff(tagPlans)
 
+  const hasAdded = addedTags.length > 0
+  const hasRemoved = removedTags.length > 0
+
   return {
-    action: addedTags.length && removedTags.length ? 'updateTags' : addedTags.length ? 'addTags' : 'removeTags',
+    action: hasAdded && hasRemoved ? 'updateTags' : hasAdded ? 'addTags' : hasRemoved ? 'removeTags' : null,
     tagsAdded: addedTags,
     tagsRemoved: removedTags,
   }

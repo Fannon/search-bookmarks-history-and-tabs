@@ -137,7 +137,9 @@ export async function editBookmark(bookmarkId) {
 
     saveButton.dataset.bookmarkId = bookmarkId
     deleteButton.dataset.bookmarkId = bookmarkId
-    managerLink.href = `./bookmarkManager.html?bookmark=${encodeURIComponent(bookmarkId)}#bookmarks`
+    if (managerLink) {
+      managerLink.href = `./bookmarkManager.html?bookmark=${encodeURIComponent(bookmarkId)}#bookmarks`
+    }
     ext.currentBookmarkId = bookmarkId
   } else {
     console.warn(`Tried to edit bookmark id="${bookmarkId}", but could not find it in searchData.`)

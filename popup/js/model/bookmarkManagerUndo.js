@@ -162,7 +162,7 @@ export function parseUndoHistoryImport(payload) {
  * @returns {string} Filename.
  */
 export function createUndoHistoryExportFilename(now = new Date()) {
-  const date = now.toISOString().slice(0, 10)
+  const date = now.toLocaleDateString('en-CA')
   const time = now.toTimeString().slice(0, 8).replaceAll(':', '-')
   return `bookmark-manager-undo-history-${date}-${time}.json`
 }

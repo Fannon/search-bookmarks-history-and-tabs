@@ -91,7 +91,6 @@ export function createFolderBookmarkHref(item) {
 export function renderRecentBookmarks(bookmarks, requestedPage = 1) {
   const recentBookmarks = bookmarks
     .filter((bookmark) => Number.isFinite(bookmark.dateAdded))
-    .slice()
     .sort((a, b) => b.dateAdded - a.dateAdded)
 
   if (!recentBookmarks.length) {

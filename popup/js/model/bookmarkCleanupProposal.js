@@ -676,14 +676,7 @@ export function parseBookmarkCleanupProposalWithIssues(jsonText, managerModel) {
  */
 export function validateBookmarkCleanupProposal(proposal, managerModel) {
   const errors = []
-  const bookmarkIds = new Set((managerModel?.bookmarks || []).map((bookmark) => String(bookmark.originalId)))
-  const folderIds = new Set((managerModel?.folderOptions || []).map((folder) => String(folder.id)))
-  const existingTags = new Set()
   const changes = proposal?.changes
-
-  for (const group of managerModel?.tagGroups || []) {
-    existingTags.add(group.name.toLowerCase())
-  }
 
   if (!proposal || typeof proposal !== 'object' || Array.isArray(proposal)) {
     return ['Cleanup proposal must be a JSON object.']
@@ -694,6 +687,14 @@ export function validateBookmarkCleanupProposal(proposal, managerModel) {
   if (!changes || typeof changes !== 'object' || Array.isArray(changes)) {
     errors.push('Cleanup proposal must include a changes object.')
     return errors
+  }
+
+  const bookmarkIds = new Set((managerModel?.bookmarks || []).map((bookmark) => String(bookmark.originalId)))
+  const folderIds = new Set((managerModel?.folderOptions || []).map((folder) => String(folder.id)))
+  const existingTags = new Set()
+
+  for (const group of managerModel?.tagGroups || []) {
+    existingTags.add(group.name.toLowerCase())
   }
 
   validateTagChanges(errors, changes.addTags, 'addTags', bookmarkIds)
@@ -855,9 +856,11 @@ function validateDeleteChanges(errors, changes, bookmarkIds, managerModel) {
     validateChangeBase(errors, change, 'deleteBookmarks', i)
     if (!bookmarkIds.has(String(change?.bookmarkId))) {
       errors.push(`changes.deleteBookmarks[${i}].bookmarkId does not match an existing bookmark.`)
+      continue
     }
     if (!bookmarkIds.has(String(change?.duplicateOfBookmarkId))) {
       errors.push(`changes.deleteBookmarks[${i}].duplicateOfBookmarkId does not match an existing bookmark.`)
+      continue
     }
     if (String(change?.bookmarkId) === String(change?.duplicateOfBookmarkId)) {
       errors.push(`changes.deleteBookmarks[${i}] cannot delete and keep the same bookmark.`)
