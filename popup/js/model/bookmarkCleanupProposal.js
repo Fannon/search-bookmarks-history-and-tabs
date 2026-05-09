@@ -7,7 +7,6 @@ import { normalizeTagName } from './bookmarkManagerOperations.js'
 const DEFAULT_PROMPT_BOOKMARK_LIMIT = 1000
 const PROMPT_BOOKMARK_TEXT_BUDGET = 80000
 const PROMPT_TEXT_LIMIT = 180
-const PROPOSAL_VERSION = '1.0'
 const PROMPT_FULL = 'full'
 const PROMPT_LITE = 'lite'
 
@@ -17,11 +16,8 @@ export const bookmarkCleanupProposalSchema = {
   title: 'Bookmark Cleanup Proposal',
   type: 'object',
   additionalProperties: false,
-  required: ['bookmarkChangeProposal', 'changes'],
+  required: ['changes'],
   properties: {
-    bookmarkChangeProposal: {
-      const: PROPOSAL_VERSION,
-    },
     summary: {
       type: 'string',
     },
@@ -165,11 +161,8 @@ export const bookmarkCleanupProposalSchema = {
 export const localAiBookmarkCleanupProposalSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['bookmarkChangeProposal', 'summary', 'changes'],
+  required: ['summary', 'changes'],
   properties: {
-    bookmarkChangeProposal: {
-      type: 'string',
-    },
     summary: {
       type: 'string',
     },
@@ -321,7 +314,7 @@ ${formatPromptRules(isLite, allowedChangeTypes)}
 ## Output Requirements
 - Output raw JSON only. Do not include introductory text, conversational filler, comments, or markdown formatting. Do not wrap the output in code fences such as \`\`\`json.
 - The first character of your response must be "{" and the last character must be "}".
-- Output base shape: {"bookmarkChangeProposal":"1.0","summary":"","changes":{}}
+- Output base shape: {"summary":"","changes":{}}
 - Omit every change type key that has no proposals. Do not output empty arrays.
 ${createPromptExample(allowedChangeTypes)}
 
@@ -597,7 +590,6 @@ function createPromptExample(allowedChangeTypes) {
   }
 
   return `Example output format only. Do not copy example IDs; use IDs from the provided data:\n${JSON.stringify({
-    bookmarkChangeProposal: PROPOSAL_VERSION,
     summary: 'Short summary.',
     changes,
   })}`
@@ -654,11 +646,6 @@ export function parseBookmarkCleanupProposalWithIssues(jsonText, managerModel) {
       warnings,
     }
   }
-  if (proposal.bookmarkChangeProposal !== PROPOSAL_VERSION) {
-    warnings.push(
-      `Expected bookmarkChangeProposal "${PROPOSAL_VERSION}", got "${String(proposal.bookmarkChangeProposal || 'missing')}".`,
-    )
-  }
   if (!proposal.changes || typeof proposal.changes !== 'object' || Array.isArray(proposal.changes)) {
     return {
       proposal: null,
@@ -687,9 +674,6 @@ export function validateBookmarkCleanupProposal(proposal, managerModel) {
 
   if (!proposal || typeof proposal !== 'object' || Array.isArray(proposal)) {
     return ['Cleanup proposal must be a JSON object.']
-  }
-  if (proposal.bookmarkChangeProposal !== PROPOSAL_VERSION) {
-    errors.push(`bookmarkChangeProposal must be "${PROPOSAL_VERSION}".`)
   }
   if (!changes || typeof changes !== 'object' || Array.isArray(changes)) {
     errors.push('Cleanup proposal must include a changes object.')
@@ -875,6 +859,8 @@ function validateDeleteChanges(errors, changes, bookmarkIds, managerModel) {
       errors.push(`changes.deleteBookmarks[${i}] must reference bookmarks from the same duplicate URL group.`)
     }
   }
+
+  validateDeleteChangesLeaveDuplicateSurvivors(errors, changes, managerModel)
 }
 
 function validateRewriteTitleChanges(errors, changes, bookmarkIds) {
@@ -910,7 +896,6 @@ function validateChangeBase(errors, change, name, index) {
 
 function normalizeBookmarkCleanupProposal(proposal) {
   return {
-    bookmarkChangeProposal: PROPOSAL_VERSION,
     summary: String(proposal.summary || '').trim(),
     changes: {
       addTags: normalizeTagChanges(proposal.changes.addTags || []),
@@ -952,7 +937,6 @@ function normalizeBookmarkCleanupProposalWithIssues(proposal, managerModel, warn
   const changes = proposal.changes || {}
 
   return {
-    bookmarkChangeProposal: PROPOSAL_VERSION,
     summary: String(proposal.summary || '').trim(),
     changes: {
       addTags: normalizeTagChangesWithIssues(changes.addTags, 'addTags', bookmarkIds, warnings),
@@ -1130,7 +1114,7 @@ function normalizeDeleteChangesWithIssues(changes, bookmarkIds, managerModel, wa
     })
   }
 
-  return result
+  return removeUnsafeDuplicateGroupDeletes(result, managerModel, warnings)
 }
 
 function normalizeRewriteTitleChangesWithIssues(changes, bookmarkIds, warnings) {
@@ -1262,6 +1246,127 @@ function isDuplicateBookmarkPair(bookmarkId, duplicateOfBookmarkId, managerModel
   const firstUrl = urlsByBookmarkId.get(firstId)
   const secondUrl = urlsByBookmarkId.get(secondId)
   return Boolean(firstUrl && secondUrl && firstUrl === secondUrl)
+}
+
+function validateDeleteChangesLeaveDuplicateSurvivors(errors, changes, managerModel) {
+  const deleteIds = new Set()
+  for (let i = 0; i < changes.length; i++) {
+    const bookmarkId = String(changes[i]?.bookmarkId || '')
+    if (bookmarkId) {
+      deleteIds.add(bookmarkId)
+    }
+  }
+
+  const unsafeGroups = getFullyDeletedDuplicateGroups(deleteIds, managerModel)
+  for (let i = 0; i < unsafeGroups.length; i++) {
+    errors.push(
+      `changes.deleteBookmarks would delete every bookmark in duplicate group: ${unsafeGroups[i].join(', ')}.`,
+    )
+  }
+}
+
+function removeUnsafeDuplicateGroupDeletes(changes, managerModel, warnings) {
+  const deleteIds = new Set(changes.map((change) => String(change.bookmarkId)))
+  const unsafeGroups = getFullyDeletedDuplicateGroups(deleteIds, managerModel)
+  if (!unsafeGroups.length) {
+    return changes
+  }
+
+  const unsafeIds = new Set()
+  for (let i = 0; i < unsafeGroups.length; i++) {
+    const group = unsafeGroups[i]
+    warnings.push(
+      `changes.deleteBookmarks ignored for duplicate group ${group.join(', ')} because it would delete every copy.`,
+    )
+    for (let j = 0; j < group.length; j++) {
+      unsafeIds.add(group[j])
+    }
+  }
+
+  return changes.filter((change) => !unsafeIds.has(String(change.bookmarkId)))
+}
+
+function getFullyDeletedDuplicateGroups(deleteIds, managerModel) {
+  const result = []
+  const seen = new Set()
+  const groups = getDuplicateBookmarkIdGroups(managerModel)
+
+  for (let i = 0; i < groups.length; i++) {
+    const group = groups[i]
+    if (group.length < 2) {
+      continue
+    }
+    const groupKey = group.join('\u0000')
+    if (seen.has(groupKey)) {
+      continue
+    }
+    let deletesEveryBookmark = true
+    for (let j = 0; j < group.length; j++) {
+      if (!deleteIds.has(group[j])) {
+        deletesEveryBookmark = false
+        break
+      }
+    }
+    if (deletesEveryBookmark) {
+      seen.add(groupKey)
+      result.push(group)
+    }
+  }
+
+  return result
+}
+
+function getDuplicateBookmarkIdGroups(managerModel) {
+  const result = []
+  const seen = new Set()
+  const duplicateGroups = managerModel?.duplicateGroups || []
+
+  for (let i = 0; i < duplicateGroups.length; i++) {
+    appendDuplicateBookmarkIdGroup(
+      result,
+      seen,
+      (duplicateGroups[i].bookmarks || []).map((bookmark) => bookmark.originalId),
+    )
+  }
+
+  const idsByUrl = new Map()
+  const bookmarks = managerModel?.bookmarks || []
+  for (let i = 0; i < bookmarks.length; i++) {
+    const url = normalizeDuplicateUrl(bookmarks[i])
+    if (!url) {
+      continue
+    }
+    let ids = idsByUrl.get(url)
+    if (!ids) {
+      ids = []
+      idsByUrl.set(url, ids)
+    }
+    ids.push(bookmarks[i].originalId)
+  }
+
+  for (const ids of idsByUrl.values()) {
+    appendDuplicateBookmarkIdGroup(result, seen, ids)
+  }
+
+  return result
+}
+
+function appendDuplicateBookmarkIdGroup(result, seen, ids) {
+  const group = ids
+    .map((id) => String(id || ''))
+    .filter(Boolean)
+    .sort()
+  if (group.length < 2) {
+    return
+  }
+
+  const key = group.join('\u0000')
+  if (seen.has(key)) {
+    return
+  }
+
+  seen.add(key)
+  result.push(group)
 }
 
 function normalizeDuplicateUrl(bookmark) {

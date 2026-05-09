@@ -196,6 +196,7 @@ describe('bookmark cleanup proposal', () => {
     const schema = JSON.stringify(localAiBookmarkCleanupProposalSchema)
 
     expect(schema).toContain('"rewriteTitles"')
+    expect(schema).not.toContain('bookmarkChangeProposal')
     expect(schema).not.toContain('"required":["addTags"')
     expect(schema).not.toContain('"$ref"')
     expect(schema).not.toContain('"$defs"')
@@ -220,7 +221,6 @@ describe('bookmark cleanup proposal', () => {
   test('parses and normalizes a valid proposal', () => {
     const proposal = parseBookmarkCleanupProposal(
       JSON.stringify({
-        bookmarkChangeProposal: '1.0',
         summary: 'Clean up AI bookmarks.',
         changes: {
           addTags: [{ id: 'add-1', bookmarkId: '1', tags: ['Docs', '#AI'], reason: 'Useful docs.' }],
@@ -244,7 +244,6 @@ describe('bookmark cleanup proposal', () => {
   test('allows omitted change arrays and normalizes them to empty arrays', () => {
     const proposal = parseBookmarkCleanupProposal(
       JSON.stringify({
-        bookmarkChangeProposal: '1.0',
         changes: {
           rewriteTitles: [{ id: 'rewrite-1', bookmarkId: '1', title: 'OpenAI Docs Reference', reason: 'Clearer.' }],
         },
@@ -259,7 +258,6 @@ describe('bookmark cleanup proposal', () => {
   test('rejects references outside the current bookmark data', () => {
     const errors = validateBookmarkCleanupProposal(
       {
-        bookmarkChangeProposal: '1.0',
         changes: {
           addTags: [{ id: 'add-1', bookmarkId: 'missing', tags: ['docs'], reason: 'No match.' }],
           removeTags: [],
@@ -283,7 +281,6 @@ describe('bookmark cleanup proposal', () => {
   test('rejects delete proposals for bookmarks that are not duplicates', () => {
     const errors = validateBookmarkCleanupProposal(
       {
-        bookmarkChangeProposal: '1.0',
         changes: {
           deleteBookmarks: [{ id: 'delete-1', bookmarkId: '3', duplicateOfBookmarkId: '1', reason: 'Wrong pair.' }],
         },
@@ -294,10 +291,25 @@ describe('bookmark cleanup proposal', () => {
     expect(errors).toEqual(['changes.deleteBookmarks[0] must reference bookmarks from the same duplicate URL group.'])
   })
 
+  test('rejects delete proposals that remove every bookmark in a duplicate group', () => {
+    const errors = validateBookmarkCleanupProposal(
+      {
+        changes: {
+          deleteBookmarks: [
+            { id: 'delete-1', bookmarkId: '1', duplicateOfBookmarkId: '2', reason: 'Same URL.' },
+            { id: 'delete-2', bookmarkId: '2', duplicateOfBookmarkId: '1', reason: 'Same URL.' },
+          ],
+        },
+      },
+      managerModel,
+    )
+
+    expect(errors).toEqual(['changes.deleteBookmarks would delete every bookmark in duplicate group: 1, 2.'])
+  })
+
   test('liberal parsing drops invalid entries with warnings', () => {
     const result = parseBookmarkCleanupProposalWithIssues(
       JSON.stringify({
-        bookmarkChangeProposal: '1.0',
         changes: {
           addTags: [
             { id: 'add-1', bookmarkId: '1', tags: ['docs'], reason: 'Valid.' },
@@ -333,6 +345,26 @@ describe('bookmark cleanup proposal', () => {
       'changes.deleteBookmarks[0] ignored because bookmarkId and duplicateOfBookmarkId are the same.',
       'changes.deleteBookmarks[1] ignored because the bookmarks are not in the same duplicate URL group.',
       'changes.rewriteTitles[1] ignored because bookmarkId "missing" does not exist.',
+    ])
+  })
+
+  test('liberal parsing drops delete proposals that remove every duplicate copy', () => {
+    const result = parseBookmarkCleanupProposalWithIssues(
+      JSON.stringify({
+        changes: {
+          deleteBookmarks: [
+            { id: 'delete-1', bookmarkId: '1', duplicateOfBookmarkId: '2', reason: 'Same URL.' },
+            { id: 'delete-2', bookmarkId: '2', duplicateOfBookmarkId: '1', reason: 'Same URL.' },
+          ],
+        },
+      }),
+      managerModel,
+    )
+
+    expect(result.errors).toEqual([])
+    expect(result.proposal.changes.deleteBookmarks).toEqual([])
+    expect(result.warnings).toEqual([
+      'changes.deleteBookmarks ignored for duplicate group 1, 2 because it would delete every copy.',
     ])
   })
 })

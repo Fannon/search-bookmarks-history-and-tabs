@@ -4,11 +4,8 @@
   "title": "Bookmark Cleanup Proposal",
   "type": "object",
   "additionalProperties": false,
-  "required": ["bookmarkChangeProposal", "changes"],
+  "required": ["changes"],
   "properties": {
-    "bookmarkChangeProposal": {
-      "const": "1.0"
-    },
     "summary": {
       "type": "string"
     },

@@ -213,7 +213,6 @@ describe('initBookmarkManager cleanup apply', () => {
 
   test('keeps failed cleanup changes pending and reports partial success', async () => {
     const proposal = {
-      bookmarkChangeProposal: '1.0',
       changes: {
         addTags: [
           { id: 'add-ok', bookmarkId: 'bookmark-1', tags: ['docs'] },
