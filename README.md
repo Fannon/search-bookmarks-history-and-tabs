@@ -75,6 +75,18 @@ Click a screenshot to open it full size:
       </a>
     </td>
   </tr>
+  <tr>
+    <td width="50%">
+      <a href="./images/manager/ai-cleanup.png">
+        <img src="./images/manager/ai-cleanup.png" alt="AI Cleanup workspace" width="100%">
+      </a>
+    </td>
+    <td width="50%">
+      <a href="./images/manager/undo-history.png">
+        <img src="./images/manager/undo-history.png" alt="Undo history" width="100%">
+      </a>
+    </td>
+  </tr>
 </table>
 
 ## Browser Support
