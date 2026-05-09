@@ -1067,7 +1067,7 @@ h3 {
 
 .cleanup-control-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -1664,6 +1664,10 @@ h3 {
   }
 
   .cleanup-change {
+    grid-template-columns: 1fr;
+  }
+
+  .cleanup-control-row {
     grid-template-columns: 1fr;
   }
 
