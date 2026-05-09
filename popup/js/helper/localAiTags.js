@@ -100,7 +100,7 @@ export async function suggestBookmarkTags(bookmarks, existingTags = [], onDownlo
     })
 
     const tags = parseTagResponse(response)
-    return bookmarks.length > 1 && !options.liberal ? filterTagsForEveryBookmark(tags, bookmarks) : tags
+    return shouldFilterTagsForEveryBookmark(bookmarks, options) ? filterTagsForEveryBookmark(tags, bookmarks) : tags
   } finally {
     if (typeof session?.destroy === 'function') {
       session.destroy()
@@ -196,6 +196,10 @@ function parseTagResponse(response) {
   }
 
   return normalizeTags(parsed.tags || [])
+}
+
+function shouldFilterTagsForEveryBookmark(bookmarks, options) {
+  return bookmarks.length > 1 && (!options.liberal || bookmarks.length > MAX_BOOKMARKS_IN_PROMPT)
 }
 
 function normalizeTags(tags) {

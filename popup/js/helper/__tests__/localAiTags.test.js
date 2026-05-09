@@ -193,4 +193,38 @@ describe('local AI tag suggestions', () => {
     expect(promptText).toContain('common denominator')
     expect(promptText).toContain('New tags are allowed')
   })
+
+  test('keeps large-selection retry suggestions strict across every selected bookmark', async () => {
+    const prompt = jest.fn(() => Promise.resolve('{"tags":["github"]}'))
+    globalThis.LanguageModel = {
+      create: jest.fn(() =>
+        Promise.resolve({
+          prompt,
+          destroy: jest.fn(),
+        }),
+      ),
+    }
+    const bookmarks = []
+    for (let i = 1; i <= 20; i++) {
+      bookmarks.push({
+        title: `GitHub Repository ${i}`,
+        originalUrl: `https://github.com/example/repo-${i}`,
+        folderArray: ['Development'],
+        tagsArray: [],
+      })
+    }
+    bookmarks.push({
+      title: 'Unrelated Documentation',
+      originalUrl: 'https://example.com/docs',
+      folderArray: ['Development'],
+      tagsArray: [],
+    })
+
+    const tags = await suggestBookmarkTags(bookmarks, [], undefined, { liberal: true })
+
+    expect(tags).toEqual([])
+    const promptText = prompt.mock.calls[0][0]
+    expect(promptText).toContain('GitHub Repository 20')
+    expect(promptText).not.toContain('Unrelated Documentation')
+  })
 })
