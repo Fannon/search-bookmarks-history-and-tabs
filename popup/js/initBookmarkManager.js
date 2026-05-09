@@ -33,7 +33,10 @@ import {
 } from './model/bookmarkManagerOperations.js'
 import {
   createBookmarkUndoSnapshot,
+  createUndoHistoryExport,
+  createUndoHistoryExportFilename,
   getBookmarkUndoSnapshots,
+  parseUndoHistoryImport,
   removeBookmarkUndoSnapshot,
   saveBookmarkUndoSnapshot,
 } from './model/bookmarkManagerUndo.js'
@@ -1634,66 +1637,6 @@ async function recreateDeletedBookmark(bookmark) {
 
 function updateBookmarkUndoHistory() {
   renderBookmarkUndoHistory(getBookmarkUndoSnapshots(), canRestoreBookmarkSnapshots())
-}
-
-function createUndoHistoryExport(snapshots) {
-  return {
-    version: 'bookmark-undo-history/v1',
-    exportedAt: new Date().toISOString(),
-    note: 'Undo snapshots restore previous bookmark state. They are not change proposals because they need prior title, URL, parent folder, and index data.',
-    snapshots: snapshots.map((snapshot) => ({
-      id: snapshot.id,
-      createdAt: new Date(snapshot.createdAt).toISOString(),
-      description: snapshot.description,
-      metadata: snapshot.metadata || {},
-      bookmarks: snapshot.bookmarks.map((bookmark) => ({
-        id: bookmark.id,
-        parentId: bookmark.parentId || '',
-        index: Number.isInteger(bookmark.index) ? bookmark.index : undefined,
-        title: bookmark.title,
-        url: bookmark.url,
-      })),
-    })),
-  }
-}
-
-function parseUndoHistoryImport(payload) {
-  if (!payload || typeof payload !== 'object' || payload.version !== 'bookmark-undo-history/v1') {
-    throw new Error('Undo history JSON must use version "bookmark-undo-history/v1".')
-  }
-  if (!Array.isArray(payload.snapshots)) {
-    throw new Error('Undo history JSON must include a snapshots array.')
-  }
-
-  const snapshots = []
-  for (let i = 0; i < payload.snapshots.length; i++) {
-    const snapshot = normalizeImportedUndoSnapshot(payload.snapshots[i], i)
-    if (snapshot) {
-      snapshots.push(snapshot)
-    }
-  }
-  return snapshots
-}
-
-function normalizeImportedUndoSnapshot(snapshot, index) {
-  if (!snapshot || typeof snapshot !== 'object' || !Array.isArray(snapshot.bookmarks) || !snapshot.bookmarks.length) {
-    return null
-  }
-
-  const createdAt = Number.isFinite(Date.parse(snapshot.createdAt)) ? Date.parse(snapshot.createdAt) : Date.now()
-  return createBookmarkUndoSnapshot(
-    snapshot.description || `Imported undo snapshot ${index + 1}`,
-    snapshot.bookmarks,
-    createdAt,
-    snapshot.metadata || {},
-  )
-}
-
-function createUndoHistoryExportFilename() {
-  const now = new Date()
-  const date = now.toISOString().slice(0, 10)
-  const time = now.toTimeString().slice(0, 8).replaceAll(':', '-')
-  return `bookmark-manager-undo-history-${date}-${time}.json`
 }
 
 function compareSnapshotBookmarks(a, b) {

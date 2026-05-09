@@ -5,7 +5,10 @@ import {
   clearBookmarkUndoSnapshots,
   createBookmarkSnapshotEntry,
   createBookmarkUndoSnapshot,
+  createUndoHistoryExport,
+  createUndoHistoryExportFilename,
   getBookmarkUndoSnapshots,
+  parseUndoHistoryImport,
   removeBookmarkUndoSnapshot,
   saveBookmarkUndoSnapshot,
 } from '../bookmarkManagerUndo.js'
@@ -131,5 +134,116 @@ describe('bookmark manager undo snapshots', () => {
 
     clearBookmarkUndoSnapshots()
     expect(getBookmarkUndoSnapshots()).toEqual([])
+  })
+
+  test('exports undo history as a portable payload', () => {
+    const snapshot = createBookmarkUndoSnapshot(
+      'Moved bookmark',
+      [
+        {
+          id: 'bookmark-1',
+          parentId: 'folder-1',
+          index: 3,
+          title: 'Bookmark #tag',
+          url: 'https://example.test',
+        },
+      ],
+      Date.UTC(2026, 4, 9, 12, 30),
+      { action: 'move', targetFolderLabel: 'Folder' },
+    )
+
+    expect(createUndoHistoryExport([snapshot])).toEqual({
+      version: 'bookmark-undo-history/v1',
+      exportedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+      note: expect.stringContaining('Undo snapshots restore previous bookmark state'),
+      snapshots: [
+        {
+          id: snapshot.id,
+          createdAt: '2026-05-09T12:30:00.000Z',
+          description: 'Moved bookmark',
+          metadata: {
+            action: 'move',
+            tagsAdded: [],
+            tagsRemoved: [],
+            tagRenames: [],
+            targetFolderId: '',
+            targetFolderLabel: 'Folder',
+          },
+          bookmarks: [
+            {
+              id: 'bookmark-1',
+              parentId: 'folder-1',
+              index: 3,
+              title: 'Bookmark #tag',
+              url: 'https://example.test',
+            },
+          ],
+        },
+      ],
+    })
+  })
+
+  test('parses imported undo history and skips empty snapshots', () => {
+    const snapshots = parseUndoHistoryImport({
+      version: 'bookmark-undo-history/v1',
+      snapshots: [
+        {
+          createdAt: '2026-05-09T12:30:00.000Z',
+          description: 'Imported change',
+          metadata: { tagsAdded: ['Docs'] },
+          bookmarks: [
+            {
+              id: 'bookmark-1',
+              title: 'Bookmark',
+              url: 'https://example.test',
+            },
+          ],
+        },
+        {
+          createdAt: '2026-05-09T12:31:00.000Z',
+          description: 'Empty change',
+          bookmarks: [],
+        },
+      ],
+    })
+
+    expect(snapshots).toHaveLength(1)
+    expect(snapshots[0]).toEqual({
+      id: expect.any(String),
+      createdAt: Date.UTC(2026, 4, 9, 12, 30),
+      description: 'Imported change',
+      metadata: {
+        action: '',
+        tagsAdded: ['Docs'],
+        tagsRemoved: [],
+        tagRenames: [],
+        targetFolderId: '',
+        targetFolderLabel: '',
+      },
+      bookmarks: [
+        {
+          id: 'bookmark-1',
+          parentId: '',
+          index: undefined,
+          title: 'Bookmark',
+          url: 'https://example.test',
+        },
+      ],
+    })
+  })
+
+  test('rejects invalid undo history imports', () => {
+    expect(() => parseUndoHistoryImport({ version: 'unknown', snapshots: [] })).toThrow(
+      'Undo history JSON must use version "bookmark-undo-history/v1".',
+    )
+    expect(() => parseUndoHistoryImport({ version: 'bookmark-undo-history/v1' })).toThrow(
+      'Undo history JSON must include a snapshots array.',
+    )
+  })
+
+  test('creates undo export filenames from local time', () => {
+    expect(createUndoHistoryExportFilename(new Date('2026-05-09T12:30:05'))).toBe(
+      'bookmark-manager-undo-history-2026-05-09-12-30-05.json',
+    )
   })
 })
