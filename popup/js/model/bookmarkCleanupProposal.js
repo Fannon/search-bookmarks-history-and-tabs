@@ -299,26 +299,14 @@ ${formatPromptFocusInstruction(isLite, changeFocus, allowedChangeTypes)}
 Bookmark context: included ${payload.includedBookmarkCount} of ${payload.totalBookmarkCount} bookmark${payload.totalBookmarkCount === 1 ? '' : 's'}.${payload.omittedBookmarkCount ? ` Omitted ${payload.omittedBookmarkCount} due to the selected bookmark/context limit.` : ''}${payload.truncatedByCharacterBudget ? ` Stopped at the ${PROMPT_BOOKMARK_TEXT_BUDGET} character bookmark-context budget.` : ''}
 
 Goals:
-- Add useful, specific tags where existing bookmark data strongly supports them.
-- Remove tags only when they appear misleading, incorrect, or a poor fit for the bookmark.
-- Rename or merge near-duplicate tags across all matching bookmarks.
-${isLite ? '- Do not propose bookmark moves or deletions.' : '- Move bookmarks to a better existing folder when the target is clearly more appropriate.\n- Delete only exact or near-exact duplicate bookmarks, keeping the better copy.'}
-- Rewrite titles only when the current title is too long, URL-like, boilerplate-heavy, or weak for search. Keep the new title factual, short, and recognizable.
-- Preserve distinctive project, repository, package, product, and documentation identifiers in rewritten titles, for example "owner/repo" or "vendor/product".
-${isLite ? '- Focus on addTags and rewriteTitles first. Use removeTags and renameTags only when clearly beneficial.' : ''}
+${formatPromptGoals(isLite, allowedChangeTypes)}
 
 Rules:
 - Use only bookmark IDs from the provided data.
-${isLite ? '- Keep moveBookmarks and deleteBookmarks empty.' : '- Use only folder IDs from the provided data.\n- Do not invent folders. Use targetFolderId from existingFolders for moves.'}
 - If unsure about a required field, omit that change instead of using placeholders.
 - Include reason only when it adds useful review context.
-- Prefer existing tag conventions, but add concise lowercase tags when they improve organization.
-- Do not remove a tag just because it is redundant or generic; tags can intentionally improve search scoring as keywords.
-- Use renameTags for tag merges, for example "ai", "llm", and "genai" into one chosen tag.
-${isLite ? '' : '- Do not delete a bookmark unless duplicateOfBookmarkId identifies the bookmark to keep.'}
 - Keep summary to one short sentence.
-${isLite ? '' : '- Do not propose a move when the current folder already seems reasonable; only move when the target folder is clearly more specific or more accurate.'}
-- Do not rewrite titles for style alone. Do not add tags, scores, folder names, domains, or invented details to rewritten titles.
+${formatPromptRules(isLite, allowedChangeTypes)}
 - Return JSON only. No markdown, comments, or explanation outside JSON.
 - Output base shape: {"bookmarkChangeProposal":"1.0","summary":"","changes":{}}
 ${createPromptExample(allowedChangeTypes)}
@@ -422,7 +410,7 @@ function getAllowedPromptChangeTypes(isLite, changeFocus) {
     return ['rewriteTitles']
   }
   if (changeFocus === 'folder') {
-    return isLite ? [] : ['moveBookmarks']
+    return ['moveBookmarks']
   }
   if (changeFocus === 'duplicates') {
     return isLite ? [] : ['deleteBookmarks']
@@ -432,10 +420,94 @@ function getAllowedPromptChangeTypes(isLite, changeFocus) {
     : ['addTags', 'removeTags', 'renameTags', 'moveBookmarks', 'deleteBookmarks', 'rewriteTitles']
 }
 
-function formatPromptFocusInstruction(isLite, changeFocus, allowedChangeTypes) {
-  if (isLite && changeFocus === 'folder') {
-    return 'Change type focus: Folder Structure. Lite mode has no folder data, so return an empty changes object. Use Advanced for folder structure proposals.'
+function formatPromptGoals(isLite, allowedChangeTypes) {
+  const goals = []
+
+  if (allowedChangeTypes.includes('addTags')) {
+    goals.push('- Add useful, specific tags where existing bookmark data strongly supports them.')
   }
+  if (allowedChangeTypes.includes('removeTags')) {
+    goals.push('- Remove tags only when they appear misleading, incorrect, or a poor fit for the bookmark.')
+  }
+  if (allowedChangeTypes.includes('renameTags')) {
+    goals.push('- Rename or merge near-duplicate tags across all matching bookmarks.')
+  }
+  if (allowedChangeTypes.includes('moveBookmarks')) {
+    goals.push('- Move bookmarks to a better existing folder when the target is clearly more appropriate.')
+  }
+  if (allowedChangeTypes.includes('deleteBookmarks')) {
+    goals.push('- Delete only exact or near-exact duplicate bookmarks, keeping the better copy.')
+  }
+  if (allowedChangeTypes.includes('rewriteTitles')) {
+    goals.push(
+      '- Rewrite titles only when the current title is too long, URL-like, boilerplate-heavy, or weak for search. Keep the new title factual, short, and recognizable.',
+      '- Preserve distinctive project, repository, package, product, and documentation identifiers in rewritten titles, for example "owner/repo" or "vendor/product".',
+    )
+  }
+  if (isLite && hasAnyAllowedType(allowedChangeTypes, ['addTags', 'removeTags', 'renameTags', 'rewriteTitles'])) {
+    goals.push('- Do not propose bookmark moves or deletions.')
+  }
+  if (isLite && allowedChangeTypes.length > 1) {
+    goals.push(
+      '- Focus on addTags and rewriteTitles first. Use removeTags and renameTags only when clearly beneficial.',
+    )
+  }
+  if (!goals.length) {
+    goals.push('- No change types are available in this mode. Return an empty changes object.')
+  }
+
+  return goals.join('\n')
+}
+
+function formatPromptRules(isLite, allowedChangeTypes) {
+  const rules = []
+
+  if (hasAnyAllowedType(allowedChangeTypes, ['addTags', 'removeTags', 'renameTags'])) {
+    rules.push('- Prefer existing tag conventions, but add concise lowercase tags when they improve organization.')
+  }
+  if (allowedChangeTypes.includes('removeTags')) {
+    rules.push(
+      '- Do not remove a tag just because it is redundant or generic; tags can intentionally improve search scoring as keywords.',
+    )
+  }
+  if (allowedChangeTypes.includes('renameTags')) {
+    rules.push('- Use renameTags for tag merges, for example "ai", "llm", and "genai" into one chosen tag.')
+  }
+  if (allowedChangeTypes.includes('moveBookmarks')) {
+    rules.push(
+      '- Use only folder IDs from the provided data.',
+      '- Do not invent folders. Use targetFolderId from existingFolders for moves.',
+      '- Do not propose a move when the current folder already seems reasonable; only move when the target folder is clearly more specific or more accurate.',
+    )
+  }
+  if (allowedChangeTypes.includes('deleteBookmarks')) {
+    rules.push('- Do not delete a bookmark unless duplicateOfBookmarkId identifies the bookmark to keep.')
+  }
+  if (allowedChangeTypes.includes('rewriteTitles')) {
+    rules.push(
+      '- Do not rewrite titles for style alone. Do not add tags, scores, folder names, domains, or invented details to rewritten titles.',
+    )
+  }
+  if (isLite && !allowedChangeTypes.includes('moveBookmarks')) {
+    rules.push('- Keep moveBookmarks empty.')
+  }
+  if (isLite && !allowedChangeTypes.includes('deleteBookmarks')) {
+    rules.push('- Keep deleteBookmarks empty.')
+  }
+
+  return rules.join('\n')
+}
+
+function hasAnyAllowedType(allowedChangeTypes, types) {
+  for (let i = 0; i < types.length; i++) {
+    if (allowedChangeTypes.includes(types[i])) {
+      return true
+    }
+  }
+  return false
+}
+
+function formatPromptFocusInstruction(isLite, changeFocus, allowedChangeTypes) {
   if (isLite && changeFocus === 'duplicates') {
     return 'Change type focus: Duplicates. Lite mode does not include duplicate-cleanup context, so return an empty changes object. Use Advanced for duplicate proposals.'
   }

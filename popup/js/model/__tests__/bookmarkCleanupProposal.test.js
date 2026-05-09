@@ -119,6 +119,11 @@ describe('bookmark cleanup proposal', () => {
     expect(prompt).toContain('Include only these change arrays when they have proposals: rewriteTitles')
     expect(prompt).toContain('"changes":{"rewriteTitles"')
     expect(prompt).toContain('"rewriteTitles":[{"id":"rewrite-1"')
+    expect(prompt).toContain('Rewrite titles only when')
+    expect(prompt).not.toContain('Add useful, specific tags')
+    expect(prompt).not.toContain('Use renameTags for tag merges')
+    expect(prompt).not.toContain('Use only folder IDs')
+    expect(prompt).not.toContain('Do not delete a bookmark')
   })
 
   test('omits folder context when advanced prompt only focuses tags', () => {
@@ -126,6 +131,11 @@ describe('bookmark cleanup proposal', () => {
 
     expect(prompt).toContain('Change type focus: Tags')
     expect(prompt).toContain('id | title | url | tags')
+    expect(prompt).toContain('Add useful, specific tags')
+    expect(prompt).toContain('Use renameTags for tag merges')
+    expect(prompt).not.toContain('Rewrite titles only when')
+    expect(prompt).not.toContain('Do not rewrite titles for style alone')
+    expect(prompt).not.toContain('Delete only exact or near-exact duplicate bookmarks')
     expect(prompt).not.toContain('Existing folders')
     expect(prompt).not.toContain('dev | Development')
   })
@@ -137,6 +147,29 @@ describe('bookmark cleanup proposal', () => {
     expect(prompt).toContain('id | title | url | folderId | folderPath | tags')
     expect(prompt).toContain('Existing folders')
     expect(prompt).toContain('dev | Development')
+    expect(prompt).toContain('Move bookmarks to a better existing folder')
+    expect(prompt).toContain('Use only folder IDs')
+    expect(prompt).not.toContain('Add useful, specific tags')
+    expect(prompt).not.toContain('Rewrite titles only when')
+    expect(prompt).not.toContain('Delete only exact or near-exact duplicate bookmarks')
+  })
+
+  test('supports folder-focused lite prompts with folder context', () => {
+    const prompt = createBookmarkCleanupPrompt(managerModel, 'lite', { changeFocus: 'folder' })
+
+    expect(prompt).toContain('Change type focus: Folder Structure')
+    expect(prompt).toContain('Include only these change arrays when they have proposals: moveBookmarks')
+    expect(prompt).toContain('id | title | url | folderId | folderPath | tags')
+    expect(prompt).toContain('Existing folders')
+    expect(prompt).toContain('dev | Development')
+    expect(prompt).toContain('"changes":{"moveBookmarks"')
+    expect(prompt).toContain('"moveBookmarks":[{"id":"move-1"')
+    expect(prompt).toContain('Move bookmarks to a better existing folder')
+    expect(prompt).toContain('Use only folder IDs')
+    expect(prompt).toContain('Keep deleteBookmarks empty.')
+    expect(prompt).not.toContain('Keep moveBookmarks empty.')
+    expect(prompt).not.toContain('Lite mode has no folder data')
+    expect(prompt).not.toContain('"$schema"')
   })
 
   test('can focus an advanced prompt on duplicate cleanup', () => {
@@ -146,6 +179,11 @@ describe('bookmark cleanup proposal', () => {
     expect(prompt).toContain('Include only these change arrays when they have proposals: deleteBookmarks')
     expect(prompt).toContain('"changes":{"deleteBookmarks"')
     expect(prompt).toContain('"deleteBookmarks":[{"id":"delete-1"')
+    expect(prompt).toContain('Delete only exact or near-exact duplicate bookmarks')
+    expect(prompt).toContain('Do not delete a bookmark unless duplicateOfBookmarkId')
+    expect(prompt).not.toContain('Add useful, specific tags')
+    expect(prompt).not.toContain('Rewrite titles only when')
+    expect(prompt).not.toContain('Use only folder IDs')
   })
 
   test('uses a flat schema for local AI constrained generation', () => {
