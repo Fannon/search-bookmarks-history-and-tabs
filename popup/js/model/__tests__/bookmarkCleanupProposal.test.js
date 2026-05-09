@@ -62,15 +62,19 @@ describe('bookmark cleanup proposal', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel)
 
     expect(prompt).toContain('Bookmark Cleanup Proposal')
+    expect(prompt).toContain('Act as a meticulous data librarian')
     expect(prompt).toContain('1 | OpenAI Docs')
     expect(prompt).toContain('dev | Development')
     expect(prompt).toContain('ai (1), llm (1)')
-    expect(prompt).toContain('Return at most 50 total changes')
+    expect(prompt).toContain('Use 50 as a safety ceiling, not a quota')
+    expect(prompt).toContain('Do not force changes to fill the limit')
     expect(prompt).toContain('Bookmark context: included 3 of 3 bookmarks.')
     expect(prompt).toContain(
       'Preserve distinctive project, repository, package, product, and documentation identifiers',
     )
     expect(prompt).toContain('Do not remove a tag just because it is redundant or generic')
+    expect(prompt).toContain('Output raw JSON only')
+    expect(prompt).toContain('The first character of your response must be "{" and the last must be "}"')
     expect(prompt).not.toContain('Omitted bookmark count')
   })
 
@@ -94,8 +98,9 @@ describe('bookmark cleanup proposal', () => {
   test('can generate an unlimited prompt', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'lite', { changeLimit: 'unlimited' })
 
-    expect(prompt).toContain('No total change limit is set')
-    expect(prompt).not.toContain('Return at most 50 total changes')
+    expect(prompt).toContain('No proposal count ceiling is set')
+    expect(prompt).toContain('highest-confidence changes')
+    expect(prompt).not.toContain('Use 50 as a safety ceiling')
   })
 
   test('limits bookmark context and reports omitted bookmark rows', () => {
@@ -120,6 +125,7 @@ describe('bookmark cleanup proposal', () => {
     expect(prompt).toContain('"changes":{"rewriteTitles"')
     expect(prompt).toContain('"rewriteTitles":[{"id":"rewrite-1"')
     expect(prompt).toContain('Rewrite titles only when')
+    expect(prompt).toContain('strip boilerplate such as "GitHub - ", "npm - ", or "Home | "')
     expect(prompt).not.toContain('Add useful, specific tags')
     expect(prompt).not.toContain('Use renameTags for tag merges')
     expect(prompt).not.toContain('Use only folder IDs')
@@ -132,7 +138,9 @@ describe('bookmark cleanup proposal', () => {
     expect(prompt).toContain('Change type focus: Tags')
     expect(prompt).toContain('id | title | url | tags')
     expect(prompt).toContain('Add useful, specific tags')
+    expect(prompt).toContain('For bookmarks with no existing tags')
     expect(prompt).toContain('Use renameTags for tag merges')
+    expect(prompt).toContain('Mutually exclusive tag actions')
     expect(prompt).not.toContain('Rewrite titles only when')
     expect(prompt).not.toContain('Do not rewrite titles for style alone')
     expect(prompt).not.toContain('Delete only exact or near-exact duplicate bookmarks')

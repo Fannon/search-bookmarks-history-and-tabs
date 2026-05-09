@@ -289,12 +289,13 @@ export function createBookmarkCleanupPrompt(managerModel, mode = PROMPT_FULL, op
   })
 
   return `
+Act as a meticulous data librarian specializing in taxonomy and repository management.
 You are helping clean up a browser bookmark collection.
 
 Use world knowledge plus the titles, URLs, and current tags below to propose useful bookmark management changes.
 Prefer conservative, reviewable changes over large speculative rewrites.
 Only propose a change when confidence is high. Prefer an empty array over a weak or speculative suggestion.
-${changeLimit ? `Return at most ${changeLimit} total changes, prioritizing highest-impact changes first.` : 'No total change limit is set, but still prioritize higher-impact changes first.'}
+${formatPromptChangeLimit(changeLimit)}
 ${formatPromptFocusInstruction(isLite, changeFocus, allowedChangeTypes)}
 Bookmark context: included ${payload.includedBookmarkCount} of ${payload.totalBookmarkCount} bookmark${payload.totalBookmarkCount === 1 ? '' : 's'}.${payload.omittedBookmarkCount ? ` Omitted ${payload.omittedBookmarkCount} due to the selected bookmark/context limit.` : ''}${payload.truncatedByCharacterBudget ? ` Stopped at the ${PROMPT_BOOKMARK_TEXT_BUDGET} character bookmark-context budget.` : ''}
 
@@ -307,7 +308,7 @@ Rules:
 - Include reason only when it adds useful review context.
 - Keep summary to one short sentence.
 ${formatPromptRules(isLite, allowedChangeTypes)}
-- Return JSON only. No markdown, comments, or explanation outside JSON.
+- Output raw JSON only. Do not include introductory text, conversational filler, comments, or markdown formatting. Do not wrap the output in code fences such as \`\`\`json. The first character of your response must be "{" and the last must be "}".
 - Output base shape: {"bookmarkChangeProposal":"1.0","summary":"","changes":{}}
 ${createPromptExample(allowedChangeTypes)}
 ${isLite ? '' : `- The JSON must validate against this schema:\n${JSON.stringify(bookmarkCleanupProposalSchema)}`}
@@ -384,6 +385,14 @@ function normalizePromptChangeLimit(changeLimit) {
 
   const limit = Number.parseInt(changeLimit || 50, 10)
   return Number.isFinite(limit) && limit > 0 ? limit : 50
+}
+
+function formatPromptChangeLimit(changeLimit) {
+  if (!changeLimit) {
+    return 'No proposal count ceiling is set. Still return only the most critical, highest-confidence changes; do not force changes just to produce a long response.'
+  }
+
+  return `Use ${changeLimit} as a safety ceiling, not a quota. Return only the most critical, highest-confidence changes. Do not force changes to fill the limit; if there are only 10 obvious improvements, return only 10.`
 }
 
 function normalizePromptBookmarkLimit(bookmarkLimit) {
@@ -465,13 +474,21 @@ function formatPromptRules(isLite, allowedChangeTypes) {
   if (hasAnyAllowedType(allowedChangeTypes, ['addTags', 'removeTags', 'renameTags'])) {
     rules.push('- Prefer existing tag conventions, but add concise lowercase tags when they improve organization.')
   }
+  if (allowedChangeTypes.includes('addTags')) {
+    rules.push(
+      '- For bookmarks with no existing tags, weigh the URL structure and title heavily and assign only 1-2 fundamental tags, for example "github", "music", or "hardware".',
+    )
+  }
   if (allowedChangeTypes.includes('removeTags')) {
     rules.push(
       '- Do not remove a tag just because it is redundant or generic; tags can intentionally improve search scoring as keywords.',
     )
   }
   if (allowedChangeTypes.includes('renameTags')) {
-    rules.push('- Use renameTags for tag merges, for example "ai", "llm", and "genai" into one chosen tag.')
+    rules.push(
+      '- Use renameTags for tag merges, for example "ai", "llm", and "genai" into one chosen tag.',
+      '- Mutually exclusive tag actions: if you use renameTags to change a tag, do not include that same tag change in addTags or removeTags.',
+    )
   }
   if (allowedChangeTypes.includes('moveBookmarks')) {
     rules.push(
@@ -486,6 +503,7 @@ function formatPromptRules(isLite, allowedChangeTypes) {
   if (allowedChangeTypes.includes('rewriteTitles')) {
     rules.push(
       '- Do not rewrite titles for style alone. Do not add tags, scores, folder names, domains, or invented details to rewritten titles.',
+      '- When rewriting titles, strip boilerplate such as "GitHub - ", "npm - ", or "Home | ". Keep the core product or repository name and a very brief description.',
     )
   }
   if (isLite && !allowedChangeTypes.includes('moveBookmarks')) {
