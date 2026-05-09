@@ -25,7 +25,7 @@ With this extension you can also **tag your bookmarks** including auto completio
 The tags are considered when searching and can be used for navigation.
 Tabs support now the tab grouping feature by the browser.
 
-The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). It's also very lightweight (< 120kb JavaScript, only ~30-40kb need to load initially - including dependencies).
+The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). The daily search popup stays lightweight: it loads about 33 KB of minified app JavaScript initially, with optional features such as fuzzy matching and the full-page Bookmark Manager bundled separately.
 
 > 💡 Have a look at the [Tips & Tricks](./Tips.md) collection.
 
@@ -41,7 +41,9 @@ Press play to start the GIF animation:
 
 ### Optional Bookmark Manager
 
-The main purpose of this extension remains the fast search popup. As a complementary beta feature, there is also a full-page Bookmark Manager for reviewing bookmark statistics, browsing folders, cleaning up duplicate bookmark URLs, and managing tags. Where supported by the browser, it can suggest tags with a local (privacy respecting) browser AI model; suggestions are reviewed before they are written to bookmarks.
+The main purpose of this extension remains the fast search popup. As a complementary beta feature, there is also a full-page Bookmark Manager for reviewing bookmark statistics, browsing folders, editing bookmark metadata, cleaning up duplicate bookmark URLs, and managing tags. Where supported by the browser, it can suggest tags with a local (privacy respecting) browser AI model; suggestions are reviewed before they are written to bookmarks.
+
+The Bookmark Manager also includes a beta AI Cleanup workspace. It can generate Lite or Advanced prompts for external AI tools, or ask the browser's local `LanguageModel` API for a JSON cleanup proposal. Proposals are reviewable before anything is applied and can cover tag additions/removals/renames, title rewrites, moves to existing folders, and confirmed duplicate deletions.
 
 Before using the Bookmark Manager, creating a backup/export of your browser bookmarks is highly recommended, especially before moving bookmarks, changing tags in bulk, or deleting duplicates.
 The manager can export your bookmarks in the standard browser bookmark HTML format. It also keeps the latest 50 undo steps in memory while the manager page stays open, but in-memory undo is not a substitute for a full bookmark export.
@@ -227,7 +229,8 @@ For the full scoring reference and all scoring configuration options, see:
 This extension is built to respect your privacy:
 
 - It does not have permissions for outside communication, so none of your data is shared or exposed externally.
-- Local AI tag suggestions in the optional Bookmark Manager use the browser's local `LanguageModel` API when available; selected bookmark metadata is sent only to that browser-managed local model.
+- Local AI tag suggestions and local AI Cleanup proposals in the optional Bookmark Manager use the browser's local `LanguageModel` API when available; selected or included bookmark metadata is sent only to that browser-managed local model.
+- If you copy a generated AI Cleanup prompt into an external AI tool, you are choosing to share the included bookmark metadata with that service.
 - It does not use external favicon services. Website favicons are read from browser-local APIs or caches where supported.
 - The extension uses [local storage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) to store user settings.
   Bookmark Manager undo history is kept in memory only while the manager page stays open.

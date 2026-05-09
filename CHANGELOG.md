@@ -2,7 +2,17 @@
 
 ## [Unreleased]
 
-- **NEW**: Added a beta Bookmark Manager as a complementary full-page view for reviewing bookmark statistics, browsing folders, editing bookmark metadata, managing tags, and cleaning up duplicate bookmark URLs. It includes browser-compatible bookmark HTML export, the latest 50 in-memory undo steps for bookmark mutations, and optional local browser AI tag suggestions when the browser supports the local `LanguageModel` API.
+## [v2.3.0] - 2026-05-09
+
+- **NEW**: Added a beta Bookmark Manager as a complementary full-page view for reviewing bookmark statistics, browsing folders, editing bookmark metadata, moving bookmarks, managing tags, and cleaning up duplicate bookmark URLs.
+  - Includes browser-compatible bookmark HTML export and the latest 50 in-memory undo steps for bookmark mutations while the manager page stays open.
+  - Includes a Tag Manager for browsing, filtering, renaming, and removing tags across matching bookmarks.
+  - Includes optional local browser AI tag suggestions when the browser supports the local `LanguageModel` API. Suggested tags are reviewed before they are written to bookmarks.
+- **NEW**: Added a beta AI Cleanup workspace in the Bookmark Manager.
+  - Can generate Lite or Advanced prompts for external AI tools.
+  - Can ask the browser's local `LanguageModel` API for a structured JSON cleanup proposal when local AI is available.
+  - Reviewable proposals can add, remove, or rename tags; rewrite noisy titles; move bookmarks to existing folders; and delete confirmed duplicate bookmark URLs.
+- **FIXED**: Large multi-bookmark local AI tag suggestion retries now keep the strict all-selection evidence check, even when only the first 20 selected bookmarks are included in the prompt.
 
 ## [v2.2.0] - 2026-05-05
 
