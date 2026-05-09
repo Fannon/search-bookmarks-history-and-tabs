@@ -1,6 +1,6 @@
 /**
  * ✅ Covered behaviors: loading, saving, and resetting user options via the edit options view.
- * ⚠️ Known gaps: repeated initOptions calls may register duplicate listeners and location redirects are not asserted (jsdom limitation).
+ * ⚠️ Known gaps: module-scoped isInitialized may prevent re-initialization across popup sessions, and location redirects are not asserted (jsdom limitation).
  * 🐞 Added BUG tests: none.
  */
 

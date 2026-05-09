@@ -41,7 +41,7 @@ Press play to start the GIF animation:
 
 ### Optional Bookmark Manager
 
-The main purpose of this extension remains the fast search popup. As a complementary beta feature, there is also a full-page Bookmark Manager for reviewing bookmark statistics, browsing folders, editing bookmark metadata, cleaning up duplicate bookmark URLs, and managing tags. Where supported by the browser, it can suggest tags with a local (privacy respecting) browser AI model; suggestions are reviewed before they are written to bookmarks.
+The main purpose of this extension remains the fast search popup. As a complementary beta feature, there is also a full-page Bookmark Manager for reviewing bookmark statistics, browsing folders, editing bookmark metadata, cleaning up duplicate bookmark URLs, and managing tags. Where supported by the browser, it can suggest tags with a local (privacy-respecting) browser AI model; suggestions are reviewed before they are written to bookmarks.
 
 The Bookmark Manager also includes a beta AI Cleanup workspace. It can generate Lite or Advanced prompts for external AI tools, or ask the browser's local `LanguageModel` API for a JSON cleanup proposal. Proposals are reviewable before anything is applied and can cover tag additions/removals/renames, title rewrites, moves to existing folders, and confirmed duplicate deletions.
 
