@@ -7,6 +7,7 @@ test.describe('Bookmark Manager', () => {
   })
 
   test('shows bookmark overview statistics from mock data', async ({ page }) => {
+    await expect(page.locator('#manager-load')).toHaveCount(0)
     await expect(page.locator('#stats-grid')).toContainText('Bookmarks')
     await expect(page.locator('#bookmark-count')).toHaveText('35')
     await expect(page.locator('#top-tags')).toContainText('json')
