@@ -389,7 +389,7 @@ function normalizePromptChangeLimit(changeLimit) {
 
 function formatPromptChangeLimit(changeLimit) {
   if (!changeLimit) {
-    return 'No proposal count ceiling is set. Still return only the most critical, highest-confidence changes; do not force changes just to produce a long response.'
+    return ''
   }
 
   return `Use ${changeLimit} as a safety ceiling, not a quota. Return only the most critical, highest-confidence changes. Do not force changes to fill the limit; if there are only 10 obvious improvements, return only 10.`

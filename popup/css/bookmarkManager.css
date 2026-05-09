@@ -371,6 +371,7 @@ button {
 .bookmark-edit-panel select,
 .cleanup-workspace select,
 .cleanup-workspace textarea,
+.cleanup-control-row select,
 #tag-filter {
   width: 100%;
   min-height: 34px;
@@ -603,7 +604,8 @@ button {
 }
 
 .bookmark-edit-panel label,
-.cleanup-workspace label {
+.cleanup-workspace label,
+.cleanup-control-row label {
   color: var(--li-title);
   font-size: 13px;
   line-height: 1.2;
@@ -1071,12 +1073,14 @@ h3 {
   min-width: 0;
   display: grid;
   gap: 8px;
+  margin-top: 8px;
 }
 
 .cleanup-control-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
+  margin-top: 8px;
 }
 
 .cleanup-workspace textarea {

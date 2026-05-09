@@ -959,9 +959,9 @@ function resetCleanupPrompt() {
 
 function getCleanupPromptOptions() {
   return {
-    changeLimit: ext.dom.manager.cleanupChangeLimit.value || '50',
+    changeLimit: ext.dom.manager.cleanupChangeLimit.value || 'unlimited',
     changeFocus: ext.dom.manager.cleanupChangeFocus.value || 'everything',
-    bookmarkLimit: ext.dom.manager.cleanupBookmarkLimit.value || '1000',
+    bookmarkLimit: ext.dom.manager.cleanupBookmarkLimit.value || 'unlimited',
   }
 }
 

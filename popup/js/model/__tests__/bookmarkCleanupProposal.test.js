@@ -98,8 +98,8 @@ describe('bookmark cleanup proposal', () => {
   test('can generate an unlimited prompt', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'lite', { changeLimit: 'unlimited' })
 
-    expect(prompt).toContain('No proposal count ceiling is set')
-    expect(prompt).toContain('highest-confidence changes')
+    expect(prompt).not.toContain('No proposal count ceiling is set')
+    expect(prompt).not.toContain('highest-confidence changes')
     expect(prompt).not.toContain('Use 50 as a safety ceiling')
   })
 
