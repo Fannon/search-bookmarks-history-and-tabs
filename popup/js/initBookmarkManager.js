@@ -12,6 +12,12 @@ import {
 } from './helper/localAiTags.js'
 import { cleanUpUrl } from './helper/utils.js'
 import {
+  createCleanupApplyEntry,
+  createCleanupApplyResult,
+  createCleanupUndoMetadata,
+  formatCleanupApplyEntries,
+} from './model/bookmarkCleanupApply.js'
+import {
   countBookmarkCleanupChanges,
   createBookmarkCleanupApplyConfirmation,
   createBookmarkCleanupPrompt,
@@ -1102,7 +1108,11 @@ async function applyAllCleanupChanges() {
 
 async function applyCleanupChanges(changes, description) {
   const affectedBookmarks = getCleanupAffectedBookmarks(changes)
-  const snapshotCreated = await createUndoSnapshot(description, affectedBookmarks, createCleanupUndoMetadata(changes))
+  const snapshotCreated = await createUndoSnapshot(
+    description,
+    affectedBookmarks,
+    createCleanupUndoMetadata(changes, getFolderLabelById),
+  )
   if (!snapshotCreated) {
     return createCleanupApplyResult(false)
   }
@@ -1224,23 +1234,6 @@ function confirmCleanupChanges(changes) {
   return window.confirm(createBookmarkCleanupApplyConfirmation(changes))
 }
 
-function createCleanupApplyResult(snapshotCreated) {
-  return {
-    snapshotCreated,
-    applied: [],
-    failed: [],
-  }
-}
-
-function createCleanupApplyEntry(type, change, bookmarkIds, error) {
-  return {
-    type,
-    changeId: String(change?.id || type),
-    bookmarkIds,
-    errorMessage: error?.message || '',
-  }
-}
-
 function markAppliedCleanupChanges(appliedChanges) {
   for (let i = 0; i < appliedChanges.length; i++) {
     markCleanupChangeApplied(appliedChanges[i].changeId)
@@ -1260,15 +1253,6 @@ function showCleanupApplyResult(result, label) {
 
   showCleanupStatus('')
   showManagerStatus(`Applied ${appliedCount} ${label === 'cleanup change' ? label : 'cleanup change(s)'}`, 'success')
-}
-
-function formatCleanupApplyEntries(entries) {
-  return entries
-    .map((entry) => {
-      const bookmarkIds = entry.bookmarkIds.length ? ` bookmarks ${entry.bookmarkIds.join(', ')}` : ''
-      return `${entry.changeId}${bookmarkIds}`
-    })
-    .join('; ')
 }
 
 function getCleanupChangeBookmarkIds(type, change) {
@@ -1765,43 +1749,6 @@ function createBulkTagMetadata(tagPlans) {
     action: addedTags.length && removedTags.length ? 'updateTags' : addedTags.length ? 'addTags' : 'removeTags',
     tagsAdded: addedTags,
     tagsRemoved: removedTags,
-  }
-}
-
-function createCleanupUndoMetadata(changes) {
-  const metadata = {
-    action: 'aiCleanup',
-    tagsAdded: [],
-    tagsRemoved: [],
-    tagRenames: [],
-  }
-
-  for (let i = 0; i < changes.length; i++) {
-    const { type, change } = changes[i]
-    if (type === 'addTags') {
-      appendUniqueValues(metadata.tagsAdded, change.tags || [])
-    } else if (type === 'removeTags') {
-      appendUniqueValues(metadata.tagsRemoved, change.tags || [])
-    } else if (type === 'renameTags') {
-      metadata.tagRenames.push({ from: change.from, to: change.to })
-    } else if (type === 'moveBookmarks' && !metadata.targetFolderId) {
-      metadata.targetFolderId = change.targetFolderId
-      metadata.targetFolderLabel = change.targetFolderPath || getFolderLabelById(change.targetFolderId)
-    }
-  }
-
-  return metadata
-}
-
-function appendUniqueValues(result, values) {
-  const seen = new Set(result.map((value) => value.toLowerCase()))
-  for (let i = 0; i < values.length; i++) {
-    const value = String(values[i] || '').trim()
-    const key = value.toLowerCase()
-    if (value && !seen.has(key)) {
-      seen.add(key)
-      result.push(value)
-    }
   }
 }
 
