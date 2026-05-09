@@ -136,7 +136,5 @@ function ensureTagify(input, currentTagify, whitelist) {
 }
 
 function transformTag(tagData) {
-  if (tagData.value.includes('#')) {
-    tagData.value = tagData.value.split('#').join('')
-  }
+  tagData.value = normalizeTagName(tagData.value)
 }

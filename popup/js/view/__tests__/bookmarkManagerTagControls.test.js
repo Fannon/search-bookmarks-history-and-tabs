@@ -1,6 +1,7 @@
 import { describe, expect, test } from '@jest/globals'
 
 import {
+  ensureManagerTagControls,
   getManagerTagControlValues,
   normalizeManagerTagValues,
   setManagerTagControlDisabled,
@@ -56,5 +57,31 @@ describe('bookmark manager tag controls', () => {
 
     expect(disabledCalls).toEqual([true, false])
     expect(ext.dom.manager.bookmarkEditTags.disabled).toBe(false)
+  })
+
+  test('normalizes Tagify display values with the persisted tag rules', () => {
+    const ext = createExt()
+    const createdTagifyOptions = []
+    const originalTagify = globalThis.Tagify
+
+    globalThis.Tagify = function Tagify(_input, options) {
+      createdTagifyOptions.push(options)
+      this.whitelist = options.whitelist
+    }
+
+    try {
+      ext.model.bookmarkManager = {
+        tagGroups: [{ name: 'docs' }],
+      }
+
+      ensureManagerTagControls(ext)
+
+      const tagData = { value: ' #Project   Docs/AI ' }
+      createdTagifyOptions[0].transformTag(tagData)
+
+      expect(tagData.value).toBe('project-docsai')
+    } finally {
+      globalThis.Tagify = originalTagify
+    }
   })
 })
