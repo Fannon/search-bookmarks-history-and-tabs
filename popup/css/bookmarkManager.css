@@ -1139,6 +1139,18 @@ h3 {
   margin-top: 16px;
 }
 
+.cleanup-review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.cleanup-review-header h2 {
+  margin: 0;
+}
+
 .cleanup-proposal-summary {
   color: var(--fg);
   font-size: 14px;

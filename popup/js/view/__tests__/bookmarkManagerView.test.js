@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals'
 
 import {
+  addManagerTagInputValues,
   bindBookmarkManagerEvents,
   getBookmarkManagerDom,
   getManagedActionTargetIds,
@@ -80,15 +81,21 @@ function setupDom() {
     <select id="cleanup-bookmark-limit"><option value="1000">1000 bookmarks</option></select>
     <textarea id="cleanup-prompt"></textarea>
     <span id="cleanup-prompt-size"></span>
-    <textarea id="cleanup-proposal-json"></textarea>
-    <div id="cleanup-proposal-summary"></div>
-    <div id="cleanup-proposal-list"></div>
+    <section class="cleanup-result-panel">
+      <textarea id="cleanup-proposal-json"></textarea>
+    </section>
+    <section class="cleanup-review-section">
+      <header class="cleanup-review-header">
+        <button id="apply-all-cleanup-changes"></button>
+      </header>
+      <div id="cleanup-proposal-summary"></div>
+      <div id="cleanup-proposal-list"></div>
+    </section>
     <div id="cleanup-status"></div>
     <button id="generate-cleanup-prompt"></button>
     <button id="generate-cleanup-prompt-full"></button>
     <button id="run-local-cleanup"></button>
     <button id="copy-cleanup-prompt"></button>
-    <button id="apply-all-cleanup-changes"></button>
     <button id="delete-selected"><span data-selected-count></span></button>
     <button id="select-suggested"></button>
     <button id="select-none"></button>
@@ -282,6 +289,28 @@ describe('bookmarkManagerView selection', () => {
     expect(button.textContent).toBe('Suggest tags')
   })
 
+  test('clears suggested bulk tags when the action target changes', () => {
+    const rows = document.querySelectorAll('[data-managed-bookmark-row-id]')
+    const bulkTags = document.getElementById('bookmark-bulk-tags')
+    const status = document.getElementById('tag-suggestion-status')
+
+    rows[0].querySelector('.url').click()
+    addManagerTagInputValues('bulk', ['suggested'])
+    showTagSuggestionStatus('Suggested 1 tag', 'success', false)
+
+    expect(ext.model.bookmarkManagerSuggestedTagsReady).toBe(true)
+    expect(bulkTags.disabled).toBe(false)
+    expect(bulkTags.value).toContain('suggested')
+    expect(status.textContent).toBe('Suggested 1 tag')
+
+    rows[1].querySelector('.url').click()
+
+    expect(ext.model.bookmarkManagerSuggestedTagsReady).toBe(false)
+    expect(bulkTags.disabled).toBe(false)
+    expect(bulkTags.value).toBe('')
+    expect(status.textContent).toBe('')
+  })
+
   test('enables manual bulk tags without suggested tags', () => {
     const rows = document.querySelectorAll('[data-managed-bookmark-row-id]')
     const bulkTags = document.getElementById('bookmark-bulk-tags')
@@ -352,6 +381,13 @@ describe('bookmarkManagerView selection', () => {
 
     expect(document.getElementById('cleanup-proposal-list').textContent).toContain('Move to ~GitHub PR')
     expect(document.getElementById('cleanup-proposal-list').textContent).not.toContain('~1199')
+  })
+
+  test('places apply all with the proposed changes review controls', () => {
+    const applyAll = document.getElementById('apply-all-cleanup-changes')
+
+    expect(applyAll.closest('.cleanup-review-section')).not.toBe(null)
+    expect(applyAll.closest('.cleanup-result-panel')).toBe(null)
   })
 
   test('renders undo history with structured action details', () => {

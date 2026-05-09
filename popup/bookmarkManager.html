@@ -297,9 +297,6 @@
           </section>
 
           <section class="cleanup-result-panel">
-            <div class="cleanup-toolbar">
-              <button id="apply-all-cleanup-changes" class="button success" type="button" disabled>Apply All</button>
-            </div>
             <label for="cleanup-proposal-json">Proposal JSON</label>
             <textarea id="cleanup-proposal-json" spellcheck="false" rows="16"
               placeholder="Paste the LLM JSON response here"></textarea>
@@ -308,7 +305,10 @@
         </div>
 
         <section class="cleanup-review-section">
-          <h2>Proposed Changes</h2>
+          <header class="cleanup-review-header">
+            <h2>Proposed Changes</h2>
+            <button id="apply-all-cleanup-changes" class="button success" type="button" disabled>Apply All</button>
+          </header>
           <div id="cleanup-proposal-summary" class="cleanup-proposal-summary"></div>
           <div id="cleanup-proposal-list"></div>
         </section>

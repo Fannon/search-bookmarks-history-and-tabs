@@ -262,6 +262,7 @@ export function bindBookmarkManagerEvents({
       return
     }
 
+    const previousTargetSignature = getManagedActionTargetSignature()
     const bookmarkId = event.target.dataset.managedBookmarkId
     const temporarySelectedId = getTemporaryManagedBookmarkSelectedId()
     ext.model.bookmarkManagerHasManualSelection = true
@@ -274,6 +275,7 @@ export function bindBookmarkManagerEvents({
     onSelectBookmark(bookmarkId, event.target.checked || temporarySelectedId === bookmarkId)
     onBookmarkNavigation()
     syncManagedBookmarkSelectionRows()
+    clearSuggestedTagsIfManagedSelectionChanged(previousTargetSignature)
   })
   dom.managedBookmarkList.addEventListener('click', (event) => {
     const row = event.target.closest('[data-managed-bookmark-row-id]')
@@ -281,17 +283,26 @@ export function bindBookmarkManagerEvents({
       return
     }
 
+    const previousTargetSignature = getManagedActionTargetSignature()
     setCurrentManagedBookmark(row.dataset.managedBookmarkRowId)
-    updateManagedSelectionUi()
+    if (!clearSuggestedTagsIfManagedSelectionChanged(previousTargetSignature)) {
+      updateManagedSelectionUi()
+    }
     onBookmarkNavigation()
   })
   dom.selectVisibleBookmarks.addEventListener('click', () => {
+    const previousTargetSignature = getManagedActionTargetSignature()
     selectVisibleManagedBookmarks()
-    updateManagedSelectionUi()
+    if (!clearSuggestedTagsIfManagedSelectionChanged(previousTargetSignature)) {
+      updateManagedSelectionUi()
+    }
   })
   dom.clearManagedSelection.addEventListener('click', () => {
+    const previousTargetSignature = getManagedActionTargetSignature()
     clearManagedBookmarkSelection()
-    updateManagedSelectionUi()
+    if (!clearSuggestedTagsIfManagedSelectionChanged(previousTargetSignature)) {
+      updateManagedSelectionUi()
+    }
   })
   dom.saveManagedBookmark.addEventListener('click', onSaveBookmark)
   dom.bookmarkMoveFolder.addEventListener('change', updateManagedSelectionUi)
@@ -1424,6 +1435,19 @@ function selectVisibleManagedBookmarks() {
 
 function setCurrentManagedBookmark(bookmarkId) {
   ext.model.bookmarkManagerCurrentId = String(bookmarkId || '')
+}
+
+function clearSuggestedTagsIfManagedSelectionChanged(previousTargetSignature) {
+  if (previousTargetSignature === getManagedActionTargetSignature()) {
+    return false
+  }
+
+  clearManagerSuggestedTags()
+  return true
+}
+
+function getManagedActionTargetSignature() {
+  return getManagedActionTargetIds().map(String).sort().join('\u0000')
 }
 
 function syncManagedBookmarkCheckboxes() {
