@@ -399,6 +399,14 @@ button {
   flex-wrap: wrap;
 }
 
+.cleanup-toolbar-placeholder {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: 34px;
+}
+
 .bookmark-browser-summary {
   min-height: 22px;
   color: var(--fg);
