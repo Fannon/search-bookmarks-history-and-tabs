@@ -26,7 +26,7 @@
   --badge-folder: #3c8d8d;
   --badge-date: #bb8c26;
   --danger: #d9534f;
-  --success: #5fc944;
+  --success: #2f7d32;
   --panel-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
@@ -599,10 +599,6 @@ button {
   color: var(--li-title);
   font-size: 13px;
   line-height: 1.2;
-}
-
-.full-width {
-  width: 100%;
 }
 
 .bookmark-edit-panel .tagify {
