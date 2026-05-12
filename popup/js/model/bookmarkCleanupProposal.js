@@ -9,252 +9,77 @@ const PROMPT_BOOKMARK_TEXT_BUDGET = 80000
 const PROMPT_TEXT_LIMIT = 180
 const PROMPT_FULL = 'full'
 const PROMPT_LITE = 'lite'
+const STRING_SCHEMA = { type: 'string' }
+const STRING_ARRAY_SCHEMA = { type: 'array', items: STRING_SCHEMA }
+const OBJECT_SCHEMA_BASE = { type: 'object', additionalProperties: false }
 
-export const bookmarkCleanupProposalSchema = {
-  $schema: 'https://json-schema.org/draft/2020-12/schema',
-  $id: 'https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/change-proposal.schema.json',
-  title: 'Bookmark Cleanup Proposal',
-  type: 'object',
-  additionalProperties: false,
-  required: ['changes'],
-  properties: {
-    summary: {
-      type: 'string',
+function createChangeSchema(required, properties) {
+  return {
+    ...OBJECT_SCHEMA_BASE,
+    required,
+    properties: {
+      id: STRING_SCHEMA,
+      ...properties,
+      reason: STRING_SCHEMA,
     },
-    changes: {
-      type: 'object',
-      additionalProperties: false,
-      properties: {
-        addTags: {
-          type: 'array',
-          items: { $ref: '#/$defs/tagChange' },
-        },
-        removeTags: {
-          type: 'array',
-          items: { $ref: '#/$defs/tagChange' },
-        },
-        renameTags: {
-          type: 'array',
-          items: { $ref: '#/$defs/renameTagChange' },
-        },
-        moveBookmarks: {
-          type: 'array',
-          items: { $ref: '#/$defs/moveBookmarkChange' },
-        },
-        deleteBookmarks: {
-          type: 'array',
-          items: { $ref: '#/$defs/deleteBookmarkChange' },
-        },
-        rewriteTitles: {
-          type: 'array',
-          items: { $ref: '#/$defs/rewriteTitleChange' },
-        },
-      },
+  }
+}
+
+function createChangeProperties() {
+  return {
+    addTags: {
+      type: 'array',
+      items: createChangeSchema(['id', 'bookmarkId', 'tags'], {
+        bookmarkId: STRING_SCHEMA,
+        tags: STRING_ARRAY_SCHEMA,
+      }),
     },
-  },
-  $defs: {
-    changeBase: {
-      type: 'object',
-      required: ['id'],
-      properties: {
-        id: {
-          type: 'string',
-        },
-        reason: {
-          type: 'string',
-        },
-      },
+    removeTags: {
+      type: 'array',
+      items: createChangeSchema(['id', 'bookmarkId', 'tags'], {
+        bookmarkId: STRING_SCHEMA,
+        tags: STRING_ARRAY_SCHEMA,
+      }),
     },
-    tagChange: {
-      allOf: [
-        { $ref: '#/$defs/changeBase' },
-        {
-          type: 'object',
-          additionalProperties: false,
-          required: ['id', 'bookmarkId', 'tags'],
-          properties: {
-            id: { type: 'string' },
-            bookmarkId: { type: 'string' },
-            tags: {
-              type: 'array',
-              minItems: 1,
-              maxItems: 8,
-              items: { type: 'string' },
-            },
-            reason: { type: 'string' },
-          },
-        },
-      ],
+    renameTags: {
+      type: 'array',
+      items: createChangeSchema(['id', 'from', 'to'], {
+        from: STRING_SCHEMA,
+        to: STRING_SCHEMA,
+      }),
     },
-    renameTagChange: {
-      allOf: [
-        { $ref: '#/$defs/changeBase' },
-        {
-          type: 'object',
-          additionalProperties: false,
-          required: ['id', 'from', 'to'],
-          properties: {
-            id: { type: 'string' },
-            from: { type: 'string' },
-            to: { type: 'string' },
-            bookmarkIds: {
-              type: 'array',
-              items: { type: 'string' },
-            },
-            reason: { type: 'string' },
-          },
-        },
-      ],
+    moveBookmarks: {
+      type: 'array',
+      items: createChangeSchema(['id', 'bookmarkId', 'targetFolderId'], {
+        bookmarkId: STRING_SCHEMA,
+        targetFolderId: STRING_SCHEMA,
+      }),
     },
-    moveBookmarkChange: {
-      allOf: [
-        { $ref: '#/$defs/changeBase' },
-        {
-          type: 'object',
-          additionalProperties: false,
-          required: ['id', 'bookmarkId', 'targetFolderId'],
-          properties: {
-            id: { type: 'string' },
-            bookmarkId: { type: 'string' },
-            targetFolderId: { type: 'string' },
-            targetFolderPath: { type: 'string' },
-            reason: { type: 'string' },
-          },
-        },
-      ],
+    deleteBookmarks: {
+      type: 'array',
+      items: createChangeSchema(['id', 'bookmarkId', 'duplicateOfBookmarkId'], {
+        bookmarkId: STRING_SCHEMA,
+        duplicateOfBookmarkId: STRING_SCHEMA,
+      }),
     },
-    deleteBookmarkChange: {
-      allOf: [
-        { $ref: '#/$defs/changeBase' },
-        {
-          type: 'object',
-          additionalProperties: false,
-          required: ['id', 'bookmarkId', 'duplicateOfBookmarkId'],
-          properties: {
-            id: { type: 'string' },
-            bookmarkId: { type: 'string' },
-            duplicateOfBookmarkId: { type: 'string' },
-            reason: { type: 'string' },
-          },
-        },
-      ],
+    rewriteTitles: {
+      type: 'array',
+      items: createChangeSchema(['id', 'bookmarkId', 'title'], {
+        bookmarkId: STRING_SCHEMA,
+        title: STRING_SCHEMA,
+      }),
     },
-    rewriteTitleChange: {
-      allOf: [
-        { $ref: '#/$defs/changeBase' },
-        {
-          type: 'object',
-          additionalProperties: false,
-          required: ['id', 'bookmarkId', 'title'],
-          properties: {
-            id: { type: 'string' },
-            bookmarkId: { type: 'string' },
-            title: { type: 'string' },
-            reason: { type: 'string' },
-          },
-        },
-      ],
-    },
-  },
+  }
 }
 
 export const localAiBookmarkCleanupProposalSchema = {
-  type: 'object',
-  additionalProperties: false,
+  ...OBJECT_SCHEMA_BASE,
   required: ['summary', 'changes'],
   properties: {
-    summary: {
-      type: 'string',
-    },
+    summary: STRING_SCHEMA,
     changes: {
-      type: 'object',
-      additionalProperties: false,
-      properties: {
-        addTags: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            required: ['id', 'bookmarkId', 'tags'],
-            properties: {
-              id: { type: 'string' },
-              bookmarkId: { type: 'string' },
-              tags: { type: 'array', items: { type: 'string' } },
-              reason: { type: 'string' },
-            },
-          },
-        },
-        removeTags: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            required: ['id', 'bookmarkId', 'tags'],
-            properties: {
-              id: { type: 'string' },
-              bookmarkId: { type: 'string' },
-              tags: { type: 'array', items: { type: 'string' } },
-              reason: { type: 'string' },
-            },
-          },
-        },
-        renameTags: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            required: ['id', 'from', 'to'],
-            properties: {
-              id: { type: 'string' },
-              from: { type: 'string' },
-              to: { type: 'string' },
-              reason: { type: 'string' },
-            },
-          },
-        },
-        moveBookmarks: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            required: ['id', 'bookmarkId', 'targetFolderId'],
-            properties: {
-              id: { type: 'string' },
-              bookmarkId: { type: 'string' },
-              targetFolderId: { type: 'string' },
-              reason: { type: 'string' },
-            },
-          },
-        },
-        deleteBookmarks: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            required: ['id', 'bookmarkId', 'duplicateOfBookmarkId'],
-            properties: {
-              id: { type: 'string' },
-              bookmarkId: { type: 'string' },
-              duplicateOfBookmarkId: { type: 'string' },
-              reason: { type: 'string' },
-            },
-          },
-        },
-        rewriteTitles: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            required: ['id', 'bookmarkId', 'title'],
-            properties: {
-              id: { type: 'string' },
-              bookmarkId: { type: 'string' },
-              title: { type: 'string' },
-              reason: { type: 'string' },
-            },
-          },
-        },
-      },
+      ...OBJECT_SCHEMA_BASE,
+      properties: createChangeProperties(),
     },
   },
 }
@@ -326,7 +151,6 @@ Before finalizing, verify:
 4. Every bookmarkId exists in the provided bookmark data.
 5. Every targetFolderId exists in the existing folder list.
 6. The first character is "{" and the last character is "}".
-${isLite ? '' : `- The JSON must validate against this schema:\n${JSON.stringify(bookmarkCleanupProposalSchema)}`}
 
 ## Input Data
 

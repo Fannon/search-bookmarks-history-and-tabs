@@ -58,10 +58,9 @@ const managerModel = {
 }
 
 describe('bookmark cleanup proposal', () => {
-  test('creates a prompt with schema and bookmark context', () => {
+  test('creates a prompt with output rules and bookmark context', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel)
 
-    expect(prompt).toContain('Bookmark Cleanup Proposal')
     expect(prompt).toContain('Act as a careful browser bookmark curator')
     expect(prompt).toContain('1 | OpenAI Docs')
     expect(prompt).toContain('dev | Development')
@@ -73,6 +72,7 @@ describe('bookmark cleanup proposal', () => {
     expect(prompt).toContain('Do not remove tags merely because they are generic or redundant')
     expect(prompt).toContain('Output raw JSON only')
     expect(prompt).toContain('first character of your response must be "{"')
+    expect(prompt).not.toContain('"$schema"')
     expect(prompt).not.toContain('Omitted bookmark count')
   })
 
