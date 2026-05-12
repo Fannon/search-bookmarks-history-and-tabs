@@ -25,7 +25,7 @@ With this extension you can also **tag your bookmarks** including auto completio
 The tags are considered when searching and can be used for navigation.
 Tabs support now the tab grouping feature by the browser.
 
-The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). It's also very lightweight (< 120kb JavaScript, only ~30-40kb need to load initially - including dependencies).
+The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). The daily search popup stays lightweight: it loads about 33 KB of minified app JavaScript initially, with optional features such as fuzzy matching and the full-page Bookmark Manager bundled separately.
 
 > 💡 Have a look at the [Tips & Tricks](./Tips.md) collection.
 
@@ -38,6 +38,56 @@ The extension is very customizable (see [user options](#user-configuration)) and
 Press play to start the GIF animation:
 
 ![Demo Animation](/images/bookmark-and-history-search.gif 'Demo Animation')
+
+### Optional Bookmark Manager (Beta)
+
+The main purpose of this extension remains the fast search popup. As a complementary **beta** feature, there is also a full-page Bookmark Manager for reviewing bookmark statistics, browsing folders, editing bookmark metadata, cleaning up duplicate bookmark URLs, and managing tags. Where supported by the browser, it can suggest tags with a local (privacy-respecting) browser AI model; suggestions are reviewed before they are written to bookmarks.
+
+The Bookmark Manager also includes a beta AI Cleanup workspace. It can generate Lite or Advanced prompts for external AI tools, or ask the browser's local `LanguageModel` API for a JSON cleanup proposal. Proposals are reviewable before anything is applied and can cover tag additions/removals/renames, title rewrites, moves to existing folders, and confirmed duplicate deletions.
+
+Before using the Bookmark Manager, creating a backup/export of your browser bookmarks is highly recommended, especially before moving bookmarks, changing tags in bulk, or deleting duplicates.
+The manager can export your bookmarks in the standard browser bookmark HTML format. It also keeps the latest 50 undo steps in memory while the manager page stays open, but in-memory undo is not a substitute for a full bookmark export.
+
+Click a screenshot to open it full size:
+
+<table>
+  <tr>
+    <td width="50%">
+      <a href="./images/manager/overview.png">
+        <img src="./images/manager/overview.png" alt="Bookmark Manager overview" width="100%">
+      </a>
+    </td>
+    <td width="50%">
+      <a href="./images/manager/bookmark-manager.png">
+        <img src="./images/manager/bookmark-manager.png" alt="Bookmark browser and editor" width="100%">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <a href="./images/manager/bookmark-duplicates.png">
+        <img src="./images/manager/bookmark-duplicates.png" alt="Duplicate bookmark cleanup" width="100%">
+      </a>
+    </td>
+    <td width="50%">
+      <a href="./images/manager/tag-manager.png">
+        <img src="./images/manager/tag-manager.png" alt="Tag manager" width="100%">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <a href="./images/manager/ai-cleanup.png">
+        <img src="./images/manager/ai-cleanup.png" alt="AI Cleanup workspace" width="100%">
+      </a>
+    </td>
+    <td width="50%">
+      <a href="./images/manager/undo-history.png">
+        <img src="./images/manager/undo-history.png" alt="Undo history" width="100%">
+      </a>
+    </td>
+  </tr>
+</table>
 
 ## Browser Support
 
@@ -191,9 +241,12 @@ For the full scoring reference and all scoring configuration options, see:
 This extension is built to respect your privacy:
 
 - It does not have permissions for outside communication, so none of your data is shared or exposed externally.
+- Local AI tag suggestions and local AI Cleanup proposals in the optional Bookmark Manager use the browser's local `LanguageModel` API when available; selected or included bookmark metadata is sent only to that browser-managed local model.
+- If you copy a generated AI Cleanup prompt into an external AI tool, you are choosing to share the included bookmark metadata with that service.
 - It does not use external favicon services. Website favicons are read from browser-local APIs or caches where supported.
-- The extension does not even store any information except your user settings.
-  Every time the extension popup is closed, it "forgets" everything and starts from a blank slate next time you open it.
+- The extension uses [local storage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) to store user settings.
+  Bookmark Manager undo history is kept in memory only while the manager page stays open.
+  Every time the search popup is closed, it "forgets" search data and starts from a blank slate next time you open it.
 - There is no background job / processing. If the popup is not explicitly opened by the user, the extension is not executed.
 - The extension only requests the following permissions for the given reasons:
   - **bookmarks**: Necessary to read and edit the bookmarks. Can be disabled via [user configuration](#user-configuration).
@@ -209,7 +262,7 @@ This extension is built to respect your privacy:
 ### Privacy FAQ
 
 - **Does the extension send my bookmarks, history, tabs, or searches anywhere?** No. The extension has no network or telemetry code.
-- **What is stored?** Only your user options are stored. Bookmark edits are saved through the browser's bookmark API because they intentionally change your browser bookmarks.
+- **What is stored?** User options are stored. Bookmark Manager undo history is memory-only and disappears when the manager page is closed or reloaded. Bookmark edits are saved through the browser's bookmark API because they intentionally change your browser bookmarks.
 - **Why does it need bookmark, history, and tab permissions?** Those permissions are required to search and navigate those browser data sources. You can disable bookmarks, history, or tabs in the user configuration if you do not want a source included.
 - **Why is `favicon` optional?** The permission is only requested if you enable `displayFavicons: true`.
 

@@ -20,6 +20,10 @@ import { validateOptions } from '../model/validateOptions.js'
  * @returns {Promise<void>}
  */
 export async function initOptions() {
+  initOptionControls()
+  const configEl = document.getElementById('config')
+  const initialConfigValue = configEl.value
+
   if (!optionsSchema) {
     try {
       optionsSchema = (await import('../../json/options.schema.json', { with: { type: 'json' } })).default
@@ -32,35 +36,41 @@ export async function initOptions() {
   const userOptions = await getUserOptions()
   const userOptionsYaml = window.jsyaml.dump(userOptions)
 
+  if (configEl.value !== initialConfigValue) return
+
   if (userOptionsYaml.trim() === '{}') {
-    document.getElementById('config').value = ''
+    configEl.value = ''
   } else {
-    document.getElementById('config').value = userOptionsYaml
+    configEl.value = userOptionsYaml
   }
+}
 
+function initOptionControls() {
   // Ensure event listeners are only attached once to prevent duplicates
-  if (!isInitialized) {
-    document.getElementById('opt-reset').addEventListener('click', resetOptions)
-    document.getElementById('opt-save').addEventListener('click', saveOptions)
+  if (isInitialized) return
 
-    // Hide error overlay when focusing the textarea
-    document.getElementById('config').addEventListener('focus', hideErrors)
+  const resetBtn = document.getElementById('opt-reset')
+  const saveBtn = document.getElementById('opt-save')
+  const configEl = document.getElementById('config')
 
-    // Use event delegation for the error overlay buttons
-    const errorMessageEl = document.getElementById('error-message')
-    if (errorMessageEl) {
-      errorMessageEl.addEventListener('click', (ev) => {
-        if (ev.target.id === 'btn-dismiss') {
-          hideErrors()
-        } else if (ev.target.id === 'btn-clean') {
-          ev.stopPropagation()
-          removeUnknownOptions()
-        }
-      })
-    }
+  if (resetBtn) resetBtn.addEventListener('click', resetOptions)
+  if (saveBtn) saveBtn.addEventListener('click', saveOptions)
+  if (configEl) configEl.addEventListener('focus', hideErrors)
 
-    isInitialized = true
+  // Use event delegation for the error overlay buttons
+  const errorMessageEl = document.getElementById('error-message')
+  if (errorMessageEl) {
+    errorMessageEl.addEventListener('click', (ev) => {
+      if (ev.target.id === 'btn-dismiss') {
+        hideErrors()
+      } else if (ev.target.id === 'btn-clean') {
+        ev.stopPropagation()
+        removeUnknownOptions()
+      }
+    })
   }
+
+  isInitialized = true
 }
 
 /**

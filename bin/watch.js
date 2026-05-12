@@ -47,7 +47,7 @@ let isBuilding = false
 let hasQueuedBuild = false
 
 /**
- * Run a single bundle + dist build and report timing.
+ * Run a single bundle + dist build, sync the developer dist mirror, and report timing.
  *
  * @returns {Promise<void>}
  */

@@ -18,9 +18,10 @@ function setupDom() {
     <input id="bm-tags" />
     <a id="bm-save" href="#"></a>
     <button id="bm-del"></button>
+    <a id="bm-manager" href="./bookmarkManager.html#bookmarks"></a>
     <button id="bm-favorite" type="button" data-favorite="" aria-pressed="false" title="Favorite bookmark">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a8a8a" stroke-width="2"><path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245" /></svg>
-      <span class="favorite-label">FAVORITE</span>
+      <span class="favorite-score">+0</span>
     </button>
     <div id="errors" style="display:none"></div>
   `
@@ -167,6 +168,9 @@ describe('editBookmarkView', () => {
     expect(document.getElementById('bm-url').value).toBe('http://example.com')
     expect(document.getElementById('bm-save').dataset.bookmarkId).toBe(BOOKMARK_ID)
     expect(document.getElementById('bm-del').dataset.bookmarkId).toBe(BOOKMARK_ID)
+    expect(document.getElementById('bm-manager').getAttribute('href')).toBe(
+      './bookmarkManager.html?bookmark=bookmark-1#bookmarks',
+    )
     expect(global.ext.currentBookmarkId).toBe(BOOKMARK_ID)
 
     expect(helpers.tagifyInstances).toHaveLength(1)
@@ -212,6 +216,26 @@ describe('editBookmarkView', () => {
     expect(global.ext.tagify.removeAllTags).toHaveBeenCalledTimes(1)
     expect(global.ext.tagify.whitelist).toEqual(['delta', 'gamma'])
     expect(global.ext.tagify.addTags).toHaveBeenCalledWith(['gamma', 'delta'])
+  })
+
+  it('encodes bookmark ids in the bookmark manager deep link', async () => {
+    setupDom()
+    setupExt([
+      {
+        originalId: 'bookmark/with/slashes',
+        title: 'Original Title',
+        originalUrl: 'http://example.com',
+        tags: '',
+        folder: '~Work',
+      },
+    ])
+    const { module } = await loadEditBookmarkView()
+
+    await module.editBookmark('bookmark/with/slashes')
+
+    expect(document.getElementById('bm-manager').getAttribute('href')).toBe(
+      './bookmarkManager.html?bookmark=bookmark%2Fwith%2Fslashes#bookmarks',
+    )
   })
 
   it('updates bookmark metadata, persists via browser API, and resets search caches', async () => {
@@ -335,7 +359,7 @@ describe('editBookmarkView', () => {
     const favoriteButton = document.getElementById('bm-favorite')
     expect(favoriteButton.dataset.favorite).toBe('red')
     expect(favoriteButton.dataset.bonusScore).toBe('60')
-    expect(favoriteButton.querySelector('.favorite-label').textContent).toBe('★★★ (+60)')
+    expect(favoriteButton.querySelector('.favorite-score').textContent).toBe('+60')
     document.getElementById('bm-title').value = 'Updated Title'
     document.getElementById('bm-url').value = 'http://updated.com'
     global.ext.tagify = {
@@ -535,30 +559,37 @@ describe('editBookmarkView', () => {
       expect(button.getAttribute('aria-pressed')).toBe('true')
     })
 
-    it('updates label text based on state', async () => {
+    it('keeps the button compact while showing the current bonus score', async () => {
       setupDom()
       setupExt([])
       const { module } = await loadEditBookmarkView()
       const button = document.getElementById('bm-favorite')
-      const label = button.querySelector('.favorite-label')
 
       module.updateFavoriteButton(button, 'yellow')
-      expect(label.textContent).toBe('★ (+25)')
+      expect(button.querySelector('.favorite-score').textContent).toBe('+25')
+      expect(button.title).toBe('Favorite (+25)')
+      expect(button.getAttribute('aria-label')).toBe('Favorite (+25)')
 
       module.updateFavoriteButton(button, 'yellow', 15)
-      expect(label.textContent).toBe('★ (+15)')
+      expect(button.querySelector('.favorite-score').textContent).toBe('+15')
+      expect(button.title).toBe('Favorite (+15)')
 
       module.updateFavoriteButton(button, 'orange')
-      expect(label.textContent).toBe('★★ (+50)')
+      expect(button.querySelector('.favorite-score').textContent).toBe('+50')
+      expect(button.title).toBe('Favorite (+50)')
 
       module.updateFavoriteButton(button, 'orange', 30)
-      expect(label.textContent).toBe('★★ (+30)')
+      expect(button.querySelector('.favorite-score').textContent).toBe('+30')
+      expect(button.title).toBe('Favorite (+30)')
 
       module.updateFavoriteButton(button, 'red')
-      expect(label.textContent).toBe('★★★ (+75)')
+      expect(button.querySelector('.favorite-score').textContent).toBe('+75')
+      expect(button.title).toBe('Favorite (+75)')
 
       module.updateFavoriteButton(button, '')
-      expect(label.textContent).toBe('FAVORITE')
+      expect(button.querySelector('.favorite-score').textContent).toBe('+0')
+      expect(button.title).toBe('Favorite bookmark')
+      expect(button.getAttribute('aria-label')).toBe('Favorite bookmark')
     })
 
     it('does nothing if button is null', async () => {
@@ -711,7 +742,7 @@ describe('editBookmarkView', () => {
 
       const favoriteButton = document.getElementById('bm-favorite')
       expect(favoriteButton.dataset.favorite).toBe('')
-      expect(favoriteButton.querySelector('.favorite-label').textContent).toBe('FAVORITE')
+      expect(favoriteButton.querySelector('.favorite-score').textContent).toBe('+0')
     })
 
     it('initializes favorite button to yellow with actual score for non-standard bonus', async () => {
@@ -735,7 +766,8 @@ describe('editBookmarkView', () => {
       const favoriteButton = document.getElementById('bm-favorite')
       expect(favoriteButton.dataset.favorite).toBe('yellow')
       expect(favoriteButton.dataset.bonusScore).toBe('20')
-      expect(favoriteButton.querySelector('.favorite-label').textContent).toBe('★ (+20)')
+      expect(favoriteButton.querySelector('.favorite-score').textContent).toBe('+20')
+      expect(favoriteButton.title).toBe('Favorite (+20)')
     })
 
     it('initializes favorite button to orange with actual score for score 35', async () => {
@@ -759,7 +791,8 @@ describe('editBookmarkView', () => {
       const favoriteButton = document.getElementById('bm-favorite')
       expect(favoriteButton.dataset.favorite).toBe('orange')
       expect(favoriteButton.dataset.bonusScore).toBe('35')
-      expect(favoriteButton.querySelector('.favorite-label').textContent).toBe('★★ (+35)')
+      expect(favoriteButton.querySelector('.favorite-score').textContent).toBe('+35')
+      expect(favoriteButton.title).toBe('Favorite (+35)')
     })
   })
 })

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/change-undo.schema.json",
+  "title": "Bookmark Undo History",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "snapshots"],
+  "properties": {
+    "version": {
+      "const": "bookmark-undo-history/v1"
+    },
+    "exportedAt": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "snapshots": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/snapshot"
+      }
+    }
+  },
+  "$defs": {
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "createdAt", "description", "bookmarks"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "bookmarks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/bookmark"
+          }
+        }
+      }
+    },
+    "bookmark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "url"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "string"
+        },
+        "index": {
+          "type": "number"
+        },
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

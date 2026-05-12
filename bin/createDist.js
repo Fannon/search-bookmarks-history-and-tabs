@@ -3,7 +3,7 @@ import { createWriteStream } from 'node:fs'
 import { join } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import archiver from 'archiver'
+import { ZipArchive } from 'archiver'
 /**
  * @file Builds the Chrome-ready distribution directory and archive.
  *
@@ -14,7 +14,13 @@ import archiver from 'archiver'
 import fs from 'fs-extra'
 
 // Track CSS files that receive minified companions so we can prune originals
-const CSS_BUNDLED_FILENAMES = new Set(['style.css', 'options.css', 'taxonomy.css', 'editBookmark.css'])
+const CSS_BUNDLED_FILENAMES = new Set([
+  'style.css',
+  'options.css',
+  'taxonomy.css',
+  'editBookmark.css',
+  'bookmarkManager.css',
+])
 
 /**
  * Build the Chrome distribution directory and accompanying archive.
@@ -47,6 +53,7 @@ export async function createDist(clean = true) {
   await modifyHtmlFile('dist/chrome/popup/folders.html')
   await modifyHtmlFile('dist/chrome/popup/groups.html')
   await modifyHtmlFile('dist/chrome/popup/editBookmark.html')
+  await modifyHtmlFile('dist/chrome/popup/bookmarkManager.html')
 
   // Remove mock data and test artifacts
   await fs.rm('dist/chrome/popup/mockData', { recursive: true, force: true })
@@ -59,7 +66,7 @@ export async function createDist(clean = true) {
   console.info(`Created dist/chrome/`)
 
   // Create zip archive
-  const archive = archiver('zip', { zlib: { level: 9 } })
+  const archive = new ZipArchive({ zlib: { level: 9 } })
   const output = createWriteStream('dist/chrome.zip')
 
   return new Promise((resolve, reject) => {

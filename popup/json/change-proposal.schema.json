@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/change-proposal.schema.json",
+  "title": "Bookmark Cleanup Proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["changes"],
+  "properties": {
+    "summary": {
+      "type": "string"
+    },
+    "changes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "addTags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tagChange"
+          }
+        },
+        "removeTags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tagChange"
+          }
+        },
+        "renameTags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/renameTagChange"
+          }
+        },
+        "moveBookmarks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/moveBookmarkChange"
+          }
+        },
+        "deleteBookmarks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/deleteBookmarkChange"
+          }
+        },
+        "rewriteTitles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rewriteTitleChange"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "tagChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "bookmarkId", "tags"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "bookmarkId": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "renameTagChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "from", "to"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "bookmarkIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "moveBookmarkChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "bookmarkId", "targetFolderId"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "bookmarkId": {
+          "type": "string"
+        },
+        "targetFolderId": {
+          "type": "string"
+        },
+        "targetFolderPath": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "deleteBookmarkChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "bookmarkId", "duplicateOfBookmarkId"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "bookmarkId": {
+          "type": "string"
+        },
+        "duplicateOfBookmarkId": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "rewriteTitleChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "bookmarkId", "title"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "bookmarkId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

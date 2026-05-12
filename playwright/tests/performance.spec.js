@@ -189,4 +189,164 @@ test.describe('Performance Benchmarks', () => {
       expect(perfResults).toBeLessThan(300)
     }
   })
+
+  test('Bookmark Manager renders and filters a 10k bookmark dataset', async ({ page }) => {
+    test.setTimeout(20000)
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await page.goto('/bookmarkManager.html#bookmarks')
+    await expect(page.locator('#bookmark-manager-search')).toBeVisible()
+    await expect(page.locator('#managed-bookmark-list')).toBeVisible()
+
+    const initialRenderMs = await page.evaluate(async () => {
+      const { createBookmarkManagerModel } = await import('./js/model/bookmarkManagerData.js')
+      const { renderBookmarkManager, renderBookmarkWorkspace } = await import('./js/view/bookmarkManagerView.js')
+      const count = 10000
+      const now = Date.now()
+      const bookmarks = []
+      const topics = ['Docs', 'API', 'Release', 'Design', 'Testing', 'Performance']
+      const folders = ['Engineering', 'Research', 'Archive', 'Product', 'Support']
+      const domains = ['example.com', 'developer.mozilla.org', 'github.com', 'docs.example.test']
+
+      for (let i = 0; i < count; i++) {
+        const topic = topics[i % topics.length]
+        const folder = folders[i % folders.length]
+        const subfolder = `${topic} ${i % 20}`
+        const url = `https://${domains[i % domains.length]}/manager/perf/${i % 250 === 0 ? 'duplicate' : i}`
+        const tagsArray = [topic, `batch-${i % 50}`, i % 7 === 0 ? 'review' : 'keep']
+        const title = `Manager Performance Bookmark ${i} ${topic}`
+        const folderArray = [folder, subfolder]
+        const tags = `#${tagsArray.join(' #')}`
+        const normalizedUrl = url.replace(/^https?:\/\//, '')
+        const folderText = `~${folderArray.join(' ~')}`
+
+        bookmarks.push({
+          type: 'bookmark',
+          originalId: `manager-perf-${i}`,
+          title,
+          titleLower: title.toLowerCase(),
+          url: normalizedUrl,
+          originalUrl: url,
+          dateAdded: now - i * 60000,
+          _dateAddedISO: new Date(now - i * 60000).toISOString(),
+          folder,
+          folderArray,
+          folderArrayLower: folderArray.map((entry) => entry.toLowerCase()),
+          folderId: `folder-${i % 100}`,
+          tags,
+          tagsLower: tags.toLowerCase(),
+          tagsArray,
+          tagsArrayLower: tagsArray.map((entry) => entry.toLowerCase()),
+          customBonusScore: i % 25 === 0 ? 50 : 0,
+          score: 100,
+          searchStringLower: `${title}¦${normalizedUrl}¦${tags}¦${folderText}`.toLowerCase(),
+        })
+      }
+
+      const model = createBookmarkManagerModel(bookmarks, [])
+      window.ext.model.bookmarks = bookmarks
+      window.ext.model.bookmarkManager = model
+      window.ext.model.bookmarkManagerFolderId = 'all'
+      window.ext.model.bookmarkManagerSelectedIds = new Set()
+      window.ext.model.bookmarkManagerCurrentId = ''
+      window.ext.model.bookmarkManagerHasManualSelection = false
+      window.ext.model.bookmarkManagerSuggestedTagsReady = false
+      window.ext.model.bookmarkManagerLocalAiAvailable = false
+      window.ext.model.searchMode = 'bookmarks'
+      window.ext.searchCache = new Map()
+      document.getElementById('bookmark-manager-search').value = ''
+
+      const start = performance.now()
+      renderBookmarkManager(model, true, true)
+      renderBookmarkWorkspace(model.bookmarks, true, true)
+      return performance.now() - start
+    })
+
+    const renderedBookmarkCount = await page.evaluate(
+      () => document.querySelectorAll('[data-managed-bookmark-row-id]').length,
+    )
+    expect(renderedBookmarkCount).toBe(500)
+    await expect(page.locator('#managed-bookmark-list')).toContainText('Showing first 500 of 10,000')
+
+    const selectVisibleMs = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const summary = document.getElementById('bookmark-selection-summary')
+          const observer = new MutationObserver(() => {
+            observer.disconnect()
+            requestAnimationFrame(() => resolve(performance.now() - start))
+          })
+          observer.observe(summary, { childList: true, subtree: true, characterData: true })
+          const start = performance.now()
+          document.getElementById('select-visible-bookmarks').click()
+        }),
+    )
+    await expect(page.locator('#bookmark-selection-summary')).toHaveText('10,000 selected bookmarks')
+
+    await page.evaluate(() => document.getElementById('clear-managed-selection').click())
+
+    const folderSwitchMs = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const list = document.getElementById('managed-bookmark-list')
+          const folderButton = document.querySelector('[data-manager-folder-id]:not([data-manager-folder-id="all"])')
+          const observer = new MutationObserver(() => {
+            observer.disconnect()
+            requestAnimationFrame(() => resolve(performance.now() - start))
+          })
+          observer.observe(list, { childList: true, subtree: true })
+          const start = performance.now()
+          folderButton.click()
+        }),
+    )
+
+    await page.locator('[data-manager-folder-id="all"]').click()
+
+    const searchRenderMs = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const list = document.getElementById('managed-bookmark-list')
+          const input = document.getElementById('bookmark-manager-search')
+          const observer = new MutationObserver(() => {
+            observer.disconnect()
+            requestAnimationFrame(() => resolve(performance.now() - start))
+          })
+          observer.observe(list, { childList: true, subtree: true })
+          const start = performance.now()
+          input.value = 'manager 9876'
+          input.dispatchEvent(new Event('input', { bubbles: true }))
+        }),
+    )
+    await expect(page.locator('[data-managed-bookmark-row-id]')).not.toHaveCount(0)
+
+    const tagPanelMs = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const tagList = document.getElementById('tag-list')
+          const observer = new MutationObserver(() => {
+            observer.disconnect()
+            requestAnimationFrame(() => resolve(performance.now() - start))
+          })
+          observer.observe(tagList, { childList: true, subtree: true })
+          const start = performance.now()
+          window.location.hash = '#tags'
+        }),
+    )
+    await expect(page.locator('[data-manager-panel="tags"]')).toBeVisible()
+    await expect(page.locator('.tag-bookmark-panel')).toContainText('Showing first 500')
+    await expect(page.locator('.tag-bookmark-list .bookmark')).toHaveCount(500)
+
+    console.log(
+      `Playwright: Bookmark Manager 10k render=${initialRenderMs.toFixed(2)}ms search=${searchRenderMs.toFixed(
+        2,
+      )}ms select=${selectVisibleMs.toFixed(2)}ms folder=${folderSwitchMs.toFixed(2)}ms tagPanel=${tagPanelMs.toFixed(
+        2,
+      )}ms`,
+    )
+
+    expect(initialRenderMs).toBeLessThan(5000)
+    expect(searchRenderMs).toBeLessThan(1000)
+    expect(selectVisibleMs).toBeLessThan(1500)
+    expect(folderSwitchMs).toBeLessThan(5000)
+    expect(tagPanelMs).toBeLessThan(500)
+  })
 })

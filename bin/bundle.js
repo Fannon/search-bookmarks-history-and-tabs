@@ -54,6 +54,12 @@ const jsBundles = [
     outfile: resolve(repoRoot, 'popup/js/initEditBookmark.bundle.min.js'),
     globalName: 'editBookmarkPopup',
   },
+  {
+    name: 'initBookmarkManager',
+    entry: resolve(repoRoot, 'popup/js/initBookmarkManager.js'),
+    outfile: resolve(repoRoot, 'popup/js/initBookmarkManager.bundle.min.js'),
+    globalName: 'bookmarkManager',
+  },
 ]
 
 // Shared esbuild options keep bundle output consistent between entry points
@@ -105,6 +111,11 @@ export async function bundleAll() {
       name: 'editBookmark',
       entry: resolve(repoRoot, 'popup/css/editBookmark.css'),
       outfile: resolve(repoRoot, 'popup/css/editBookmark.min.css'),
+    },
+    {
+      name: 'bookmarkManager',
+      entry: resolve(repoRoot, 'popup/css/bookmarkManager.css'),
+      outfile: resolve(repoRoot, 'popup/css/bookmarkManager.min.css'),
     },
   ]
 
