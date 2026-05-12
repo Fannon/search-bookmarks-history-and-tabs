@@ -122,7 +122,7 @@ export async function initBookmarkManager() {
     onRenameTag: renameTag,
     onRemoveTag: removeTag,
     onOpenBookmark: openBookmarkInManager,
-    onOpenBookmarkEditor: openBookmarkEditorPopup,
+
     onBookmarkNavigation: writeBookmarkBrowserUrl,
     onUndoBookmarkChange: undoBookmarkChange,
     onExportBookmarks: exportBookmarks,
@@ -220,31 +220,6 @@ async function openBookmarkInManager(bookmarkId) {
   await updateBookmarkBrowser()
   scrollManagedBookmarkIntoView(bookmark.originalId)
   scrollActiveFolderIntoView()
-}
-
-async function openBookmarkEditorPopup(event, url) {
-  if (typeof ext.browserApi.windows?.create !== 'function') {
-    return
-  }
-
-  event.preventDefault()
-
-  try {
-    await ext.browserApi.windows.create({
-      url,
-      type: 'popup',
-      width: getPopupDimension('--w', 515),
-      height: getPopupDimension('--h', 600),
-    })
-  } catch (error) {
-    showManagerStatus('Editor popup failed', 'error')
-    printError(error, 'Could not open bookmark editor popup.')
-  }
-}
-
-function getPopupDimension(cssVariable, fallback) {
-  const value = Number.parseInt(getComputedStyle(document.documentElement).getPropertyValue(cssVariable), 10)
-  return Number.isFinite(value) && value > 0 ? value : fallback
 }
 
 function applyBookmarkDeepLinkState() {

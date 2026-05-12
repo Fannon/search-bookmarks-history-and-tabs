@@ -59,7 +59,6 @@ function setupDom() {
     <input id="bookmark-edit-url" />
     <input id="bookmark-edit-tags" />
     <input id="bookmark-edit-score" />
-    <a id="open-bookmark-editor" href="./editBookmark.html" aria-disabled="true"></a>
     <button id="save-managed-bookmark"></button>
     <div id="stats-grid"></div>
     <div id="top-tags"></div>
@@ -154,7 +153,6 @@ function setupExt() {
 }
 
 function bindEvents() {
-  const onOpenBookmarkEditor = jest.fn((event) => event.preventDefault())
   bindBookmarkManagerEvents({
     onRefresh: jest.fn(),
     onDeleteSelected: jest.fn(),
@@ -168,7 +166,6 @@ function bindEvents() {
     onRenameTag: jest.fn(),
     onRemoveTag: jest.fn(),
     onOpenBookmark: jest.fn(),
-    onOpenBookmarkEditor,
     onBookmarkNavigation: jest.fn(),
     onUndoBookmarkChange: jest.fn(),
     onExportBookmarks: jest.fn(),
@@ -184,7 +181,6 @@ function bindEvents() {
     onApplyCleanupCategory: jest.fn(),
     onApplyAllCleanupChanges: jest.fn(),
   })
-  return { onOpenBookmarkEditor }
 }
 
 function renderWorkspace() {
@@ -211,10 +207,6 @@ describe('bookmarkManagerView selection', () => {
     expect(document.getElementById('bookmark-edit-title').disabled).toBe(false)
     expect(document.getElementById('bookmark-edit-score').disabled).toBe(false)
     expect(document.getElementById('bookmark-edit-score').value).toBe('25')
-    expect(document.getElementById('open-bookmark-editor').getAttribute('href')).toBe(
-      './editBookmark.html#bookmark/bookmark-1',
-    )
-    expect(document.getElementById('open-bookmark-editor').getAttribute('aria-disabled')).toBe('false')
     expect(getSelectedManagedBookmarkIds()).toEqual([])
 
     document.getElementById('bookmark-edit-score').value = '42'
@@ -252,7 +244,6 @@ describe('bookmarkManagerView selection', () => {
     expect(document.getElementById('bookmark-edit-title').disabled).toBe(true)
     expect(document.getElementById('bookmark-edit-url').disabled).toBe(true)
     expect(document.getElementById('bookmark-edit-score').disabled).toBe(true)
-    expect(document.getElementById('open-bookmark-editor').getAttribute('aria-disabled')).toBe('true')
     expect(getManagedActionTargetIds()).toEqual(['bookmark-1'])
 
     inputs[1].click()
@@ -326,18 +317,6 @@ describe('bookmarkManagerView selection', () => {
     bulkTags.dispatchEvent(new Event('input'))
 
     expect(addButton.disabled).toBe(false)
-  })
-
-  test('opens the current bookmark editor through the bound popup handler', () => {
-    const editor = document.getElementById('open-bookmark-editor')
-    document.querySelector('[data-managed-bookmark-row-id="bookmark-1"] .url').click()
-
-    editor.click()
-
-    expect(global.boundHandlers.onOpenBookmarkEditor).toHaveBeenCalledWith(
-      expect.any(MouseEvent),
-      expect.stringContaining('/editBookmark.html#bookmark/bookmark-1'),
-    )
   })
 
   test('renders move folder options as indented folder names without repeated parent trails', () => {

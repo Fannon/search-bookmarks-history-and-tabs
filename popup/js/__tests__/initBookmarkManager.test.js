@@ -64,7 +64,6 @@ function setupDom() {
     <input id="bookmark-edit-url" />
     <input id="bookmark-edit-tags" />
     <input id="bookmark-edit-score" />
-    <a id="open-bookmark-editor" href="./editBookmark.html" aria-disabled="true"></a>
     <button id="save-managed-bookmark"></button>
     <div id="stats-grid"></div>
     <div id="top-tags"></div>

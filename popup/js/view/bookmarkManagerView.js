@@ -68,7 +68,6 @@ export function getBookmarkManagerDom() {
     bookmarkEditUrl: document.getElementById('bookmark-edit-url'),
     bookmarkEditTags: document.getElementById('bookmark-edit-tags'),
     bookmarkEditScore: document.getElementById('bookmark-edit-score'),
-    openBookmarkEditor: document.getElementById('open-bookmark-editor'),
     saveManagedBookmark: document.getElementById('save-managed-bookmark'),
     statsGrid: document.getElementById('stats-grid'),
     topTags: document.getElementById('top-tags'),
@@ -160,7 +159,6 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
  * @param {Function} handlers.onRenameTag Tag rename handler.
  * @param {Function} handlers.onRemoveTag Tag removal handler.
  * @param {Function} handlers.onOpenBookmark Open bookmark in the editable bookmark browser.
- * @param {Function} handlers.onOpenBookmarkEditor Open standalone bookmark editor handler.
  * @param {Function} handlers.onBookmarkNavigation Bookmark browser URL state handler.
  * @param {Function} handlers.onUndoBookmarkChange Restore an undo snapshot.
  * @param {Function} handlers.onExportBookmarks Export bookmarks as browser-compatible HTML.
@@ -189,7 +187,6 @@ export function bindBookmarkManagerEvents({
   onRenameTag,
   onRemoveTag,
   onOpenBookmark,
-  onOpenBookmarkEditor,
   onBookmarkNavigation,
   onUndoBookmarkChange,
   onExportBookmarks,
@@ -215,13 +212,6 @@ export function bindBookmarkManagerEvents({
   dom.exportBookmarks.addEventListener('click', onExportBookmarks)
   dom.generateCleanupPrompt.addEventListener('click', onGenerateCleanupPrompt)
   dom.generateCleanupPromptFull.addEventListener('click', onGenerateCleanupPromptFull)
-  dom.openBookmarkEditor.addEventListener('click', (event) => {
-    if (dom.openBookmarkEditor.getAttribute('aria-disabled') === 'true') {
-      event.preventDefault()
-      return
-    }
-    onOpenBookmarkEditor(event, dom.openBookmarkEditor.href)
-  })
   dom.cleanupFolderScope.addEventListener('change', onCleanupScopeChange)
   dom.cleanupChangeLimit.addEventListener('change', onCleanupScopeChange)
   dom.cleanupChangeFocus.addEventListener('change', onCleanupScopeChange)
@@ -1351,7 +1341,6 @@ function updateManagedSelectionUi() {
   const canUpdateBookmarks = Boolean(ext.model.bookmarkManagerCanUpdateBookmarks)
   const canMoveBookmarks = Boolean(ext.model.bookmarkManagerCanMoveBookmarks)
   const canEditCurrentBookmark = canEditCurrentManagedBookmark(currentBookmark, selectedIds, canUpdateBookmarks)
-  const canOpenBookmarkEditor = canEditCurrentBookmark
   const isSuggestingTags = Boolean(ext.model.bookmarkManagerSuggestingTags)
   const hasBulkTags = getManagerTagInputValues('bulk').length > 0
   const canApplyBulkTags = Boolean(targetIds.length && canUpdateBookmarks && hasBulkTags && !isSuggestingTags)
@@ -1373,11 +1362,6 @@ function updateManagedSelectionUi() {
   dom.bookmarkEditUrl.disabled = !canEditCurrentBookmark
   dom.bookmarkEditTags.disabled = !canEditCurrentBookmark
   dom.bookmarkEditScore.disabled = !canEditCurrentBookmark
-  dom.openBookmarkEditor.href = canOpenBookmarkEditor
-    ? `./editBookmark.html#bookmark/${encodeURIComponent(String(currentBookmark.originalId))}`
-    : './editBookmark.html'
-  dom.openBookmarkEditor.setAttribute('aria-disabled', canOpenBookmarkEditor ? 'false' : 'true')
-  dom.openBookmarkEditor.tabIndex = canOpenBookmarkEditor ? 0 : -1
   dom.bulkTagsInput.disabled = !canEditBulkTags
 
   if (selectedCount > 1) {
