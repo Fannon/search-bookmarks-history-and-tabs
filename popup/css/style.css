@@ -396,6 +396,21 @@ li.direct .favicon-col {
   transition: all 0.2s;
   text-align: center;
   box-shadow: inset 0 1px 0 0 #99999933;
+  position: relative;
+}
+#links .nav.new::after {
+  content: "new";
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  padding: 1px 3px 2px;
+  background: var(--nav-active-fg);
+  border-radius: 2px;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
 }
 #links .nav:hover {
   background: var(--nav-hover);
