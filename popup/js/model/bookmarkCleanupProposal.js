@@ -313,7 +313,7 @@ function formatPromptGoals(isLite, allowedChangeTypes) {
   }
   if (isLite && allowedChangeTypes.length > 1) {
     goals.push(
-      '- Focus on addTags and rewriteTitles first. Use removeTags and renameTags only when clearly beneficial.',
+      '- Lite mode: return a compact review batch. Prioritize addTags. Suggest rewriteTitles only for clearly long, noisy, or boilerplate webpage titles. Use removeTags and renameTags only when clearly beneficial.',
     )
   }
   if (!goals.length) {
