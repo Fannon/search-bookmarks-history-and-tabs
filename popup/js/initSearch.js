@@ -9,7 +9,7 @@
  */
 
 import { createExtensionContext } from './helper/extensionContext.js'
-import { getEffectiveOptions } from './model/options.js'
+import { getEffectiveOptions } from './model/optionsStorage.js'
 import { getSearchData } from './model/searchData.js'
 
 import { addDefaultEntries, search } from './search/common.js'

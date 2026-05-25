@@ -45,7 +45,7 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
   const setUserOptions = jest.fn(async () => {})
   const searchMock = jest.fn(() => Promise.resolve())
 
-  jest.unstable_mockModule('../../model/options.js', () => ({
+  jest.unstable_mockModule('../../model/optionsStorage.js', () => ({
     getUserOptions,
     setUserOptions,
   }))

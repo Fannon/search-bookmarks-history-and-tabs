@@ -2,7 +2,7 @@ import { jest } from '@jest/globals'
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
 const { calculateFinalScore } = await import('../scoring.js')
-const { defaultOptions } = await import('../../model/options.js')
+const { defaultOptions } = await import('../../model/optionsDefaults.js')
 
 // Baseline options for isolated unit tests (all bonuses off, weights = 1.0 for simplicity)
 // Note: scoreTitleWeight (1), scoreExactIncludesBonusMinChars (3), and scoreExactIncludesMaxBonuses (3)

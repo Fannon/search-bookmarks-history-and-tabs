@@ -10,7 +10,7 @@
 
 import { createExtensionContext } from './helper/extensionContext.js'
 
-import { getEffectiveOptions } from './model/options.js'
+import { getEffectiveOptions } from './model/optionsStorage.js'
 import { getSearchData } from './model/searchData.js'
 import { cycleFavoriteButton, deleteBookmark, editBookmark, updateBookmark } from './view/editBookmarkView.js'
 

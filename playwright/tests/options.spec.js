@@ -2,7 +2,7 @@ import { expect, expectNoClientErrors, test } from './fixtures.js'
 
 test.describe('Options View', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/options.html')
+    await page.goto('/bookmarkManager.html#options')
   })
 
   test.describe('Initializing Phase', () => {
@@ -10,8 +10,34 @@ test.describe('Options View', () => {
       await expect(page.locator('#options #config')).toBeVisible()
     })
 
+    test('opens from popup navigation in a bookmark manager tab', async ({ page, context }) => {
+      await page.goto('/')
+
+      const optionsPagePromise = context.waitForEvent('page')
+      await page.locator('a[title="Open options in bookmark manager"]').click()
+      const optionsPage = await optionsPagePromise
+
+      await optionsPage.waitForURL(/bookmarkManager(?:\.html)?#options$/)
+      await expect(optionsPage.locator('#options #config')).toBeVisible()
+    })
+
     test('loads the default user config', async ({ page }) => {
       await expect(page.locator('#config')).toHaveValue(/searchStrategy/)
+      await expectNoClientErrors(page)
+    })
+
+    test('keeps the form and YAML editor synced', async ({ page }) => {
+      const visitCounterRow = page.locator('[data-option-key="displayVisitCounter"]')
+      await visitCounterRow.locator('[data-option-enabled]').click()
+      await visitCounterRow.locator('[data-option-input]').check()
+      await expect(page.locator('#config')).toHaveValue(/displayVisitCounter: true/)
+
+      const userConfig = page.locator('#config')
+      await userConfig.fill('searchMaxResults: 50\n')
+
+      const maxResultsRow = page.locator('[data-option-key="searchMaxResults"]')
+      await expect(maxResultsRow.locator('[data-option-enabled]')).toBeChecked()
+      await expect(maxResultsRow.locator('[data-option-input]')).toHaveValue('50')
       await expectNoClientErrors(page)
     })
 
@@ -30,9 +56,9 @@ test.describe('Options View', () => {
       await userConfig.fill(newConfig)
 
       await page.locator('#opt-save').click()
-      await page.waitForURL(/.*#search.*/)
+      await page.waitForURL(/.*#overview.*/)
 
-      await page.goto('/options.html')
+      await page.goto('/bookmarkManager.html#options')
       await expect(page.locator('#config')).toHaveValue(/displayVisitCounter/)
       await expectNoClientErrors(page)
     })
@@ -46,9 +72,9 @@ test.describe('Options View', () => {
       await userConfig.fill(newConfig)
 
       await page.locator('#opt-save').click()
-      await page.waitForURL(/.*#search.*/)
+      await page.waitForURL(/.*#overview.*/)
 
-      await page.goto('/options.html')
+      await page.goto('/bookmarkManager.html#options')
       await expect(page.locator('#config')).toHaveValue(/displayVisitCounter/)
       await expectNoClientErrors(page)
     })
@@ -66,7 +92,7 @@ test.describe('Options View', () => {
       await page.locator('#opt-save').click()
 
       await expect(page.locator('#error-message')).not.toBeVisible()
-      await page.waitForURL(/.*#search.*/)
+      await page.waitForURL(/.*#overview.*/)
     })
 
     test('shows validation error for invalid option type and blocks save', async ({ page }) => {
@@ -84,7 +110,7 @@ test.describe('Options View', () => {
       await expect(errorOverlay).toContainText('searchMaxResults')
 
       // Verify URL did NOT change (save was blocked)
-      await expect(page).not.toHaveURL(/.*#search.*/)
+      await expect(page).not.toHaveURL(/.*#overview.*/)
     })
 
     test('shows validation error for enum violation and allows user to fix', async ({ page }) => {
@@ -104,7 +130,7 @@ test.describe('Options View', () => {
 
       // Should now succeed
       await expect(errorOverlay).not.toBeVisible()
-      await page.waitForURL(/.*#search.*/)
+      await page.waitForURL(/.*#overview.*/)
     })
   })
 
@@ -152,7 +178,7 @@ test.describe('Options View', () => {
 
       // Now save should work
       await page.locator('#opt-save').click()
-      await page.waitForURL(/.*#search.*/)
+      await page.waitForURL(/.*#overview.*/)
     })
 
     test('dismisses error without removing options', async ({ page }) => {
@@ -196,9 +222,9 @@ test.describe('Options View', () => {
       // Click the remove button
       await page.locator('#btn-clean').click()
 
-      // After removal, textarea should contain empty object (YAML representation of {})
+      // After removal, textarea should be empty because there are no overrides left.
       const currentValue = await userConfig.inputValue()
-      expect(currentValue.trim()).toBe('{}')
+      expect(currentValue.trim()).toBe('')
     })
 
     test('preserves valid complex config when removing unknown options', async ({ page }) => {

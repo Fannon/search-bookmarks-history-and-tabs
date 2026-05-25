@@ -15,6 +15,32 @@ function setupDom() {
   `
 }
 
+function setupOptionsFormDom() {
+  document.body.innerHTML = `
+    <section data-manager-panel="options">
+      <div data-page-status></div>
+      <form id="options-form"></form>
+      <textarea id="config"></textarea>
+      <button id="opt-save"></button>
+      <button id="opt-reset"></button>
+      <div id="error-message" style="display:none"></div>
+    </section>
+  `
+}
+
+function createJsonYamlMocks() {
+  return {
+    dump: jest.fn((value) => {
+      if (!value || Object.keys(value).length === 0) return '{}'
+      return JSON.stringify(value)
+    }),
+    load: jest.fn((value) => {
+      if (!value) return undefined
+      return JSON.parse(value)
+    }),
+  }
+}
+
 async function loadEditOptionsView({
   userOptions = {},
   getUserOptionsImpl,
@@ -60,7 +86,7 @@ async function loadEditOptionsView({
     load: loadMock,
   }
 
-  jest.unstable_mockModule('../../model/options.js', () => ({
+  jest.unstable_mockModule('../../model/optionsStorage.js', () => ({
     getUserOptions,
     setUserOptions,
   }))
@@ -247,6 +273,62 @@ describe('editOptionsView', () => {
     expect(input.value).toBe('')
   })
 
+  it('edits simple string arrays with inline rows', async () => {
+    setupOptionsFormDom()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+
+    await module.initOptions()
+
+    const row = document.querySelector('[data-option-key="bookmarksIgnoreFolderList"]')
+    row.querySelector('[data-option-enabled]').click()
+    row.querySelector('[data-option-add-array-item]').click()
+    const input = row.querySelector('[data-array-value]')
+    input.value = 'Bookmarks/Archive'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+
+    expect(JSON.parse(document.getElementById('config').value)).toEqual({
+      bookmarksIgnoreFolderList: ['Bookmarks/Archive'],
+    })
+  })
+
+  it('edits searchEngineChoices with inline rows', async () => {
+    setupOptionsFormDom()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+
+    await module.initOptions()
+
+    const row = document.querySelector('[data-option-key="searchEngineChoices"]')
+    row.querySelector('[data-option-enabled]').click()
+    row.querySelector('[data-option-add-array-item]').click()
+    const lastItem = row.querySelector('[data-option-array-item]:last-child')
+    lastItem.querySelector('[data-array-field="name"]').value = 'Docs'
+    lastItem.querySelector('[data-array-field="urlPrefix"]').value = 'https://docs.example/search?q=$s'
+    lastItem.querySelector('[data-array-field="urlPrefix"]').dispatchEvent(new Event('input', { bubbles: true }))
+
+    expect(JSON.parse(document.getElementById('config').value)).toEqual({
+      searchEngineChoices: [
+        {
+          name: 'Google',
+          urlPrefix: 'https://www.google.com/search?q=$s',
+        },
+        {
+          name: 'Docs',
+          urlPrefix: 'https://docs.example/search?q=$s',
+        },
+      ],
+    })
+  })
+
   it('saveOptions shows REMOVE UNKNOWN OPTIONS button for unknown options, and it works', async () => {
     setupDom()
     const validateOptionsImpl = jest.fn(() =>
@@ -329,4 +411,240 @@ describe('editOptionsView', () => {
 
     expect(document.getElementById('config').value).not.toContain('remove-me')
   })
+
+  it('shows all rows when options filter is empty', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = ''
+    filterEl.dispatchEvent(new Event('input'))
+
+    const hiddenRows = document.querySelectorAll('.option-row.hidden-by-filter')
+    expect(hiddenRows.length).toBe(0)
+  })
+
+  it('finds history-related options by key but not unrelated ones', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'history'
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('historyColor')).toBe(true)
+    expect(rowIsVisible('enableHistory')).toBe(true)
+    expect(rowIsVisible('historyDaysAgo')).toBe(true)
+    expect(rowIsVisible('historyMaxItems')).toBe(true)
+    expect(rowIsVisible('historyIgnoreList')).toBe(true)
+    expect(rowIsVisible('scoreHistoryBase')).toBe(true)
+
+    expect(rowIsVisible('bookmarkColor')).toBe(false)
+    expect(rowIsVisible('tabColor')).toBe(false)
+    expect(rowIsVisible('scoreBookmarkBase')).toBe(false)
+
+    const visibleCount = document.querySelectorAll('.option-row:not(.hidden-by-filter)').length
+    const totalCount = document.querySelectorAll('.option-row').length
+    expect(visibleCount).toBeLessThan(totalCount)
+  })
+
+  it('handles camelCase token splitting in option keys', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'score'
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('scoreBookmarkBase')).toBe(true)
+    expect(rowIsVisible('scoreHistoryBase')).toBe(true)
+    expect(rowIsVisible('scoreTabBase')).toBe(true)
+    expect(rowIsVisible('bookmarkColor')).toBe(false)
+  })
+
+  it('uses AND logic for multiple query tokens', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'score history'
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('scoreHistoryBase')).toBe(true)
+    expect(rowIsVisible('scoreBookmarkBase')).toBe(false)
+    expect(rowIsVisible('historyColor')).toBe(false)
+  })
+
+  it('matches description text as well as keys', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'favicon'
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('displayFavicons')).toBe(true)
+    expect(rowIsVisible('bookmarkColor')).toBe(false)
+  })
+
+  it('hides sections whose rows are all filtered out', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'history'
+    filterEl.dispatchEvent(new Event('input'))
+
+    const visibleSections = document.querySelectorAll('.options-section-group:not(.hidden-by-filter)')
+    const allSections = document.querySelectorAll('.options-section-group')
+    expect(visibleSections.length).toBeLessThan(allSections.length)
+  })
+
+  it('handles special characters in filter input safely', async () => {
+    await setupFilterTest()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = '(score)'
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('scoreBookmarkBase')).toBe(true)
+    expect(rowIsVisible('scoreHistoryBase')).toBe(true)
+    expect(rowIsVisible('bookmarkColor')).toBe(false)
+  })
+
+  it('hides everything when no option matches', async () => {
+    await setupFilterTest()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'nonexistentzzz'
+    filterEl.dispatchEvent(new Event('input'))
+
+    const visibleRows = document.querySelectorAll('.option-row:not(.hidden-by-filter)')
+    expect(visibleRows.length).toBe(0)
+  })
+
+  it('clears all filters when input is emptied', async () => {
+    await setupFilterTest()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'history'
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('bookmarkColor')).toBe(false)
+
+    filterEl.value = ''
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('bookmarkColor')).toBe(true)
+    const hiddenRows = document.querySelectorAll('.option-row.hidden-by-filter')
+    expect(hiddenRows.length).toBe(0)
+  })
+
+  it('syncs form changes to YAML textarea', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const row = document.querySelector('[data-option-key="bookmarkColor"]')
+    row.querySelector('[data-option-enabled]').click()
+    const input = row.querySelector('[data-option-input]')
+    input.value = '#ff0000'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+
+    const dumpedValues = yaml.dump.mock.calls.map((c) => c[0])
+    const lastDumped = dumpedValues[dumpedValues.length - 1]
+    expect(lastDumped).toHaveProperty('bookmarkColor', '#ff0000')
+  })
+
+  it('syncs YAML changes to form fields', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const updatedOptions = { bookmarkColor: '#123456' }
+    const { module } = await loadEditOptionsView({
+      userOptions: updatedOptions,
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const row = document.querySelector('[data-option-key="bookmarkColor"]')
+    const input = row.querySelector('[data-option-input]')
+    expect(input.value).toBe('#123456')
+    expect(row.querySelector('[data-option-enabled]').checked).toBe(true)
+  })
 })
+
+async function setupFilterTest() {
+  setupOptionsFormDom()
+  setupOptionsFilterEl()
+  const yaml = createJsonYamlMocks()
+  const result = await loadEditOptionsView({
+    userOptions: {},
+    dumpImpl: yaml.dump,
+    loadImpl: yaml.load,
+  })
+  await result.module.initOptions()
+  return result
+}
+
+function setupOptionsFilterEl() {
+  const filterInput = document.createElement('input')
+  filterInput.id = 'options-filter'
+  filterInput.type = 'search'
+  document.body.appendChild(filterInput)
+}
+
+function rowIsVisible(key) {
+  const row = document.querySelector(`[data-option-key="${key}"]`)
+  if (!row) return null
+  return !row.classList.contains('hidden-by-filter')
+}

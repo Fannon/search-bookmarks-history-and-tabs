@@ -720,6 +720,7 @@ export function renderActiveManagerScreen() {
     hash === '#tags' ||
     hash === '#cleanup' ||
     hash === '#undo' ||
+    hash === '#options' ||
     hash === '#overview'
       ? hash.slice(1)
       : 'overview'

@@ -17,7 +17,7 @@ beforeEach(async () => {
   await jest.unstable_mockModule('../view/groupsView.js', () => ({
     loadGroupsOverview: mockLoadGroupsOverview,
   }))
-  await jest.unstable_mockModule('../model/options.js', () => ({
+  await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
     getEffectiveOptions: mockGetEffectiveOptions,
   }))
   await jest.unstable_mockModule('../model/searchData.js', () => ({

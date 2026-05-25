@@ -17,7 +17,7 @@ beforeEach(async () => {
   await jest.unstable_mockModule('../view/foldersView.js', () => ({
     loadFoldersOverview: mockLoadFoldersOverview,
   }))
-  await jest.unstable_mockModule('../model/options.js', () => ({
+  await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
     getEffectiveOptions: mockGetEffectiveOptions,
   }))
   await jest.unstable_mockModule('../model/searchData.js', () => ({

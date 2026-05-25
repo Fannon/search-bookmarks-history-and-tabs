@@ -49,7 +49,7 @@ describe('initEditBookmark entry point', () => {
       deleteBookmark,
       cycleFavoriteButton,
     }))
-    await jest.unstable_mockModule('../model/options.js', () => ({
+    await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
       __esModule: true,
       getEffectiveOptions,
     }))
@@ -110,7 +110,7 @@ describe('initEditBookmark entry point', () => {
       deleteBookmark,
       cycleFavoriteButton: jest.fn(),
     }))
-    await jest.unstable_mockModule('../model/options.js', () => ({
+    await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
       __esModule: true,
       getEffectiveOptions,
     }))
@@ -146,7 +146,7 @@ describe('initEditBookmark entry point', () => {
       deleteBookmark: jest.fn(),
       cycleFavoriteButton: jest.fn(),
     }))
-    await jest.unstable_mockModule('../model/options.js', () => ({
+    await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
       __esModule: true,
       getEffectiveOptions: jest.fn(() => Promise.resolve({})),
     }))
@@ -185,7 +185,7 @@ describe('initEditBookmark entry point', () => {
       deleteBookmark: jest.fn(),
       cycleFavoriteButton: jest.fn(),
     }))
-    await jest.unstable_mockModule('../model/options.js', () => ({
+    await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
       __esModule: true,
       getEffectiveOptions: jest.fn(() => Promise.resolve({})),
     }))

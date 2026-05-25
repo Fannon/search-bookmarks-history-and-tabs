@@ -41,6 +41,9 @@
         <span>Undo History</span>
         <strong id="undo-count"></strong>
       </a>
+      <a href="#options" data-manager-tab="options">
+        <span>Options</span>
+      </a>
     </nav>
     <div class="manager-actions">
       <button id="undo-bookmark-change" class="button secondary" type="button"
@@ -307,11 +310,55 @@
           <div id="cleanup-proposal-list"></div>
         </section>
       </section>
+
+      <section data-manager-panel="options" class="manager-panel" hidden>
+        <header class="manager-panel-header options-page-header">
+          <div>
+            <h2>Options</h2>
+            <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
+            <p>
+              Edit only the settings you want to override. Unchecked settings use the extension defaults and stay out of
+              the saved YAML.
+            </p>
+          </div>
+          <div class="options-toolbar">
+            <a id="opt-help" class="button secondary"
+              href="https://github.com/Fannon/search-bookmarks-history-and-tabs#user-configuration" target="_blank"
+              rel="noreferrer">Help</a>
+            <button id="opt-reset" class="button warning" type="button">Reset</button>
+            <button id="opt-save" class="button success" type="button">Save Options</button>
+          </div>
+        </header>
+
+        <div id="options" class="manager-options">
+          <div class="options-workspace">
+            <section class="options-form-panel" aria-label="Option settings">
+              <header class="options-column-header">
+                <h3>Settings</h3>
+              </header>
+              <input id="options-filter" class="options-filter-input" type="search" placeholder="Filter options..."
+                autocomplete="off" />
+              <form id="options-form" class="options-form" novalidate></form>
+            </section>
+
+            <section class="options-yaml-panel">
+              <header class="options-column-header">
+                <label for="config">YAML</label>
+              </header>
+              <div class="textarea-container">
+                <textarea id="config" title="User Config" spellcheck="false"></textarea>
+                <div id="error-message" class="error-overlay" style="display: none"></div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
     </section>
   </main>
 
   <div id="error-overlay" class="error-overlay" style="display: none"></div>
   <script defer src="./lib/tagify.min.js"></script>
+  <script defer src="./lib/js-yaml.min.js"></script>
   <script defer type="module" src="./js/initBookmarkManager.js"></script>
 </body>
 

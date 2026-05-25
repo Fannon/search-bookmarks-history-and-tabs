@@ -92,7 +92,7 @@ test.describe('Error Overlay', () => {
 
   test.describe('Options Page Error Overlay', () => {
     test('displays validation error for invalid config', async ({ page }) => {
-      await page.goto('/options.html')
+      await page.goto('/bookmarkManager.html#options')
 
       // Enter invalid config
       const userConfig = page.locator('#config')
@@ -113,7 +113,7 @@ test.describe('Error Overlay', () => {
     })
 
     test('displays unknown option warning with remove button', async ({ page }) => {
-      await page.goto('/options.html')
+      await page.goto('/bookmarkManager.html#options')
 
       // Enter config with unknown option
       const userConfig = page.locator('#config')
@@ -152,7 +152,7 @@ test.describe('Error Monitoring Integration', () => {
   })
 
   test('options page initializes without triggering error monitoring', async ({ page }) => {
-    await page.goto('/options.html')
+    await page.goto('/bookmarkManager.html#options')
     await expect(page.locator('#config')).toBeVisible()
     // If this test passes, it means no unexpected console errors occurred
   })
