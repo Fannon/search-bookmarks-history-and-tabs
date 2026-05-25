@@ -5,7 +5,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '24.x'
+  NODE_VERSION: '24'
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v6
         with:
@@ -30,7 +30,7 @@ jobs:
       - name: Build
         run: npm run build
       - name: Save build folder
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: popup
           path: popup
@@ -42,7 +42,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v6
         with:
@@ -52,7 +52,7 @@ jobs:
         run: npm ci
       - name: Run Unit Tests
         run: npm run test:unit:coverage
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: unit-test-report
@@ -65,9 +65,9 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Download the build folder
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: popup
           path: popup
@@ -84,10 +84,9 @@ jobs:
         run: npm run test:e2e:chromium
       - name: Test Firefox
         run: npm run test:e2e:firefox
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
           path: reports/playwright/
           retention-days: 30
-

@@ -72,7 +72,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - Prefer focused tests before broader suites:
   - Unit: `npm run test:unit -- path/to/test.js`
   - E2E: `npx playwright test path/to/test.spec.js --project=chromium`
-- Run relevant unit tests for code changes.
-- Run Playwright e2e tests for UI or behavior changes.
+- Run `npm run test:unit` for code changes.
+- Run `npm run test:e2e` for UI or behavior changes.
 - Run `npm run size` for dependency, bundling, shared utility, or significant code-size changes.
 - Run `npm run build` only when explicitly requested or for release work.
