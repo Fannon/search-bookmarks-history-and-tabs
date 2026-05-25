@@ -156,7 +156,7 @@ function renderOptionRow(key, schema) {
         <label class="option-label" for="option-${escapeHtml(key)}">${escapeHtml(key)}</label>
         ${renderOptionInput(key, schema)}
         <p class="option-description">${escapeHtml(schema.description || '')}</p>
-        <p class="option-default">Default: <code>${escapeHtml(formatYamlInline(schema.default))}</code></p>
+        ${renderDefaultValue(schema)}
         <p class="option-error" data-option-error aria-live="polite"></p>
       </div>
     </section>
@@ -196,6 +196,10 @@ function renderOptionInput(key, schema) {
       return renderSearchEngineChoicesInput(id)
     }
 
+    if (key === 'customSearchEngines') {
+      return renderCustomSearchEnginesInput(id)
+    }
+
     return `<textarea id="${id}" rows="5" ${disabled}></textarea>`
   }
 
@@ -220,6 +224,40 @@ function renderSearchEngineChoicesInput(id) {
     <div id="${id}" class="option-list-editor" data-option-input data-option-array-kind="search-engine" aria-disabled="true">
       <div data-option-list-items></div>
       <button class="text-button" type="button" data-option-add-array-item disabled>Add search engine</button>
+    </div>
+  `
+}
+
+function renderCustomSearchEnginesInput(id) {
+  return `
+    <div id="${id}" class="option-list-editor" data-option-input data-option-array-kind="custom-search-engine" aria-disabled="true">
+      <div data-option-list-items></div>
+      <button class="text-button" type="button" data-option-add-array-item disabled>Add search engine</button>
+    </div>
+  `
+}
+
+function renderCustomSearchEngineItem(value = {}) {
+  const aliasText = Array.isArray(value.alias) ? value.alias.join(', ') : value.alias || ''
+  return `
+    <div class="option-list-item custom-search-engine-item" data-option-array-item>
+      <label>
+        <span>Name</span>
+        <input type="text" value="${escapeHtml(value.name || '')}" data-array-field="name" />
+      </label>
+      <label>
+        <span>URL Prefix</span>
+        <input type="text" value="${escapeHtml(value.urlPrefix || '')}" data-array-field="urlPrefix" />
+      </label>
+      <label>
+        <span>Aliases</span>
+        <input type="text" value="${escapeHtml(aliasText)}" data-array-field="alias" placeholder="comma-separated" />
+      </label>
+      <label>
+        <span>Blank URL</span>
+        <input type="text" value="${escapeHtml(value.blank || '')}" data-array-field="blank" />
+      </label>
+      <button class="text-button" type="button" data-option-remove-array-item>Remove</button>
     </div>
   `
 }
@@ -266,6 +304,7 @@ function handleOptionFormClick(event) {
 
 function getBlankOptionArrayItem(kind) {
   if (kind === 'search-engine') return { name: '', urlPrefix: '' }
+  if (kind === 'custom-search-engine') return { alias: [], name: '', urlPrefix: '', blank: '' }
   return ''
 }
 
@@ -275,6 +314,11 @@ function addOptionArrayItem(editor, value = '') {
 
   if (editor.dataset.optionArrayKind === 'search-engine') {
     itemsEl.insertAdjacentHTML('beforeend', renderSearchEngineChoiceItem(value))
+    return
+  }
+
+  if (editor.dataset.optionArrayKind === 'custom-search-engine') {
+    itemsEl.insertAdjacentHTML('beforeend', renderCustomSearchEngineItem(value))
     return
   }
 
@@ -493,6 +537,7 @@ function getOptionRowValue(row) {
 
   if (input.dataset.optionArrayKind === 'string') return getStringArrayValue(input)
   if (input.dataset.optionArrayKind === 'search-engine') return getSearchEngineChoicesValue(input)
+  if (input.dataset.optionArrayKind === 'custom-search-engine') return getCustomSearchEnginesValue(input)
 
   if (type === 'boolean') return Boolean(input.checked)
 
@@ -574,6 +619,29 @@ function getSearchEngineChoicesValue(editor) {
     const name = item.querySelector('[data-array-field="name"]')?.value.trim() || ''
     const urlPrefix = item.querySelector('[data-array-field="urlPrefix"]')?.value.trim() || ''
     if (name || urlPrefix) values.push({ name, urlPrefix })
+  }
+
+  return values
+}
+
+function getCustomSearchEnginesValue(editor) {
+  const items = editor.querySelectorAll('[data-option-array-item]')
+  const values = []
+
+  for (const item of items) {
+    const name = item.querySelector('[data-array-field="name"]')?.value.trim() || ''
+    const urlPrefix = item.querySelector('[data-array-field="urlPrefix"]')?.value.trim() || ''
+    const aliasRaw = item.querySelector('[data-array-field="alias"]')?.value.trim() || ''
+    const blank = item.querySelector('[data-array-field="blank"]')?.value.trim() || ''
+    const alias = aliasRaw
+      ? aliasRaw
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : []
+    const entry = { alias, name, urlPrefix }
+    if (blank) entry.blank = blank
+    if (name || urlPrefix || alias.length) values.push(entry)
   }
 
   return values
@@ -691,6 +759,16 @@ function showOptionsStatus(message, tone = 'info') {
 function formatYamlInline(value) {
   if (value === undefined) return ''
   return window.jsyaml.dump(value).trim().replace(/\n/g, ' ')
+}
+
+function renderDefaultValue(schema) {
+  if (schema.default === undefined) return '<p class="option-default">Default: <code></code></p>'
+  const type = getSimpleSchemaType(schema)
+  if (type === 'array' || type === 'object') {
+    const yaml = escapeHtml(window.jsyaml.dump(schema.default).trim())
+    return `<p class="option-default">Default:<br><pre class="option-default-code"><code>${yaml}</code></pre></p>`
+  }
+  return `<p class="option-default">Default: <code>${escapeHtml(formatYamlInline(schema.default))}</code></p>`
 }
 
 function escapeHtml(value) {

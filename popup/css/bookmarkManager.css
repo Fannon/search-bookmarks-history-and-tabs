@@ -634,7 +634,7 @@ button {
 
 .options-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
+  grid-template-columns: minmax(0, 13fr) minmax(320px, 7fr);
   gap: 16px;
   align-items: start;
 }
@@ -660,8 +660,6 @@ button {
 }
 
 .options-form {
-  max-height: calc(100vh - 226px);
-  overflow: auto;
   display: grid;
   gap: 16px;
   padding-right: 4px;
@@ -808,6 +806,33 @@ button {
 .search-engine-choice-item span {
   color: var(--fg);
   font-size: 12px;
+}
+
+.custom-search-engine-item {
+  grid-template-columns: minmax(80px, 1fr) minmax(140px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) auto;
+  align-items: end;
+}
+
+.custom-search-engine-item label {
+  display: grid;
+  gap: 4px;
+}
+
+.custom-search-engine-item span {
+  color: var(--fg);
+  font-size: 12px;
+}
+
+.option-default-code {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  border-radius: 4px;
+  padding: 6px 10px;
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-x: auto;
+  white-space: pre;
 }
 
 .option-list-editor > .text-button {
@@ -1988,11 +2013,8 @@ h3 {
     grid-template-columns: 1fr;
   }
 
-  .options-form {
-    max-height: none;
-  }
-
-  .search-engine-choice-item {
+  .search-engine-choice-item,
+  .custom-search-engine-item {
     grid-template-columns: 1fr;
   }
 
