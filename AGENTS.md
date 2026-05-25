@@ -1,64 +1,78 @@
 # AGENTS.md
 
-## Project rules
+## 1. Think Before Coding
 
-- Browser extension popup only: no background worker, no network or telemetry, stateless except for user options.
-- Search must stay instant on large datasets. Avoid unnecessary DOM work and allocations in hot paths.
-- Keep the extension small. Avoid unnecessary code, duplicated logic, and new dependencies that increase bundle size.
-- Use ESM and vanilla JS only. Follow Biome formatting: 2 spaces, single quotes, no semicolons.
-- Prefer small, focused diffs. Do not add dependencies without approval.
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
 
-## Structure
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
 
-- Search entry points: `popup/js/initSearch.js`, `popup/js/initTags.js`, `popup/js/initFolders.js`, `popup/js/initGroups.js`, `popup/js/initEditBookmark.js`
-- Search orchestration and strategies: `popup/js/search/common.js`, `popup/js/search/simpleSearch.js`, `popup/js/search/fuzzySearch.js`, `popup/js/search/taxonomySearch.js`
-- Query parsing, ranking, defaults: `popup/js/search/queryParser.js`, `popup/js/search/scoring.js`, `popup/js/search/defaultResults.js`, `popup/js/search/searchEngines.js`
-- Data and options: `popup/js/model/searchData.js`, `popup/js/model/options.js`, `popup/js/model/validateOptions.js`
-- Browser wrappers and helpers: `popup/js/helper/browserApi.js`, `popup/js/helper/utils.js`, `popup/js/helper/extensionContext.js`
-- Rendering: `popup/js/view/*`
-- Shared styles: `popup/css/style.css`
+## 2. Simplicity First
 
-## Search and performance
+**Minimum code that solves the problem. Nothing speculative.**
 
-- Pre-normalize searchable fields during init.
-- Precompute highlight markup as strings; avoid DOM-based highlighting during search.
-- Avoid object spread and repeated regex compilation in hot loops.
-- Filter and slice before expensive ranking or rendering work.
-- Test both precise and fuzzy paths when changing search behavior.
-- Validate perf-sensitive changes against large datasets.
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
 
-## Error handling
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
-- Browser API failures: `console.warn` and return empty results.
-- Options failures: fall back to defaults and call `printError`.
-- Search and render failures: show the dismissible overlay via `printError`; do not crash the popup.
+## 3. Surgical Changes
 
-## Commands
+**Touch only what you must. Clean up only your own mess.**
 
-- Prefer targeted checks first:
-  - `npx @biomejs/biome check path/to/file.js`
-  - `npm run test:unit -- path/to/test.js`
-- Typical loop: `npm run lint` then relevant unit tests.
-- Run `npm run test:e2e` for UI or behavior changes.
-- Run `npm run test:perf` for search, scoring, render, or cache changes.
-- Run `npm run size` when changing dependencies, bundling, shared utilities, or adding significant new code.
-- Run `npm run build` only when explicitly requested or for release-oriented work.
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
 
-## Ask first
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
 
-- package installs
-- deleting or renaming many files
-- broad refactors outside the requested area
-- expensive full-suite runs when targeted checks are sufficient
+The test: Every changed line should trace directly to the user's request.
 
-## Examples
+## 4. Goal-Driven Execution
 
-- Query parsing: `popup/js/search/queryParser.js`
-- Ranking: `popup/js/search/scoring.js`
-- Search rendering: `popup/js/view/searchView.js`
-- Error overlay: `popup/js/view/errorView.js`
-- Options loading and validation: `popup/js/model/options.js`, `popup/js/model/validateOptions.js`
+**Define success criteria. Loop until verified.**
 
-## When stuck
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
 
-- Ask a clarifying question or propose a short plan instead of making speculative large changes.
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+## 5. Project rules
+
+- Scope: browser extension popup only; no background worker, network, or telemetry; stateless except user options.
+- Style: ESM and vanilla JS. Follow Biome formatting: 2 spaces, single quotes, no semicolons.
+- Size: keep the extension small. Do not add dependencies without approval.
+- Search: keep it instant on large datasets; precompute searchable fields during data loading.
+- Hot paths: avoid unnecessary DOM work, allocations, regex compilation, and object cloning.
+- Validation: for search, scoring, render, or cache changes, run relevant unit tests and `npm run test:perf`.
+- Failures: browser API failures `console.warn` and return empty results; options failures use defaults and `printError`; search/render failures show the dismissible overlay via `printError`.
+
+## 6. Commands
+
+- Run `npm run lint` for code changes; use `npm run lint:fix` only for fixable issues in touched files.
+- Prefer focused tests before broader suites:
+  - Unit: `npm run test:unit -- path/to/test.js`
+  - E2E: `npx playwright test path/to/test.spec.js --project=chromium`
+- Run relevant unit tests for code changes.
+- Run Playwright e2e tests for UI or behavior changes.
+- Run `npm run size` for dependency, bundling, shared utility, or significant code-size changes.
+- Run `npm run build` only when explicitly requested or for release work.
