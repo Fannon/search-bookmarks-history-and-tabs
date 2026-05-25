@@ -55,6 +55,7 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   const resetFuzzySearchState = jest.fn()
   const resetSimpleSearchState = jest.fn()
   const searchMock = jest.fn(() => Promise.resolve())
+  const clearSearchDataCache = jest.fn(() => Promise.resolve())
   const createSearchStringLower = jest.fn((title, url, tags, folder) =>
     `search:${title}|${url}|${tags}|${folder}`.toLowerCase(),
   )
@@ -107,6 +108,9 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   jest.unstable_mockModule('../../search/simpleSearch.js', () => ({
     resetSimpleSearchState,
   }))
+  jest.unstable_mockModule('../../model/searchDataCacheStorage.js', () => ({
+    clearSearchDataCache,
+  }))
 
   const module = await import('../editBookmarkView.js')
 
@@ -120,6 +124,7 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
       browserApi,
       getUniqueTags,
       resetUniqueFoldersCache,
+      clearSearchDataCache,
     },
     helpers: {
       tagifyInstances,

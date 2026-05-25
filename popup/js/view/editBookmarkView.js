@@ -10,6 +10,7 @@
 
 import { browserApi, createSearchStringLower } from '../helper/browserApi.js'
 import { cleanUpUrl } from '../helper/utils.js'
+import { clearSearchDataCache } from '../model/searchDataCacheStorage.js'
 import { resetFuzzySearchState } from '../search/fuzzySearch.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
 import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
@@ -187,6 +188,7 @@ export function updateBookmark(bookmarkId) {
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
   resetUniqueFoldersCache()
+  void clearSearchDataCache()
 
   if (browserApi.bookmarks) {
     browserApi.bookmarks.update(bookmarkId, {
@@ -221,6 +223,7 @@ export async function deleteBookmark(bookmarkId) {
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
   resetUniqueFoldersCache()
+  void clearSearchDataCache()
 
   navigateToSearchView()
 }

@@ -103,7 +103,7 @@ function flagBookmarksWithOpenTabs(bookmarks, tabs) {
  * @returns {Promise<{tabs: Array, bookmarks: Array, history: Array}>} Prepared search data.
  */
 export async function getSearchData() {
-  const startTime = Date.now()
+  const overallStart = performance.now()
   const result = {
     tabs: [],
     bookmarks: [],
@@ -130,6 +130,7 @@ export async function getSearchData() {
     }
   } else {
     // Fetch all browser data sources in parallel for faster startup
+    const apiStart = performance.now()
     const [browserTabs, browserBookmarks, browserHistory, browserTabGroups] = await Promise.all([
       browserApi.tabs && ext.opts.enableTabs ? getBrowserTabs() : Promise.resolve([]),
       browserApi.bookmarks && ext.opts.enableBookmarks ? getBrowserBookmarks() : Promise.resolve([]),
@@ -138,15 +139,18 @@ export async function getSearchData() {
         : Promise.resolve([]),
       browserApi.tabGroups && ext.opts.enableTabs ? getBrowserTabGroups() : Promise.resolve([]),
     ])
+    const apiMs = Math.round(performance.now() - apiStart)
 
     // Build group lookup map
     const groupMap = new Map(browserTabGroups.map((g) => [g.id, g]))
 
     // Convert browser data to internal format
+    const convertStart = performance.now()
     result.tabs = convertBrowserTabs(browserTabs, groupMap)
     result.bookmarkTree = browserBookmarks
     result.bookmarks = convertBrowserBookmarks(browserBookmarks)
     result.history = convertBrowserHistory(browserHistory)
+    const convertMs = Math.round(performance.now() - convertStart)
 
     // Merge history data into bookmarks and tabs if history is enabled
     if (browserApi.history && ext.opts.enableHistory && result.history.length > 0) {
@@ -163,22 +167,27 @@ export async function getSearchData() {
 
     // Flag bookmarks with open tabs
     flagBookmarksWithOpenTabs(result.bookmarks, result.tabs)
+
+    console.debug(
+      `getSearchData: ${apiMs}ms API (${browserTabs.length} tabs raw, ${countBookmarksRaw(browserBookmarks)} bookmarks raw, ${browserHistory.length} history raw), ` +
+        `${convertMs}ms conversion, ${Math.round(performance.now() - overallStart)}ms total ` +
+        `-> ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks, ${result.history.length} history`,
+    )
   }
-  console.debug(
-    `Loaded ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${
-      result.history.length
-    } history items in ${Date.now() - startTime}ms.`,
-  )
-  // let oldestHistoryItem = 0
-  // for (const item of result.history) {
-  //   if (item.lastVisitSecondsAgo > oldestHistoryItem) {
-  //     oldestHistoryItem = item.lastVisitSecondsAgo
-  //   }
-  // }
-  // console.debug(
-  //   `Oldest history item is ${Math.round(oldestHistoryItem / 60 / 60 / 24)} days ago. Max history back is ${
-  //     ext.opts.historyDaysAgo
-  //   } days (Option: historyDaysAgo).`,
-  // )
   return result
+}
+
+function countBookmarksRaw(tree) {
+  let count = 0
+  const walk = (nodes) => {
+    for (const node of nodes) {
+      if (node.url) {
+        count++
+      } else if (node.children) {
+        walk(node.children)
+      }
+    }
+  }
+  walk(tree)
+  return count
 }
