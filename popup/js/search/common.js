@@ -303,9 +303,6 @@ export async function search(event) {
       let searchTerm = normalizeSearchTerm(ext.dom.searchInput.value)
       const originalSearchTerm = searchTerm
 
-      // Check cache first for better performance (only for actual searches, not default results)
-      if (useCachedResultsIfAvailable(searchTerm)) return
-
       // Handle empty search - show default results
       if (!searchTerm.trim()) {
         await handleEmptySearch()
@@ -321,6 +318,10 @@ export async function search(event) {
 
       ext.model.searchTerm = searchTerm
       ext.model.searchMode = searchMode
+
+      // Check cache after mode parsing so prefixes like "b foo" use the
+      // bookmarks-specific cache key instead of the previous mode.
+      if (useCachedResultsIfAvailable(searchTerm)) return
 
       // Collect results
       let results = []
