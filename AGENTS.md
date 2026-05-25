@@ -22,13 +22,14 @@ Before implementing:
 
 Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
-## 3. Surgical Changes
+## 3. Pragmatic Changes
 
-**Touch only what you must. Clean up only your own mess.**
+**Make the change as small as it can be while still producing the best overall outcome.**
 
 When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
+- Prefer focused changes, but don't be so surgical that the result is awkward, duplicated, or harder to maintain.
+- It is acceptable to touch nearby code, tests, or call sites when that creates a clearer boundary, avoids duplicated work, or makes the behavior easier to verify.
+- Don't do opportunistic cleanup, broad refactors, or style churn that does not support the requested change.
 - Match existing style, even if you'd do it differently.
 - If you notice unrelated dead code, mention it - don't delete it.
 
@@ -36,7 +37,7 @@ When your changes create orphans:
 - Remove imports/variables/functions that YOUR changes made unused.
 - Don't remove pre-existing dead code unless asked.
 
-The test: Every changed line should trace directly to the user's request.
+The test: Every changed line should have a defensible reason tied to the user's request or to keeping the implementation coherent.
 
 ## 4. Goal-Driven Execution
 
@@ -53,8 +54,6 @@ For multi-step tasks, state a brief plan:
 2. [Step] → verify: [check]
 3. [Step] → verify: [check]
 ```
-
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
 ## 5. Project rules
 
