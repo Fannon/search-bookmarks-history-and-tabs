@@ -5,7 +5,6 @@ import {
   convertBrowserHistory,
   convertBrowserTabs,
   createSearchStringLower,
-  getBrowserHistory,
   getBrowserTabGroups,
   getBrowserTabs,
   getTitle,
@@ -27,7 +26,6 @@ afterEach(() => {
   delete globalThis.ext
   jest.restoreAllMocks()
   delete browserApi.tabs
-  delete browserApi.history
 })
 
 describe('getBrowserTabs', () => {
@@ -49,85 +47,6 @@ describe('getBrowserTabs', () => {
     expect(result[0]).toMatchObject({ id: 3, url: 'chrome-extension://abcdef' })
     expect(result[1]).toMatchObject({ id: 4, url: 'https://example.com' })
     expect(result[2]).toMatchObject({ id: 5, url: 'moz-extension://xyz' })
-  })
-})
-
-describe('getBrowserHistory', () => {
-  async function searchHistoryWithIgnoreList(historyIgnoreList, history) {
-    ext.opts.historyIgnoreList = historyIgnoreList
-    browserApi.history = { search: jest.fn().mockResolvedValue(history) }
-
-    return getBrowserHistory(1_000, 50)
-  }
-
-  it('filters ignored raw history entries immediately after browser search', async () => {
-    ext.opts.historyIgnoreList = ['ignore.example.com']
-    const searchMock = jest.fn().mockResolvedValue([
-      { id: '1', url: 'https://keep.example.com/page', title: 'Keep' },
-      { id: '2', url: 'https://ignore.example.com/secret', title: 'Ignore' },
-    ])
-    browserApi.history = { search: searchMock }
-
-    const result = await getBrowserHistory(1_000, 50)
-
-    expect(searchMock).toHaveBeenCalledWith({
-      text: '',
-      startTime: 1_000,
-      maxResults: 50,
-    })
-    expect(result).toEqual([{ id: '1', url: 'https://keep.example.com/page', title: 'Keep' }])
-  })
-
-  it('handles multiple ignore patterns and case sensitivity', async () => {
-    const result = await searchHistoryWithIgnoreList(
-      ['GOOG.LE', 'test.com'],
-      [
-        { id: '1', url: 'https://goog.le/search', title: 'Google' },
-        { id: '2', url: 'https://TEST.COM/path', title: 'Test' },
-        { id: '3', url: 'https://example.com', title: 'KeepMe' },
-      ],
-    )
-
-    expect(result).toEqual([{ id: '3', url: 'https://example.com', title: 'KeepMe' }])
-  })
-
-  it('correctly escapes regex special characters in patterns', async () => {
-    const result = await searchHistoryWithIgnoreList(
-      ['example.com/a+b', 'site(dot)com', 'bank.com?id='],
-      [
-        { id: '1', url: 'https://example.com/a+b', title: 'Match Plus' },
-        { id: '2', url: 'https://site(dot)com/page', title: 'Match Parens' },
-        { id: '3', url: 'https://bank.com?id=123', title: 'Match QMark' },
-        { id: '4', url: 'https://example.com/ab', title: 'No Match Plus' },
-        { id: '5', url: 'https://sitedot.com', title: 'No Match Parens' },
-      ],
-    )
-
-    expect(result.map((r) => r.title)).toEqual(['No Match Plus', 'No Match Parens'])
-  })
-
-  it('handles empty, null, or whitespace patterns without matching everything', async () => {
-    const result = await searchHistoryWithIgnoreList(
-      ['', null, '   ', 'valid.com'],
-      [
-        { id: '1', url: 'https://valid.com/page', title: 'Ignored' },
-        { id: '2', url: 'https://anything.else', title: 'Kept' },
-      ],
-    )
-
-    expect(result).toEqual([{ id: '2', url: 'https://anything.else', title: 'Kept' }])
-  })
-
-  it('handles complex URL characters like slashes and hyphens in ignore patterns', async () => {
-    const result = await searchHistoryWithIgnoreList(
-      ['my-site.com/sub-path/'],
-      [
-        { id: '1', url: 'https://my-site.com/sub-path/page', title: 'Ignored' },
-        { id: '2', url: 'https://my-site.com/other', title: 'Kept' },
-      ],
-    )
-
-    expect(result).toEqual([{ id: '2', url: 'https://my-site.com/other', title: 'Kept' }])
   })
 })
 
@@ -359,6 +278,37 @@ describe('convertBrowserBookmarks', () => {
     expect(result).toHaveLength(0)
   })
 
+  it('checks ignored folders before preparing child folder metadata', () => {
+    ext.opts.bookmarksIgnoreFolderList = ['Ignored']
+    const folderTrail = {
+      length: 1,
+      map: jest.fn(() => {
+        throw new Error('folder trail should not be mapped for ignored folders')
+      }),
+    }
+
+    const result = convertBrowserBookmarks(
+      [
+        {
+          title: 'Ignored',
+          children: [
+            {
+              title: 'Hidden bookmark',
+              url: 'https://hidden.example.com',
+            },
+          ],
+        },
+      ],
+      folderTrail,
+      3,
+      undefined,
+      '',
+    )
+
+    expect(result).toHaveLength(0)
+    expect(folderTrail.map).not.toHaveBeenCalled()
+  })
+
   it('flags duplicate bookmarks when detection is enabled', () => {
     ext.opts.bookmarksIgnoreFolderList = []
     ext.opts.detectDuplicateBookmarks = true
@@ -441,8 +391,9 @@ describe('convertBrowserHistory', () => {
     }
   })
 
-  it('normalizes history entries', () => {
+  it('filters ignored urls and normalizes history entries', () => {
     jest.spyOn(Date, 'now').mockReturnValue(10_000)
+    ext.opts.historyIgnoreList = ['ignore.example.com']
 
     const history = [
       {
@@ -462,7 +413,7 @@ describe('convertBrowserHistory', () => {
     ]
 
     const result = convertBrowserHistory(history)
-    expect(result).toHaveLength(2)
+    expect(result).toHaveLength(1)
 
     const [entry] = result
 
@@ -495,5 +446,63 @@ describe('convertBrowserHistory', () => {
       url: 'keep.example.com/page',
       originalUrl: 'https://keep.example.com/page/',
     })
+  })
+
+  it('handles multiple ignore patterns and case sensitivity', () => {
+    ext.opts.historyIgnoreList = ['GOOG.LE', 'test.com']
+
+    const history = [
+      { id: '1', url: 'https://goog.le/search', title: 'Google' },
+      { id: '2', url: 'https://TEST.COM/path', title: 'Test' },
+      { id: '3', url: 'https://example.com', title: 'KeepMe' },
+    ]
+
+    const result = convertBrowserHistory(history)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('KeepMe')
+  })
+
+  it('correctly escapes regex special characters in patterns', () => {
+    // Patterns with dots, pluses, parentheses, etc.
+    ext.opts.historyIgnoreList = ['example.com/a+b', 'site(dot)com', 'bank.com?id=']
+
+    const history = [
+      { id: '1', url: 'https://example.com/a+b', title: 'Match Plus' },
+      { id: '2', url: 'https://site(dot)com/page', title: 'Match Parens' },
+      { id: '3', url: 'https://bank.com?id=123', title: 'Match QMark' },
+      { id: '4', url: 'https://example.com/ab', title: 'No Match Plus' },
+      { id: '5', url: 'https://sitedot.com', title: 'No Match Parens' },
+    ]
+
+    const result = convertBrowserHistory(history)
+    expect(result).toHaveLength(2)
+    expect(result.map((r) => r.title)).toContain('No Match Plus')
+    expect(result.map((r) => r.title)).toContain('No Match Parens')
+  })
+
+  it('handles empty, null, or whitespace patterns without matching everything', () => {
+    ext.opts.historyIgnoreList = ['', null, '   ', 'valid.com']
+
+    const history = [
+      { id: '1', url: 'https://valid.com/page', title: 'Ignored' },
+      { id: '2', url: 'https://anything.else', title: 'Kept' },
+    ]
+
+    const result = convertBrowserHistory(history)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Kept')
+  })
+
+  it('handles complex URL characters like slashes and hyphens in ignore patterns', () => {
+    ext.opts.historyIgnoreList = ['my-site.com/sub-path/']
+
+    const history = [
+      { id: '1', url: 'https://my-site.com/sub-path/page', title: 'Ignored' },
+      { id: '2', url: 'https://my-site.com/other', title: 'Kept' },
+    ]
+
+    const result = convertBrowserHistory(history)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Kept')
   })
 })
