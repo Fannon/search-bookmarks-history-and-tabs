@@ -2,7 +2,7 @@ import { browserApi } from '../helper/browserApi.js'
 
 export const SEARCH_DATA_CACHE_KEY = 'searchDataCache:v1'
 
-function getLocalStorageArea() {
+function getExtensionStorage() {
   return ext.browserApi?.storage?.local || browserApi.storage?.local
 }
 
@@ -11,7 +11,19 @@ function getLastStorageError() {
 }
 
 export async function loadRawSearchDataCache() {
-  const storage = getLocalStorageArea()
+  const startTime = performance.now()
+  try {
+    const raw = window.localStorage?.getItem(SEARCH_DATA_CACHE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      console.debug(`Cache localStorage read took ${Math.round(performance.now() - startTime)}ms (${raw.length} chars)`)
+      return parsed
+    }
+  } catch (_err) {
+    // localStorage unavailable or parse failed — fall through to extension storage
+  }
+
+  const storage = getExtensionStorage()
   if (storage?.get) {
     return new Promise((resolve, reject) => {
       try {
@@ -20,12 +32,20 @@ export async function loadRawSearchDataCache() {
           if (error) {
             reject(error)
           } else {
-            resolve(result?.[SEARCH_DATA_CACHE_KEY])
+            const value = result?.[SEARCH_DATA_CACHE_KEY]
+            console.debug(`Cache extension storage read took ${Math.round(performance.now() - startTime)}ms`)
+            resolve(value)
           }
         })
 
         if (maybePromise?.then) {
-          maybePromise.then((result) => resolve(result?.[SEARCH_DATA_CACHE_KEY])).catch(reject)
+          maybePromise
+            .then((result) => {
+              const value = result?.[SEARCH_DATA_CACHE_KEY]
+              console.debug(`Cache extension storage read took ${Math.round(performance.now() - startTime)}ms`)
+              resolve(value)
+            })
+            .catch(reject)
         }
       } catch (err) {
         reject(err)
@@ -33,17 +53,24 @@ export async function loadRawSearchDataCache() {
     })
   }
 
-  try {
-    const value = window.localStorage?.getItem(SEARCH_DATA_CACHE_KEY)
-    return value ? JSON.parse(value) : undefined
-  } catch (err) {
-    console.warn('Could not read search data cache from localStorage.', err)
-    return undefined
-  }
+  return undefined
 }
 
 export async function saveRawSearchDataCache(value) {
-  const storage = getLocalStorageArea()
+  const startTime = performance.now()
+  const serialized = JSON.stringify(value)
+
+  try {
+    window.localStorage?.setItem(SEARCH_DATA_CACHE_KEY, serialized)
+    console.debug(
+      `Cache localStorage write took ${Math.round(performance.now() - startTime)}ms (${serialized.length} chars)`,
+    )
+    return
+  } catch (_err) {
+    // Quota exceeded or localStorage unavailable — fall back to extension storage
+  }
+
+  const storage = getExtensionStorage()
   if (storage?.set) {
     return new Promise((resolve, reject) => {
       try {
@@ -52,12 +79,22 @@ export async function saveRawSearchDataCache(value) {
           if (error) {
             reject(error)
           } else {
+            console.debug(
+              `Cache extension storage write took ${Math.round(performance.now() - startTime)}ms (${serialized.length} chars)`,
+            )
             resolve()
           }
         })
 
         if (maybePromise?.then) {
-          maybePromise.then(resolve).catch(reject)
+          maybePromise
+            .then(() => {
+              console.debug(
+                `Cache extension storage write took ${Math.round(performance.now() - startTime)}ms (${serialized.length} chars)`,
+              )
+              resolve()
+            })
+            .catch(reject)
         }
       } catch (err) {
         reject(err)
@@ -65,15 +102,18 @@ export async function saveRawSearchDataCache(value) {
     })
   }
 
-  try {
-    window.localStorage?.setItem(SEARCH_DATA_CACHE_KEY, JSON.stringify(value))
-  } catch (err) {
-    console.warn('Could not write search data cache to localStorage.', err)
-  }
+  console.warn('Could not write search data cache to localStorage or extension storage.')
 }
 
 export async function clearSearchDataCache() {
-  const storage = getLocalStorageArea()
+  try {
+    window.localStorage?.removeItem(SEARCH_DATA_CACHE_KEY)
+    return
+  } catch (_err) {
+    // fall through
+  }
+
+  const storage = getExtensionStorage()
   if (storage?.remove) {
     return new Promise((resolve, reject) => {
       try {
@@ -93,11 +133,5 @@ export async function clearSearchDataCache() {
         reject(err)
       }
     })
-  }
-
-  try {
-    window.localStorage?.removeItem(SEARCH_DATA_CACHE_KEY)
-  } catch (err) {
-    console.warn('Could not remove search data cache from localStorage.', err)
   }
 }

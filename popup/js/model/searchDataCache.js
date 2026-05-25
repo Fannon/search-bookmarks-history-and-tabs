@@ -164,13 +164,24 @@ function resetSearchDataRuntimeCaches() {
 }
 
 async function loadCachedSearchData(options) {
+  const overallStart = performance.now()
   try {
     const cache = await loadRawSearchDataCache()
     if (!isCacheUsable(cache, options)) {
+      const reason = !cache
+        ? 'no cache found'
+        : cache.version !== CACHE_VERSION
+          ? `version mismatch (expected ${CACHE_VERSION}, got ${cache?.version})`
+          : !cache.data || !Array.isArray(cache.data.bookmarks) || !Array.isArray(cache.data.history)
+            ? 'cache data missing or malformed'
+            : 'options fingerprint mismatch'
+      console.debug(`Cache miss: ${reason}`)
       return null
     }
 
+    const ageStart = performance.now()
     const agedData = applyCacheAge(cache.data, cache.savedAt)
+    const tabsStart = performance.now()
     const tabs = await getLiveTabsData()
     const data = {
       tabs,
@@ -179,6 +190,11 @@ async function loadCachedSearchData(options) {
       bookmarkTree: [],
     }
     flagBookmarksWithOpenTabs(data.bookmarks, data.tabs)
+    const totalMs = Math.round(performance.now() - overallStart)
+    console.debug(
+      `Cache hit: loaded ${data.bookmarks.length} bookmarks and ${data.history.length} history items ` +
+        `(${Math.round(performance.now() - ageStart)}ms age adjust, ${Math.round(performance.now() - tabsStart)}ms live tabs, ${totalMs}ms total)`,
+    )
     return {
       data,
       fingerprint: cache.dataFingerprint,
@@ -190,19 +206,27 @@ async function loadCachedSearchData(options) {
 }
 
 async function saveSearchDataCache(data, options) {
+  const startTime = performance.now()
   try {
     await saveRawSearchDataCache(createCachePayload(data, options))
+    console.debug(`Saved search data cache in ${Math.round(performance.now() - startTime)}ms`)
   } catch (err) {
     console.warn('Could not save search data cache.', err)
   }
 }
 
 export async function getCachedThenFreshSearchData(options = ext.opts) {
+  const overallStart = performance.now()
   const cached = await loadCachedSearchData(options)
 
   if (!cached) {
+    const liveStart = performance.now()
     const liveData = await getSearchData()
+    const liveMs = Math.round(performance.now() - liveStart)
     void saveSearchDataCache(liveData, options)
+    console.debug(
+      `getCachedThenFreshSearchData: live load took ${liveMs}ms, total ${Math.round(performance.now() - overallStart)}ms`,
+    )
     return {
       data: liveData,
       refreshPromise: null,
@@ -210,13 +234,17 @@ export async function getCachedThenFreshSearchData(options = ext.opts) {
     }
   }
 
+  const refreshStart = performance.now()
   const refreshPromise = getSearchData()
     .then(async (liveData) => {
       const payload = createCachePayload(liveData, options)
       await saveRawSearchDataCache(payload)
+      const liveMs = Math.round(performance.now() - refreshStart)
       if (payload.dataFingerprint === cached.fingerprint) {
+        console.debug(`Background refresh: data unchanged, took ${liveMs}ms`)
         return null
       }
+      console.debug(`Background refresh: data changed, resetting search caches, took ${liveMs}ms`)
       resetSearchDataRuntimeCaches()
       return cloneSearchData(liveData)
     })
@@ -225,6 +253,7 @@ export async function getCachedThenFreshSearchData(options = ext.opts) {
       return null
     })
 
+  console.debug(`getCachedThenFreshSearchData: cache load took ${Math.round(performance.now() - overallStart)}ms`)
   return {
     data: cached.data,
     refreshPromise,

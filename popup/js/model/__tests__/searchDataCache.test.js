@@ -119,9 +119,19 @@ async function loadModule({ initialCache, liveData }) {
 }
 
 describe('searchDataCache', () => {
+  let localStorageStore = {}
+
   beforeEach(() => {
     clearTestExt()
     jest.restoreAllMocks()
+    localStorageStore = {}
+    jest.spyOn(Storage.prototype, 'getItem').mockImplementation((key) => localStorageStore[key] ?? null)
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation((key, value) => {
+      localStorageStore[key] = value
+    })
+    jest.spyOn(Storage.prototype, 'removeItem').mockImplementation((key) => {
+      delete localStorageStore[key]
+    })
   })
 
   test('uses processed cache immediately and refreshes live data in the background', async () => {
@@ -150,19 +160,18 @@ describe('searchDataCache', () => {
       history: [],
       bookmarkTree: [],
     }
-    const { module, mocks } = await loadModule({
-      initialCache: {
-        version: 1,
-        savedAt,
-        optionsFingerprint: optionFingerprint,
-        dataFingerprint: 'old',
-        data: {
-          bookmarks: [cachedBookmark],
-          history: [],
-        },
+    localStorageStore['searchDataCache:v1'] = JSON.stringify({
+      version: 1,
+      savedAt,
+      optionsFingerprint: optionFingerprint,
+      dataFingerprint: 'old',
+      data: {
+        bookmarks: [cachedBookmark],
+        history: [],
       },
-      liveData,
     })
+
+    const { module, mocks } = await loadModule({ initialCache: null, liveData })
 
     const result = await module.getCachedThenFreshSearchData(ext.opts)
 
@@ -182,7 +191,7 @@ describe('searchDataCache', () => {
     expect(mocks.resetSimpleSearchState).toHaveBeenCalledTimes(1)
     expect(mocks.resetFuzzySearchState).toHaveBeenCalledTimes(1)
     expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
-    expect(mocks.storage.set).toHaveBeenCalled()
+    expect(Storage.prototype.setItem).toHaveBeenCalled()
   })
 
   test('falls back to live data and saves it when no usable cache exists', async () => {
@@ -192,10 +201,7 @@ describe('searchDataCache', () => {
       history: [],
       bookmarkTree: [],
     }
-    const { module, mocks } = await loadModule({
-      initialCache: null,
-      liveData,
-    })
+    const { module, mocks } = await loadModule({ initialCache: null, liveData })
 
     const result = await module.getCachedThenFreshSearchData(ext.opts)
 
@@ -205,24 +211,26 @@ describe('searchDataCache', () => {
       source: 'live',
     })
     expect(mocks.getSearchData).toHaveBeenCalledTimes(1)
-    expect(mocks.storage.set).toHaveBeenCalled()
+    expect(Storage.prototype.setItem).toHaveBeenCalled()
   })
 
   test('clears persisted cache', async () => {
-    const { storageModule, mocks } = await loadModule({
-      initialCache: {
-        version: 1,
-        savedAt: Date.now(),
-        optionsFingerprint: optionFingerprint,
-        dataFingerprint: 'old',
-        data: { bookmarks: [], history: [] },
-      },
+    localStorageStore['searchDataCache:v1'] = JSON.stringify({
+      version: 1,
+      savedAt: Date.now(),
+      optionsFingerprint: optionFingerprint,
+      dataFingerprint: 'old',
+      data: { bookmarks: [], history: [] },
+    })
+
+    const { storageModule } = await loadModule({
+      initialCache: null,
       liveData: { tabs: [], bookmarks: [], history: [], bookmarkTree: [] },
     })
 
     await storageModule.clearSearchDataCache()
 
-    expect(mocks.storage.remove).toHaveBeenCalledWith('searchDataCache:v1', expect.any(Function))
-    expect(mocks.storage.getCache()).toBeUndefined()
+    expect(Storage.prototype.removeItem).toHaveBeenCalledWith('searchDataCache:v1')
+    expect(localStorageStore['searchDataCache:v1']).toBeUndefined()
   })
 })

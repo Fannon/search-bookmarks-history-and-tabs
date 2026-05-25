@@ -317,17 +317,60 @@ export function convertBrowserBookmarks(
  * @param {number} maxResults - Maximum number of history items.
  * @returns {Promise<Array>} History entries or empty array when unsupported.
  */
+function buildHistoryIgnoreRegex() {
+  const historyIgnoreList = ext.opts.historyIgnoreList
+  if (!historyIgnoreList?.length) {
+    return null
+  }
+
+  if (!ext.state) ext.state = {}
+  if (!ext.state.historyIgnoreRegex) {
+    const cleanPatterns = historyIgnoreList
+      .filter(Boolean)
+      .map((str) => String(str).replace(REGEX_SPECIAL_CHARS_REGEX, '\\$&'))
+
+    if (cleanPatterns.length > 0) {
+      ext.state.historyIgnoreRegex = new RegExp(cleanPatterns.join('|'), 'i')
+    } else {
+      ext.state.historyIgnoreRegex = /$.^/
+    }
+  }
+  return ext.state.historyIgnoreRegex
+}
+
 export async function getBrowserHistory(startTime, maxResults) {
   if (browserApi.history) {
-    return await browserApi.history.search({
+    const raw = await browserApi.history.search({
       text: '',
       startTime: startTime,
       maxResults: maxResults,
     })
-  } else {
-    console.warn(`No browser history API found. Returning no results.`)
-    return []
+
+    const ignoreRegex = buildHistoryIgnoreRegex()
+    if (!ignoreRegex) {
+      return raw
+    }
+
+    const filtered = []
+    let ignoredCount = 0
+    for (let i = 0; i < raw.length; i++) {
+      const el = raw[i]
+      if (ignoreRegex.test(el.url)) {
+        ignoredCount++
+        continue
+      }
+      filtered.push(el)
+    }
+
+    if (ignoredCount > 0) {
+      console.debug(`Ignored ${ignoredCount} history items due to ignore list`)
+    }
+
+    return filtered
   }
+
+  console.warn(`No browser history API found. Returning no results.`)
+  return []
 }
 
 /**
@@ -349,38 +392,12 @@ export async function getBrowserTabGroups() {
 }
 
 export function convertBrowserHistory(history) {
-  const historyIgnoreList = ext.opts.historyIgnoreList
-  let ignoreRegex = null
-  if (historyIgnoreList?.length) {
-    if (!ext.state) ext.state = {}
-    if (!ext.state.historyIgnoreRegex) {
-      // Filter out empty strings and escape special characters
-      const cleanPatterns = historyIgnoreList
-        .filter(Boolean)
-        .map((str) => String(str).replace(REGEX_SPECIAL_CHARS_REGEX, '\\$&'))
-
-      if (cleanPatterns.length > 0) {
-        ext.state.historyIgnoreRegex = new RegExp(cleanPatterns.join('|'), 'i')
-      } else {
-        // Fallback to a regex that matches nothing
-        ext.state.historyIgnoreRegex = /$.^/
-      }
-    }
-    ignoreRegex = ext.state.historyIgnoreRegex
-  }
-
   const result = []
   const count = history.length
   const now = Date.now()
-  let ignoredHistoryCounter = 0
 
   for (let i = 0; i < count; i++) {
     const el = history[i]
-    if (ignoreRegex?.test(el.url)) {
-      ignoredHistoryCounter += 1
-      continue
-    }
-
     const cleanUrl = cleanUpUrl(el.url)
     const title = getTitle(el.title, cleanUrl)
     const titleLower = title.toLowerCase().trim()
@@ -407,10 +424,6 @@ export function convertBrowserHistory(history) {
     }
 
     result.push(historyItem)
-  }
-
-  if (ignoredHistoryCounter > 0) {
-    console.debug(`Ignored ${ignoredHistoryCounter} history items due to ignore list`)
   }
 
   return result

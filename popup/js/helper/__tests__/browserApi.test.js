@@ -5,6 +5,7 @@ import {
   convertBrowserHistory,
   convertBrowserTabs,
   createSearchStringLower,
+  getBrowserHistory,
   getBrowserTabGroups,
   getBrowserTabs,
   getTitle,
@@ -352,17 +353,128 @@ describe('convertBrowserBookmarks', () => {
   })
 })
 
-describe('convertBrowserHistory', () => {
-  beforeEach(() => {
-    // Clear the memoized regex state before each test
-    if (globalThis.ext) {
-      ext.state = {}
-    }
+describe('getBrowserHistory', () => {
+  afterEach(() => {
+    delete browserApi.history
+    jest.restoreAllMocks()
   })
 
-  it('filters ignored urls and normalizes history entries', () => {
-    jest.spyOn(Date, 'now').mockReturnValue(10_000)
+  it('returns raw history from the browser API', async () => {
+    const raw = [{ id: '1', url: 'https://example.com', title: 'Example', visitCount: 3, lastVisitTime: Date.now() }]
+    browserApi.history = { search: jest.fn(() => Promise.resolve(raw)) }
+
+    const result = await getBrowserHistory(0, 100)
+    expect(result).toEqual(raw)
+    expect(browserApi.history.search).toHaveBeenCalledWith({ text: '', startTime: 0, maxResults: 100 })
+  })
+
+  it('filters out history items matching the ignore list', async () => {
     ext.opts.historyIgnoreList = ['ignore.example.com']
+    browserApi.history = {
+      search: jest.fn(() =>
+        Promise.resolve([
+          { id: '1', url: 'https://keep.example.com/page', title: 'Keep', visitCount: 3, lastVisitTime: 9_000 },
+          { id: '2', url: 'https://ignore.example.com/secret', title: 'Ignore', visitCount: 5, lastVisitTime: 8_500 },
+        ]),
+      ),
+    }
+
+    const result = await getBrowserHistory(0, 100)
+    expect(result).toHaveLength(1)
+    expect(result[0].url).toBe('https://keep.example.com/page')
+  })
+
+  it('handles multiple ignore patterns and case sensitivity', async () => {
+    ext.opts.historyIgnoreList = ['GOOG.LE', 'test.com']
+    browserApi.history = {
+      search: jest.fn(() =>
+        Promise.resolve([
+          { id: '1', url: 'https://goog.le/search', title: 'Google', visitCount: 1, lastVisitTime: Date.now() },
+          { id: '2', url: 'https://TEST.COM/path', title: 'Test', visitCount: 1, lastVisitTime: Date.now() },
+          { id: '3', url: 'https://example.com', title: 'KeepMe', visitCount: 1, lastVisitTime: Date.now() },
+        ]),
+      ),
+    }
+
+    const result = await getBrowserHistory(0, 100)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('KeepMe')
+  })
+
+  it('correctly escapes regex special characters in patterns', async () => {
+    ext.opts.historyIgnoreList = ['example.com/a+b', 'site(dot)com', 'bank.com?id=']
+    browserApi.history = {
+      search: jest.fn(() =>
+        Promise.resolve([
+          { id: '1', url: 'https://example.com/a+b', title: 'Match Plus', visitCount: 1, lastVisitTime: Date.now() },
+          {
+            id: '2',
+            url: 'https://site(dot)com/page',
+            title: 'Match Parens',
+            visitCount: 1,
+            lastVisitTime: Date.now(),
+          },
+          { id: '3', url: 'https://bank.com?id=123', title: 'Match QMark', visitCount: 1, lastVisitTime: Date.now() },
+          { id: '4', url: 'https://example.com/ab', title: 'No Match Plus', visitCount: 1, lastVisitTime: Date.now() },
+          { id: '5', url: 'https://sitedot.com', title: 'No Match Parens', visitCount: 1, lastVisitTime: Date.now() },
+        ]),
+      ),
+    }
+
+    const result = await getBrowserHistory(0, 100)
+    expect(result).toHaveLength(2)
+    expect(result.map((r) => r.title)).toContain('No Match Plus')
+    expect(result.map((r) => r.title)).toContain('No Match Parens')
+  })
+
+  it('handles empty, null, or whitespace patterns without matching everything', async () => {
+    ext.opts.historyIgnoreList = ['', null, '   ', 'valid.com']
+    browserApi.history = {
+      search: jest.fn(() =>
+        Promise.resolve([
+          { id: '1', url: 'https://valid.com/page', title: 'Ignored', visitCount: 1, lastVisitTime: Date.now() },
+          { id: '2', url: 'https://anything.else', title: 'Kept', visitCount: 1, lastVisitTime: Date.now() },
+        ]),
+      ),
+    }
+
+    const result = await getBrowserHistory(0, 100)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Kept')
+  })
+
+  it('handles complex URL characters like slashes and hyphens in ignore patterns', async () => {
+    ext.opts.historyIgnoreList = ['my-site.com/sub-path/']
+    browserApi.history = {
+      search: jest.fn(() =>
+        Promise.resolve([
+          {
+            id: '1',
+            url: 'https://my-site.com/sub-path/page',
+            title: 'Ignored',
+            visitCount: 1,
+            lastVisitTime: Date.now(),
+          },
+          { id: '2', url: 'https://my-site.com/other', title: 'Kept', visitCount: 1, lastVisitTime: Date.now() },
+        ]),
+      ),
+    }
+
+    const result = await getBrowserHistory(0, 100)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Kept')
+  })
+
+  it('returns empty array when history API is unavailable', async () => {
+    delete browserApi.history
+    const result = await getBrowserHistory(0, 100)
+    expect(result).toEqual([])
+  })
+})
+
+describe('convertBrowserHistory', () => {
+  it('normalizes history entries', () => {
+    jest.spyOn(Date, 'now').mockReturnValue(10_000)
 
     const history = [
       {
@@ -372,19 +484,9 @@ describe('convertBrowserHistory', () => {
         visitCount: 3,
         lastVisitTime: 9_000,
       },
-      {
-        id: '2',
-        url: 'https://ignore.example.com/secret',
-        title: 'Ignore',
-        visitCount: 5,
-        lastVisitTime: 8_500,
-      },
     ]
 
-    const result = convertBrowserHistory(history)
-    expect(result).toHaveLength(1)
-
-    const [entry] = result
+    const [entry] = convertBrowserHistory(history)
 
     expect(entry).toMatchObject({
       type: 'history',
@@ -415,63 +517,5 @@ describe('convertBrowserHistory', () => {
       url: 'keep.example.com/page',
       originalUrl: 'https://keep.example.com/page/',
     })
-  })
-
-  it('handles multiple ignore patterns and case sensitivity', () => {
-    ext.opts.historyIgnoreList = ['GOOG.LE', 'test.com']
-
-    const history = [
-      { id: '1', url: 'https://goog.le/search', title: 'Google' },
-      { id: '2', url: 'https://TEST.COM/path', title: 'Test' },
-      { id: '3', url: 'https://example.com', title: 'KeepMe' },
-    ]
-
-    const result = convertBrowserHistory(history)
-    expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('KeepMe')
-  })
-
-  it('correctly escapes regex special characters in patterns', () => {
-    // Patterns with dots, pluses, parentheses, etc.
-    ext.opts.historyIgnoreList = ['example.com/a+b', 'site(dot)com', 'bank.com?id=']
-
-    const history = [
-      { id: '1', url: 'https://example.com/a+b', title: 'Match Plus' },
-      { id: '2', url: 'https://site(dot)com/page', title: 'Match Parens' },
-      { id: '3', url: 'https://bank.com?id=123', title: 'Match QMark' },
-      { id: '4', url: 'https://example.com/ab', title: 'No Match Plus' },
-      { id: '5', url: 'https://sitedot.com', title: 'No Match Parens' },
-    ]
-
-    const result = convertBrowserHistory(history)
-    expect(result).toHaveLength(2)
-    expect(result.map((r) => r.title)).toContain('No Match Plus')
-    expect(result.map((r) => r.title)).toContain('No Match Parens')
-  })
-
-  it('handles empty, null, or whitespace patterns without matching everything', () => {
-    ext.opts.historyIgnoreList = ['', null, '   ', 'valid.com']
-
-    const history = [
-      { id: '1', url: 'https://valid.com/page', title: 'Ignored' },
-      { id: '2', url: 'https://anything.else', title: 'Kept' },
-    ]
-
-    const result = convertBrowserHistory(history)
-    expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('Kept')
-  })
-
-  it('handles complex URL characters like slashes and hyphens in ignore patterns', () => {
-    ext.opts.historyIgnoreList = ['my-site.com/sub-path/']
-
-    const history = [
-      { id: '1', url: 'https://my-site.com/sub-path/page', title: 'Ignored' },
-      { id: '2', url: 'https://my-site.com/other', title: 'Kept' },
-    ]
-
-    const result = convertBrowserHistory(history)
-    expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('Kept')
   })
 })

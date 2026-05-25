@@ -39,7 +39,7 @@ initExtension().catch((err) => {
  * @returns {Promise<void>}
  */
 export async function initExtension() {
-  const startTime = Date.now()
+  const startTime = performance.now()
   // Load effective options, including user customizations
   ext.opts = await getEffectiveOptions()
 
@@ -58,8 +58,10 @@ export async function initExtension() {
   ext.model.loadedFavicons = new Set()
 
   // Load bookmarks, tabs, and history data for searching
-  const { data, refreshPromise } = await getCachedThenFreshSearchData(ext.opts)
+  const dataStart = performance.now()
+  const { data, refreshPromise, source } = await getCachedThenFreshSearchData(ext.opts)
   Object.assign(ext.model, data)
+  const dataMs = Math.round(performance.now() - dataStart)
 
   // Register Events
   document.addEventListener('keydown', navigationKeyListener)
@@ -85,7 +87,8 @@ export async function initExtension() {
     document.getElementById('results-load').remove()
   }
 
-  console.debug(`Init in ${Date.now() - startTime}ms`)
+  const totalMs = Math.round(performance.now() - startTime)
+  console.debug(`Init complete in ${totalMs}ms (data load: ${dataMs}ms, source: ${source})`)
 }
 
 //////////////////////////////////////////
