@@ -10,7 +10,7 @@
 
 import { createExtensionContext } from './helper/extensionContext.js'
 import { getEffectiveOptions } from './model/optionsStorage.js'
-import { getSearchData } from './model/searchData.js'
+import { getCachedThenFreshSearchData } from './model/searchDataCache.js'
 
 import { addDefaultEntries, search } from './search/common.js'
 
@@ -52,8 +52,14 @@ export async function initExtension() {
 
   updateSearchApproachToggle()
 
+  // Cache search results by (term, strategy, mode) to avoid re-running algorithms
+  ext.searchCache = new Map()
+  // Track successfully loaded favicon URLs to prevent fade-in on re-renders
+  ext.model.loadedFavicons = new Set()
+
   // Load bookmarks, tabs, and history data for searching
-  Object.assign(ext.model, await getSearchData())
+  const { data, refreshPromise } = await getCachedThenFreshSearchData(ext.opts)
+  Object.assign(ext.model, data)
 
   // Register Events
   document.addEventListener('keydown', navigationKeyListener)
@@ -65,14 +71,15 @@ export async function initExtension() {
   // avoiding stale selections when Enter is pressed quickly after typing.
   ext.dom.searchInput.addEventListener('input', search)
 
-  // Cache search results by (term, strategy, mode) to avoid re-running algorithms
-  ext.searchCache = new Map()
-  // Track successfully loaded favicon URLs to prevent fade-in on re-renders
-  ext.model.loadedFavicons = new Set()
-
   ext.initialized = true
 
   hashRouter()
+
+  refreshPromise?.then((freshData) => {
+    if (!freshData) return
+    Object.assign(ext.model, freshData)
+    hashRouter()
+  })
 
   if (document.getElementById('results-load')) {
     document.getElementById('results-load').remove()

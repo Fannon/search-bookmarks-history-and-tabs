@@ -36,6 +36,7 @@ const mockDependencies = async (overrides = {}) => {
         history: [{ originalId: 'h1' }],
       }),
     ),
+    getCachedThenFreshSearchData: null,
     addDefaultEntries: jest.fn(async () => {
       const defaults = [{ originalId: 'default' }]
       if (globalThis.ext?.model) {
@@ -47,6 +48,13 @@ const mockDependencies = async (overrides = {}) => {
     search: jest.fn(() => Promise.resolve()),
   }
   const config = { ...defaults, ...overrides }
+  if (!config.getCachedThenFreshSearchData) {
+    config.getCachedThenFreshSearchData = jest.fn(async () => ({
+      data: await config.getSearchData(),
+      refreshPromise: null,
+      source: 'live',
+    }))
+  }
 
   await jest.unstable_mockModule('../helper/utils.js', () => ({
     __esModule: true,
@@ -71,6 +79,10 @@ const mockDependencies = async (overrides = {}) => {
   await jest.unstable_mockModule('../model/searchData.js', () => ({
     __esModule: true,
     getSearchData: config.getSearchData,
+  }))
+  await jest.unstable_mockModule('../model/searchDataCache.js', () => ({
+    __esModule: true,
+    getCachedThenFreshSearchData: config.getCachedThenFreshSearchData,
   }))
   await jest.unstable_mockModule('../search/common.js', () => ({
     __esModule: true,
@@ -131,6 +143,7 @@ describe('initSearch entry point', () => {
 
     expect(module.ext.initialized).toBe(true)
     expect(module.ext.model.tabs).toEqual([{ originalId: 't1' }])
+    expect(mocks.getCachedThenFreshSearchData).toHaveBeenCalledWith(module.ext.opts)
     expect(module.ext.searchCache instanceof Map).toBe(true)
     expect(mocks.addDefaultEntries).toHaveBeenCalled()
     expect(mocks.renderSearchResults).toHaveBeenCalled()
