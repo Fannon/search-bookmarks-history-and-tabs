@@ -154,7 +154,7 @@ export async function initBookmarkManager() {
 }
 
 async function loadBookmarkManagerAfterOptionsNavigation() {
-  if (window.location.hash === '#options' || ext.model.bookmarkManagerLoaded) {
+  if (window.location.hash === '#options') {
     return
   }
 

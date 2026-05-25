@@ -12,6 +12,9 @@ let isInitialized = false
 let redirectAfterSave = './index.html#search/'
 let isSyncingOptions = false
 
+const CAMEL_CASE_SPLIT_REGEX = /([a-z])([A-Z])/g
+const TOKEN_SPLIT_REGEX = /[\s,._\-/\\|[\]{}()]+/
+
 import { browserApi } from '../helper/browserApi.js'
 import { getUserOptions, setUserOptions } from '../model/optionsStorage.js'
 import { validateOptions } from '../model/validateOptions.js'
@@ -42,9 +45,17 @@ export async function initOptions(options = {}) {
   initOptionControls()
   const initialConfigValue = configEl.value
 
-  await ensureOptionsSchema()
-  renderOptionsForm()
-  const userOptions = await getUserOptions()
+  let userOptions = {}
+  try {
+    await ensureOptionsSchema()
+    renderOptionsForm()
+    userOptions = await getUserOptions()
+  } catch (error) {
+    showErrorMessage(error)
+    showOptionsStatus(error?.message || 'Failed to load options', 'error')
+    return
+  }
+
   const userOptionsYaml = window.jsyaml.dump(userOptions)
 
   if (configEl.value !== initialConfigValue) return
@@ -182,11 +193,7 @@ function filterOptions() {
 }
 
 function tokenize(text) {
-  return text
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .toLowerCase()
-    .split(/[\s,._\-/\\|[\]{}()]+/)
-    .filter(Boolean)
+  return text.replace(CAMEL_CASE_SPLIT_REGEX, '$1 $2').toLowerCase().split(TOKEN_SPLIT_REGEX).filter(Boolean)
 }
 
 function getRowEnumValues(row) {
