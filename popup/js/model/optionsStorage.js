@@ -71,7 +71,7 @@ export async function getEffectiveOptions() {
     }
   } catch (err) {
     console.warn('Could not get valid user options, falling back to defaults.', err)
-    return defaultOptions
+    return { ...defaultOptions }
   }
 }
 

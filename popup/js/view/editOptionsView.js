@@ -51,7 +51,7 @@ export async function initOptions(options = {}) {
 
   setConfigYamlValue(userOptionsYaml)
   syncFormFromOptions(userOptions)
-  validateCurrentOptions({ showOverlay: false })
+  await validateCurrentOptions({ showOverlay: false })
 }
 
 function initOptionControls() {
@@ -505,10 +505,10 @@ async function resetOptions() {
   setConfigYaml({})
   syncFormFromOptions({})
   hideErrors()
-  validateCurrentOptions({ showOverlay: false })
+  await validateCurrentOptions({ showOverlay: false })
 }
 
-function syncOptionsFromYaml() {
+async function syncOptionsFromYaml() {
   if (isSyncingOptions) return
 
   hideErrors()
@@ -516,13 +516,13 @@ function syncOptionsFromYaml() {
   try {
     const options = parseConfigValue()
     syncFormFromOptions(options)
-    validateCurrentOptions({ showOverlay: false })
+    await validateCurrentOptions({ showOverlay: false })
   } catch (error) {
     showOptionsStatus(error.message, 'error')
   }
 }
 
-function syncYamlFromForm(event) {
+async function syncYamlFromForm(event) {
   if (isSyncingOptions) return
 
   const row = event.target.closest?.('[data-option-key]')
@@ -537,7 +537,7 @@ function syncYamlFromForm(event) {
     const options = collectOptionsFromForm()
     setConfigYaml(options)
     hideErrors()
-    validateCurrentOptions({ showOverlay: false })
+    await validateCurrentOptions({ showOverlay: false })
   } catch (error) {
     clearInlineValidation()
     const key = row?.dataset.optionKey
@@ -820,13 +820,18 @@ function renderDefaultValue(schema) {
   const type = getSimpleSchemaType(schema)
   if (type === 'array' || type === 'object') {
     const yaml = escapeHtml(window.jsyaml.dump(schema.default).trim())
-    return `<p class="option-default">Default:<br><pre class="option-default-code"><code>${yaml}</code></pre></p>`
+    return `<div class="option-default">Default:<pre class="option-default-code"><code>${yaml}</code></pre></div>`
   }
   return `<p class="option-default">Default: <code>${escapeHtml(formatYamlInline(schema.default))}</code></p>`
 }
 
 function escapeHtml(value) {
-  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 }
 
 /**
