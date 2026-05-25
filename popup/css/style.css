@@ -404,7 +404,7 @@ li.direct .favicon-col {
   top: 3px;
   right: 5px;
   padding: 1px 3px 2px;
-  background: var(--nav-active-fg);
+  background: #59ab5c;
   border-radius: 2px;
   color: #fff;
   font-size: 9px;

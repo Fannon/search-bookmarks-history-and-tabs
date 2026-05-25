@@ -81,6 +81,9 @@ function initOptionControls() {
   if (formEl) formEl.addEventListener('change', syncYamlFromForm)
   if (formEl) formEl.addEventListener('click', handleOptionFormClick)
 
+  const filterEl = document.getElementById('options-filter')
+  if (filterEl) filterEl.addEventListener('input', filterOptions)
+
   // Use event delegation for the error overlay buttons
   const errorMessageEl = document.getElementById('error-message')
   if (errorMessageEl) {
@@ -143,6 +146,57 @@ function getGroupedOptionEntries() {
   }
 
   return grouped
+}
+
+function filterOptions() {
+  const filterEl = document.getElementById('options-filter')
+  const formEl = document.getElementById('options-form')
+  if (!filterEl || !formEl) return
+
+  const query = filterEl.value.trim().toLowerCase()
+  const queryTokens = tokenize(query)
+  const sectionGroups = formEl.querySelectorAll('.options-section-group')
+
+  for (const group of sectionGroups) {
+    const rows = group.querySelectorAll('[data-option-key]')
+    let hasVisibleRow = false
+
+    for (const row of rows) {
+      if (!queryTokens.length) {
+        row.classList.remove('hidden-by-filter')
+        hasVisibleRow = true
+        continue
+      }
+
+      const key = row.dataset.optionKey
+      const description = row.querySelector('.option-description')?.textContent || ''
+      const enumValues = getRowEnumValues(row)
+      const allText = tokenize(`${key} ${description} ${enumValues}`)
+      const matches = queryTokens.every((qt) => allText.some((t) => t.includes(qt)))
+      row.classList.toggle('hidden-by-filter', !matches)
+      if (matches) hasVisibleRow = true
+    }
+
+    group.classList.toggle('hidden-by-filter', !hasVisibleRow)
+  }
+}
+
+function tokenize(text) {
+  return text
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .toLowerCase()
+    .split(/[\s,._\-/\\|[\]{}()]+/)
+    .filter(Boolean)
+}
+
+function getRowEnumValues(row) {
+  const select = row.querySelector('select[data-option-input]')
+  if (!select) return ''
+  const texts = []
+  for (const option of select.options) {
+    texts.push(option.textContent.toLowerCase())
+  }
+  return texts.join(' ')
 }
 
 function renderOptionRow(key, schema) {

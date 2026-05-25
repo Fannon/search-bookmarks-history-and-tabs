@@ -411,4 +411,147 @@ describe('editOptionsView', () => {
 
     expect(document.getElementById('config').value).not.toContain('remove-me')
   })
+
+  it('shows all rows when options filter is empty', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = ''
+    filterEl.dispatchEvent(new Event('input'))
+
+    const hiddenRows = document.querySelectorAll('.option-row.hidden-by-filter')
+    expect(hiddenRows.length).toBe(0)
+  })
+
+  it('finds history-related options by key but not unrelated ones', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'history'
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('historyColor')).toBe(true)
+    expect(rowIsVisible('enableHistory')).toBe(true)
+    expect(rowIsVisible('historyDaysAgo')).toBe(true)
+    expect(rowIsVisible('historyMaxItems')).toBe(true)
+    expect(rowIsVisible('historyIgnoreList')).toBe(true)
+    expect(rowIsVisible('scoreHistoryBase')).toBe(true)
+
+    expect(rowIsVisible('bookmarkColor')).toBe(false)
+    expect(rowIsVisible('tabColor')).toBe(false)
+    expect(rowIsVisible('scoreBookmarkBase')).toBe(false)
+
+    const visibleCount = document.querySelectorAll('.option-row:not(.hidden-by-filter)').length
+    const totalCount = document.querySelectorAll('.option-row').length
+    expect(visibleCount).toBeLessThan(totalCount)
+  })
+
+  it('handles camelCase token splitting in option keys', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'score'
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('scoreBookmarkBase')).toBe(true)
+    expect(rowIsVisible('scoreHistoryBase')).toBe(true)
+    expect(rowIsVisible('scoreTabBase')).toBe(true)
+    expect(rowIsVisible('bookmarkColor')).toBe(false)
+  })
+
+  it('uses AND logic for multiple query tokens', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'score history'
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('scoreHistoryBase')).toBe(true)
+    expect(rowIsVisible('scoreBookmarkBase')).toBe(false)
+    expect(rowIsVisible('historyColor')).toBe(false)
+  })
+
+  it('matches description text as well as keys', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'favicon'
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('displayFavicons')).toBe(true)
+    expect(rowIsVisible('bookmarkColor')).toBe(false)
+  })
+
+  it('hides sections whose rows are all filtered out', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'history'
+    filterEl.dispatchEvent(new Event('input'))
+
+    const visibleSections = document.querySelectorAll('.options-section-group:not(.hidden-by-filter)')
+    const allSections = document.querySelectorAll('.options-section-group')
+    expect(visibleSections.length).toBeLessThan(allSections.length)
+  })
 })
+
+function setupOptionsFilterEl() {
+  const filterInput = document.createElement('input')
+  filterInput.id = 'options-filter'
+  filterInput.type = 'search'
+  document.body.appendChild(filterInput)
+}
+
+function rowIsVisible(key) {
+  const row = document.querySelector(`[data-option-key="${key}"]`)
+  if (!row) return null
+  return !row.classList.contains('hidden-by-filter')
+}

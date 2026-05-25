@@ -659,6 +659,24 @@ button {
   line-height: 1.2;
 }
 
+.options-filter-input {
+  width: calc(100% + 4px);
+  min-height: 32px;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--input-fg);
+  padding: 4px 9px;
+  font: inherit;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.option-row.hidden-by-filter,
+.options-section-group.hidden-by-filter {
+  display: none;
+}
+
 .options-form {
   display: grid;
   gap: 16px;
