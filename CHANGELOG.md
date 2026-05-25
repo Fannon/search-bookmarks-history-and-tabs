@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **NEW**: Moved user options into the full-page Bookmark Manager as a dedicated Options tab.
+  - Adds a schema-driven form with explicit per-option opt-in controls, inline descriptions, live validation, and a synced YAML editor.
+  - The browser extension options entry and popup navigation now open `popup/bookmarkManager.html#options` in a full tab.
+
 ## [v2.3.0] - 2026-05-09
 
 - **NEW**: Added a beta Bookmark Manager as a complementary full-page view for reviewing bookmark statistics, browsing folders, editing bookmark metadata, moving bookmarks, managing tags, and cleaning up duplicate bookmark URLs.

@@ -15,6 +15,32 @@ function setupDom() {
   `
 }
 
+function setupOptionsFormDom() {
+  document.body.innerHTML = `
+    <section data-manager-panel="options">
+      <div data-page-status></div>
+      <form id="options-form"></form>
+      <textarea id="config"></textarea>
+      <button id="opt-save"></button>
+      <button id="opt-reset"></button>
+      <div id="error-message" style="display:none"></div>
+    </section>
+  `
+}
+
+function createJsonYamlMocks() {
+  return {
+    dump: jest.fn((value) => {
+      if (!value || Object.keys(value).length === 0) return '{}'
+      return JSON.stringify(value)
+    }),
+    load: jest.fn((value) => {
+      if (!value) return undefined
+      return JSON.parse(value)
+    }),
+  }
+}
+
 async function loadEditOptionsView({
   userOptions = {},
   getUserOptionsImpl,
@@ -60,7 +86,7 @@ async function loadEditOptionsView({
     load: loadMock,
   }
 
-  jest.unstable_mockModule('../../model/options.js', () => ({
+  jest.unstable_mockModule('../../model/optionsStorage.js', () => ({
     getUserOptions,
     setUserOptions,
   }))
@@ -245,6 +271,62 @@ describe('editOptionsView', () => {
     await Promise.resolve()
 
     expect(input.value).toBe('')
+  })
+
+  it('edits simple string arrays with inline rows', async () => {
+    setupOptionsFormDom()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+
+    await module.initOptions()
+
+    const row = document.querySelector('[data-option-key="bookmarksIgnoreFolderList"]')
+    row.querySelector('[data-option-enabled]').click()
+    row.querySelector('[data-option-add-array-item]').click()
+    const input = row.querySelector('[data-array-value]')
+    input.value = 'Bookmarks/Archive'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+
+    expect(JSON.parse(document.getElementById('config').value)).toEqual({
+      bookmarksIgnoreFolderList: ['Bookmarks/Archive'],
+    })
+  })
+
+  it('edits searchEngineChoices with inline rows', async () => {
+    setupOptionsFormDom()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+
+    await module.initOptions()
+
+    const row = document.querySelector('[data-option-key="searchEngineChoices"]')
+    row.querySelector('[data-option-enabled]').click()
+    row.querySelector('[data-option-add-array-item]').click()
+    const lastItem = row.querySelector('[data-option-array-item]:last-child')
+    lastItem.querySelector('[data-array-field="name"]').value = 'Docs'
+    lastItem.querySelector('[data-array-field="urlPrefix"]').value = 'https://docs.example/search?q=$s'
+    lastItem.querySelector('[data-array-field="urlPrefix"]').dispatchEvent(new Event('input', { bubbles: true }))
+
+    expect(JSON.parse(document.getElementById('config').value)).toEqual({
+      searchEngineChoices: [
+        {
+          name: 'Google',
+          urlPrefix: 'https://www.google.com/search?q=$s',
+        },
+        {
+          name: 'Docs',
+          urlPrefix: 'https://docs.example/search?q=$s',
+        },
+      ],
+    })
   })
 
   it('saveOptions shows REMOVE UNKNOWN OPTIONS button for unknown options, and it works', async () => {

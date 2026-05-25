@@ -6,12 +6,13 @@ const waitForInitialization = async (page) => {
 
 const updateUserConfig = async (page, config) => {
   const newConfig = JSON.stringify(config, null, 2)
-  await page.goto('/options.html')
+  await page.goto('/bookmarkManager.html#options')
   const userConfig = page.locator('#config')
   await userConfig.fill('')
   await userConfig.fill(newConfig)
   await page.locator('#opt-save').click()
-  await page.waitForURL(/.*#search\/?/)
+  await page.waitForURL(/.*#overview/)
+  await page.goto('/')
 }
 
 test.describe('Recent Tabs on Open Functionality', () => {

@@ -25,12 +25,6 @@ const jsBundles = [
     globalName: 'searchPopup',
   },
   {
-    name: 'initOptions',
-    entry: resolve(repoRoot, 'popup/js/initOptions.js'),
-    outfile: resolve(repoRoot, 'popup/js/initOptions.bundle.min.js'),
-    globalName: 'optionsPopup',
-  },
-  {
     name: 'initTags',
     entry: resolve(repoRoot, 'popup/js/initTags.js'),
     outfile: resolve(repoRoot, 'popup/js/initTags.bundle.min.js'),

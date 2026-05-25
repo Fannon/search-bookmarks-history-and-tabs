@@ -18,7 +18,7 @@
     }
   },
   "options_ui": {
-    "page": "/popup/options.html",
+    "page": "/popup/bookmarkManager.html#options",
     "open_in_tab": true
   },
   "commands": {

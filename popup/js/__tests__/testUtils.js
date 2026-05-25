@@ -1,5 +1,5 @@
 import { convertBrowserBookmarks, convertBrowserHistory, convertBrowserTabs } from '../helper/browserApi.js'
-import { defaultOptions } from '../model/options.js'
+import { defaultOptions } from '../model/optionsDefaults.js'
 
 export function flushPromises() {
   return new Promise((resolve) => {

@@ -51,7 +51,7 @@ import {
   removeBookmarkUndoSnapshot,
   saveBookmarkUndoSnapshot,
 } from './model/bookmarkManagerUndo.js'
-import { getEffectiveOptions } from './model/options.js'
+import { getEffectiveOptions } from './model/optionsStorage.js'
 import { getSearchData } from './model/searchData.js'
 import { calculateFinalScore, executeSearch, sortResults } from './search/common.js'
 import { resetFuzzySearchState } from './search/fuzzySearch.js'
@@ -82,6 +82,7 @@ import {
   showTagSuggestionBusy,
   showTagSuggestionStatus,
 } from './view/bookmarkManagerView.js'
+import { initOptions } from './view/editOptionsView.js'
 import { printError } from './view/errorView.js'
 
 const LOCAL_AI_PROMPT_TIMEOUT_MS = 45000
@@ -99,6 +100,7 @@ initBookmarkManager().catch((error) => {
  */
 export async function initBookmarkManager() {
   ext.dom.manager = getBookmarkManagerDom()
+  await initOptions({ redirectAfterSave: './bookmarkManager.html#overview' })
   ext.opts = await getEffectiveOptions()
 
   // Load tabs only to enrich local AI prompts when a bookmark is already open.
@@ -139,9 +141,25 @@ export async function initBookmarkManager() {
     onApplyAllCleanupChanges: applyAllCleanupChanges,
   })
 
+  if (window.location.hash === '#options') {
+    ext.dom.manager.loadingIndicator?.remove()
+    window.addEventListener('hashchange', loadBookmarkManagerAfterOptionsNavigation)
+    ext.initialized = true
+    return
+  }
+
   await reloadBookmarkManager()
   checkLocalAiTagSupport()
   ext.initialized = true
+}
+
+async function loadBookmarkManagerAfterOptionsNavigation() {
+  if (window.location.hash === '#options' || ext.model.bookmarkManagerLoaded) {
+    return
+  }
+
+  await reloadBookmarkManager()
+  checkLocalAiTagSupport()
 }
 
 /**
@@ -185,6 +203,7 @@ export async function reloadBookmarkManager(options = {}) {
     await updateBookmarkBrowser()
     scrollManagedBookmarkIntoView(ext.model.bookmarkManagerCurrentId)
     scrollActiveFolderIntoView()
+    ext.model.bookmarkManagerLoaded = true
   } catch (error) {
     showManagerStatus('Load failed', 'error')
     printError(error, 'Could not load bookmark manager data.')
@@ -195,6 +214,10 @@ export async function reloadBookmarkManager(options = {}) {
 
 async function updateBookmarkBrowser() {
   try {
+    if (!ext.model.bookmarkManager) {
+      return
+    }
+
     const visibleBookmarks = await getVisibleBookmarks()
     renderBookmarkWorkspace(visibleBookmarks, canUpdateBookmarks(), canMoveBookmarks())
   } catch (error) {

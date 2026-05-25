@@ -8,7 +8,7 @@
  */
 
 import { createExtensionContext } from './helper/extensionContext.js'
-import { getEffectiveOptions } from './model/options.js'
+import { getEffectiveOptions } from './model/optionsStorage.js'
 import { getSearchData } from './model/searchData.js'
 import { printError } from './view/errorView.js'
 import { loadGroupsOverview } from './view/groupsView.js'

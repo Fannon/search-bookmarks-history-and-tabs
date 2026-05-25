@@ -47,7 +47,6 @@ export async function createDist(clean = true) {
   // Copy popup directory
   await fs.copy('popup/', 'dist/chrome/popup/', { recursive: true })
 
-  await modifyHtmlFile('dist/chrome/popup/options.html')
   await modifyHtmlFile('dist/chrome/popup/index.html')
   await modifyHtmlFile('dist/chrome/popup/tags.html')
   await modifyHtmlFile('dist/chrome/popup/folders.html')

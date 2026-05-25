@@ -17,7 +17,7 @@ beforeEach(async () => {
   await jest.unstable_mockModule('../view/tagsView.js', () => ({
     loadTagsOverview: mockLoadTagsOverview,
   }))
-  await jest.unstable_mockModule('../model/options.js', () => ({
+  await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
     getEffectiveOptions: mockGetEffectiveOptions,
   }))
   await jest.unstable_mockModule('../model/searchData.js', () => ({

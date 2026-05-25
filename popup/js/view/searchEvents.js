@@ -10,7 +10,7 @@
  */
 
 import { cleanUpUrl } from '../helper/utils.js'
-import { getUserOptions, setUserOptions } from '../model/options.js'
+import { getUserOptions, setUserOptions } from '../model/optionsStorage.js'
 import { search } from '../search/common.js'
 import { clearSelection, hoverResultItem } from './searchNavigation.js'
 import { renderSearchResults } from './searchView.js'

@@ -62,7 +62,7 @@ const mockDependencies = async (overrides = {}) => {
     },
     printError: config.printError,
   }))
-  await jest.unstable_mockModule('../model/options.js', () => ({
+  await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
     __esModule: true,
     getEffectiveOptions: config.getEffectiveOptions,
     getUserOptions: jest.fn(() => Promise.resolve({ searchStrategy: 'precise' })),

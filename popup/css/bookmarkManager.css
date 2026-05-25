@@ -605,10 +605,302 @@ button {
 
 .bookmark-edit-panel label,
 .cleanup-workspace label,
-.cleanup-control-row label {
+.cleanup-control-row label,
+.options-column-header label {
   color: var(--li-title);
   font-size: 13px;
   line-height: 1.2;
+}
+
+.manager-options {
+  min-width: 0;
+}
+
+.options-page-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 16px;
+  align-items: start;
+}
+
+.options-toolbar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  padding-top: 2px;
+}
+
+.options-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.options-form-panel {
+  min-width: 0;
+}
+
+.options-column-header {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.options-column-header h3,
+.options-column-header label {
+  margin: 0;
+  color: var(--li-title);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.options-form {
+  max-height: calc(100vh - 226px);
+  overflow: auto;
+  display: grid;
+  gap: 16px;
+  padding-right: 4px;
+}
+
+.options-section-group {
+  min-width: 0;
+}
+
+.options-section-title {
+  margin: 0 0 6px;
+  color: var(--li-title);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.options-section {
+  border: 1px solid var(--footer-border);
+  border-radius: 4px;
+  background: var(--li-bg);
+  box-shadow: var(--panel-shadow);
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.option-row {
+  display: grid;
+  grid-template-columns: 95px minmax(0, 1fr);
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--footer-border);
+}
+
+.option-row:first-of-type {
+  border-top: none;
+}
+
+.option-row.has-error {
+  border-left: 3px solid var(--danger);
+  padding-left: 7px;
+}
+
+.option-enabled,
+.option-check {
+  color: var(--nav-fg);
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.option-body {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.option-label {
+  color: var(--li-title);
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.option-description,
+.option-default,
+.option-error {
+  color: var(--fg);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.option-default code {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+
+.option-error {
+  min-height: 16px;
+  color: var(--danger);
+}
+
+.option-error:empty {
+  display: none;
+}
+
+.option-body input[type="text"],
+.option-body input[type="number"],
+.option-body input[type="color"],
+.option-body select,
+.option-body textarea,
+.option-list-editor input,
+.options-yaml-panel textarea {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--input-fg);
+  padding: 5px 9px 6px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.option-body textarea,
+.options-yaml-panel textarea {
+  resize: vertical;
+  font-family: Consolas, "Liberation Mono", monospace;
+  line-height: 1.35;
+}
+
+.option-list-editor {
+  display: grid;
+  gap: 8px;
+}
+
+.option-list-editor [data-option-list-items] {
+  display: grid;
+  gap: 8px;
+}
+
+.option-list-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-engine-choice-item {
+  grid-template-columns: minmax(140px, 1fr) minmax(220px, 2fr) auto;
+  align-items: end;
+}
+
+.search-engine-choice-item label {
+  display: grid;
+  gap: 4px;
+}
+
+.search-engine-choice-item span {
+  color: var(--fg);
+  font-size: 12px;
+}
+
+.option-list-editor > .text-button {
+  justify-self: start;
+}
+
+.option-body :disabled {
+  background: var(--footer-bg);
+  color: var(--fg);
+  opacity: 0.75;
+}
+
+.options-yaml-panel {
+  min-width: 0;
+  position: sticky;
+  top: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.options-yaml-panel .textarea-container {
+  position: relative;
+}
+
+.options-yaml-panel textarea {
+  min-height: calc(100vh - 254px);
+}
+
+.options-yaml-panel .error-overlay {
+  position: absolute;
+  inset: 0;
+  min-height: calc(100vh - 254px);
+  background: rgba(255, 255, 255, 0.98);
+  color: #cc0000;
+  font-size: 14px;
+  padding: 12px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+  z-index: 10;
+  border-left: 4px solid #cc5858;
+  display: flex;
+  flex-direction: column;
+}
+
+.options-yaml-panel .error-overlay code {
+  font-family: Consolas, "Liberation Mono", monospace;
+  background: rgba(204, 88, 88, 0.1);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.options-yaml-panel .error-header {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(204, 88, 88, 0.2);
+}
+
+.options-yaml-panel .error-list {
+  flex: 1;
+}
+
+.options-yaml-panel .error-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(204, 88, 88, 0.2);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.options-yaml-panel .overlay-button {
+  min-height: 28px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  line-height: normal;
+  padding: 0 12px;
+  font-size: 13px;
+  border: none;
+  background: #777;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.options-yaml-panel .overlay-button.primary {
+  background: #cc5858;
 }
 
 .bookmark-edit-panel .tagify {
@@ -1683,6 +1975,31 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  .options-page-header {
+    grid-template-columns: 1fr;
+  }
+
+  .options-toolbar {
+    justify-content: flex-start;
+    padding-top: 0;
+  }
+
+  .options-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .options-form {
+    max-height: none;
+  }
+
+  .search-engine-choice-item {
+    grid-template-columns: 1fr;
+  }
+
+  .options-yaml-panel {
+    position: static;
+  }
+
   .tag-manager-actions {
     justify-content: flex-start;
   }
@@ -1729,6 +2046,11 @@ h3 {
   }
 
   .error-overlay {
+    background: rgba(30, 0, 0, 0.98);
+    color: #ff9999;
+  }
+
+  .options-yaml-panel .error-overlay {
     background: rgba(30, 0, 0, 0.98);
     color: #ff9999;
   }

@@ -151,7 +151,8 @@ Click a screenshot to open it full size:
 ## User Configuration
 
 The extension is highly customizable.
-Finding and setting options is a bit technical, though.
+Open the full-page Bookmark Manager and switch to **Options** to edit settings.
+The left side is a schema-driven form with inline descriptions and validation; the right side is the synced YAML editor for advanced edits.
 
 The user options are written in [YAML](https://en.wikipedia.org/wiki/YAML) or [JSON](https://en.wikipedia.org/wiki/JSON) notation.
 
@@ -162,6 +163,7 @@ The user options are written in [YAML](https://en.wikipedia.org/wiki/YAML) or [J
 > You can also browse the source in [options.js](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/popup/js/model/options.js) for inline documentation.
 
 When defining your custom config, you only need to define the options that you want to overwrite from the defaults.
+In the form, unchecked settings are not saved and continue to use defaults.
 The extension will validate your input against the JSON schema before saving.
 
 An exemplary user config can look like the following example:

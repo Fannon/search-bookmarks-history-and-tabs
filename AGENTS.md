@@ -10,7 +10,7 @@
 
 ## Structure
 
-- Search entry points: `popup/js/initSearch.js`, `popup/js/initOptions.js`, `popup/js/initTags.js`, `popup/js/initFolders.js`, `popup/js/initGroups.js`, `popup/js/initEditBookmark.js`
+- Search entry points: `popup/js/initSearch.js`, `popup/js/initTags.js`, `popup/js/initFolders.js`, `popup/js/initGroups.js`, `popup/js/initEditBookmark.js`
 - Search orchestration and strategies: `popup/js/search/common.js`, `popup/js/search/simpleSearch.js`, `popup/js/search/fuzzySearch.js`, `popup/js/search/taxonomySearch.js`
 - Query parsing, ranking, defaults: `popup/js/search/queryParser.js`, `popup/js/search/scoring.js`, `popup/js/search/defaultResults.js`, `popup/js/search/searchEngines.js`
 - Data and options: `popup/js/model/searchData.js`, `popup/js/model/options.js`, `popup/js/model/validateOptions.js`
