@@ -541,7 +541,81 @@ describe('editOptionsView', () => {
     const allSections = document.querySelectorAll('.options-section-group')
     expect(visibleSections.length).toBeLessThan(allSections.length)
   })
+
+  it('handles special characters in filter input safely', async () => {
+    await setupFilterTest()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = '(score)'
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('scoreBookmarkBase')).toBe(true)
+    expect(rowIsVisible('scoreHistoryBase')).toBe(true)
+    expect(rowIsVisible('bookmarkColor')).toBe(false)
+  })
+
+  it('hides everything when no option matches', async () => {
+    await setupFilterTest()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'nonexistentzzz'
+    filterEl.dispatchEvent(new Event('input'))
+
+    const visibleRows = document.querySelectorAll('.option-row:not(.hidden-by-filter)')
+    expect(visibleRows.length).toBe(0)
+  })
+
+  it('clears all filters when input is emptied', async () => {
+    await setupFilterTest()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'history'
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('bookmarkColor')).toBe(false)
+
+    filterEl.value = ''
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('bookmarkColor')).toBe(true)
+    const hiddenRows = document.querySelectorAll('.option-row.hidden-by-filter')
+    expect(hiddenRows.length).toBe(0)
+  })
+
+  it('syncs form to YAML textarea when an option row is toggled', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const row = document.querySelector('[data-option-key="bookmarkColor"]')
+    row.querySelector('[data-option-enabled]').click()
+    const input = row.querySelector('[data-option-input]')
+    input.value = '#ff0000'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+
+    const config = window.jsyaml.dump.mock.calls
+    expect(config.length).toBeGreaterThan(0)
+  })
 })
+
+async function setupFilterTest() {
+  setupOptionsFormDom()
+  setupOptionsFilterEl()
+  const yaml = createJsonYamlMocks()
+  const result = await loadEditOptionsView({
+    userOptions: {},
+    dumpImpl: yaml.dump,
+    loadImpl: yaml.load,
+  })
+  await result.module.initOptions()
+  return result
+}
 
 function setupOptionsFilterEl() {
   const filterInput = document.createElement('input')
