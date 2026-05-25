@@ -278,6 +278,37 @@ describe('convertBrowserBookmarks', () => {
     expect(result).toHaveLength(0)
   })
 
+  it('checks ignored folders before preparing child folder metadata', () => {
+    ext.opts.bookmarksIgnoreFolderList = ['Ignored']
+    const folderTrail = {
+      length: 1,
+      map: jest.fn(() => {
+        throw new Error('folder trail should not be mapped for ignored folders')
+      }),
+    }
+
+    const result = convertBrowserBookmarks(
+      [
+        {
+          title: 'Ignored',
+          children: [
+            {
+              title: 'Hidden bookmark',
+              url: 'https://hidden.example.com',
+            },
+          ],
+        },
+      ],
+      folderTrail,
+      3,
+      undefined,
+      '',
+    )
+
+    expect(result).toHaveLength(0)
+    expect(folderTrail.map).not.toHaveBeenCalled()
+  })
+
   it('flags duplicate bookmarks when detection is enabled', () => {
     ext.opts.bookmarksIgnoreFolderList = []
     ext.opts.detectDuplicateBookmarks = true

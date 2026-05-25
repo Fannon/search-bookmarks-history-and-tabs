@@ -130,11 +130,13 @@ export async function getSearchData() {
     }
   } else {
     // Fetch all browser data sources in parallel for faster startup
-    const [browserTabs, browserBookmarks, browserHistory, browserTabGroups] = await Promise.all([
+    const [browserTabs, browserBookmarks, history, browserTabGroups] = await Promise.all([
       browserApi.tabs && ext.opts.enableTabs ? getBrowserTabs() : Promise.resolve([]),
       browserApi.bookmarks && ext.opts.enableBookmarks ? getBrowserBookmarks() : Promise.resolve([]),
       browserApi.history && ext.opts.enableHistory
-        ? getBrowserHistory(Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo, ext.opts.historyMaxItems)
+        ? getBrowserHistory(Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo, ext.opts.historyMaxItems).then(
+            convertBrowserHistory,
+          )
         : Promise.resolve([]),
       browserApi.tabGroups && ext.opts.enableTabs ? getBrowserTabGroups() : Promise.resolve([]),
     ])
@@ -146,7 +148,7 @@ export async function getSearchData() {
     result.tabs = convertBrowserTabs(browserTabs, groupMap)
     result.bookmarkTree = browserBookmarks
     result.bookmarks = convertBrowserBookmarks(browserBookmarks)
-    result.history = convertBrowserHistory(browserHistory)
+    result.history = history
 
     // Merge history data into bookmarks and tabs if history is enabled
     if (browserApi.history && ext.opts.enableHistory && result.history.length > 0) {

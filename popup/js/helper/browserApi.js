@@ -269,6 +269,12 @@ export function convertBrowserBookmarks(
     } else if (entry.children) {
       // It's a folder
       const folderTitle = entry.title
+
+      // Check ignore list before building folder metadata for skipped children
+      if (hasIgnoreList && folderTitle && ignoreList.includes(folderTitle)) {
+        continue
+      }
+
       let newFolderTrail = folderTrail
       let nextFolderText = folderText
       let nextFolderLower = folderLower
@@ -285,11 +291,6 @@ export function convertBrowserBookmarks(
         nextFolderId = entry.id
       } else if (entry.id) {
         nextFolderId = entry.id
-      }
-
-      // Check ignore list
-      if (hasIgnoreList && folderTitle && ignoreList.includes(folderTitle)) {
-        continue
       }
 
       convertBrowserBookmarks(
