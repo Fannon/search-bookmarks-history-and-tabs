@@ -255,7 +255,7 @@ describe('fuzzySearch', () => {
     expect(afterReset).toBeGreaterThan(afterSecondCall)
   })
 
-  it.failing('rebuilds cached tab indices after tab data is mutated in place', async () => {
+  it('rebuilds cached tab indices after tab data is mutated in place', async () => {
     model.tabs = createTabsTestData([
       {
         id: 'tab-1',
