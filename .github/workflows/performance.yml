@@ -5,7 +5,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '24.x'
+  NODE_VERSION: '24'
 
 on:
   push:
@@ -17,10 +17,10 @@ on:
 jobs:
   performance:
     name: Performance Analysis
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v6
@@ -36,7 +36,7 @@ jobs:
         run: echo "version=$(npm ls @playwright/test --json | jq -r '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -57,12 +57,11 @@ jobs:
           npm run test:perf
           cat reports/perf-summary.md >> $GITHUB_STEP_SUMMARY
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: performance-logs
           path: |
             reports/jest_output.txt
             reports/playwright_output.txt
-          retention-days: 7
-
+          retention-days: 180

@@ -1,25 +1,30 @@
 {
   "name": "search-bookmarks-history-and-tabs",
   "version": "2.3.0",
+  "private": true,
   "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.",
-  "main": "index.js",
   "type": "module",
+  "packageManager": "npm@11.11.0",
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=11 <12"
+  },
   "dependencies": {
     "@leeoniya/ufuzzy": "^1.0.19",
     "@yaireo/tagify": "^4.37.1",
     "js-yaml": "^4.1.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.14",
+    "@biomejs/biome": "^2.4.15",
     "@jest/globals": "^30.4.1",
-    "@playwright/test": "^1.59.1",
+    "@playwright/test": "^1.60.0",
     "archiver": "^8.0.0",
     "chokidar": "^5.0.0",
     "esbuild": "^0.28.0",
     "fs-extra": "^11.3.5",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
-    "lefthook": "^2.1.6",
+    "lefthook": "^2.1.8",
     "serve": "^14.2.6"
   },
   "scripts": {
