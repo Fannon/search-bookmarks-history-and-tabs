@@ -329,7 +329,7 @@ describe('simpleSearch', () => {
       expect(refreshedResults[0].originalId).toBe('bookmark-4')
     })
 
-    test.failing('rebuilds cached tab haystacks after tab data is mutated in place', () => {
+    test('rebuilds cached tab haystacks after tab data is mutated in place', () => {
       model.tabs = createTabsTestData([
         { id: 'tab-1', title: 'Alpha tab', url: 'https://alpha.test' },
         { id: 'tab-2', title: 'Beta tab', url: 'https://beta.test' },

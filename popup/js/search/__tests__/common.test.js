@@ -229,7 +229,7 @@ describe('search', () => {
     expect(mockRenderSearchResults).toHaveBeenCalledWith()
   })
 
-  test.failing('does not serve a cache hit from the previous logical mode when the new query has no prefix', async () => {
+  test('does not serve a cache hit from the previous logical mode when the new query has no prefix', async () => {
     const cached = [{ type: 'bookmark', title: 'stale tag cache', score: 50 }]
     ext.searchCache = new Map([['foo_precise_tags', cached]])
     ext.model.searchMode = 'tags'
@@ -250,7 +250,7 @@ describe('search', () => {
     expect(ext.model.searchMode).toBe('all')
   })
 
-  test.failing('reuses cached results for prefixed queries using the resolved mode instead of the raw input', async () => {
+  test('reuses cached results for prefixed queries using the resolved mode instead of the raw input', async () => {
     const cached = [{ type: 'tab', title: 'cached tab', originalId: 'cached-tab', score: 99 }]
     ext.searchCache = new Map([['foo_precise_tabs', cached]])
     ext.model.searchMode = 'tabs'
@@ -358,7 +358,7 @@ describe('search', () => {
     expect(direct.originalUrl).toBe('https://Example.com/API/Foo')
   })
 
-  test.failing('keeps the newest async search results when earlier searches resolve later', async () => {
+  test('keeps the newest async search results when earlier searches resolve later', async () => {
     let resolveFirstLoad
     let resolveSecondLoad
     let loadCount = 0

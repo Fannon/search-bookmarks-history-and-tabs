@@ -39,6 +39,7 @@ export { calculateFinalScore } from './scoring.js'
 
 const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 const protocolRegex = /^[a-zA-Z]+:\/\//
+let searchRequestId = 0
 
 /**
  * Maps search mode prefixes to their data sources.
@@ -289,6 +290,8 @@ function cacheResults(searchTerm, results) {
  * @returns {Promise<void>}
  */
 export async function search(event) {
+  const requestId = ++searchRequestId
+
   // Create a promise that we'll track so Enter key can await completion
   const searchPromise = (async () => {
     const startTime = Date.now()
@@ -302,9 +305,6 @@ export async function search(event) {
       // Get and clean up original search query
       let searchTerm = normalizeSearchTerm(ext.dom.searchInput.value)
       const originalSearchTerm = searchTerm
-
-      // Check cache first for better performance (only for actual searches, not default results)
-      if (useCachedResultsIfAvailable(searchTerm)) return
 
       // Handle empty search - show default results
       if (!searchTerm.trim()) {
@@ -321,6 +321,10 @@ export async function search(event) {
 
       ext.model.searchTerm = searchTerm
       ext.model.searchMode = searchMode
+
+      // Check cache after mode parsing so prefixes like "b foo" use the
+      // bookmarks-specific cache key instead of the previous mode.
+      if (useCachedResultsIfAvailable(searchTerm)) return
 
       // Collect results
       let results = []
@@ -345,6 +349,8 @@ export async function search(event) {
         // Show default entries for that mode instead of empty results
         results = await addDefaultEntries()
       }
+
+      if (requestId !== searchRequestId) return
 
       // Apply scoring and sorting
       results = applyScoring(results, searchTerm, searchMode)
@@ -375,6 +381,7 @@ export async function search(event) {
       // Simple timing for debugging
       console.debug(`Search took ${Date.now() - startTime}ms`)
     } catch (err) {
+      if (requestId !== searchRequestId) return
       printError(err)
     }
   })()

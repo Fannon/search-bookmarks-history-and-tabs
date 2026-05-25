@@ -112,7 +112,7 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
 
   // Initialize or retrieve cached state
   let s = state[searchMode]
-  if (!s) {
+  if (!s || s.data !== data || s.dataLen !== dataLen) {
     // Projecting the haystack once saves property lookups in the hot loop
     const haystack = new Array(dataLen)
     for (let i = 0; i < dataLen; i++) {
@@ -120,6 +120,7 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
     }
     s = state[searchMode] = {
       data: data,
+      dataLen: dataLen,
       haystack: haystack,
       idxs: null, // null means "all indices" - avoids array allocation
       searchTerm: '',
