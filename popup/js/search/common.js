@@ -39,6 +39,7 @@ export { calculateFinalScore } from './scoring.js'
 
 const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 const protocolRegex = /^[a-zA-Z]+:\/\//
+let searchRequestId = 0
 
 /**
  * Maps search mode prefixes to their data sources.
@@ -289,6 +290,8 @@ function cacheResults(searchTerm, results) {
  * @returns {Promise<void>}
  */
 export async function search(event) {
+  const requestId = ++searchRequestId
+
   // Create a promise that we'll track so Enter key can await completion
   const searchPromise = (async () => {
     const startTime = Date.now()
@@ -347,6 +350,8 @@ export async function search(event) {
         results = await addDefaultEntries()
       }
 
+      if (requestId !== searchRequestId) return
+
       // Apply scoring and sorting
       results = applyScoring(results, searchTerm, searchMode)
 
@@ -376,6 +381,7 @@ export async function search(event) {
       // Simple timing for debugging
       console.debug(`Search took ${Date.now() - startTime}ms`)
     } catch (err) {
+      if (requestId !== searchRequestId) return
       printError(err)
     }
   })()

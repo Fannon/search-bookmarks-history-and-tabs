@@ -358,7 +358,7 @@ describe('search', () => {
     expect(direct.originalUrl).toBe('https://Example.com/API/Foo')
   })
 
-  test.failing('keeps the newest async search results when earlier searches resolve later', async () => {
+  test('keeps the newest async search results when earlier searches resolve later', async () => {
     let resolveFirstLoad
     let resolveSecondLoad
     let loadCount = 0
