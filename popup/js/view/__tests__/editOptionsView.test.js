@@ -582,7 +582,7 @@ describe('editOptionsView', () => {
     expect(hiddenRows.length).toBe(0)
   })
 
-  it('syncs form to YAML textarea when an option row is toggled', async () => {
+  it('syncs form changes to YAML textarea', async () => {
     setupOptionsFormDom()
     setupOptionsFilterEl()
     const yaml = createJsonYamlMocks()
@@ -599,8 +599,27 @@ describe('editOptionsView', () => {
     input.value = '#ff0000'
     input.dispatchEvent(new Event('input', { bubbles: true }))
 
-    const config = window.jsyaml.dump.mock.calls
-    expect(config.length).toBeGreaterThan(0)
+    const dumpedValues = yaml.dump.mock.calls.map((c) => c[0])
+    const lastDumped = dumpedValues[dumpedValues.length - 1]
+    expect(lastDumped).toHaveProperty('bookmarkColor', '#ff0000')
+  })
+
+  it('syncs YAML changes to form fields', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const updatedOptions = { bookmarkColor: '#123456' }
+    const { module } = await loadEditOptionsView({
+      userOptions: updatedOptions,
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const row = document.querySelector('[data-option-key="bookmarkColor"]')
+    const input = row.querySelector('[data-option-input]')
+    expect(input.value).toBe('#123456')
+    expect(row.querySelector('[data-option-enabled]').checked).toBe(true)
   })
 })
 
