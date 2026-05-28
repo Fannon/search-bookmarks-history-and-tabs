@@ -407,6 +407,24 @@ describe('editBookmarkView', () => {
     warnSpy.mockRestore()
   })
 
+  it('does not throw when updating a bookmark that is no longer in the model', async () => {
+    setupDom()
+    setupExt([])
+    const { module, mocks } = await loadEditBookmarkView()
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    expect(() => module.updateBookmark(BOOKMARK_ID)).not.toThrow()
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      `Tried to update bookmark id="${BOOKMARK_ID}", but could not find it in searchData.`,
+    )
+    expect(mocks.browserApi.bookmarks.update).not.toHaveBeenCalled()
+    expect(mocks.resetFuzzySearchState).not.toHaveBeenCalled()
+    expect(mocks.resetSimpleSearchState).not.toHaveBeenCalled()
+
+    warnSpy.mockRestore()
+  })
+
   it('removes bookmark, resets search state, and redirects after deletion', async () => {
     setupDom()
     const bookmarks = [

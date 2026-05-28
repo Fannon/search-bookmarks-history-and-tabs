@@ -159,6 +159,11 @@ export async function editBookmark(bookmarkId) {
  */
 export function updateBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
+  if (!bookmark) {
+    console.warn(`Tried to update bookmark id="${bookmarkId}", but could not find it in searchData.`)
+    return
+  }
+
   const titleInput = document.getElementById('bm-title').value.trim()
   const urlInput = document.getElementById('bm-url').value.trim()
   const favoriteButton = document.getElementById('bm-favorite')

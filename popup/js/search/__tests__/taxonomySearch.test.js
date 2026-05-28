@@ -44,6 +44,29 @@ describe('taxonomy search', () => {
     })
   })
 
+  test('searchTaxonomy requires exact tag names instead of substring matches', () => {
+    const { searchTaxonomy } = taxonomyModule
+    const data = [
+      {
+        originalId: '1',
+        tags: '#javascript',
+        tagsArrayLower: ['javascript'],
+        type: 'bookmark',
+      },
+      {
+        originalId: '2',
+        tags: '#java',
+        tagsArrayLower: ['java'],
+        type: 'bookmark',
+      },
+    ]
+
+    const result = searchTaxonomy('java', 'tags', data)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].originalId).toBe('2')
+  })
+
   test('searchTaxonomy finds entries based on folder names', () => {
     const { searchTaxonomy } = taxonomyModule
     const data = [
@@ -61,6 +84,27 @@ describe('taxonomy search', () => {
 
     expect(result).toHaveLength(1)
     expect(result[0].originalId).toBe('3')
+  })
+
+  test('searchTaxonomy requires exact folder names instead of substring matches', () => {
+    const { searchTaxonomy } = taxonomyModule
+    const data = [
+      {
+        originalId: '1',
+        folder: '~Projects Archive',
+        folderArrayLower: ['projects archive'],
+      },
+      {
+        originalId: '2',
+        folder: '~Projects',
+        folderArrayLower: ['projects'],
+      },
+    ]
+
+    const result = searchTaxonomy('projects', 'folder', data)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].originalId).toBe('2')
   })
 
   test('getUniqueTags aggregates tag usage', () => {

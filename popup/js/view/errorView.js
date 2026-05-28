@@ -11,6 +11,7 @@ import { escapeHtml } from '../helper/utils.js'
 
 /** Track accumulated errors for display */
 let errorQueue = []
+let escHandler
 
 /**
  * Hide the global error overlay if present on the current page.
@@ -25,6 +26,11 @@ export function closeErrors() {
 
   // Clear the error queue
   errorQueue = []
+
+  if (escHandler) {
+    document.removeEventListener('keydown', escHandler)
+    escHandler = undefined
+  }
 }
 
 /**
@@ -105,10 +111,12 @@ function renderErrorOverlay(overlay, errors) {
   }
 
   // Also close on Escape key
-  const escHandler = (e) => {
+  if (escHandler) {
+    document.removeEventListener('keydown', escHandler)
+  }
+  escHandler = (e) => {
     if (e.key === 'Escape') {
       closeErrors()
-      document.removeEventListener('keydown', escHandler)
     }
   }
   document.addEventListener('keydown', escHandler)

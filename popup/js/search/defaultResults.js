@@ -35,7 +35,7 @@ export async function addDefaultEntries() {
 
   if (ext.model.searchMode === 'history' && ext.model.history) {
     // Display recent history by default
-    results = ext.model.history
+    results = ext.model.history.map((el) => ({ ...el }))
   } else if (ext.model.searchMode === 'tabs' && ext.model.tabs) {
     // Display last opened tabs by default
     results = ext.model.tabs
@@ -45,7 +45,7 @@ export async function addDefaultEntries() {
       })
   } else if (ext.model.searchMode === 'bookmarks' && ext.model.bookmarks) {
     // Display all bookmarks by default
-    results = ext.model.bookmarks
+    results = ext.model.bookmarks.map((el) => ({ ...el }))
   } else {
     // Default: Find bookmarks that match current page URL
     let activeTab
@@ -56,7 +56,7 @@ export async function addDefaultEntries() {
         const currentUrl = cleanUpUrl(tab.url)
         const matchingBookmarks = ext.model.bookmarks.filter((el) => el.url === currentUrl)
         if (matchingBookmarks.length > 0) {
-          results.push(...matchingBookmarks)
+          results.push(...matchingBookmarks.map((el) => ({ ...el })))
         }
       }
     } catch (err) {

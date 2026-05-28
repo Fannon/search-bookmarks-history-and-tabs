@@ -177,7 +177,21 @@ describe('initSearch entry point', () => {
     await flushPromises()
 
     expect(mocks.printError).toHaveBeenCalledWith(routeError, 'Could not initialize Extension')
-    expect(document.getElementById('results-load')).not.toBeNull()
+    expect(document.getElementById('results-load')).toBeNull()
+  })
+
+  test('initExtension removes loading indicator when search data loading fails', async () => {
+    const dataError = new Error('Search data failed')
+    const mocks = await mockDependencies({
+      getSearchData: jest.fn(() => Promise.reject(dataError)),
+    })
+
+    const module = await import('../initSearch.js')
+    moduleUnderTest = module
+    await flushPromises()
+
+    expect(mocks.printError).toHaveBeenCalledWith(dataError, 'Could not initialize Extension')
+    expect(document.getElementById('results-load')).toBeNull()
   })
 
   test('hashRouter handles search, bookmark routes, and ignores tags/folders routes', async () => {

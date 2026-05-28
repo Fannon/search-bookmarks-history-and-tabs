@@ -380,6 +380,36 @@ describe('fuzzySearch', () => {
     expect(results.length).toBeGreaterThanOrEqual(0)
   })
 
+  it('returns no partial results when uFuzzy fails on a later search term', async () => {
+    class ThrowingUFuzzy {
+      filter(_haystack, term) {
+        if (term === 'alpha') return [0, 1]
+        throw new Error('filter failed')
+      }
+    }
+
+    window.uFuzzy = ThrowingUFuzzy
+    globalThis.uFuzzy = ThrowingUFuzzy
+    resetFuzzySearchState()
+
+    model.bookmarks = createBookmarksTestData([
+      {
+        id: 'bookmark-1',
+        title: 'Alpha beta',
+        url: 'https://example.com/alpha-beta',
+      },
+      {
+        id: 'bookmark-2',
+        title: 'Alpha only',
+        url: 'https://example.com/alpha',
+      },
+    ])
+
+    const results = await fuzzySearch('bookmarks', 'alpha beta', model, opts)
+
+    expect(results).toEqual([])
+  })
+
   it('handles empty search terms gracefully', async () => {
     model.bookmarks = createBookmarksTestData([
       {

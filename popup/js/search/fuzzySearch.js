@@ -142,6 +142,8 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
     } catch (err) {
       err.message = 'Fuzzy search could not handle search term. Please try precise search instead.'
       printError(err)
+      s.idxs = []
+      break
     }
 
     if (!s.idxs?.length) {
