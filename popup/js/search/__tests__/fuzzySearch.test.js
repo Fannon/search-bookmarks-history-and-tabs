@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals'
+import RealUFuzzy from '@leeoniya/ufuzzy'
 import { createBookmarksTestData, createHistoryTestData, createTabsTestData } from '../../__tests__/testUtils.js'
 import { fuzzySearch, resetFuzzySearchState } from '../fuzzySearch.js'
 
@@ -8,7 +9,6 @@ const cjkTerm = '\u6f22\u5b57'
 let uFuzzyInstances = []
 let uFuzzyCallHistory = []
 let originalUFuzzy = null
-let lastSearchTerm = ''
 
 // Enhanced uFuzzy wrapper that tracks calls while using real implementation
 class TrackedUFuzzy {
@@ -17,17 +17,10 @@ class TrackedUFuzzy {
     this.instanceId = uFuzzyInstances.length
     uFuzzyInstances.push(this)
 
-    // Use real uFuzzy if available, otherwise create a minimal fallback
-    if (typeof window !== 'undefined' && window.uFuzzy && window.uFuzzy !== TrackedUFuzzy) {
-      this.uf = new window.uFuzzy(options)
-    } else {
-      // Fallback for when uFuzzy is not loaded yet
-      this.uf = null
-    }
+    this.uf = new RealUFuzzy(options)
   }
 
   filter(haystack, term) {
-    lastSearchTerm = term
     uFuzzyCallHistory.push({
       method: 'filter',
       instanceId: this.instanceId,
@@ -38,18 +31,10 @@ class TrackedUFuzzy {
       return this.uf.filter(haystack, term)
     }
 
-    // Fallback implementation for testing
-    const indices = []
-    haystack.forEach((searchStr, index) => {
-      if (searchStr.toLowerCase().includes(term.toLowerCase())) {
-        indices.push(index)
-      }
-    })
-    return indices
+    throw new Error('uFuzzy filter is not available')
   }
 
   info(indices, haystack, term) {
-    lastSearchTerm = term
     uFuzzyCallHistory.push({
       method: 'info',
       instanceId: this.instanceId,
@@ -60,12 +45,7 @@ class TrackedUFuzzy {
       return this.uf.info(indices, haystack, term)
     }
 
-    // Fallback implementation for testing
-    return {
-      idx: indices,
-      ranges: indices.map(() => [[0, term.length - 1]]),
-      intraIns: indices.map(() => 1),
-    }
+    throw new Error('uFuzzy info is not available')
   }
 
   static highlight(searchString, ranges, mapper) {
@@ -79,19 +59,12 @@ class TrackedUFuzzy {
       return originalUFuzzy.highlight(searchString, ranges, mapper)
     }
 
-    // Fallback highlighting implementation
-    if (lastSearchTerm) {
-      const termRegex = new RegExp(lastSearchTerm, 'gi')
-      return searchString.replace(termRegex, (match) => `<mark>${match}</mark>`)
-    }
-
     return searchString
   }
 
   static reset() {
     uFuzzyInstances = []
     uFuzzyCallHistory = []
-    lastSearchTerm = ''
   }
 
   static getInstances() {
@@ -140,27 +113,10 @@ describe('fuzzySearch', () => {
       }
     }
 
-    // Load the real uFuzzy library
-    try {
-      // Load uFuzzy script in Node.js test environment
-      if (typeof window === 'undefined') {
-        global.window = {}
-      }
-      originalUFuzzy = window.uFuzzy
-
-      // Load the actual uFuzzy library
-      const fs = await import('node:fs')
-      const path = await import('node:path')
-      const uFuzzyPath = path.join(process.cwd(), 'popup/lib/uFuzzy.iife.min.js')
-
-      if (fs.existsSync(uFuzzyPath)) {
-        const uFuzzyScript = fs.readFileSync(uFuzzyPath, 'utf8')
-        // Execute the script to make uFuzzy available globally
-        new Function(uFuzzyScript)()
-      }
-    } catch (error) {
-      console.warn('Could not load real uFuzzy library, using fallback:', error.message)
+    if (typeof window === 'undefined') {
+      global.window = {}
     }
+    originalUFuzzy = window.uFuzzy
 
     // Ensure complete reset of all state
     resetModes()
@@ -316,10 +272,10 @@ describe('fuzzySearch', () => {
     await fuzzySearch('bookmarks', cjkTerm, model, opts)
 
     const instancesAfterCJK = TrackedUFuzzy.getInstances()
-    // Real uFuzzy may reuse instances, so just check that we have instances
     expect(instancesAfterCJK.length).toBeGreaterThan(0)
 
-    // Find the CJK instance (should be the most recent top-level instance)
+    // The literal-looking value is intentional: without unicode: true, a real
+    // property escape is not active, and this keeps CJK terms searchable.
     const cjkInstance = instancesAfterCJK.find(
       (instance) => instance.options && instance.options.interSplit === '(p{Unified_Ideograph=yes})+',
     )
@@ -333,6 +289,36 @@ describe('fuzzySearch', () => {
       interSplit: '(p{Unified_Ideograph=yes})+',
       extra: 'option',
     })
+  })
+
+  it('returns real uFuzzy results for CJK search terms', async () => {
+    model.bookmarks = createBookmarksTestData([
+      {
+        id: 'bookmark-cjk',
+        title: `${cjkTerm} entry`,
+        url: 'https://example.com/cjk',
+      },
+      {
+        id: 'bookmark-other-cjk',
+        title: '仮名 entry',
+        url: 'https://example.com/kana',
+      },
+    ])
+
+    const results = await fuzzySearch('bookmarks', cjkTerm, model, opts)
+
+    expect(results).toHaveLength(1)
+    expect(results[0].originalId).toBe('bookmark-cjk')
+  })
+
+  it('documents why the proposed CJK property-escape fix is not valid here', () => {
+    expect(new RealUFuzzy({}).split(cjkTerm)).toEqual([])
+    expect(new RealUFuzzy({ interSplit: '(p{Unified_Ideograph=yes})+' }).split(cjkTerm)).toEqual([cjkTerm])
+    expect(new RealUFuzzy({ interSplit: '(\\p{Unified_Ideograph=yes})+' }).split(cjkTerm)).toEqual([cjkTerm])
+    expect(() => new RealUFuzzy({ unicode: true, interSplit: '(\\p{Unified_Ideograph=yes})+' })).toThrow(
+      /Invalid regular expression/,
+    )
+    expect(new RealUFuzzy({ unicode: true, interSplit: '(\\p{Unified_Ideograph})+' }).split(cjkTerm)).toEqual([])
   })
 
   it('handles empty search results gracefully', async () => {

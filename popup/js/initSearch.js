@@ -72,7 +72,7 @@ export async function initExtension() {
 
   ext.initialized = true
 
-  hashRouter()
+  await hashRouter()
 
   if (document.getElementById('results-load')) {
     document.getElementById('results-load').remove()
