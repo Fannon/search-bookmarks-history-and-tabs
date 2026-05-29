@@ -14,6 +14,7 @@ For advanced users, you can also inspect the [JSON Schema](https://raw.githubuse
 | `searchStrategy` | string | `'precise'` | Search approach: `'precise'` (faster, only exact matches) or `'fuzzy'` (slower, finds approximate matches using [uFuzzy](https://github.com/leeoniya/uFuzzy)). |
 | `searchMaxResults` | integer | `24` | Maximum number of search results to display. Lower values improve performance. Does not apply to tag and folder search (which show all matches). |
 | `searchFuzzyness` | number | `0.6` | Fuzzy search tolerance (0–1). Higher values find more approximate matches but may return less relevant results. Only applies when `searchStrategy` is `'fuzzy'`. |
+| `openInCurrentTab` | boolean | `false` | Open results in the current tab by default. When enabled, hold `Shift` or `Alt` to open in a new tab instead (inverts the default behavior). |
 
 ## Colors and Style
 
