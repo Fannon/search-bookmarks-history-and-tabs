@@ -177,6 +177,7 @@ describe('initSearch entry point', () => {
     await flushPromises()
 
     expect(mocks.printError).toHaveBeenCalledWith(routeError, 'Could not initialize Extension')
+    expect(module.ext.initialized).toBe(false)
     expect(document.getElementById('results-load')).toBeNull()
   })
 

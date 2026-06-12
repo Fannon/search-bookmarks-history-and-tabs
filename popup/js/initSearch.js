@@ -71,9 +71,8 @@ export async function initExtension() {
     // Track successfully loaded favicon URLs to prevent fade-in on re-renders
     ext.model.loadedFavicons = new Set()
 
-    ext.initialized = true
-
     await hashRouter()
+    ext.initialized = true
   } finally {
     document.getElementById('results-load')?.remove()
 

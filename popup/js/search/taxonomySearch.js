@@ -77,13 +77,13 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
 
 function getTaxonomyValues(entry, taxonomyType, taxonomyMarker) {
   if (taxonomyType === 'group') {
-    const group = entry.groupLower || entry.group
-    return group ? [String(group).replace(/^@/, '').toLowerCase()] : []
+    const group = entry.groupLower || (entry.group ? String(entry.group).toLowerCase() : '')
+    return group ? [String(group).replace(/^@/, '')] : []
   }
 
   const arrayField = taxonomyType === 'tags' ? 'tagsArrayLower' : 'folderArrayLower'
   if (Array.isArray(entry[arrayField])) {
-    return entry[arrayField].map((value) => String(value).toLowerCase())
+    return entry[arrayField].map((value) => String(value))
   }
 
   const rawValue = entry[`${taxonomyType}Lower`] || entry[taxonomyType] || ''

@@ -421,6 +421,7 @@ describe('editBookmarkView', () => {
     expect(mocks.browserApi.bookmarks.update).not.toHaveBeenCalled()
     expect(mocks.resetFuzzySearchState).not.toHaveBeenCalled()
     expect(mocks.resetSimpleSearchState).not.toHaveBeenCalled()
+    expect(mocks.resetUniqueFoldersCache).not.toHaveBeenCalled()
 
     warnSpy.mockRestore()
   })

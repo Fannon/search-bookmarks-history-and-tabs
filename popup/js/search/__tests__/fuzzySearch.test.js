@@ -319,6 +319,12 @@ describe('fuzzySearch', () => {
       /Invalid regular expression/,
     )
     expect(new RealUFuzzy({ unicode: true, interSplit: '(\\p{Unified_Ideograph})+' }).split(cjkTerm)).toEqual([])
+    expect(new RealUFuzzy({ unicode: true, interSplit: '(\\p{Script=Han})+' }).split(cjkTerm)).toEqual([])
+    expect(new RealUFuzzy({ unicode: true, interSplit: '(\\p{sc=Han})+' }).split(cjkTerm)).toEqual([])
+    expect(() => new RealUFuzzy({ unicode: true, interSplit: '(p{Script=Han})+' })).toThrow(
+      /Invalid regular expression/,
+    )
+    expect(() => new RealUFuzzy({ unicode: true, interSplit: '(p{sc=Han})+' })).toThrow(/Invalid regular expression/)
   })
 
   it('handles empty search results gracefully', async () => {
