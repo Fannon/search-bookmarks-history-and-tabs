@@ -16,6 +16,8 @@ import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch
 
 const STAR_STATE_CYCLE = ['', 'yellow', 'orange', 'red']
 const STAR_BONUS = { yellow: 25, orange: 50, red: 75 }
+const BOOKMARKS_BAR_ALIASES = ['bookmarks bar', 'bookmarks toolbar']
+const BOOKMARKS_BAR_IDS = ['1', 'toolbar_____']
 const STAR_ICONS = {
   '': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245" /></svg>',
   yellow:
@@ -244,9 +246,15 @@ export async function createBookmark() {
     return
   }
 
+  const quickBookmarkFolder = getQuickBookmarkFolder()
+  if (!quickBookmarkFolder) {
+    return
+  }
+
   let createdBookmark
   try {
     createdBookmark = await browserApi.bookmarks.create({
+      parentId: quickBookmarkFolder.id,
       title: formValues.persistedTitle,
       url: formValues.url,
     })
@@ -284,6 +292,129 @@ export async function createBookmark() {
   resetSimpleSearchState('bookmarks')
   resetUniqueFoldersCache()
   navigateToSearchView()
+}
+
+/**
+ * Resolve the configured quick-bookmark destination folder.
+ *
+ * @returns {Object|null} Bookmark tree folder node.
+ */
+function getQuickBookmarkFolder() {
+  const folderName = ext.opts.quickBookmarkCurrentTab
+  if (typeof folderName !== 'string' || !folderName.trim()) {
+    console.warn('Quick bookmark current tab is disabled or missing a folder name.')
+    return null
+  }
+
+  const folder = findBookmarkFolder(ext.model.bookmarkTree || [], folderName)
+  if (!folder) {
+    console.warn(`Quick bookmark folder "${folderName}" was not found. Bookmark create will not persist.`)
+    return null
+  }
+
+  return folder
+}
+
+/**
+ * Find a folder by exact ID first, then case-insensitive title.
+ *
+ * @param {Array<Object>} nodes - Browser bookmark tree nodes.
+ * @param {string} folderRef - Configured folder ID or name.
+ * @returns {Object|null} Matching folder node.
+ */
+function findBookmarkFolder(nodes, folderRef) {
+  const trimmedRef = folderRef.trim()
+  const byId = findBookmarkFolderById(nodes, trimmedRef)
+  if (byId) {
+    return byId
+  }
+
+  const byName = findBookmarkFolderByName(nodes, trimmedRef)
+  if (byName) {
+    return byName
+  }
+
+  if (BOOKMARKS_BAR_ALIASES.includes(trimmedRef.toLowerCase())) {
+    return findBookmarksBarFolder(nodes)
+  }
+
+  return null
+}
+
+/**
+ * Find the first folder in a bookmark tree matching an ID.
+ *
+ * @param {Array<Object>} nodes - Browser bookmark tree nodes.
+ * @param {string} folderId - Configured folder ID.
+ * @returns {Object|null} Matching folder node.
+ */
+function findBookmarkFolderById(nodes, folderId) {
+  for (const node of nodes || []) {
+    if (node?.children && String(node.id) === folderId) {
+      return node
+    }
+
+    if (node?.children) {
+      const childMatch = findBookmarkFolderById(node.children, folderId)
+      if (childMatch) {
+        return childMatch
+      }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Find the first folder in a bookmark tree matching a title.
+ *
+ * @param {Array<Object>} nodes - Browser bookmark tree nodes.
+ * @param {string} folderName - Configured folder name.
+ * @returns {Object|null} Matching folder node.
+ */
+function findBookmarkFolderByName(nodes, folderName) {
+  const needle = folderName.toLowerCase()
+
+  for (const node of nodes || []) {
+    if (node?.children && typeof node.title === 'string' && node.title.toLowerCase() === needle) {
+      return node
+    }
+
+    if (node?.children) {
+      const childMatch = findBookmarkFolderByName(node.children, folderName)
+      if (childMatch) {
+        return childMatch
+      }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Find a browser's bookmarks toolbar folder by common root IDs or titles.
+ *
+ * @param {Array<Object>} nodes - Browser bookmark tree nodes.
+ * @returns {Object|null} Matching toolbar folder node.
+ */
+function findBookmarksBarFolder(nodes) {
+  for (const node of nodes || []) {
+    if (
+      node?.children &&
+      (BOOKMARKS_BAR_IDS.includes(String(node.id)) || BOOKMARKS_BAR_ALIASES.includes(String(node.title).toLowerCase()))
+    ) {
+      return node
+    }
+
+    if (node?.children) {
+      const childMatch = findBookmarksBarFolder(node.children)
+      if (childMatch) {
+        return childMatch
+      }
+    }
+  }
+
+  return null
 }
 
 /**

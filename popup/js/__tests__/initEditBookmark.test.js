@@ -39,7 +39,8 @@ describe('initEditBookmark entry point', () => {
     const deleteBookmark = jest.fn(() => Promise.resolve())
     const cycleFavoriteButton = jest.fn()
     const getEffectiveOptions = jest.fn(() => Promise.resolve({}))
-    const getSearchData = jest.fn(() => Promise.resolve({ bookmarks: [{ originalId: 'bookmark-1' }] }))
+    const bookmarkTree = [{ id: '0', title: '', children: [] }]
+    const getSearchData = jest.fn(() => Promise.resolve({ bookmarks: [{ originalId: 'bookmark-1' }], bookmarkTree }))
     const printError = jest.fn()
 
     await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
@@ -75,6 +76,7 @@ describe('initEditBookmark entry point', () => {
     expect(module.ext.initialized).toBe(true)
     expect(module.ext.returnHash).toBe('#search/foo')
     expect(window.ext).toBe(module.ext)
+    expect(module.ext.model.bookmarkTree).toBe(bookmarkTree)
     expect(editBookmark).toHaveBeenCalledWith('bookmark-1')
     expect(getEffectiveOptions).toHaveBeenCalled()
     expect(getSearchData).toHaveBeenCalled()

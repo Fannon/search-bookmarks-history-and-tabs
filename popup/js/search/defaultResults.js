@@ -59,7 +59,7 @@ export async function addDefaultEntries() {
         const matchingBookmarks = ext.model.bookmarks.filter((el) => el.url === currentUrl)
         if (matchingBookmarks.length > 0) {
           results.push(...matchingBookmarks)
-        } else if (ext.opts.enableQuickBookmarkCurrentTab && isBookmarkableUrl(tab.url)) {
+        } else if (isQuickBookmarkEnabled() && isBookmarkableUrl(tab.url)) {
           results.push(createQuickBookmarkEntry(tab))
         }
       }
@@ -123,4 +123,13 @@ function isBookmarkableUrl(url) {
   }
 
   return !UNBOOKMARKABLE_URL_PREFIXES.some((prefix) => trimmedUrl.startsWith(prefix))
+}
+
+/**
+ * Check whether quick bookmark creation is configured.
+ *
+ * @returns {boolean} Whether quick-bookmark default results are enabled.
+ */
+function isQuickBookmarkEnabled() {
+  return typeof ext.opts.quickBookmarkCurrentTab === 'string' && ext.opts.quickBookmarkCurrentTab.trim().length > 0
 }

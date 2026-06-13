@@ -54,8 +54,9 @@ export async function initEditBookmark() {
     }
     ext.returnHash = normalizeReturnHash(returnHash)
 
-    const { bookmarks } = await getSearchData()
+    const { bookmarks, bookmarkTree } = await getSearchData()
     ext.model.bookmarks = bookmarks
+    ext.model.bookmarkTree = bookmarkTree
 
     setupEventHandlers()
     if (bookmarkDraft) {

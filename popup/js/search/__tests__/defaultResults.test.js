@@ -136,7 +136,7 @@ describe('addDefaultEntries', () => {
     })
 
     test('does not add quick bookmark action when option is disabled', async () => {
-      ext.opts.enableQuickBookmarkCurrentTab = false
+      ext.opts.quickBookmarkCurrentTab = false
       ext.model.bookmarks = []
       ext.model.tabs = []
       mockGetBrowserTabs.mockResolvedValue([{ id: 1, title: 'Active Page', url: 'https://active.test/path' }])
@@ -213,7 +213,7 @@ describe('addDefaultEntries', () => {
 
     test('adds recent tabs when enabled', async () => {
       ext.opts.maxRecentTabsToShow = 2
-      ext.opts.enableQuickBookmarkCurrentTab = false
+      ext.opts.quickBookmarkCurrentTab = false
       ext.model.tabs = [
         { id: 1, url: 'https://one.test', lastVisitSecondsAgo: 30 },
         { id: 2, url: 'https://two.test', lastVisitSecondsAgo: 10 },
@@ -229,7 +229,7 @@ describe('addDefaultEntries', () => {
 
     test('excludes active tab from recent tabs', async () => {
       ext.opts.maxRecentTabsToShow = 2
-      ext.opts.enableQuickBookmarkCurrentTab = false
+      ext.opts.quickBookmarkCurrentTab = false
       ext.model.tabs = [
         { id: 1, originalId: 1, url: 'https://active.test', active: true, lastVisitSecondsAgo: 0 },
         { id: 2, originalId: 2, url: 'https://recent.test', active: false, lastVisitSecondsAgo: 10 },

@@ -33,10 +33,24 @@ function setupExt(bookmarks = [], overrides = {}) {
   global.ext = {
     model: {
       bookmarks,
+      bookmarkTree: [
+        {
+          id: '0',
+          title: '',
+          children: [
+            {
+              id: 'folder-bar',
+              title: 'Bookmarks bar',
+              children: [],
+            },
+          ],
+        },
+      ],
       ...(modelOverrides || {}),
     },
     opts: {
       debug: false,
+      quickBookmarkCurrentTab: 'Bookmarks bar',
       ...(optsOverrides || {}),
     },
     dom: {
@@ -416,7 +430,12 @@ describe('editBookmarkView', () => {
 
   it('creates a bookmark from the current form values', async () => {
     setupDom()
-    setupExt([], { returnHash: '#search/' })
+    setupExt([], {
+      opts: {
+        quickBookmarkCurrentTab: 'BOOKMARKS BAR',
+      },
+      returnHash: '#search/',
+    })
     const { module, mocks, helpers } = await loadEditBookmarkView()
 
     module.editNewBookmark({
@@ -429,6 +448,7 @@ describe('editBookmarkView', () => {
     await module.createBookmark()
 
     expect(mocks.browserApi.bookmarks.create).toHaveBeenCalledWith({
+      parentId: 'folder-bar',
       title: 'New Page +50 #alpha #beta',
       url: 'https://new.test/page',
     })
@@ -447,6 +467,111 @@ describe('editBookmarkView', () => {
     expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
     expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
+  })
+
+  it('resolves the quick bookmark destination by folder id before folder name', async () => {
+    setupDom()
+    setupExt([], {
+      model: {
+        bookmarkTree: [
+          {
+            id: '0',
+            title: '',
+            children: [
+              { id: 'target-folder', title: 'Target', children: [] },
+              { id: 'other-folder', title: 'target-folder', children: [] },
+            ],
+          },
+        ],
+      },
+      opts: {
+        quickBookmarkCurrentTab: 'target-folder',
+      },
+      returnHash: '#search/',
+    })
+    const { module, mocks } = await loadEditBookmarkView()
+
+    module.editNewBookmark({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+
+    await module.createBookmark()
+
+    expect(mocks.browserApi.bookmarks.create).toHaveBeenCalledWith({
+      parentId: 'target-folder',
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+  })
+
+  it('falls back to known bookmarks bar root ids when the default title is localized', async () => {
+    setupDom()
+    setupExt([], {
+      model: {
+        bookmarkTree: [
+          {
+            id: '0',
+            title: '',
+            children: [
+              { id: 'toolbar_____', title: 'Lesezeichen-Symbolleiste', children: [] },
+              { id: 'unfiled_____', title: 'Other Bookmarks', children: [] },
+            ],
+          },
+        ],
+      },
+      opts: {
+        quickBookmarkCurrentTab: 'Bookmarks bar',
+      },
+      returnHash: '#search/',
+    })
+    const { module, mocks } = await loadEditBookmarkView()
+
+    module.editNewBookmark({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+
+    await module.createBookmark()
+
+    expect(mocks.browserApi.bookmarks.create).toHaveBeenCalledWith({
+      parentId: 'toolbar_____',
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+  })
+
+  it('warns and stays in the editor when the configured quick bookmark folder is missing', async () => {
+    setupDom()
+    setupExt([], {
+      model: {
+        bookmarkTree: [{ id: '0', title: '', children: [] }],
+      },
+      opts: {
+        quickBookmarkCurrentTab: 'Missing Folder',
+      },
+      returnHash: '#search/',
+    })
+    const { module, mocks } = await loadEditBookmarkView()
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    module.editNewBookmark({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+
+    await module.createBookmark()
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Quick bookmark folder "Missing Folder" was not found. Bookmark create will not persist.',
+    )
+    expect(mocks.browserApi.bookmarks.create).not.toHaveBeenCalled()
+    expect(global.ext.model.bookmarks).toEqual([])
+    expect(mocks.resetFuzzySearchState).not.toHaveBeenCalled()
+    expect(mocks.resetSimpleSearchState).not.toHaveBeenCalled()
+    expect(mocks.resetUniqueFoldersCache).not.toHaveBeenCalled()
+
+    warnSpy.mockRestore()
   })
 
   it('warns and stays in the editor when bookmark creation fails', async () => {
