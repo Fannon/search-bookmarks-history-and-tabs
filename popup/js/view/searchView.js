@@ -148,7 +148,8 @@ export async function renderSearchResults() {
       const displayUrl = entry.originalUrl || entry.url || ''
       const url = shouldHighlight && entry.highlightedUrl ? entry.highlightedUrl : escapeHtml(displayUrl)
 
-      let colorStyle = `border-left-color: ${typeColors[type] || ''}`
+      const typeColor = type === 'bookmarkCreate' ? typeColors.bookmark : typeColors[type]
+      let colorStyle = `border-left-color: ${typeColor || ''}`
       if (type === 'bookmark' && entry.tab) {
         // Vertical gradient indicator for "both bookmark and tab"
         colorStyle = `border-left-color:transparent;background-image:linear-gradient(to bottom, ${typeColors.bookmark} 20%,${typeColors.tab} 80%);background-size:4px 100%;background-repeat:no-repeat;background-origin:border-box`

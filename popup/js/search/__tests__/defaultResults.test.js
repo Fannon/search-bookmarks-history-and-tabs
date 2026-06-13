@@ -110,6 +110,65 @@ describe('addDefaultEntries', () => {
       expect(results).toEqual([expect.objectContaining({ id: 1, title: 'Example' })])
     })
 
+    test('adds quick bookmark action first for an unbookmarked active tab', async () => {
+      ext.model.bookmarks = []
+      ext.model.tabs = [{ id: 2, originalId: 2, url: 'https://recent.test', lastVisitSecondsAgo: 10 }]
+      mockGetBrowserTabs.mockResolvedValue([
+        {
+          id: 1,
+          title: 'Active Page',
+          url: 'https://active.test/path',
+          favIconUrl: 'https://active.test/favicon.ico',
+        },
+      ])
+
+      const results = await addDefaultEntries()
+
+      expect(results[0]).toEqual({
+        type: 'bookmarkCreate',
+        title: 'Bookmark current page',
+        pageTitle: 'Active Page',
+        originalUrl: 'https://active.test/path',
+        url: 'active.test/path',
+        favIconUrl: 'https://active.test/favicon.ico',
+      })
+      expect(results[1]).toEqual(expect.objectContaining({ id: 2 }))
+    })
+
+    test('does not add quick bookmark action when option is disabled', async () => {
+      ext.opts.enableQuickBookmarkCurrentTab = false
+      ext.model.bookmarks = []
+      ext.model.tabs = []
+      mockGetBrowserTabs.mockResolvedValue([{ id: 1, title: 'Active Page', url: 'https://active.test/path' }])
+
+      const results = await addDefaultEntries()
+
+      expect(results).toEqual([])
+    })
+
+    test('does not add quick bookmark action when active tab is already bookmarked', async () => {
+      ext.model.bookmarks = [
+        { id: 1, url: 'active.test/path', originalUrl: 'https://active.test/path', title: 'Existing Bookmark' },
+      ]
+      ext.model.tabs = []
+      mockGetBrowserTabs.mockResolvedValue([{ id: 1, title: 'Active Page', url: 'https://active.test/path' }])
+
+      const results = await addDefaultEntries()
+
+      expect(results).toEqual([expect.objectContaining({ id: 1, title: 'Existing Bookmark' })])
+      expect(results.find((entry) => entry.type === 'bookmarkCreate')).toBeUndefined()
+    })
+
+    test('does not add quick bookmark action for browser internal pages', async () => {
+      ext.model.bookmarks = []
+      ext.model.tabs = []
+      mockGetBrowserTabs.mockResolvedValue([{ id: 1, title: 'Extensions', url: 'chrome://extensions' }])
+
+      const results = await addDefaultEntries()
+
+      expect(results).toEqual([])
+    })
+
     test('shows all bookmarks if multiple match current tab URL', async () => {
       ext.model.bookmarks = [
         { id: 1, url: 'example.com', originalUrl: 'https://example.com', title: 'Example 1' },
@@ -154,6 +213,7 @@ describe('addDefaultEntries', () => {
 
     test('adds recent tabs when enabled', async () => {
       ext.opts.maxRecentTabsToShow = 2
+      ext.opts.enableQuickBookmarkCurrentTab = false
       ext.model.tabs = [
         { id: 1, url: 'https://one.test', lastVisitSecondsAgo: 30 },
         { id: 2, url: 'https://two.test', lastVisitSecondsAgo: 10 },
@@ -169,6 +229,7 @@ describe('addDefaultEntries', () => {
 
     test('excludes active tab from recent tabs', async () => {
       ext.opts.maxRecentTabsToShow = 2
+      ext.opts.enableQuickBookmarkCurrentTab = false
       ext.model.tabs = [
         { id: 1, originalId: 1, url: 'https://active.test', active: true, lastVisitSecondsAgo: 0 },
         { id: 2, originalId: 2, url: 'https://recent.test', active: false, lastVisitSecondsAgo: 10 },

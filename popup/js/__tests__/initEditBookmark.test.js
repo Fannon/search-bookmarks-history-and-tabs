@@ -44,7 +44,9 @@ describe('initEditBookmark entry point', () => {
 
     await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
       __esModule: true,
+      createBookmark: jest.fn(),
       editBookmark,
+      editNewBookmark: jest.fn(),
       updateBookmark,
       deleteBookmark,
       cycleFavoriteButton,
@@ -105,7 +107,9 @@ describe('initEditBookmark entry point', () => {
 
     await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
       __esModule: true,
+      createBookmark: jest.fn(),
       editBookmark,
+      editNewBookmark: jest.fn(),
       updateBookmark,
       deleteBookmark,
       cycleFavoriteButton: jest.fn(),
@@ -135,13 +139,70 @@ describe('initEditBookmark entry point', () => {
     expect(printError).not.toHaveBeenCalled()
   })
 
+  test('initializes new bookmark draft and creates only on save', async () => {
+    window.location.hash = '#new?url=https%3A%2F%2Fnew.test%2Fpage&title=New%20Page&return=%23search%2F'
+    const editBookmark = jest.fn()
+    const editNewBookmark = jest.fn((bookmarkDraft) => {
+      window.ext.currentBookmarkDraft = bookmarkDraft
+    })
+    const createBookmark = jest.fn(() => Promise.resolve())
+    const getEffectiveOptions = jest.fn(() => Promise.resolve({}))
+    const getSearchData = jest.fn(() => Promise.resolve({ bookmarks: [] }))
+    const printError = jest.fn()
+
+    await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
+      __esModule: true,
+      createBookmark,
+      editBookmark,
+      editNewBookmark,
+      updateBookmark: jest.fn(),
+      deleteBookmark: jest.fn(),
+      cycleFavoriteButton: jest.fn(),
+    }))
+    await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
+      __esModule: true,
+      getEffectiveOptions,
+    }))
+    await jest.unstable_mockModule('../model/searchData.js', () => ({
+      __esModule: true,
+      getSearchData,
+    }))
+    await jest.unstable_mockModule('../view/errorView.js', () => ({
+      __esModule: true,
+      printError,
+    }))
+    await jest.unstable_mockModule('../helper/browserApi.js', () => ({
+      __esModule: true,
+      browserApi: {},
+    }))
+
+    const module = await import('../initEditBookmark.js')
+    await flushPromises()
+
+    expect(editBookmark).not.toHaveBeenCalled()
+    expect(editNewBookmark).toHaveBeenCalledWith({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+    expect(module.ext.returnHash).toBe('#search/')
+    expect(printError).not.toHaveBeenCalled()
+    expect(createBookmark).not.toHaveBeenCalled()
+
+    document.getElementById('bm-save').dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await flushPromises()
+
+    expect(createBookmark).toHaveBeenCalledTimes(1)
+  })
+
   test('logs an error when bookmark identifier is missing', async () => {
     window.location.hash = ''
     const printError = jest.fn()
 
     await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
       __esModule: true,
+      createBookmark: jest.fn(),
       editBookmark: jest.fn(),
+      editNewBookmark: jest.fn(),
       updateBookmark: jest.fn(),
       deleteBookmark: jest.fn(),
       cycleFavoriteButton: jest.fn(),
@@ -180,7 +241,9 @@ describe('initEditBookmark entry point', () => {
 
     await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
       __esModule: true,
+      createBookmark: jest.fn(),
       editBookmark,
+      editNewBookmark: jest.fn(),
       updateBookmark: jest.fn(),
       deleteBookmark: jest.fn(),
       cycleFavoriteButton: jest.fn(),

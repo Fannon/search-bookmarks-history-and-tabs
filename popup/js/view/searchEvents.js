@@ -119,6 +119,11 @@ export function openResultItem(event) {
     return
   }
 
+  if (selectedResult?.type === 'bookmarkCreate') {
+    window.location = buildNewBookmarkEditorUrl(selectedResult)
+    return
+  }
+
   // Handle Ctrl modifier - always open in background tab, regardless of the
   // `openInCurrentTab` option.
   if (event.ctrlKey) {
@@ -197,6 +202,20 @@ export function openResultItem(event) {
     // Fallback for non-extension environments
     window.open(url, '_newtab')
   }
+}
+
+/**
+ * Build the editor URL for creating a bookmark from a synthetic result.
+ *
+ * @param {Object} result - Synthetic bookmark-create result.
+ * @returns {string} Relative editor URL.
+ */
+export function buildNewBookmarkEditorUrl(result) {
+  const params = new URLSearchParams()
+  params.set('url', result.originalUrl || '')
+  params.set('title', result.pageTitle || '')
+  params.set('return', `#search/${encodeURIComponent(ext.model.searchTerm || '')}`)
+  return `./editBookmark.html#new?${params.toString()}`
 }
 
 /**

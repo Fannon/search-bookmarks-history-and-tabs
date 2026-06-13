@@ -60,6 +60,14 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   )
   const browserApi = {
     bookmarks: {
+      create: jest.fn(() =>
+        Promise.resolve({
+          id: 'created-1',
+          parentId: '1',
+          index: 0,
+          dateAdded: 1234,
+        }),
+      ),
       update: jest.fn(),
       remove: jest.fn(),
     },
@@ -238,6 +246,37 @@ describe('editBookmarkView', () => {
     )
   })
 
+  it('populates the edit form for a new bookmark draft', async () => {
+    setupDom()
+    setupExt([], { returnHash: '#search/' })
+    const { module, helpers } = await loadEditBookmarkView({
+      uniqueTags: {
+        alpha: [{ id: 1 }],
+      },
+    })
+
+    module.editNewBookmark({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+
+    expect(document.getElementById('edit-bm').getAttribute('style')).toBe('')
+    expect(document.getElementById('bm-title').value).toBe('New Page')
+    expect(document.getElementById('bm-url').value).toBe('https://new.test/page')
+    expect(document.getElementById('bm-save').dataset.bookmarkId).toBeUndefined()
+    expect(document.getElementById('bm-del').dataset.bookmarkId).toBeUndefined()
+    expect(document.getElementById('bm-del').style.display).toBe('none')
+    expect(document.getElementById('bm-manager').style.display).toBe('none')
+    expect(global.ext.currentBookmarkId).toBeNull()
+    expect(global.ext.currentBookmarkDraft).toEqual({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+    expect(helpers.tagifyInstances).toHaveLength(1)
+    expect(helpers.tagifyInstances[0].options.whitelist).toEqual(['alpha'])
+    expect(helpers.tagifyInstances[0].addTags).toHaveBeenCalledWith([])
+  })
+
   it('updates bookmark metadata, persists via browser API, and resets search caches', async () => {
     setupDom()
     const bookmark = {
@@ -373,6 +412,64 @@ describe('editBookmarkView', () => {
       url: 'http://updated.com',
     })
     expect(bookmark.customBonusScore).toBe(60)
+  })
+
+  it('creates a bookmark from the current form values', async () => {
+    setupDom()
+    setupExt([], { returnHash: '#search/' })
+    const { module, mocks, helpers } = await loadEditBookmarkView()
+
+    module.editNewBookmark({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+    global.ext.tagify.value = [{ value: 'alpha' }, { value: 'beta' }]
+    module.updateFavoriteButton(document.getElementById('bm-favorite'), 'orange')
+
+    await module.createBookmark()
+
+    expect(mocks.browserApi.bookmarks.create).toHaveBeenCalledWith({
+      title: 'New Page +50 #alpha #beta',
+      url: 'https://new.test/page',
+    })
+    expect(global.ext.model.bookmarks).toEqual([
+      expect.objectContaining({
+        type: 'bookmark',
+        originalId: 'created-1',
+        title: 'New Page',
+        originalUrl: 'https://new.test/page',
+        url: helpers.cleanUpUrl('https://new.test/page'),
+        customBonusScore: 50,
+        tags: '#alpha #beta',
+        tagsArray: ['alpha', 'beta'],
+      }),
+    ])
+    expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')
+    expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
+    expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
+  })
+
+  it('warns and stays in the editor when bookmark creation fails', async () => {
+    setupDom()
+    setupExt([], { returnHash: '#search/' })
+    const { module, mocks } = await loadEditBookmarkView()
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    module.editNewBookmark({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+    mocks.browserApi.bookmarks.create.mockRejectedValue(new Error('create failed'))
+
+    await module.createBookmark()
+
+    expect(warnSpy).toHaveBeenCalledWith('Could not create bookmark.', expect.any(Error))
+    expect(global.ext.model.bookmarks).toEqual([])
+    expect(mocks.resetFuzzySearchState).not.toHaveBeenCalled()
+    expect(mocks.resetSimpleSearchState).not.toHaveBeenCalled()
+    expect(mocks.resetUniqueFoldersCache).not.toHaveBeenCalled()
+
+    warnSpy.mockRestore()
   })
 
   it('handles missing browser API and empty tag selection during update', async () => {

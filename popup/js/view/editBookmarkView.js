@@ -86,8 +86,6 @@ export function cycleFavoriteButton(button) {
  */
 export async function editBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
-  const uniqueTags = getUniqueTags() || {}
-  const tags = Object.keys(uniqueTags).sort()
   const editContainer = document.getElementById('edit-bm')
   const titleInput = document.getElementById('bm-title')
   const urlInput = document.getElementById('bm-url')
@@ -105,45 +103,93 @@ export async function editBookmark(bookmarkId) {
       const bonusScore = bookmark.customBonusScore || 0
       updateFavoriteButton(favoriteButton, getStarState(bonusScore), bonusScore)
     }
-    if (!ext.tagify) {
-      ext.tagify = new Tagify(tagsInput, {
-        whitelist: tags,
-        trim: true,
-        transformTag,
-        skipInvalid: false,
-        editTags: {
-          clicks: 1,
-          keepInvalid: false,
-        },
-        dropdown: {
-          position: 'all',
-          enabled: 0,
-          maxItems: 12,
-          closeOnSelect: false,
-        },
-      })
-    } else {
-      // If tagify was already initialized:
-      // reset current and available tags to new state
-      ext.tagify.removeAllTags()
-      ext.tagify.whitelist = tags
-    }
 
     const currentTags = bookmark.tags
       .split('#')
       .map((el) => el.trim())
       .filter((el) => el)
-    ext.tagify.addTags(currentTags)
+    setupTagEditor(tagsInput, currentTags)
 
     saveButton.dataset.bookmarkId = bookmarkId
     deleteButton.dataset.bookmarkId = bookmarkId
+    deleteButton.style.display = ''
     if (managerLink) {
+      managerLink.style.display = ''
       managerLink.href = `./bookmarkManager.html?bookmark=${encodeURIComponent(bookmarkId)}#bookmarks`
     }
+    ext.currentBookmarkDraft = null
     ext.currentBookmarkId = bookmarkId
   } else {
     console.warn(`Tried to edit bookmark id="${bookmarkId}", but could not find it in searchData.`)
   }
+}
+
+/**
+ * Populate the bookmark editor form for a new bookmark draft.
+ *
+ * @param {{title: string, url: string}} bookmarkDraft - Initial bookmark values.
+ */
+export function editNewBookmark(bookmarkDraft) {
+  const editContainer = document.getElementById('edit-bm')
+  const titleInput = document.getElementById('bm-title')
+  const urlInput = document.getElementById('bm-url')
+  const tagsInput = document.getElementById('bm-tags')
+  const saveButton = document.getElementById('bm-save')
+  const deleteButton = document.getElementById('bm-del')
+  const managerLink = document.getElementById('bm-manager')
+  const favoriteButton = document.getElementById('bm-favorite')
+
+  editContainer.style = ''
+  titleInput.value = bookmarkDraft.title || ''
+  urlInput.value = bookmarkDraft.url || ''
+  setupTagEditor(tagsInput, [])
+  updateFavoriteButton(favoriteButton, '')
+
+  delete saveButton.dataset.bookmarkId
+  delete deleteButton.dataset.bookmarkId
+  deleteButton.style.display = 'none'
+  if (managerLink) {
+    managerLink.style.display = 'none'
+  }
+  ext.currentBookmarkId = null
+  ext.currentBookmarkDraft = bookmarkDraft
+}
+
+/**
+ * Initialize or update the tag autocomplete field.
+ *
+ * @param {HTMLTextAreaElement|HTMLInputElement} tagsInput - Tags input element.
+ * @param {string[]} currentTags - Tags to populate.
+ */
+function setupTagEditor(tagsInput, currentTags) {
+  const uniqueTags = getUniqueTags() || {}
+  const tags = Object.keys(uniqueTags).sort()
+
+  if (!ext.tagify) {
+    ext.tagify = new Tagify(tagsInput, {
+      whitelist: tags,
+      trim: true,
+      transformTag,
+      skipInvalid: false,
+      editTags: {
+        clicks: 1,
+        keepInvalid: false,
+      },
+      dropdown: {
+        position: 'all',
+        enabled: 0,
+        maxItems: 12,
+        closeOnSelect: false,
+      },
+    })
+  } else {
+    // If tagify was already initialized:
+    // reset current and available tags to new state
+    ext.tagify.removeAllTags()
+    ext.tagify.whitelist = tags
+  }
+
+  ext.tagify.addTags(currentTags)
 
   function transformTag(tagData) {
     if (tagData.value.includes('#')) {
@@ -159,30 +205,14 @@ export async function editBookmark(bookmarkId) {
  */
 export function updateBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
-  const titleInput = document.getElementById('bm-title').value.trim()
-  const urlInput = document.getElementById('bm-url').value.trim()
-  const favoriteButton = document.getElementById('bm-favorite')
-  const bonusScore = Number.parseInt(favoriteButton?.dataset.bonusScore || '0', 10) || 0
-  let tagsInput = ''
-  if (ext.tagify.value.length) {
-    tagsInput = `#${ext.tagify.value.map((el) => el.value.trim()).join(' #')}`
-  }
-
-  // Build persisted title: title + bonus + tags
-  let persistedTitle = titleInput
-  if (bonusScore) {
-    persistedTitle += ` +${bonusScore}`
-  }
-  if (tagsInput) {
-    persistedTitle += ` ${tagsInput}`
-  }
+  const formValues = getBookmarkFormValues()
 
   // Update search data model of bookmark
-  bookmark.title = titleInput
-  bookmark.originalUrl = urlInput
-  bookmark.url = cleanUpUrl(urlInput)
-  bookmark.tags = tagsInput
-  bookmark.customBonusScore = bonusScore
+  bookmark.title = formValues.title
+  bookmark.originalUrl = formValues.url
+  bookmark.url = cleanUpUrl(formValues.url)
+  bookmark.tags = formValues.tags
+  bookmark.customBonusScore = formValues.bonusScore
   bookmark.searchStringLower = createSearchStringLower(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
@@ -190,8 +220,8 @@ export function updateBookmark(bookmarkId) {
 
   if (browserApi.bookmarks) {
     browserApi.bookmarks.update(bookmarkId, {
-      title: persistedTitle,
-      url: urlInput,
+      title: formValues.persistedTitle,
+      url: formValues.url,
     })
   } else {
     console.warn(`No browser bookmarks API found. Bookmark update will not persist.`)
@@ -199,6 +229,92 @@ export function updateBookmark(bookmarkId) {
 
   // Start search again to update the search index and the UI with new bookmark model
   navigateToSearchView()
+}
+
+/**
+ * Create a new browser bookmark from the current form values.
+ *
+ * @returns {Promise<void>}
+ */
+export async function createBookmark() {
+  const formValues = getBookmarkFormValues()
+
+  if (!browserApi.bookmarks?.create) {
+    console.warn(`No browser bookmarks API found. Bookmark create will not persist.`)
+    return
+  }
+
+  let createdBookmark
+  try {
+    createdBookmark = await browserApi.bookmarks.create({
+      title: formValues.persistedTitle,
+      url: formValues.url,
+    })
+  } catch (err) {
+    console.warn('Could not create bookmark.', err)
+    return
+  }
+
+  if (createdBookmark?.id) {
+    const cleanedUrl = cleanUpUrl(formValues.url)
+    ext.model.bookmarks.push({
+      type: 'bookmark',
+      originalId: createdBookmark.id,
+      parentId: createdBookmark.parentId,
+      index: createdBookmark.index,
+      title: formValues.title,
+      titleLower: formValues.title.toLowerCase().trim(),
+      originalUrl: formValues.url,
+      url: cleanedUrl,
+      dateAdded: createdBookmark.dateAdded,
+      customBonusScore: formValues.bonusScore,
+      tags: formValues.tags,
+      tagsLower: formValues.tags.toLowerCase(),
+      tagsArray: formValues.tagsArray,
+      tagsArrayLower: formValues.tagsArray.map((tag) => tag.toLowerCase()),
+      folder: '',
+      folderLower: '',
+      folderArray: [],
+      folderArrayLower: [],
+      searchStringLower: createSearchStringLower(formValues.title, cleanedUrl, formValues.tags, ''),
+    })
+  }
+
+  resetFuzzySearchState('bookmarks')
+  resetSimpleSearchState('bookmarks')
+  resetUniqueFoldersCache()
+  navigateToSearchView()
+}
+
+/**
+ * Read the bookmark editor form and build persisted bookmark fields.
+ *
+ * @returns {{title: string, url: string, tags: string, tagsArray: string[], bonusScore: number, persistedTitle: string}}
+ */
+function getBookmarkFormValues() {
+  const title = document.getElementById('bm-title').value.trim()
+  const url = document.getElementById('bm-url').value.trim()
+  const favoriteButton = document.getElementById('bm-favorite')
+  const bonusScore = Number.parseInt(favoriteButton?.dataset.bonusScore || '0', 10) || 0
+  const tagsArray = ext.tagify.value.map((el) => el.value.trim()).filter((tag) => tag)
+  const tags = tagsArray.length ? `#${tagsArray.join(' #')}` : ''
+
+  let persistedTitle = title
+  if (bonusScore) {
+    persistedTitle += ` +${bonusScore}`
+  }
+  if (tags) {
+    persistedTitle += ` ${tags}`
+  }
+
+  return {
+    title,
+    url,
+    tags,
+    tagsArray,
+    bonusScore,
+    persistedTitle,
+  }
 }
 
 /**

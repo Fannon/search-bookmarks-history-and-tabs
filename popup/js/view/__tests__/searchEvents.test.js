@@ -156,6 +156,21 @@ afterEach(() => {
 })
 
 describe('searchEvents openResultItem', () => {
+  it('builds the new-bookmark editor URL for quick bookmark results', async () => {
+    const { module } = await setupSearchEvents()
+    ext.model.searchTerm = ''
+
+    const url = module.buildNewBookmarkEditorUrl({
+      type: 'bookmarkCreate',
+      pageTitle: 'Page Title',
+      originalUrl: 'https://new.test/page?x=1#section',
+    })
+
+    expect(url).toBe(
+      './editBookmark.html#new?url=https%3A%2F%2Fnew.test%2Fpage%3Fx%3D1%23section&title=Page+Title&return=%23search%2F',
+    )
+  })
+
   it('copies URL to clipboard on right click', async () => {
     const { module, viewModule } = await setupSearchEvents()
     await viewModule.renderSearchResults()

@@ -14,6 +14,8 @@
 import { getBrowserTabs } from '../helper/browserApi.js'
 import { cleanUpUrl } from '../helper/utils.js'
 
+const UNBOOKMARKABLE_URL_PREFIXES = ['about:', 'chrome:', 'chrome-extension:', 'edge:', 'moz-extension:']
+
 /**
  * Build default result sets when no explicit search term is provided.
  *
@@ -57,6 +59,8 @@ export async function addDefaultEntries() {
         const matchingBookmarks = ext.model.bookmarks.filter((el) => el.url === currentUrl)
         if (matchingBookmarks.length > 0) {
           results.push(...matchingBookmarks)
+        } else if (ext.opts.enableQuickBookmarkCurrentTab && isBookmarkableUrl(tab.url)) {
+          results.push(createQuickBookmarkEntry(tab))
         }
       }
     } catch (err) {
@@ -87,4 +91,36 @@ export async function addDefaultEntries() {
 
   ext.model.result = results
   return results
+}
+
+/**
+ * Build a synthetic default result for creating a bookmark from the active tab.
+ *
+ * @param {Object} tab - Active browser tab.
+ * @returns {Object} Search result entry.
+ */
+function createQuickBookmarkEntry(tab) {
+  return {
+    type: 'bookmarkCreate',
+    title: 'Bookmark current page',
+    pageTitle: tab.title || '',
+    originalUrl: tab.url,
+    url: cleanUpUrl(tab.url),
+    favIconUrl: tab.favIconUrl,
+  }
+}
+
+/**
+ * Determine whether the active tab is useful as a bookmark target.
+ *
+ * @param {string} url - Active tab URL.
+ * @returns {boolean} Whether to show the quick-bookmark action.
+ */
+function isBookmarkableUrl(url) {
+  const trimmedUrl = typeof url === 'string' ? url.trim() : ''
+  if (!trimmedUrl) {
+    return false
+  }
+
+  return !UNBOOKMARKABLE_URL_PREFIXES.some((prefix) => trimmedUrl.startsWith(prefix))
 }

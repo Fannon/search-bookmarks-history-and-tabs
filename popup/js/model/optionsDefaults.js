@@ -60,6 +60,8 @@ export const defaultOptions = {
   enableSearchEngines: true,
   /** Detect URL-shaped terms and offer direct navigation */
   enableDirectUrl: true,
+  /** Show a default result to bookmark the active tab with the rich bookmark editor. */
+  enableQuickBookmarkCurrentTab: true,
 
   //////////////////////////////////////////
   // DISPLAY OPTIONS                      //

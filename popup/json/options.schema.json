@@ -109,6 +109,12 @@
       "description": "Detect URL-shaped search terms and offer a direct navigation result at the top.",
       "x-ui-section": "sources"
     },
+    "enableQuickBookmarkCurrentTab": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show a first default result that opens the rich bookmark editor for saving the active tab.",
+      "x-ui-section": "sources"
+    },
     "displayTags": {
       "type": "boolean",
       "default": true,
