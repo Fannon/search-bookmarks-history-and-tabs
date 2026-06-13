@@ -246,20 +246,30 @@ export async function createBookmark() {
     return
   }
 
-  const quickBookmarkFolder = getQuickBookmarkFolder()
-  if (!quickBookmarkFolder) {
+  const quickBookmarkFolderIds = getQuickBookmarkFolderIds()
+  if (!quickBookmarkFolderIds.length) {
     return
   }
 
   let createdBookmark
-  try {
-    createdBookmark = await browserApi.bookmarks.create({
-      parentId: quickBookmarkFolder.id,
-      title: formValues.persistedTitle,
-      url: formValues.url,
-    })
-  } catch (err) {
-    console.warn('Could not create bookmark.', err)
+  const createInfo = {
+    title: formValues.persistedTitle,
+    url: formValues.url,
+  }
+
+  for (const parentId of quickBookmarkFolderIds) {
+    try {
+      createdBookmark = await browserApi.bookmarks.create({
+        ...createInfo,
+        parentId,
+      })
+      break
+    } catch (err) {
+      console.warn(`Could not create bookmark in folder "${parentId}".`, err)
+    }
+  }
+
+  if (!createdBookmark) {
     return
   }
 
@@ -295,24 +305,24 @@ export async function createBookmark() {
 }
 
 /**
- * Resolve the configured quick-bookmark destination folder.
+ * Resolve the configured quick-bookmark destination folder IDs.
  *
- * @returns {Object|null} Bookmark tree folder node.
+ * @returns {Array<string>} Candidate bookmark folder IDs.
  */
-function getQuickBookmarkFolder() {
+function getQuickBookmarkFolderIds() {
   const folderName = ext.opts.quickBookmarkCurrentTab
   if (typeof folderName !== 'string' || !folderName.trim()) {
     console.warn('Quick bookmark current tab is disabled or missing a folder name.')
-    return null
+    return []
   }
 
   const folder = findBookmarkFolder(ext.model.bookmarkTree || [], folderName)
   if (!folder) {
-    console.warn(`Quick bookmark folder "${folderName}" was not found. Bookmark create will not persist.`)
-    return null
+    console.warn(`Quick bookmark folder "${folderName}" was not found. Falling back to bookmarks bar root IDs.`)
+    return BOOKMARKS_BAR_IDS
   }
 
-  return folder
+  return [folder.id]
 }
 
 /**

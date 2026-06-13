@@ -110,18 +110,9 @@
       "x-ui-section": "sources"
     },
     "quickBookmarkCurrentTab": {
-      "anyOf": [
-        {
-          "type": "string",
-          "minLength": 1
-        },
-        {
-          "type": "boolean",
-          "const": false
-        }
-      ],
+      "type": "string",
       "default": "Bookmarks bar",
-      "description": "Folder name or folder ID used by the first default result that opens the rich bookmark editor for saving the active tab. Set to false to disable.",
+      "description": "Folder name or folder ID used by the first default result that opens the rich bookmark editor for saving the active tab. Leave empty to disable.",
       "x-ui-section": "sources"
     },
     "displayTags": {

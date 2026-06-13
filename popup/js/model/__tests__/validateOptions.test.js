@@ -37,9 +37,9 @@ describe('validateOptions', () => {
     expect(result).toEqual({ valid: true, errors: [] })
   })
 
-  test('accepts disabling quick bookmark current tab with false', async () => {
+  test('accepts disabling quick bookmark current tab with an empty string', async () => {
     const result = await validateOptions({
-      quickBookmarkCurrentTab: false,
+      quickBookmarkCurrentTab: '',
     })
 
     expect(result).toEqual({ valid: true, errors: [] })
@@ -134,11 +134,11 @@ describe('validateOptions', () => {
 
   test('rejects invalid quick bookmark current tab values', async () => {
     const result = await validateOptions({
-      quickBookmarkCurrentTab: true,
+      quickBookmarkCurrentTab: false,
     })
 
     expect(result.valid).toBe(false)
-    expect(result.errors[0]).toContain('"quickBookmarkCurrentTab" must match one of the allowed formats')
+    expect(result.errors[0]).toContain('"quickBookmarkCurrentTab" must be string')
   })
 
   test('rejects unknown options', async () => {

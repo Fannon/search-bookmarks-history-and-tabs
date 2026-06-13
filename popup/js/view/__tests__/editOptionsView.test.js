@@ -654,6 +654,40 @@ describe('editOptionsView', () => {
     expect(mocks.setUserOptions).toHaveBeenCalledWith({ openInCurrentTab: true })
   })
 
+  it('edits quickBookmarkCurrentTab as a string and saves an empty string to disable it', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module, mocks } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const row = document.querySelector('[data-option-key="quickBookmarkCurrentTab"]')
+    expect(row).not.toBeNull()
+    expect(row.closest('.options-section-group').textContent).toContain('Sources')
+
+    row.querySelector('[data-option-enabled]').click()
+    const input = row.querySelector('[data-option-input]')
+    expect(input.type).toBe('text')
+    expect(input.value).toBe('Bookmarks bar')
+
+    input.value = ''
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+
+    const dumpedValues = yaml.dump.mock.calls.map((c) => c[0])
+    const lastDumped = dumpedValues[dumpedValues.length - 1]
+    expect(lastDumped).toHaveProperty('quickBookmarkCurrentTab', '')
+
+    document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
+    await Promise.resolve()
+
+    expect(mocks.validateOptions).toHaveBeenCalledWith({ quickBookmarkCurrentTab: '' })
+    expect(mocks.setUserOptions).toHaveBeenCalledWith({ quickBookmarkCurrentTab: '' })
+  })
+
   it('syncs YAML changes to form fields', async () => {
     setupOptionsFormDom()
     setupOptionsFilterEl()
