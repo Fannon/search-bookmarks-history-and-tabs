@@ -483,6 +483,25 @@ describe('editOptionsView', () => {
     expect(rowIsVisible('bookmarkColor')).toBe(false)
   })
 
+  it('finds options by their exact technical key', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const filterEl = document.getElementById('options-filter')
+    filterEl.value = 'openInCurrentTab'
+    filterEl.dispatchEvent(new Event('input'))
+
+    expect(rowIsVisible('openInCurrentTab')).toBe(true)
+    expect(rowIsVisible('searchStrategy')).toBe(false)
+  })
+
   it('uses AND logic for multiple query tokens', async () => {
     setupOptionsFormDom()
     setupOptionsFilterEl()
@@ -602,6 +621,37 @@ describe('editOptionsView', () => {
     const dumpedValues = yaml.dump.mock.calls.map((c) => c[0])
     const lastDumped = dumpedValues[dumpedValues.length - 1]
     expect(lastDumped).toHaveProperty('bookmarkColor', '#ff0000')
+  })
+
+  it('edits openInCurrentTab through the options form', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module, mocks } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const row = document.querySelector('[data-option-key="openInCurrentTab"]')
+    expect(row).not.toBeNull()
+    expect(row.closest('.options-section-group').textContent).toContain('Search')
+
+    row.querySelector('[data-option-enabled]').click()
+    const input = row.querySelector('[data-option-input]')
+    expect(input.type).toBe('checkbox')
+    input.click()
+
+    const dumpedValues = yaml.dump.mock.calls.map((c) => c[0])
+    const lastDumped = dumpedValues[dumpedValues.length - 1]
+    expect(lastDumped).toHaveProperty('openInCurrentTab', true)
+
+    document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
+    await Promise.resolve()
+
+    expect(mocks.validateOptions).toHaveBeenCalledWith({ openInCurrentTab: true })
+    expect(mocks.setUserOptions).toHaveBeenCalledWith({ openInCurrentTab: true })
   })
 
   it('syncs YAML changes to form fields', async () => {

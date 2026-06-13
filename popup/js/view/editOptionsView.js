@@ -166,6 +166,7 @@ function filterOptions() {
 
   const query = filterEl.value.trim().toLowerCase()
   const queryTokens = tokenize(query)
+  const normalizedQuery = normalizeTechnicalKey(query)
   const sectionGroups = formEl.querySelectorAll('.options-section-group')
 
   for (const group of sectionGroups) {
@@ -183,7 +184,8 @@ function filterOptions() {
       const description = row.querySelector('.option-description')?.textContent || ''
       const enumValues = getRowEnumValues(row)
       const allText = tokenize(`${key} ${description} ${enumValues}`)
-      const matches = queryTokens.every((qt) => allText.some((t) => t.includes(qt)))
+      const keyMatches = normalizedQuery && normalizeTechnicalKey(key).includes(normalizedQuery)
+      const matches = keyMatches || queryTokens.every((qt) => allText.some((t) => t.includes(qt)))
       row.classList.toggle('hidden-by-filter', !matches)
       if (matches) hasVisibleRow = true
     }
@@ -194,6 +196,10 @@ function filterOptions() {
 
 function tokenize(text) {
   return text.replace(CAMEL_CASE_SPLIT_REGEX, '$1 $2').toLowerCase().split(TOKEN_SPLIT_REGEX).filter(Boolean)
+}
+
+function normalizeTechnicalKey(text) {
+  return text.toLowerCase().replace(TOKEN_SPLIT_REGEX, '')
 }
 
 function getRowEnumValues(row) {
