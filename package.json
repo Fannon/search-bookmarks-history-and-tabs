@@ -20,7 +20,7 @@
     "@playwright/test": "^1.60.0",
     "archiver": "^8.0.0",
     "chokidar": "^5.0.0",
-    "esbuild": "^0.28.0",
+    "esbuild": "^0.28.1",
     "fs-extra": "^11.3.5",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
