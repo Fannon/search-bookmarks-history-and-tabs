@@ -23,6 +23,11 @@ export const defaultOptions = {
   searchMaxResults: 24,
   /** Fuzzy search threshold (0-1). 0 = no fuzzyness, 1 = full fuzzyness */
   searchFuzzyness: 0.6,
+  /**
+   * Open results in the current tab by default.
+   * When enabled, hold Shift/Alt to open in a new tab instead (the opposite of the default behavior).
+   */
+  openInCurrentTab: false,
 
   //////////////////////////////////////////
   // COLORS AND STYLE                     //

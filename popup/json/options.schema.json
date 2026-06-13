@@ -31,6 +31,12 @@
       "description": "How tolerant fuzzy search should be. 0 behaves like precise search; values closer to 1 allow more relaxed matches.",
       "x-ui-section": "search"
     },
+    "openInCurrentTab": {
+      "type": "boolean",
+      "default": false,
+      "description": "Open results in the current tab by default. When enabled, hold Shift or Alt to open in a new tab instead, inverting the usual behavior.",
+      "x-ui-section": "search"
+    },
     "bookmarkColor": {
       "type": "string",
       "pattern": "^#([0-9a-fA-F]{3}){1,2}$",

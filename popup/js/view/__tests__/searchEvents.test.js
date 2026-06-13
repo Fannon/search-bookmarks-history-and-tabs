@@ -565,6 +565,91 @@ describe('searchEvents openResultItem', () => {
     expect(window.open).toHaveBeenCalledWith('https://bookmark.test', '_newtab')
   })
 
+  it('opens in the current tab on a plain click when openInCurrentTab is enabled', async () => {
+    const { module, viewModule } = await setupSearchEvents({ opts: { openInCurrentTab: true } })
+    await viewModule.renderSearchResults()
+    ext.model.tabs = []
+
+    module.openResultItem({
+      button: 0,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+    await Promise.resolve()
+
+    expect(ext.browserApi.tabs.query).toHaveBeenCalledTimes(1)
+    expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(77, {
+      url: 'https://bookmark.test',
+    })
+    expect(ext.browserApi.tabs.create).not.toHaveBeenCalled()
+    expect(window.close).toHaveBeenCalledTimes(1)
+  })
+
+  it('opens in a new tab when Shift is held and openInCurrentTab is enabled', async () => {
+    const { module, viewModule } = await setupSearchEvents({ opts: { openInCurrentTab: true } })
+    await viewModule.renderSearchResults()
+    ext.model.tabs = []
+
+    module.openResultItem({
+      button: 0,
+      ctrlKey: false,
+      shiftKey: true,
+      altKey: false,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+    await Promise.resolve()
+
+    expect(ext.browserApi.tabs.create).toHaveBeenCalledWith({
+      active: true,
+      url: 'https://bookmark.test',
+    })
+    expect(ext.browserApi.tabs.update).not.toHaveBeenCalled()
+    expect(window.close).toHaveBeenCalledTimes(1)
+  })
+
+  it('opens in a background tab when Ctrl is held even if openInCurrentTab is enabled', async () => {
+    const { module, viewModule } = await setupSearchEvents({ opts: { openInCurrentTab: true } })
+    await viewModule.renderSearchResults()
+    ext.model.tabs = []
+
+    module.openResultItem({
+      button: 0,
+      ctrlKey: true,
+      shiftKey: false,
+      altKey: false,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+    await Promise.resolve()
+
+    expect(ext.browserApi.tabs.create).toHaveBeenCalledWith({
+      active: false,
+      url: 'https://bookmark.test',
+    })
+    expect(ext.browserApi.tabs.update).not.toHaveBeenCalled()
+    expect(ext.browserApi.tabs.query).not.toHaveBeenCalled()
+    expect(window.close).not.toHaveBeenCalled()
+  })
+
   it('reads result data from model state instead of stale DOM attributes (BUG: race condition fix)', async () => {
     const { module, viewModule } = await setupSearchEvents()
     await viewModule.renderSearchResults()

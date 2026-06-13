@@ -119,8 +119,29 @@ export function openResultItem(event) {
     return
   }
 
-  // Handle Shift/Alt modifiers - open in current tab
-  if (event.shiftKey || event.altKey) {
+  // Handle Ctrl modifier - always open in background tab, regardless of the
+  // `openInCurrentTab` option.
+  if (event.ctrlKey) {
+    if (ext.browserApi.tabs) {
+      ext.browserApi.tabs.create({
+        active: false,
+        url: url,
+      })
+    } else {
+      window.open(url, '_newtab')
+    }
+    return
+  }
+
+  // Decide whether to open in the current tab.
+  // By default, Shift/Alt opens links in the current tab. When the
+  // `openInCurrentTab` option is enabled this is inverted: a plain click opens
+  // in the current tab and Shift/Alt opens in a new tab instead.
+  const alternateTabModifier = event.shiftKey || event.altKey
+  const useCurrentTab = ext.opts.openInCurrentTab ? !alternateTabModifier : alternateTabModifier
+
+  // Open in current tab
+  if (useCurrentTab) {
     if (ext.browserApi.tabs) {
       // Use browser tabs API to update current tab
       ext.browserApi.tabs
@@ -133,30 +154,13 @@ export function openResultItem(event) {
             ext.browserApi.tabs.update(tabs[0].id, {
               url: url,
             })
-
-            // Close popup unless Ctrl is also pressed
-            if (!event.ctrlKey) {
-              window.close()
-            }
+            window.close()
           }
         })
         .catch(console.error)
     } else {
       // Fallback for non-extension environments
       window.location.href = url
-    }
-    return
-  }
-
-  // Handle Ctrl modifier - open in background tab
-  if (event.ctrlKey) {
-    if (ext.browserApi.tabs) {
-      ext.browserApi.tabs.create({
-        active: false,
-        url: url,
-      })
-    } else {
-      window.open(url, '_newtab')
     }
     return
   }

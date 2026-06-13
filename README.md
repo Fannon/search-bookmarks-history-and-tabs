@@ -107,6 +107,7 @@ Click a screenshot to open it full size:
   - Hold `Shift` or `Alt` to open the result in the current tab.
   - Hold `Ctrl` to open the result without closing the popup.
   - Right-click to copy URL to clipboard.
+  - Prefer opening in the current tab? Enable the `openInCurrentTab` option to make that the default; `Shift`/`Alt` then opens in a new tab instead.
 - **Search Modes**: In case you want to be more selective -> use a search mode:
   - Start your query with `#`: only **bookmarks with the tag** will be returned (exact "starts with" search)
     - Supports AND search, e.g. search for `#github #pr` to only get results which have both tags
