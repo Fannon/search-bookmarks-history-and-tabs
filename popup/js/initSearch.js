@@ -101,7 +101,7 @@ export async function hashRouter() {
     if (searchTerm) {
       ext.dom.searchInput.value = searchTerm
       ext.dom.searchInput.focus()
-      search({ bypassInitializedGuard: true })
+      await search({ bypassInitializedGuard: true })
     } else {
       // Empty search term, show default entries
       ext.dom.searchInput.value = ''
