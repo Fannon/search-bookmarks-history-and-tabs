@@ -107,6 +107,27 @@ describe('taxonomy search', () => {
     expect(result[0].originalId).toBe('2')
   })
 
+  test('searchTaxonomy requires exact group names instead of substring matches', () => {
+    const { searchTaxonomy } = taxonomyModule
+    const data = [
+      {
+        originalId: '1',
+        group: '@Workspace',
+        groupLower: '@workspace',
+      },
+      {
+        originalId: '2',
+        group: '@Work',
+        groupLower: '@work',
+      },
+    ]
+
+    const result = searchTaxonomy('work', 'group', data)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].originalId).toBe('2')
+  })
+
   test('getUniqueTags aggregates tag usage', () => {
     const { getUniqueTags } = taxonomyModule
     ext.model.bookmarks = [

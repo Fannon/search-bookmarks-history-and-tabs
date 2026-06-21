@@ -1,9 +1,9 @@
 /**
- * @file Implements dedicated tag (`#`) and folder (`~`) taxonomy searches.
+ * @file Implements dedicated tag (`#`), folder (`~`), and tab group (`@`) taxonomy searches.
  *
  * Strategy:
- * - Provide AND-based filtering so queries like `#react #node` or `~Projects ~React` match bookmarks with every term.
- * - Power the tags and folders overview pages with aggregated counts derived from bookmark metadata.
+ * - Provide AND-based filtering so queries like `#react #node`, `~Projects ~React`, or `@Work` match every term.
+ * - Power taxonomy overview pages with aggregated counts derived from bookmark and tab metadata.
  * - Maintain cached taxonomy indexes for quick lookups when switching between popup navigation modes.
  *
  * Scoring:
@@ -12,12 +12,12 @@
  */
 
 /**
- * Simple, precise search for bookmark tags and folder names
+ * Simple, precise search for bookmark tags, folder names, and tab groups.
  * Executes AND search with the terms in searchTerm, separated by spaces
  *
  * @param {string} searchTerm
- * @param {'tags' | 'folder'} taxonomyType
- * @param {Array<Object>} data - Bookmark-derived taxonomy entries.
+ * @param {'tags' | 'folder' | 'group'} taxonomyType
+ * @param {Array<Object>} data - Bookmark- or tab-derived taxonomy entries.
  * @returns {Array<Object>} Taxonomy results with score metadata.
  */
 export function searchTaxonomy(searchTerm, taxonomyType, data) {
