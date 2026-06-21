@@ -216,6 +216,15 @@ describe('search', () => {
     expect(mockRenderSearchResults).not.toHaveBeenCalled()
   })
 
+  test('allows router-driven search during initialization', async () => {
+    ext.initialized = false
+    ext.dom.searchInput.value = 'Test'
+
+    await search({ bypassInitializedGuard: true })
+
+    expect(mockRenderSearchResults).toHaveBeenCalledWith()
+  })
+
   test('uses cached results when present', async () => {
     const cached = [{ type: 'bookmark', score: 50 }]
     ext.searchCache = new Map([['test_precise_all', cached]])

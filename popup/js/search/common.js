@@ -286,7 +286,7 @@ function cacheResults(searchTerm, results) {
 /**
  * Execute a search against the cached datasets based on the current UI state.
  *
- * @param {KeyboardEvent|InputEvent} [event] - Optional input event from the search field.
+ * @param {KeyboardEvent|InputEvent|{bypassInitializedGuard?: boolean}} [event] - Optional input event from the search field.
  * @returns {Promise<void>}
  */
 export async function search(event) {
@@ -296,7 +296,7 @@ export async function search(event) {
   const searchPromise = (async () => {
     const startTime = Date.now()
     try {
-      if (shouldSkipSearch(event) || !ext.initialized) return
+      if (shouldSkipSearch(event) || (!ext.initialized && !event?.bypassInitializedGuard)) return
 
       if (typeof performance !== 'undefined' && typeof performance.mark === 'function') {
         performance.mark('search-start')

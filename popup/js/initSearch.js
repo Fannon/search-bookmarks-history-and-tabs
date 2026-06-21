@@ -40,45 +40,44 @@ initExtension().catch((err) => {
  */
 export async function initExtension() {
   const startTime = Date.now()
-  // Load effective options, including user customizations
-  ext.opts = await getEffectiveOptions()
+  try {
+    // Load effective options, including user customizations
+    ext.opts = await getEffectiveOptions()
 
-  // HTML Element selectors
+    // HTML Element selectors
 
-  ext.dom.searchInput = document.getElementById('q')
-  ext.dom.resultList = document.getElementById('results')
-  ext.dom.resultCounter = document.getElementById('counter')
-  ext.dom.searchApproachToggle = document.getElementById('toggle')
+    ext.dom.searchInput = document.getElementById('q')
+    ext.dom.resultList = document.getElementById('results')
+    ext.dom.resultCounter = document.getElementById('counter')
+    ext.dom.searchApproachToggle = document.getElementById('toggle')
 
-  updateSearchApproachToggle()
+    updateSearchApproachToggle()
 
-  // Load bookmarks, tabs, and history data for searching
-  Object.assign(ext.model, await getSearchData())
+    // Load bookmarks, tabs, and history data for searching
+    Object.assign(ext.model, await getSearchData())
 
-  // Register Events
-  document.addEventListener('keydown', navigationKeyListener)
-  window.addEventListener('hashchange', hashRouter, false)
-  ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
+    // Register Events
+    document.addEventListener('keydown', navigationKeyListener)
+    window.addEventListener('hashchange', hashRouter, false)
+    ext.dom.searchApproachToggle.addEventListener('mouseup', toggleSearchApproach)
 
-  // Run a search on every input event instead of debouncing. The popup dataset is small
-  // enough that the simpler approach keeps navigation in sync with what the user sees,
-  // avoiding stale selections when Enter is pressed quickly after typing.
-  ext.dom.searchInput.addEventListener('input', search)
+    // Run a search on every input event instead of debouncing. The popup dataset is small
+    // enough that the simpler approach keeps navigation in sync with what the user sees,
+    // avoiding stale selections when Enter is pressed quickly after typing.
+    ext.dom.searchInput.addEventListener('input', search)
 
-  // Cache search results by (term, strategy, mode) to avoid re-running algorithms
-  ext.searchCache = new Map()
-  // Track successfully loaded favicon URLs to prevent fade-in on re-renders
-  ext.model.loadedFavicons = new Set()
+    // Cache search results by (term, strategy, mode) to avoid re-running algorithms
+    ext.searchCache = new Map()
+    // Track successfully loaded favicon URLs to prevent fade-in on re-renders
+    ext.model.loadedFavicons = new Set()
 
-  ext.initialized = true
+    await hashRouter()
+    ext.initialized = true
+  } finally {
+    document.getElementById('results-load')?.remove()
 
-  hashRouter()
-
-  if (document.getElementById('results-load')) {
-    document.getElementById('results-load').remove()
+    console.debug(`Init in ${Date.now() - startTime}ms`)
   }
-
-  console.debug(`Init in ${Date.now() - startTime}ms`)
 }
 
 //////////////////////////////////////////
@@ -102,7 +101,7 @@ export async function hashRouter() {
     if (searchTerm) {
       ext.dom.searchInput.value = searchTerm
       ext.dom.searchInput.focus()
-      search()
+      search({ bypassInitializedGuard: true })
     } else {
       // Empty search term, show default entries
       ext.dom.searchInput.value = ''
