@@ -37,13 +37,15 @@ function createResults() {
   ]
 }
 
-async function setupSearchEvents({ results = createResults(), opts = {} } = {}) {
+async function setupSearchEvents({ results = createResults(), bookmarks = [], opts = {} } = {}) {
   jest.resetModules()
   window.location.hash = '#search/query'
 
   const getUserOptions = jest.fn(async () => ({ searchStrategy: 'precise' }))
   const setUserOptions = jest.fn(async () => {})
   const searchMock = jest.fn(() => Promise.resolve())
+  const resetFuzzySearchState = jest.fn()
+  const resetSimpleSearchState = jest.fn()
 
   jest.unstable_mockModule('../../model/optionsStorage.js', () => ({
     getUserOptions,
@@ -51,6 +53,12 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
   }))
   jest.unstable_mockModule('../../search/common.js', () => ({
     search: searchMock,
+  }))
+  jest.unstable_mockModule('../../search/fuzzySearch.js', () => ({
+    resetFuzzySearchState,
+  }))
+  jest.unstable_mockModule('../../search/simpleSearch.js', () => ({
+    resetSimpleSearchState,
   }))
 
   // Import modules needed for events
@@ -75,8 +83,15 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
       originalId: entry.originalId,
       originalUrl: entry.originalUrl,
       url: entry.url,
+      title: entry.title,
+      active: entry.active,
+      favIconUrl: entry.favIconUrl,
+      group: entry.group,
+      groupLower: entry.groupLower,
+      groupId: entry.groupId,
       windowId: 101,
     }))
+  const copiedBookmarks = bookmarks.map((entry) => ({ ...entry }))
 
   navigator.clipboard = {
     writeText: jest.fn(() => Promise.resolve()),
@@ -96,6 +111,7 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
     model: {
       result: copiedResults,
       tabs: tabEntries,
+      bookmarks: copiedBookmarks,
       searchTerm: 'query',
       mouseMoved: false,
       currentItem: 0,
@@ -135,6 +151,8 @@ async function setupSearchEvents({ results = createResults(), opts = {} } = {}) 
       getUserOptions,
       setUserOptions,
       search: searchMock,
+      resetFuzzySearchState,
+      resetSimpleSearchState,
     },
     elements: {
       resultList,
@@ -231,7 +249,7 @@ describe('searchEvents openResultItem', () => {
   })
 
   it('closes tabs from the result list when the close button is pressed', async () => {
-    const { viewModule, elements } = await setupSearchEvents()
+    const { viewModule, elements, mocks } = await setupSearchEvents()
     await viewModule.renderSearchResults()
     const tabItem = elements.resultList.children[1]
     const closeButton = tabItem.querySelector('.close')
@@ -242,6 +260,88 @@ describe('searchEvents openResultItem', () => {
     expect(ext.model.tabs).toHaveLength(0)
     expect(ext.model.result).toHaveLength(1)
     expect(elements.resultList.children).toHaveLength(1)
+    expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('tabs')
+    expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('tabs')
+  })
+
+  it('clears open-tab metadata from matching bookmarks when a tab is closed', async () => {
+    const results = createResults()
+    results[1].active = true
+    results[1].favIconUrl = 'https://tab.test/favicon.png'
+    results[1].group = 'Work'
+    results[1].groupLower = 'work'
+    results[1].groupId = 7
+
+    const bookmarks = [
+      {
+        type: 'bookmark',
+        originalId: 'bm-open',
+        originalUrl: 'https://tab.test',
+        url: 'tab.test',
+        title: 'Bookmarked Tab',
+        tab: true,
+        openTabTitle: 'Tab Title',
+        openTabActive: true,
+        favIconUrl: 'https://tab.test/favicon.png',
+        group: 'Work',
+        groupLower: 'work',
+        groupId: 7,
+      },
+      {
+        type: 'bookmark',
+        originalId: 'bm-other',
+        originalUrl: 'https://other.test',
+        url: 'other.test',
+        title: 'Other Bookmark',
+        tab: true,
+        openTabTitle: 'Other Tab',
+      },
+    ]
+
+    const { viewModule, elements } = await setupSearchEvents({ results, bookmarks })
+    await viewModule.renderSearchResults()
+
+    elements.resultList.children[1].querySelector('.close').dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+
+    expect(ext.model.bookmarks[0]).toMatchObject({
+      type: 'bookmark',
+      originalId: 'bm-open',
+      originalUrl: 'https://tab.test',
+      url: 'tab.test',
+      title: 'Bookmarked Tab',
+    })
+    expect(ext.model.bookmarks[0].tab).toBeUndefined()
+    expect(ext.model.bookmarks[0].openTabTitle).toBeUndefined()
+    expect(ext.model.bookmarks[0].openTabActive).toBeUndefined()
+    expect(ext.model.bookmarks[0].favIconUrl).toBeUndefined()
+    expect(ext.model.bookmarks[0].group).toBeUndefined()
+    expect(ext.model.bookmarks[0].groupLower).toBeUndefined()
+    expect(ext.model.bookmarks[0].groupId).toBeUndefined()
+    expect(ext.model.bookmarks[1].tab).toBe(true)
+    expect(ext.model.bookmarks[1].openTabTitle).toBe('Other Tab')
+  })
+
+  it('ignores stale close buttons without a valid tab id', async () => {
+    const { module } = await setupSearchEvents()
+
+    module.openResultItem({
+      button: 0,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      target: {
+        nodeName: 'BUTTON',
+        className: 'close',
+        parentElement: null,
+        getAttribute: () => null,
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+
+    expect(ext.browserApi.tabs.remove).not.toHaveBeenCalled()
+    expect(ext.model.tabs).toHaveLength(1)
+    expect(ext.model.result).toHaveLength(2)
   })
 
   it('does not delete wrong tab when originalId is not found in model (BUG: findIndex returns -1)', async () => {
