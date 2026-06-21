@@ -147,7 +147,13 @@ describe('initEditBookmark entry point', () => {
     const editNewBookmark = jest.fn((bookmarkDraft) => {
       window.ext.currentBookmarkDraft = bookmarkDraft
     })
-    const createBookmark = jest.fn(() => Promise.resolve())
+    let resolveCreateBookmark
+    const createBookmark = jest.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveCreateBookmark = resolve
+        }),
+    )
     const getEffectiveOptions = jest.fn(() => Promise.resolve({}))
     const getSearchData = jest.fn(() => Promise.resolve({ bookmarks: [] }))
     const printError = jest.fn()
@@ -191,9 +197,14 @@ describe('initEditBookmark entry point', () => {
     expect(createBookmark).not.toHaveBeenCalled()
 
     document.getElementById('bm-save').dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    document.getElementById('bm-save').dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(createBookmark).toHaveBeenCalledTimes(1)
+
+    resolveCreateBookmark()
     await flushPromises()
 
     expect(createBookmark).toHaveBeenCalledTimes(1)
+    expect(module.ext.currentBookmarkDraft).toBeNull()
   })
 
   test('logs an error when bookmark identifier is missing', async () => {

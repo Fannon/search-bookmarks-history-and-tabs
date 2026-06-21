@@ -260,6 +260,23 @@ describe('editBookmarkView', () => {
     )
   })
 
+  it('handles existing bookmarks without tags', async () => {
+    setupDom()
+    setupExt([
+      {
+        originalId: BOOKMARK_ID,
+        title: 'Original Title',
+        originalUrl: 'http://example.com',
+        folder: '~Work',
+      },
+    ])
+    const { module, helpers } = await loadEditBookmarkView()
+
+    await module.editBookmark(BOOKMARK_ID)
+
+    expect(helpers.tagifyInstances[0].addTags).toHaveBeenCalledWith([])
+  })
+
   it('populates the edit form for a new bookmark draft', async () => {
     setupDom()
     setupExt([], { returnHash: '#search/' })
@@ -317,9 +334,13 @@ describe('editBookmarkView', () => {
     const expectedSearchStringLower = `search:Updated Title|${expectedCleanUrl}|#alpha #beta|~Work`.toLowerCase()
 
     expect(bookmark.title).toBe('Updated Title')
+    expect(bookmark.titleLower).toBe('updated title')
     expect(bookmark.originalUrl).toBe('http://updated.com')
     expect(bookmark.url).toBe(expectedCleanUrl)
     expect(bookmark.tags).toBe('#alpha #beta')
+    expect(bookmark.tagsLower).toBe('#alpha #beta')
+    expect(bookmark.tagsArray).toEqual(['alpha', 'beta'])
+    expect(bookmark.tagsArrayLower).toEqual(['alpha', 'beta'])
     expect(bookmark.searchStringLower).toBe(expectedSearchStringLower)
 
     expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')

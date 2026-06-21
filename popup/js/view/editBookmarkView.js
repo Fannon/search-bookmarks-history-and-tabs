@@ -106,7 +106,7 @@ export async function editBookmark(bookmarkId) {
       updateFavoriteButton(favoriteButton, getStarState(bonusScore), bonusScore)
     }
 
-    const currentTags = bookmark.tags
+    const currentTags = (bookmark.tags || '')
       .split('#')
       .map((el) => el.trim())
       .filter((el) => el)
@@ -211,9 +211,13 @@ export function updateBookmark(bookmarkId) {
 
   // Update search data model of bookmark
   bookmark.title = formValues.title
+  bookmark.titleLower = formValues.title.toLowerCase().trim()
   bookmark.originalUrl = formValues.url
   bookmark.url = cleanUpUrl(formValues.url)
   bookmark.tags = formValues.tags
+  bookmark.tagsLower = formValues.tags.toLowerCase()
+  bookmark.tagsArray = formValues.tagsArray
+  bookmark.tagsArrayLower = formValues.tagsArray.map((tag) => tag.toLowerCase())
   bookmark.customBonusScore = formValues.bonusScore
   bookmark.searchStringLower = createSearchStringLower(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
   resetFuzzySearchState('bookmarks')

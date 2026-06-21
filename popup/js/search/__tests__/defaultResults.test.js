@@ -159,10 +159,22 @@ describe('addDefaultEntries', () => {
       expect(results.find((entry) => entry.type === 'bookmarkCreate')).toBeUndefined()
     })
 
-    test('does not add quick bookmark action for browser internal pages', async () => {
+    test.each([
+      ['about:blank'],
+      ['brave://settings'],
+      ['chrome://extensions'],
+      ['chrome-extension://abc/page.html'],
+      ['data:text/plain,hello'],
+      ['edge://extensions'],
+      ['file:///tmp/page.html'],
+      ['javascript:alert(1)'],
+      ['moz-extension://abc/page.html'],
+      ['opera://settings'],
+      ['vivaldi://settings'],
+    ])('does not add quick bookmark action for unbookmarkable URL %s', async (url) => {
       ext.model.bookmarks = []
       ext.model.tabs = []
-      mockGetBrowserTabs.mockResolvedValue([{ id: 1, title: 'Extensions', url: 'chrome://extensions' }])
+      mockGetBrowserTabs.mockResolvedValue([{ id: 1, title: 'Internal Page', url }])
 
       const results = await addDefaultEntries()
 

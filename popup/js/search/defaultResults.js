@@ -14,7 +14,19 @@
 import { getBrowserTabs } from '../helper/browserApi.js'
 import { cleanUpUrl } from '../helper/utils.js'
 
-const UNBOOKMARKABLE_URL_PREFIXES = ['about:', 'chrome:', 'chrome-extension:', 'edge:', 'moz-extension:']
+const UNBOOKMARKABLE_URL_PREFIXES = [
+  'about:',
+  'brave:',
+  'chrome:',
+  'chrome-extension:',
+  'data:',
+  'edge:',
+  'file:',
+  'javascript:',
+  'moz-extension:',
+  'opera:',
+  'vivaldi:',
+]
 
 /**
  * Build default result sets when no explicit search term is provided.
@@ -73,7 +85,7 @@ export async function addDefaultEntries() {
         .filter((tab) => {
           // Exclude the currently active tab from recent tabs
           const isCurrentTab = activeTab && activeTab.id !== undefined && tab.originalId === activeTab.id
-          return tab?.url && !isCurrentTab && !tab.url.startsWith('chrome://') && !tab.url.startsWith('about:')
+          return tab?.url && !isCurrentTab && isBookmarkableUrl(tab.url)
         })
         .map((el) => ({ ...el }))
         .sort((a, b) => {
@@ -122,7 +134,8 @@ function isBookmarkableUrl(url) {
     return false
   }
 
-  return !UNBOOKMARKABLE_URL_PREFIXES.some((prefix) => trimmedUrl.startsWith(prefix))
+  const normalizedUrl = trimmedUrl.toLowerCase()
+  return !UNBOOKMARKABLE_URL_PREFIXES.some((prefix) => normalizedUrl.startsWith(prefix))
 }
 
 /**

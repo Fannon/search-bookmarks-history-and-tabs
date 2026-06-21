@@ -216,7 +216,17 @@ function setupEventHandlers() {
       if (ext.currentBookmarkId) {
         updateBookmark(ext.currentBookmarkId)
       } else if (ext.currentBookmarkDraft) {
-        await createBookmark()
+        if (saveButton.dataset.saving === 'true') return
+
+        saveButton.dataset.saving = 'true'
+        saveButton.setAttribute('aria-busy', 'true')
+        try {
+          await createBookmark()
+          ext.currentBookmarkDraft = null
+        } finally {
+          delete saveButton.dataset.saving
+          saveButton.removeAttribute('aria-busy')
+        }
       } else {
         window.location.href = getReturnTarget()
       }

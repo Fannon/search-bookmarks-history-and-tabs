@@ -41,6 +41,7 @@ Toggle which data sources are included in search results.
 | `enableHistory` | boolean | `true` | Include browsing history in search results. Note: The browser history API can be slow; see History Options for tuning. |
 | `enableSearchEngines` | boolean | `true` | Show search engine links as fallback results (e.g., "Search Google for..."). |
 | `enableDirectUrl` | boolean | `true` | When typing a URL-like term (e.g., `example.com`), offer direct navigation as a result. |
+| `quickBookmarkCurrentTab` | string or `false` | `'Bookmarks bar'` | Folder name or folder ID used by the first default result that opens the rich bookmark editor for saving the active tab. Folder IDs are more reliable across localized browsers than English folder names like the default. Use `false`, an empty string, or only whitespace to disable that result. |
 
 ## Display Options
 

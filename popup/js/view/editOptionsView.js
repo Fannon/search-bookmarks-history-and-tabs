@@ -473,17 +473,18 @@ async function saveOptions() {
 
   try {
     const userOptions = parseYamlValue(userOptionsString)
+    const normalizedUserOptions = userOptions ?? {}
 
     // Validate options against schema before saving
-    const validation = await validateOptions(userOptions || {})
+    const validation = await validateOptions(normalizedUserOptions)
     if (!validation.valid) {
       const schemaError = new Error('User options do not match the required schema.')
       schemaError.validationErrors = validation.errors
       throw schemaError
     }
 
-    setConfigYaml(userOptions || {})
-    syncFormFromOptions(userOptions || {})
+    setConfigYaml(normalizedUserOptions)
+    syncFormFromOptions(normalizedUserOptions)
 
     // Handle optional permissions
     // Favicon permission is needed for displayFavicons
@@ -494,7 +495,7 @@ async function saveOptions() {
       }
     }
 
-    await setUserOptions(userOptions || {})
+    await setUserOptions(normalizedUserOptions)
 
     // Clear any previous error messages
     hideErrors()
@@ -738,7 +739,7 @@ function parseYamlValue(value) {
 }
 
 function setConfigYaml(options = {}) {
-  setConfigYamlValue(window.jsyaml.dump(options || {}))
+  setConfigYamlValue(window.jsyaml.dump(options ?? {}))
 }
 
 function setConfigYamlValue(yaml) {
