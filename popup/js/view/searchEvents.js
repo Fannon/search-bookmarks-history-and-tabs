@@ -12,6 +12,8 @@
 import { cleanUpUrl } from '../helper/utils.js'
 import { getUserOptions, setUserOptions } from '../model/optionsStorage.js'
 import { search } from '../search/common.js'
+import { resetFuzzySearchState } from '../search/fuzzySearch.js'
+import { resetSimpleSearchState } from '../search/simpleSearch.js'
 import { clearSelection, hoverResultItem } from './searchNavigation.js'
 import { renderSearchResults } from './searchView.js'
 
@@ -19,6 +21,30 @@ import { renderSearchResults } from './searchView.js'
 // Using a module variable instead of a DOM property ensures the state
 // survives any potential DOM replacement and prevents duplicate event listeners.
 let eventDelegationSetup = false
+
+function clearBookmarkOpenTabState(closedTab) {
+  if (!closedTab?.url || !Array.isArray(ext.model.bookmarks)) {
+    return
+  }
+
+  for (const bookmark of ext.model.bookmarks) {
+    if (bookmark?.url !== closedTab.url) {
+      continue
+    }
+
+    delete bookmark.tab
+    delete bookmark.openTabTitle
+    delete bookmark.openTabActive
+
+    if (bookmark.favIconUrl === closedTab.favIconUrl) {
+      delete bookmark.favIconUrl
+    }
+
+    delete bookmark.group
+    delete bookmark.groupLower
+    delete bookmark.groupId
+  }
+}
 
 /**
  * Handle click/mouse events on search results with different behaviors based on modifiers and target elements
@@ -55,9 +81,18 @@ export function openResultItem(event) {
 
       const originalIdFromDom = listItem?.getAttribute('x-original-id')
       const targetId = parseInt(originalIdFromDom, 10)
+      if (!Number.isInteger(targetId)) {
+        return
+      }
 
       // Close the browser tab
-      ext.browserApi.tabs.remove(targetId)
+      try {
+        Promise.resolve(ext.browserApi.tabs.remove(targetId)).catch((err) => {
+          console.warn('Could not close tab:', err)
+        })
+      } catch (err) {
+        console.warn('Could not close tab:', err)
+      }
 
       // Remove the item from the UI - use targetId to ensure we have a valid value
       const domElement = document.querySelector(`#results > li[x-original-id="${targetId}"]`)
@@ -68,7 +103,9 @@ export function openResultItem(event) {
       // Update the application state - only remove if found (findIndex returns -1 if not found)
       const tabIndex = ext.model.tabs.findIndex((el) => el.originalId === targetId)
       if (tabIndex !== -1) {
+        const closedTab = ext.model.tabs[tabIndex]
         ext.model.tabs.splice(tabIndex, 1)
+        clearBookmarkOpenTabState(closedTab)
       }
 
       const resultIndex = ext.model.result.findIndex((el) => el.originalId === targetId)
@@ -80,6 +117,8 @@ export function openResultItem(event) {
       if (ext.searchCache) {
         ext.searchCache.clear()
       }
+      resetSimpleSearchState('tabs')
+      resetFuzzySearchState('tabs')
 
       // Re-render to update indices and selection
       renderSearchResults()
