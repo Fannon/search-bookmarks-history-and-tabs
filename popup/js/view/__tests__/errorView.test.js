@@ -91,6 +91,22 @@ describe('printError with overlay', () => {
     expect(overlay.innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
     expect(overlay.innerHTML).toContain('&lt;b&gt;bad markup&lt;/b&gt;')
   })
+
+  it('removes the Escape listener when the overlay is dismissed by button', () => {
+    const addSpy = jest.spyOn(document, 'addEventListener')
+    const removeSpy = jest.spyOn(document, 'removeEventListener')
+
+    printError(new Error('Dismiss me'))
+    const keydownHandler = addSpy.mock.calls.find(([eventName]) => eventName === 'keydown')?.[1]
+
+    document.getElementById('btn-dismiss-error').click()
+
+    expect(keydownHandler).toBeDefined()
+    expect(removeSpy).toHaveBeenCalledWith('keydown', keydownHandler)
+
+    addSpy.mockRestore()
+    removeSpy.mockRestore()
+  })
 })
 
 describe('printError no DOM element', () => {
