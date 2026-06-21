@@ -207,6 +207,11 @@ function setupTagEditor(tagsInput, currentTags) {
  */
 export function updateBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
+  if (!bookmark) {
+    console.warn(`Tried to update bookmark id="${bookmarkId}", but could not find it in searchData.`)
+    return
+  }
+
   const formValues = getBookmarkFormValues()
 
   // Update search data model of bookmark

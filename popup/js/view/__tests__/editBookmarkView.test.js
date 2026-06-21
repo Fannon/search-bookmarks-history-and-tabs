@@ -414,6 +414,25 @@ describe('editBookmarkView', () => {
     expect(bookmark.customBonusScore).toBe(0)
   })
 
+  it('does not throw when updating a bookmark that is no longer in the model', async () => {
+    setupDom()
+    setupExt([])
+    const { module, mocks } = await loadEditBookmarkView()
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    expect(() => module.updateBookmark(BOOKMARK_ID)).not.toThrow()
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      `Tried to update bookmark id="${BOOKMARK_ID}", but could not find it in searchData.`,
+    )
+    expect(mocks.browserApi.bookmarks.update).not.toHaveBeenCalled()
+    expect(mocks.resetFuzzySearchState).not.toHaveBeenCalled()
+    expect(mocks.resetSimpleSearchState).not.toHaveBeenCalled()
+    expect(mocks.resetUniqueFoldersCache).not.toHaveBeenCalled()
+
+    warnSpy.mockRestore()
+  })
+
   it('preserves a custom bonus score when the favorite button was not cycled', async () => {
     setupDom()
     const bookmark = {
