@@ -433,14 +433,14 @@ describe('searchNavigation navigationKeyListener', () => {
     expect(ext.opts.searchStrategy).toBe('precise')
   })
 
-  it('opens selected bookmark editor with Ctrl+E', async () => {
+  it('opens selected bookmark editor with Ctrl+Enter', async () => {
     const { module, viewModule } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
     const preventDefault = jest.fn()
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
     const editorUrl = await module.navigationKeyListener({
-      key: 'e',
+      key: 'Enter',
       ctrlKey: true,
       preventDefault,
     })

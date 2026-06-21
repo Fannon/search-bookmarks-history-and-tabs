@@ -40,7 +40,7 @@ export async function navigationKeyListener(event) {
   }
 
   // Edit the selected bookmark, or create a bookmark draft from the selected URL.
-  if (event.ctrlKey && (event.key === 'e' || event.key === 'E')) {
+  if (event.ctrlKey && event.key === 'Enter') {
     event.preventDefault()
     return editSelectedResultAsBookmark()
   }

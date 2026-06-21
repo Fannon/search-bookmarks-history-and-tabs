@@ -622,6 +622,10 @@ function getOptionRowValue(row) {
     return parseYamlValue(input.value) ?? (type === 'array' ? [] : {})
   }
 
+  if (row.dataset.optionKey === 'quickBookmarkCurrentTab' && input.value === '') {
+    return false
+  }
+
   return input.value
 }
 
@@ -636,6 +640,8 @@ function setOptionRowValue(row, value) {
     input.checked = Boolean(value)
   } else if (type === 'array' || type === 'object') {
     input.value = value === undefined ? '' : window.jsyaml.dump(value).trim()
+  } else if (row.dataset.optionKey === 'quickBookmarkCurrentTab' && value === false) {
+    input.value = ''
   } else {
     input.value = value ?? ''
   }
