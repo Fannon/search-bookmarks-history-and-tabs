@@ -1,9 +1,9 @@
 /**
- * @file Implements dedicated tag (`#`) and folder (`~`) taxonomy searches.
+ * @file Implements dedicated tag (`#`), folder (`~`), and tab group (`@`) taxonomy searches.
  *
  * Strategy:
- * - Provide AND-based filtering so queries like `#react #node` or `~Projects ~React` match bookmarks with every term.
- * - Power the tags and folders overview pages with aggregated counts derived from bookmark metadata.
+ * - Provide AND-based filtering so queries like `#react #node`, `~Projects ~React`, or `@Work` match every term.
+ * - Power taxonomy overview pages with aggregated counts derived from bookmark and tab metadata.
  * - Maintain cached taxonomy indexes for quick lookups when switching between popup navigation modes.
  *
  * Scoring:
@@ -12,12 +12,12 @@
  */
 
 /**
- * Simple, precise search for bookmark tags and folder names
+ * Simple, precise search for bookmark tags, folder names, and tab groups.
  * Executes AND search with the terms in searchTerm, separated by spaces
  *
  * @param {string} searchTerm
- * @param {'tags' | 'folder'} taxonomyType
- * @param {Array<Object>} data - Bookmark-derived taxonomy entries.
+ * @param {'tags' | 'folder' | 'group'} taxonomyType
+ * @param {Array<Object>} data - Bookmark- or tab-derived taxonomy entries.
  * @returns {Array<Object>} Taxonomy results with score metadata.
  */
 export function searchTaxonomy(searchTerm, taxonomyType, data) {
@@ -61,17 +61,9 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
         }
       }
 
-      // Prepare search string for taxonomy matching
-      let searchString = ''
-      if (taxonomyType === 'group') {
-        // For groups, we prepend @. Use pre-calculated groupLower if available.
-        searchString = entry.groupLower ? `@${entry.groupLower}` : entry.group ? `@${entry.group}`.toLowerCase() : ''
-      } else {
-        // For tags/folders, use pre-calculated lower field (tagsLower, folderLower)
-        searchString = entry[`${taxonomyType}Lower`] || (entry[taxonomyType] || '').toLowerCase()
-      }
+      const taxonomyValues = getTaxonomyValues(entry, taxonomyType, taxonomyMarker)
 
-      if (searchTerms.every((term) => searchString.includes(taxonomyMarker + term))) {
+      if (searchTerms.every((term) => taxonomyValues.includes(term))) {
         results.push({
           ...entry,
           searchApproach: 'taxonomy',
@@ -81,6 +73,24 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
   }
 
   return results
+}
+
+function getTaxonomyValues(entry, taxonomyType, taxonomyMarker) {
+  if (taxonomyType === 'group') {
+    const group = entry.groupLower || (entry.group ? String(entry.group).toLowerCase() : '')
+    return group ? [String(group).replace(/^@/, '')] : []
+  }
+
+  const arrayField = taxonomyType === 'tags' ? 'tagsArrayLower' : 'folderArrayLower'
+  if (Array.isArray(entry[arrayField])) {
+    return entry[arrayField].map((value) => String(value))
+  }
+
+  const rawValue = entry[`${taxonomyType}Lower`] || entry[taxonomyType] || ''
+  return String(rawValue)
+    .split(taxonomyMarker)
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean)
 }
 
 /**
