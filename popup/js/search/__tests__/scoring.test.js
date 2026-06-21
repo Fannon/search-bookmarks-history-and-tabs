@@ -144,6 +144,30 @@ describe('scoring', () => {
     expect(scoreByType.direct).toBeCloseTo(500)
   })
 
+  it('uses the searchTerm argument rather than global model state for search bonuses', () => {
+    createTestExt({
+      model: { searchTerm: '' },
+      opts: {
+        ...baseOpts,
+        scoreBookmarkBase: 100,
+        scoreExactEqualsBonus: 20,
+      },
+    })
+
+    const [scored] = calculateFinalScore(
+      [
+        {
+          ...baseResult,
+          title: 'Exact Match',
+          titleLower: 'exact match',
+        },
+      ],
+      'exact match',
+    )
+
+    expect(scored.score).toBe(120)
+  })
+
   it('throws on unsupported result type', () => {
     createTestExt({
       model: { searchTerm: 'test' },
