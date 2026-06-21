@@ -193,6 +193,58 @@ describe('editOptionsView', () => {
     expect(document.getElementById('config').value).toBe('normalized: dark')
   })
 
+  it('saveOptions treats empty YAML as empty options when js-yaml throws on empty input', async () => {
+    setupDom()
+    const loadImpl = jest.fn((value) => {
+      if (value === '') {
+        throw new Error('expected a document in the stream')
+      }
+      return { parsed: value }
+    })
+    const dumpImpl = jest.fn(() => '{}')
+    const { module, mocks } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl,
+      loadImpl,
+    })
+
+    await module.initOptions()
+    document.getElementById('config').value = ''
+
+    document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
+    await Promise.resolve()
+
+    expect(mocks.load).not.toHaveBeenCalled()
+    expect(mocks.validateOptions).toHaveBeenCalledWith({})
+    expect(mocks.setUserOptions).toHaveBeenCalledWith({})
+    expect(document.getElementById('error-message').style.display).toBe('none')
+  })
+
+  it.each([
+    ['false', false],
+    ['0', 0],
+  ])('saveOptions validates parsed falsy scalar YAML roots without coercing %s to empty options', async (yamlValue, parsedValue) => {
+    setupDom()
+    const loadImpl = jest.fn(() => parsedValue)
+    const dumpImpl = jest.fn(() => '{}')
+    const { module, mocks } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl,
+      loadImpl,
+      validateOptionsImpl: jest.fn(() => ({ valid: false, errors: ['"options" must be object'] })),
+    })
+
+    await module.initOptions()
+    document.getElementById('config').value = yamlValue
+
+    document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
+    await Promise.resolve()
+
+    expect(mocks.load).toHaveBeenCalledWith(yamlValue)
+    expect(mocks.validateOptions).toHaveBeenCalledWith(parsedValue)
+    expect(mocks.setUserOptions).not.toHaveBeenCalled()
+  })
+
   it('saveOptions displays an error message when YAML parsing fails', async () => {
     setupDom()
     const error = new Error('bad input')
@@ -652,6 +704,56 @@ describe('editOptionsView', () => {
 
     expect(mocks.validateOptions).toHaveBeenCalledWith({ openInCurrentTab: true })
     expect(mocks.setUserOptions).toHaveBeenCalledWith({ openInCurrentTab: true })
+  })
+
+  it('edits quickBookmarkCurrentTab as a string and preserves an empty value', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module, mocks } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const row = document.querySelector('[data-option-key="quickBookmarkCurrentTab"]')
+    expect(row).not.toBeNull()
+    expect(row.closest('.options-section-group').textContent).toContain('Sources')
+
+    row.querySelector('[data-option-enabled]').click()
+    const input = row.querySelector('[data-option-input]')
+    expect(input.type).toBe('text')
+    expect(input.value).toBe('Bookmarks bar')
+
+    input.value = ''
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+
+    const dumpedValues = yaml.dump.mock.calls.map((c) => c[0])
+    const lastDumped = dumpedValues[dumpedValues.length - 1]
+    expect(lastDumped).toHaveProperty('quickBookmarkCurrentTab', '')
+
+    document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
+    await Promise.resolve()
+
+    expect(mocks.validateOptions).toHaveBeenCalledWith({ quickBookmarkCurrentTab: '' })
+    expect(mocks.setUserOptions).toHaveBeenCalledWith({ quickBookmarkCurrentTab: '' })
+  })
+
+  it('shows disabled quickBookmarkCurrentTab values as an empty text field', async () => {
+    setupOptionsFormDom()
+    setupOptionsFilterEl()
+    const yaml = createJsonYamlMocks()
+    const { module } = await loadEditOptionsView({
+      userOptions: { quickBookmarkCurrentTab: false },
+      dumpImpl: yaml.dump,
+      loadImpl: yaml.load,
+    })
+    await module.initOptions()
+
+    const row = document.querySelector('[data-option-key="quickBookmarkCurrentTab"]')
+    expect(row.querySelector('[data-option-enabled]').checked).toBe(true)
+    expect(row.querySelector('[data-option-input]').value).toBe('')
   })
 
   it('syncs YAML changes to form fields', async () => {

@@ -11,6 +11,7 @@
   - <kbd>Enter</kbd>: Open in new active tab (or switch to existing tab).
   - <kbd>Shift</kbd> + <kbd>Enter</kbd> or <kbd>Alt</kbd> + <kbd>Enter</kbd>: Open in **current tab**.
   - <kbd>Ctrl</kbd> + <kbd>Enter</kbd>: Open in background without closing the popup.
+  - <kbd>F2</kbd>: Edit the selected bookmark, or create a new bookmark from the selected URL.
   - Tip: Enable the `openInCurrentTab` option to flip this — <kbd>Enter</kbd> opens in the **current tab** and <kbd>Shift</kbd>/<kbd>Alt</kbd> + <kbd>Enter</kbd> opens in a **new tab**.
 - **Copy URL**: **Right-Click** any result or press a custom shortcut if configured.
 - **Hybrid Search**: Press <kbd>TAB</kbd> to insert a double-space separator for combining taxonomy filters with search terms (e.g., `#tag  query`).

@@ -434,7 +434,7 @@ function hideErrors() {
 function removeUnknownOptions() {
   const userOptionsString = document.getElementById('config').value
   try {
-    const userOptions = window.jsyaml.load(userOptionsString)
+    const userOptions = parseYamlValue(userOptionsString)
     if (!userOptions || typeof userOptions !== 'object') return
 
     const schemaProperties = optionsSchema.properties || {}
@@ -472,18 +472,19 @@ async function saveOptions() {
   const _errorMessageEl = document.getElementById('error-message')
 
   try {
-    const userOptions = window.jsyaml.load(userOptionsString)
+    const userOptions = parseYamlValue(userOptionsString)
+    const normalizedUserOptions = userOptions ?? {}
 
     // Validate options against schema before saving
-    const validation = await validateOptions(userOptions || {})
+    const validation = await validateOptions(normalizedUserOptions)
     if (!validation.valid) {
       const schemaError = new Error('User options do not match the required schema.')
       schemaError.validationErrors = validation.errors
       throw schemaError
     }
 
-    setConfigYaml(userOptions || {})
-    syncFormFromOptions(userOptions || {})
+    setConfigYaml(normalizedUserOptions)
+    syncFormFromOptions(normalizedUserOptions)
 
     // Handle optional permissions
     // Favicon permission is needed for displayFavicons
@@ -494,7 +495,7 @@ async function saveOptions() {
       }
     }
 
-    await setUserOptions(userOptions)
+    await setUserOptions(normalizedUserOptions)
 
     // Clear any previous error messages
     hideErrors()
@@ -619,7 +620,7 @@ function getOptionRowValue(row) {
   }
 
   if (type === 'array' || type === 'object') {
-    return window.jsyaml.load(input.value) ?? (type === 'array' ? [] : {})
+    return parseYamlValue(input.value) ?? (type === 'array' ? [] : {})
   }
 
   return input.value
@@ -636,6 +637,8 @@ function setOptionRowValue(row, value) {
     input.checked = Boolean(value)
   } else if (type === 'array' || type === 'object') {
     input.value = value === undefined ? '' : window.jsyaml.dump(value).trim()
+  } else if (row.dataset.optionKey === 'quickBookmarkCurrentTab' && value === false) {
+    input.value = ''
   } else {
     input.value = value ?? ''
   }
@@ -720,7 +723,7 @@ function getOptionSchema(key) {
 
 function parseConfigValue() {
   const userOptionsString = document.getElementById('config').value
-  const parsed = window.jsyaml.load(userOptionsString)
+  const parsed = parseYamlValue(userOptionsString)
   if (parsed === null || parsed === undefined) return {}
   if (typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('User options must be a valid YAML / JSON object')
@@ -728,8 +731,15 @@ function parseConfigValue() {
   return parsed
 }
 
+function parseYamlValue(value) {
+  if (!value || value.trim() === '') {
+    return undefined
+  }
+  return window.jsyaml.load(value)
+}
+
 function setConfigYaml(options = {}) {
-  setConfigYamlValue(window.jsyaml.dump(options || {}))
+  setConfigYamlValue(window.jsyaml.dump(options ?? {}))
 }
 
 function setConfigYamlValue(yaml) {

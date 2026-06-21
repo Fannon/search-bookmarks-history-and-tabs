@@ -109,6 +109,20 @@
       "description": "Detect URL-shaped search terms and offer a direct navigation result at the top.",
       "x-ui-section": "sources"
     },
+    "quickBookmarkCurrentTab": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "boolean",
+          "const": false
+        }
+      ],
+      "default": "Bookmarks bar",
+      "description": "Folder name or folder ID used by the first default result that opens the rich bookmark editor for saving the active tab. Folder IDs are more reliable across localized browsers than English folder names like the default. Set to false, an empty string, or only whitespace to disable.",
+      "x-ui-section": "sources"
+    },
     "displayTags": {
       "type": "boolean",
       "default": true,

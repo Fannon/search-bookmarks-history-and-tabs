@@ -12,7 +12,14 @@ import { createExtensionContext } from './helper/extensionContext.js'
 
 import { getEffectiveOptions } from './model/optionsStorage.js'
 import { getSearchData } from './model/searchData.js'
-import { cycleFavoriteButton, deleteBookmark, editBookmark, updateBookmark } from './view/editBookmarkView.js'
+import {
+  createBookmark,
+  cycleFavoriteButton,
+  deleteBookmark,
+  editBookmark,
+  editNewBookmark,
+  updateBookmark,
+} from './view/editBookmarkView.js'
 
 import { printError } from './view/errorView.js'
 
@@ -22,6 +29,7 @@ window.ext = ext
 
 const BOOKMARK_HASH_PREFIX = '#bookmark/'
 const LEGACY_BOOKMARK_HASH_PREFIX = '#id/'
+const NEW_BOOKMARK_HASH_PREFIX = '#new'
 
 /**
  * Bootstrap the standalone bookmark editor page and wire up event handlers.
@@ -39,18 +47,23 @@ export async function initEditBookmark() {
     ext.dom.searchApproachToggle = document.getElementById('toggle')
     ext.opts = await getEffectiveOptions()
 
-    const { bookmarkId, returnHash } = parseBookmarkHash(window.location.hash)
+    const { bookmarkId, bookmarkDraft, returnHash } = parseBookmarkHash(window.location.hash)
 
-    if (!bookmarkId) {
+    if (!bookmarkId && !bookmarkDraft) {
       throw new Error('Missing bookmark identifier in URL hash.')
     }
     ext.returnHash = normalizeReturnHash(returnHash)
 
-    const { bookmarks } = await getSearchData()
+    const { bookmarks, bookmarkTree } = await getSearchData()
     ext.model.bookmarks = bookmarks
+    ext.model.bookmarkTree = bookmarkTree
 
     setupEventHandlers()
-    await editBookmark(bookmarkId)
+    if (bookmarkDraft) {
+      editNewBookmark(bookmarkDraft)
+    } else {
+      await editBookmark(bookmarkId)
+    }
 
     window.addEventListener('hashchange', handleHashChange)
 
@@ -71,26 +84,54 @@ export async function initEditBookmark() {
  * Extract bookmark id and return hash from a bookmark editor location hash.
  *
  * @param {string} hash - Raw `window.location.hash` string.
- * @returns {{bookmarkId: string|null, returnHash: string|null}}
+ * @returns {{bookmarkId: string|null, bookmarkDraft: Object|null, returnHash: string|null}}
  */
 function parseBookmarkHash(hash) {
   if (!hash) {
-    return { bookmarkId: null, returnHash: null }
+    return { bookmarkId: null, bookmarkDraft: null, returnHash: null }
+  }
+
+  if (hash.startsWith(NEW_BOOKMARK_HASH_PREFIX)) {
+    return parseNewBookmarkComponents(hash)
   }
 
   if (hash.startsWith(BOOKMARK_HASH_PREFIX)) {
     const hashBody = hash.slice(BOOKMARK_HASH_PREFIX.length)
     const { bookmarkId, returnHash } = parseBookmarkComponents(hashBody)
-    return { bookmarkId, returnHash }
+    return { bookmarkId, bookmarkDraft: null, returnHash }
   }
 
   if (hash.startsWith(LEGACY_BOOKMARK_HASH_PREFIX)) {
     const hashBody = hash.slice(LEGACY_BOOKMARK_HASH_PREFIX.length)
     const { bookmarkId, returnHash } = parseBookmarkComponents(hashBody)
-    return { bookmarkId, returnHash }
+    return { bookmarkId, bookmarkDraft: null, returnHash }
   }
 
-  return { bookmarkId: null, returnHash: null }
+  return { bookmarkId: null, bookmarkDraft: null, returnHash: null }
+}
+
+/**
+ * Parse a new-bookmark editor hash.
+ *
+ * @param {string} hash - Raw `window.location.hash` string.
+ * @returns {{bookmarkId: null, bookmarkDraft: Object|null, returnHash: string|null}}
+ */
+function parseNewBookmarkComponents(hash) {
+  const queryIndex = hash.indexOf('?')
+  const searchParams = new URLSearchParams(queryIndex === -1 ? '' : hash.slice(queryIndex + 1))
+  const url = searchParams.get('url') || ''
+  if (!url) {
+    return { bookmarkId: null, bookmarkDraft: null, returnHash: searchParams.get('return') }
+  }
+
+  return {
+    bookmarkId: null,
+    bookmarkDraft: {
+      title: searchParams.get('title') || url,
+      url,
+    },
+    returnHash: searchParams.get('return'),
+  }
 }
 
 /**
@@ -170,10 +211,22 @@ function setupEventHandlers() {
   const favoriteButton = document.getElementById('bm-favorite')
 
   if (saveButton && !saveButton.dataset.listenerAttached) {
-    saveButton.addEventListener('click', (event) => {
+    saveButton.addEventListener('click', async (event) => {
       event.preventDefault()
       if (ext.currentBookmarkId) {
         updateBookmark(ext.currentBookmarkId)
+      } else if (ext.currentBookmarkDraft) {
+        if (saveButton.dataset.saving === 'true') return
+
+        saveButton.dataset.saving = 'true'
+        saveButton.setAttribute('aria-busy', 'true')
+        try {
+          await createBookmark()
+          ext.currentBookmarkDraft = null
+        } finally {
+          delete saveButton.dataset.saving
+          saveButton.removeAttribute('aria-busy')
+        }
       } else {
         window.location.href = getReturnTarget()
       }
@@ -212,14 +265,19 @@ function setupEventHandlers() {
  * @returns {Promise<void>}
  */
 async function handleHashChange() {
-  const { bookmarkId, returnHash } = parseBookmarkHash(window.location.hash)
-  if (!bookmarkId) {
+  const { bookmarkId, bookmarkDraft, returnHash } = parseBookmarkHash(window.location.hash)
+  if (!bookmarkId && !bookmarkDraft) {
     return
   }
 
   ext.returnHash = normalizeReturnHash(returnHash)
   if (ext.dom?.cancelButton) {
     ext.dom.cancelButton.href = getReturnTarget()
+  }
+
+  if (bookmarkDraft) {
+    editNewBookmark(bookmarkDraft)
+    return
   }
 
   if (bookmarkId === ext.currentBookmarkId) {

@@ -60,6 +60,8 @@ export const defaultOptions = {
   enableSearchEngines: true,
   /** Detect URL-shaped terms and offer direct navigation */
   enableDirectUrl: true,
+  /** Folder name or ID used by the default result that bookmarks the active tab. Set to false or blank to disable. */
+  quickBookmarkCurrentTab: 'Bookmarks bar',
 
   //////////////////////////////////////////
   // DISPLAY OPTIONS                      //

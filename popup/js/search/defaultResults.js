@@ -14,6 +14,20 @@
 import { getBrowserTabs } from '../helper/browserApi.js'
 import { cleanUpUrl } from '../helper/utils.js'
 
+const UNBOOKMARKABLE_URL_PREFIXES = [
+  'about:',
+  'brave:',
+  'chrome:',
+  'chrome-extension:',
+  'data:',
+  'edge:',
+  'file:',
+  'javascript:',
+  'moz-extension:',
+  'opera:',
+  'vivaldi:',
+]
+
 /**
  * Build default result sets when no explicit search term is provided.
  *
@@ -57,6 +71,8 @@ export async function addDefaultEntries() {
         const matchingBookmarks = ext.model.bookmarks.filter((el) => el.url === currentUrl)
         if (matchingBookmarks.length > 0) {
           results.push(...matchingBookmarks)
+        } else if (isQuickBookmarkEnabled() && isBookmarkableUrl(tab.url)) {
+          results.push(createQuickBookmarkEntry(tab))
         }
       }
     } catch (err) {
@@ -69,7 +85,7 @@ export async function addDefaultEntries() {
         .filter((tab) => {
           // Exclude the currently active tab from recent tabs
           const isCurrentTab = activeTab && activeTab.id !== undefined && tab.originalId === activeTab.id
-          return tab?.url && !isCurrentTab && !tab.url.startsWith('chrome://') && !tab.url.startsWith('about:')
+          return tab?.url && !isCurrentTab && isBookmarkableUrl(tab.url)
         })
         .map((el) => ({ ...el }))
         .sort((a, b) => {
@@ -87,4 +103,46 @@ export async function addDefaultEntries() {
 
   ext.model.result = results
   return results
+}
+
+/**
+ * Build a synthetic default result for creating a bookmark from the active tab.
+ *
+ * @param {Object} tab - Active browser tab.
+ * @returns {Object} Search result entry.
+ */
+function createQuickBookmarkEntry(tab) {
+  return {
+    type: 'bookmarkCreate',
+    title: 'Bookmark current page',
+    pageTitle: tab.title || '',
+    originalUrl: tab.url,
+    url: cleanUpUrl(tab.url),
+    favIconUrl: tab.favIconUrl,
+  }
+}
+
+/**
+ * Determine whether the active tab is useful as a bookmark target.
+ *
+ * @param {string} url - Active tab URL.
+ * @returns {boolean} Whether to show the quick-bookmark action.
+ */
+function isBookmarkableUrl(url) {
+  const trimmedUrl = typeof url === 'string' ? url.trim() : ''
+  if (!trimmedUrl) {
+    return false
+  }
+
+  const normalizedUrl = trimmedUrl.toLowerCase()
+  return !UNBOOKMARKABLE_URL_PREFIXES.some((prefix) => normalizedUrl.startsWith(prefix))
+}
+
+/**
+ * Check whether quick bookmark creation is configured.
+ *
+ * @returns {boolean} Whether quick-bookmark default results are enabled.
+ */
+function isQuickBookmarkEnabled() {
+  return typeof ext.opts.quickBookmarkCurrentTab === 'string' && ext.opts.quickBookmarkCurrentTab.trim().length > 0
 }

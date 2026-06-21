@@ -16,6 +16,8 @@ import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch
 
 const STAR_STATE_CYCLE = ['', 'yellow', 'orange', 'red']
 const STAR_BONUS = { yellow: 25, orange: 50, red: 75 }
+const BOOKMARKS_BAR_ALIASES = ['bookmarks bar', 'bookmarks toolbar']
+const BOOKMARKS_BAR_IDS = ['1', 'toolbar_____']
 const STAR_ICONS = {
   '': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245" /></svg>',
   yellow:
@@ -86,8 +88,6 @@ export function cycleFavoriteButton(button) {
  */
 export async function editBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
-  const uniqueTags = getUniqueTags() || {}
-  const tags = Object.keys(uniqueTags).sort()
   const editContainer = document.getElementById('edit-bm')
   const titleInput = document.getElementById('bm-title')
   const urlInput = document.getElementById('bm-url')
@@ -105,45 +105,93 @@ export async function editBookmark(bookmarkId) {
       const bonusScore = bookmark.customBonusScore || 0
       updateFavoriteButton(favoriteButton, getStarState(bonusScore), bonusScore)
     }
-    if (!ext.tagify) {
-      ext.tagify = new Tagify(tagsInput, {
-        whitelist: tags,
-        trim: true,
-        transformTag,
-        skipInvalid: false,
-        editTags: {
-          clicks: 1,
-          keepInvalid: false,
-        },
-        dropdown: {
-          position: 'all',
-          enabled: 0,
-          maxItems: 12,
-          closeOnSelect: false,
-        },
-      })
-    } else {
-      // If tagify was already initialized:
-      // reset current and available tags to new state
-      ext.tagify.removeAllTags()
-      ext.tagify.whitelist = tags
-    }
 
-    const currentTags = bookmark.tags
+    const currentTags = (bookmark.tags || '')
       .split('#')
       .map((el) => el.trim())
       .filter((el) => el)
-    ext.tagify.addTags(currentTags)
+    setupTagEditor(tagsInput, currentTags)
 
     saveButton.dataset.bookmarkId = bookmarkId
     deleteButton.dataset.bookmarkId = bookmarkId
+    deleteButton.style.display = ''
     if (managerLink) {
+      managerLink.style.display = ''
       managerLink.href = `./bookmarkManager.html?bookmark=${encodeURIComponent(bookmarkId)}#bookmarks`
     }
+    ext.currentBookmarkDraft = null
     ext.currentBookmarkId = bookmarkId
   } else {
     console.warn(`Tried to edit bookmark id="${bookmarkId}", but could not find it in searchData.`)
   }
+}
+
+/**
+ * Populate the bookmark editor form for a new bookmark draft.
+ *
+ * @param {{title: string, url: string}} bookmarkDraft - Initial bookmark values.
+ */
+export function editNewBookmark(bookmarkDraft) {
+  const editContainer = document.getElementById('edit-bm')
+  const titleInput = document.getElementById('bm-title')
+  const urlInput = document.getElementById('bm-url')
+  const tagsInput = document.getElementById('bm-tags')
+  const saveButton = document.getElementById('bm-save')
+  const deleteButton = document.getElementById('bm-del')
+  const managerLink = document.getElementById('bm-manager')
+  const favoriteButton = document.getElementById('bm-favorite')
+
+  editContainer.style = ''
+  titleInput.value = bookmarkDraft.title || ''
+  urlInput.value = bookmarkDraft.url || ''
+  setupTagEditor(tagsInput, [])
+  updateFavoriteButton(favoriteButton, '')
+
+  delete saveButton.dataset.bookmarkId
+  delete deleteButton.dataset.bookmarkId
+  deleteButton.style.display = 'none'
+  if (managerLink) {
+    managerLink.style.display = 'none'
+  }
+  ext.currentBookmarkId = null
+  ext.currentBookmarkDraft = bookmarkDraft
+}
+
+/**
+ * Initialize or update the tag autocomplete field.
+ *
+ * @param {HTMLTextAreaElement|HTMLInputElement} tagsInput - Tags input element.
+ * @param {string[]} currentTags - Tags to populate.
+ */
+function setupTagEditor(tagsInput, currentTags) {
+  const uniqueTags = getUniqueTags() || {}
+  const tags = Object.keys(uniqueTags).sort()
+
+  if (!ext.tagify) {
+    ext.tagify = new Tagify(tagsInput, {
+      whitelist: tags,
+      trim: true,
+      transformTag,
+      skipInvalid: false,
+      editTags: {
+        clicks: 1,
+        keepInvalid: false,
+      },
+      dropdown: {
+        position: 'all',
+        enabled: 0,
+        maxItems: 12,
+        closeOnSelect: false,
+      },
+    })
+  } else {
+    // If tagify was already initialized:
+    // reset current and available tags to new state
+    ext.tagify.removeAllTags()
+    ext.tagify.whitelist = tags
+  }
+
+  ext.tagify.addTags(currentTags)
 
   function transformTag(tagData) {
     if (tagData.value.includes('#')) {
@@ -159,30 +207,18 @@ export async function editBookmark(bookmarkId) {
  */
 export function updateBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
-  const titleInput = document.getElementById('bm-title').value.trim()
-  const urlInput = document.getElementById('bm-url').value.trim()
-  const favoriteButton = document.getElementById('bm-favorite')
-  const bonusScore = Number.parseInt(favoriteButton?.dataset.bonusScore || '0', 10) || 0
-  let tagsInput = ''
-  if (ext.tagify.value.length) {
-    tagsInput = `#${ext.tagify.value.map((el) => el.value.trim()).join(' #')}`
-  }
-
-  // Build persisted title: title + bonus + tags
-  let persistedTitle = titleInput
-  if (bonusScore) {
-    persistedTitle += ` +${bonusScore}`
-  }
-  if (tagsInput) {
-    persistedTitle += ` ${tagsInput}`
-  }
+  const formValues = getBookmarkFormValues()
 
   // Update search data model of bookmark
-  bookmark.title = titleInput
-  bookmark.originalUrl = urlInput
-  bookmark.url = cleanUpUrl(urlInput)
-  bookmark.tags = tagsInput
-  bookmark.customBonusScore = bonusScore
+  bookmark.title = formValues.title
+  bookmark.titleLower = formValues.title.toLowerCase().trim()
+  bookmark.originalUrl = formValues.url
+  bookmark.url = cleanUpUrl(formValues.url)
+  bookmark.tags = formValues.tags
+  bookmark.tagsLower = formValues.tags.toLowerCase()
+  bookmark.tagsArray = formValues.tagsArray
+  bookmark.tagsArrayLower = formValues.tagsArray.map((tag) => tag.toLowerCase())
+  bookmark.customBonusScore = formValues.bonusScore
   bookmark.searchStringLower = createSearchStringLower(bookmark.title, bookmark.url, bookmark.tags, bookmark.folder)
   resetFuzzySearchState('bookmarks')
   resetSimpleSearchState('bookmarks')
@@ -190,8 +226,8 @@ export function updateBookmark(bookmarkId) {
 
   if (browserApi.bookmarks) {
     browserApi.bookmarks.update(bookmarkId, {
-      title: persistedTitle,
-      url: urlInput,
+      title: formValues.persistedTitle,
+      url: formValues.url,
     })
   } else {
     console.warn(`No browser bookmarks API found. Bookmark update will not persist.`)
@@ -199,6 +235,231 @@ export function updateBookmark(bookmarkId) {
 
   // Start search again to update the search index and the UI with new bookmark model
   navigateToSearchView()
+}
+
+/**
+ * Create a new browser bookmark from the current form values.
+ *
+ * @returns {Promise<void>}
+ */
+export async function createBookmark() {
+  const formValues = getBookmarkFormValues()
+
+  if (!browserApi.bookmarks?.create) {
+    console.warn(`No browser bookmarks API found. Bookmark create will not persist.`)
+    return
+  }
+
+  const quickBookmarkFolderIds = getQuickBookmarkFolderIds()
+  if (!quickBookmarkFolderIds.length) {
+    return
+  }
+
+  let createdBookmark
+  const createInfo = {
+    title: formValues.persistedTitle,
+    url: formValues.url,
+  }
+
+  for (const parentId of quickBookmarkFolderIds) {
+    try {
+      createdBookmark = await browserApi.bookmarks.create({
+        ...createInfo,
+        parentId,
+      })
+      break
+    } catch (err) {
+      console.warn(`Could not create bookmark in folder "${parentId}".`, err)
+    }
+  }
+
+  if (!createdBookmark) {
+    return
+  }
+
+  if (createdBookmark?.id) {
+    const cleanedUrl = cleanUpUrl(formValues.url)
+    ext.model.bookmarks.push({
+      type: 'bookmark',
+      originalId: createdBookmark.id,
+      parentId: createdBookmark.parentId,
+      index: createdBookmark.index,
+      title: formValues.title,
+      titleLower: formValues.title.toLowerCase().trim(),
+      originalUrl: formValues.url,
+      url: cleanedUrl,
+      dateAdded: createdBookmark.dateAdded,
+      customBonusScore: formValues.bonusScore,
+      tags: formValues.tags,
+      tagsLower: formValues.tags.toLowerCase(),
+      tagsArray: formValues.tagsArray,
+      tagsArrayLower: formValues.tagsArray.map((tag) => tag.toLowerCase()),
+      folder: '',
+      folderLower: '',
+      folderArray: [],
+      folderArrayLower: [],
+      searchStringLower: createSearchStringLower(formValues.title, cleanedUrl, formValues.tags, ''),
+    })
+  }
+
+  resetFuzzySearchState('bookmarks')
+  resetSimpleSearchState('bookmarks')
+  resetUniqueFoldersCache()
+  navigateToSearchView()
+}
+
+/**
+ * Resolve the configured quick-bookmark destination folder IDs.
+ *
+ * @returns {Array<string>} Candidate bookmark folder IDs.
+ */
+function getQuickBookmarkFolderIds() {
+  const folderName = ext.opts.quickBookmarkCurrentTab
+  if (typeof folderName !== 'string' || !folderName.trim()) {
+    console.warn('Quick bookmark current tab is disabled or missing a folder name.')
+    return []
+  }
+
+  const folder = findBookmarkFolder(ext.model.bookmarkTree || [], folderName)
+  if (!folder) {
+    console.warn(`Quick bookmark folder "${folderName}" was not found. Falling back to bookmarks bar root IDs.`)
+    return BOOKMARKS_BAR_IDS
+  }
+
+  return [folder.id]
+}
+
+/**
+ * Find a folder by exact ID first, then case-insensitive title.
+ *
+ * @param {Array<Object>} nodes - Browser bookmark tree nodes.
+ * @param {string} folderRef - Configured folder ID or name.
+ * @returns {Object|null} Matching folder node.
+ */
+function findBookmarkFolder(nodes, folderRef) {
+  const trimmedRef = folderRef.trim()
+  const byId = findBookmarkFolderById(nodes, trimmedRef)
+  if (byId) {
+    return byId
+  }
+
+  const byName = findBookmarkFolderByName(nodes, trimmedRef)
+  if (byName) {
+    return byName
+  }
+
+  if (BOOKMARKS_BAR_ALIASES.includes(trimmedRef.toLowerCase())) {
+    return findBookmarksBarFolder(nodes)
+  }
+
+  return null
+}
+
+/**
+ * Find the first folder in a bookmark tree matching an ID.
+ *
+ * @param {Array<Object>} nodes - Browser bookmark tree nodes.
+ * @param {string} folderId - Configured folder ID.
+ * @returns {Object|null} Matching folder node.
+ */
+function findBookmarkFolderById(nodes, folderId) {
+  for (const node of nodes || []) {
+    if (node?.children && String(node.id) === folderId) {
+      return node
+    }
+
+    if (node?.children) {
+      const childMatch = findBookmarkFolderById(node.children, folderId)
+      if (childMatch) {
+        return childMatch
+      }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Find the first folder in a bookmark tree matching a title.
+ *
+ * @param {Array<Object>} nodes - Browser bookmark tree nodes.
+ * @param {string} folderName - Configured folder name.
+ * @returns {Object|null} Matching folder node.
+ */
+function findBookmarkFolderByName(nodes, folderName) {
+  const needle = folderName.toLowerCase()
+
+  for (const node of nodes || []) {
+    if (node?.children && typeof node.title === 'string' && node.title.toLowerCase() === needle) {
+      return node
+    }
+
+    if (node?.children) {
+      const childMatch = findBookmarkFolderByName(node.children, folderName)
+      if (childMatch) {
+        return childMatch
+      }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Find a browser's bookmarks toolbar folder by common root IDs or titles.
+ *
+ * @param {Array<Object>} nodes - Browser bookmark tree nodes.
+ * @returns {Object|null} Matching toolbar folder node.
+ */
+function findBookmarksBarFolder(nodes) {
+  for (const node of nodes || []) {
+    if (
+      node?.children &&
+      (BOOKMARKS_BAR_IDS.includes(String(node.id)) || BOOKMARKS_BAR_ALIASES.includes(String(node.title).toLowerCase()))
+    ) {
+      return node
+    }
+
+    if (node?.children) {
+      const childMatch = findBookmarksBarFolder(node.children)
+      if (childMatch) {
+        return childMatch
+      }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Read the bookmark editor form and build persisted bookmark fields.
+ *
+ * @returns {{title: string, url: string, tags: string, tagsArray: string[], bonusScore: number, persistedTitle: string}}
+ */
+function getBookmarkFormValues() {
+  const title = document.getElementById('bm-title').value.trim()
+  const url = document.getElementById('bm-url').value.trim()
+  const favoriteButton = document.getElementById('bm-favorite')
+  const bonusScore = Number.parseInt(favoriteButton?.dataset.bonusScore || '0', 10) || 0
+  const tagsArray = ext.tagify.value.map((el) => el.value.trim()).filter((tag) => tag)
+  const tags = tagsArray.length ? `#${tagsArray.join(' #')}` : ''
+
+  let persistedTitle = title
+  if (bonusScore) {
+    persistedTitle += ` +${bonusScore}`
+  }
+  if (tags) {
+    persistedTitle += ` ${tags}`
+  }
+
+  return {
+    title,
+    url,
+    tags,
+    tagsArray,
+    bonusScore,
+    persistedTitle,
+  }
 }
 
 /**

@@ -87,27 +87,7 @@ export function openResultItem(event) {
     }
   }
 
-  // Determine which result to use based on event context
-  // For mouse clicks on specific items, use the clicked item's index
-  // For keyboard navigation (Enter key), use the currently selected item
-  let selectedResult = null
-  if (event?.target && typeof event.target.closest === 'function') {
-    // Try to find the list item that was clicked
-    const listItem = event.target.closest('li[x-index]')
-    if (listItem) {
-      const clickedIndex = parseInt(listItem.getAttribute('x-index'), 10)
-      const hasValidIndex =
-        Number.isInteger(clickedIndex) && clickedIndex >= 0 && clickedIndex < ext.model.result.length
-      if (hasValidIndex) {
-        selectedResult = ext.model.result[clickedIndex]
-      }
-    }
-  }
-
-  // Fall back to currently selected item if we couldn't determine clicked item
-  if (!selectedResult) {
-    selectedResult = ext.model.result[ext.model.currentItem]
-  }
+  const selectedResult = getSelectedResult(event)
 
   // Final fallback to DOM attributes if model state is unavailable
   const url = selectedResult?.originalUrl ?? resultEntry?.getAttribute('x-open-url')
@@ -116,6 +96,11 @@ export function openResultItem(event) {
   // Handle right-click to copy URL to clipboard
   if (event.button === 2) {
     navigator.clipboard.writeText(url)
+    return
+  }
+
+  if (selectedResult?.type === 'bookmarkCreate') {
+    window.location = buildNewBookmarkEditorUrl(selectedResult)
     return
   }
 
@@ -197,6 +182,73 @@ export function openResultItem(event) {
     // Fallback for non-extension environments
     window.open(url, '_newtab')
   }
+}
+
+/**
+ * Open the bookmark editor for the selected result.
+ * Existing bookmarks are edited directly; tabs, history, and URL results open as new bookmark drafts.
+ */
+export function editSelectedResultAsBookmark() {
+  const selectedResult = getSelectedResult()
+  if (!selectedResult) {
+    return
+  }
+
+  let editorUrl
+  if (selectedResult.type === 'bookmark') {
+    editorUrl = buildEditBookmarkEditorUrl(selectedResult)
+  } else {
+    editorUrl = buildNewBookmarkEditorUrl(selectedResult)
+  }
+
+  window.location = editorUrl
+  return editorUrl
+}
+
+/**
+ * Build the editor URL for creating a bookmark from a synthetic result.
+ *
+ * @param {Object} result - Synthetic bookmark-create result.
+ * @returns {string} Relative editor URL.
+ */
+export function buildNewBookmarkEditorUrl(result) {
+  const params = new URLSearchParams()
+  params.set('url', result.originalUrl || '')
+  params.set('title', result.pageTitle || result.title || result.originalUrl || '')
+  params.set('return', getSearchReturnHash())
+  return `./editBookmark.html#new?${params.toString()}`
+}
+
+/**
+ * Build the editor URL for an existing bookmark result.
+ *
+ * @param {Object} result - Existing bookmark result.
+ * @returns {string} Relative editor URL.
+ */
+export function buildEditBookmarkEditorUrl(result) {
+  const params = new URLSearchParams()
+  params.set('return', getSearchReturnHash())
+  return `./editBookmark.html#bookmark/${encodeURIComponent(result.originalId)}?${params.toString()}`
+}
+
+function getSearchReturnHash() {
+  return `#search/${ext.model.searchTerm || ''}`
+}
+
+function getSelectedResult(event) {
+  if (event?.target && typeof event.target.closest === 'function') {
+    const listItem = event.target.closest('li[x-index]')
+    if (listItem) {
+      const clickedIndex = parseInt(listItem.getAttribute('x-index'), 10)
+      const hasValidIndex =
+        Number.isInteger(clickedIndex) && clickedIndex >= 0 && clickedIndex < ext.model.result.length
+      if (hasValidIndex) {
+        return ext.model.result[clickedIndex]
+      }
+    }
+  }
+
+  return ext.model.result[ext.model.currentItem]
 }
 
 /**

@@ -33,10 +33,24 @@ function setupExt(bookmarks = [], overrides = {}) {
   global.ext = {
     model: {
       bookmarks,
+      bookmarkTree: [
+        {
+          id: '0',
+          title: '',
+          children: [
+            {
+              id: 'folder-bar',
+              title: 'Bookmarks bar',
+              children: [],
+            },
+          ],
+        },
+      ],
       ...(modelOverrides || {}),
     },
     opts: {
       debug: false,
+      quickBookmarkCurrentTab: 'Bookmarks bar',
       ...(optsOverrides || {}),
     },
     dom: {
@@ -60,6 +74,14 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
   )
   const browserApi = {
     bookmarks: {
+      create: jest.fn(() =>
+        Promise.resolve({
+          id: 'created-1',
+          parentId: '1',
+          index: 0,
+          dateAdded: 1234,
+        }),
+      ),
       update: jest.fn(),
       remove: jest.fn(),
     },
@@ -238,6 +260,54 @@ describe('editBookmarkView', () => {
     )
   })
 
+  it('handles existing bookmarks without tags', async () => {
+    setupDom()
+    setupExt([
+      {
+        originalId: BOOKMARK_ID,
+        title: 'Original Title',
+        originalUrl: 'http://example.com',
+        folder: '~Work',
+      },
+    ])
+    const { module, helpers } = await loadEditBookmarkView()
+
+    await module.editBookmark(BOOKMARK_ID)
+
+    expect(helpers.tagifyInstances[0].addTags).toHaveBeenCalledWith([])
+  })
+
+  it('populates the edit form for a new bookmark draft', async () => {
+    setupDom()
+    setupExt([], { returnHash: '#search/' })
+    const { module, helpers } = await loadEditBookmarkView({
+      uniqueTags: {
+        alpha: [{ id: 1 }],
+      },
+    })
+
+    module.editNewBookmark({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+
+    expect(document.getElementById('edit-bm').getAttribute('style')).toBe('')
+    expect(document.getElementById('bm-title').value).toBe('New Page')
+    expect(document.getElementById('bm-url').value).toBe('https://new.test/page')
+    expect(document.getElementById('bm-save').dataset.bookmarkId).toBeUndefined()
+    expect(document.getElementById('bm-del').dataset.bookmarkId).toBeUndefined()
+    expect(document.getElementById('bm-del').style.display).toBe('none')
+    expect(document.getElementById('bm-manager').style.display).toBe('none')
+    expect(global.ext.currentBookmarkId).toBeNull()
+    expect(global.ext.currentBookmarkDraft).toEqual({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+    expect(helpers.tagifyInstances).toHaveLength(1)
+    expect(helpers.tagifyInstances[0].options.whitelist).toEqual(['alpha'])
+    expect(helpers.tagifyInstances[0].addTags).toHaveBeenCalledWith([])
+  })
+
   it('updates bookmark metadata, persists via browser API, and resets search caches', async () => {
     setupDom()
     const bookmark = {
@@ -264,9 +334,13 @@ describe('editBookmarkView', () => {
     const expectedSearchStringLower = `search:Updated Title|${expectedCleanUrl}|#alpha #beta|~Work`.toLowerCase()
 
     expect(bookmark.title).toBe('Updated Title')
+    expect(bookmark.titleLower).toBe('updated title')
     expect(bookmark.originalUrl).toBe('http://updated.com')
     expect(bookmark.url).toBe(expectedCleanUrl)
     expect(bookmark.tags).toBe('#alpha #beta')
+    expect(bookmark.tagsLower).toBe('#alpha #beta')
+    expect(bookmark.tagsArray).toEqual(['alpha', 'beta'])
+    expect(bookmark.tagsArrayLower).toEqual(['alpha', 'beta'])
     expect(bookmark.searchStringLower).toBe(expectedSearchStringLower)
 
     expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')
@@ -373,6 +447,222 @@ describe('editBookmarkView', () => {
       url: 'http://updated.com',
     })
     expect(bookmark.customBonusScore).toBe(60)
+  })
+
+  it('creates a bookmark from the current form values', async () => {
+    setupDom()
+    setupExt([], {
+      opts: {
+        quickBookmarkCurrentTab: 'BOOKMARKS BAR',
+      },
+      returnHash: '#search/',
+    })
+    const { module, mocks, helpers } = await loadEditBookmarkView()
+
+    module.editNewBookmark({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+    global.ext.tagify.value = [{ value: 'alpha' }, { value: 'beta' }]
+    module.updateFavoriteButton(document.getElementById('bm-favorite'), 'orange')
+
+    await module.createBookmark()
+
+    expect(mocks.browserApi.bookmarks.create).toHaveBeenCalledWith({
+      parentId: 'folder-bar',
+      title: 'New Page +50 #alpha #beta',
+      url: 'https://new.test/page',
+    })
+    expect(global.ext.model.bookmarks).toEqual([
+      expect.objectContaining({
+        type: 'bookmark',
+        originalId: 'created-1',
+        title: 'New Page',
+        originalUrl: 'https://new.test/page',
+        url: helpers.cleanUpUrl('https://new.test/page'),
+        customBonusScore: 50,
+        tags: '#alpha #beta',
+        tagsArray: ['alpha', 'beta'],
+      }),
+    ])
+    expect(mocks.resetFuzzySearchState).toHaveBeenCalledWith('bookmarks')
+    expect(mocks.resetSimpleSearchState).toHaveBeenCalledWith('bookmarks')
+    expect(mocks.resetUniqueFoldersCache).toHaveBeenCalledTimes(1)
+  })
+
+  it('resolves the quick bookmark destination by folder id before folder name', async () => {
+    setupDom()
+    setupExt([], {
+      model: {
+        bookmarkTree: [
+          {
+            id: '0',
+            title: '',
+            children: [
+              { id: 'target-folder', title: 'Target', children: [] },
+              { id: 'other-folder', title: 'target-folder', children: [] },
+            ],
+          },
+        ],
+      },
+      opts: {
+        quickBookmarkCurrentTab: 'target-folder',
+      },
+      returnHash: '#search/',
+    })
+    const { module, mocks } = await loadEditBookmarkView()
+
+    module.editNewBookmark({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+
+    await module.createBookmark()
+
+    expect(mocks.browserApi.bookmarks.create).toHaveBeenCalledWith({
+      parentId: 'target-folder',
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+  })
+
+  it('falls back to known bookmarks bar root ids when the default title is localized', async () => {
+    setupDom()
+    setupExt([], {
+      model: {
+        bookmarkTree: [
+          {
+            id: '0',
+            title: '',
+            children: [
+              { id: 'toolbar_____', title: 'Lesezeichen-Symbolleiste', children: [] },
+              { id: 'unfiled_____', title: 'Other Bookmarks', children: [] },
+            ],
+          },
+        ],
+      },
+      opts: {
+        quickBookmarkCurrentTab: 'Bookmarks bar',
+      },
+      returnHash: '#search/',
+    })
+    const { module, mocks } = await loadEditBookmarkView()
+
+    module.editNewBookmark({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+
+    await module.createBookmark()
+
+    expect(mocks.browserApi.bookmarks.create).toHaveBeenCalledWith({
+      parentId: 'toolbar_____',
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+  })
+
+  it('falls back to the Chrome bookmarks bar root id when the configured quick bookmark folder is missing', async () => {
+    setupDom()
+    setupExt([], {
+      model: {
+        bookmarkTree: [{ id: '0', title: '', children: [] }],
+      },
+      opts: {
+        quickBookmarkCurrentTab: 'Missing Folder',
+      },
+      returnHash: '#search/',
+    })
+    const { module, mocks } = await loadEditBookmarkView()
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    module.editNewBookmark({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+
+    await module.createBookmark()
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Quick bookmark folder "Missing Folder" was not found. Falling back to bookmarks bar root IDs.',
+    )
+    expect(mocks.browserApi.bookmarks.create).toHaveBeenCalledWith({
+      parentId: '1',
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+    expect(global.ext.model.bookmarks).toHaveLength(1)
+
+    warnSpy.mockRestore()
+  })
+
+  it('tries the Firefox bookmarks toolbar root id when the Chrome root id fails', async () => {
+    setupDom()
+    setupExt([], {
+      model: {
+        bookmarkTree: [{ id: '0', title: '', children: [] }],
+      },
+      opts: {
+        quickBookmarkCurrentTab: 'Missing Folder',
+      },
+      returnHash: '#search/',
+    })
+    const { module, mocks } = await loadEditBookmarkView()
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    mocks.browserApi.bookmarks.create.mockRejectedValueOnce(new Error('invalid parent')).mockResolvedValueOnce({
+      id: 'created-2',
+      parentId: 'toolbar_____',
+      index: 0,
+      dateAdded: 1234,
+    })
+
+    module.editNewBookmark({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+
+    await module.createBookmark()
+
+    expect(mocks.browserApi.bookmarks.create).toHaveBeenNthCalledWith(1, {
+      parentId: '1',
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+    expect(mocks.browserApi.bookmarks.create).toHaveBeenNthCalledWith(2, {
+      parentId: 'toolbar_____',
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+    expect(warnSpy).toHaveBeenCalledWith('Could not create bookmark in folder "1".', expect.any(Error))
+    expect(global.ext.model.bookmarks[0]).toMatchObject({
+      originalId: 'created-2',
+      parentId: 'toolbar_____',
+    })
+
+    warnSpy.mockRestore()
+  })
+
+  it('warns and stays in the editor when bookmark creation fails', async () => {
+    setupDom()
+    setupExt([], { returnHash: '#search/' })
+    const { module, mocks } = await loadEditBookmarkView()
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    module.editNewBookmark({
+      title: 'New Page',
+      url: 'https://new.test/page',
+    })
+    mocks.browserApi.bookmarks.create.mockRejectedValue(new Error('create failed'))
+
+    await module.createBookmark()
+
+    expect(warnSpy).toHaveBeenCalledWith('Could not create bookmark in folder "folder-bar".', expect.any(Error))
+    expect(global.ext.model.bookmarks).toEqual([])
+    expect(mocks.resetFuzzySearchState).not.toHaveBeenCalled()
+    expect(mocks.resetSimpleSearchState).not.toHaveBeenCalled()
+    expect(mocks.resetUniqueFoldersCache).not.toHaveBeenCalled()
+
+    warnSpy.mockRestore()
   })
 
   it('handles missing browser API and empty tag selection during update', async () => {

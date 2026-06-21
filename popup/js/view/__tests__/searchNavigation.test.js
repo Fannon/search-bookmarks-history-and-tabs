@@ -433,6 +433,50 @@ describe('searchNavigation navigationKeyListener', () => {
     expect(ext.opts.searchStrategy).toBe('precise')
   })
 
+  it('opens selected bookmark editor with F2', async () => {
+    const { module, viewModule } = await setupSearchNavigation()
+    await viewModule.renderSearchResults()
+    const preventDefault = jest.fn()
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    const editorUrl = await module.navigationKeyListener({
+      key: 'F2',
+      preventDefault,
+    })
+
+    expect(preventDefault).toHaveBeenCalledTimes(1)
+    expect(editorUrl).toBe('./editBookmark.html#bookmark/bm-1?return=%23search%2Fquery')
+    errorSpy.mockRestore()
+  })
+
+  it('opens selected result in background with Ctrl+Enter', async () => {
+    const { module, viewModule } = await setupSearchNavigation()
+    await viewModule.renderSearchResults()
+
+    const event = {
+      key: 'Enter',
+      ctrlKey: true,
+      shiftKey: false,
+      altKey: false,
+      preventDefault: jest.fn(),
+      stopPropagation: jest.fn(),
+      button: 0,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+    }
+    window.location.hash = '#search/query'
+
+    await module.navigationKeyListener(event)
+
+    expect(ext.browserApi.tabs.create).toHaveBeenCalledWith({
+      active: false,
+      url: 'https://bookmark.test',
+    })
+  })
+
   it('inserts two spaces when TAB is pressed in search input', async () => {
     const { module, elements } = await setupSearchNavigation()
     const preventDefault = jest.fn()

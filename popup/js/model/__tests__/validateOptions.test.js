@@ -29,8 +29,25 @@ describe('validateOptions', () => {
   test('accepts options with default values', async () => {
     const result = await validateOptions({
       enableDirectUrl: false,
+      quickBookmarkCurrentTab: 'Bookmarks bar',
       searchStrategy: 'precise',
       searchMaxResults: 24,
+    })
+
+    expect(result).toEqual({ valid: true, errors: [] })
+  })
+
+  test('accepts disabling quick bookmark current tab with false', async () => {
+    const result = await validateOptions({
+      quickBookmarkCurrentTab: false,
+    })
+
+    expect(result).toEqual({ valid: true, errors: [] })
+  })
+
+  test('accepts an empty quick bookmark current tab folder value', async () => {
+    const result = await validateOptions({
+      quickBookmarkCurrentTab: '',
     })
 
     expect(result).toEqual({ valid: true, errors: [] })
@@ -121,6 +138,15 @@ describe('validateOptions', () => {
     expect(result.errors).toContain('"enableDirectUrl" must be boolean')
     expect(result.errors).toContain('"searchMaxResults" must be integer')
     expect(result.errors).toContain('"bookmarksIgnoreFolderList" must be array')
+  })
+
+  test('rejects invalid quick bookmark current tab values', async () => {
+    const result = await validateOptions({
+      quickBookmarkCurrentTab: true,
+    })
+
+    expect(result.valid).toBe(false)
+    expect(result.errors[0]).toContain('"quickBookmarkCurrentTab" must match one of the allowed formats')
   })
 
   test('rejects unknown options', async () => {
