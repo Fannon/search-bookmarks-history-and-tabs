@@ -193,6 +193,33 @@ describe('editOptionsView', () => {
     expect(document.getElementById('config').value).toBe('normalized: dark')
   })
 
+  it('saveOptions treats empty YAML as empty options when js-yaml throws on empty input', async () => {
+    setupDom()
+    const loadImpl = jest.fn((value) => {
+      if (value === '') {
+        throw new Error('expected a document in the stream')
+      }
+      return { parsed: value }
+    })
+    const dumpImpl = jest.fn(() => '{}')
+    const { module, mocks } = await loadEditOptionsView({
+      userOptions: {},
+      dumpImpl,
+      loadImpl,
+    })
+
+    await module.initOptions()
+    document.getElementById('config').value = ''
+
+    document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
+    await Promise.resolve()
+
+    expect(mocks.load).not.toHaveBeenCalled()
+    expect(mocks.validateOptions).toHaveBeenCalledWith({})
+    expect(mocks.setUserOptions).toHaveBeenCalledWith({})
+    expect(document.getElementById('error-message').style.display).toBe('none')
+  })
+
   it('saveOptions displays an error message when YAML parsing fails', async () => {
     setupDom()
     const error = new Error('bad input')

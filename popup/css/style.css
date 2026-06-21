@@ -131,6 +131,7 @@ code {
   font-weight: 500;
   text-align: center;
   background: var(--input-bg);
+  border: none;
   border-bottom: 1px solid var(--input-border);
   cursor: pointer;
 }
@@ -367,7 +368,7 @@ li.direct .favicon-col {
 .controls .button {
   margin: 0 4px;
 }
-.controls a:hover {
+.controls .button:hover {
   filter: brightness(110%);
 }
 

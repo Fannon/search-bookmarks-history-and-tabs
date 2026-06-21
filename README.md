@@ -106,6 +106,7 @@ Click a screenshot to open it full size:
 - **Open selected results**: By default, the extension will open the selected result in a new active tab, or switch to an existing tab with the target URL.
   - Hold `Shift` or `Alt` to open the result in the current tab.
   - Hold `Ctrl` to open the result without closing the popup.
+  - Press `Ctrl+E` to edit the selected bookmark, or create a new bookmark from the selected URL.
   - Right-click to copy URL to clipboard.
   - Prefer opening in the current tab? Enable the `openInCurrentTab` option to make that the default; `Shift`/`Alt` then opens in a new tab instead.
 - **Search Modes**: In case you want to be more selective -> use a search mode:

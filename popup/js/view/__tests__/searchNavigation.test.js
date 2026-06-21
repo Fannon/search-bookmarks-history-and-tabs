@@ -433,6 +433,23 @@ describe('searchNavigation navigationKeyListener', () => {
     expect(ext.opts.searchStrategy).toBe('precise')
   })
 
+  it('opens selected bookmark editor with Ctrl+E', async () => {
+    const { module, viewModule } = await setupSearchNavigation()
+    await viewModule.renderSearchResults()
+    const preventDefault = jest.fn()
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    const editorUrl = await module.navigationKeyListener({
+      key: 'e',
+      ctrlKey: true,
+      preventDefault,
+    })
+
+    expect(preventDefault).toHaveBeenCalledTimes(1)
+    expect(editorUrl).toBe('./editBookmark.html#bookmark/bm-1?return=%23search%2Fquery')
+    errorSpy.mockRestore()
+  })
+
   it('inserts two spaces when TAB is pressed in search input', async () => {
     const { module, elements } = await setupSearchNavigation()
     const preventDefault = jest.fn()

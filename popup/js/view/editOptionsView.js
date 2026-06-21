@@ -434,7 +434,7 @@ function hideErrors() {
 function removeUnknownOptions() {
   const userOptionsString = document.getElementById('config').value
   try {
-    const userOptions = window.jsyaml.load(userOptionsString)
+    const userOptions = parseYamlValue(userOptionsString)
     if (!userOptions || typeof userOptions !== 'object') return
 
     const schemaProperties = optionsSchema.properties || {}
@@ -472,7 +472,7 @@ async function saveOptions() {
   const _errorMessageEl = document.getElementById('error-message')
 
   try {
-    const userOptions = window.jsyaml.load(userOptionsString)
+    const userOptions = parseYamlValue(userOptionsString)
 
     // Validate options against schema before saving
     const validation = await validateOptions(userOptions || {})
@@ -494,7 +494,7 @@ async function saveOptions() {
       }
     }
 
-    await setUserOptions(userOptions)
+    await setUserOptions(userOptions || {})
 
     // Clear any previous error messages
     hideErrors()
@@ -619,7 +619,7 @@ function getOptionRowValue(row) {
   }
 
   if (type === 'array' || type === 'object') {
-    return window.jsyaml.load(input.value) ?? (type === 'array' ? [] : {})
+    return parseYamlValue(input.value) ?? (type === 'array' ? [] : {})
   }
 
   return input.value
@@ -720,12 +720,19 @@ function getOptionSchema(key) {
 
 function parseConfigValue() {
   const userOptionsString = document.getElementById('config').value
-  const parsed = window.jsyaml.load(userOptionsString)
+  const parsed = parseYamlValue(userOptionsString)
   if (parsed === null || parsed === undefined) return {}
   if (typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('User options must be a valid YAML / JSON object')
   }
   return parsed
+}
+
+function parseYamlValue(value) {
+  if (!value || value.trim() === '') {
+    return undefined
+  }
+  return window.jsyaml.load(value)
 }
 
 function setConfigYaml(options = {}) {

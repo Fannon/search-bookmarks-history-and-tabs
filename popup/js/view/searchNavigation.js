@@ -8,7 +8,7 @@
  * - Coordinate with search result rendering to maintain proper selection state.
  */
 
-import { openResultItem, toggleSearchApproach } from './searchEvents.js'
+import { editSelectedResultAsBookmark, openResultItem, toggleSearchApproach } from './searchEvents.js'
 
 // Some browsers report IME conversion keys as legacy keyCode/which 229 ("Process").
 // Treat that as composing so Enter/arrow keys used to confirm or navigate candidates
@@ -37,6 +37,12 @@ export async function navigationKeyListener(event) {
     event.preventDefault()
     await toggleSearchApproach()
     return
+  }
+
+  // Edit the selected bookmark, or create a bookmark draft from the selected URL.
+  if (event.ctrlKey && (event.key === 'e' || event.key === 'E')) {
+    event.preventDefault()
+    return editSelectedResultAsBookmark()
   }
 
   // Handle Tab key to insert two spaces for hybrid search separator

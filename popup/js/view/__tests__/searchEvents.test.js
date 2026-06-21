@@ -171,6 +171,43 @@ describe('searchEvents openResultItem', () => {
     )
   })
 
+  it('builds the bookmark editor URL for existing bookmark results', async () => {
+    const { module } = await setupSearchEvents()
+    ext.model.searchTerm = 'docs query'
+
+    const url = module.buildEditBookmarkEditorUrl({
+      type: 'bookmark',
+      originalId: 'folder/bookmark 1',
+    })
+
+    expect(url).toBe('./editBookmark.html#bookmark/folder%2Fbookmark%201?return=%23search%2Fdocs+query')
+  })
+
+  it('opens the bookmark editor for the selected bookmark', async () => {
+    const { module, viewModule } = await setupSearchEvents()
+    await viewModule.renderSearchResults()
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    const editorUrl = module.editSelectedResultAsBookmark()
+
+    expect(editorUrl).toBe('./editBookmark.html#bookmark/bm-1?return=%23search%2Fquery')
+    errorSpy.mockRestore()
+  })
+
+  it('opens a new bookmark draft for the selected tab', async () => {
+    const { module, viewModule } = await setupSearchEvents()
+    await viewModule.renderSearchResults()
+    ext.model.currentItem = 1
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    const editorUrl = module.editSelectedResultAsBookmark()
+
+    expect(editorUrl).toBe(
+      './editBookmark.html#new?url=https%3A%2F%2Ftab.test&title=Tab+Title&return=%23search%2Fquery',
+    )
+    errorSpy.mockRestore()
+  })
+
   it('copies URL to clipboard on right click', async () => {
     const { module, viewModule } = await setupSearchEvents()
     await viewModule.renderSearchResults()
