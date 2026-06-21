@@ -59,6 +59,16 @@ describe('addDefaultEntries', () => {
       ])
       expect(ext.model.result).toBe(results)
     })
+
+    test('clones history entries so downstream scoring cannot mutate source data', async () => {
+      ext.model.searchMode = 'history'
+      ext.model.history = [{ id: 1, title: 'History 1', url: 'https://one.test' }]
+
+      const results = await addDefaultEntries()
+
+      expect(results[0]).toEqual(ext.model.history[0])
+      expect(results[0]).not.toBe(ext.model.history[0])
+    })
   })
 
   describe('tabs mode', () => {
@@ -94,6 +104,16 @@ describe('addDefaultEntries', () => {
         { id: 2, title: 'Bookmark 2' },
       ])
     })
+
+    test('clones bookmark entries so downstream scoring cannot mutate source data', async () => {
+      ext.model.searchMode = 'bookmarks'
+      ext.model.bookmarks = [{ id: 1, title: 'Bookmark 1' }]
+
+      const results = await addDefaultEntries()
+
+      expect(results[0]).toEqual(ext.model.bookmarks[0])
+      expect(results[0]).not.toBe(ext.model.bookmarks[0])
+    })
   })
 
   describe('all mode (default)', () => {
@@ -108,6 +128,7 @@ describe('addDefaultEntries', () => {
       const results = await addDefaultEntries()
 
       expect(results).toEqual([expect.objectContaining({ id: 1, title: 'Example' })])
+      expect(results[0]).not.toBe(ext.model.bookmarks[0])
     })
 
     test('adds quick bookmark action first for an unbookmarked active tab', async () => {
