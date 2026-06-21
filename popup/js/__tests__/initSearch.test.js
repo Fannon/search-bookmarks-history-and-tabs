@@ -103,6 +103,14 @@ const mockDependencies = async (overrides = {}) => {
   return config
 }
 
+const createDeferred = () => {
+  let resolve
+  const promise = new Promise((promiseResolve) => {
+    resolve = promiseResolve
+  })
+  return { promise, resolve }
+}
+
 describe('initSearch entry point', () => {
   let moduleUnderTest
 
@@ -134,6 +142,83 @@ describe('initSearch entry point', () => {
     expect(module.ext.searchCache instanceof Map).toBe(true)
     expect(mocks.addDefaultEntries).toHaveBeenCalled()
     expect(mocks.renderSearchResults).toHaveBeenCalled()
+    expect(document.getElementById('results-load')).toBeNull()
+  })
+
+  test('initExtension keeps loading indicator until default route rendering completes', async () => {
+    const defaultEntries = createDeferred()
+    const mocks = await mockDependencies({
+      addDefaultEntries: jest.fn(() => defaultEntries.promise),
+    })
+
+    const module = await import('../initSearch.js')
+    moduleUnderTest = module
+    await flushPromises()
+
+    expect(mocks.addDefaultEntries).toHaveBeenCalled()
+    expect(mocks.renderSearchResults).not.toHaveBeenCalled()
+    expect(document.getElementById('results-load')).not.toBeNull()
+
+    defaultEntries.resolve([{ originalId: 'default' }])
+    await flushPromises()
+
+    expect(mocks.renderSearchResults).toHaveBeenCalled()
+    expect(document.getElementById('results-load')).toBeNull()
+  })
+
+  test('initExtension keeps loading indicator until hash-driven search completes', async () => {
+    const search = createDeferred()
+    const mocks = await mockDependencies({
+      search: jest.fn(() => search.promise),
+    })
+    window.location.hash = '#search/test'
+
+    const module = await import('../initSearch.js')
+    moduleUnderTest = module
+    await flushPromises()
+
+    expect(mocks.search).toHaveBeenCalledWith({ bypassInitializedGuard: true })
+    expect(document.getElementById('results-load')).not.toBeNull()
+
+    search.resolve()
+    await flushPromises()
+
+    expect(document.getElementById('results-load')).toBeNull()
+  })
+
+  test('initExtension surfaces async hashRouter failures through the initialization catch', async () => {
+    const routeError = new Error('Default entries failed')
+    const mocks = await mockDependencies()
+
+    const module = await import('../initSearch.js')
+    moduleUnderTest = module
+    await flushPromises()
+
+    setupDom()
+    mocks.printError.mockClear()
+    mocks.addDefaultEntries.mockRejectedValueOnce(routeError)
+    module.ext.initialized = false
+
+    await module.initExtension().catch((err) => {
+      mocks.printError(err, 'Could not initialize Extension')
+    })
+
+    expect(mocks.printError).toHaveBeenCalledWith(routeError, 'Could not initialize Extension')
+    expect(module.ext.initialized).toBe(false)
+    expect(document.getElementById('results-load')).toBeNull()
+  })
+
+  test('initExtension removes loading indicator when search data loading fails', async () => {
+    const dataError = new Error('Search data failed')
+    const mocks = await mockDependencies({
+      getSearchData: jest.fn(() => Promise.reject(dataError)),
+    })
+
+    const module = await import('../initSearch.js')
+    moduleUnderTest = module
+    await flushPromises()
+
+    expect(mocks.printError).toHaveBeenCalledWith(dataError, 'Could not initialize Extension')
     expect(document.getElementById('results-load')).toBeNull()
   })
 
