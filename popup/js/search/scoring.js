@@ -16,7 +16,7 @@ const NUMERIC_TERM_REGEX = /^\d+$/
  * @returns {Array} Results with calculated scores
  */
 export function calculateFinalScore(results, searchTerm) {
-  const hasSearchTerm = Boolean(ext.model.searchTerm)
+  const hasSearchTerm = Boolean(searchTerm)
 
   // searchTerm is already lowercased from normalizeSearchTerm() in common.js
   const normalizedSearchTerm = hasSearchTerm ? searchTerm.trim() : ''
