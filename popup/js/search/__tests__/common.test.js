@@ -295,6 +295,25 @@ describe('search', () => {
     expect(mockRenderSearchResults).toHaveBeenCalledWith()
   })
 
+  test('does not mutate source bookmarks when scoring mode-prefix default entries', async () => {
+    ext.dom.searchInput.value = 'b '
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+    ext.model.bookmarks = createBookmarksTestData([
+      {
+        id: 1,
+        title: 'Default bookmark',
+        url: 'https://bookmark.test',
+      },
+    ])
+
+    await search({ key: 'b' })
+
+    expect(ext.model.searchMode).toBe('bookmarks')
+    expect(ext.model.result[0].score).toBeDefined()
+    expect(ext.model.bookmarks[0].score).toBeUndefined()
+  })
+
   test('performs taxonomy search when tag prefix detected', async () => {
     ext.dom.searchInput.value = '#TagSearch'
     ext.model.bookmarks = createBookmarksTestData([
