@@ -681,7 +681,7 @@ describe('editOptionsView', () => {
     expect(mocks.setUserOptions).toHaveBeenCalledWith({ openInCurrentTab: true })
   })
 
-  it('edits quickBookmarkCurrentTab as a string and saves false when cleared to disable it', async () => {
+  it('edits quickBookmarkCurrentTab as a string and preserves an empty value', async () => {
     setupOptionsFormDom()
     setupOptionsFilterEl()
     const yaml = createJsonYamlMocks()
@@ -706,13 +706,13 @@ describe('editOptionsView', () => {
 
     const dumpedValues = yaml.dump.mock.calls.map((c) => c[0])
     const lastDumped = dumpedValues[dumpedValues.length - 1]
-    expect(lastDumped).toHaveProperty('quickBookmarkCurrentTab', false)
+    expect(lastDumped).toHaveProperty('quickBookmarkCurrentTab', '')
 
     document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
     await Promise.resolve()
 
-    expect(mocks.validateOptions).toHaveBeenCalledWith({ quickBookmarkCurrentTab: false })
-    expect(mocks.setUserOptions).toHaveBeenCalledWith({ quickBookmarkCurrentTab: false })
+    expect(mocks.validateOptions).toHaveBeenCalledWith({ quickBookmarkCurrentTab: '' })
+    expect(mocks.setUserOptions).toHaveBeenCalledWith({ quickBookmarkCurrentTab: '' })
   })
 
   it('shows disabled quickBookmarkCurrentTab values as an empty text field', async () => {

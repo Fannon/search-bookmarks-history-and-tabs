@@ -45,6 +45,14 @@ describe('validateOptions', () => {
     expect(result).toEqual({ valid: true, errors: [] })
   })
 
+  test('accepts an empty quick bookmark current tab folder value', async () => {
+    const result = await validateOptions({
+      quickBookmarkCurrentTab: '',
+    })
+
+    expect(result).toEqual({ valid: true, errors: [] })
+  })
+
   test('rejects values outside numeric bounds', async () => {
     const result = await validateOptions({
       searchMaxResults: 0,

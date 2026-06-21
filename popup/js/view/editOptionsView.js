@@ -622,10 +622,6 @@ function getOptionRowValue(row) {
     return parseYamlValue(input.value) ?? (type === 'array' ? [] : {})
   }
 
-  if (row.dataset.optionKey === 'quickBookmarkCurrentTab' && input.value === '') {
-    return false
-  }
-
   return input.value
 }
 
