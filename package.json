@@ -1,6 +1,6 @@
 {
   "name": "search-bookmarks-history-and-tabs",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "private": true,
   "description": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.",
   "type": "module",

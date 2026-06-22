@@ -2,11 +2,14 @@
 
 ## [Unreleased]
 
+## [v2.4.0] - 2026-06-22
+
 - **NEW**: Moved user options into the full-page Bookmark Manager as a dedicated Options tab.
-  - Adds a schema-driven form with explicit per-option opt-in controls, inline descriptions, live validation, and a synced YAML editor.
-  - The browser extension options entry and popup navigation now open `popup/bookmarkManager.html#options` in a full tab.
-- **NEW**: Added `F2` in the search popup to edit the selected bookmark, or create a new bookmark from the selected URL.
-- **FIXED**: Allowed an empty `quickBookmarkCurrentTab` value in the Options editor and documented how to disable the quick-bookmark default result.
+- **NEW**: Use `F2` in the search popup to edit the selected bookmark, or create a new bookmark from the selected URL.
+- **NEW**: Added a Quick Bookmark default result for saving the current tab through the rich bookmark editor.
+  - Configure its target folder with `quickBookmarkCurrentTab`, or set that option to an empty string to disable it.
+- **NEW**: Added `openInCurrentTab` to open selected results in the current tab by default, with `Shift` or `Alt` inverting that behavior.
+- **FIXED**: Closing a tab result now clears matching bookmark open-tab state and related cached results.
 
 ## [v2.3.0] - 2026-05-09
 
