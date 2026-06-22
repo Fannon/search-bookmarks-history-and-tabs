@@ -328,7 +328,7 @@ describe('search', () => {
     ext.model.bookmarks = createBookmarksTestData([
       {
         id: 1,
-        title: 'Tagged result #tagsearch #other',
+        title: 'Tagged result #tagsearch#other',
         url: 'https://tag.test',
       },
     ])
