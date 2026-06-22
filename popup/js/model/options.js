@@ -18,10 +18,10 @@
  * @see /popup/json/options.schema.json for documentation and validation details.
  */
 
-import { defaultOptions, emptyOptions } from './optionsDefaults.js'
+import { defaultOptions } from './optionsDefaults.js'
 import { getEffectiveOptions, getUserOptions, setUserOptions } from './optionsStorage.js'
 
-export { defaultOptions, emptyOptions, getEffectiveOptions, getUserOptions, setUserOptions }
+export { defaultOptions, getEffectiveOptions, getUserOptions, setUserOptions }
 
 /**
  * Normalize and clean up user options.
