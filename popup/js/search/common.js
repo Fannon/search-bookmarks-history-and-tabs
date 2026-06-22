@@ -23,7 +23,7 @@
  * - See `highlightResults()` for the implementation.
  */
 
-import { cleanUpUrl, escapeHtml, escapeRegex, generateRandomId, highlightMatches } from '../helper/utils.js'
+import { cleanUpUrl, escapeHtml, escapeRegex, generateRandomId, highlightRegexMatches } from '../helper/utils.js'
 import { closeErrors, printError } from '../view/errorView.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultResults.js'
@@ -451,15 +451,15 @@ function highlightResults(results, searchTerm) {
   for (let i = 0; i < resultsLen; i++) {
     const entry = results[i]
 
-    entry.highlightedTitle = highlightMatches(entry.title || entry.url, highlightRegex)
-    entry.highlightedUrl = highlightMatches(entry.originalUrl || entry.url, highlightRegex)
+    entry.highlightedTitle = highlightRegexMatches(entry.title || entry.url, highlightRegex)
+    entry.highlightedUrl = highlightRegexMatches(entry.originalUrl || entry.url, highlightRegex)
 
     const tagsArray = entry.tagsArray
     if (highlightTags && tagsArray) {
       const tagCount = tagsArray.length
       const highlightedTags = new Array(tagCount)
       for (let j = 0; j < tagCount; j++) {
-        highlightedTags[j] = highlightMatches(`#${tagsArray[j]}`, highlightRegex)
+        highlightedTags[j] = highlightRegexMatches(`#${tagsArray[j]}`, highlightRegex)
       }
       entry.highlightedTagsArray = highlightedTags
     }
@@ -469,13 +469,13 @@ function highlightResults(results, searchTerm) {
       const folderCount = folderArray.length
       const highlightedFolders = new Array(folderCount)
       for (let j = 0; j < folderCount; j++) {
-        highlightedFolders[j] = highlightMatches(`~${folderArray[j]}`, highlightRegex)
+        highlightedFolders[j] = highlightRegexMatches(`~${folderArray[j]}`, highlightRegex)
       }
       entry.highlightedFolderArray = highlightedFolders
     }
 
     if (highlightGroup && entry.group) {
-      entry.highlightedGroup = highlightMatches(`@${entry.group}`, highlightRegex)
+      entry.highlightedGroup = highlightRegexMatches(`@${entry.group}`, highlightRegex)
     }
   }
 

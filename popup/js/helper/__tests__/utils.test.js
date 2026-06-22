@@ -5,6 +5,7 @@ import {
   escapeRegex,
   generateRandomId,
   highlightMatches,
+  highlightRegexMatches,
   loadScript,
   timeSince,
 } from '../utils.js'
@@ -316,5 +317,12 @@ describe('highlightMatches', () => {
     const text = '<b>Bold</b>'
     const terms = ['Bold']
     expect(highlightMatches(text, terms)).toBe('&lt;b&gt;<mark>Bold</mark>&lt;/b&gt;')
+  })
+})
+
+describe('highlightRegexMatches', () => {
+  it('escapes text and highlights precompiled regex matches', () => {
+    const regex = /(Bold)/gi
+    expect(highlightRegexMatches('<b>Bold</b>', regex)).toBe('&lt;b&gt;<mark>Bold</mark>&lt;/b&gt;')
   })
 })

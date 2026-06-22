@@ -70,12 +70,12 @@ export function highlightMatches(text, termsOrRegex) {
     return escapeHtml(text)
   }
 
+  if (termsOrRegex instanceof RegExp) {
+    return highlightRegexMatches(text, termsOrRegex)
+  }
+
   // Escape HTML first to prevent XSS
   const escapedText = escapeHtml(text)
-
-  if (termsOrRegex instanceof RegExp) {
-    return escapedText.replace(termsOrRegex, '<mark>$1</mark>')
-  }
 
   // Filter out empty terms and sort by length descending (match longest first)
   const validTerms = termsOrRegex.filter((t) => t && t.length > 0)
@@ -91,6 +91,23 @@ export function highlightMatches(text, termsOrRegex) {
 
   const highlightRegex = new RegExp(`(${escapedTerms.join('|')})`, 'gi')
   return escapedText.replace(highlightRegex, '<mark>$1</mark>')
+}
+
+/**
+ * Highlight matches using a pre-compiled regex.
+ *
+ * Use this on hot paths that already compiled and sorted terms once.
+ *
+ * @param {string} text - Text to highlight (will be HTML-escaped).
+ * @param {RegExp} regex - Pre-compiled highlight regex with one capture group.
+ * @returns {string} HTML-safe string with <mark> tags around matching terms.
+ */
+export function highlightRegexMatches(text, regex) {
+  if (!text || !regex) {
+    return escapeHtml(text)
+  }
+
+  return escapeHtml(text).replace(regex, '<mark>$1</mark>')
 }
 
 // Pre-calculate time units for performance
