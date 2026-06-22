@@ -21,8 +21,8 @@ test.describe('Options View', () => {
       await expect(optionsPage.locator('#options #config')).toBeVisible()
     })
 
-    test('loads the default user config', async ({ page }) => {
-      await expect(page.locator('#config')).toHaveValue(/searchStrategy/)
+    test('loads an empty default user config', async ({ page }) => {
+      await expect(page.locator('#config')).toHaveValue('')
       await expectNoClientErrors(page)
     })
 

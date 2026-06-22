@@ -6,7 +6,7 @@
  * - setUserOptions: Sync storage fallback to localStorage, error handling (no validation - see editOptionsView)
  * - getUserOptions: Sync storage fallback to localStorage, malformed JSON handling
  * - getEffectiveOptions: Merging defaults with user options, error recovery
- * - Constants: Structure validation for defaultOptions and emptyOptions
+ * - Constants: Structure validation for defaultOptions
  * - Integration: Complete workflows and error scenarios
  *
  * ## Known Gaps:
@@ -148,12 +148,12 @@ describe('options model', () => {
       })
     })
 
-    test('returns emptyOptions when no user options exist', async () => {
+    test('returns empty object when no user options exist', async () => {
       createTestExt({
         browserApi: {},
       })
 
-      await expect(optionsModule.getUserOptions()).resolves.toEqual(optionsModule.emptyOptions)
+      await expect(optionsModule.getUserOptions()).resolves.toEqual({})
     })
 
     test('handles malformed JSON in localStorage', async () => {
@@ -213,13 +213,6 @@ describe('options model', () => {
       expect(Array.isArray(optionsModule.defaultOptions.bookmarksIgnoreFolderList)).toBe(true)
     })
 
-    test('emptyOptions has expected structure', () => {
-      expect(optionsModule.emptyOptions).toBeDefined()
-      expect(typeof optionsModule.emptyOptions).toBe('object')
-      expect(optionsModule.emptyOptions.searchStrategy).toBe('precise')
-      expect(Object.keys(optionsModule.emptyOptions).length).toBe(1)
-    })
-
     test('defaultOptions contains all required option categories', () => {
       const requiredCategories = [
         'searchStrategy',
@@ -266,6 +259,17 @@ describe('options model', () => {
       expect(effectiveOptions.bookmarkColor).toBe(optionsModule.defaultOptions.bookmarkColor)
 
       expect(mockPrintError).not.toHaveBeenCalled()
+    })
+
+    test('effective options report invalid stored options before falling back to defaults', async () => {
+      createTestExt({ browserApi: {} })
+      document.body.innerHTML = '<div id="error-overlay"></div>'
+      localStorage.setItem('userOptions', 'invalid json{')
+
+      await expect(optionsModule.getEffectiveOptions()).resolves.toEqual(optionsModule.defaultOptions)
+      expect(document.getElementById('error-overlay').textContent).toContain(
+        'Could not get valid user options, falling back to defaults.',
+      )
     })
   })
 })

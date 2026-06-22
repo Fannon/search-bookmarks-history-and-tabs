@@ -2,7 +2,8 @@
  * @file Lightweight runtime option storage helpers.
  */
 
-import { defaultOptions, emptyOptions } from './optionsDefaults.js'
+import { printError } from '../view/errorView.js'
+import { defaultOptions } from './optionsDefaults.js'
 
 /**
  * Writes trusted user settings to sync storage, falling back to local storage.
@@ -40,12 +41,12 @@ export async function getUserOptions() {
           if (ext.browserApi.runtime.lastError) {
             return reject(ext.browserApi.runtime.lastError)
           }
-          return resolve(result.userOptions || emptyOptions)
+          return resolve(result.userOptions || {})
         })
       } else {
         console.warn('No storage API found. Falling back to local Web Storage')
         const userOptionsString = window.localStorage.getItem('userOptions')
-        return resolve(userOptionsString ? JSON.parse(userOptionsString) : emptyOptions)
+        return resolve(userOptionsString ? JSON.parse(userOptionsString) : {})
       }
     } catch (err) {
       return reject(err)
@@ -70,7 +71,7 @@ export async function getEffectiveOptions() {
       ...filtered,
     }
   } catch (err) {
-    console.warn('Could not get valid user options, falling back to defaults.', err)
+    printError(err, 'Could not get valid user options, falling back to defaults.')
     return { ...defaultOptions }
   }
 }

@@ -187,7 +187,3 @@ export const defaultOptions = {
   /** Advanced configuration for the uFuzzy search library */
   uFuzzyOptions: {},
 }
-
-export const emptyOptions = {
-  searchStrategy: defaultOptions.searchStrategy,
-}
