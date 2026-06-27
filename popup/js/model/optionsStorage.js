@@ -5,6 +5,8 @@
 import { printError } from '../view/errorView.js'
 import { defaultOptions } from './optionsDefaults.js'
 
+const legacyUserOptionKeys = new Set(['displayIcons'])
+
 /**
  * Writes trusted user settings to sync storage, falling back to local storage.
  *
@@ -41,12 +43,12 @@ export async function getUserOptions() {
           if (ext.browserApi.runtime.lastError) {
             return reject(ext.browserApi.runtime.lastError)
           }
-          return resolve(result.userOptions || {})
+          return resolve(removeLegacyUserOptions(result.userOptions || {}))
         })
       } else {
         console.warn('No storage API found. Falling back to local Web Storage')
         const userOptionsString = window.localStorage.getItem('userOptions')
-        return resolve(userOptionsString ? JSON.parse(userOptionsString) : {})
+        return resolve(removeLegacyUserOptions(userOptionsString ? JSON.parse(userOptionsString) : {}))
       }
     } catch (err) {
       return reject(err)
@@ -92,6 +94,20 @@ function filterKnownOptions(userOptions) {
       filtered[key] = userOptions[key]
     } else {
       console.warn(`Unknown user option: "${key}". It will be ignored and removed.`)
+    }
+  }
+
+  return filtered
+}
+
+function removeLegacyUserOptions(userOptions) {
+  if (!userOptions || typeof userOptions !== 'object') return {}
+
+  const filtered = {}
+
+  for (const [key, value] of Object.entries(userOptions)) {
+    if (!legacyUserOptionKeys.has(key)) {
+      filtered[key] = value
     }
   }
 
