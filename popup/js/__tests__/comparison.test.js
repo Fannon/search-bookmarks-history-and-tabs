@@ -55,10 +55,11 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
   /**
    * Run an async benchmark with warmup and averaged iterations.
    */
-  const runAsyncTiming = async (fn, iterations = 8) => {
+  const runAsyncTiming = async (fn, iterations = 8, afterWarmup) => {
     for (let i = 0; i < 2; i++) {
       await fn()
     }
+    afterWarmup?.()
 
     let total = 0
     for (let i = 0; i < iterations; i++) {
@@ -510,7 +511,7 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
    */
   const runDefaultResultsStartupBenchmark = async () => {
     console.log('\n### Default Results Startup Performance')
-    console.log('\n| Scenario | Time (Avg) | Tab API Calls |')
+    console.log('\n| Scenario | Time (Avg) | Tab API Calls/Run |')
     console.log('|---|---|---|')
 
     const originalTabs = browserApi.tabs
@@ -530,30 +531,48 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
         { id: 2, url: 'current-window.test', originalUrl: 'https://current-window.test', title: 'Current Window' },
       ]
 
-      tabApiCalls = 0
-      const unambiguousMs = await runAsyncTiming(async () => {
-        ext.model.tabs = [
-          {
-            originalId: 10,
-            active: true,
-            title: 'Loaded Active Tab',
-            url: 'single-active.test',
-            originalUrl: 'https://single-active.test',
-          },
-        ]
-        await addDefaultEntries()
-      }, 8)
-      console.log(`| One loaded active tab | ${unambiguousMs.toFixed(2)}ms | ${tabApiCalls} |`)
+      const measuredIterations = 8
 
       tabApiCalls = 0
-      const ambiguousMs = await runAsyncTiming(async () => {
-        ext.model.tabs = [
-          { originalId: 10, active: true, url: 'other-window.test', originalUrl: 'https://other-window.test' },
-          { originalId: 20, active: true, url: 'current-window.test', originalUrl: 'https://current-window.test' },
-        ]
-        await addDefaultEntries()
-      }, 8)
-      console.log(`| Multiple loaded active tabs, API fallback | ${ambiguousMs.toFixed(2)}ms | ${tabApiCalls} |`)
+      const unambiguousMs = await runAsyncTiming(
+        async () => {
+          ext.model.tabs = [
+            {
+              originalId: 10,
+              active: true,
+              title: 'Loaded Active Tab',
+              url: 'single-active.test',
+              originalUrl: 'https://single-active.test',
+            },
+          ]
+          await addDefaultEntries()
+        },
+        measuredIterations,
+        () => {
+          tabApiCalls = 0
+        },
+      )
+      console.log(
+        `| One loaded active tab | ${unambiguousMs.toFixed(2)}ms | ${(tabApiCalls / measuredIterations).toFixed(2)} |`,
+      )
+
+      tabApiCalls = 0
+      const ambiguousMs = await runAsyncTiming(
+        async () => {
+          ext.model.tabs = [
+            { originalId: 10, active: true, url: 'other-window.test', originalUrl: 'https://other-window.test' },
+            { originalId: 20, active: true, url: 'current-window.test', originalUrl: 'https://current-window.test' },
+          ]
+          await addDefaultEntries()
+        },
+        measuredIterations,
+        () => {
+          tabApiCalls = 0
+        },
+      )
+      console.log(
+        `| Multiple loaded active tabs, API fallback | ${ambiguousMs.toFixed(2)}ms | ${(tabApiCalls / measuredIterations).toFixed(2)} |`,
+      )
     } finally {
       browserApi.tabs = originalTabs
     }

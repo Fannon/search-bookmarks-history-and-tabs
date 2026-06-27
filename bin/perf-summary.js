@@ -107,6 +107,10 @@ function generateSummary() {
     }
 
     let currentSection = null
+    const recordJestTiming = (key, value) => {
+      const ms = parseMs(value)
+      if (ms != null) jestResults[key] = ms
+    }
 
     for (const line of contentLines) {
       // Check for section headers
@@ -136,10 +140,8 @@ function generateSummary() {
           .filter((p) => p !== '')
         if (parts.length === 3) {
           sections.coldStart.rows.push(parts)
-          const preciseMs = parseMs(parts[1])
-          const fuzzyMs = parseMs(parts[2])
-          if (preciseMs != null) jestResults[`${parts[0]} Precise`] = preciseMs
-          if (fuzzyMs != null) jestResults[`${parts[0]} Fuzzy`] = fuzzyMs
+          recordJestTiming(`${parts[0]} Precise`, parts[1])
+          recordJestTiming(`${parts[0]} Fuzzy`, parts[2])
         }
       } else if (currentSection && line.includes('|') && line.includes('ms')) {
         // Parse table row
@@ -154,13 +156,21 @@ function generateSummary() {
           // Extract timing for regression check
           const scenario = parts[0]
           if (['dataLoading', 'scoring', 'conversionShape', 'searchOptions'].includes(currentSection)) {
-            const ms = parseMs(parts[1])
-            if (ms != null) jestResults[`${currentSection} ${scenario}`] = ms
+            recordJestTiming(`${currentSection} ${scenario}`, parts[1])
           } else if (['singleQuery', 'incremental'].includes(currentSection)) {
-            const preciseMs = parseMs(parts[1])
-            const fuzzyMs = parseMs(parts[2])
-            if (preciseMs != null) jestResults[`${scenario} Precise`] = preciseMs
-            if (fuzzyMs != null) jestResults[`${scenario} Fuzzy`] = fuzzyMs
+            recordJestTiming(`${scenario} Precise`, parts[1])
+            recordJestTiming(`${scenario} Fuzzy`, parts[2])
+          } else if (currentSection === 'realisticBoundary') {
+            recordJestTiming(`${currentSection} ${scenario} Conversion`, parts[1])
+            recordJestTiming(`${currentSection} ${scenario} Precise Broad`, parts[2])
+            recordJestTiming(`${currentSection} ${scenario} Precise Selective`, parts[3])
+            recordJestTiming(`${currentSection} ${scenario} Scoring 1k`, parts[4])
+          } else if (currentSection === 'startupStage') {
+            recordJestTiming(`${currentSection} ${scenario} Total`, parts[1])
+            recordJestTiming(`${currentSection} ${scenario} API Wall`, parts[2])
+            recordJestTiming(`${currentSection} ${scenario} Post-API Work`, parts[3])
+          } else if (currentSection === 'defaultResults') {
+            recordJestTiming(`${currentSection} ${scenario}`, parts[1])
           }
         }
       }
@@ -234,7 +244,7 @@ function generateSummary() {
     if (sections.defaultResults.rows.length > 0) {
       renderTable(
         'Default Results Startup Performance',
-        ['Scenario', 'Time (Avg)', 'Tab API Calls'],
+        ['Scenario', 'Time (Avg)', 'Tab API Calls/Run'],
         sections.defaultResults.rows,
       )
     }
