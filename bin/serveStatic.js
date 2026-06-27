@@ -7,7 +7,7 @@
 import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import { createServer } from 'node:http'
-import { extname, join, resolve } from 'node:path'
+import { extname, join, resolve, sep } from 'node:path'
 import process from 'node:process'
 
 const root = resolve(process.argv[2] || 'popup')
@@ -31,7 +31,7 @@ function getFilePath(url = '/') {
 const server = createServer(async (request, response) => {
   try {
     const filePath = getFilePath(request.url)
-    if (!filePath.startsWith(root)) {
+    if (filePath !== root && !filePath.startsWith(root + sep)) {
       response.writeHead(403)
       response.end('Forbidden')
       return
@@ -48,7 +48,9 @@ const server = createServer(async (request, response) => {
       'content-length': fileStat.size,
       'content-type': contentTypes[extname(filePath)] || 'application/octet-stream',
     })
-    createReadStream(filePath).pipe(response)
+    const stream = createReadStream(filePath)
+    stream.on('error', () => response.destroy())
+    stream.pipe(response)
   } catch {
     response.writeHead(404)
     response.end('Not found')

@@ -325,4 +325,9 @@ describe('highlightRegexMatches', () => {
     const regex = /(Bold)/gi
     expect(highlightRegexMatches('<b>Bold</b>', regex)).toBe('&lt;b&gt;<mark>Bold</mark>&lt;/b&gt;')
   })
+
+  it('highlights all matches when the regex is global', () => {
+    const regex = /(ab)/gi
+    expect(highlightRegexMatches('AB ab', regex)).toBe('<mark>AB</mark> <mark>ab</mark>')
+  })
 })

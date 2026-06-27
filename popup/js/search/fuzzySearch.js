@@ -15,6 +15,7 @@
 import { loadScript } from '../helper/utils.js'
 import { printError } from '../view/errorView.js'
 import { resolveSearchTargets } from './common.js'
+import { createSearchResultObjects } from './resultObjects.js'
 
 const nonASCIIRegex = /[\u0080-\uFFFF]/
 
@@ -116,7 +117,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
 
   // Return cached results if search term is identical
   if (s.searchTerm === searchTerm && s.idxs !== null) {
-    return createResultObjects(data, s.idxs)
+    return createSearchResultObjects(data, s.idxs, 'fuzzy')
   }
 
   // Invalidate cache if search term changed direction
@@ -152,7 +153,7 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
   }
 
   s.searchTerm = searchTerm
-  return createResultObjects(data, s.idxs)
+  return createSearchResultObjects(data, s.idxs, 'fuzzy')
 }
 
 /**
@@ -160,22 +161,4 @@ function fuzzySearchWithScoring(searchTerm, searchMode, data, opts) {
  */
 function containsNonASCII(str) {
   return nonASCIIRegex.test(str)
-}
-
-/**
- * Creates result objects for matched indices.
- */
-function createResultObjects(data, idxs) {
-  if (!idxs || idxs.length === 0) {
-    return []
-  }
-  const count = idxs.length
-  const results = new Array(count)
-  for (let i = 0; i < count; i++) {
-    results[i] = {
-      ...data[idxs[i]],
-      searchApproach: 'fuzzy',
-    }
-  }
-  return results
 }

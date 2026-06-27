@@ -7,6 +7,7 @@
  */
 
 import { resolveSearchTargets } from './common.js'
+import { createSearchResultObjects } from './resultObjects.js'
 
 /**
  * Memoize some state to avoid re-creating haystack and search instances.
@@ -130,7 +131,7 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
 
   // Return cached results if search term is identical
   if (s.searchTerm === searchTerm && s.idxs !== null) {
-    return createResultObjects(s.data, s.idxs)
+    return createSearchResultObjects(s.data, s.idxs, 'precise')
   }
 
   const haystack = s.haystack
@@ -183,22 +184,5 @@ function simpleSearchWithScoring(searchTerm, searchMode, data) {
     return []
   }
 
-  return createResultObjects(s.data, idxs)
-}
-
-/**
- * Creates result objects for matched indices.
- */
-function createResultObjects(data, idxs) {
-  const count = idxs.length
-  const results = new Array(count)
-  for (let i = 0; i < count; i++) {
-    // Spread is currently the fastest way in V8 to clone and extend objects
-    // for subsequent property access (which scoring and rendering do heavily).
-    results[i] = {
-      ...data[idxs[i]],
-      searchApproach: 'precise',
-    }
-  }
-  return results
+  return createSearchResultObjects(s.data, idxs, 'precise')
 }

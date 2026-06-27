@@ -85,11 +85,10 @@ export async function getEffectiveOptions() {
 function filterKnownOptions(userOptions) {
   if (!userOptions || typeof userOptions !== 'object') return {}
 
-  const validKeys = new Set(Object.keys(defaultOptions))
   const filtered = {}
 
   for (const key of Object.keys(userOptions)) {
-    if (validKeys.has(key)) {
+    if (Object.hasOwn(defaultOptions, key)) {
       filtered[key] = userOptions[key]
     } else {
       console.warn(`Unknown user option: "${key}". It will be ignored and removed.`)
