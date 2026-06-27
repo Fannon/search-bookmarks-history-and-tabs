@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globa
 import { clearTestExt, flushPromises } from './testUtils.js'
 
 const setupDom = () => {
+  document.head.innerHTML = ''
   document.body.innerHTML = `
     <input id="q" />
     <ul id="results"></ul>
@@ -143,6 +144,33 @@ describe('initSearch entry point', () => {
     expect(mocks.addDefaultEntries).toHaveBeenCalled()
     expect(mocks.renderSearchResults).toHaveBeenCalled()
     expect(document.getElementById('results-load')).toBeNull()
+  })
+
+  test('initExtension does not inject a separate favicon stylesheet', async () => {
+    await mockDependencies()
+
+    const module = await import('../initSearch.js')
+    moduleUnderTest = module
+    await flushPromises()
+
+    expect(document.querySelector('link[href*="favicons"]')).toBeNull()
+  })
+
+  test('initExtension keeps favicon styles in the shared stylesheet when favicons are enabled', async () => {
+    document.head.innerHTML = '<link rel="stylesheet" href="./css/style.min.css">'
+    await mockDependencies({
+      getEffectiveOptions: jest.fn(() =>
+        Promise.resolve({
+          displayFavicons: true,
+        }),
+      ),
+    })
+
+    const module = await import('../initSearch.js')
+    moduleUnderTest = module
+    await flushPromises()
+
+    expect(document.querySelector('link[href*="favicons"]')).toBeNull()
   })
 
   test('initExtension keeps loading indicator until default route rendering completes', async () => {

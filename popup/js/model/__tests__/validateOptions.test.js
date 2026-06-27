@@ -158,6 +158,15 @@ describe('validateOptions', () => {
     expect(result.errors).toContain('Unknown option: "unknownOption"')
   })
 
+  test('rejects removed displayIcons option', async () => {
+    const result = await validateOptions({
+      displayIcons: true,
+    })
+
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContain('Unknown option: "displayIcons"')
+  })
+
   test('validates nested objects (searchEngineChoices)', async () => {
     const result = await validateOptions({
       searchEngineChoices: [
