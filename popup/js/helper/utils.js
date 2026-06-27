@@ -153,10 +153,6 @@ export function timeSince(date) {
   return `${seconds} s`
 }
 
-const URL_CLEANUP_PREFIX_REGEX = /^(?:https?:\/\/)?(?:www\.)?/
-const URL_CLEANUP_HASH_REGEX = /#.*$/
-const URL_CLEANUP_TRAILING_SLASH_REGEX = /\/$/
-
 /**
  * Normalizes URLs by removing protocol, www, trailing slashes and hashes
  *
@@ -169,11 +165,29 @@ const URL_CLEANUP_TRAILING_SLASH_REGEX = /\/$/
  */
 export function cleanUpUrl(url) {
   if (!url) return ''
-  return String(url)
-    .toLowerCase()
-    .replace(URL_CLEANUP_PREFIX_REGEX, '')
-    .replace(URL_CLEANUP_HASH_REGEX, '')
-    .replace(URL_CLEANUP_TRAILING_SLASH_REGEX, '')
+  const normalizedUrl = String(url).toLowerCase()
+
+  let start = 0
+  if (normalizedUrl.startsWith('https://')) {
+    start = 8
+  } else if (normalizedUrl.startsWith('http://')) {
+    start = 7
+  }
+
+  if (normalizedUrl.startsWith('www.', start)) {
+    start += 4
+  }
+
+  let end = normalizedUrl.indexOf('#', start)
+  if (end === -1) {
+    end = normalizedUrl.length
+  }
+
+  if (end > start && normalizedUrl.charCodeAt(end - 1) === 47) {
+    end -= 1
+  }
+
+  return start === 0 && end === normalizedUrl.length ? normalizedUrl : normalizedUrl.slice(start, end)
 }
 
 // Cache for loaded scripts to avoid duplicate loading and network requests
