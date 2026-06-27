@@ -42,9 +42,6 @@ export async function initExtension() {
   try {
     // Load effective options, including user customizations
     ext.opts = await getEffectiveOptions()
-    if (ext.opts.displayFavicons) {
-      loadFaviconStylesheet()
-    }
 
     // HTML Element selectors
 
@@ -78,17 +75,6 @@ export async function initExtension() {
   } finally {
     document.getElementById('results-load')?.remove()
   }
-}
-
-function loadFaviconStylesheet() {
-  const href = document.querySelector('link[href$="style.min.css"]') ? './css/favicons.min.css' : './css/favicons.css'
-  if (document.querySelector(`link[href="${href}"]`)) {
-    return
-  }
-  const link = document.createElement('link')
-  link.rel = 'stylesheet'
-  link.href = href
-  document.head.appendChild(link)
 }
 
 //////////////////////////////////////////

@@ -146,7 +146,7 @@ describe('initSearch entry point', () => {
     expect(document.getElementById('results-load')).toBeNull()
   })
 
-  test('initExtension does not load favicon CSS by default', async () => {
+  test('initExtension does not inject a separate favicon stylesheet', async () => {
     await mockDependencies()
 
     const module = await import('../initSearch.js')
@@ -156,7 +156,7 @@ describe('initSearch entry point', () => {
     expect(document.querySelector('link[href*="favicons"]')).toBeNull()
   })
 
-  test('initExtension lazy-loads minified favicon CSS when favicons are enabled in dist', async () => {
+  test('initExtension keeps favicon styles in the shared stylesheet when favicons are enabled', async () => {
     document.head.innerHTML = '<link rel="stylesheet" href="./css/style.min.css">'
     await mockDependencies({
       getEffectiveOptions: jest.fn(() =>
@@ -170,7 +170,7 @@ describe('initSearch entry point', () => {
     moduleUnderTest = module
     await flushPromises()
 
-    expect(document.querySelector('link[href="./css/favicons.min.css"]')).not.toBeNull()
+    expect(document.querySelector('link[href*="favicons"]')).toBeNull()
   })
 
   test('initExtension keeps loading indicator until default route rendering completes', async () => {
