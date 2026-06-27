@@ -16,8 +16,6 @@ import { selectListItem } from './searchNavigation.js'
 const createBadge = (content, title, extraClass = '', extraLink = '', extraStyle = '') =>
   `<span class="badge ${extraClass}"${title ? ` title="${escapeHtml(title)}"` : ''}${extraLink ? ` x-link="${escapeHtml(extraLink)}"` : ''}${extraStyle ? ` style="${extraStyle}"` : ''}>${content}</span>`
 
-const BADGE_DUPLICATE = createBadge('Duplicate', 'Duplicate Bookmark', 'duplicate')
-
 const TYPE_LIST = ['bookmark', 'tab', 'history', 'search', 'customSearch', 'direct']
 
 /**
@@ -75,7 +73,6 @@ export async function renderSearchResults() {
 
       const badges = []
       const type = entry.type || ''
-      if (entry.dupe) badges.push(BADGE_DUPLICATE)
 
       const tagsArray = entry.tagsArray
       if (opts.displayTags && tagsArray) {

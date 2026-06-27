@@ -92,7 +92,7 @@ export function clearTestExt() {
 function withExt(fn) {
   const originalExt = global.ext
   if (!global.ext?.opts) {
-    global.ext = { opts: { ...defaultOptions, detectDuplicateBookmarks: false } }
+    global.ext = { opts: { ...defaultOptions } }
   }
   try {
     return fn()

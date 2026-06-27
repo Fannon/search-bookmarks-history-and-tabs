@@ -131,6 +131,46 @@ describe('addDefaultEntries', () => {
       expect(results[0]).not.toBe(ext.model.bookmarks[0])
     })
 
+    test('reuses the loaded active tab when it is unambiguous', async () => {
+      ext.model.bookmarks = [
+        { id: 1, url: 'active.test/path', originalUrl: 'https://active.test/path', title: 'Active Bookmark' },
+      ]
+      ext.model.tabs = [
+        {
+          originalId: 11,
+          active: true,
+          title: 'Loaded Active Tab',
+          url: 'active.test/path',
+          originalUrl: 'https://active.test/path',
+          lastVisitSecondsAgo: 0,
+        },
+      ]
+      mockGetBrowserTabs.mockResolvedValue([{ id: 99, url: 'https://wrong.test' }])
+
+      const results = await addDefaultEntries()
+
+      expect(mockGetBrowserTabs).not.toHaveBeenCalled()
+      expect(results.map((r) => r.id)).toEqual([1])
+    })
+
+    test('queries the browser when loaded tab data has multiple active tabs', async () => {
+      ext.opts.maxRecentTabsToShow = 0
+      ext.model.bookmarks = [
+        { id: 1, url: 'other-window.test', originalUrl: 'https://other-window.test', title: 'Other Window' },
+        { id: 2, url: 'current-window.test', originalUrl: 'https://current-window.test', title: 'Current Window' },
+      ]
+      ext.model.tabs = [
+        { originalId: 10, active: true, url: 'other-window.test', originalUrl: 'https://other-window.test' },
+        { originalId: 20, active: true, url: 'current-window.test', originalUrl: 'https://current-window.test' },
+      ]
+      mockGetBrowserTabs.mockResolvedValue([{ id: 20, url: 'https://current-window.test' }])
+
+      const results = await addDefaultEntries()
+
+      expect(mockGetBrowserTabs).toHaveBeenCalledWith({ active: true, currentWindow: true })
+      expect(results.map((r) => r.id)).toEqual([2])
+    })
+
     test('adds quick bookmark action first for an unbookmarked active tab', async () => {
       ext.model.bookmarks = []
       ext.model.tabs = [{ id: 2, originalId: 2, url: 'https://recent.test', lastVisitSecondsAgo: 10 }]

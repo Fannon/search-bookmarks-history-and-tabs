@@ -6,7 +6,6 @@
 
 // Pre-compiled regexes for performance
 const TAXONOMY_PREFIX_REGEX = /^[#~@]+/
-const WHITESPACE_REGEX = /\s+/g
 const NUMERIC_TERM_REGEX = /^\d+$/
 
 /**
@@ -92,9 +91,6 @@ export function calculateFinalScore(results, searchTerm) {
   // Only check includes bonus if configured and there are tokens that qualify
   const canCheckIncludes = hasSearchTerm && scoreExactIncludesBonus && includeTermsLen > 0
 
-  // Pre-calculate URL-normalized terms for the includes check
-  const normalizedUrlTerms = canCheckIncludes ? includeTerms.map((term) => term.replace(WHITESPACE_REGEX, '-')) : []
-
   const includesBonusCap = Number.isFinite(scoreExactIncludesMaxBonuses) ? scoreExactIncludesMaxBonuses : 999
   const maxRecentSeconds = historyDaysAgo * 24 * 60 * 60
   const recentBonusFactor = maxRecentSeconds > 0 ? scoreRecentBonusScoreMaximum / maxRecentSeconds : 0
@@ -162,13 +158,12 @@ export function calculateFinalScore(results, searchTerm) {
           if (includesBonusesAwarded >= includesBonusCap) break
 
           const term = includeTerms[j]
-          const normalizedUrlTerm = normalizedUrlTerms[j]
 
           // Check fields in priority order - first match wins
           if (titleLower?.includes(term)) {
             score += scoreExactIncludesBonus
             includesBonusesAwarded++
-          } else if (normalizedUrl?.includes(normalizedUrlTerm)) {
+          } else if (normalizedUrl?.includes(term)) {
             score += includesUrlBonus
             includesBonusesAwarded++
           } else if (normalizedTags?.includes(term)) {

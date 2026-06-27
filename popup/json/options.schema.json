@@ -187,12 +187,6 @@
       "description": "Array of bookmark folder paths whose contents should never be indexed. All subfolders of the listed folders are skipped as well.",
       "x-ui-section": "bookmarks"
     },
-    "detectDuplicateBookmarks": {
-      "type": "boolean",
-      "default": false,
-      "description": "Detect bookmarks with identical URLs and mark them with a red 'D' badge. Useful for cleaning up duplicates.",
-      "x-ui-section": "bookmarks"
-    },
     "tabsOnlyCurrentWindow": {
       "type": "boolean",
       "default": false,
