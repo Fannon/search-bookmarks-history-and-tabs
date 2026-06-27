@@ -66,6 +66,7 @@ const sharedBuildOptions = {
   target: ['chrome109', 'firefox115'],
   format: 'iife',
   logLevel: 'info',
+  pure: ['console.debug', 'performance.mark', 'performance.measure'],
 }
 
 /**

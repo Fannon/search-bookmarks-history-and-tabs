@@ -39,7 +39,6 @@ initExtension().catch((err) => {
  * @returns {Promise<void>}
  */
 export async function initExtension() {
-  const startTime = Date.now()
   try {
     // Load effective options, including user customizations
     ext.opts = await getEffectiveOptions()
@@ -75,8 +74,6 @@ export async function initExtension() {
     ext.initialized = true
   } finally {
     document.getElementById('results-load')?.remove()
-
-    console.debug(`Init in ${Date.now() - startTime}ms`)
   }
 }
 

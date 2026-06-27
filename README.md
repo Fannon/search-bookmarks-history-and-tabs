@@ -95,7 +95,7 @@ Click a screenshot to open it full size:
 | :--- | :--- | :--- | :--- |
 | Chrome | Yes | Yes | Yes, with optional `favicon` permission |
 | Edge | Yes | Yes | Yes, with optional `favicon` permission |
-| Firefox | Yes | Graceful fallback if unavailable | Uses placeholder icons for bookmarks/history |
+| Firefox | Yes | Graceful fallback if unavailable | Open tab icons only, where available |
 | Opera | Old version only | Depends on the installed version | Depends on the installed version |
 
 ## User Documentation
@@ -144,8 +144,8 @@ Click a screenshot to open it full size:
 - **Tags**:
   - A bookmark title cannot start with a tag, it needs a title
   - Tags cannot start with a number. This is how the extension filters out issue / ticket numbers.
-- **Icons & Favicons**: This extension can display favicons or result type icons next to your search results.
-  - To customize this, see `displayIcons` and `displayFavicons` in the [user configuration](#user-configuration) and [favicons in OPTIONS.md](./OPTIONS.md#website-favicons) for details on privacy, implementation, and browser support.
+- **Favicons**: This extension can display website favicons next to your search results.
+  - To customize this, see `displayFavicons` in the [user configuration](#user-configuration) and [favicons in OPTIONS.md](./OPTIONS.md#website-favicons) for details on privacy, implementation, and browser support.
 - This extension works best if you avoid:
   - using `#` in bookmark titles that do not indicate a tag.
   - using `~` in bookmark folder names.

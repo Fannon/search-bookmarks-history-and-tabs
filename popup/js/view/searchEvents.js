@@ -375,15 +375,7 @@ export function setupResultItemsEvents() {
         // Update selection for this item
         clearSelection()
         listItem.id = 'sel'
-        openResultItem({
-          target: event.target,
-          srcElement: event.target,
-          button: event.button,
-          shiftKey: event.shiftKey,
-          altKey: event.altKey,
-          ctrlKey: event.ctrlKey,
-          stopPropagation: () => event.stopPropagation(),
-        })
+        openResultItem(event)
       }
     },
     true,
@@ -405,14 +397,5 @@ export function setupResultItemsEvents() {
     },
     true,
   )
-
-  ext.dom.resultList.addEventListener(
-    'error',
-    (_ev) => {
-      // If it fails, we keep background icon visible (no .loaded class)
-    },
-    true,
-  )
-
   eventDelegationSetup = true
 }

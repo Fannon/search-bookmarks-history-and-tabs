@@ -18,8 +18,6 @@ const createBadge = (content, title, extraClass = '', extraLink = '', extraStyle
 
 const BADGE_DUPLICATE = createBadge('Duplicate', 'Duplicate Bookmark', 'duplicate')
 
-// Transparent 1x1 GIF spacer
-const SPACER = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
 const TYPE_LIST = ['bookmark', 'tab', 'history', 'search', 'customSearch', 'direct']
 
 /**
@@ -161,8 +159,8 @@ export async function renderSearchResults() {
 
       // Build favicon HTML if enabled
       let faviconHtml = ''
-      if (opts.displayIcons || opts.displayFavicons) {
-        const iconUrl = opts.displayFavicons ? entry.favIconUrl || SPACER : SPACER
+      if (opts.displayFavicons && entry.favIconUrl) {
+        const iconUrl = entry.favIconUrl
         const isLoaded = ext.model.loadedFavicons?.has(iconUrl)
         faviconHtml = `<span class="favicon-col"><img class="favicon${isLoaded ? ' loaded' : ''}" src="${escapeHtml(iconUrl)}" alt=""></span>`
       }

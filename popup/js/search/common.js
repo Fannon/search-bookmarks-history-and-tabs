@@ -23,7 +23,7 @@
  * - See `highlightResults()` for the implementation.
  */
 
-import { cleanUpUrl, escapeHtml, escapeRegex, generateRandomId, highlightMatches } from '../helper/utils.js'
+import { cleanUpUrl, escapeHtml, escapeRegex, generateRandomId, highlightRegexMatches } from '../helper/utils.js'
 import { closeErrors, printError } from '../view/errorView.js'
 import { renderSearchResults } from '../view/searchView.js'
 import { addDefaultEntries } from './defaultResults.js'
@@ -38,7 +38,6 @@ import { searchTaxonomy } from './taxonomySearch.js'
 export { calculateFinalScore } from './scoring.js'
 
 const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
-const protocolRegex = /^[a-zA-Z]+:\/\//
 let searchRequestId = 0
 
 /**
@@ -83,10 +82,8 @@ function shouldSkipSearch(event) {
  * @returns {string} Normalized term.
  */
 function normalizeSearchTerm(term) {
-  let normalized = term || ''
-  normalized = normalized.trimStart().toLowerCase()
   // DUPLICATE_SPACE_REGEX removed to support "  " double-space separator for hybrid taxonomy search (e.g. "@group  search")
-  return normalized
+  return (term || '').trimStart().toLowerCase()
 }
 
 /**
@@ -147,7 +144,7 @@ export async function executeSearch(searchTerm, searchMode, data, options) {
  */
 function addDirectUrlIfApplicable(searchTerm, results) {
   if (ext.opts.enableDirectUrl && urlRegex.test(searchTerm) && results.length < ext.opts.searchMaxResults) {
-    const url = protocolRegex.test(searchTerm) ? searchTerm : `https://${searchTerm.replace(/^\/+/, '')}`
+    const url = searchTerm.includes('://') ? searchTerm : `https://${searchTerm.replace(/^\/+/, '')}`
     results.push({
       type: 'direct',
       title: `Direct: "${cleanUpUrl(url)}"`,
@@ -294,7 +291,6 @@ export async function search(event) {
 
   // Create a promise that we'll track so Enter key can await completion
   const searchPromise = (async () => {
-    const startTime = Date.now()
     try {
       if (shouldSkipSearch(event) || (!ext.initialized && !event?.bypassInitializedGuard)) return
 
@@ -377,9 +373,6 @@ export async function search(event) {
           performance.measure('search-total', 'search-start', 'search-end')
         }
       }
-
-      // Simple timing for debugging
-      console.debug(`Search took ${Date.now() - startTime}ms`)
     } catch (err) {
       if (requestId !== searchRequestId) return
       printError(err)
@@ -451,15 +444,15 @@ function highlightResults(results, searchTerm) {
   for (let i = 0; i < resultsLen; i++) {
     const entry = results[i]
 
-    entry.highlightedTitle = highlightMatches(entry.title || entry.url, highlightRegex)
-    entry.highlightedUrl = highlightMatches(entry.originalUrl || entry.url, highlightRegex)
+    entry.highlightedTitle = highlightRegexMatches(entry.title || entry.url, highlightRegex)
+    entry.highlightedUrl = highlightRegexMatches(entry.originalUrl || entry.url, highlightRegex)
 
     const tagsArray = entry.tagsArray
     if (highlightTags && tagsArray) {
       const tagCount = tagsArray.length
       const highlightedTags = new Array(tagCount)
       for (let j = 0; j < tagCount; j++) {
-        highlightedTags[j] = highlightMatches(`#${tagsArray[j]}`, highlightRegex)
+        highlightedTags[j] = highlightRegexMatches(`#${tagsArray[j]}`, highlightRegex)
       }
       entry.highlightedTagsArray = highlightedTags
     }
@@ -469,13 +462,13 @@ function highlightResults(results, searchTerm) {
       const folderCount = folderArray.length
       const highlightedFolders = new Array(folderCount)
       for (let j = 0; j < folderCount; j++) {
-        highlightedFolders[j] = highlightMatches(`~${folderArray[j]}`, highlightRegex)
+        highlightedFolders[j] = highlightRegexMatches(`~${folderArray[j]}`, highlightRegex)
       }
       entry.highlightedFolderArray = highlightedFolders
     }
 
     if (highlightGroup && entry.group) {
-      entry.highlightedGroup = highlightMatches(`@${entry.group}`, highlightRegex)
+      entry.highlightedGroup = highlightRegexMatches(`@${entry.group}`, highlightRegex)
     }
   }
 

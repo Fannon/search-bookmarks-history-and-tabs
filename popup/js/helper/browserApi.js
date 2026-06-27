@@ -373,12 +373,10 @@ export function convertBrowserHistory(history) {
   const result = []
   const count = history.length
   const now = Date.now()
-  let ignoredHistoryCounter = 0
 
   for (let i = 0; i < count; i++) {
     const el = history[i]
     if (ignoreRegex?.test(el.url)) {
-      ignoredHistoryCounter += 1
       continue
     }
 
@@ -408,10 +406,6 @@ export function convertBrowserHistory(history) {
     }
 
     result.push(historyItem)
-  }
-
-  if (ignoredHistoryCounter > 0) {
-    console.debug(`Ignored ${ignoredHistoryCounter} history items due to ignore list`)
   }
 
   return result

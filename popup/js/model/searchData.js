@@ -103,7 +103,6 @@ function flagBookmarksWithOpenTabs(bookmarks, tabs) {
  * @returns {Promise<{tabs: Array, bookmarks: Array, history: Array}>} Prepared search data.
  */
 export async function getSearchData() {
-  const startTime = Date.now()
   const result = {
     tabs: [],
     bookmarks: [],
@@ -166,11 +165,6 @@ export async function getSearchData() {
     // Flag bookmarks with open tabs
     flagBookmarksWithOpenTabs(result.bookmarks, result.tabs)
   }
-  console.debug(
-    `Loaded ${result.tabs.length} tabs, ${result.bookmarks.length} bookmarks and ${
-      result.history.length
-    } history items in ${Date.now() - startTime}ms.`,
-  )
   // let oldestHistoryItem = 0
   // for (const item of result.history) {
   //   if (item.lastVisitSecondsAgo > oldestHistoryItem) {

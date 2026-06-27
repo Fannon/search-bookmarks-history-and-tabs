@@ -211,6 +211,42 @@ describe('searchView renderSearchResults', () => {
     expect(ext.model.currentItem).toBe(0)
   })
 
+  it('renders favicon images only for results that have a favicon URL', async () => {
+    const { module, elements } = await setupSearchView({
+      results: [
+        {
+          ...createResults()[0],
+          favIconUrl: 'https://bookmark.test/favicon.ico',
+        },
+        createResults()[1],
+      ],
+      opts: { displayFavicons: true },
+    })
+
+    await module.renderSearchResults()
+
+    const listItems = elements.resultList.querySelectorAll('li')
+    const favicon = listItems[0].querySelector('.favicon')
+    expect(favicon).not.toBeNull()
+    expect(favicon.getAttribute('src')).toBe('https://bookmark.test/favicon.ico')
+    expect(listItems[1].querySelector('.favicon-col')).toBeNull()
+  })
+
+  it('does not render favicon placeholders when favicons are disabled', async () => {
+    const { module, elements } = await setupSearchView({
+      results: [
+        {
+          ...createResults()[0],
+          favIconUrl: 'https://bookmark.test/favicon.ico',
+        },
+      ],
+    })
+
+    await module.renderSearchResults()
+
+    expect(elements.resultList.querySelector('.favicon-col')).toBeNull()
+  })
+
   it('escapes HTML content coming from bookmarks and metadata', async () => {
     const maliciousResults = [
       {

@@ -12,12 +12,12 @@
   "dependencies": {
     "@leeoniya/ufuzzy": "^1.0.19",
     "@yaireo/tagify": "^4.37.1",
-    "js-yaml": "^5.0.0"
+    "js-yaml": "^5.2.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.0",
+    "@biomejs/biome": "^2.5.1",
     "@jest/globals": "^30.4.1",
-    "@playwright/test": "^1.61.0",
+    "@playwright/test": "^1.61.1",
     "archiver": "^8.0.0",
     "chokidar": "^5.0.0",
     "esbuild": "^0.28.1",
@@ -47,7 +47,10 @@
     "test:unit": "node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js",
     "test:unit:watch": "node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js --watch",
     "test:unit:coverage": "node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js --coverage",
-    "test:perf": "npm run test:unit -- popup/js/__tests__/performance.test.js popup/js/__tests__/comparison.test.js > reports/jest_output.txt 2>&1 && npx playwright test playwright/tests/performance.spec.js --project=chromium > reports/playwright_output.txt 2>&1 && node bin/perf-summary.js",
+    "test:perf": "mkdir -p reports && npm run test:perf:unit > reports/jest_output.txt 2>&1 && : > reports/playwright_output.txt && node bin/perf-summary.js",
+    "test:perf:unit": "npm run test:unit -- popup/js/__tests__/performance.test.js popup/js/__tests__/comparison.test.js",
+    "test:perf:e2e": "npx playwright test playwright/tests/performance.spec.js --project=chromium --workers=1",
+    "test:perf:full": "mkdir -p reports && npm run test:perf:unit > reports/jest_output.txt 2>&1 && npm run test:perf:e2e > reports/playwright_output.txt 2>&1 && node bin/perf-summary.js",
     "test:ci": "npm run lint && npm run test:unit && npm run test:e2e",
     "lint": "biome check --error-on-warnings .",
     "lint:fix": "biome check --write .",

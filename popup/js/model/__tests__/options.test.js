@@ -137,11 +137,38 @@ describe('options model', () => {
       expect(syncGet).toHaveBeenCalledWith(['userOptions'], expect.any(Function))
     })
 
+    test('removes legacy displayIcons option from sync storage values', async () => {
+      const syncGet = jest.fn((_keys, callback) =>
+        callback({ userOptions: { displayIcons: true, displayFavicons: true } }),
+      )
+      createTestExt({
+        browserApi: {
+          storage: { sync: { get: syncGet } },
+          runtime: {},
+        },
+      })
+
+      await expect(optionsModule.getUserOptions()).resolves.toEqual({
+        displayFavicons: true,
+      })
+    })
+
     test('falls back to localStorage when sync storage missing', async () => {
       createTestExt({
         browserApi: {},
       })
       localStorage.setItem('userOptions', JSON.stringify({ searchMaxResults: 5 }))
+
+      await expect(optionsModule.getUserOptions()).resolves.toEqual({
+        searchMaxResults: 5,
+      })
+    })
+
+    test('removes legacy displayIcons option from localStorage values', async () => {
+      createTestExt({
+        browserApi: {},
+      })
+      localStorage.setItem('userOptions', JSON.stringify({ displayIcons: true, searchMaxResults: 5 }))
 
       await expect(optionsModule.getUserOptions()).resolves.toEqual({
         searchMaxResults: 5,
