@@ -95,8 +95,6 @@ export const defaultOptions = {
 
   /** Bookmark folder paths to exclude from indexing */
   bookmarksIgnoreFolderList: [],
-  /** Detect and mark duplicate bookmarks (same URL) */
-  detectDuplicateBookmarks: false,
 
   //////////////////////////////////////////
   // TABS OPTIONS                         //

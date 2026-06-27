@@ -6,6 +6,7 @@
   - Adds a schema-driven form with explicit per-option opt-in controls, inline descriptions, live validation, and a synced YAML editor.
   - The browser extension options entry and popup navigation now open `popup/bookmarkManager.html#options` in a full tab.
 - **NEW**: Added `F2` in the search popup to edit the selected bookmark, or create a new bookmark from the selected URL.
+- **REMOVED**: Removed the popup `detectDuplicateBookmarks` option and duplicate result badge. Duplicate cleanup remains available in the Bookmark Manager.
 - **IMPROVED**: Minor popup startup and search performance improvements, with expanded benchmark coverage for realistic data sizes and default results.
 - **REMOVED**: Dropped the `displayIcons` option and result-type placeholder icons from search results.
 - **FIXED**: Allowed an empty `quickBookmarkCurrentTab` value in the Options editor and documented how to disable the quick-bookmark default result.

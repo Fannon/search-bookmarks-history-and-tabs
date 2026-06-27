@@ -107,7 +107,6 @@ export async function initBookmarkManager() {
   ext.opts.enableTabs = true
   ext.opts.enableHistory = false
   ext.opts.enableBookmarks = true
-  ext.opts.detectDuplicateBookmarks = false
   ext.opts.bookmarksIgnoreFolderList = []
   applyManagerColors()
 
