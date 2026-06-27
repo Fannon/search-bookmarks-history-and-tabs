@@ -4,19 +4,20 @@
 
 ## [v2.4.0] - 2026-06-27
 
+- **NEW**: Added quick bookmark and edit actions directly from search results.
+  - The default result can now save the current tab through the rich bookmark editor.
+  - Use `F2` in the search popup to edit the selected bookmark, or create a new bookmark from the selected URL.
+  - Configure the quick-bookmark target folder with `quickBookmarkCurrentTab`, or set that option to an empty string to disable it.
 - **NEW**: Moved user options into the full-page Bookmark Manager as a dedicated Options tab.
-- **NEW**: Use `F2` in the search popup to edit the selected bookmark, or create a new bookmark from the selected URL.
-- **NEW**: Added a Quick Bookmark default result for saving the current tab through the rich bookmark editor.
-  - Configure its target folder with `quickBookmarkCurrentTab`, or set that option to an empty string to disable it.
-- **NEW**: Added `openInCurrentTab` to open selected results in the current tab by default, with `Shift` or `Alt` inverting that behavior.
-- **FIXED**: Closing a tab result now clears matching bookmark open-tab state and related cached results.
   - Adds a schema-driven form with explicit per-option opt-in controls, inline descriptions, live validation, and a synced YAML editor.
   - The browser extension options entry and popup navigation now open `popup/bookmarkManager.html#options` in a full tab.
-- **NEW**: Added `F2` in the search popup to edit the selected bookmark, or create a new bookmark from the selected URL.
+- **NEW**: Added `openInCurrentTab` to open selected results in the current tab by default, with `Shift` or `Alt` inverting that behavior.
+- **FIXED**: Search result state now refreshes more reliably after tab closes, bookmark edits, default-result actions, and fuzzy search failures.
+- **FIXED**: Opening the popup with a `#search/...` route now runs that initial search after startup.
+- **FIXED**: Invalid stored options now fall back to defaults and show the dismissible error overlay.
 - **REMOVED**: Removed the popup `detectDuplicateBookmarks` option and duplicate result badge. Duplicate cleanup remains available in the Bookmark Manager.
-- **IMPROVED**: Minor popup startup and search performance improvements, with expanded benchmark coverage for realistic data sizes and default results.
 - **REMOVED**: Dropped the `displayIcons` option and result-type placeholder icons from search results.
-- **FIXED**: Allowed an empty `quickBookmarkCurrentTab` value in the Options editor and documented how to disable the quick-bookmark default result.
+- **IMPROVED**: Minor popup startup and search performance improvements, with expanded benchmark coverage for realistic data sizes and default results.
 
 ## [v2.3.0] - 2026-05-09
 
