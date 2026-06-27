@@ -64,15 +64,20 @@ export async function addDefaultEntries() {
     // Default: Find bookmarks that match current page URL
     let activeTab
     try {
-      const [tab] = await getBrowserTabs({ active: true, currentWindow: true })
-      activeTab = tab
-      if (tab?.url) {
-        const currentUrl = cleanUpUrl(tab.url)
+      activeTab = getLoadedActiveTab()
+      if (!activeTab) {
+        const [queriedActiveTab] = await getBrowserTabs({ active: true, currentWindow: true })
+        activeTab = queriedActiveTab
+      }
+
+      const activeTabUrl = activeTab?.originalUrl || activeTab?.url
+      if (activeTabUrl) {
+        const currentUrl = cleanUpUrl(activeTabUrl)
         const matchingBookmarks = ext.model.bookmarks.filter((el) => el.url === currentUrl)
         if (matchingBookmarks.length > 0) {
           results.push(...matchingBookmarks.map((el) => ({ ...el })))
-        } else if (isQuickBookmarkEnabled() && isBookmarkableUrl(tab.url)) {
-          results.push(createQuickBookmarkEntry(tab))
+        } else if (isQuickBookmarkEnabled() && isBookmarkableUrl(activeTabUrl)) {
+          results.push(createQuickBookmarkEntry(activeTab))
         }
       }
     } catch (err) {
@@ -81,10 +86,11 @@ export async function addDefaultEntries() {
 
     // Always add recently visited tabs when option is enabled and no search term
     if (ext.model.tabs && ext.opts.maxRecentTabsToShow > 0) {
+      const activeTabId = activeTab?.id ?? activeTab?.originalId
       const recentTabs = ext.model.tabs
         .filter((tab) => {
           // Exclude the currently active tab from recent tabs
-          const isCurrentTab = activeTab && activeTab.id !== undefined && tab.originalId === activeTab.id
+          const isCurrentTab = activeTabId !== undefined && tab.originalId === activeTabId
           return tab?.url && !isCurrentTab && isBookmarkableUrl(tab.url)
         })
         .map((el) => ({ ...el }))
@@ -106,18 +112,48 @@ export async function addDefaultEntries() {
 }
 
 /**
+ * Return the already-loaded active tab when it is unambiguous.
+ *
+ * Browser tab data can contain one active tab per window. If multiple active
+ * tabs are present, fall back to the browser API so current-window behavior is
+ * unchanged.
+ *
+ * @returns {Object|undefined} Loaded active tab, if exactly one exists.
+ */
+function getLoadedActiveTab() {
+  const tabs = ext.model.tabs
+  if (!tabs?.length) {
+    return undefined
+  }
+
+  let activeTab
+  for (let i = 0; i < tabs.length; i++) {
+    const tab = tabs[i]
+    if (!tab?.active) {
+      continue
+    }
+    if (activeTab) {
+      return undefined
+    }
+    activeTab = tab
+  }
+  return activeTab
+}
+
+/**
  * Build a synthetic default result for creating a bookmark from the active tab.
  *
  * @param {Object} tab - Active browser tab.
  * @returns {Object} Search result entry.
  */
 function createQuickBookmarkEntry(tab) {
+  const originalUrl = tab.originalUrl || tab.url
   return {
     type: 'bookmarkCreate',
     title: 'Bookmark current page',
     pageTitle: tab.title || '',
-    originalUrl: tab.url,
-    url: cleanUpUrl(tab.url),
+    originalUrl,
+    url: cleanUpUrl(originalUrl),
     favIconUrl: tab.favIconUrl,
   }
 }
