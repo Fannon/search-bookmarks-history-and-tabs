@@ -48,6 +48,7 @@
     <div class="manager-actions">
       <button id="undo-bookmark-change" class="button secondary" type="button"
         title="Undo the latest bookmark manager change" disabled>Undo</button>
+      <button id="export-bookmarks" class="button secondary" type="button">Export Bookmarks</button>
       <button id="refresh-bookmarks" class="button" type="button" title="Refresh bookmarks">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -56,12 +57,6 @@
         </svg>
         Refresh
       </button>
-    </div>
-    <div class="bookmark-backup-note">
-      <span>
-        Backup bookmarks before bulk changes. Undo keeps 50 changes only until this page closes or reloads.
-      </span>
-      <button id="export-bookmarks" class="button secondary" type="button">Export Bookmarks</button>
     </div>
   </header>
 
@@ -143,6 +138,11 @@
                     </div>
                   </div>
 
+                  <p class="bookmark-safety-note">
+                    Export a backup before changing many bookmarks. Undo only keeps the latest 50 changes and is cleared
+                    when this page closes.
+                  </p>
+
                   <label for="bookmark-move-folder">Move to folder</label>
                   <select id="bookmark-move-folder"></select>
                   <button id="move-selected-bookmarks" class="button warning" type="button"
@@ -204,6 +204,10 @@
           <div id="duplicate-summary"></div>
         </header>
         <div class="duplicate-toolbar">
+          <p class="bookmark-safety-note">
+            Export a backup before deleting bookmarks. Undo only keeps the latest 50 changes and is cleared when this
+            page closes.
+          </p>
           <div class="duplicate-actions">
             <button id="select-suggested" class="button secondary" type="button">Select Lower-Ranked Copies</button>
             <button id="select-none" class="button secondary" type="button">Select None</button>
@@ -224,6 +228,10 @@
         <div class="tag-toolbar">
           <input id="tag-filter" type="search" placeholder="Filter tags" autocomplete="off" spellcheck="false" />
         </div>
+        <p class="bookmark-safety-note">
+          Export a backup before changing tags on many bookmarks. Undo only keeps the latest 50 changes and is cleared
+          when this page closes.
+        </p>
         <div id="tag-list"></div>
       </section>
 
@@ -306,6 +314,10 @@
             <h2>Proposed Changes</h2>
             <button id="apply-all-cleanup-changes" class="button success" type="button" disabled>Accept All</button>
           </header>
+          <p class="bookmark-safety-note">
+            Export a backup before applying cleanup changes. Undo only keeps the latest 50 changes and is cleared when
+            this page closes.
+          </p>
           <div id="cleanup-proposal-summary" class="cleanup-proposal-summary"></div>
           <div id="cleanup-proposal-list"></div>
         </section>
