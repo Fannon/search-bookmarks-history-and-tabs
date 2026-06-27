@@ -9,7 +9,7 @@ const REGEX_SPECIAL_CHARS_REGEX = /[.*+?^${}()|[\]/-]/g
  * - Fetch raw entries with defensive fallbacks for browsers that omit certain APIs.
  * - Convert every record into the shared `searchItem` shape (type, title, url, tags, folder trail, search strings).
  * - Parse inline annotations like `#tag` taxonomy markers and `+20` custom bonus hints from bookmark titles.
- * - Preserve source URLs exactly while also deriving normalized URL keys for search, comparisons, and dedupe.
+ * - Preserve source URLs exactly while also deriving normalized URL keys for search and comparisons.
  * - Preserve breadcrumb-style folder metadata so taxonomy pages and scoring rules stay in sync across browsers.
  */
 
@@ -142,7 +142,6 @@ export async function getBrowserBookmarks() {
  * @param {Array<Object>} bookmarks - Raw bookmark tree nodes.
  * @param {Array<string>} [folderTrail] - Accumulated folder hierarchy.
  * @param {number} [depth] - Current traversal depth.
- * @param {Map<string, Object>} [seenByUrl] - Map to track duplicate URLs (only if duplicate detection is enabled).
  * @param {string} [folderText] - Pre-calculated folder string for search.
  * @returns {Array<Object>} Flattened bookmark entries.
  */
@@ -150,7 +149,6 @@ export function convertBrowserBookmarks(
   bookmarks,
   folderTrail = [],
   depth = 1,
-  seenByUrl,
   folderText,
   result = [],
   folderLower = '',
@@ -166,11 +164,6 @@ export function convertBrowserBookmarks(
     folderText = ''
     folderLower = ''
     folderArrayLower = []
-  }
-
-  // Only initialize seenByUrl Map if duplicate detection is enabled
-  if (seenByUrl === undefined && ext.opts.detectDuplicateBookmarks) {
-    seenByUrl = new Map()
   }
 
   const ignoreList = ext.opts.bookmarksIgnoreFolderList
@@ -251,20 +244,6 @@ export function convertBrowserBookmarks(
         }
       }
 
-      // Only detect duplicates if the feature is enabled
-      if (seenByUrl) {
-        const existingEntry = seenByUrl.get(mappedEntry.url)
-        if (existingEntry) {
-          existingEntry.dupe = true
-          mappedEntry.dupe = true
-          console.warn(
-            `Duplicate bookmark detected for ${mappedEntry.originalUrl} in folder: ${mappedEntry.folderArray.join(' > ') || '/'}`,
-          )
-        } else {
-          seenByUrl.set(mappedEntry.url, mappedEntry)
-        }
-      }
-
       result.push(mappedEntry)
     } else if (entry.children) {
       // It's a folder
@@ -297,7 +276,6 @@ export function convertBrowserBookmarks(
         entry.children,
         newFolderTrail,
         depth + 1,
-        seenByUrl,
         nextFolderText,
         result,
         nextFolderLower,

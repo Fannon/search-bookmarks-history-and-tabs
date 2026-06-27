@@ -54,7 +54,6 @@ If the extension feels slow to open or search:
 - **Custom Scores**: Boost important bookmarks by adding ` +20` (or any number) to the title.
   - *Example*: `Production Dashboard +50 #work`
 - **Exclusion Folders**: Use `bookmarksIgnoreFolderList` to completely hide archive or sensitive folders from search results.
-- **Duplicate Detection**: Enable `detectDuplicateBookmarks: true` to see a red **D** badge on redundant bookmarks.
 - **Open Tab Indicators**: A bookmark that is already open in a tab gets an open-tab score bonus and a bookmark-to-tab color stripe in search results.
 
 ---

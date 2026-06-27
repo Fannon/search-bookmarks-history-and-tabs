@@ -301,7 +301,6 @@ describe('convertBrowserBookmarks', () => {
       ],
       folderTrail,
       3,
-      undefined,
       '',
     )
 
@@ -309,9 +308,8 @@ describe('convertBrowserBookmarks', () => {
     expect(folderTrail.map).not.toHaveBeenCalled()
   })
 
-  it('flags duplicate bookmarks when detection is enabled', () => {
+  it('preserves duplicate bookmark URLs without popup duplicate flags', () => {
     ext.opts.bookmarksIgnoreFolderList = []
-    ext.opts.detectDuplicateBookmarks = true
     const tree = [
       {
         title: 'Root',
@@ -330,56 +328,11 @@ describe('convertBrowserBookmarks', () => {
       },
     ]
 
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    const result = convertBrowserBookmarks(tree)
 
-    try {
-      const result = convertBrowserBookmarks(tree)
-
-      const duplicates = result.filter((bookmark) => bookmark.dupe)
-      expect(duplicates).toHaveLength(2)
-      expect(duplicates.every((bookmark) => bookmark.dupe)).toBe(true)
-      expect(warnSpy).toHaveBeenCalledTimes(1)
-      expect(warnSpy.mock.calls[0][0]).toContain('Duplicate bookmark detected')
-      expect(warnSpy.mock.calls[0][0]).toContain('https://duplicate.example.com')
-      expect(warnSpy.mock.calls[0][0]).toContain('folder: /')
-    } finally {
-      warnSpy.mockRestore()
-    }
-  })
-
-  it('skips duplicate detection when disabled', () => {
-    ext.opts.bookmarksIgnoreFolderList = []
-    ext.opts.detectDuplicateBookmarks = false
-    const tree = [
-      {
-        title: 'Root',
-        children: [
-          {
-            id: 'bookmark-1',
-            title: 'First entry',
-            url: 'https://duplicate.example.com',
-          },
-          {
-            id: 'bookmark-2',
-            title: 'Second entry',
-            url: 'https://duplicate.example.com',
-          },
-        ],
-      },
-    ]
-
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
-
-    try {
-      const result = convertBrowserBookmarks(tree)
-
-      // When detection is disabled, dupe flag should not be set
-      const duplicates = result.filter((bookmark) => bookmark.dupe)
-      expect(duplicates).toHaveLength(0)
-      expect(warnSpy).not.toHaveBeenCalled()
-    } finally {
-      warnSpy.mockRestore()
-    }
+    expect(result).toHaveLength(2)
+    expect(result.map((bookmark) => bookmark.url)).toEqual(['duplicate.example.com', 'duplicate.example.com'])
+    expect(result.some((bookmark) => bookmark.dupe)).toBe(false)
   })
 })
 

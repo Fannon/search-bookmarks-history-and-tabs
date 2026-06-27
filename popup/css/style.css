@@ -152,9 +152,6 @@ code {
   position: relative;
   top: -2px;
 }
-.badge.duplicate {
-  background: #d9534f;
-}
 .tags {
   background: var(--badge-tag);
 }

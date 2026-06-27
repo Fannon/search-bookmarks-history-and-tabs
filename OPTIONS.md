@@ -64,7 +64,6 @@ Control what information is shown in search result items.
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `bookmarksIgnoreFolderList` | array | `[]` | List of bookmark folder paths to exclude from search. All bookmarks in these folders (and their subfolders) will be ignored. Example: `['Archive', 'Work/Old Bookmarks']` |
-| `detectDuplicateBookmarks` | boolean | `false` | Detect bookmarks with identical URLs and mark them with a red "D" badge. Useful for cleaning up duplicates. Disable for faster startup with large collections. |
 
 ## Tabs Options
 
