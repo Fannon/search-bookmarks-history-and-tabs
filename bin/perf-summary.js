@@ -99,13 +99,28 @@ function generateSummary() {
       singleQuery: { header: 'Single-Query Search Performance', rows: [], cols: 3 },
       incremental: { header: 'Incremental Typing Performance', rows: [], cols: 3 },
       coldStart: { header: 'Cold Start', rows: [], cols: 3 },
+      realisticBoundary: { header: 'Realistic Boundary Performance', rows: [], cols: 5 },
+      conversionShape: { header: 'Conversion Shape Performance', rows: [], cols: 2 },
+      searchOptions: { header: 'Search Option Rendering Performance', rows: [], cols: 2 },
+      startupStage: { header: 'Startup Stage Performance', rows: [], cols: 4 },
+      defaultResults: { header: 'Default Results Startup Performance', rows: [], cols: 3 },
     }
 
     let currentSection = null
 
     for (const line of contentLines) {
       // Check for section headers
-      if (line.includes('Data Loading')) {
+      if (line.includes('Realistic Boundary Performance')) {
+        currentSection = 'realisticBoundary'
+      } else if (line.includes('Conversion Shape Performance')) {
+        currentSection = 'conversionShape'
+      } else if (line.includes('Search Option Rendering Performance')) {
+        currentSection = 'searchOptions'
+      } else if (line.includes('Startup Stage Performance')) {
+        currentSection = 'startupStage'
+      } else if (line.includes('Default Results Startup Performance')) {
+        currentSection = 'defaultResults'
+      } else if (line.includes('Data Loading')) {
         currentSection = 'dataLoading'
       } else if (line.includes('Scoring Algorithm')) {
         currentSection = 'scoring'
@@ -138,10 +153,10 @@ function generateSummary() {
 
           // Extract timing for regression check
           const scenario = parts[0]
-          if (parts.length === 2) {
+          if (['dataLoading', 'scoring', 'conversionShape', 'searchOptions'].includes(currentSection)) {
             const ms = parseMs(parts[1])
             if (ms != null) jestResults[`${currentSection} ${scenario}`] = ms
-          } else if (parts.length === 3) {
+          } else if (['singleQuery', 'incremental'].includes(currentSection)) {
             const preciseMs = parseMs(parts[1])
             const fuzzyMs = parseMs(parts[2])
             if (preciseMs != null) jestResults[`${scenario} Precise`] = preciseMs
@@ -189,6 +204,38 @@ function generateSummary() {
         'Incremental Typing Performance',
         ['Dataset Size', 'Precise (Total)', 'Fuzzy (Total)'],
         sections.incremental.rows,
+      )
+    }
+
+    if (sections.realisticBoundary.rows.length > 0) {
+      renderTable(
+        'Realistic Boundary Performance',
+        ['Scenario', 'Conversion', 'Precise Broad', 'Precise Selective', 'Scoring 1k'],
+        sections.realisticBoundary.rows,
+      )
+    }
+
+    if (sections.conversionShape.rows.length > 0) {
+      renderTable('Conversion Shape Performance', ['Scenario', 'Time (Avg)'], sections.conversionShape.rows)
+    }
+
+    if (sections.searchOptions.rows.length > 0) {
+      renderTable('Search Option Rendering Performance', ['Scenario', 'Time (Avg)'], sections.searchOptions.rows)
+    }
+
+    if (sections.startupStage.rows.length > 0) {
+      renderTable(
+        'Startup Stage Performance',
+        ['Scenario', 'Total', 'API Wall', 'Post-API Work'],
+        sections.startupStage.rows,
+      )
+    }
+
+    if (sections.defaultResults.rows.length > 0) {
+      renderTable(
+        'Default Results Startup Performance',
+        ['Scenario', 'Time (Avg)', 'Tab API Calls'],
+        sections.defaultResults.rows,
       )
     }
 

@@ -1,5 +1,5 @@
 import uFuzzy from '@leeoniya/ufuzzy'
-import { convertBrowserBookmarks, convertBrowserHistory, convertBrowserTabs } from '../helper/browserApi.js'
+import { browserApi, convertBrowserBookmarks, convertBrowserHistory, convertBrowserTabs } from '../helper/browserApi.js'
 import {
   createTestExt,
   generateBookmarksTestData,
@@ -26,12 +26,80 @@ createTestExt({
   },
 })
 
-const { search } = await import('../search/common.js')
-const { resetSimpleSearchState } = await import('../search/simpleSearch.js')
+const { addDefaultEntries, search } = await import('../search/common.js')
+const { resetSimpleSearchState, simpleSearch } = await import('../search/simpleSearch.js')
 const { resetFuzzySearchState } = await import('../search/fuzzySearch.js')
 const { calculateFinalScore } = await import('../search/scoring.js')
+const { getSearchData } = await import('../model/searchData.js')
 
 describe('REAL Fuzzy vs Precise Search Benchmark', () => {
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+  /**
+   * Run a synchronous benchmark with warmup and averaged iterations.
+   */
+  const runSyncTiming = (fn, iterations = 10) => {
+    for (let i = 0; i < 3; i++) {
+      fn()
+    }
+
+    let total = 0
+    for (let i = 0; i < iterations; i++) {
+      const start = performance.now()
+      fn()
+      total += performance.now() - start
+    }
+    return total / iterations
+  }
+
+  /**
+   * Run an async benchmark with warmup and averaged iterations.
+   */
+  const runAsyncTiming = async (fn, iterations = 8) => {
+    for (let i = 0; i < 2; i++) {
+      await fn()
+    }
+
+    let total = 0
+    for (let i = 0; i < iterations; i++) {
+      const start = performance.now()
+      await fn()
+      total += performance.now() - start
+    }
+    return total / iterations
+  }
+
+  /**
+   * Create raw bookmark data with configurable tag density.
+   */
+  const generateTaggedRawBookmarks = (count, taggedRatio = 0, folderDepth = 1) => {
+    const bookmarks = []
+    const tagModulo = taggedRatio > 0 ? Math.max(1, Math.round(1 / taggedRatio)) : 0
+
+    for (let i = 0; i < count; i++) {
+      const tags = tagModulo && i % tagModulo === 0 ? ` #tag-${i % 10} #project-${i % 20}` : ''
+      bookmarks.push({
+        id: `tagged-${i}`,
+        title: `Bookmark ${i}: Documentation for Resource ${i}${tags}`,
+        url: `https://example.com/path/to/resource-${i}`,
+        dateAdded: 1700000000000 - i * 60000,
+      })
+    }
+
+    let children = bookmarks
+    for (let depth = folderDepth; depth >= 1; depth--) {
+      children = [
+        {
+          id: `folder-${depth}`,
+          title: `Folder ${depth}`,
+          children,
+        },
+      ]
+    }
+
+    return [{ title: 'Root', children: [{ title: 'Bookmarks Bar', children }] }]
+  }
+
   /**
    * Run a cold-start benchmark - no pre-warming, measures first-run performance
    */
@@ -249,6 +317,248 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     console.log(`| ${scenarioLabel} | ${avgTime.toFixed(2)}ms |`)
   }
 
+  /**
+   * Run benchmarks at realistic user scale without the 50k+ stress emphasis.
+   */
+  const runRealisticBoundaryBenchmark = async () => {
+    console.log('\n### Realistic Boundary Performance')
+    console.log('\n| Scenario | Conversion | Precise Broad | Precise Selective | Scoring 1k |')
+    console.log('|---|---|---|---|---|')
+
+    const counts = [1000, 6000, 12000]
+    for (const count of counts) {
+      const rawBookmarks = generateRawBookmarks(count)
+      const rawHistory = generateRawHistory(count)
+      const rawTabs = generateRawTabs(Math.floor(count / 10))
+
+      const conversionMs = runSyncTiming(() => {
+        convertBrowserBookmarks(rawBookmarks)
+        convertBrowserHistory(rawHistory)
+        convertBrowserTabs(rawTabs)
+      }, 8)
+
+      const data = {
+        bookmarks: convertBrowserBookmarks(rawBookmarks),
+        history: convertBrowserHistory(rawHistory),
+        tabs: convertBrowserTabs(rawTabs),
+      }
+      const broadMs = runSyncTiming(() => {
+        resetSimpleSearchState()
+        simpleSearchForBenchmark('resource', data)
+      }, 8)
+      const selectiveMs = runSyncTiming(() => {
+        resetSimpleSearchState()
+        simpleSearchForBenchmark('resource-123', data)
+      }, 8)
+      const scoringInput = data.bookmarks.slice(0, 1000).map((entry) => ({ ...entry, searchApproach: 'precise' }))
+      const scoringMs = runSyncTiming(() => {
+        calculateFinalScore(
+          scoringInput.map((entry) => ({ ...entry })),
+          'resource',
+        )
+      }, 8)
+
+      const totalItems = count * 2 + Math.floor(count / 10)
+      console.log(
+        `| ${count} bookmarks + ${count} history (${totalItems} total) | ${conversionMs.toFixed(2)}ms | ${broadMs.toFixed(2)}ms | ${selectiveMs.toFixed(2)}ms | ${scoringMs.toFixed(2)}ms |`,
+      )
+    }
+  }
+
+  /**
+   * Search directly through the precise path for core search timings.
+   */
+  const simpleSearchForBenchmark = (term, data) => {
+    return simpleSearch('all', term, data)
+  }
+
+  /**
+   * Run conversion benchmarks for tag-heavy and folder-heavy bookmark libraries.
+   */
+  const runConversionShapeBenchmark = async () => {
+    console.log('\n### Conversion Shape Performance')
+    console.log('\n| Scenario | Time (Avg) |')
+    console.log('|---|---|')
+
+    const scenarios = [
+      ['No tags, shallow folders (6000 bookmarks)', generateTaggedRawBookmarks(6000, 0, 1)],
+      ['25% tagged, shallow folders (6000 bookmarks)', generateTaggedRawBookmarks(6000, 0.25, 1)],
+      ['100% tagged, shallow folders (6000 bookmarks)', generateTaggedRawBookmarks(6000, 1, 1)],
+      ['No tags, deep folders (6000 bookmarks)', generateTaggedRawBookmarks(6000, 0, 6)],
+      ['100% tagged, deep folders (6000 bookmarks)', generateTaggedRawBookmarks(6000, 1, 6)],
+    ]
+
+    for (const [label, rawBookmarks] of scenarios) {
+      const avgMs = runSyncTiming(() => {
+        convertBrowserBookmarks(rawBookmarks)
+      }, 10)
+      console.log(`| ${label} | ${avgMs.toFixed(2)}ms |`)
+    }
+  }
+
+  /**
+   * Run popup search benchmarks for result limits and render/highlight settings.
+   */
+  const runSearchOptionsBenchmark = async () => {
+    console.log('\n### Search Option Rendering Performance')
+    console.log('\n| Scenario | Time (Avg) |')
+    console.log('|---|---|')
+
+    ext.model.bookmarks = convertBrowserBookmarks(generateTaggedRawBookmarks(6000, 1, 3))
+    ext.model.history = convertBrowserHistory(generateRawHistory(6000))
+    ext.model.tabs = convertBrowserTabs(generateRawTabs(600))
+    ext.initialized = true
+    ext.dom.searchInput.value = 'resource'
+    ext.opts.searchStrategy = 'precise'
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+    ext.opts.enableDirectUrl = false
+
+    const scenarios = [
+      ['Max 24, no highlights/badges', { max: 24, highlight: false, tags: false, folders: false, score: false }],
+      ['Max 100, no highlights/badges', { max: 100, highlight: false, tags: false, folders: false, score: false }],
+      ['Max 250, no highlights/badges', { max: 250, highlight: false, tags: false, folders: false, score: false }],
+      ['Max 24, highlights and badges', { max: 24, highlight: true, tags: true, folders: true, score: true }],
+      ['Max 100, highlights and badges', { max: 100, highlight: true, tags: true, folders: true, score: true }],
+    ]
+
+    for (const [label, config] of scenarios) {
+      const avgMs = await runAsyncTiming(async () => {
+        ext.opts.searchMaxResults = config.max
+        ext.opts.displaySearchMatchHighlight = config.highlight
+        ext.opts.displayTags = config.tags
+        ext.opts.displayFolderName = config.folders
+        ext.opts.displayScore = config.score
+        ext.searchCache = new Map()
+        resetSimpleSearchState()
+        await search()
+      }, 8)
+      console.log(`| ${label} | ${avgMs.toFixed(2)}ms |`)
+    }
+  }
+
+  /**
+   * Run startup/default-result benchmarks with explicit API latency.
+   */
+  const runStartupPathBenchmark = async () => {
+    console.log('\n### Startup Stage Performance')
+    console.log('\n| Scenario | Total | API Wall | Post-API Work |')
+    console.log('|---|---|---|---|')
+
+    const originalTabs = browserApi.tabs
+    const originalBookmarks = browserApi.bookmarks
+    const originalHistory = browserApi.history
+    const originalTabGroups = browserApi.tabGroups
+    const rawTabs = generateRawTabs(600)
+    const rawBookmarks = generateRawBookmarks(6000)
+    const rawHistory = generateRawHistory(6000)
+
+    try {
+      const apiDelayMs = 2
+      let apiWallMs = 0
+
+      const timedApi =
+        (fn) =>
+        async (...args) => {
+          const start = performance.now()
+          await sleep(apiDelayMs)
+          const result = fn(...args)
+          apiWallMs = Math.max(apiWallMs, performance.now() - start)
+          return result
+        }
+
+      browserApi.tabs = { query: timedApi(() => rawTabs) }
+      browserApi.bookmarks = { getTree: timedApi(() => rawBookmarks) }
+      browserApi.history = { search: timedApi(() => rawHistory) }
+      browserApi.tabGroups = { query: timedApi(() => []) }
+      ext.opts.enableTabs = true
+      ext.opts.enableBookmarks = true
+      ext.opts.enableHistory = true
+
+      for (let i = 0; i < 2; i++) {
+        apiWallMs = 0
+        await getSearchData()
+      }
+
+      let totalMs = 0
+      let totalApiWallMs = 0
+      const iterations = 5
+      for (let i = 0; i < iterations; i++) {
+        apiWallMs = 0
+        const start = performance.now()
+        await getSearchData()
+        totalMs += performance.now() - start
+        totalApiWallMs += apiWallMs
+      }
+      const avgTotalMs = totalMs / iterations
+      const avgApiWallMs = totalApiWallMs / iterations
+      const postApiMs = Math.max(0, avgTotalMs - avgApiWallMs)
+
+      console.log(
+        `| getSearchData, 6000 bookmarks + 6000 history, ${apiDelayMs}ms API delay | ${avgTotalMs.toFixed(2)}ms | ${avgApiWallMs.toFixed(2)}ms | ${postApiMs.toFixed(2)}ms |`,
+      )
+    } finally {
+      browserApi.tabs = originalTabs
+      browserApi.bookmarks = originalBookmarks
+      browserApi.history = originalHistory
+      browserApi.tabGroups = originalTabGroups
+    }
+  }
+
+  /**
+   * Run default empty-popup benchmarks for active-tab lookup paths.
+   */
+  const runDefaultResultsStartupBenchmark = async () => {
+    console.log('\n### Default Results Startup Performance')
+    console.log('\n| Scenario | Time (Avg) | Tab API Calls |')
+    console.log('|---|---|---|')
+
+    const originalTabs = browserApi.tabs
+    try {
+      let tabApiCalls = 0
+      browserApi.tabs = {
+        query: async () => {
+          tabApiCalls += 1
+          await sleep(2)
+          return [{ id: 20, title: 'Queried Active Tab', url: 'https://current-window.test' }]
+        },
+      }
+      ext.opts.maxRecentTabsToShow = 0
+      ext.model.searchMode = 'all'
+      ext.model.bookmarks = [
+        { id: 1, url: 'single-active.test', originalUrl: 'https://single-active.test', title: 'Single Active' },
+        { id: 2, url: 'current-window.test', originalUrl: 'https://current-window.test', title: 'Current Window' },
+      ]
+
+      tabApiCalls = 0
+      const unambiguousMs = await runAsyncTiming(async () => {
+        ext.model.tabs = [
+          {
+            originalId: 10,
+            active: true,
+            title: 'Loaded Active Tab',
+            url: 'single-active.test',
+            originalUrl: 'https://single-active.test',
+          },
+        ]
+        await addDefaultEntries()
+      }, 8)
+      console.log(`| One loaded active tab | ${unambiguousMs.toFixed(2)}ms | ${tabApiCalls} |`)
+
+      tabApiCalls = 0
+      const ambiguousMs = await runAsyncTiming(async () => {
+        ext.model.tabs = [
+          { originalId: 10, active: true, url: 'other-window.test', originalUrl: 'https://other-window.test' },
+          { originalId: 20, active: true, url: 'current-window.test', originalUrl: 'https://current-window.test' },
+        ]
+        await addDefaultEntries()
+      }, 8)
+      console.log(`| Multiple loaded active tabs, API fallback | ${ambiguousMs.toFixed(2)}ms | ${tabApiCalls} |`)
+    } finally {
+      browserApi.tabs = originalTabs
+    }
+  }
+
   test('Benchmark Matrix', async () => {
     // Data Loading Benchmarks
     console.log('\n### Data Loading/Conversion Performance')
@@ -292,5 +602,11 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     await runIncrementalBenchmark(500, 5, 'Small (1050 items)')
     await runIncrementalBenchmark(2500, 5, 'Medium (5250 items)')
     await runIncrementalBenchmark(5000, 5, 'Large (10500 items)')
-  })
+
+    await runRealisticBoundaryBenchmark()
+    await runConversionShapeBenchmark()
+    await runSearchOptionsBenchmark()
+    await runStartupPathBenchmark()
+    await runDefaultResultsStartupBenchmark()
+  }, 30000)
 })
