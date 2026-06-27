@@ -16,6 +16,7 @@ import fs from 'fs-extra'
 // Track CSS files that receive minified companions so we can prune originals
 const CSS_BUNDLED_FILENAMES = new Set([
   'style.css',
+  'favicons.css',
   'options.css',
   'taxonomy.css',
   'editBookmark.css',

@@ -57,7 +57,6 @@ Control what information is shown in search result items.
 | `displayVisitCounter` | boolean | `false` | Show total visit count from browsing history. |
 | `displayDateAdded` | boolean | `false` | Show date when bookmark was added. |
 | `displayScore` | boolean | `true` | Show the relevance score next to each result (useful for debugging scoring). |
-| `displayIcons` | boolean | `false` | Show default result type icons (bookmarks, tabs, history, etc.) for results. |
 | `displayFavicons` | boolean | `false` | Show real website favicons next to results. See [Website Favicons](#website-favicons) for details and privacy information. |
 
 ## Bookmarks Options
@@ -173,16 +172,13 @@ For a detailed explanation, see the [Scoring System section in README.md](https:
 
 ## Website Favicons
 
-You can control how icons are displayed using two complementary options:
-
-- **`displayIcons` (Default: `false`)**: Shows high-quality SVG placeholder icons representing the result type (bookmark, tab, or history). This provides a consistent visual structure without requiring extra permissions or network lookups.
-- **`displayFavicons` (Default: `false`)**: Attempts to show the actual website favicon. **Enabling this implies `displayIcons` is also active**, as the default icons are used as placeholders while the real favicons are being retrieved from the browser's cache.
+Set **`displayFavicons: true`** to show website favicons next to search results when the browser provides an icon.
 
 ### Implementation & Privacy
 
-- **No External Requests**: To respect your privacy, this feature is built to make zero external calls. Icons are retrieved solely from your browser's local cache or internal SVG assets.
+- **No External Requests**: To respect your privacy, this feature is built to make zero external calls. Icons are retrieved solely from your browser's local cache.
 - **Chrome/Edge Native API**: Chromium-based browsers provide a secure, built-in helper (`_favicon`) to retrieve cached icons for your bookmarks and history.
-- **Firefox & Fallbacks**: Firefox does not currently support a native favicon API for background access. On Firefox (or when an icon is missing in Chrome), the extension gracefully falls back to the SVG placeholder icons (if `displayIcons` is true).
+- **Firefox & Missing Icons**: Firefox does not currently support a native favicon API for background access. When no favicon is available, the result is shown without an icon.
 - **Tab Synchronization**: If a bookmark is also an open tab, the extension "borrows" the tab's current icon directly.
 
 ### Technical Implementation

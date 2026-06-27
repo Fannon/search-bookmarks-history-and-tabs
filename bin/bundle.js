@@ -93,6 +93,11 @@ export async function bundleAll() {
       outfile: resolve(repoRoot, 'popup/css/style.min.css'),
     },
     {
+      name: 'favicons',
+      entry: resolve(repoRoot, 'popup/css/favicons.css'),
+      outfile: resolve(repoRoot, 'popup/css/favicons.min.css'),
+    },
+    {
       name: 'options',
       entry: resolve(repoRoot, 'popup/css/options.css'),
       outfile: resolve(repoRoot, 'popup/css/options.min.css'),
