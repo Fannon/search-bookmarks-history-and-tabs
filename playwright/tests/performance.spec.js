@@ -135,9 +135,12 @@ test.describe('Performance Benchmarks', () => {
   })
 
   test('Search and Rendering Performance - Fuzzy Strategy', async ({ page }) => {
-    // 1. Switch to Fuzzy
-    await page.locator('#toggle').click()
-    await expect(page.locator('#toggle')).toHaveClass(/fuzzy/)
+    // 1. Switch to fuzzy directly. This benchmark measures search/render
+    // throughput, not option persistence or toggle event handling.
+    await page.evaluate(() => {
+      window.ext.opts.searchStrategy = 'fuzzy'
+      window.ext.searchCache = new Map()
+    })
 
     // 2. Inject 2000 items (fuzzy is heavier)
     await page.evaluate(() => {
