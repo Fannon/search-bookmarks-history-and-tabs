@@ -78,6 +78,10 @@ function appendFolder(lines, folder, depth, fallbackDate) {
   const modifiedDate = toUnixSeconds(folder.dateGroupModified, addDate)
   const title = escapeBookmarkHtml(folder.title || 'Bookmarks')
   const attributes = [`ADD_DATE="${addDate}"`, `LAST_MODIFIED="${modifiedDate}"`]
+  const id = folder.id != null && folder.id !== '' ? String(folder.id) : ''
+  if (id) {
+    attributes.push(`ID="${escapeBookmarkHtml(id)}"`)
+  }
 
   if (depth === 1 && isBookmarksBarFolder(folder)) {
     attributes.push('PERSONAL_TOOLBAR_FOLDER="true"')
@@ -99,8 +103,10 @@ function appendBookmark(lines, bookmark, depth, fallbackDate) {
   const addDate = toUnixSeconds(bookmark.dateAdded, fallbackDate)
   const url = escapeBookmarkHtml(bookmark.url)
   const title = escapeBookmarkHtml(bookmark.title || bookmark.url)
+  const id = bookmark.id != null && bookmark.id !== '' ? String(bookmark.id) : ''
+  const idAttr = id ? ` ID="${escapeBookmarkHtml(id)}"` : ''
 
-  lines.push(`${indent}<DT><A HREF="${url}" ADD_DATE="${addDate}">${title}</A>`)
+  lines.push(`${indent}<DT><A HREF="${url}" ADD_DATE="${addDate}"${idAttr}>${title}</A>`)
 }
 
 function isBookmarksBarFolder(folder) {
