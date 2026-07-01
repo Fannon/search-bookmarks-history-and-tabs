@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **IMPROVED**: Bookmark HTML export now includes the browser bookmark `ID` on each `<A>` and `<H3>` element. The attribute is safely ignored on re-import and lets external tooling (for example AI cleanup proposal files) reference bookmarks by their real id.
+
 ## [v2.4.0] - 2026-06-27
 
 - **NEW**: Added quick bookmark and edit actions directly from search results.
