@@ -37,7 +37,7 @@ import { searchTaxonomy } from './taxonomySearch.js'
 // Export scoring function for other modules
 export { calculateFinalScore } from './scoring.js'
 
-const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
+const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i
 let searchRequestId = 0
 
 /**
@@ -113,9 +113,11 @@ function useCachedResultsIfAvailable(searchTerm) {
  *
  * @returns {Promise<void>}
  */
-async function handleEmptySearch() {
+async function handleEmptySearch(requestId) {
   ext.model.searchTerm = '' // Clear search term for default results
-  ext.model.result = await addDefaultEntries()
+  const results = await addDefaultEntries()
+  if (requestId !== searchRequestId) return
+  ext.model.result = results
   renderSearchResults()
 }
 
@@ -299,12 +301,14 @@ export async function search(event) {
       }
 
       // Get and clean up original search query
-      let searchTerm = normalizeSearchTerm(ext.dom.searchInput.value)
+      const rawSearchTerm = (ext.dom.searchInput.value || '').trimStart()
+      let searchTerm = normalizeSearchTerm(rawSearchTerm)
       const originalSearchTerm = searchTerm
+      ext.model.rawSearchTerm = rawSearchTerm
 
       // Handle empty search - show default results
       if (!searchTerm.trim()) {
-        await handleEmptySearch()
+        await handleEmptySearch(requestId)
         return
       }
 
@@ -313,6 +317,7 @@ export async function search(event) {
       // Parse search mode and extract term
       const { mode: detectedMode, term: trimmedTerm } = resolveSearchMode(searchTerm)
       const searchMode = detectedMode
+      const rawTrimmedTerm = rawSearchTerm.slice(searchTerm.length - trimmedTerm.length).trim()
       searchTerm = trimmedTerm.trim()
 
       ext.model.searchTerm = searchTerm
@@ -334,7 +339,7 @@ export async function search(event) {
       // Note: searchTerm can become empty after resolveSearchMode() strips mode prefix (e.g., "t ", "b ")
       if (searchTerm) {
         results.push(...(await executeSearch(searchTerm, searchMode, ext.model, ext.opts)))
-        addDirectUrlIfApplicable(searchTerm, results)
+        addDirectUrlIfApplicable(rawTrimmedTerm, results)
 
         // Add search engine result items
         if (searchMode === 'all' || searchMode === 'search') {

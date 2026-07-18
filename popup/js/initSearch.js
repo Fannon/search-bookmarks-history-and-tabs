@@ -102,6 +102,8 @@ export async function hashRouter() {
     } else {
       // Empty search term, show default entries
       ext.dom.searchInput.value = ''
+      ext.model.searchTerm = ''
+      ext.model.rawSearchTerm = ''
       ext.dom.searchInput.focus()
       // Display default entries
       ext.model.result = await addDefaultEntries()
