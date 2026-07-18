@@ -22,7 +22,7 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'node bin/serveStatic.js popup 8080',
+    command: 'npm run build:update-libs && node bin/serveStatic.js popup 8080',
     url: baseURL,
     timeout: 30_000,
     reuseExistingServer: !process.env.CI,
