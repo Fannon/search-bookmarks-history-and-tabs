@@ -190,11 +190,15 @@ describe('searchEvents openResultItem', () => {
   it('builds the bookmark editor URL for existing bookmark results', async () => {
     const { module } = await setupSearchEvents()
     ext.model.searchTerm = 'docs query'
+    ext.model.rawSearchTerm = 'b Docs Query'
     const url = module.buildEditBookmarkEditorUrl({
       type: 'bookmark',
       originalId: 'folder/bookmark 1',
     })
-    assert.strictEqual(url, './editBookmark.html#bookmark/folder%2Fbookmark%201?return=%23search%2Fdocs+query')
+    assert.strictEqual(
+      url,
+      './editBookmark.html#bookmark/folder%2Fbookmark%201?return=%23search%2Fb%2520Docs%2520Query',
+    )
   })
   it('opens the bookmark editor for the selected bookmark', async () => {
     const { module, viewModule } = await setupSearchEvents()

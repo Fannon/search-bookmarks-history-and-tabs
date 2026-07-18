@@ -204,6 +204,27 @@ test.describe('Edit Bookmark View', () => {
     await expectNoClientErrors(page)
   })
 
+  for (const query of ['b Pandoc', '#MD']) {
+    for (const entry of ['icon', 'F2']) {
+      test(`restores "${query}" after entering the editor via ${entry}`, async ({ page }) => {
+        await page.goto('/')
+        await page.locator('#q').fill(query)
+        const bookmarkRow = page.locator(`#results [x-original-id="${BOOKMARK_ID}"]`)
+        await expect(bookmarkRow).toBeVisible()
+        if (entry === 'icon') {
+          await bookmarkRow.locator('.edit').click()
+        } else {
+          await page.keyboard.press('F2')
+        }
+        await expect(page.locator('#bm-title')).toHaveValue('Try pandoc!')
+        await page.locator('#bm-cancel').click()
+        await expect(page.locator('#q')).toHaveValue(query)
+        await expect(bookmarkRow).toBeVisible()
+        await expectNoClientErrors(page)
+      })
+    }
+  }
+
   test('saves updated bookmark details and renders new tags in search results', async ({ page }) => {
     await page.locator('#bm-title').fill('Pandoc Playground')
     await page.locator('#bm-url').fill('https://pandoc.org/playground')

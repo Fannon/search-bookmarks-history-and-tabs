@@ -40,14 +40,6 @@ const mockDependencies = async (overrides = {}) => {
         history: [{ originalId: 'h1' }],
       }),
     ),
-    addDefaultEntries: mock.fn(async () => {
-      const defaults = [{ originalId: 'default' }]
-      if (globalThis.ext?.model) {
-        globalThis.ext.model.result = defaults
-      }
-      return defaults
-    }),
-    renderSearchResults: mock.fn(),
     search: mock.fn(() => Promise.resolve()),
   }
   const config = { ...defaults, ...overrides }
@@ -82,7 +74,6 @@ const mockDependencies = async (overrides = {}) => {
   mock.module(new URL('../search/common.js', import.meta.url), {
     exports: {
       search: config.search,
-      addDefaultEntries: config.addDefaultEntries,
     },
   })
   mock.module(new URL('../helper/browserApi.js', import.meta.url), {
@@ -92,7 +83,7 @@ const mockDependencies = async (overrides = {}) => {
   })
   mock.module(new URL('../view/searchView.js', import.meta.url), {
     exports: {
-      renderSearchResults: config.renderSearchResults,
+      renderSearchResults: mock.fn(),
     },
   })
   mock.module(new URL('../view/searchNavigation.js', import.meta.url), {
@@ -135,7 +126,7 @@ describe('initSearch entry point', () => {
     clearTestExt()
     moduleUnderTest = null
   })
-  test('initExtension populates ext namespace and renders defaults', async () => {
+  test('initExtension populates ext namespace and searches the default route', async () => {
     const mocks = await mockDependencies()
     const module = await import('../initSearch.js')
     moduleUnderTest = module
@@ -143,8 +134,8 @@ describe('initSearch entry point', () => {
     assert.strictEqual(module.ext.initialized, true)
     assert.deepStrictEqual(module.ext.model.tabs, [{ originalId: 't1' }])
     assert.strictEqual(module.ext.searchCache instanceof Map, true)
-    assert(mocks.addDefaultEntries.mock.callCount() > 0)
-    assert(mocks.renderSearchResults.mock.callCount() > 0)
+    assert.strictEqual(module.ext.dom.searchInput.value, '')
+    assert(mocks.search.mock.calls.some((call) => matches(call.arguments, [{ bypassInitializedGuard: true }])))
     assert.strictEqual(document.getElementById('results-load'), null)
   })
   test('initExtension does not inject a separate favicon stylesheet', async () => {
@@ -169,19 +160,19 @@ describe('initSearch entry point', () => {
     assert.strictEqual(document.querySelector('link[href*="favicons"]'), null)
   })
   test('initExtension keeps loading indicator until default route rendering completes', async () => {
-    const defaultEntries = createDeferred()
+    const defaultSearch = createDeferred()
     const mocks = await mockDependencies({
-      addDefaultEntries: mock.fn(() => defaultEntries.promise),
+      search: mock.fn(() => defaultSearch.promise),
     })
     const module = await import('../initSearch.js')
     moduleUnderTest = module
     await flushPromises()
-    assert(mocks.addDefaultEntries.mock.callCount() > 0)
-    assert(mocks.renderSearchResults.mock.callCount() === 0)
+    assert(mocks.search.mock.callCount() > 0)
+    assert.strictEqual(module.ext.initialized, false)
     assert.notStrictEqual(document.getElementById('results-load'), null)
-    defaultEntries.resolve([{ originalId: 'default' }])
+    defaultSearch.resolve()
     await flushPromises()
-    assert(mocks.renderSearchResults.mock.callCount() > 0)
+    assert.strictEqual(module.ext.initialized, true)
     assert.strictEqual(document.getElementById('results-load'), null)
   })
   test('initExtension keeps loading indicator until hash-driven search completes', async () => {
@@ -200,14 +191,14 @@ describe('initSearch entry point', () => {
     assert.strictEqual(document.getElementById('results-load'), null)
   })
   test('initExtension surfaces async hashRouter failures through the initialization catch', async () => {
-    const routeError = new Error('Default entries failed')
+    const routeError = new Error('Search failed')
     const mocks = await mockDependencies()
     const module = await import('../initSearch.js')
     moduleUnderTest = module
     await flushPromises()
     setupDom()
     mocks.printError.mock.resetCalls()
-    mocks.addDefaultEntries.mock.mockImplementationOnce(() => Promise.reject(routeError))
+    mocks.search.mock.mockImplementationOnce(() => Promise.reject(routeError))
     module.ext.initialized = false
     await module.initExtension().catch((err) => {
       mocks.printError(err, 'Could not initialize Extension')
@@ -271,6 +262,7 @@ describe('initSearch entry point', () => {
     const module = await import('../initSearch.js')
     moduleUnderTest = module
     await flushPromises()
+    searchMock.mock.resetCalls()
     const firstInput = new Event('input')
     const secondInput = new Event('input')
     module.ext.dom.searchInput.value = 'first'

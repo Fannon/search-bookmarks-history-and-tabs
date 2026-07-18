@@ -315,7 +315,7 @@ export function buildEditBookmarkEditorUrl(result) {
 }
 
 function getSearchReturnHash() {
-  return `#search/${ext.model.searchTerm || ''}`
+  return `#search/${encodeURIComponent(ext.model.rawSearchTerm ?? ext.model.searchTerm ?? '')}`
 }
 
 function getSelectedResult(event) {

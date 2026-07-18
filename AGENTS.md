@@ -58,6 +58,9 @@ For multi-step tasks, state a brief plan:
 ## 5. Project rules
 
 - Scope: browser extension popup only; no background worker, network, or telemetry; stateless except user options.
+- Lifecycle: opening the popup via its icon or shortcut creates a fresh document and extension context. Closing it discards in-memory models, caches, module state, and pending work; do not design state persistence or cache invalidation across popup openings.
+- Search (`index.html`) and bookmark editing (`editBookmark.html`) are separate documents. Navigating between them recreates JS state and reloads data even if the popup window stays open. Preserve the return query (including mode prefixes and casing) in the navigation URL, not in memory.
+- Within one document, input events, hash changes, and search-strategy toggles share state. Account for overlapping async searches, cached results, and model changes during that document's lifetime; commit results only if the request is still current.
 - Style: ESM and vanilla JS. Follow Biome formatting: 2 spaces, single quotes, no semicolons.
 - Size: keep the extension small. Do not add dependencies without approval.
 - Search: keep it instant on large datasets; precompute searchable fields during data loading.

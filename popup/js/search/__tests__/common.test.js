@@ -217,6 +217,7 @@ describe('search', () => {
     await search({ key: 't' })
     assert.strictEqual(ext.model.result, cached)
     assert.strictEqual(ext.model.searchTerm, 'test')
+    assert.strictEqual(ext.model.rawSearchTerm, 'Test')
     assert(mockRenderSearchResults.mock.calls.some((call) => matches(call.arguments, [])))
   })
   test('does not serve a cache hit from the previous logical mode when the new query has no prefix', async () => {
@@ -379,19 +380,43 @@ describe('search', () => {
       )
     })
   }
-  test('preserves the user-typed casing for direct URL navigation targets', async () =>
-    assert.rejects(
-      async () => {
-        ext.dom.searchInput.value = 'Example.com/API/Foo'
-        ext.opts.enableSearchEngines = false
-        ext.opts.customSearchEngines = []
-        await search({ key: 'e' })
+  for (const prefix of ['', 'b ', 'B ']) {
+    test(`preserves direct URL casing with prefix "${prefix}" across cache hits and case-only edits`, async () => {
+      ext.opts.enableSearchEngines = false
+      ext.opts.customSearchEngines = []
+      for (const term of ['Example.com/API/Foo', 'Example.com/api/foo', 'Example.com/API/Foo']) {
+        ext.dom.searchInput.value = `${prefix}${term}`
+        await search()
         const direct = ext.model.result.find((item) => item.type === 'direct')
         assert.notStrictEqual(direct, undefined)
-        assert.strictEqual(direct.originalUrl, 'https://Example.com/API/Foo')
-      },
-      { code: 'ERR_ASSERTION' },
-    ))
+        assert.strictEqual(direct.originalUrl, `https://${term}`)
+        assert.strictEqual(ext.model.searchTerm, 'example.com/api/foo')
+        assert.strictEqual(ext.model.rawSearchTerm, `${prefix}${term}`)
+      }
+    })
+  }
+  test('keeps newer search results when an earlier empty search resolves later', async () => {
+    let resolveDefaultTabs
+    mockGetBrowserTabs.mock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveDefaultTabs = resolve
+        }),
+    )
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+    ext.model.bookmarks = createBookmarksTestData([{ id: 'new-result', title: 'New result', url: 'https://new.test' }])
+    ext.dom.searchInput.value = ''
+    const emptySearch = search()
+    ext.dom.searchInput.value = 'b New'
+    await search()
+    resolveDefaultTabs([])
+    await emptySearch
+    assert.strictEqual(ext.model.result.length, 1)
+    assert.strictEqual(ext.model.result[0].originalId, 'new-result')
+    assert.strictEqual(ext.model.rawSearchTerm, 'b New')
+    assert.strictEqual(mockRenderSearchResults.mock.callCount(), 1)
+  })
   test('keeps the newest async search results when earlier searches resolve later', async () => {
     let resolveFirstLoad
     let resolveSecondLoad

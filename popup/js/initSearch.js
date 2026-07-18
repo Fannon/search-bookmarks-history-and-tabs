@@ -12,12 +12,11 @@ import { createExtensionContext } from './helper/extensionContext.js'
 import { getEffectiveOptions } from './model/optionsStorage.js'
 import { getSearchData } from './model/searchData.js'
 
-import { addDefaultEntries, search } from './search/common.js'
+import { search } from './search/common.js'
 
 import { closeErrors, printError } from './view/errorView.js'
 import { toggleSearchApproach, updateSearchApproachToggle } from './view/searchEvents.js'
 import { navigationKeyListener } from './view/searchNavigation.js'
-import { renderSearchResults } from './view/searchView.js'
 
 export { closeErrors } from './view/errorView.js'
 
@@ -95,17 +94,8 @@ export async function hashRouter() {
   if (hash.startsWith('#search/')) {
     // Search specific term
     const searchTerm = decodeURIComponent(hash.replace('#search/', ''))
-    if (searchTerm) {
-      ext.dom.searchInput.value = searchTerm
-      ext.dom.searchInput.focus()
-      await search({ bypassInitializedGuard: true })
-    } else {
-      // Empty search term, show default entries
-      ext.dom.searchInput.value = ''
-      ext.dom.searchInput.focus()
-      // Display default entries
-      ext.model.result = await addDefaultEntries()
-      renderSearchResults()
-    }
+    ext.dom.searchInput.value = searchTerm
+    ext.dom.searchInput.focus()
+    await search({ bypassInitializedGuard: true })
   }
 }

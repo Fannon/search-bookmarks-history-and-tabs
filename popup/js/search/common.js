@@ -96,11 +96,10 @@ function getCacheKey(term) {
   return `${term}_${ext.opts.searchStrategy}_${ext.model.searchMode || 'all'}`
 }
 
-function useCachedResultsIfAvailable(searchTerm) {
-  if (!searchTerm.trim() || !ext.searchCache) return false
-  const results = ext.searchCache.get(getCacheKey(searchTerm))
+function useCachedResultsIfAvailable(cacheTerm) {
+  if (!cacheTerm.trim() || !ext.searchCache) return false
+  const results = ext.searchCache.get(getCacheKey(cacheTerm))
   if (results) {
-    ext.model.searchTerm = searchTerm
     ext.model.result = results
     renderSearchResults()
     return true
@@ -113,9 +112,11 @@ function useCachedResultsIfAvailable(searchTerm) {
  *
  * @returns {Promise<void>}
  */
-async function handleEmptySearch() {
+async function handleEmptySearch(requestId) {
   ext.model.searchTerm = '' // Clear search term for default results
-  ext.model.result = await addDefaultEntries()
+  const results = await addDefaultEntries()
+  if (requestId !== searchRequestId) return
+  ext.model.result = results
   renderSearchResults()
 }
 
@@ -299,12 +300,14 @@ export async function search(event) {
       }
 
       // Get and clean up original search query
-      let searchTerm = normalizeSearchTerm(ext.dom.searchInput.value)
+      const rawSearchTerm = (ext.dom.searchInput.value || '').trimStart()
+      let searchTerm = normalizeSearchTerm(rawSearchTerm)
       const originalSearchTerm = searchTerm
+      ext.model.rawSearchTerm = rawSearchTerm
 
       // Handle empty search - show default results
       if (!searchTerm.trim()) {
-        await handleEmptySearch()
+        await handleEmptySearch(requestId)
         return
       }
 
@@ -313,6 +316,7 @@ export async function search(event) {
       // Parse search mode and extract term
       const { mode: detectedMode, term: trimmedTerm } = resolveSearchMode(searchTerm)
       const searchMode = detectedMode
+      const rawTrimmedTerm = rawSearchTerm.slice(searchTerm.length - trimmedTerm.length).trim()
       searchTerm = trimmedTerm.trim()
 
       ext.model.searchTerm = searchTerm
@@ -320,7 +324,9 @@ export async function search(event) {
 
       // Check cache after mode parsing so prefixes like "b foo" use the
       // bookmarks-specific cache key instead of the previous mode.
-      if (useCachedResultsIfAvailable(searchTerm)) return
+      // Direct URL paths and query strings can be case-sensitive.
+      const cacheTerm = ext.opts.enableDirectUrl && urlRegex.test(rawTrimmedTerm) ? rawTrimmedTerm : searchTerm
+      if (useCachedResultsIfAvailable(cacheTerm)) return
 
       // Collect results
       let results = []
@@ -334,7 +340,7 @@ export async function search(event) {
       // Note: searchTerm can become empty after resolveSearchMode() strips mode prefix (e.g., "t ", "b ")
       if (searchTerm) {
         results.push(...(await executeSearch(searchTerm, searchMode, ext.model, ext.opts)))
-        addDirectUrlIfApplicable(searchTerm, results)
+        addDirectUrlIfApplicable(rawTrimmedTerm, results)
 
         // Add search engine result items
         if (searchMode === 'all' || searchMode === 'search') {
@@ -363,7 +369,7 @@ export async function search(event) {
       ext.model.result = results
 
       // Cache the results for better performance (only for actual searches)
-      cacheResults(searchTerm, results)
+      cacheResults(cacheTerm, results)
 
       renderSearchResults()
 
