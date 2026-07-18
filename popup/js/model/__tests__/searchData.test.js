@@ -370,7 +370,7 @@ describe('getSearchData', () => {
     }
   })
 
-  test.failing('uses the available live APIs when history is unavailable but history search is disabled', async () => {
+  test('uses the available live APIs when history is unavailable but history search is disabled', async () => {
     ext.opts.enableHistory = false
     setBrowserApiAvailability({ tabs: true, bookmarks: true, history: false, tabGroups: true })
 
@@ -418,6 +418,28 @@ describe('getSearchData', () => {
     expect(bookmarksGetTreeMock).toHaveBeenCalled()
     expect(result.tabs).toEqual(actualConvertBrowserTabs(mockState.tabs))
     expect(result.bookmarks).toEqual(actualConvertBrowserBookmarks(mockState.bookmarks))
+  })
+
+  test('keeps data from healthy browser APIs when another source rejects', async () => {
+    setBrowserData({
+      tabs: [
+        {
+          url: 'https://tab-only.com',
+          title: 'Healthy Tab',
+          id: 'tab-1',
+          active: true,
+          windowId: 2,
+        },
+      ],
+    })
+    bookmarksGetTreeMock.mockRejectedValue(new Error('bookmarks unavailable'))
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const result = await getSearchData()
+
+    expect(result.tabs).toEqual(actualConvertBrowserTabs(mockState.tabs))
+    expect(result.bookmarks).toEqual([])
+    expect(warnSpy).toHaveBeenCalledWith('Error fetching bookmarks: bookmarks unavailable')
   })
 
   test('handles mock data fetch failures gracefully', async () => {

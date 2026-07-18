@@ -111,7 +111,7 @@ export async function getSearchData() {
   }
 
   // Use mock data (for localhost preview / development)
-  if (!browserApi.bookmarks || !browserApi.history) {
+  if (!browserApi.tabs && !browserApi.bookmarks && !browserApi.history) {
     console.warn(`No Chrome API found. Switching to local dev mode with mock data only`)
     try {
       const requestChromeMockData = await fetch('./mockData/chrome.json')
