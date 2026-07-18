@@ -205,7 +205,7 @@ describe('loadScript', () => {
     expect(mockHead.appendChild).not.toHaveBeenCalled()
   })
 
-  it.failing('deduplicates concurrent loads for the same script while the first request is still pending', () => {
+  it('deduplicates concurrent loads for the same script while the first request is still pending', async () => {
     const url = 'https://example.com/concurrent.js'
     const createdScripts = []
 
@@ -220,11 +220,15 @@ describe('loadScript', () => {
       return script
     })
 
-    loadScript(url)
-    loadScript(url)
+    const firstLoad = loadScript(url)
+    const secondLoad = loadScript(url)
 
+    expect(secondLoad).toBe(firstLoad)
     expect(document.createElement).toHaveBeenCalledTimes(1)
     expect(mockHead.appendChild).toHaveBeenCalledTimes(1)
+
+    createdScripts[0].onload()
+    await expect(Promise.all([firstLoad, secondLoad])).resolves.toEqual([undefined, undefined])
   })
 
   it('rejects when script fails to load and retries create element on next call', async () => {

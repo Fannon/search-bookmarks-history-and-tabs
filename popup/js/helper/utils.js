@@ -190,8 +190,8 @@ export function cleanUpUrl(url) {
   return start === 0 && end === normalizedUrl.length ? normalizedUrl : normalizedUrl.slice(start, end)
 }
 
-// Cache for loaded scripts to avoid duplicate loading and network requests
-const loadedScripts = new Set()
+// Cache script load promises to deduplicate both completed and in-flight requests
+const scriptLoads = new Map()
 
 /**
  * Dynamically loads a script file and caches the result
@@ -204,22 +204,34 @@ const loadedScripts = new Set()
  * @returns {Promise<void>} Resolves when script is loaded or cached
  * @throws {Error} If script fails to load
  */
-export async function loadScript(url) {
-  if (loadedScripts.has(url)) {
-    return Promise.resolve()
+export function loadScript(url) {
+  const cachedLoad = scriptLoads.get(url)
+  if (cachedLoad) {
+    return cachedLoad
   }
 
-  return new Promise((resolve, reject) => {
-    const s = document.createElement('script')
-    s.type = 'text/javascript'
-    s.onload = () => {
-      loadedScripts.add(url)
-      resolve()
-    }
+  const s = document.createElement('script')
+  s.type = 'text/javascript'
+  s.src = url
+
+  let rejectLoad
+  const load = new Promise((resolve, reject) => {
+    rejectLoad = reject
+    s.onload = () => resolve()
     s.onerror = () => {
+      scriptLoads.delete(url)
       reject(new Error(`Failed to load script: ${url}`))
     }
-    s.src = url
-    document.getElementsByTagName('head')[0].appendChild(s)
   })
+
+  scriptLoads.set(url, load)
+
+  try {
+    document.getElementsByTagName('head')[0].appendChild(s)
+  } catch (error) {
+    scriptLoads.delete(url)
+    rejectLoad(error)
+  }
+
+  return load
 }
