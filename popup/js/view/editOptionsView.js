@@ -437,14 +437,7 @@ function removeUnknownOptions() {
     const userOptions = parseYamlValue(userOptionsString)
     if (!userOptions || typeof userOptions !== 'object') return
 
-    const schemaProperties = optionsSchema.properties || {}
-    const cleanOptions = {}
-
-    for (const [key, value] of Object.entries(userOptions)) {
-      if (key in schemaProperties || key === '$schema') {
-        cleanOptions[key] = value
-      }
-    }
+    const cleanOptions = removeUnknownProperties(userOptions, optionsSchema)
 
     setConfigYaml(cleanOptions)
     syncFormFromOptions(cleanOptions)
@@ -454,6 +447,36 @@ function removeUnknownOptions() {
     console.error('Failed to clean options:', e)
     showErrorMessage(e)
   }
+}
+
+function removeUnknownProperties(value, schema) {
+  const resolvedSchema = resolveSchemaReference(schema)
+
+  if (Array.isArray(value)) {
+    if (!resolvedSchema?.items) return value
+    return value.map((item) => removeUnknownProperties(item, resolvedSchema.items))
+  }
+
+  if (!value || typeof value !== 'object' || !resolvedSchema?.properties) {
+    return value
+  }
+
+  const cleanValue = {}
+  for (const [key, propertyValue] of Object.entries(value)) {
+    const propertySchema = resolvedSchema.properties[key]
+    if (propertySchema) {
+      cleanValue[key] = removeUnknownProperties(propertyValue, propertySchema)
+    } else if (resolvedSchema.additionalProperties !== false) {
+      cleanValue[key] = propertyValue
+    }
+  }
+  return cleanValue
+}
+
+function resolveSchemaReference(schema) {
+  if (!schema?.$ref) return schema
+  const definitionName = schema.$ref.replace('#/definitions/', '')
+  return optionsSchema.definitions?.[definitionName] || schema
 }
 
 /**

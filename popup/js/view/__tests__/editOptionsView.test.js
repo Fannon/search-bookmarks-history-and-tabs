@@ -424,7 +424,7 @@ describe('editOptionsView', () => {
     expect(document.getElementById('config').value).toBe('knownKey: value')
   })
 
-  it.failing('REMOVE UNKNOWN OPTIONS also strips nested unknown properties', async () => {
+  it('REMOVE UNKNOWN OPTIONS also strips nested unknown properties', async () => {
     setupDom()
     const nestedOptions = {
       customSearchEngines: [
@@ -435,6 +435,9 @@ describe('editOptionsView', () => {
           extra: 'remove-me',
         },
       ],
+      uFuzzyOptions: {
+        intraMode: 1,
+      },
     }
 
     const { module } = await loadEditOptionsView({
@@ -461,7 +464,9 @@ describe('editOptionsView', () => {
     btnClean.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     await Promise.resolve()
 
-    expect(document.getElementById('config').value).not.toContain('remove-me')
+    const cleanedOptions = JSON.parse(document.getElementById('config').value)
+    expect(cleanedOptions.customSearchEngines[0]).not.toHaveProperty('extra')
+    expect(cleanedOptions.uFuzzyOptions).toEqual({ intraMode: 1 })
   })
 
   it('shows all rows when options filter is empty', async () => {
