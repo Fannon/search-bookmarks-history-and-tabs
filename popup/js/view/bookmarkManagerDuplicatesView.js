@@ -3,6 +3,7 @@
  */
 
 import { escapeHtml } from '../helper/utils.js'
+import { t } from '../helper/i18n.js'
 import {
   formatInteger,
   renderBookmarkTitle,
@@ -14,26 +15,26 @@ import {
 
 export function renderDuplicateSummary(stats) {
   if (!stats.duplicateGroupCount) {
-    return '<p>No duplicate bookmark URLs were found.</p>'
+    return `<p>${t('empty_duplicates', 'No duplicate bookmark URLs were found.')}</p>`
   }
 
   return `
-    <p>${formatInteger(stats.duplicateBookmarkCount)} bookmarks share URLs in ${formatInteger(
+    <p>${formatInteger(stats.duplicateBookmarkCount)} ${t('desc_duplicates_summary', 'bookmarks share URLs in')} ${formatInteger(
       stats.duplicateGroupCount,
-    )} groups. Ranking prefers more tags, cleaner titles, newer additions, then deeper folder placement. ${formatInteger(
+    )} ${t('desc_duplicates_summary_2', 'groups. Ranking prefers more tags, cleaner titles, newer additions, then deeper folder placement. ')}${formatInteger(
       stats.removableDuplicateCount,
-    )} lower-ranked copies can be selected for deletion.</p>
+    )}${t('desc_duplicates_summary_3', ' lower-ranked copies can be selected for deletion.')}</p>
   `
 }
 
 export function renderDuplicates(duplicateGroups, canModifyBookmarks) {
   if (!duplicateGroups.length) {
-    return '<p class="empty-state">No duplicate bookmark URLs were found.</p>'
+    return `<p class="empty-state">${t('empty_duplicates', 'No duplicate bookmark URLs were found.')}</p>`
   }
 
   const deleteNotice = canModifyBookmarks
     ? ''
-    : '<p class="manager-note">Bookmark deletion is unavailable in this preview context.</p>'
+    : `<p class="manager-note">${t('notice_deletion_unavailable', 'Bookmark deletion is unavailable in this preview context.')}</p>`
 
   return `${deleteNotice}${duplicateGroups.map((group) => renderDuplicateGroup(group, canModifyBookmarks)).join('')}`
 }

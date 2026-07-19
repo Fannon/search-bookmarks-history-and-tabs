@@ -16,6 +16,7 @@ import { resetFuzzySearchState } from '../search/fuzzySearch.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
 import { clearSelection, hoverResultItem } from './searchNavigation.js'
 import { renderSearchResults } from './searchView.js'
+import { t } from '../helper/i18n.js'
 
 // Module-level flag to track if event delegation has been set up.
 // Using a module variable instead of a DOM property ensures the state
@@ -327,7 +328,8 @@ export async function toggleSearchApproach() {
  * Changes both the displayed text and CSS class based on current strategy
  */
 export function updateSearchApproachToggle() {
-  ext.dom.searchApproachToggle.innerText = ext.opts.searchStrategy.toUpperCase()
+  ext.dom.searchApproachToggle.innerText =
+    ext.opts.searchStrategy === 'fuzzy' ? t('badge_fuzzy', 'FUZZY') : t('badge_precise', 'PRECISE')
   ext.dom.searchApproachToggle.classList = ext.opts.searchStrategy
 }
 
