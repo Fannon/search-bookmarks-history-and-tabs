@@ -354,7 +354,7 @@ code {
   position: relative;
 }
 #links .nav.new::after {
-  content: "new";
+  content: attr(data-new-label);
   position: absolute;
   top: 3px;
   right: 5px;
