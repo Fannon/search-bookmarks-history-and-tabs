@@ -1,0 +1,932 @@
+{
+  "extension_name": {
+    "message": "Search Bookmarks, History and Tabs"
+  },
+  "extension_description": {
+    "message": "Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs."
+  },
+  "command_description": {
+    "message": "Open search popup"
+  },
+  "search_placeholder": {
+    "message": "Search tabs, bookmarks and history"
+  },
+  "toggle_search_approach": {
+    "message": "Toggle Search Approach"
+  },
+  "toggle_search_strategy": {
+    "message": "Toggle Search Strategy"
+  },
+  "loading": {
+    "message": "Loading..."
+  },
+  "nav_search": {
+    "message": "Search"
+  },
+  "nav_tags": {
+    "message": "Tags"
+  },
+  "nav_folders": {
+    "message": "Folders"
+  },
+  "nav_groups": {
+    "message": "Tab Groups"
+  },
+  "nav_manager": {
+    "message": "Manager"
+  },
+  "nav_options": {
+    "message": "Options"
+  },
+  "nav_help": {
+    "message": "Help"
+  },
+  "open_manager": {
+    "message": "Open bookmark manager"
+  },
+  "open_options": {
+    "message": "Open options in bookmark manager"
+  },
+  "edit_title_placeholder": {
+    "message": "Bookmark Title"
+  },
+  "edit_url_placeholder": {
+    "message": "Bookmark URL"
+  },
+  "edit_tags_placeholder": {
+    "message": "Bookmark Tags"
+  },
+  "edit_delete": {
+    "message": "DELETE"
+  },
+  "edit_favorite_title": {
+    "message": "Favorite bookmark"
+  },
+  "edit_manage": {
+    "message": "MANAGE"
+  },
+  "edit_manage_title": {
+    "message": "Open this bookmark in the Bookmark Manager"
+  },
+  "edit_cancel": {
+    "message": "CANCEL"
+  },
+  "edit_save": {
+    "message": "SAVE"
+  },
+  "options_title": {
+    "message": "Options"
+  },
+  "options_description": {
+    "message": "Edit only the settings you want to override. Unchecked settings use the extension defaults and stay out of the saved YAML."
+  },
+  "options_reset": {
+    "message": "Reset"
+  },
+  "options_save": {
+    "message": "Save Options"
+  },
+  "options_filter_placeholder": {
+    "message": "Filter options..."
+  },
+  "options_yaml_label": {
+    "message": "YAML"
+  },
+  "options_settings_title": {
+    "message": "Settings"
+  },
+  "options_customize": {
+    "message": "Customize"
+  },
+  "options_enabled": {
+    "message": "Enabled"
+  },
+  "options_add_item": {
+    "message": "Add item"
+  },
+  "options_add_search_engine": {
+    "message": "Add search engine"
+  },
+  "options_remove": {
+    "message": "Remove"
+  },
+  "options_name": {
+    "message": "Name"
+  },
+  "options_url_prefix": {
+    "message": "URL Prefix"
+  },
+  "options_aliases": {
+    "message": "Aliases"
+  },
+  "options_blank_url": {
+    "message": "Blank URL"
+  },
+  "options_help": {
+    "message": "Help"
+  },
+  "options_default": {
+    "message": "Default"
+  },
+  "options_invalid_title": {
+    "message": "Invalid Options"
+  },
+  "options_btn_remove_unknown": {
+    "message": "REMOVE UNKNOWN OPTIONS"
+  },
+  "options_btn_dismiss": {
+    "message": "DISMISS"
+  },
+  "options_status_valid": {
+    "message": "Options draft is valid"
+  },
+  "section_search": {
+    "message": "Search"
+  },
+  "section_style": {
+    "message": "Result Colors"
+  },
+  "section_sources": {
+    "message": "Sources"
+  },
+  "section_display": {
+    "message": "Display"
+  },
+  "section_bookmarks": {
+    "message": "Bookmarks"
+  },
+  "section_tabs": {
+    "message": "Tabs"
+  },
+  "section_history": {
+    "message": "History"
+  },
+  "section_searchEngines": {
+    "message": "Search Engines"
+  },
+  "section_scores": {
+    "message": "Scoring"
+  },
+  "section_powerUsers": {
+    "message": "Power Users"
+  },
+  "option_searchStrategy_title": {
+    "message": "Search Strategy"
+  },
+  "option_searchStrategy_desc": {
+    "message": "Choose how searches behave: `precise` favors exact matches and fastest responses, while `fuzzy` tolerates typos and similar words but runs a bit slower."
+  },
+  "option_searchMaxResults_title": {
+    "message": "Max Search Results"
+  },
+  "option_searchMaxResults_desc": {
+    "message": "Maximum number of results shown for a normal search. Tag, folder, and tab lists always show everything relevant."
+  },
+  "option_searchFuzzyness_title": {
+    "message": "Search Fuzziness"
+  },
+  "option_searchFuzzyness_desc": {
+    "message": "How tolerant fuzzy search should be. 0 behaves like precise search; values closer to 1 allow more relaxed matches."
+  },
+  "option_openInCurrentTab_title": {
+    "message": "Open in Current Tab"
+  },
+  "option_openInCurrentTab_desc": {
+    "message": "Open results in the current tab by default. When enabled, hold Shift or Alt to open in a new tab instead, inverting the usual behavior."
+  },
+  "option_bookmarkColor_title": {
+    "message": "Bookmark Color"
+  },
+  "option_bookmarkColor_desc": {
+    "message": "Hex color applied to bookmark results in the list."
+  },
+  "option_tabColor_title": {
+    "message": "Tab Color"
+  },
+  "option_tabColor_desc": {
+    "message": "Hex color applied to entries representing currently open tabs."
+  },
+  "option_historyColor_title": {
+    "message": "History Color"
+  },
+  "option_historyColor_desc": {
+    "message": "Hex color applied to browsing history results."
+  },
+  "option_searchColor_title": {
+    "message": "Search Suggestion Color"
+  },
+  "option_searchColor_desc": {
+    "message": "Hex color used for the built-in web search suggestions that follow the query."
+  },
+  "option_customSearchColor_title": {
+    "message": "Custom Search Color"
+  },
+  "option_customSearchColor_desc": {
+    "message": "Hex color used for custom search engine results triggered via aliases."
+  },
+  "option_directColor_title": {
+    "message": "Direct Navigation Color"
+  },
+  "option_directColor_desc": {
+    "message": "Hex color applied to direct navigation suggestions (for example when typing a URL)."
+  },
+  "option_enableTabs_title": {
+    "message": "Enable Tabs Search"
+  },
+  "option_enableTabs_desc": {
+    "message": "Include your currently open browser tabs in the search results. Disable if you only want saved items."
+  },
+  "option_enableBookmarks_title": {
+    "message": "Enable Bookmarks Search"
+  },
+  "option_enableBookmarks_desc": {
+    "message": "Include bookmarks in the index so they can be searched."
+  },
+  "option_enableHistory_title": {
+    "message": "Enable History Search"
+  },
+  "option_enableHistory_desc": {
+    "message": "Include browsing history in the index. Large history ranges can slow down startup on older machines."
+  },
+  "option_enableSearchEngines_title": {
+    "message": "Enable Search Engines"
+  },
+  "option_enableSearchEngines_desc": {
+    "message": "Show quick links to web search engines that use the current query."
+  },
+  "option_enableDirectUrl_title": {
+    "message": "Enable Direct URL Navigation"
+  },
+  "option_enableDirectUrl_desc": {
+    "message": "Detect URL-shaped search terms and offer a direct navigation result at the top."
+  },
+  "option_quickBookmarkCurrentTab_title": {
+    "message": "Quick Bookmark Folder"
+  },
+  "option_quickBookmarkCurrentTab_desc": {
+    "message": "Folder name or folder ID used by the first default result that opens the rich bookmark editor for saving the active tab. Folder IDs are more reliable across localized browsers than English folder names like the default. Set to false, an empty string, or only whitespace to disable."
+  },
+  "option_displayTags_title": {
+    "message": "Display Tags"
+  },
+  "option_displayTags_desc": {
+    "message": "Show hashtag-style tags extracted from bookmark titles as clickable badges."
+  },
+  "option_displayFolderName_title": {
+    "message": "Display Folder Names"
+  },
+  "option_displayFolderName_desc": {
+    "message": "Show each bookmark's folder trail as clickable breadcrumbs."
+  },
+  "option_displayTabGroup_title": {
+    "message": "Display Tab Groups"
+  },
+  "option_displayTabGroup_desc": {
+    "message": "Show tab group names as clickable badges for open tabs."
+  },
+  "option_displaySearchMatchHighlight_title": {
+    "message": "Highlight Search Matches"
+  },
+  "option_displaySearchMatchHighlight_desc": {
+    "message": "Highlight matching text in titles and URLs. Turn off to reduce rendering work on slower devices."
+  },
+  "option_displayLastVisit_title": {
+    "message": "Display Last Visit Time"
+  },
+  "option_displayLastVisit_desc": {
+    "message": "Show how long ago each result was last visited when that information is available."
+  },
+  "option_displayVisitCounter_title": {
+    "message": "Display Visit Counter"
+  },
+  "option_displayVisitCounter_desc": {
+    "message": "Show how many times an item has been visited according to your browsing history."
+  },
+  "option_displayDateAdded_title": {
+    "message": "Display Date Added"
+  },
+  "option_displayDateAdded_desc": {
+    "message": "Show the date a bookmark was created (YYYY-MM-DD) when that information exists."
+  },
+  "option_displayScore_title": {
+    "message": "Display Score"
+  },
+  "option_displayScore_desc": {
+    "message": "Show the numeric relevance score next to each result, which can be useful when tuning ranking options."
+  },
+  "option_displayFavicons_title": {
+    "message": "Display Favicons"
+  },
+  "option_displayFavicons_desc": {
+    "message": "Show real website favicons. Requires the 'favicon' permission."
+  },
+  "option_bookmarksIgnoreFolderList_title": {
+    "message": "Ignored Bookmark Folders"
+  },
+  "option_bookmarksIgnoreFolderList_desc": {
+    "message": "Array of bookmark folder paths whose contents should never be indexed. All subfolders of the listed folders are skipped as well."
+  },
+  "option_tabsOnlyCurrentWindow_title": {
+    "message": "Tabs in Current Window Only"
+  },
+  "option_tabsOnlyCurrentWindow_desc": {
+    "message": "Limit tab indexing to the active browser window. Helps multi-window users keep the result set focused."
+  },
+  "option_maxRecentTabsToShow_title": {
+    "message": "Max Recent Tabs to Show"
+  },
+  "option_maxRecentTabsToShow_desc": {
+    "message": "Number of most recently used tabs to show when the popup opens without a search term. Set to 0 to disable the MRU list entirely."
+  },
+  "option_historyDaysAgo_title": {
+    "message": "History Depth (Days)"
+  },
+  "option_historyDaysAgo_desc": {
+    "message": "How many days back in time the extension should request items from the browsing history."
+  },
+  "option_historyMaxItems_title": {
+    "message": "Max History Items"
+  },
+  "option_historyMaxItems_desc": {
+    "message": "Upper bound on the number of history items retrieved. Larger values increase initialization time and memory usage."
+  },
+  "option_historyIgnoreList_title": {
+    "message": "History Ignore List"
+  },
+  "option_historyIgnoreList_desc": {
+    "message": "List of string fragments. History entries whose URL contains any of these fragments will be excluded from indexing."
+  },
+  "option_searchEngineChoices_title": {
+    "message": "Search Engine Choices"
+  },
+  "option_searchEngineChoices_desc": {
+    "message": "Ordered list of built-in search engines that appear as fallback actions. `$s` within the `urlPrefix` is replaced with the search term; otherwise the term is appended."
+  },
+  "option_customSearchEngines_title": {
+    "message": "Custom Search Engines"
+  },
+  "option_customSearchEngines_desc": {
+    "message": "Custom search engine definitions that can be triggered with aliases (e.g. `g query`). `$s` inside `urlPrefix` is replaced with the search term. `blank` is optional and used when the alias is entered without a query."
+  },
+  "option_scoreBookmarkBase_title": {
+    "message": "Bookmark Base Score"
+  },
+  "option_scoreBookmarkBase_desc": {
+    "message": "Base score applied to bookmark results before any multipliers or bonuses are added."
+  },
+  "option_scoreTabBase_title": {
+    "message": "Tab Base Score"
+  },
+  "option_scoreTabBase_desc": {
+    "message": "Base score applied to open tab results before additional weighting."
+  },
+  "option_scoreHistoryBase_title": {
+    "message": "History Base Score"
+  },
+  "option_scoreHistoryBase_desc": {
+    "message": "Base score applied to history results before additional weighting."
+  },
+  "option_scoreSearchEngineBase_title": {
+    "message": "Search Engine Base Score"
+  },
+  "option_scoreSearchEngineBase_desc": {
+    "message": "Base score applied to built-in search engine choices to keep them sorted after organic results."
+  },
+  "option_scoreCustomSearchEngineBase_title": {
+    "message": "Custom Search Engine Base Score"
+  },
+  "option_scoreCustomSearchEngineBase_desc": {
+    "message": "Base score applied to custom search engine choices so they float to the top when their alias matches."
+  },
+  "option_scoreDirectUrlScore_title": {
+    "message": "Direct URL Score"
+  },
+  "option_scoreDirectUrlScore_desc": {
+    "message": "Base score awarded when the user types a direct URL, ensuring it always ranks first."
+  },
+  "option_scoreTagWeight_title": {
+    "message": "Tag Score Weight"
+  },
+  "option_scoreTagWeight_desc": {
+    "message": "Weight multiplier applied when a search term matches one of the parsed tags."
+  },
+  "option_scoreUrlWeight_title": {
+    "message": "URL Score Weight"
+  },
+  "option_scoreUrlWeight_desc": {
+    "message": "Weight multiplier applied when a search term matches the URL of an item."
+  },
+  "option_scoreGroupWeight_title": {
+    "message": "Group Score Weight"
+  },
+  "option_scoreGroupWeight_desc": {
+    "message": "Weight multiplier applied when a search term matches the tab group name."
+  },
+  "option_scoreFolderWeight_title": {
+    "message": "Folder Score Weight"
+  },
+  "option_scoreFolderWeight_desc": {
+    "message": "Weight multiplier applied when a search term matches the folder name of a bookmark."
+  },
+  "option_scoreCustomBonusScore_title": {
+    "message": "Enable Custom Bonus Score"
+  },
+  "option_scoreCustomBonusScore_desc": {
+    "message": "Allow bookmark titles to include manual bonus scores in the form ` +<score>` which are added to the calculated result score."
+  },
+  "option_scoreExactIncludesBonus_title": {
+    "message": "Word Exact Match Bonus"
+  },
+  "option_scoreExactIncludesBonus_desc": {
+    "message": "Bonus score awarded for each search term that appears as an exact substring within the title or URL."
+  },
+  "option_scoreExactStartsWithBonus_title": {
+    "message": "Starts With Bonus"
+  },
+  "option_scoreExactStartsWithBonus_desc": {
+    "message": "Bonus score awarded when the title or URL starts with the full search term."
+  },
+  "option_scoreExactEqualsBonus_title": {
+    "message": "Exact Equals Bonus"
+  },
+  "option_scoreExactEqualsBonus_desc": {
+    "message": "Bonus score awarded when the title exactly equals the search term."
+  },
+  "option_scoreExactTagMatchBonus_title": {
+    "message": "Tag Exact Match Bonus"
+  },
+  "option_scoreExactTagMatchBonus_desc": {
+    "message": "Bonus score awarded when a tag matches the search term exactly."
+  },
+  "option_scoreExactFolderMatchBonus_title": {
+    "message": "Folder Exact Match Bonus"
+  },
+  "option_scoreExactFolderMatchBonus_desc": {
+    "message": "Bonus score awarded when a folder name matches the search term exactly."
+  },
+  "option_scoreExactGroupMatchBonus_title": {
+    "message": "Tab Group Exact Match Bonus"
+  },
+  "option_scoreExactGroupMatchBonus_desc": {
+    "message": "Bonus score awarded when a tab group name matches the search term exactly."
+  },
+  "option_scoreExactPhraseTitleBonus_title": {
+    "message": "Exact Phrase Match Title Bonus"
+  },
+  "option_scoreExactPhraseTitleBonus_desc": {
+    "message": "Bonus score awarded for an exact phrase match within the title."
+  },
+  "option_scoreExactPhraseUrlBonus_title": {
+    "message": "Exact Phrase Match URL Bonus"
+  },
+  "option_scoreExactPhraseUrlBonus_desc": {
+    "message": "Bonus score awarded for an exact phrase match within the URL."
+  },
+  "option_scoreVisitedBonusScore_title": {
+    "message": "Visited Count Bonus Score"
+  },
+  "option_scoreVisitedBonusScore_desc": {
+    "message": "Multiplier applied per visit count when calculating the history-based bonus score."
+  },
+  "option_scoreVisitedBonusScoreMaximum_title": {
+    "message": "Max Visited Bonus Score"
+  },
+  "option_scoreVisitedBonusScoreMaximum_desc": {
+    "message": "Upper limit applied to the visit-based bonus so frequently visited items cannot exceed this value."
+  },
+  "option_scoreRecentBonusScoreMaximum_title": {
+    "message": "Max Recent Visit Bonus"
+  },
+  "option_scoreRecentBonusScoreMaximum_desc": {
+    "message": "Maximum bonus that can be awarded based on how recently an item was visited. Fresh visits score higher than those near the `historyDaysAgo` cutoff."
+  },
+  "option_scoreBookmarkOpenTabBonus_title": {
+    "message": "Bookmark Open Tab Bonus"
+  },
+  "option_scoreBookmarkOpenTabBonus_desc": {
+    "message": "Bonus score awarded when a bookmark is also open as an active browser tab."
+  },
+  "option_uFuzzyOptions_title": {
+    "message": "uFuzzy Options"
+  },
+  "option_uFuzzyOptions_desc": {
+    "message": "Advanced configuration passed straight to the uFuzzy search library. Leave empty to rely on the built-in tuning. See https://github.com/leeoniya/uFuzzy?tab=readme-ov-file#options."
+  },
+  "mgr_loading": {
+    "message": "Loading bookmarks..."
+  },
+  "mgr_title": {
+    "message": "Bookmark Manager"
+  },
+  "tab_overview": {
+    "message": "Overview"
+  },
+  "tab_bookmarks": {
+    "message": "Bookmarks"
+  },
+  "tab_duplicates": {
+    "message": "Bookmark Duplicates"
+  },
+  "tab_tags": {
+    "message": "Tag Manager"
+  },
+  "tab_cleanup": {
+    "message": "AI Cleanup"
+  },
+  "tab_undo": {
+    "message": "Undo History"
+  },
+  "tab_options": {
+    "message": "Options"
+  },
+  "btn_undo": {
+    "message": "Undo"
+  },
+  "btn_undo_title": {
+    "message": "Undo the latest bookmark manager change"
+  },
+  "btn_export": {
+    "message": "Export Bookmarks"
+  },
+  "btn_refresh": {
+    "message": "Refresh"
+  },
+  "btn_refresh_title": {
+    "message": "Refresh bookmarks"
+  },
+  "heading_folders": {
+    "message": "Folders"
+  },
+  "placeholder_search_bookmarks": {
+    "message": "Search bookmarks"
+  },
+  "btn_select_visible": {
+    "message": "Select Visible"
+  },
+  "btn_clear": {
+    "message": "Clear"
+  },
+  "heading_selection": {
+    "message": "Selection"
+  },
+  "selection_summary": {
+    "message": "Click a bookmark or check bookmarks."
+  },
+  "lbl_title": {
+    "message": "Title"
+  },
+  "lbl_url": {
+    "message": "URL"
+  },
+  "lbl_existing_tags": {
+    "message": "Existing Tags"
+  },
+  "lbl_bonus_score": {
+    "message": "Bonus Score"
+  },
+  "btn_save_bookmark": {
+    "message": "Save Bookmark"
+  },
+  "btn_save_bookmark_title": {
+    "message": "Save the current bookmark title, URL, and existing tags"
+  },
+  "heading_suggested_tags": {
+    "message": "Add suggested tags"
+  },
+  "desc_suggested_tags": {
+    "message": "Uses your browser's local LLM to suggest tags for the current bookmark or checked bookmarks."
+  },
+  "btn_suggest_tags": {
+    "message": "Suggest tags"
+  },
+  "btn_suggest_tags_title": {
+    "message": "Suggest tags for checked bookmarks, or the current bookmark if none are checked"
+  },
+  "lbl_suggested_tags": {
+    "message": "Suggested Tags"
+  },
+  "placeholder_suggested_tags": {
+    "message": "Suggested tags appear here"
+  },
+  "btn_add": {
+    "message": "Add"
+  },
+  "btn_add_title": {
+    "message": "Add these tags to checked bookmarks, or the current bookmark if none are checked"
+  },
+  "btn_replace": {
+    "message": "Replace"
+  },
+  "btn_replace_title": {
+    "message": "Replace all tags on checked bookmarks, or the current bookmark if none are checked"
+  },
+  "btn_remove": {
+    "message": "Remove"
+  },
+  "btn_remove_title": {
+    "message": "Remove these tags from checked bookmarks, or the current bookmark if none are checked"
+  },
+  "desc_bookmark_safety": {
+    "message": "Export a backup before changing many bookmarks. Undo only keeps the latest 50 changes and is cleared when this page closes."
+  },
+  "desc_bookmark_safety_dup": {
+    "message": "Export a backup before deleting bookmarks. Undo only keeps the latest 50 changes and is cleared when this page closes."
+  },
+  "desc_bookmark_safety_cleanup": {
+    "message": "Export a backup before applying cleanup changes. Undo only keeps the latest 50 changes and is cleared when this page closes."
+  },
+  "lbl_move_folder": {
+    "message": "Move to folder"
+  },
+  "btn_move": {
+    "message": "Move"
+  },
+  "btn_move_title": {
+    "message": "Move checked bookmarks, or the current bookmark if none are checked"
+  },
+  "heading_top_tags": {
+    "message": "Top Tags"
+  },
+  "heading_top_domains": {
+    "message": "Top Domains"
+  },
+  "heading_top_folders": {
+    "message": "Top Folders"
+  },
+  "heading_recently_added": {
+    "message": "Recently Added"
+  },
+  "desc_undo_history": {
+    "message": "Undo snapshots store the previous bookmark title, URL, parent folder, and position for each affected bookmark. They stay in memory only until this page closes or reloads."
+  },
+  "btn_export_undo": {
+    "message": "Export Undo History"
+  },
+  "btn_import_undo": {
+    "message": "Import Undo History"
+  },
+  "btn_select_lower": {
+    "message": "Select Lower-Ranked Copies"
+  },
+  "btn_select_none": {
+    "message": "Select None"
+  },
+  "btn_delete_selected": {
+    "message": "Delete Selected"
+  },
+  "placeholder_filter_tags": {
+    "message": "Filter tags"
+  },
+  "heading_ai_cleanup": {
+    "message": "AI Bookmark Cleanup"
+  },
+  "desc_ai_cleanup": {
+    "message": "Generate a prompt for external AI prompting or ask the browser's local LLM for a JSON proposal. Review every proposed change before applying it."
+  },
+  "btn_generate_prompt_lite": {
+    "message": "Generate Prompt (Lite)"
+  },
+  "btn_generate_prompt_adv": {
+    "message": "Generate Prompt (Advanced)"
+  },
+  "btn_run_local_ai": {
+    "message": "Run Local AI"
+  },
+  "btn_copy_prompt": {
+    "message": "Copy Prompt"
+  },
+  "lbl_cleanup_limit": {
+    "message": "Limit Proposed Changes"
+  },
+  "lbl_cleanup_focus": {
+    "message": "Limit Change Type"
+  },
+  "lbl_cleanup_folders": {
+    "message": "Limit Bookmark Folders"
+  },
+  "lbl_cleanup_amount": {
+    "message": "Limit Bookmark Amount"
+  },
+  "lbl_prompt_schema": {
+    "message": "Prompt and JSON Schema"
+  },
+  "lbl_proposal_json": {
+    "message": "Proposal JSON"
+  },
+  "placeholder_proposal_json": {
+    "message": "Paste the LLM JSON response here"
+  },
+  "btn_accept_all": {
+    "message": "Accept All"
+  },
+  "limit_changes_10": {
+    "message": "10 changes"
+  },
+  "limit_changes_25": {
+    "message": "25 changes"
+  },
+  "limit_changes_50": {
+    "message": "50 changes"
+  },
+  "limit_changes_100": {
+    "message": "100 changes"
+  },
+  "limit_changes_500": {
+    "message": "500 changes"
+  },
+  "limit_changes_unlimited": {
+    "message": "Unlimited"
+  },
+  "focus_everything": {
+    "message": "Everything"
+  },
+  "focus_tags": {
+    "message": "Tags"
+  },
+  "focus_title": {
+    "message": "Title"
+  },
+  "focus_folder": {
+    "message": "Folder Structure"
+  },
+  "focus_duplicates": {
+    "message": "Duplicates"
+  },
+  "limit_bookmarks_20": {
+    "message": "20 bookmarks"
+  },
+  "limit_bookmarks_50": {
+    "message": "50 bookmarks"
+  },
+  "limit_bookmarks_100": {
+    "message": "100 bookmarks"
+  },
+  "limit_bookmarks_500": {
+    "message": "500 bookmarks"
+  },
+  "limit_bookmarks_1000": {
+    "message": "1000 bookmarks"
+  },
+  "limit_bookmarks_2000": {
+    "message": "2000 bookmarks"
+  },
+  "options_description_bookmarks": {
+    "message": "Click a bookmark to edit its title and URL. Check one or more bookmarks to apply tag and move actions to that selection."
+  },
+  "heading_proposed_changes": {
+    "message": "Proposed Changes"
+  },
+  "lbl_stat_bookmarks": {
+    "message": "Bookmarks"
+  },
+  "lbl_stat_duplicates": {
+    "message": "Duplicates"
+  },
+  "lbl_stat_tagged": {
+    "message": "Tagged"
+  },
+  "lbl_stat_unique_tags": {
+    "message": "Unique Tags"
+  },
+  "lbl_stat_avg_tags": {
+    "message": "Avg Tags"
+  },
+  "lbl_stat_domains": {
+    "message": "Domains"
+  },
+  "lbl_stat_total_entries": {
+    "message": "Total bookmark entries"
+  },
+  "lbl_stat_removable_copies": {
+    "message": "removable copies"
+  },
+  "lbl_stat_without_tags": {
+    "message": "without tags"
+  },
+  "lbl_stat_tag_assignments": {
+    "message": "tag assignments"
+  },
+  "lbl_stat_on_tagged": {
+    "message": "on tagged bookmarks"
+  },
+  "lbl_stat_unique_hostnames": {
+    "message": "Unique URL hostnames"
+  },
+  "lbl_stat_manage_tags": {
+    "message": "Manage tags"
+  },
+  "empty_tags": {
+    "message": "No bookmark tags were found."
+  },
+  "empty_domains": {
+    "message": "No domains found"
+  },
+  "empty_folders": {
+    "message": "No folders found"
+  },
+  "empty_date_metadata": {
+    "message": "No bookmark date metadata found."
+  },
+  "empty_duplicates": {
+    "message": "No duplicate bookmark URLs were found."
+  },
+  "empty_undo_history": {
+    "message": "No bookmark manager changes to undo yet."
+  },
+  "empty_bookmarks_view": {
+    "message": "No bookmarks match this view."
+  },
+  "empty_use_tag": {
+    "message": "No bookmarks use this tag."
+  },
+  "title_no_undo_available": {
+    "message": "No bookmark manager changes are available to undo"
+  },
+  "opt_all_bookmarks": {
+    "message": "All bookmarks"
+  },
+  "proposal_no_proposal": {
+    "message": "No cleanup proposal loaded."
+  },
+  "proposal_empty_state": {
+    "message": "Generate or paste a proposal to review changes here."
+  },
+  "desc_duplicates_summary": {
+    "message": "bookmarks share URLs in"
+  },
+  "desc_duplicates_summary_2": {
+    "message": "groups. Ranking prefers more tags, cleaner titles, newer additions, then deeper folder placement. "
+  },
+  "desc_duplicates_summary_3": {
+    "message": " lower-ranked copies can be selected for deletion."
+  },
+  "desc_tag_summary": {
+    "message": "unique tags are assigned"
+  },
+  "desc_tag_summary_2": {
+    "message": "times across"
+  },
+  "desc_tag_summary_3": {
+    "message": "tagged bookmarks."
+  },
+  "notice_deletion_unavailable": {
+    "message": "Bookmark deletion is unavailable in this preview context."
+  },
+  "lbl_matching": {
+    "message": "matching"
+  },
+  "lbl_selected_in": {
+    "message": "selected in"
+  },
+  "btn_suggest_tags_retry": {
+    "message": "Suggest tags (try again)"
+  },
+  "lbl_selected_bookmark": {
+    "message": "selected bookmark"
+  },
+  "lbl_selected_bookmarks": {
+    "message": "selected bookmarks"
+  },
+  "lbl_one_selected_bookmark": {
+    "message": "1 selected bookmark"
+  },
+  "lbl_suggesting": {
+    "message": "Suggesting..."
+  },
+  "btn_previous": {
+    "message": "Previous"
+  },
+  "btn_next": {
+    "message": "Next"
+  },
+  "lbl_of": {
+    "message": "of"
+  },
+  "lbl_stat_open_prefix": {
+    "message": "Open"
+  },
+  "lbl_show_bookmarks_for": {
+    "message": "Show bookmarks for"
+  },
+  "empty_tags_filter": {
+    "message": "No tags match this filter."
+  },
+  "lbl_bookmark": {
+    "message": "bookmark"
+  },
+  "lbl_bookmarks": {
+    "message": "bookmarks"
+  },
+  "notice_tag_updates_unavailable": {
+    "message": "Tag updates are unavailable in this preview context."
+  },
+  "badge_new": {
+    "message": "new"
+  },
+  "badge_fuzzy": {
+    "message": "FUZZY"
+  },
+  "badge_precise": {
+    "message": "PRECISE"
+  }
+}
