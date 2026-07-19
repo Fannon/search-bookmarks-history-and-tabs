@@ -1,5 +1,8 @@
 # User Options
 
+> **Language / Язык:** **English** | [Русский](./localized-md/ru/OPTIONS.md)
+> *   **Main Readme / Главный Readme:** [README.md](./README.md) | [README.ru.md](./localized-md/ru/README.md)
+
 This document lists all available configuration options for the extension.
 You can customize these options in the Bookmark Manager's **Options** page using a schema-driven form and a synced **YAML** editor.
 Only options you explicitly customize need to be saved; everything else falls back to defaults.

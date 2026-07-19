@@ -1,5 +1,8 @@
 # CHANGELOG
 
+> **Language / Язык:** **English** | [Русский](./localized-md/ru/CHANGELOG.md)
+> *   **Main Readme / Главный Readme:** [README.md](./README.md) | [README.ru.md](./localized-md/ru/README.md)
+
 ## [Unreleased]
 
 - **IMPROVED**: Bookmark HTML export now includes the browser bookmark `ID` on each `<A>` and `<H3>` element. The attribute is safely ignored on re-import and lets external tooling (for example AI cleanup proposal files) reference bookmarks by their real id.

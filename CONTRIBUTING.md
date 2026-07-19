@@ -1,5 +1,8 @@
 # Contributing to Search Bookmarks, History & Tabs Extension
 
+> **Language / Язык:** **English** | [Русский](./localized-md/ru/CONTRIBUTING.md)
+> *   **Main Readme / Главный Readme:** [README.md](./README.md) | [README.ru.md](./localized-md/ru/README.md)
+
 Thank you for your interest in contributing!
 This project is a browser extension for searching and navigating bookmarks, history, and open tabs.
 Please review the guidelines below before submitting changes.
