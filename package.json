@@ -12,7 +12,7 @@
   "dependencies": {
     "@leeoniya/ufuzzy": "^1.0.19",
     "@yaireo/tagify": "^4.38.0",
-    "js-yaml": "^5.2.0"
+    "js-yaml": "^5.2.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
