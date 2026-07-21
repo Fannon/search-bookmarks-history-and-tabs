@@ -1,5 +1,8 @@
 # Tips & Tricks
 
+> **Language / Язык:** **English** | [Русский](./localized-md/ru/Tips.md)
+> *   **Main Readme / Главный Readme:** [README.md](./README.md) | [README.ru.md](./localized-md/ru/README.md)
+
 ### ⌨️ Keyboard Shortcuts
 
 - **Toggle Extension**: Default is <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>.</kbd>. You can customize this in browser extension settings.

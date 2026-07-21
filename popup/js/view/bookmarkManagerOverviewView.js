@@ -3,57 +3,70 @@
  */
 
 import { escapeHtml } from '../helper/utils.js'
+import { t } from '../helper/i18n.js'
 import { formatDecimal, formatInteger, renderBookmarkListItem } from './bookmarkManagerRenderHelpers.js'
 
 export const RECENT_BOOKMARKS_PER_PAGE = 20
 
 export function renderStats(stats) {
   return [
-    renderStat('Bookmarks', formatInteger(stats.bookmarkCount), 'Total bookmark entries', '#bookmarks', 'bookmark'),
     renderStat(
-      'Duplicates',
+      t('lbl_stat_bookmarks', 'Bookmarks'),
+      formatInteger(stats.bookmarkCount),
+      t('lbl_stat_total_entries', 'Total bookmark entries'),
+      '#bookmarks',
+      'bookmark',
+    ),
+    renderStat(
+      t('lbl_stat_duplicates', 'Duplicates'),
       formatInteger(stats.duplicateGroupCount),
-      `${formatInteger(stats.removableDuplicateCount)} removable copies`,
+      `${formatInteger(stats.removableDuplicateCount)} ${t('lbl_stat_removable_copies', 'removable copies')}`,
       '#duplicates',
       'duplicate',
     ),
     renderStat(
-      'Tagged',
+      t('lbl_stat_tagged', 'Tagged'),
       formatInteger(stats.taggedBookmarkCount),
-      `${formatInteger(stats.untaggedBookmarkCount)} without tags`,
+      `${formatInteger(stats.untaggedBookmarkCount)} ${t('lbl_stat_without_tags', 'without tags')}`,
       '#tags',
       'tag',
-      'Manage tags',
+      t('lbl_stat_manage_tags', 'Manage tags'),
     ),
     renderStat(
-      'Unique Tags',
+      t('lbl_stat_unique_tags', 'Unique Tags'),
       formatInteger(stats.uniqueTagCount),
-      `${formatInteger(stats.tagAssignmentCount)} tag assignments`,
+      `${formatInteger(stats.tagAssignmentCount)} ${t('lbl_stat_tag_assignments', 'tag assignments')}`,
       '#tags',
       'tag',
-      'Manage tags',
+      t('lbl_stat_manage_tags', 'Manage tags'),
     ),
     renderStat(
-      'Avg Tags',
+      t('lbl_stat_avg_tags', 'Avg Tags'),
       formatDecimal(stats.averageTagsPerBookmark),
-      `${formatDecimal(stats.averageTagsPerTaggedBookmark)} on tagged bookmarks`,
+      `${formatDecimal(stats.averageTagsPerTaggedBookmark)} ${t('lbl_stat_on_tagged', 'on tagged bookmarks')}`,
       '#tags',
       'tag',
-      'Manage tags',
+      t('lbl_stat_manage_tags', 'Manage tags'),
     ),
-    renderStat('Domains', formatInteger(stats.uniqueDomainCount), 'Unique URL hostnames', undefined, 'domain'),
+    renderStat(
+      t('lbl_stat_domains', 'Domains'),
+      formatInteger(stats.uniqueDomainCount),
+      t('lbl_stat_unique_hostnames', 'Unique URL hostnames'),
+      undefined,
+      'domain',
+    ),
   ].join('')
 }
 
 export function renderTagSummary(stats) {
   if (!stats.uniqueTagCount) {
-    return '<p>No bookmark tags were found.</p>'
+    return `<p>${t('empty_tags', 'No bookmark tags were found.')}</p>`
   }
 
   return `
-    <p>${formatInteger(stats.uniqueTagCount)} unique tags are assigned ${formatInteger(
+    <p>${formatInteger(stats.uniqueTagCount)} ${t('desc_tag_summary', 'unique tags are assigned')} ${formatInteger(
       stats.tagAssignmentCount,
-    )} times across ${formatInteger(stats.taggedBookmarkCount)} tagged bookmarks.</p>
+    )} ${t('desc_tag_summary_2', 'times across')} ${formatInteger(stats.taggedBookmarkCount)} ${t('desc_tag_summary_3', 'tagged bookmarks.')}</p>
   `
 }
 
@@ -95,7 +108,7 @@ export function renderRecentBookmarks(bookmarks, requestedPage = 1) {
 
   if (!recentBookmarks.length) {
     return {
-      html: '<p class="empty-state">No bookmark date metadata found.</p>',
+      html: `<p class="empty-state">${t('empty_date_metadata', 'No bookmark date metadata found.')}</p>`,
       page: 1,
     }
   }

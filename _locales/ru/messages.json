@@ -1,0 +1,932 @@
+{
+  "extension_name": {
+    "message": "Поиск закладок, истории и вкладок"
+  },
+  "extension_description": {
+    "message": "Расширение для (нечеткого) поиска и навигации по закладкам, истории и открытым вкладкам."
+  },
+  "command_description": {
+    "message": "Открыть всплывающее окно поиска"
+  },
+  "search_placeholder": {
+    "message": "Поиск по вкладкам, закладкам и истории"
+  },
+  "toggle_search_approach": {
+    "message": "Переключить метод поиска"
+  },
+  "toggle_search_strategy": {
+    "message": "Переключить стратегию поиска"
+  },
+  "loading": {
+    "message": "Загрузка..."
+  },
+  "nav_search": {
+    "message": "Поиск"
+  },
+  "nav_tags": {
+    "message": "Теги"
+  },
+  "nav_folders": {
+    "message": "Папки"
+  },
+  "nav_groups": {
+    "message": "Группы"
+  },
+  "nav_manager": {
+    "message": "Диспетчер"
+  },
+  "nav_options": {
+    "message": "Настройки"
+  },
+  "nav_help": {
+    "message": "Справка"
+  },
+  "open_manager": {
+    "message": "Открыть диспетчер закладок"
+  },
+  "open_options": {
+    "message": "Открыть настройки в диспетчере закладок"
+  },
+  "edit_title_placeholder": {
+    "message": "Название закладки"
+  },
+  "edit_url_placeholder": {
+    "message": "URL-адрес закладки"
+  },
+  "edit_tags_placeholder": {
+    "message": "Теги закладки"
+  },
+  "edit_delete": {
+    "message": "УДАЛИТЬ"
+  },
+  "edit_favorite_title": {
+    "message": "Добавить в избранное"
+  },
+  "edit_manage": {
+    "message": "УПРАВЛЕНИЕ"
+  },
+  "edit_manage_title": {
+    "message": "Открыть эту закладку в Диспетчере закладок"
+  },
+  "edit_cancel": {
+    "message": "ОТМЕНА"
+  },
+  "edit_save": {
+    "message": "СОХРАНИТЬ"
+  },
+  "options_title": {
+    "message": "Настройки"
+  },
+  "options_description": {
+    "message": "Редактируйте только те параметры, которые вы хотите переопределить. Неотмеченные параметры используют значения по умолчанию и не сохраняются в YAML."
+  },
+  "options_reset": {
+    "message": "Сбросить"
+  },
+  "options_save": {
+    "message": "Сохранить настройки"
+  },
+  "options_filter_placeholder": {
+    "message": "Фильтр настроек..."
+  },
+  "options_yaml_label": {
+    "message": "YAML"
+  },
+  "options_settings_title": {
+    "message": "Параметры"
+  },
+  "options_customize": {
+    "message": "Настроить"
+  },
+  "options_enabled": {
+    "message": "Включено"
+  },
+  "options_add_item": {
+    "message": "Добавить пункт"
+  },
+  "options_add_search_engine": {
+    "message": "Добавить поисковик"
+  },
+  "options_remove": {
+    "message": "Удалить"
+  },
+  "options_name": {
+    "message": "Название"
+  },
+  "options_url_prefix": {
+    "message": "Префикс URL"
+  },
+  "options_aliases": {
+    "message": "Алиасы"
+  },
+  "options_blank_url": {
+    "message": "Пустой URL"
+  },
+  "options_help": {
+    "message": "Справка"
+  },
+  "options_default": {
+    "message": "По умолчанию"
+  },
+  "options_invalid_title": {
+    "message": "Недействительные параметры"
+  },
+  "options_btn_remove_unknown": {
+    "message": "УДАЛИТЬ НЕИЗВЕСТНЫЕ НАСТРОЙКИ"
+  },
+  "options_btn_dismiss": {
+    "message": "ЗАКРЫТЬ"
+  },
+  "options_status_valid": {
+    "message": "Черновик настроек корректен"
+  },
+  "section_search": {
+    "message": "Поиск"
+  },
+  "section_style": {
+    "message": "Цвета результатов"
+  },
+  "section_sources": {
+    "message": "Источники"
+  },
+  "section_display": {
+    "message": "Отображение"
+  },
+  "section_bookmarks": {
+    "message": "Закладки"
+  },
+  "section_tabs": {
+    "message": "Вкладки"
+  },
+  "section_history": {
+    "message": "История"
+  },
+  "section_searchEngines": {
+    "message": "Поисковые системы"
+  },
+  "section_scores": {
+    "message": "Оценка (Scoring)"
+  },
+  "section_powerUsers": {
+    "message": "Продвинутые настройки"
+  },
+  "option_searchStrategy_title": {
+    "message": "Стратегия поиска"
+  },
+  "option_searchStrategy_desc": {
+    "message": "Выберите поведение при поиске: `precise` (точный) отдает приоритет точным совпадениям и работает максимально быстро, в то время как `fuzzy` (нечеткий) допускает опечатки и похожие слова, но работает немного медленнее."
+  },
+  "option_searchMaxResults_title": {
+    "message": "Максимум результатов поиска"
+  },
+  "option_searchMaxResults_desc": {
+    "message": "Максимальное количество результатов, отображаемых при обычном поиске. Списки тегов, папок и вкладок всегда отображают все соответствующие элементы."
+  },
+  "option_searchFuzzyness_title": {
+    "message": "Степень нечеткости поиска"
+  },
+  "option_searchFuzzyness_desc": {
+    "message": "Уровень допустимости опечаток для нечеткого поиска. При значении 0 ведет себя как точный поиск; значения ближе к 1 допускают больше неточных совпадений."
+  },
+  "option_openInCurrentTab_title": {
+    "message": "Открывать в текущей вкладке"
+  },
+  "option_openInCurrentTab_desc": {
+    "message": "Открывать результаты в текущей вкладке по умолчанию. Если включено, удерживайте Shift или Alt, чтобы открыть в новой вкладке (инвертирует поведение по умолчанию)."
+  },
+  "option_bookmarkColor_title": {
+    "message": "Цвет закладок"
+  },
+  "option_bookmarkColor_desc": {
+    "message": "HEX-цвет, применяемый к закладкам в списке результатов."
+  },
+  "option_tabColor_title": {
+    "message": "Цвет вкладок"
+  },
+  "option_tabColor_desc": {
+    "message": "HEX-цвет, применяемый к открытым вкладкам в списке результатов."
+  },
+  "option_historyColor_title": {
+    "message": "Цвет истории"
+  },
+  "option_historyColor_desc": {
+    "message": "HEX-цвет, применяемый к элементам истории посещений."
+  },
+  "option_searchColor_title": {
+    "message": "Цвет встроенного поиска"
+  },
+  "option_searchColor_desc": {
+    "message": "HEX-цвет для встроенных предложений веб-поиска, следующих за поисковым запросом."
+  },
+  "option_customSearchColor_title": {
+    "message": "Цвет альтернативного поиска"
+  },
+  "option_customSearchColor_desc": {
+    "message": "HEX-цвет для результатов пользовательских поисковых систем, вызываемых по алиасам."
+  },
+  "option_directColor_title": {
+    "message": "Цвет прямой навигации"
+  },
+  "option_directColor_desc": {
+    "message": "HEX-цвет для предложений прямого перехода (например, при вводе URL-адреса)."
+  },
+  "option_enableTabs_title": {
+    "message": "Включить поиск по вкладкам"
+  },
+  "option_enableTabs_desc": {
+    "message": "Включать открытые вкладки браузера в результаты поиска. Отключите, если хотите искать только по сохраненным элементам."
+  },
+  "option_enableBookmarks_title": {
+    "message": "Включить поиск по закладкам"
+  },
+  "option_enableBookmarks_desc": {
+    "message": "Включать закладки в индекс для возможности поиска по ним."
+  },
+  "option_enableHistory_title": {
+    "message": "Включить поиск по истории"
+  },
+  "option_enableHistory_desc": {
+    "message": "Включать историю посещений в индекс. Большой объем истории может замедлить запуск на старых компьютерах."
+  },
+  "option_enableSearchEngines_title": {
+    "message": "Включить поисковые системы"
+  },
+  "option_enableSearchEngines_desc": {
+    "message": "Показывать быстрые ссылки на поисковые системы, использующие текущий запрос."
+  },
+  "option_enableDirectUrl_title": {
+    "message": "Включить прямой переход по URL"
+  },
+  "option_enableDirectUrl_desc": {
+    "message": "Обнаруживать поисковые запросы в формате URL и предлагать прямой переход в самом верху результатов."
+  },
+  "option_quickBookmarkCurrentTab_title": {
+    "message": "Папка быстрого сохранения"
+  },
+  "option_quickBookmarkCurrentTab_desc": {
+    "message": "Название или ID папки, используемой по умолчанию для быстрого сохранения активной вкладки. Идентификаторы папок (ID) более надежны в локализованных версиях браузеров, чем их названия. Укажите false или оставьте пустым для отключения."
+  },
+  "option_displayTags_title": {
+    "message": "Показывать теги"
+  },
+  "option_displayTags_desc": {
+    "message": "Отображать теги в виде хэштегов, извлеченных из названий закладок, как кликабельные значки."
+  },
+  "option_displayFolderName_title": {
+    "message": "Показывать имена папок"
+  },
+  "option_displayFolderName_desc": {
+    "message": "Отображать путь к папке закладки в виде кликабельных хлебных крошек."
+  },
+  "option_displayTabGroup_title": {
+    "message": "Показывать группы вкладок"
+  },
+  "option_displayTabGroup_desc": {
+    "message": "Отображать названия групп вкладок в виде кликабельных значков для открытых вкладок."
+  },
+  "option_displaySearchMatchHighlight_title": {
+    "message": "Подсвечивать совпадения"
+  },
+  "option_displaySearchMatchHighlight_desc": {
+    "message": "Подсвечивать совпадающий текст в названиях и URL. Отключите для снижения нагрузки на медленных устройствах."
+  },
+  "option_displayLastVisit_title": {
+    "message": "Показывать время последнего посещения"
+  },
+  "option_displayLastVisit_desc": {
+    "message": "Отображать время последнего посещения элемента, если эта информация доступна."
+  },
+  "option_displayVisitCounter_title": {
+    "message": "Показывать счетчик посещений"
+  },
+  "option_displayVisitCounter_desc": {
+    "message": "Отображать количество посещений элемента в соответствии с историей браузера."
+  },
+  "option_displayDateAdded_title": {
+    "message": "Показывать дату добавления"
+  },
+  "option_displayDateAdded_desc": {
+    "message": "Отображать дату создания закладки (ГГГГ-ММ-ДД), если она доступна."
+  },
+  "option_displayScore_title": {
+    "message": "Показывать оценку релевантности"
+  },
+  "option_displayScore_desc": {
+    "message": "Отображать числовую оценку релевантности рядом с каждым результатом (полезно при тонкой настройке ранжирования)."
+  },
+  "option_displayFavicons_title": {
+    "message": "Показывать фавиконы"
+  },
+  "option_displayFavicons_desc": {
+    "message": "Отображать фавиконы веб-сайтов. Требуется разрешение 'favicon'."
+  },
+  "option_bookmarksIgnoreFolderList_title": {
+    "message": "Игнорируемые папки закладок"
+  },
+  "option_bookmarksIgnoreFolderList_desc": {
+    "message": "Список путей к папкам закладок, содержимое которых не должно индексироваться. Все подпапки указанных папок также будут пропущены."
+  },
+  "option_tabsOnlyCurrentWindow_title": {
+    "message": "Искать вкладки только в текущем окне"
+  },
+  "option_tabsOnlyCurrentWindow_desc": {
+    "message": "Ограничить индексацию вкладок только активным окном браузера. Помогает сфокусироваться при работе с несколькими окнами."
+  },
+  "option_maxRecentTabsToShow_title": {
+    "message": "Максимум последних вкладок"
+  },
+  "option_maxRecentTabsToShow_desc": {
+    "message": "Количество недавно использованных вкладок, отображаемых при открытии окна без поискового запроса. Установите 0 для полного отключения этого списка."
+  },
+  "option_historyDaysAgo_title": {
+    "message": "Глубина истории в днях"
+  },
+  "option_historyDaysAgo_desc": {
+    "message": "За сколько дней назад запрашивать историю посещений браузера."
+  },
+  "option_historyMaxItems_title": {
+    "message": "Максимум элементов истории"
+  },
+  "option_historyMaxItems_desc": {
+    "message": "Максимальное количество загружаемых элементов истории. Большие значения увеличивают время инициализации и потребление памяти."
+  },
+  "option_historyIgnoreList_title": {
+    "message": "Игнорируемые фрагменты истории"
+  },
+  "option_historyIgnoreList_desc": {
+    "message": "Список фрагментов строк. Исторические записи, URL которых содержит любой из этих фрагментов, будут исключены из индекса."
+  },
+  "option_searchEngineChoices_title": {
+    "message": "Выбор поисковых систем"
+  },
+  "option_searchEngineChoices_desc": {
+    "message": "Упорядоченный список встроенных поисковых систем, отображаемых в качестве альтернативных вариантов. Символы `$s` в `urlPrefix` заменяются поисковым запросом."
+  },
+  "option_customSearchEngines_title": {
+    "message": "Пользовательские поисковые системы"
+  },
+  "option_customSearchEngines_desc": {
+    "message": "Настройки пользовательских поисковых систем, вызываемых по алиасам (например, `g запрос`). `$s` в `urlPrefix` заменяется запросом. Параметр `blank` является необязательным и используется при вызове алиаса без запроса."
+  },
+  "option_scoreBookmarkBase_title": {
+    "message": "Базовая оценка закладки"
+  },
+  "option_scoreBookmarkBase_desc": {
+    "message": "Базовая оценка для результатов закладок перед применением множителей и бонусов."
+  },
+  "option_scoreTabBase_title": {
+    "message": "Базовая оценка вкладки"
+  },
+  "option_scoreTabBase_desc": {
+    "message": "Базовая оценка для результатов открытых вкладок перед применением дополнительных весов."
+  },
+  "option_scoreHistoryBase_title": {
+    "message": "Базовая оценка истории"
+  },
+  "option_scoreHistoryBase_desc": {
+    "message": "Базовая оценка для результатов истории посещений перед применением дополнительных весов."
+  },
+  "option_scoreSearchEngineBase_title": {
+    "message": "Базовая оценка поисковика"
+  },
+  "option_scoreSearchEngineBase_desc": {
+    "message": "Базовая оценка для встроенных поисковиков, чтобы они сортировались ниже основных результатов."
+  },
+  "option_scoreCustomSearchEngineBase_title": {
+    "message": "Базовая оценка альтернативного поиска"
+  },
+  "option_scoreCustomSearchEngineBase_desc": {
+    "message": "Базовая оценка для пользовательских поисковиков, чтобы они выводились наверх при совпадении алиаса."
+  },
+  "option_scoreDirectUrlScore_title": {
+    "message": "Базовая оценка перехода по URL"
+  },
+  "option_scoreDirectUrlScore_desc": {
+    "message": "Базовая оценка, начисляемая при вводе прямого URL-адреса, гарантирующая его первое место в списке."
+  },
+  "option_scoreTagWeight_title": {
+    "message": "Вес совпадения тега"
+  },
+  "option_scoreTagWeight_desc": {
+    "message": "Множитель веса релевантности при совпадении поискового запроса с одним из тегов элемента."
+  },
+  "option_scoreUrlWeight_title": {
+    "message": "Вес совпадения URL"
+  },
+  "option_scoreUrlWeight_desc": {
+    "message": "Множитель веса релевантности при совпадении поискового запроса с URL-адресом элемента."
+  },
+  "option_scoreGroupWeight_title": {
+    "message": "Вес совпадения группы"
+  },
+  "option_scoreGroupWeight_desc": {
+    "message": "Множитель веса релевантности при совпадении поискового запроса с названием группы вкладок."
+  },
+  "option_scoreFolderWeight_title": {
+    "message": "Вес совпадения папки"
+  },
+  "option_scoreFolderWeight_desc": {
+    "message": "Множитель веса релевантности при совпадении поискового запроса с именем папки закладки."
+  },
+  "option_scoreCustomBonusScore_title": {
+    "message": "Использовать ручные бонусы"
+  },
+  "option_scoreCustomBonusScore_desc": {
+    "message": "Разрешить ручные бонусы оценки вида ` +<число>` в названиях закладок, которые суммируются с итоговым баллом."
+  },
+  "option_scoreExactIncludesBonus_title": {
+    "message": "Бонус за точное совпадение слова"
+  },
+  "option_scoreExactIncludesBonus_desc": {
+    "message": "Бонусные баллы за каждое поисковое слово, которое точно входит в название или URL."
+  },
+  "option_scoreExactStartsWithBonus_title": {
+    "message": "Бонус за начало строки"
+  },
+  "option_scoreExactStartsWithBonus_desc": {
+    "message": "Бонусные баллы, начисляемые если название или URL начинается с полного поискового запроса."
+  },
+  "option_scoreExactEqualsBonus_title": {
+    "message": "Бонус за полное совпадение"
+  },
+  "option_scoreExactEqualsBonus_desc": {
+    "message": "Бонусные баллы, начисляемые если название элемента точно совпадает с поисковым запросом."
+  },
+  "option_scoreExactTagMatchBonus_title": {
+    "message": "Бонус за совпадение тега"
+  },
+  "option_scoreExactTagMatchBonus_desc": {
+    "message": "Бонусные баллы, начисляемые если тег точно совпадает с поисковым запросом."
+  },
+  "option_scoreExactFolderMatchBonus_title": {
+    "message": "Бонус за совпадение папки"
+  },
+  "option_scoreExactFolderMatchBonus_desc": {
+    "message": "Бонусные баллы, начисляемые если имя папки точно совпадает с поисковым запросом."
+  },
+  "option_scoreExactGroupMatchBonus_title": {
+    "message": "Бонус за совпадение группы вкладок"
+  },
+  "option_scoreExactGroupMatchBonus_desc": {
+    "message": "Бонусные баллы, начисляемые если название группы вкладок точно совпадает с поисковым запросом."
+  },
+  "option_scoreExactPhraseTitleBonus_title": {
+    "message": "Бонус за точную фразу в названии"
+  },
+  "option_scoreExactPhraseTitleBonus_desc": {
+    "message": "Бонусные баллы за совпадение точной фразы внутри названия."
+  },
+  "option_scoreExactPhraseUrlBonus_title": {
+    "message": "Бонус за точную фразу в URL"
+  },
+  "option_scoreExactPhraseUrlBonus_desc": {
+    "message": "Бонусные баллы за совпадение точной фразы внутри URL-адреса."
+  },
+  "option_scoreVisitedBonusScore_title": {
+    "message": "Множитель посещений"
+  },
+  "option_scoreVisitedBonusScore_desc": {
+    "message": "Множитель, применяемый к количеству посещений при расчете бонуса на основе популярности."
+  },
+  "option_scoreVisitedBonusScoreMaximum_title": {
+    "message": "Максимум бонуса за посещения"
+  },
+  "option_scoreVisitedBonusScoreMaximum_desc": {
+    "message": "Максимальное ограничение для бонуса по популярности посещений."
+  },
+  "option_scoreRecentBonusScoreMaximum_title": {
+    "message": "Максимум бонуса за недавность"
+  },
+  "option_scoreRecentBonusScoreMaximum_desc": {
+    "message": "Максимальный бонус за недавность посещения. Более свежие посещения оцениваются выше."
+  },
+  "option_scoreBookmarkOpenTabBonus_title": {
+    "message": "Бонус за открытую вкладку с закладкой"
+  },
+  "option_scoreBookmarkOpenTabBonus_desc": {
+    "message": "Бонусные баллы, если закладка одновременно открыта в виде активной вкладки браузера."
+  },
+  "option_uFuzzyOptions_title": {
+    "message": "Параметры uFuzzy"
+  },
+  "option_uFuzzyOptions_desc": {
+    "message": "Продвинутая конфигурация, передаваемая напрямую в библиотеку uFuzzy. Оставьте пустой для использования встроенных настроек."
+  },
+  "mgr_loading": {
+    "message": "Загрузка закладок..."
+  },
+  "mgr_title": {
+    "message": "Диспетчер закладок"
+  },
+  "tab_overview": {
+    "message": "Обзор"
+  },
+  "tab_bookmarks": {
+    "message": "Закладки"
+  },
+  "tab_duplicates": {
+    "message": "Дубликаты закладок"
+  },
+  "tab_tags": {
+    "message": "Диспетчер тегов"
+  },
+  "tab_cleanup": {
+    "message": "AI-очистка"
+  },
+  "tab_undo": {
+    "message": "История отмен"
+  },
+  "tab_options": {
+    "message": "Настройки"
+  },
+  "btn_undo": {
+    "message": "Отменить"
+  },
+  "btn_undo_title": {
+    "message": "Отменить последнее изменение в диспетчере закладок"
+  },
+  "btn_export": {
+    "message": "Экспорт закладок"
+  },
+  "btn_refresh": {
+    "message": "Обновить"
+  },
+  "btn_refresh_title": {
+    "message": "Обновить список закладок"
+  },
+  "heading_folders": {
+    "message": "Папки"
+  },
+  "placeholder_search_bookmarks": {
+    "message": "Поиск закладок"
+  },
+  "btn_select_visible": {
+    "message": "Выбрать видимые"
+  },
+  "btn_clear": {
+    "message": "Очистить"
+  },
+  "heading_selection": {
+    "message": "Выбор"
+  },
+  "selection_summary": {
+    "message": "Выберите закладку или отметьте галочками несколько штук."
+  },
+  "lbl_title": {
+    "message": "Название"
+  },
+  "lbl_url": {
+    "message": "URL-адрес"
+  },
+  "lbl_existing_tags": {
+    "message": "Существующие теги"
+  },
+  "lbl_bonus_score": {
+    "message": "Бонусные баллы"
+  },
+  "btn_save_bookmark": {
+    "message": "Сохранить закладку"
+  },
+  "btn_save_bookmark_title": {
+    "message": "Сохранить текущее название, URL и существующие теги"
+  },
+  "heading_suggested_tags": {
+    "message": "Добавить предложенные теги"
+  },
+  "desc_suggested_tags": {
+    "message": "Использует локальную нейросеть браузера для предложения тегов к выбранным закладкам."
+  },
+  "btn_suggest_tags": {
+    "message": "Предложить теги"
+  },
+  "btn_suggest_tags_title": {
+    "message": "Предложить теги для отмеченных закладок (или для текущей, если ничего не отмечено)"
+  },
+  "lbl_suggested_tags": {
+    "message": "Предложенные теги"
+  },
+  "placeholder_suggested_tags": {
+    "message": "Предложенные теги появятся здесь"
+  },
+  "btn_add": {
+    "message": "Добавить"
+  },
+  "btn_add_title": {
+    "message": "Добавить эти теги к отмеченным закладкам (или к текущей, если ничего не отмечено)"
+  },
+  "btn_replace": {
+    "message": "Заменить"
+  },
+  "btn_replace_title": {
+    "message": "Заменить все теги на отмеченных закладках (или на текущей, если ничего не отмечено)"
+  },
+  "btn_remove": {
+    "message": "Удалить"
+  },
+  "btn_remove_title": {
+    "message": "Удалить эти теги у отмеченных закладок (или у текущей, если ничего не отмечено)"
+  },
+  "desc_bookmark_safety": {
+    "message": "Экспортируйте резервную копию перед массовым изменением. История хранит только последние 50 изменений и сбрасывается при закрытии страницы."
+  },
+  "desc_bookmark_safety_dup": {
+    "message": "Экспортируйте резервную копию перед массовым удалением. История хранит только последние 50 изменений и сбрасывается при закрытии страницы."
+  },
+  "desc_bookmark_safety_cleanup": {
+    "message": "Экспортируйте резервную копию перед применением очистки. История хранит только последние 50 изменений и сбрасывается при закрытии страницы."
+  },
+  "lbl_move_folder": {
+    "message": "Переместить в папку"
+  },
+  "btn_move": {
+    "message": "Переместить"
+  },
+  "btn_move_title": {
+    "message": "Переместить отмеченные закладки (или текущую, если ничего не отмечено)"
+  },
+  "heading_top_tags": {
+    "message": "Популярные теги"
+  },
+  "heading_top_domains": {
+    "message": "Популярные домены"
+  },
+  "heading_top_folders": {
+    "message": "Популярные папки"
+  },
+  "heading_recently_added": {
+    "message": "Недавно добавленные"
+  },
+  "desc_undo_history": {
+    "message": "Снимки истории отмен содержат исходные заголовки, URL-адреса, родительские папки и позиции закладок. Они хранятся в памяти до закрытия или перезагрузки этой страницы."
+  },
+  "btn_export_undo": {
+    "message": "Экспорт истории отмен"
+  },
+  "btn_import_undo": {
+    "message": "Импорт истории отмен"
+  },
+  "btn_select_lower": {
+    "message": "Выбрать копии ниже рангом"
+  },
+  "btn_select_none": {
+    "message": "Снять выделение"
+  },
+  "btn_delete_selected": {
+    "message": "Удалить выбранные"
+  },
+  "placeholder_filter_tags": {
+    "message": "Фильтр тегов"
+  },
+  "heading_ai_cleanup": {
+    "message": "Интеллектуальная очистка закладок"
+  },
+  "desc_ai_cleanup": {
+    "message": "Сгенерируйте запрос для внешней нейросети или запросите локальный ИИ браузера для получения предложений в формате JSON. Обязательно проверяйте все предложенные изменения перед их применением."
+  },
+  "btn_generate_prompt_lite": {
+    "message": "Создать промпт (Быстрый)"
+  },
+  "btn_generate_prompt_adv": {
+    "message": "Создать промпт (Полный)"
+  },
+  "btn_run_local_ai": {
+    "message": "Запустить локальный ИИ"
+  },
+  "btn_copy_prompt": {
+    "message": "Копировать промпт"
+  },
+  "lbl_cleanup_limit": {
+    "message": "Ограничение числа изменений"
+  },
+  "lbl_cleanup_focus": {
+    "message": "Тип изменений для очистки"
+  },
+  "lbl_cleanup_folders": {
+    "message": "Папки для очистки"
+  },
+  "lbl_cleanup_amount": {
+    "message": "Максимум закладок для обработки"
+  },
+  "lbl_prompt_schema": {
+    "message": "Запрос и JSON-схема"
+  },
+  "lbl_proposal_json": {
+    "message": "JSON с предложениями"
+  },
+  "placeholder_proposal_json": {
+    "message": "Вставьте ответ ИИ в формате JSON сюда"
+  },
+  "btn_accept_all": {
+    "message": "Принять все"
+  },
+  "limit_changes_10": {
+    "message": "10 изменений"
+  },
+  "limit_changes_25": {
+    "message": "25 изменений"
+  },
+  "limit_changes_50": {
+    "message": "50 изменений"
+  },
+  "limit_changes_100": {
+    "message": "100 изменений"
+  },
+  "limit_changes_500": {
+    "message": "500 изменений"
+  },
+  "limit_changes_unlimited": {
+    "message": "Без ограничений"
+  },
+  "focus_everything": {
+    "message": "Всё подряд"
+  },
+  "focus_tags": {
+    "message": "Теги"
+  },
+  "focus_title": {
+    "message": "Названия"
+  },
+  "focus_folder": {
+    "message": "Структура папок"
+  },
+  "focus_duplicates": {
+    "message": "Дубликаты"
+  },
+  "limit_bookmarks_20": {
+    "message": "20 закладок"
+  },
+  "limit_bookmarks_50": {
+    "message": "50 закладок"
+  },
+  "limit_bookmarks_100": {
+    "message": "100 закладок"
+  },
+  "limit_bookmarks_500": {
+    "message": "500 закладок"
+  },
+  "limit_bookmarks_1000": {
+    "message": "1000 закладок"
+  },
+  "limit_bookmarks_2000": {
+    "message": "2000 закладок"
+  },
+  "options_description_bookmarks": {
+    "message": "Нажмите на закладку, чтобы изменить её название или URL. Отметьте одну или несколько закладок, чтобы применить действия с тегами или перемещением."
+  },
+  "heading_proposed_changes": {
+    "message": "Предлагаемые изменения"
+  },
+  "lbl_stat_bookmarks": {
+    "message": "Закладки"
+  },
+  "lbl_stat_duplicates": {
+    "message": "Дубликаты"
+  },
+  "lbl_stat_tagged": {
+    "message": "С тегами"
+  },
+  "lbl_stat_unique_tags": {
+    "message": "Уникальные теги"
+  },
+  "lbl_stat_avg_tags": {
+    "message": "Тегов в среднем"
+  },
+  "lbl_stat_domains": {
+    "message": "Домены"
+  },
+  "lbl_stat_total_entries": {
+    "message": "Всего закладок"
+  },
+  "lbl_stat_removable_copies": {
+    "message": "копий можно удалить"
+  },
+  "lbl_stat_without_tags": {
+    "message": "без тегов"
+  },
+  "lbl_stat_tag_assignments": {
+    "message": "присвоений тегов"
+  },
+  "lbl_stat_on_tagged": {
+    "message": "на закладках с тегами"
+  },
+  "lbl_stat_unique_hostnames": {
+    "message": "Уникальные хосты"
+  },
+  "lbl_stat_manage_tags": {
+    "message": "Управление тегами"
+  },
+  "empty_tags": {
+    "message": "Теги закладок не найдены."
+  },
+  "empty_domains": {
+    "message": "Домены не найдены"
+  },
+  "empty_folders": {
+    "message": "Папки не найдены"
+  },
+  "empty_date_metadata": {
+    "message": "Метаданные о датах создания закладок не найдены."
+  },
+  "empty_duplicates": {
+    "message": "Дубликаты закладок не найдены."
+  },
+  "empty_undo_history": {
+    "message": "История изменений пока пуста."
+  },
+  "empty_bookmarks_view": {
+    "message": "Нет закладок, соответствующих этому представлению."
+  },
+  "empty_use_tag": {
+    "message": "Нет закладок с этим тегом."
+  },
+  "title_no_undo_available": {
+    "message": "Нет доступных изменений для отмены"
+  },
+  "opt_all_bookmarks": {
+    "message": "Все закладки"
+  },
+  "proposal_no_proposal": {
+    "message": "План очистки не загружен."
+  },
+  "proposal_empty_state": {
+    "message": "Сгенерируйте или вставьте предложение ИИ, чтобы просмотреть изменения."
+  },
+  "desc_duplicates_summary": {
+    "message": "закладок имеют одинаковые URL в"
+  },
+  "desc_duplicates_summary_2": {
+    "message": "группах. При ранжировании предпочтение отдается наличию тегов, чистым заголовкам, новизне, а затем глубине папки. "
+  },
+  "desc_duplicates_summary_3": {
+    "message": " копий с меньшим рангом могут быть выбраны для удаления."
+  },
+  "desc_tag_summary": {
+    "message": "уникальных тегов назначены"
+  },
+  "desc_tag_summary_2": {
+    "message": "раз на"
+  },
+  "desc_tag_summary_3": {
+    "message": "закладках."
+  },
+  "notice_deletion_unavailable": {
+    "message": "Удаление закладок недоступно в режиме предварительного просмотра."
+  },
+  "lbl_matching": {
+    "message": "соответствующих"
+  },
+  "lbl_selected_in": {
+    "message": "выбрано в"
+  },
+  "btn_suggest_tags_retry": {
+    "message": "Предложить теги (повторить)"
+  },
+  "lbl_selected_bookmark": {
+    "message": "выбранная закладка"
+  },
+  "lbl_selected_bookmarks": {
+    "message": "выбранных закладок"
+  },
+  "lbl_one_selected_bookmark": {
+    "message": "Выбрана 1 закладка"
+  },
+  "lbl_suggesting": {
+    "message": "Предложение тегов..."
+  },
+  "btn_previous": {
+    "message": "Назад"
+  },
+  "btn_next": {
+    "message": "Вперед"
+  },
+  "lbl_of": {
+    "message": "из"
+  },
+  "lbl_stat_open_prefix": {
+    "message": "Открыть"
+  },
+  "lbl_show_bookmarks_for": {
+    "message": "Показать закладки для"
+  },
+  "empty_tags_filter": {
+    "message": "Нет тегов, соответствующих этому фильтру."
+  },
+  "lbl_bookmark": {
+    "message": "закладка"
+  },
+  "lbl_bookmarks": {
+    "message": "закладок"
+  },
+  "notice_tag_updates_unavailable": {
+    "message": "Редактирование тегов недоступно в режиме предварительного просмотра."
+  },
+  "badge_new": {
+    "message": "нов"
+  },
+  "badge_fuzzy": {
+    "message": "НЕЧЕТКИЙ"
+  },
+  "badge_precise": {
+    "message": "ТОЧНЫЙ"
+  }
+}

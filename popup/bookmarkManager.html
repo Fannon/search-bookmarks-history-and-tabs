@@ -11,51 +11,51 @@
 </head>
 
 <body id="bookmark-manager" data-beta="true">
-  <div id="manager-load" class="loading">Loading bookmarks...</div>
+  <div id="manager-load" class="loading" data-i18n="mgr_loading">Loading bookmarks...</div>
   <header class="manager-header">
     <div class="manager-title-row">
-      <h1><a href="#overview">Bookmark Manager</a></h1>
+      <h1><a href="#overview" data-i18n="mgr_title">Bookmark Manager</a></h1>
       <span class="beta-badge">BETA</span>
     </div>
     <nav class="manager-tabs" aria-label="Bookmark manager sections">
       <a href="#overview" data-manager-tab="overview" class="active" aria-current="page">
-        <span>Overview</span>
+        <span data-i18n="tab_overview">Overview</span>
       </a>
       <a href="#bookmarks" data-manager-tab="bookmarks">
-        <span>Bookmarks</span>
+        <span data-i18n="tab_bookmarks">Bookmarks</span>
         <strong id="bookmark-count"></strong>
       </a>
       <a href="#duplicates" data-manager-tab="duplicates">
-        <span>Bookmark Duplicates</span>
+        <span data-i18n="tab_duplicates">Bookmark Duplicates</span>
         <strong id="duplicate-count"></strong>
       </a>
       <a href="#tags" data-manager-tab="tags">
-        <span>Tag Manager</span>
+        <span data-i18n="tab_tags">Tag Manager</span>
         <strong id="tag-count"></strong>
       </a>
       <a href="#cleanup" data-manager-tab="cleanup">
-        <span>AI Cleanup</span>
+        <span data-i18n="tab_cleanup">AI Cleanup</span>
         <strong id="cleanup-count"></strong>
       </a>
       <a href="#undo" data-manager-tab="undo">
-        <span>Undo History</span>
+        <span data-i18n="tab_undo">Undo History</span>
         <strong id="undo-count"></strong>
       </a>
       <a href="#options" data-manager-tab="options">
-        <span>Options</span>
+        <span data-i18n="tab_options">Options</span>
       </a>
     </nav>
     <div class="manager-actions">
       <button id="undo-bookmark-change" class="button secondary" type="button"
-        title="Undo the latest bookmark manager change" disabled>Undo</button>
-      <button id="export-bookmarks" class="button secondary" type="button">Export Bookmarks</button>
-      <button id="refresh-bookmarks" class="button" type="button" title="Refresh bookmarks">
+        title="Undo the latest bookmark manager change" data-i18n-title="btn_undo_title" data-i18n="btn_undo" disabled>Undo</button>
+      <button id="export-bookmarks" class="button secondary" type="button" data-i18n="btn_export">Export Bookmarks</button>
+      <button id="refresh-bookmarks" class="button" type="button" title="Refresh bookmarks" data-i18n-title="btn_refresh_title">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" />
           <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
         </svg>
-        Refresh
+        <span data-i18n="btn_refresh">Refresh</span>
       </button>
     </div>
   </header>
@@ -64,10 +64,10 @@
     <section class="manager-content">
       <section data-manager-panel="bookmarks" class="manager-panel" hidden>
         <header class="manager-panel-header bookmark-page-header">
-          <h2>Bookmarks</h2>
+          <h2 data-i18n="tab_bookmarks">Bookmarks</h2>
           <div id="manager-status" class="manager-page-status" data-page-status data-tone="info" aria-live="polite">
           </div>
-          <p>
+          <p data-i18n="options_description_bookmarks">
             Click a bookmark to edit its title and URL. Check one or more bookmarks to apply tag and move actions to
             that selection.
           </p>
@@ -76,7 +76,7 @@
         <div class="bookmarks-workspace">
           <aside class="bookmark-tree-panel" aria-label="Bookmark folders">
             <div class="manager-panel-header compact">
-              <h2>Folders</h2>
+              <h2 data-i18n="heading_folders">Folders</h2>
             </div>
             <div id="bookmark-folder-tree" class="bookmark-folder-tree"></div>
           </aside>
@@ -84,10 +84,10 @@
           <section class="bookmark-browser-panel">
             <div class="bookmark-browser-toolbar">
               <input id="bookmark-manager-search" type="search" placeholder="Search bookmarks" autocomplete="off"
-                spellcheck="false" />
+                spellcheck="false" data-i18n-placeholder="placeholder_search_bookmarks" />
               <div class="bookmark-browser-actions">
-                <button id="select-visible-bookmarks" class="button secondary" type="button">Select Visible</button>
-                <button id="clear-managed-selection" class="button secondary" type="button">Clear</button>
+                <button id="select-visible-bookmarks" class="button secondary" type="button" data-i18n="btn_select_visible">Select Visible</button>
+                <button id="clear-managed-selection" class="button secondary" type="button" data-i18n="btn_clear">Clear</button>
               </div>
             </div>
 
@@ -98,55 +98,55 @@
 
               <aside class="bookmark-edit-panel" aria-label="Bookmark editing">
                 <section class="bookmark-tools-panel">
-                  <h2>Selection</h2>
-                  <p id="bookmark-selection-summary">Click a bookmark or check bookmarks.</p>
+                  <h2 data-i18n="heading_selection">Selection</h2>
+                  <p id="bookmark-selection-summary" data-i18n="selection_summary">Click a bookmark or check bookmarks.</p>
 
-                  <label for="bookmark-edit-title">Title</label>
+                  <label for="bookmark-edit-title" data-i18n="lbl_title">Title</label>
                   <input id="bookmark-edit-title" type="text" autocomplete="off" disabled />
-                  <label for="bookmark-edit-url">URL</label>
+                  <label for="bookmark-edit-url" data-i18n="lbl_url">URL</label>
                   <input id="bookmark-edit-url" type="url" autocomplete="off" disabled />
-                  <label for="bookmark-edit-tags">Existing Tags</label>
+                  <label for="bookmark-edit-tags" data-i18n="lbl_existing_tags">Existing Tags</label>
                   <input id="bookmark-edit-tags" type="text" disabled />
-                  <label for="bookmark-edit-score">Bonus Score</label>
+                  <label for="bookmark-edit-score" data-i18n="lbl_bonus_score">Bonus Score</label>
                   <input id="bookmark-edit-score" type="number" min="0" step="1" inputmode="numeric" disabled />
                   <div class="bookmark-edit-actions">
                     <button id="save-managed-bookmark" class="button success" type="button"
-                      title="Save the current bookmark title, URL, and existing tags" disabled>Save Bookmark</button>
+                      title="Save the current bookmark title, URL, and existing tags" data-i18n-title="btn_save_bookmark_title" data-i18n="btn_save_bookmark" disabled>Save Bookmark</button>
                   </div>
 
                   <div class="suggested-tags-section">
-                    <h3>Add suggested tags</h3>
-                    <p class="field-description">
+                    <h3 data-i18n="heading_suggested_tags">Add suggested tags</h3>
+                    <p class="field-description" data-i18n="desc_suggested_tags">
                       Uses your browser's local LLM to suggest tags for the current bookmark or checked bookmarks.
                     </p>
                     <button id="suggest-tags-selected" class="button secondary" type="button"
                       title="Suggest tags for checked bookmarks, or the current bookmark if none are checked"
-                      disabled>Suggest tags</button>
+                      data-i18n-title="btn_suggest_tags_title" data-i18n="btn_suggest_tags" disabled>Suggest tags</button>
                     <div id="tag-suggestion-status" class="tag-suggestion-status" aria-live="polite"></div>
-                    <label for="bookmark-bulk-tags">Suggested Tags</label>
-                    <input id="bookmark-bulk-tags" type="text" placeholder="Suggested tags appear here" disabled />
+                    <label for="bookmark-bulk-tags" data-i18n="lbl_suggested_tags">Suggested Tags</label>
+                    <input id="bookmark-bulk-tags" type="text" placeholder="Suggested tags appear here" data-i18n-placeholder="placeholder_suggested_tags" disabled />
                     <div class="bulk-tag-actions">
                       <button id="add-tags-selected" class="button success" type="button"
                         title="Add these tags to checked bookmarks, or the current bookmark if none are checked"
-                        disabled>Add</button>
+                        data-i18n-title="btn_add_title" data-i18n="btn_add" disabled>Add</button>
                       <button id="replace-tags-selected" class="button warning" type="button"
                         title="Replace all tags on checked bookmarks, or the current bookmark if none are checked"
-                        disabled>Replace</button>
+                        data-i18n-title="btn_replace_title" data-i18n="btn_replace" disabled>Replace</button>
                       <button id="remove-tags-selected" class="button danger" type="button"
                         title="Remove these tags from checked bookmarks, or the current bookmark if none are checked"
-                        disabled>Remove</button>
+                        data-i18n-title="btn_remove_title" data-i18n="btn_remove" disabled>Remove</button>
                     </div>
                   </div>
 
-                  <p class="bookmark-safety-note">
+                  <p class="bookmark-safety-note" data-i18n="desc_bookmark_safety">
                     Export a backup before changing many bookmarks. Undo only keeps the latest 50 changes and is cleared
                     when this page closes.
                   </p>
 
-                  <label for="bookmark-move-folder">Move to folder</label>
+                  <label for="bookmark-move-folder" data-i18n="lbl_move_folder">Move to folder</label>
                   <select id="bookmark-move-folder"></select>
                   <button id="move-selected-bookmarks" class="button warning" type="button"
-                    title="Move checked bookmarks, or the current bookmark if none are checked" disabled>Move</button>
+                    title="Move checked bookmarks, or the current bookmark if none are checked" data-i18n-title="btn_move_title" data-i18n="btn_move" disabled>Move</button>
                 </section>
               </aside>
             </div>
@@ -160,21 +160,21 @@
 
         <div class="overview-grid">
           <section>
-            <h2>Top Tags</h2>
+            <h2 data-i18n="heading_top_tags">Top Tags</h2>
             <div id="top-tags"></div>
           </section>
           <section>
-            <h2>Top Domains</h2>
+            <h2 data-i18n="heading_top_domains">Top Domains</h2>
             <div id="top-domains"></div>
           </section>
           <section>
-            <h2>Top Folders</h2>
+            <h2 data-i18n="heading_top_folders">Top Folders</h2>
             <div id="top-folders"></div>
           </section>
         </div>
 
         <section>
-          <h2>Recently Added</h2>
+          <h2 data-i18n="heading_recently_added">Recently Added</h2>
           <div id="recent-bookmarks"></div>
         </section>
 
@@ -182,16 +182,16 @@
 
       <section data-manager-panel="undo" class="manager-panel" hidden>
         <header class="manager-panel-header undo-page-header">
-          <h2>Undo History</h2>
+          <h2 data-i18n="tab_undo">Undo History</h2>
           <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
-          <p>
+          <p data-i18n="desc_undo_history">
             Undo snapshots store the previous bookmark title, URL, parent folder, and position for each affected
             bookmark. They stay in memory only until this page closes or reloads.
           </p>
         </header>
         <div class="undo-toolbar">
-          <button id="export-undo-history" class="button secondary" type="button" disabled>Export Undo History</button>
-          <button id="import-undo-history" class="button secondary" type="button">Import Undo History</button>
+          <button id="export-undo-history" class="button secondary" type="button" data-i18n="btn_export_undo" disabled>Export Undo History</button>
+          <button id="import-undo-history" class="button secondary" type="button" data-i18n="btn_import_undo">Import Undo History</button>
           <input id="import-undo-history-file" type="file" accept="application/json,.json" hidden />
         </div>
         <div id="bookmark-undo-history" class="bookmark-undo-history"></div>
@@ -199,20 +199,20 @@
 
       <section data-manager-panel="duplicates" class="manager-panel" hidden>
         <header class="manager-panel-header duplicate-page-header">
-          <h2>Duplicate Bookmarks</h2>
+          <h2 data-i18n="tab_duplicates">Duplicate Bookmarks</h2>
           <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
           <div id="duplicate-summary"></div>
         </header>
         <div class="duplicate-toolbar">
-          <p class="bookmark-safety-note">
+          <p class="bookmark-safety-note" data-i18n="desc_bookmark_safety_dup">
             Export a backup before deleting bookmarks. Undo only keeps the latest 50 changes and is cleared when this
             page closes.
           </p>
           <div class="duplicate-actions">
-            <button id="select-suggested" class="button secondary" type="button">Select Lower-Ranked Copies</button>
-            <button id="select-none" class="button secondary" type="button">Select None</button>
+            <button id="select-suggested" class="button secondary" type="button" data-i18n="btn_select_lower">Select Lower-Ranked Copies</button>
+            <button id="select-none" class="button secondary" type="button" data-i18n="btn_select_none">Select None</button>
             <button id="delete-selected" class="button danger" type="button" disabled>
-              Delete Selected (<span data-selected-count>0</span>)
+              <span data-i18n="btn_delete_selected">Delete Selected</span> (<span data-selected-count>0</span>)
             </button>
           </div>
         </div>
@@ -221,14 +221,14 @@
 
       <section data-manager-panel="tags" class="manager-panel" hidden>
         <header class="manager-panel-header tag-page-header">
-          <h2>Tag Manager</h2>
+          <h2 data-i18n="tab_tags">Tag Manager</h2>
           <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
           <div id="tag-summary"></div>
         </header>
         <div class="tag-toolbar">
-          <input id="tag-filter" type="search" placeholder="Filter tags" autocomplete="off" spellcheck="false" />
+          <input id="tag-filter" type="search" placeholder="Filter tags" autocomplete="off" spellcheck="false" data-i18n-placeholder="placeholder_filter_tags" />
         </div>
-        <p class="bookmark-safety-note">
+        <p class="bookmark-safety-note" data-i18n="desc_bookmark_safety">
           Export a backup before changing tags on many bookmarks. Undo only keeps the latest 50 changes and is cleared
           when this page closes.
         </p>
@@ -237,84 +237,84 @@
 
       <section data-manager-panel="cleanup" class="manager-panel" hidden>
         <header class="manager-panel-header cleanup-page-header">
-          <h2>AI Bookmark Cleanup</h2>
+          <h2 data-i18n="heading_ai_cleanup">AI Bookmark Cleanup</h2>
           <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
-          <p>
+          <p data-i18n="desc_ai_cleanup">
             Generate a prompt for external AI prompting or ask the browser's local LLM for a JSON proposal.
             Review every proposed change before applying it.
           </p>
         </header>
 
         <div class="cleanup-toolbar">
-          <button id="generate-cleanup-prompt" class="button secondary" type="button">Generate Prompt
+          <button id="generate-cleanup-prompt" class="button secondary" type="button" data-i18n="btn_generate_prompt_lite">Generate Prompt
             (Lite)</button>
-          <button id="generate-cleanup-prompt-full" class="button secondary" type="button">Generate Prompt
+          <button id="generate-cleanup-prompt-full" class="button secondary" type="button" data-i18n="btn_generate_prompt_adv">Generate Prompt
             (Advanced)</button>
-          <button id="run-local-cleanup" class="button secondary" type="button" disabled>Run Local AI</button>
-          <button id="copy-cleanup-prompt" class="button secondary" type="button" disabled>Copy Prompt</button>
+          <button id="run-local-cleanup" class="button secondary" type="button" data-i18n="btn_run_local_ai" disabled>Run Local AI</button>
+          <button id="copy-cleanup-prompt" class="button secondary" type="button" data-i18n="btn_copy_prompt" disabled>Copy Prompt</button>
           <span id="cleanup-prompt-size" class="cleanup-prompt-size"></span>
         </div>
 
         <div class="cleanup-control-row">
           <div>
-            <label for="cleanup-change-limit">Limit Proposed Changes</label>
+            <label for="cleanup-change-limit" data-i18n="lbl_cleanup_limit">Limit Proposed Changes</label>
             <select id="cleanup-change-limit">
-              <option value="10">10 changes</option>
-              <option value="25">25 changes</option>
-              <option value="50">50 changes</option>
-              <option value="100">100 changes</option>
-              <option value="500">500 changes</option>
-              <option value="unlimited" selected>Unlimited</option>
+              <option value="10" data-i18n="limit_changes_10">10 changes</option>
+              <option value="25" data-i18n="limit_changes_25">25 changes</option>
+              <option value="50" data-i18n="limit_changes_50">50 changes</option>
+              <option value="100" data-i18n="limit_changes_100">100 changes</option>
+              <option value="500" data-i18n="limit_changes_500">500 changes</option>
+              <option value="unlimited" data-i18n="limit_changes_unlimited" selected>Unlimited</option>
             </select>
           </div>
           <div>
-            <label for="cleanup-change-focus">Limit Change Type</label>
+            <label for="cleanup-change-focus" data-i18n="lbl_cleanup_focus">Limit Change Type</label>
             <select id="cleanup-change-focus">
-              <option value="everything" selected>Everything</option>
-              <option value="tags">Tags</option>
-              <option value="title">Title</option>
-              <option value="folder">Folder Structure</option>
-              <option value="duplicates">Duplicates</option>
+              <option value="everything" data-i18n="focus_everything" selected>Everything</option>
+              <option value="tags" data-i18n="focus_tags">Tags</option>
+              <option value="title" data-i18n="focus_title">Title</option>
+              <option value="folder" data-i18n="focus_folder">Folder Structure</option>
+              <option value="duplicates" data-i18n="focus_duplicates">Duplicates</option>
             </select>
           </div>
           <div>
-            <label for="cleanup-folder-scope">Limit Bookmark Folders</label>
+            <label for="cleanup-folder-scope" data-i18n="lbl_cleanup_folders">Limit Bookmark Folders</label>
             <select id="cleanup-folder-scope"></select>
           </div>
           <div>
-            <label for="cleanup-bookmark-limit">Limit Bookmark Amount</label>
+            <label for="cleanup-bookmark-limit" data-i18n="lbl_cleanup_amount">Limit Bookmark Amount</label>
             <select id="cleanup-bookmark-limit">
-              <option value="20">20 bookmarks</option>
-              <option value="50">50 bookmarks</option>
-              <option value="100">100 bookmarks</option>
-              <option value="500">500 bookmarks</option>
-              <option value="1000">1000 bookmarks</option>
-              <option value="2000">2000 bookmarks</option>
-              <option value="unlimited" selected>Unlimited</option>
+              <option value="20" data-i18n="limit_bookmarks_20">20 bookmarks</option>
+              <option value="50" data-i18n="limit_bookmarks_50">50 bookmarks</option>
+              <option value="100" data-i18n="limit_bookmarks_100">100 bookmarks</option>
+              <option value="500" data-i18n="limit_bookmarks_500">500 bookmarks</option>
+              <option value="1000" data-i18n="limit_bookmarks_1000">1000 bookmarks</option>
+              <option value="2000" data-i18n="limit_bookmarks_2000">2000 bookmarks</option>
+              <option value="unlimited" data-i18n="limit_changes_unlimited" selected>Unlimited</option>
             </select>
           </div>
         </div>
 
         <div class="cleanup-workspace">
           <section class="cleanup-prompt-panel">
-            <label for="cleanup-prompt">Prompt and JSON Schema</label>
+            <label for="cleanup-prompt" data-i18n="lbl_prompt_schema">Prompt and JSON Schema</label>
             <textarea id="cleanup-prompt" spellcheck="false" rows="16" readonly></textarea>
           </section>
 
           <section class="cleanup-result-panel">
-            <label for="cleanup-proposal-json">Proposal JSON</label>
+            <label for="cleanup-proposal-json" data-i18n="lbl_proposal_json">Proposal JSON</label>
             <textarea id="cleanup-proposal-json" spellcheck="false" rows="16"
-              placeholder="Paste the LLM JSON response here"></textarea>
+              placeholder="Paste the LLM JSON response here" data-i18n-placeholder="placeholder_proposal_json"></textarea>
             <div id="cleanup-status" class="cleanup-status" aria-live="polite"></div>
           </section>
         </div>
 
         <section class="cleanup-review-section">
           <header class="cleanup-review-header">
-            <h2>Proposed Changes</h2>
-            <button id="apply-all-cleanup-changes" class="button success" type="button" disabled>Accept All</button>
+            <h2 data-i18n="heading_proposed_changes">Proposed Changes</h2>
+            <button id="apply-all-cleanup-changes" class="button success" type="button" data-i18n="btn_accept_all" disabled>Accept All</button>
           </header>
-          <p class="bookmark-safety-note">
+          <p class="bookmark-safety-note" data-i18n="desc_bookmark_safety_cleanup">
             Export a backup before applying cleanup changes. Undo only keeps the latest 50 changes and is cleared when
             this page closes.
           </p>
@@ -326,9 +326,9 @@
       <section data-manager-panel="options" class="manager-panel" hidden>
         <header class="manager-panel-header options-page-header">
           <div>
-            <h2>Options</h2>
+            <h2 data-i18n="options_title">Options</h2>
             <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
-            <p>
+            <p data-i18n="options_description">
               Edit only the settings you want to override. Unchecked settings use the extension defaults and stay out of
               the saved YAML.
             </p>
@@ -336,9 +336,9 @@
           <div class="options-toolbar">
             <a id="opt-help" class="button secondary"
               href="https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/OPTIONS.md" target="_blank"
-              rel="noreferrer">Help</a>
-            <button id="opt-reset" class="button warning" type="button">Reset</button>
-            <button id="opt-save" class="button success" type="button">Save Options</button>
+              rel="noreferrer" data-i18n="options_help">Help</a>
+            <button id="opt-reset" class="button warning" type="button" data-i18n="options_reset">Reset</button>
+            <button id="opt-save" class="button success" type="button" data-i18n="options_save">Save Options</button>
           </div>
         </header>
 
@@ -346,19 +346,19 @@
           <div class="options-workspace">
             <section class="options-form-panel" aria-label="Option settings">
               <header class="options-column-header">
-                <h3>Settings</h3>
+                <h3 data-i18n="options_settings_title">Settings</h3>
               </header>
               <input id="options-filter" class="options-filter-input" type="search" placeholder="Filter options..."
-                autocomplete="off" />
+                autocomplete="off" data-i18n-placeholder="options_filter_placeholder" />
               <form id="options-form" class="options-form" novalidate></form>
             </section>
 
             <section class="options-yaml-panel">
               <header class="options-column-header">
-                <label for="config">YAML</label>
+                <label for="config" data-i18n="options_yaml_label">YAML</label>
               </header>
               <div class="textarea-container">
-                <textarea id="config" title="User Config" spellcheck="false"></textarea>
+                <textarea id="config" title="User Config" spellcheck="false" data-i18n-title="options_yaml_label"></textarea>
                 <div id="error-message" class="error-overlay" style="display: none"></div>
               </div>
             </section>
