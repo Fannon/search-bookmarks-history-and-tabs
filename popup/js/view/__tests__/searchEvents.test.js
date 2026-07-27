@@ -627,8 +627,98 @@ describe('searchEvents openResultItem', () => {
     expect(ext.browserApi.tabs.create).not.toHaveBeenCalled()
   })
 
-  it('matches existing tabs by normalized URL when originalUrl formatting differs', async () => {
+  it('opens a new tab for a different hash by default (hash-aware matching)', async () => {
     const { module, viewModule } = await setupSearchEvents({
+      results: [
+        {
+          type: 'bookmark',
+          originalId: 'bm-1',
+          originalUrl: 'https://app.test/site#Paystubs-Display',
+          url: 'app.test/site',
+          title: 'Paystubs',
+          score: 10,
+        },
+      ],
+    })
+    await viewModule.renderSearchResults()
+
+    // A tab on the same base URL but a different hash route is already open.
+    ext.model.tabs = [
+      {
+        originalId: 42,
+        originalUrl: 'https://app.test/site#leaverequest-create',
+        url: 'app.test/site',
+        windowId: 101,
+      },
+    ]
+
+    module.openResultItem({
+      button: 0,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+
+    // Must NOT switch to the existing tab; must open a new one instead.
+    expect(ext.browserApi.tabs.update).not.toHaveBeenCalled()
+    expect(ext.browserApi.tabs.create).toHaveBeenCalledWith({
+      active: true,
+      url: 'https://app.test/site#Paystubs-Display',
+    })
+  })
+
+  it('switches to an existing tab when the full URL including hash matches (default)', async () => {
+    const { module, viewModule } = await setupSearchEvents({
+      results: [
+        {
+          type: 'bookmark',
+          originalId: 'bm-1',
+          originalUrl: 'https://app.test/site#Paystubs-Display',
+          url: 'app.test/site',
+          title: 'Paystubs',
+          score: 10,
+        },
+      ],
+    })
+    await viewModule.renderSearchResults()
+
+    ext.model.tabs = [
+      {
+        originalId: 42,
+        originalUrl: 'https://app.test/site#Paystubs-Display',
+        url: 'app.test/site',
+        windowId: 101,
+      },
+    ]
+
+    module.openResultItem({
+      button: 0,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+
+    expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(42, { active: true })
+    expect(ext.browserApi.tabs.create).not.toHaveBeenCalled()
+  })
+
+  it('matches existing tabs by normalized URL when openTabMatchIgnoreHash is true', async () => {
+    const { module, viewModule } = await setupSearchEvents({
+      opts: { openTabMatchIgnoreHash: true },
       results: [
         {
           type: 'bookmark',

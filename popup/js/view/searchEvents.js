@@ -196,9 +196,15 @@ export function openResultItem(event) {
   }
 
   if (!foundTab) {
-    foundTab = ext.model.tabs.find((el) => {
-      return el.url === normalizedUrl
-    })
+    // By default, matching is hash-sensitive: compare the full original URLs so
+    // distinct routes of a single-page app whose hash is significant (and which
+    // share a base URL) are not treated as the same tab. When the user opts into
+    // ignoring the hash, fall back to the normalized (hash-stripped) base URL.
+    if (ext.opts.openTabMatchIgnoreHash) {
+      foundTab = ext.model.tabs.find((el) => el.url === normalizedUrl)
+    } else if (url) {
+      foundTab = ext.model.tabs.find((el) => el.originalUrl === url)
+    }
   }
 
   if (foundTab && ext.browserApi.tabs.highlight) {
