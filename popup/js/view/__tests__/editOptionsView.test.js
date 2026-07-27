@@ -223,27 +223,30 @@ describe('editOptionsView', () => {
   it.each([
     ['false', false],
     ['0', 0],
-  ])('saveOptions validates parsed falsy scalar YAML roots without coercing %s to empty options', async (yamlValue, parsedValue) => {
-    setupDom()
-    const loadImpl = jest.fn(() => parsedValue)
-    const dumpImpl = jest.fn(() => '{}')
-    const { module, mocks } = await loadEditOptionsView({
-      userOptions: {},
-      dumpImpl,
-      loadImpl,
-      validateOptionsImpl: jest.fn(() => ({ valid: false, errors: ['"options" must be object'] })),
-    })
+  ])(
+    'saveOptions validates parsed falsy scalar YAML roots without coercing %s to empty options',
+    async (yamlValue, parsedValue) => {
+      setupDom()
+      const loadImpl = jest.fn(() => parsedValue)
+      const dumpImpl = jest.fn(() => '{}')
+      const { module, mocks } = await loadEditOptionsView({
+        userOptions: {},
+        dumpImpl,
+        loadImpl,
+        validateOptionsImpl: jest.fn(() => ({ valid: false, errors: ['"options" must be object'] })),
+      })
 
-    await module.initOptions()
-    document.getElementById('config').value = yamlValue
+      await module.initOptions()
+      document.getElementById('config').value = yamlValue
 
-    document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
-    await Promise.resolve()
+      document.getElementById('opt-save').dispatchEvent(new MouseEvent('click'))
+      await Promise.resolve()
 
-    expect(mocks.load).toHaveBeenCalledWith(yamlValue)
-    expect(mocks.validateOptions).toHaveBeenCalledWith(parsedValue)
-    expect(mocks.setUserOptions).not.toHaveBeenCalled()
-  })
+      expect(mocks.load).toHaveBeenCalledWith(yamlValue)
+      expect(mocks.validateOptions).toHaveBeenCalledWith(parsedValue)
+      expect(mocks.setUserOptions).not.toHaveBeenCalled()
+    },
+  )
 
   it('saveOptions displays an error message when YAML parsing fails', async () => {
     setupDom()
