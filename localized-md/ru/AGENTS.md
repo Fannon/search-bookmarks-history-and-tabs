@@ -1,7 +1,7 @@
 # AGENTS.md
 
-> **Язык / Language:** [English](../../AGENTS.md) | **Русский**
-> *   **Главный Readme / Main Readme:** [README.md](../../README.md) | [README.ru.md](../ru/README.md)
+> **Language / Язык:** [English](../../AGENTS.md) | **Русский**
+> *   **Main Readme / Главный Readme:** [README.md](../../README.md) | [README.md](./README.md)
 
 ## 1. Сначала подумай, потом кодируй
 

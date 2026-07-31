@@ -360,13 +360,13 @@
     "message": "Search Engine Choices"
   },
   "option_searchEngineChoices_desc": {
-    "message": "Ordered list of built-in search engines that appear as fallback actions. `$s` within the `urlPrefix` is replaced with the search term; otherwise the term is appended."
+    "message": "Ordered list of built-in search engines that appear as fallback actions. `$$s` within the `urlPrefix` is replaced with the search term; otherwise the term is appended."
   },
   "option_customSearchEngines_title": {
     "message": "Custom Search Engines"
   },
   "option_customSearchEngines_desc": {
-    "message": "Custom search engine definitions that can be triggered with aliases (e.g. `g query`). `$s` inside `urlPrefix` is replaced with the search term. `blank` is optional and used when the alias is entered without a query."
+    "message": "Custom search engine definitions that can be triggered with aliases (e.g. `g query`). `$$s` inside `urlPrefix` is replaced with the search term. `blank` is optional and used when the alias is entered without a query."
   },
   "option_scoreBookmarkBase_title": {
     "message": "Bookmark Base Score"

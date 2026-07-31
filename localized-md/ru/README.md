@@ -1,11 +1,11 @@
 # Поиск закладок, истории и вкладок браузера
 
 > **Язык / Language:** [English](../../README.md) | **Русский**
-> *   **Документация / Documentation:** [OPTIONS.md](../../OPTIONS.md) | [OPTIONS.ru.md](./OPTIONS.md)
+> *   **Документация / Documentation:** [OPTIONS.md](../../OPTIONS.md) | [OPTIONS.md](./OPTIONS.md)
 
 🔎 Расширение для браузера для (нечеткого) поиска и навигации по закладкам, истории и открытым вкладкам.
 
-Доступно в виде [расширения Chrome](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0), [надстройки Microsoft Edge](https://microsoftedge.microsoft.com/addons/detail/search-tabs-bookmarks-an/ldmbegkendnchhjppahaadhhakgfbfpo), [дополнения Firefox](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/) and [дополнения Opera](https://addons.opera.com/en/extensions/details/search-bookmarks-history-and-tabs/) (только старая версия).
+Доступно в виде [расширения Chrome](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0), [надстройки Microsoft Edge](https://microsoftedge.microsoft.com/addons/detail/search-tabs-bookmarks-an/ldmbegkendnchhjppahaadhhakgfbfpo), [дополнения Firefox](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/) и [дополнения Opera](https://addons.opera.com/en/extensions/details/search-bookmarks-history-and-tabs/) (только старая версия).
 
 ## Быстрый старт
 
@@ -36,11 +36,11 @@
 
 ## Скриншоты и демонстрация
 
-![Скриншоты (3 скриншота)](/images/search-bookmarks-history-and-tabs-screenshots-wide.png 'Скриншоты')
+![Скриншоты (3 скриншота)](../../images/search-bookmarks-history-and-tabs-screenshots-wide.png 'Скриншоты')
 
 Нажмите кнопку воспроизведения, чтобы запустить GIF-анимацию:
 
-![Демо-анимация](/images/bookmark-and-history-search.gif 'Демо-анимация')
+![Демо-анимация](../../images/bookmark-and-history-search.gif 'Демо-анимация')
 
 ### Дополнительный диспетчер закладок (бета)
 
@@ -148,7 +148,7 @@
   - Название закладки не может начинаться с тега, ей необходимо название.
   - Теги не могут начинаться с цифры. Таким образом расширение отфильтровывает номера задач/тикетов.
 - **Фавиконы**: это расширение может отображать фавиконы сайтов рядом с результатами поиска.
-  - Информацию по настройке см. в описании параметра `displayFavicons` в разделе [настройки пользователя](#настройки-пользователя), а подробности о конфиденциальности, реализации и поддержке браузерами — в файле [OPTIONS.md на английском языке](./OPTIONS.md#website-favicons).
+  - Информацию по настройке см. в описании параметра `displayFavicons` в разделе [настройки пользователя](#настройки-пользователя), а подробности о конфиденциальности, реализации и поддержке браузерами — в файле [OPTIONS.md на английском языке](../../OPTIONS.md#website-favicons).
 - Это расширение работает лучше всего, если вы избегаете:
   - использования символа `#` в названиях закладок, если он не обозначает тег;
   - использования символа `~` в названиях папок закладок.
@@ -161,7 +161,7 @@
 
 Пользовательские настройки записываются в формате [YAML](https://ru.wikipedia.org/wiki/YAML) или [JSON](https://ru.wikipedia.org/wiki/JSON).
 
-> 📘 **Полный список всех доступных опций см. в файле [OPTIONS.md на английском языке](./OPTIONS.md).**
+> 📘 **Полный список всех доступных опций см. в файле [OPTIONS.md на английском языке](../../OPTIONS.md).**
 >
 > Для продвинутых пользователей также доступна [схема JSON](https://raw.githubusercontent.com/Fannon/search-bookmarks-history-and-tabs/main/popup/json/options.schema.json).
 >
@@ -272,7 +272,7 @@ uFuzzyOptions:
 
 ## Локальная разработка
 
-Настройка локальной среды разработки, структура проекта и рабочие процессы описаны в файле [CONTRIBUTING.md#local-development (на английском языке)](./CONTRIBUTING.md#local-development).
+Настройка локальной среды разработки, структура проекта и рабочие процессы описаны в файле [CONTRIBUTING.md#local-development (на английском языке)](../../CONTRIBUTING.md#local-development).
 
 ## Благодарности
 

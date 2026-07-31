@@ -1,7 +1,7 @@
 # Советы и хитрости
 
 > **Язык / Language:** [English](../../Tips.md) | **Русский**
-> *   **Главный Readme / Main Readme:** [README.md](../../README.md) | [README.ru.md](../ru/README.md)
+> *   **Главный Readme / Main Readme:** [README.md](../../README.md) | [README.md](./README.md)
 
 ### ⌨️ Горячие клавиши
 
@@ -9,7 +9,7 @@
 - **Переключить режим поиска**: Нажмите <kbd>Ctrl</kbd> + <kbd>F</kbd> для быстрого переключения между **Точным** и **Нечетким** поиском.
 - **Навигация в стиле Vim / Emacs**:
   - <kbd>Ctrl</kbd> + <kbd>N</kbd> или <kbd>Ctrl</kbd> + <kbd>J</kbd> перемещает выделение **вниз**.
-  - <kbd>Ctrl</kbd> + <kbd>P</kbd> or <kbd>Ctrl</kbd> + <kbd>K</kbd> перемещает выделение **вверх**.
+  - <kbd>Ctrl</kbd> + <kbd>P</kbd> или <kbd>Ctrl</kbd> + <kbd>K</kbd> перемещает выделение **вверх**.
 - **Открыть результат**:
   - <kbd>Enter</kbd>: Открыть в новой активной вкладке (или переключиться на существующую вкладку).
   - <kbd>Shift</kbd> + <kbd>Enter</kbd> или <kbd>Alt</kbd> + <kbd>Enter</kbd>: Открыть в **текущей вкладке**.
@@ -66,4 +66,4 @@
 Это расширение очень гибко настраивается через конфигурационные файлы YAML или JSON.
 Полный список параметров с их подробным описанием доступен здесь:
 
-👉 **[OPTIONS.ru.md](https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/localized-md/ru/OPTIONS.md)**
+👉 **[OPTIONS.md](./OPTIONS.md)**

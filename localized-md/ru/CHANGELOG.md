@@ -1,7 +1,7 @@
 # История изменений (CHANGELOG)
 
 > **Язык / Language:** [English](../../CHANGELOG.md) | **Русский**
-> *   **Главный Readme / Main Readme:** [README.md](../../README.md) | [README.ru.md](../ru/README.md)
+> *   **Главный Readme / Main Readme:** [README.md](../../README.md) | [README.md](./README.md)
 
 ## [В разработке (Unreleased)]
 
