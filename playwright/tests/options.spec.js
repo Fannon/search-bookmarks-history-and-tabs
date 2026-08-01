@@ -13,8 +13,11 @@ test.describe('Options View', () => {
     test('opens from popup navigation in a bookmark manager tab', async ({ page, context }) => {
       await page.goto('/')
 
+      const optionsLink = page.locator('a[title="Open options in bookmark manager"]')
+      await expect(optionsLink).not.toHaveClass(/\bnew\b/)
+
       const optionsPagePromise = context.waitForEvent('page')
-      await page.locator('a[title="Open options in bookmark manager"]').click()
+      await optionsLink.click()
       const optionsPage = await optionsPagePromise
 
       await optionsPage.waitForURL(/bookmarkManager(?:\.html)?#options$/)
