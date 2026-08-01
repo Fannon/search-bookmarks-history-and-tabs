@@ -210,15 +210,15 @@ export function loadScript(url) {
     return cachedLoad
   }
 
-  const s = document.createElement('script')
-  s.type = 'text/javascript'
-  s.src = url
+  const scriptElement = document.createElement('script')
+  scriptElement.type = 'text/javascript'
+  scriptElement.src = url
 
   let rejectLoad
   const load = new Promise((resolve, reject) => {
     rejectLoad = reject
-    s.onload = () => resolve()
-    s.onerror = () => {
+    scriptElement.onload = () => resolve()
+    scriptElement.onerror = () => {
       scriptLoads.delete(url)
       reject(new Error(`Failed to load script: ${url}`))
     }
@@ -227,7 +227,7 @@ export function loadScript(url) {
   scriptLoads.set(url, load)
 
   try {
-    document.getElementsByTagName('head')[0].appendChild(s)
+    document.getElementsByTagName('head')[0].appendChild(scriptElement)
   } catch (error) {
     scriptLoads.delete(url)
     rejectLoad(error)

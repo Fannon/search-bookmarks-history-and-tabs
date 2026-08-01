@@ -1016,9 +1016,9 @@ function normalizeOptionalBookmarkIds(bookmarkIds, resolveBookmarkId, context, w
   const result = []
   for (let i = 0; i < bookmarkIds.length; i++) {
     const rawBookmarkId = String(bookmarkIds[i])
-    const resolved = resolveBookmarkId(bookmarkIds[i])
-    if (resolved) {
-      result.push(resolved)
+    const resolvedBookmarkId = resolveBookmarkId(bookmarkIds[i])
+    if (resolvedBookmarkId) {
+      result.push(resolvedBookmarkId)
     } else {
       warnings.push(`${context}.bookmarkIds[${i}] ignored because bookmark "${rawBookmarkId}" does not exist.`)
     }
