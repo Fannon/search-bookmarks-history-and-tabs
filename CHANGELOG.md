@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [v2.5.0] - 2026-08-01
+
 - **CHANGED**: Detecting whether a result is "already open" is now hash-sensitive. Opening a URL that shares its base with an existing tab but has a different `#hash` route now opens a new tab instead of switching to the existing one. This fixes single-page apps whose hash is a significant route (distinct pages sharing one base URL were previously treated as the same tab). To restore the previous behavior, set the `openTabMatchIgnoreHash` option to `true`.
 - **IMPROVED**: Bookmark HTML export now includes the browser bookmark `ID` on each `<A>` and `<H3>` element. The attribute is safely ignored on re-import and lets external tooling (for example AI cleanup proposal files) reference bookmarks by their real id.
 
