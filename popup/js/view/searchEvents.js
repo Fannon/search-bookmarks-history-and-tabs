@@ -22,6 +22,11 @@ import { renderSearchResults } from './searchView.js'
 // survives any potential DOM replacement and prevents duplicate event listeners.
 let eventDelegationSetup = false
 
+function getUrlHash(url) {
+  const hashIndex = url?.indexOf('#') ?? -1
+  return hashIndex === -1 ? '' : url.slice(hashIndex)
+}
+
 function clearBookmarkOpenTabState(closedTab) {
   if (!closedTab?.url || !Array.isArray(ext.model.bookmarks)) {
     return
@@ -196,14 +201,14 @@ export function openResultItem(event) {
   }
 
   if (!foundTab) {
-    // By default, matching is hash-sensitive: compare the full original URLs so
-    // distinct routes of a single-page app whose hash is significant (and which
-    // share a base URL) are not treated as the same tab. When the user opts into
-    // ignoring the hash, fall back to the normalized (hash-stripped) base URL.
+    // By default, match the normalized base URL and exact hash separately so
+    // equivalent URL forms still match while distinct hash routes remain separate.
+    // When the user opts into ignoring the hash, compare only the normalized base.
     if (ext.opts.openTabMatchIgnoreHash) {
       foundTab = ext.model.tabs.find((el) => el.url === normalizedUrl)
     } else if (url) {
-      foundTab = ext.model.tabs.find((el) => el.originalUrl === url)
+      const urlHash = getUrlHash(url)
+      foundTab = ext.model.tabs.find((el) => el.url === normalizedUrl && getUrlHash(el.originalUrl) === urlHash)
     }
   }
 
