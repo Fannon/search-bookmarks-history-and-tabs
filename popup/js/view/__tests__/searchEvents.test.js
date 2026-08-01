@@ -716,6 +716,90 @@ describe('searchEvents openResultItem', () => {
     expect(ext.browserApi.tabs.create).not.toHaveBeenCalled()
   })
 
+  it('matches an existing tab by normalized URL when hashes match by default', async () => {
+    const { module, viewModule } = await setupSearchEvents({
+      results: [
+        {
+          type: 'bookmark',
+          originalId: 'bm-1',
+          originalUrl: 'https://bookmark.test/',
+          url: 'bookmark.test',
+          title: 'Bookmark Title',
+          score: 10,
+        },
+      ],
+    })
+    await viewModule.renderSearchResults()
+
+    ext.model.tabs = [
+      {
+        originalId: 22,
+        originalUrl: 'https://bookmark.test',
+        url: 'bookmark.test',
+        windowId: 101,
+      },
+    ]
+
+    module.openResultItem({
+      button: 0,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+
+    expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(22, { active: true })
+    expect(ext.browserApi.tabs.create).not.toHaveBeenCalled()
+  })
+
+  it('matches an existing tab by normalized base URL when non-empty hashes match by default', async () => {
+    const { module, viewModule } = await setupSearchEvents({
+      results: [
+        {
+          type: 'bookmark',
+          originalId: 'bm-1',
+          originalUrl: 'https://app.test/site/#Paystubs-Display',
+          url: 'app.test/site',
+          title: 'Paystubs',
+          score: 10,
+        },
+      ],
+    })
+    await viewModule.renderSearchResults()
+
+    ext.model.tabs = [
+      {
+        originalId: 42,
+        originalUrl: 'https://app.test/site#Paystubs-Display',
+        url: 'app.test/site',
+        windowId: 101,
+      },
+    ]
+
+    module.openResultItem({
+      button: 0,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+
+    expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(42, { active: true })
+    expect(ext.browserApi.tabs.create).not.toHaveBeenCalled()
+  })
+
   it('matches existing tabs by normalized URL when openTabMatchIgnoreHash is true', async () => {
     const { module, viewModule } = await setupSearchEvents({
       opts: { openTabMatchIgnoreHash: true },
@@ -756,6 +840,49 @@ describe('searchEvents openResultItem', () => {
     })
 
     expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(22, { active: true })
+    expect(ext.browserApi.tabs.create).not.toHaveBeenCalled()
+  })
+
+  it('activates an existing tab despite different hashes when openTabMatchIgnoreHash is true', async () => {
+    const { module, viewModule } = await setupSearchEvents({
+      opts: { openTabMatchIgnoreHash: true },
+      results: [
+        {
+          type: 'bookmark',
+          originalId: 'bm-1',
+          originalUrl: 'https://app.test/site#Paystubs-Display',
+          url: 'app.test/site',
+          title: 'Paystubs',
+          score: 10,
+        },
+      ],
+    })
+    await viewModule.renderSearchResults()
+
+    ext.model.tabs = [
+      {
+        originalId: 42,
+        originalUrl: 'https://app.test/site#leaverequest-create',
+        url: 'app.test/site',
+        windowId: 101,
+      },
+    ]
+
+    module.openResultItem({
+      button: 0,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      target: {
+        nodeName: 'LI',
+        getAttribute: () => null,
+        className: '',
+      },
+      stopPropagation: jest.fn(),
+      preventDefault: jest.fn(),
+    })
+
+    expect(ext.browserApi.tabs.update).toHaveBeenCalledWith(42, { active: true })
     expect(ext.browserApi.tabs.create).not.toHaveBeenCalled()
   })
 
