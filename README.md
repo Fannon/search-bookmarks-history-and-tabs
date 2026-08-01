@@ -109,6 +109,7 @@ Click a screenshot to open it full size:
   - Press `F2` to edit the selected bookmark, or create a new bookmark from the selected URL.
   - Right-click to copy URL to clipboard.
   - Prefer opening in the current tab? Enable the `openInCurrentTab` option to make that the default; `Shift`/`Alt` then opens in a new tab instead.
+  - Already-open tab matching includes the URL hash by default, so different routes such as `app.example/#inbox` and `app.example/#settings` open separately. Set `openTabMatchIgnoreHash` to `true` to treat them as the same URL.
 - **Search Modes**: In case you want to be more selective -> use a search mode:
   - Start your query with `#`: only **bookmarks with the tag** will be returned (exact "starts with" search)
     - Supports AND search, e.g. search for `#github #pr` to only get results which have both tags

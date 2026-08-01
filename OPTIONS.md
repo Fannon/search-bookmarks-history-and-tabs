@@ -15,6 +15,7 @@ For advanced users, you can also inspect the [JSON Schema](https://raw.githubuse
 | `searchMaxResults` | integer | `24` | Maximum number of search results to display. Lower values improve performance. Does not apply to tag and folder search (which show all matches). |
 | `searchFuzzyness` | number | `0.6` | Fuzzy search tolerance (0–1). Higher values find more approximate matches but may return less relevant results. Only applies when `searchStrategy` is `'fuzzy'`. |
 | `openInCurrentTab` | boolean | `false` | Open results in the current tab by default. When enabled, hold `Shift` or `Alt` to open in a new tab instead (inverts the default behavior). |
+| `openTabMatchIgnoreHash` | boolean | `false` | Ignore URL hashes when switching to an already-open tab. By default, different hash routes are treated as separate pages. Enable this to switch to a tab with the same base URL even when its hash differs. |
 
 ## Colors and Style
 
