@@ -72,6 +72,21 @@ describe('bookmark export', () => {
     expect(html).not.toMatch(/ID=""/)
   })
 
+  test('preserves title-based tags', () => {
+    const html = createBookmarkExportHtml(
+      [
+        {
+          title: 'Tagged Bookmark #docs #reference',
+          url: 'https://example.test/',
+          dateAdded: 1700000003000,
+        },
+      ],
+      1700000004000,
+    )
+
+    expect(html).toContain('>Tagged Bookmark #docs #reference</A>')
+  })
+
   test('creates dated html export filenames', () => {
     expect(createBookmarkExportFilename(new Date(2026, 4, 7))).toBe('bookmarks_07_05_2026.html')
   })
