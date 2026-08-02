@@ -16,6 +16,12 @@ test.describe('Bookmark Manager', () => {
     await expectNoClientErrors(page)
   })
 
+  test('explains how exported bookmarks and tags can be restored', async ({ page }) => {
+    await expect(page.locator('[data-bookmark-import-guidance]')).toContainText(
+      "Restore the HTML file with your browser's bookmark import. Tags are stored in bookmark titles and are preserved.",
+    )
+  })
+
   test('links top domains to all bookmarks filtered by domain', async ({ page }) => {
     const firstDomain = page.locator('#top-domains .rank-link').first()
     const domain = await firstDomain.locator('.rank-name').textContent()

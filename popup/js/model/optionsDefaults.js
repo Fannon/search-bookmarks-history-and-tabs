@@ -28,6 +28,14 @@ export const defaultOptions = {
    * When enabled, hold Shift/Alt to open in a new tab instead (the opposite of the default behavior).
    */
   openInCurrentTab: false,
+  /**
+   * When switching to an already-open tab, ignore the URL hash (`#...`) while matching.
+   * Disabled by default: matching is hash-sensitive, so distinct routes of a
+   * single-page app that share a base URL are treated as separate pages. Enable this
+   * to fall back to base-URL matching (e.g. so a bookmark to `page#faq` switches to an
+   * already-open `page` tab instead of opening a duplicate).
+   */
+  openTabMatchIgnoreHash: false,
 
   //////////////////////////////////////////
   // COLORS AND STYLE                     //

@@ -9,6 +9,7 @@
  * - Coordinate with search and navigation modules for result interactions.
  */
 
+import { t } from '../helper/i18n.js'
 import { cleanUpUrl } from '../helper/utils.js'
 import { getUserOptions, setUserOptions } from '../model/optionsStorage.js'
 import { search } from '../search/common.js'
@@ -16,12 +17,16 @@ import { resetFuzzySearchState } from '../search/fuzzySearch.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
 import { clearSelection, hoverResultItem } from './searchNavigation.js'
 import { renderSearchResults } from './searchView.js'
-import { t } from '../helper/i18n.js'
 
 // Module-level flag to track if event delegation has been set up.
 // Using a module variable instead of a DOM property ensures the state
 // survives any potential DOM replacement and prevents duplicate event listeners.
 let eventDelegationSetup = false
+
+function getUrlHash(url) {
+  const hashIndex = url?.indexOf('#') ?? -1
+  return hashIndex === -1 ? '' : url.slice(hashIndex)
+}
 
 function clearBookmarkOpenTabState(closedTab) {
   if (!closedTab?.url || !Array.isArray(ext.model.bookmarks)) {
@@ -197,9 +202,15 @@ export function openResultItem(event) {
   }
 
   if (!foundTab) {
-    foundTab = ext.model.tabs.find((el) => {
-      return el.url === normalizedUrl
-    })
+    // By default, match the normalized base URL and exact hash separately so
+    // equivalent URL forms still match while distinct hash routes remain separate.
+    // When the user opts into ignoring the hash, compare only the normalized base.
+    if (ext.opts.openTabMatchIgnoreHash) {
+      foundTab = ext.model.tabs.find((el) => el.url === normalizedUrl)
+    } else if (url) {
+      const urlHash = getUrlHash(url)
+      foundTab = ext.model.tabs.find((el) => el.url === normalizedUrl && getUrlHash(el.originalUrl) === urlHash)
+    }
   }
 
   if (foundTab && ext.browserApi.tabs.highlight) {

@@ -49,7 +49,7 @@ The main purpose of this extension remains the fast search popup. As a complemen
 The Bookmark Manager also includes a beta AI Cleanup workspace. It can generate Lite or Advanced prompts for external AI tools, or ask the browser's local `LanguageModel` API for a JSON cleanup proposal. Proposals are reviewable before anything is applied and can cover tag additions/removals/renames, title rewrites, moves to existing folders, and confirmed duplicate deletions.
 
 Before using the Bookmark Manager, creating a backup/export of your browser bookmarks is highly recommended, especially before moving bookmarks, changing tags in bulk, or deleting duplicates.
-The manager can export your bookmarks in the standard browser bookmark HTML format. It also keeps the latest 50 undo steps in memory while the manager page stays open, but in-memory undo is not a substitute for a full bookmark export.
+The manager can export your bookmarks in the standard browser bookmark HTML format. Restore that file with your browser's built-in HTML bookmark import. Tags are stored in bookmark titles, so the import preserves them. The manager also keeps the latest 50 undo steps in memory while the manager page stays open, but in-memory undo is not a substitute for a full bookmark export.
 
 Click a screenshot to open it full size:
 
@@ -112,6 +112,7 @@ Click a screenshot to open it full size:
   - Press `F2` to edit the selected bookmark, or create a new bookmark from the selected URL.
   - Right-click to copy URL to clipboard.
   - Prefer opening in the current tab? Enable the `openInCurrentTab` option to make that the default; `Shift`/`Alt` then opens in a new tab instead.
+  - Already-open tab matching includes the URL hash by default, so different routes such as `app.example/#inbox` and `app.example/#settings` open separately. Set `openTabMatchIgnoreHash` to `true` to treat them as the same URL.
 - **Search Modes**: In case you want to be more selective -> use a search mode:
   - Start your query with `#`: only **bookmarks with the tag** will be returned (exact "starts with" search)
     - Supports AND search, e.g. search for `#github #pr` to only get results which have both tags

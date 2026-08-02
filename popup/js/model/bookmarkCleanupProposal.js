@@ -2,7 +2,7 @@
  * @file Prompt, schema, and validation helpers for AI bookmark cleanup proposals.
  */
 
-import { findBookmarkById, normalizeTagName } from './bookmarkManagerOperations.js'
+import { normalizeTagName } from './bookmarkManagerOperations.js'
 
 const DEFAULT_PROMPT_BOOKMARK_LIMIT = 1000
 const PROMPT_BOOKMARK_TEXT_BUDGET = 80000
@@ -504,7 +504,7 @@ export function validateBookmarkCleanupProposal(proposal, managerModel) {
     return errors
   }
 
-  const resolveBookmarkId = createBookmarkIdResolver(managerModel)
+  const bookmarkIds = new Set((managerModel?.bookmarks || []).map((bookmark) => String(bookmark.originalId)))
   const folderIds = new Set((managerModel?.folderOptions || []).map((folder) => String(folder.id)))
   const existingTags = new Set()
 
@@ -512,32 +512,14 @@ export function validateBookmarkCleanupProposal(proposal, managerModel) {
     existingTags.add(group.name.toLowerCase())
   }
 
-  validateTagChanges(errors, changes.addTags, 'addTags', resolveBookmarkId)
-  validateTagChanges(errors, changes.removeTags, 'removeTags', resolveBookmarkId)
-  validateRenameTagChanges(errors, changes.renameTags, existingTags, resolveBookmarkId)
-  validateMoveChanges(errors, changes.moveBookmarks, resolveBookmarkId, folderIds)
-  validateDeleteChanges(errors, changes.deleteBookmarks, resolveBookmarkId, managerModel)
-  validateRewriteTitleChanges(errors, changes.rewriteTitles, resolveBookmarkId)
+  validateTagChanges(errors, changes.addTags, 'addTags', bookmarkIds)
+  validateTagChanges(errors, changes.removeTags, 'removeTags', bookmarkIds)
+  validateRenameTagChanges(errors, changes.renameTags, existingTags, bookmarkIds)
+  validateMoveChanges(errors, changes.moveBookmarks, bookmarkIds, folderIds)
+  validateDeleteChanges(errors, changes.deleteBookmarks, bookmarkIds, managerModel)
+  validateRewriteTitleChanges(errors, changes.rewriteTitles, bookmarkIds)
 
   return errors
-}
-
-/**
- * Build a resolver that maps a proposal's bookmarkId to the real originalId.
- * Returns "" when the value is missing or does not match a known bookmark.
- *
- * @param {Object} managerModel Bookmark manager model.
- * @returns {(value: unknown) => string}
- */
-function createBookmarkIdResolver(managerModel) {
-  const bookmarks = managerModel?.bookmarks || []
-  return (value) => {
-    if (value == null || value === '') {
-      return ''
-    }
-    const bookmark = findBookmarkById(bookmarks, value)
-    return bookmark ? String(bookmark.originalId) : ''
-  }
 }
 
 /**
@@ -605,7 +587,7 @@ function formatBookmarkForPrompt(bookmark) {
   ].join(' | ')
 }
 
-function validateTagChanges(errors, changes, name, resolveBookmarkId) {
+function validateTagChanges(errors, changes, name, bookmarkIds) {
   if (typeof changes === 'undefined') {
     return
   }
@@ -617,7 +599,7 @@ function validateTagChanges(errors, changes, name, resolveBookmarkId) {
   for (let i = 0; i < changes.length; i++) {
     const change = changes[i]
     validateChangeBase(errors, change, name, i)
-    if (!resolveBookmarkId(change?.bookmarkId)) {
+    if (!bookmarkIds.has(String(change?.bookmarkId))) {
       errors.push(`changes.${name}[${i}].bookmarkId does not match an existing bookmark.`)
     }
     if (!Array.isArray(change?.tags) || !change.tags.length) {
@@ -626,7 +608,7 @@ function validateTagChanges(errors, changes, name, resolveBookmarkId) {
   }
 }
 
-function validateRenameTagChanges(errors, changes, existingTags, resolveBookmarkId) {
+function validateRenameTagChanges(errors, changes, existingTags, bookmarkIds) {
   if (typeof changes === 'undefined') {
     return
   }
@@ -646,7 +628,7 @@ function validateRenameTagChanges(errors, changes, existingTags, resolveBookmark
     }
     if (Array.isArray(change?.bookmarkIds)) {
       for (let j = 0; j < change.bookmarkIds.length; j++) {
-        if (!resolveBookmarkId(change.bookmarkIds[j])) {
+        if (!bookmarkIds.has(String(change.bookmarkIds[j]))) {
           errors.push(`changes.renameTags[${i}].bookmarkIds[${j}] does not match an existing bookmark.`)
         }
       }
@@ -654,7 +636,7 @@ function validateRenameTagChanges(errors, changes, existingTags, resolveBookmark
   }
 }
 
-function validateMoveChanges(errors, changes, resolveBookmarkId, folderIds) {
+function validateMoveChanges(errors, changes, bookmarkIds, folderIds) {
   if (typeof changes === 'undefined') {
     return
   }
@@ -666,7 +648,7 @@ function validateMoveChanges(errors, changes, resolveBookmarkId, folderIds) {
   for (let i = 0; i < changes.length; i++) {
     const change = changes[i]
     validateChangeBase(errors, change, 'moveBookmarks', i)
-    if (!resolveBookmarkId(change?.bookmarkId)) {
+    if (!bookmarkIds.has(String(change?.bookmarkId))) {
       errors.push(`changes.moveBookmarks[${i}].bookmarkId does not match an existing bookmark.`)
     }
     if (!folderIds.has(String(change?.targetFolderId))) {
@@ -675,7 +657,7 @@ function validateMoveChanges(errors, changes, resolveBookmarkId, folderIds) {
   }
 }
 
-function validateDeleteChanges(errors, changes, resolveBookmarkId, managerModel) {
+function validateDeleteChanges(errors, changes, bookmarkIds, managerModel) {
   if (typeof changes === 'undefined') {
     return
   }
@@ -687,19 +669,17 @@ function validateDeleteChanges(errors, changes, resolveBookmarkId, managerModel)
   for (let i = 0; i < changes.length; i++) {
     const change = changes[i]
     validateChangeBase(errors, change, 'deleteBookmarks', i)
-    const resolvedBookmarkId = resolveBookmarkId(change?.bookmarkId)
-    if (!resolvedBookmarkId) {
+    if (!bookmarkIds.has(String(change?.bookmarkId))) {
       errors.push(`changes.deleteBookmarks[${i}].bookmarkId does not match an existing bookmark.`)
       continue
     }
-    const resolvedDuplicateId = resolveBookmarkId(change?.duplicateOfBookmarkId)
-    if (!resolvedDuplicateId) {
+    if (!bookmarkIds.has(String(change?.duplicateOfBookmarkId))) {
       errors.push(`changes.deleteBookmarks[${i}].duplicateOfBookmarkId does not match an existing bookmark.`)
       continue
     }
-    if (resolvedBookmarkId === resolvedDuplicateId) {
+    if (String(change?.bookmarkId) === String(change?.duplicateOfBookmarkId)) {
       errors.push(`changes.deleteBookmarks[${i}] cannot delete and keep the same bookmark.`)
-    } else if (!isDuplicateBookmarkPair(resolvedBookmarkId, resolvedDuplicateId, managerModel)) {
+    } else if (!isDuplicateBookmarkPair(change?.bookmarkId, change?.duplicateOfBookmarkId, managerModel)) {
       errors.push(`changes.deleteBookmarks[${i}] must reference bookmarks from the same duplicate URL group.`)
     }
   }
@@ -707,7 +687,7 @@ function validateDeleteChanges(errors, changes, resolveBookmarkId, managerModel)
   validateDeleteChangesLeaveDuplicateSurvivors(errors, changes, managerModel)
 }
 
-function validateRewriteTitleChanges(errors, changes, resolveBookmarkId) {
+function validateRewriteTitleChanges(errors, changes, bookmarkIds) {
   if (typeof changes === 'undefined') {
     return
   }
@@ -719,7 +699,7 @@ function validateRewriteTitleChanges(errors, changes, resolveBookmarkId) {
   for (let i = 0; i < changes.length; i++) {
     const change = changes[i]
     validateChangeBase(errors, change, 'rewriteTitles', i)
-    if (!resolveBookmarkId(change?.bookmarkId)) {
+    if (!bookmarkIds.has(String(change?.bookmarkId))) {
       errors.push(`changes.rewriteTitles[${i}].bookmarkId does not match an existing bookmark.`)
     }
     if (!normalizePromptTitle(change?.title)) {
@@ -775,7 +755,7 @@ function normalizeBookmarkCleanupProposal(proposal) {
 }
 
 function normalizeBookmarkCleanupProposalWithIssues(proposal, managerModel, warnings) {
-  const resolveBookmarkId = createBookmarkIdResolver(managerModel)
+  const bookmarkIds = new Set((managerModel?.bookmarks || []).map((bookmark) => String(bookmark.originalId)))
   const folderIds = new Set((managerModel?.folderOptions || []).map((folder) => String(folder.id)))
   const existingTags = new Set((managerModel?.tagGroups || []).map((tag) => tag.name.toLowerCase()))
   const changes = proposal.changes || {}
@@ -783,22 +763,17 @@ function normalizeBookmarkCleanupProposalWithIssues(proposal, managerModel, warn
   return {
     summary: String(proposal.summary || '').trim(),
     changes: {
-      addTags: normalizeTagChangesWithIssues(changes.addTags, 'addTags', resolveBookmarkId, warnings),
-      removeTags: normalizeTagChangesWithIssues(changes.removeTags, 'removeTags', resolveBookmarkId, warnings),
-      renameTags: normalizeRenameTagChangesWithIssues(changes.renameTags, existingTags, resolveBookmarkId, warnings),
-      moveBookmarks: normalizeMoveChangesWithIssues(changes.moveBookmarks, resolveBookmarkId, folderIds, warnings),
-      deleteBookmarks: normalizeDeleteChangesWithIssues(
-        changes.deleteBookmarks,
-        resolveBookmarkId,
-        managerModel,
-        warnings,
-      ),
-      rewriteTitles: normalizeRewriteTitleChangesWithIssues(changes.rewriteTitles, resolveBookmarkId, warnings),
+      addTags: normalizeTagChangesWithIssues(changes.addTags, 'addTags', bookmarkIds, warnings),
+      removeTags: normalizeTagChangesWithIssues(changes.removeTags, 'removeTags', bookmarkIds, warnings),
+      renameTags: normalizeRenameTagChangesWithIssues(changes.renameTags, existingTags, bookmarkIds, warnings),
+      moveBookmarks: normalizeMoveChangesWithIssues(changes.moveBookmarks, bookmarkIds, folderIds, warnings),
+      deleteBookmarks: normalizeDeleteChangesWithIssues(changes.deleteBookmarks, bookmarkIds, managerModel, warnings),
+      rewriteTitles: normalizeRewriteTitleChangesWithIssues(changes.rewriteTitles, bookmarkIds, warnings),
     },
   }
 }
 
-function normalizeTagChangesWithIssues(changes, name, resolveBookmarkId, warnings) {
+function normalizeTagChangesWithIssues(changes, name, bookmarkIds, warnings) {
   if (typeof changes === 'undefined') {
     return []
   }
@@ -815,11 +790,10 @@ function normalizeTagChangesWithIssues(changes, name, resolveBookmarkId, warning
       continue
     }
 
-    const rawBookmarkId = String(change.bookmarkId || '')
-    const resolvedBookmarkId = resolveBookmarkId(change.bookmarkId)
+    const bookmarkId = String(change.bookmarkId || '')
     const tags = Array.isArray(change.tags) ? normalizePromptTags(change.tags) : []
-    if (!resolvedBookmarkId) {
-      warnings.push(`${context} ignored because bookmarkId "${rawBookmarkId || 'missing'}" does not exist.`)
+    if (!bookmarkIds.has(bookmarkId)) {
+      warnings.push(`${context} ignored because bookmarkId "${bookmarkId || 'missing'}" does not exist.`)
       continue
     }
     if (!tags.length) {
@@ -829,7 +803,7 @@ function normalizeTagChangesWithIssues(changes, name, resolveBookmarkId, warning
 
     result.push({
       id: normalizeChangeId(change.id, name, i),
-      bookmarkId: resolvedBookmarkId,
+      bookmarkId,
       tags,
       reason: String(change.reason || '').trim(),
     })
@@ -838,7 +812,7 @@ function normalizeTagChangesWithIssues(changes, name, resolveBookmarkId, warning
   return result
 }
 
-function normalizeRenameTagChangesWithIssues(changes, existingTags, resolveBookmarkId, warnings) {
+function normalizeRenameTagChangesWithIssues(changes, existingTags, bookmarkIds, warnings) {
   if (typeof changes === 'undefined') {
     return []
   }
@@ -870,7 +844,7 @@ function normalizeRenameTagChangesWithIssues(changes, existingTags, resolveBookm
       id: normalizeChangeId(change.id, 'renameTags', i),
       from,
       to,
-      bookmarkIds: normalizeOptionalBookmarkIds(change.bookmarkIds, resolveBookmarkId, context, warnings),
+      bookmarkIds: normalizeOptionalBookmarkIds(change.bookmarkIds, bookmarkIds, context, warnings),
       reason: String(change.reason || '').trim(),
     })
   }
@@ -878,7 +852,7 @@ function normalizeRenameTagChangesWithIssues(changes, existingTags, resolveBookm
   return result
 }
 
-function normalizeMoveChangesWithIssues(changes, resolveBookmarkId, folderIds, warnings) {
+function normalizeMoveChangesWithIssues(changes, bookmarkIds, folderIds, warnings) {
   if (typeof changes === 'undefined') {
     return []
   }
@@ -895,11 +869,10 @@ function normalizeMoveChangesWithIssues(changes, resolveBookmarkId, folderIds, w
       continue
     }
 
-    const rawBookmarkId = String(change.bookmarkId || '')
-    const resolvedBookmarkId = resolveBookmarkId(change.bookmarkId)
+    const bookmarkId = String(change.bookmarkId || '')
     const targetFolderId = String(change.targetFolderId || '')
-    if (!resolvedBookmarkId) {
-      warnings.push(`${context} ignored because bookmarkId "${rawBookmarkId || 'missing'}" does not exist.`)
+    if (!bookmarkIds.has(bookmarkId)) {
+      warnings.push(`${context} ignored because bookmarkId "${bookmarkId || 'missing'}" does not exist.`)
       continue
     }
     if (!folderIds.has(targetFolderId)) {
@@ -909,7 +882,7 @@ function normalizeMoveChangesWithIssues(changes, resolveBookmarkId, folderIds, w
 
     result.push({
       id: normalizeChangeId(change.id, 'moveBookmarks', i),
-      bookmarkId: resolvedBookmarkId,
+      bookmarkId,
       targetFolderId,
       targetFolderPath: String(change.targetFolderPath || '').trim(),
       reason: String(change.reason || '').trim(),
@@ -919,7 +892,7 @@ function normalizeMoveChangesWithIssues(changes, resolveBookmarkId, folderIds, w
   return result
 }
 
-function normalizeDeleteChangesWithIssues(changes, resolveBookmarkId, managerModel, warnings) {
+function normalizeDeleteChangesWithIssues(changes, bookmarkIds, managerModel, warnings) {
   if (typeof changes === 'undefined') {
     return []
   }
@@ -936,16 +909,16 @@ function normalizeDeleteChangesWithIssues(changes, resolveBookmarkId, managerMod
       continue
     }
 
-    const rawBookmarkId = String(change.bookmarkId || '')
-    const rawDuplicateId = String(change.duplicateOfBookmarkId || '')
-    const bookmarkId = resolveBookmarkId(change.bookmarkId)
-    const duplicateOfBookmarkId = resolveBookmarkId(change.duplicateOfBookmarkId)
-    if (!bookmarkId) {
-      warnings.push(`${context} ignored because bookmarkId "${rawBookmarkId || 'missing'}" does not exist.`)
+    const bookmarkId = String(change.bookmarkId || '')
+    const duplicateOfBookmarkId = String(change.duplicateOfBookmarkId || '')
+    if (!bookmarkIds.has(bookmarkId)) {
+      warnings.push(`${context} ignored because bookmarkId "${bookmarkId || 'missing'}" does not exist.`)
       continue
     }
-    if (!duplicateOfBookmarkId) {
-      warnings.push(`${context} ignored because duplicateOfBookmarkId "${rawDuplicateId || 'missing'}" does not exist.`)
+    if (!bookmarkIds.has(duplicateOfBookmarkId)) {
+      warnings.push(
+        `${context} ignored because duplicateOfBookmarkId "${duplicateOfBookmarkId || 'missing'}" does not exist.`,
+      )
       continue
     }
     if (bookmarkId === duplicateOfBookmarkId) {
@@ -968,7 +941,7 @@ function normalizeDeleteChangesWithIssues(changes, resolveBookmarkId, managerMod
   return removeUnsafeDuplicateGroupDeletes(result, managerModel, warnings)
 }
 
-function normalizeRewriteTitleChangesWithIssues(changes, resolveBookmarkId, warnings) {
+function normalizeRewriteTitleChangesWithIssues(changes, bookmarkIds, warnings) {
   if (typeof changes === 'undefined') {
     return []
   }
@@ -985,11 +958,10 @@ function normalizeRewriteTitleChangesWithIssues(changes, resolveBookmarkId, warn
       continue
     }
 
-    const rawBookmarkId = String(change.bookmarkId || '')
-    const resolvedBookmarkId = resolveBookmarkId(change.bookmarkId)
+    const bookmarkId = String(change.bookmarkId || '')
     const title = normalizePromptTitle(change.title)
-    if (!resolvedBookmarkId) {
-      warnings.push(`${context} ignored because bookmarkId "${rawBookmarkId || 'missing'}" does not exist.`)
+    if (!bookmarkIds.has(bookmarkId)) {
+      warnings.push(`${context} ignored because bookmarkId "${bookmarkId || 'missing'}" does not exist.`)
       continue
     }
     if (!title) {
@@ -999,7 +971,7 @@ function normalizeRewriteTitleChangesWithIssues(changes, resolveBookmarkId, warn
 
     result.push({
       id: normalizeChangeId(change.id, 'rewriteTitles', i),
-      bookmarkId: resolvedBookmarkId,
+      bookmarkId,
       title,
       reason: String(change.reason || '').trim(),
     })
@@ -1008,19 +980,18 @@ function normalizeRewriteTitleChangesWithIssues(changes, resolveBookmarkId, warn
   return result
 }
 
-function normalizeOptionalBookmarkIds(bookmarkIds, resolveBookmarkId, context, warnings) {
+function normalizeOptionalBookmarkIds(bookmarkIds, knownBookmarkIds, context, warnings) {
   if (!Array.isArray(bookmarkIds)) {
     return []
   }
 
   const result = []
   for (let i = 0; i < bookmarkIds.length; i++) {
-    const rawBookmarkId = String(bookmarkIds[i])
-    const resolved = resolveBookmarkId(bookmarkIds[i])
-    if (resolved) {
-      result.push(resolved)
+    const bookmarkId = String(bookmarkIds[i])
+    if (knownBookmarkIds.has(bookmarkId)) {
+      result.push(bookmarkId)
     } else {
-      warnings.push(`${context}.bookmarkIds[${i}] ignored because bookmark "${rawBookmarkId}" does not exist.`)
+      warnings.push(`${context}.bookmarkIds[${i}] ignored because bookmark "${bookmarkId}" does not exist.`)
     }
   }
   return result

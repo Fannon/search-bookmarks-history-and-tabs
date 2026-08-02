@@ -37,6 +37,12 @@
       "description": "Open results in the current tab by default. When enabled, hold Shift or Alt to open in a new tab instead, inverting the usual behavior.",
       "x-ui-section": "search"
     },
+    "openTabMatchIgnoreHash": {
+      "type": "boolean",
+      "default": false,
+      "description": "When switching to an already-open tab, ignore the URL hash (#...) while matching. Disabled by default, so matching is hash-sensitive and distinct single-page-app routes sharing a base URL are treated as separate pages. Enable this to fall back to base-URL matching (e.g. so a bookmark to page#faq switches to an already-open page tab instead of opening a duplicate).",
+      "x-ui-section": "search"
+    },
     "bookmarkColor": {
       "type": "string",
       "pattern": "^#([0-9a-fA-F]{3}){1,2}$",
