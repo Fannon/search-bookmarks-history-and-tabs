@@ -494,4 +494,77 @@ describe('getSearchData', () => {
       nowSpy.mockRestore()
     }
   })
+
+  test('flags bookmarks deterministically when hash-route tabs share a base URL', async () => {
+    setBrowserData({
+      tabs: [
+        { url: 'https://app.example/#/inbox', title: 'Inbox', id: 'tab-1' },
+        { url: 'https://app.example/#/settings', title: 'Settings', id: 'tab-2' },
+      ],
+      bookmarks: [
+        {
+          title: '',
+          children: [
+            {
+              title: 'Bookmarks Bar',
+              children: [{ id: 'bookmark-1', title: 'App', url: 'https://app.example/' }],
+            },
+          ],
+        },
+      ],
+      history: [],
+    })
+
+    const result = await getSearchData()
+
+    expect(result.tabs).toHaveLength(2)
+    const bookmark = result.bookmarks.find((entry) => entry.originalId === 'bookmark-1')
+    expect(bookmark.tab).toBe(true)
+    expect(bookmark.openTabTitle).toBe('Inbox')
+  })
+
+  test('merges the freshest history entry when hash routes share a base URL', async () => {
+    const baseTime = 1700000400000
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
+
+    try {
+      setBrowserData({
+        tabs: [],
+        bookmarks: [
+          {
+            title: '',
+            children: [
+              {
+                title: 'Bookmarks Bar',
+                children: [{ id: 'bookmark-1', title: 'App', url: 'https://app.example/' }],
+              },
+            ],
+          },
+        ],
+        history: [
+          {
+            id: 'history-1',
+            url: 'https://app.example/#/inbox',
+            title: 'Inbox',
+            lastVisitTime: baseTime - 10 * 1000,
+            visitCount: 3,
+          },
+          {
+            id: 'history-2',
+            url: 'https://app.example/#/settings',
+            title: 'Settings',
+            lastVisitTime: baseTime - 500 * 1000,
+            visitCount: 30,
+          },
+        ],
+      })
+
+      const result = await getSearchData()
+      const bookmark = result.bookmarks.find((entry) => entry.originalId === 'bookmark-1')
+      expect(bookmark.lastVisitSecondsAgo).toBe(10)
+      expect(bookmark.visitCount).toBe(3)
+    } finally {
+      nowSpy.mockRestore()
+    }
+  })
 })

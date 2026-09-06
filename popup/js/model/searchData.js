@@ -61,6 +61,12 @@ function mergeHistoryLazily(items, historyMap, mergedUrls) {
  * Annotate bookmark entries that have a currently open browser tab.
  * Also copies tab group information when available.
  *
+ * Identity is the normalized base URL (hash stripped by cleanUpUrl): a bookmark
+ * matches any open tab on the same base URL. When several tabs share a base
+ * (e.g. distinct hash routes), the first tab wins so the copied metadata is
+ * deterministic. Exact-hash switching happens separately at open time
+ * (see openResultItem and the openTabMatchIgnoreHash option).
+ *
  * @param {Array} bookmarks - Bookmark search items.
  * @param {Array} tabs - Tab search items.
  */
@@ -72,7 +78,7 @@ function flagBookmarksWithOpenTabs(bookmarks, tabs) {
   // Use a Map to preserve the full tab object for group info lookup
   const tabByUrl = new Map()
   for (const tab of tabs) {
-    if (tab?.url) {
+    if (tab?.url && !tabByUrl.has(tab.url)) {
       tabByUrl.set(tab.url, tab)
     }
   }
@@ -151,8 +157,15 @@ export async function getSearchData() {
 
     // Merge history data into bookmarks and tabs if history is enabled
     if (browserApi.history && ext.opts.enableHistory && result.history.length > 0) {
-      // Build maps with URL as key, so we have fast hashmap access
-      const historyMap = new Map(result.history.map((item) => [item.url, item]))
+      // Build maps with URL as key, so we have fast hashmap access.
+      // First entry wins: history is most-recent-first, so the freshest
+      // visit data survives when hash routes share a base URL.
+      const historyMap = new Map()
+      for (const item of result.history) {
+        if (!historyMap.has(item.url)) {
+          historyMap.set(item.url, item)
+        }
+      }
 
       const mergedHistoryUrls = new Set()
 

@@ -321,6 +321,49 @@ describe('searchEvents openResultItem', () => {
     expect(ext.model.bookmarks[1].openTabTitle).toBe('Other Tab')
   })
 
+  it('keeps the bookmark flagged when a sibling hash-route tab is still open', async () => {
+    const results = [
+      {
+        type: 'tab',
+        originalId: 2,
+        originalUrl: 'https://app.test/#/inbox',
+        url: 'app.test',
+        title: 'Inbox',
+        score: 8.4,
+      },
+      {
+        type: 'tab',
+        originalId: 3,
+        originalUrl: 'https://app.test/#/settings',
+        url: 'app.test',
+        title: 'Settings',
+        score: 8.0,
+      },
+    ]
+    const bookmarks = [
+      {
+        type: 'bookmark',
+        originalId: 'bm-app',
+        originalUrl: 'https://app.test/',
+        url: 'app.test',
+        title: 'App',
+        tab: true,
+        openTabTitle: 'Inbox',
+        openTabActive: true,
+      },
+    ]
+
+    const { viewModule, elements } = await setupSearchEvents({ results, bookmarks })
+    await viewModule.renderSearchResults()
+
+    elements.resultList.children[0].querySelector('.close').dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+
+    expect(ext.model.tabs).toHaveLength(1)
+    expect(ext.model.tabs[0].originalId).toBe(3)
+    expect(ext.model.bookmarks[0].tab).toBe(true)
+    expect(ext.model.bookmarks[0].openTabTitle).toBe('Settings')
+  })
+
   it('ignores stale close buttons without a valid tab id', async () => {
     const { module } = await setupSearchEvents()
 

@@ -32,8 +32,34 @@ function clearBookmarkOpenTabState(closedTab) {
     return
   }
 
+  // The closed tab was already spliced from ext.model.tabs by the caller.
+  // If a sibling tab on the same base URL (e.g. another hash route) is still
+  // open, keep the bookmark flagged and refresh from the remaining tab.
+  const remainingTab = ext.model.tabs.find((tab) => tab?.url === closedTab.url)
+
   for (const bookmark of ext.model.bookmarks) {
     if (bookmark?.url !== closedTab.url) {
+      continue
+    }
+
+    if (remainingTab) {
+      bookmark.tab = true
+      bookmark.openTabTitle = remainingTab.title
+      bookmark.openTabActive = remainingTab.active
+      if (remainingTab.favIconUrl) {
+        bookmark.favIconUrl = remainingTab.favIconUrl
+      } else if (bookmark.favIconUrl === closedTab.favIconUrl) {
+        delete bookmark.favIconUrl
+      }
+      if (remainingTab.group) {
+        bookmark.group = remainingTab.group
+        bookmark.groupLower = remainingTab.groupLower
+        bookmark.groupId = remainingTab.groupId
+      } else {
+        delete bookmark.group
+        delete bookmark.groupLower
+        delete bookmark.groupId
+      }
       continue
     }
 
