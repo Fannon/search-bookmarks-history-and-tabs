@@ -37,7 +37,7 @@ import { searchTaxonomy } from './taxonomySearch.js'
 // Export scoring function for other modules
 export { calculateFinalScore } from './scoring.js'
 
-const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
+const urlRegex = /^(https?:\/\/)?((?:[\da-z](?:[\da-z-]*[\da-z])?\.)+[a-z]{2,})(:\d{1,5})?([/?#]\S*)?$/i
 let searchRequestId = 0
 
 /**
