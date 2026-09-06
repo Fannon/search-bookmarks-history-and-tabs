@@ -494,4 +494,70 @@ describe('getSearchData', () => {
       nowSpy.mockRestore()
     }
   })
+
+  test('continues with partial results when one source fails', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    tabsQueryMock.mockRejectedValue(new Error('tabs boom'))
+
+    try {
+      setBrowserData({
+        tabs: [{ url: 'https://tab.com', title: 'Tab', id: 'tab-1' }],
+        bookmarks: [
+          {
+            title: '',
+            children: [
+              {
+                title: 'Bookmarks Bar',
+                children: [{ id: 'bookmark-1', title: 'Saved', url: 'https://bookmark.com' }],
+              },
+            ],
+          },
+        ],
+        history: [],
+      })
+
+      const result = await getSearchData()
+
+      expect(result.tabs).toEqual([])
+      expect(result.bookmarks).toHaveLength(1)
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('tabs'), expect.any(Error))
+    } finally {
+      warnSpy.mockRestore()
+    }
+  })
+
+  test('times out a hanging source and returns partial results', async () => {
+    jest.useFakeTimers()
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    historySearchMock.mockImplementation(() => new Promise(() => {}))
+
+    try {
+      setBrowserData({
+        tabs: [],
+        bookmarks: [
+          {
+            title: '',
+            children: [
+              {
+                title: 'Bookmarks Bar',
+                children: [{ id: 'bookmark-1', title: 'Saved', url: 'https://bookmark.com' }],
+              },
+            ],
+          },
+        ],
+        history: [],
+      })
+
+      const pending = getSearchData()
+      await jest.advanceTimersByTimeAsync(10000)
+      const result = await pending
+
+      expect(result.bookmarks).toHaveLength(1)
+      expect(result.history).toEqual([])
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('timed out'))
+    } finally {
+      warnSpy.mockRestore()
+      jest.useRealTimers()
+    }
+  })
 })

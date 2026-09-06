@@ -19,6 +19,40 @@ import {
   getBrowserTabs,
 } from '../helper/browserApi.js'
 
+const SEARCH_DATA_TIMEOUT_MS = 10000
+
+/**
+ * Await a data source with a timeout, degrading to an empty result on
+ * failure instead of rejecting the whole startup load.
+ *
+ * @param {Promise} promise - Source promise (already started).
+ * @param {string} label - Source name for the warning.
+ * @returns {Promise<Array>} Source data or empty array.
+ */
+function loadSource(promise, label) {
+  let timer
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => {
+      console.warn(`Loading ${label} timed out, continuing with partial results.`)
+      resolve([])
+    }, SEARCH_DATA_TIMEOUT_MS)
+  })
+  return Promise.race([
+    Promise.resolve(promise).then(
+      (value) => {
+        clearTimeout(timer)
+        return value
+      },
+      (err) => {
+        clearTimeout(timer)
+        console.warn(`Could not load ${label}, continuing with partial results:`, err)
+        return []
+      },
+    ),
+    timeout,
+  ])
+}
+
 /**
  * Efficiently merges history data into bookmarks or tabs using lazy evaluation
  * Only creates new objects when there are actual history matches to merge
@@ -128,16 +162,28 @@ export async function getSearchData() {
       console.warn('Could not load example mock data', err)
     }
   } else {
-    // Fetch all browser data sources in parallel for faster startup
+    // Fetch all browser data sources in parallel for faster startup.
+    // Each source degrades to [] on failure/timeout so one slow API
+    // (usually history) cannot block the whole popup.
     const [browserTabs, browserBookmarks, history, browserTabGroups] = await Promise.all([
-      browserApi.tabs && ext.opts.enableTabs ? getBrowserTabs() : Promise.resolve([]),
-      browserApi.bookmarks && ext.opts.enableBookmarks ? getBrowserBookmarks() : Promise.resolve([]),
-      browserApi.history && ext.opts.enableHistory
-        ? getBrowserHistory(Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo, ext.opts.historyMaxItems).then(
-            convertBrowserHistory,
-          )
-        : Promise.resolve([]),
-      browserApi.tabGroups && ext.opts.enableTabs ? getBrowserTabGroups() : Promise.resolve([]),
+      loadSource(browserApi.tabs && ext.opts.enableTabs ? getBrowserTabs() : Promise.resolve([]), 'tabs'),
+      loadSource(
+        browserApi.bookmarks && ext.opts.enableBookmarks ? getBrowserBookmarks() : Promise.resolve([]),
+        'bookmarks',
+      ),
+      loadSource(
+        browserApi.history && ext.opts.enableHistory
+          ? getBrowserHistory(
+              Date.now() - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo,
+              ext.opts.historyMaxItems,
+            ).then(convertBrowserHistory)
+          : Promise.resolve([]),
+        'history',
+      ),
+      loadSource(
+        browserApi.tabGroups && ext.opts.enableTabs ? getBrowserTabGroups() : Promise.resolve([]),
+        'tab groups',
+      ),
     ])
 
     // Build group lookup map
