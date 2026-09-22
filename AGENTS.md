@@ -1,5 +1,8 @@
 # AGENTS.md
 
+> **Language / Язык:** **English** | [Русский](./localized-md/ru/AGENTS.md)
+> *   **Main Readme / Главный Readme:** [README.md](./README.md) | [README.ru.md](./localized-md/ru/README.md)
+
 ## 1. Think Before Coding
 
 **Don't assume. Don't hide confusion. Surface tradeoffs.**

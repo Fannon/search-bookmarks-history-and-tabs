@@ -9,6 +9,7 @@
  * - Coordinate with search and navigation modules for result interactions.
  */
 
+import { t } from '../helper/i18n.js'
 import { cleanUpUrl } from '../helper/utils.js'
 import { getUserOptions, setUserOptions } from '../model/optionsStorage.js'
 import { search } from '../search/common.js'
@@ -338,7 +339,8 @@ export async function toggleSearchApproach() {
  * Changes both the displayed text and CSS class based on current strategy
  */
 export function updateSearchApproachToggle() {
-  ext.dom.searchApproachToggle.innerText = ext.opts.searchStrategy.toUpperCase()
+  ext.dom.searchApproachToggle.innerText =
+    ext.opts.searchStrategy === 'fuzzy' ? t('badge_fuzzy', 'FUZZY') : t('badge_precise', 'PRECISE')
   ext.dom.searchApproachToggle.classList = ext.opts.searchStrategy
 }
 

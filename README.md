@@ -1,5 +1,8 @@
 # Search Bookmarks, History and Browser Tabs
 
+> **Language / Язык:** **English** | [Русский](./localized-md/ru/README.md)
+> *   **Documentation / Документация:** [OPTIONS.md](./OPTIONS.md) | [OPTIONS.ru.md](./localized-md/ru/OPTIONS.md)
+
 🔎 Browser extension to (fuzzy) search and navigate bookmarks, history and open tabs.
 
 Available as [Chrome Extension](https://chrome.google.com/webstore/detail/tabs-bookmark-and-history/cofpegcepiccpobikjoddpmmocficdjj?hl=en-GB&authuser=0), [Microsoft Edge Addon](https://microsoftedge.microsoft.com/addons/detail/search-tabs-bookmarks-an/ldmbegkendnchhjppahaadhhakgfbfpo), [Firefox Addon](https://addons.mozilla.org/en-US/firefox/addon/search-tabs-bookmarks-history/) and [Opera Addon](https://addons.opera.com/en/extensions/details/search-bookmarks-history-and-tabs/) (only an old version).

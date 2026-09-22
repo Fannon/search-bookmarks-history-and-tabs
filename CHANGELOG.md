@@ -1,5 +1,8 @@
 # CHANGELOG
 
+> **Language / Язык:** **English** | [Русский](./localized-md/ru/CHANGELOG.md)
+> *   **Main Readme / Главный Readme:** [README.md](./README.md) | [README.ru.md](./localized-md/ru/README.md)
+
 ## [Unreleased]
 
 ## [v2.5.0] - 2026-08-01

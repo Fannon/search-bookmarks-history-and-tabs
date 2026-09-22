@@ -3,6 +3,7 @@
  */
 
 import { escapeHtml } from '../helper/utils.js'
+import { t } from '../helper/i18n.js'
 import { canEditCurrentManagedBookmark, findBookmarkById, findFolderById } from '../model/bookmarkManagerOperations.js'
 import {
   clearDuplicateBookmarkSelection,
@@ -125,9 +126,17 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
   const stats = model.stats
 
   dom.statsGrid.innerHTML = renderStats(stats)
-  dom.topTags.innerHTML = renderTopList(stats.topTags, 'No tags found', createTagManagerHref)
-  dom.topDomains.innerHTML = renderTopList(stats.topDomains, 'No domains found', createDomainBookmarkHref)
-  dom.topFolders.innerHTML = renderTopList(stats.topFolders, 'No folders found', createFolderBookmarkHref)
+  dom.topTags.innerHTML = renderTopList(stats.topTags, t('empty_tags', 'No tags found'), createTagManagerHref)
+  dom.topDomains.innerHTML = renderTopList(
+    stats.topDomains,
+    t('empty_domains', 'No domains found'),
+    createDomainBookmarkHref,
+  )
+  dom.topFolders.innerHTML = renderTopList(
+    stats.topFolders,
+    t('empty_folders', 'No folders found'),
+    createFolderBookmarkHref,
+  )
   renderRecentBookmarksIntoDom()
   dom.bookmarkCount.textContent = stats.bookmarkCount ? String(stats.bookmarkCount) : ''
   dom.duplicateSummary.innerHTML = renderDuplicateSummary(stats)
@@ -522,11 +531,11 @@ export function renderBookmarkUndoHistory(snapshots = [], canRestore = false) {
   }
 
   if (!snapshots.length) {
-    dom.bookmarkUndoHistory.innerHTML = '<p class="empty-state">No bookmark manager changes to undo yet.</p>'
+    dom.bookmarkUndoHistory.innerHTML = `<p class="empty-state">${t('empty_undo_history', 'No bookmark manager changes to undo yet.')}</p>`
     dom.undoCount.textContent = ''
     dom.undoBookmarkChange.disabled = true
     dom.exportUndoHistory.disabled = true
-    dom.undoBookmarkChange.title = 'No bookmark manager changes are available to undo'
+    dom.undoBookmarkChange.title = t('title_no_undo_available', 'No bookmark manager changes are available to undo')
     return
   }
 
@@ -776,7 +785,7 @@ export function renderBookmarkCleanupScopeOptions(folderTree, selectedFolderId =
 
   const folders = getBookmarkCleanupScopeFolders(folderTree)
   select.innerHTML = `
-    <option value="all">All bookmarks</option>
+    <option value="all">${t('opt_all_bookmarks', 'All bookmarks')}</option>
     ${folders.map(renderBookmarkCleanupScopeOption).join('')}
   `
   select.value = folders.some((folder) => String(folder.id) === String(selectedFolderId)) ? selectedFolderId : 'all'
@@ -795,10 +804,11 @@ export function renderBookmarkCleanupProposal(proposal, managerModel, appliedCha
 
   dom.cleanupCount.textContent = changeCount ? String(changeCount) : ''
   dom.applyAllCleanupChanges.disabled = !changeCount
-  dom.cleanupProposalSummary.textContent = proposal?.summary || (changeCount ? '' : 'No cleanup proposal loaded.')
+  dom.cleanupProposalSummary.textContent =
+    proposal?.summary || (changeCount ? '' : t('proposal_no_proposal', 'No cleanup proposal loaded.'))
   dom.cleanupProposalList.innerHTML = proposal
     ? renderCleanupChangeGroups(proposal, managerModel, appliedChangeIds)
-    : '<p class="empty-state">Generate or paste a proposal to review changes here.</p>'
+    : `<p class="empty-state">${t('proposal_empty_state', 'Generate or paste a proposal to review changes here.')}</p>`
 }
 
 let cleanupStatusDismissId = 0
@@ -1265,7 +1275,7 @@ function renderFolderOptions(folderOptions) {
 
 function renderManagedBookmarkList(bookmarks, canUpdateBookmarks) {
   if (!bookmarks.length) {
-    return '<p class="empty-state">No bookmarks match this view.</p>'
+    return `<p class="empty-state">${t('empty_bookmarks_view', 'No bookmarks match this view.')}</p>`
   }
 
   const renderCount = Math.min(bookmarks.length, MANAGED_BOOKMARK_RENDER_LIMIT)
@@ -1324,10 +1334,10 @@ function renderBrowserSummary(visibleCount, selectedCount) {
   const folderId = ext.model.bookmarkManagerFolderId || 'all'
   const query = ext.dom.manager.bookmarkSearch.value.trim()
   const folder = findFolderById(ext.model.bookmarkManager?.folderTree, folderId)
-  const folderName = folderId === 'all' || !folder ? 'All Bookmarks' : folder.path.join(' / ')
-  const searchText = query ? ` matching "${query}"` : ''
+  const folderName = folderId === 'all' || !folder ? t('opt_all_bookmarks', 'All Bookmarks') : folder.path.join(' / ')
+  const searchText = query ? ` ${t('lbl_matching', 'matching')} "${query}"` : ''
 
-  return `${formatInteger(selectedCount)}/${formatInteger(visibleCount)} selected in ${folderName}${searchText}`
+  return `${formatInteger(selectedCount)}/${formatInteger(visibleCount)} ${t('lbl_selected_in', 'selected in')} ${folderName}${searchText}`
 }
 
 function updateManagedSelectionUi() {
@@ -1390,7 +1400,7 @@ function updateManagedSelectionUi() {
 
 function getTagSuggestionButtonLabel(targetIds, isSuggestingTags) {
   if (isSuggestingTags) {
-    return 'Suggesting...'
+    return t('lbl_suggesting', 'Suggesting...')
   }
 
   const targetKey = targetIds.join('|')
@@ -1400,19 +1410,19 @@ function getTagSuggestionButtonLabel(targetIds, isSuggestingTags) {
       ext.model.bookmarkManagerTagSuggestionRetryKey === targetKey,
   )
 
-  return canRetry ? 'Suggest tags (try again)' : 'Suggest tags'
+  return canRetry ? t('btn_suggest_tags_retry', 'Suggest tags (try again)') : t('btn_suggest_tags', 'Suggest tags')
 }
 
 function renderActionTargetSummary(selectedCount, currentBookmark) {
   if (selectedCount) {
-    return `${formatInteger(selectedCount)} selected bookmark${selectedCount === 1 ? '' : 's'}`
+    return `${formatInteger(selectedCount)} ${selectedCount === 1 ? t('lbl_selected_bookmark', 'selected bookmark') : t('lbl_selected_bookmarks', 'selected bookmarks')}`
   }
 
   if (currentBookmark) {
-    return '1 selected bookmark'
+    return t('lbl_one_selected_bookmark', '1 selected bookmark')
   }
 
-  return 'Click a bookmark or check bookmarks.'
+  return t('selection_summary', 'Click a bookmark or check bookmarks.')
 }
 
 function getVisibleManagedSelectionCount(selectedIds, currentBookmark) {
@@ -1522,15 +1532,15 @@ function renderTagManager(canUpdateBookmarks) {
   const visibleTags = filter ? tagGroups.filter((tag) => tag.name.toLowerCase().includes(filter)) : tagGroups
 
   if (!tagGroups.length) {
-    return '<p class="empty-state">No bookmark tags were found.</p>'
+    return `<p class="empty-state">${t('empty_tags', 'No bookmark tags were found.')}</p>`
   }
 
   const updateNotice = canUpdateBookmarks
     ? ''
-    : '<p class="manager-note">Tag updates are unavailable in this preview context.</p>'
+    : `<p class="manager-note">${t('notice_tag_updates_unavailable', 'Tag updates are unavailable in this preview context.')}</p>`
 
   if (!visibleTags.length) {
-    return `${updateNotice}<p class="empty-state">No tags match this filter.</p>`
+    return `${updateNotice}<p class="empty-state">${t('empty_tags_filter', 'No tags match this filter.')}</p>`
   }
 
   const selectedTag = getSelectedTag(visibleTags)
@@ -1564,7 +1574,7 @@ function renderTagManagerRow(tag, selectedTag) {
         <div class="tag-manager-main">
           <span class="badge tags">#${safeName}</span>
           <span class="tag-manager-count">${formatInteger(tag.count)} ${
-            tag.count === 1 ? 'bookmark' : 'bookmarks'
+            tag.count === 1 ? t('lbl_bookmark', 'bookmark') : t('lbl_bookmarks', 'bookmarks')
           }</span>
         </div>
       </button>
@@ -1580,7 +1590,7 @@ function renderTagBookmarkPanel(tag, canUpdateBookmarks) {
     return `
       <section class="tag-bookmark-panel">
         ${renderTagBookmarkPanelHeader(tag, 0, disabled)}
-        <p class="empty-state">No bookmarks use this tag.</p>
+        <p class="empty-state">${t('empty_use_tag', 'No bookmarks use this tag.')}</p>
       </section>
     `
   }
