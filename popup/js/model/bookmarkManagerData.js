@@ -2,6 +2,8 @@
  * @file Builds aggregate bookmark manager data from normalized bookmark entries.
  */
 
+import { compareText } from '../helper/compareText.js'
+
 const TOP_LIST_LIMIT = 8
 const UNKNOWN_DOMAIN = 'Unknown'
 const LONG_TITLE_LENGTH = 80
@@ -109,7 +111,7 @@ export function getDuplicateGroups(bookmarks = []) {
     if (a.count !== b.count) {
       return b.count - a.count
     }
-    return a.displayUrl.localeCompare(b.displayUrl, undefined, { sensitivity: 'base' })
+    return compareText(a.displayUrl, b.displayUrl)
   })
 
   return duplicateGroups
@@ -230,7 +232,7 @@ export function getTagGroups(bookmarks = []) {
     if (a.count !== b.count) {
       return b.count - a.count
     }
-    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    return compareText(a.name, b.name)
   })
 }
 
@@ -298,7 +300,7 @@ function addBookmarkPathFolders(root, bookmarks) {
 
 function sortFolderTree(folder) {
   let totalCount = folder.count
-  folder.children.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }))
+  folder.children.sort((a, b) => compareText(a.title, b.title))
 
   for (let i = 0; i < folder.children.length; i++) {
     totalCount += sortFolderTree(folder.children[i])
@@ -542,7 +544,7 @@ function getTopCounts(countMap) {
       if (a.count !== b.count) {
         return b.count - a.count
       }
-      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+      return compareText(a.name, b.name)
     })
     .slice(0, TOP_LIST_LIMIT)
 }

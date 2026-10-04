@@ -2,6 +2,8 @@
  * @file Optional local AI tag suggestions for bookmarks.
  */
 
+import { compareText } from './compareText.js'
+
 const LANGUAGE_MODEL_OPTIONS = {
   expectedInputs: [{ type: 'text', languages: ['en'] }],
   expectedOutputs: [{ type: 'text', languages: ['en'] }],
@@ -304,7 +306,7 @@ function normalizeExistingTags(tags) {
     if (a.count !== b.count) {
       return b.count - a.count
     }
-    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    return compareText(a.name, b.name)
   })
 }
 

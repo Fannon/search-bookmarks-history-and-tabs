@@ -193,6 +193,59 @@ test.describe('Performance Benchmarks', () => {
     }
   })
 
+  test('Tags overview renders 5000 multilingual labels in both sort modes', async ({ page }) => {
+    test.setTimeout(20000)
+    await page.goto('/tags.html')
+    await expect(page.locator('#sort-toggle')).toBeVisible()
+
+    const results = await page.evaluate(async () => {
+      const { loadTagsOverview } = await import('./js/view/tagsView.js')
+      const prefixes = ['React', 'Café', 'ΣΟΣ', '東京', 'Alpha', 'Ångström', 'Zebra']
+      const names = Array.from({ length: 5000 }, (_, i) => `${prefixes[i % prefixes.length]} ${i}`)
+      window.ext.model.bookmarks = names.flatMap((name, i) =>
+        Array.from({ length: (i % 5) + 1 }, (_, j) => ({ originalId: `${i}-${j}`, tags: `#${name}` })),
+      )
+      const container = document.getElementById('tags-list')
+      const results = []
+
+      for (const mode of ['alpha', 'count']) {
+        localStorage.setItem('taxonomySortMode', mode)
+        loadTagsOverview()
+        container.getBoundingClientRect()
+
+        const samples = []
+        for (let i = 0; i < 3; i++) {
+          const start = performance.now()
+          loadTagsOverview()
+          // Include style and layout work, which search-total does not measure.
+          container.getBoundingClientRect()
+          samples.push(performance.now() - start)
+        }
+        const tags = window.ext.index.taxonomy.tags
+        const expected = names.toSorted((a, b) => {
+          const countDifference = mode === 'count' ? tags[b].length - tags[a].length : 0
+          return countDifference || a.localeCompare(b, undefined, { sensitivity: 'base' })
+        })
+        const actual = Array.from(container.querySelectorAll('[x-tag]'), (badge) => badge.getAttribute('x-tag'))
+        results.push({
+          mode,
+          medianMs: samples.sort((a, b) => a - b)[1],
+          count: actual.length,
+          orderMatches: actual.every((name, i) => name === expected[i]),
+        })
+      }
+      return results
+    })
+
+    for (const result of results) {
+      expect(result.count).toBe(5000)
+      expect(result.orderMatches).toBe(true)
+      console.log(
+        `Playwright: Tags overview 5000 labels (${result.mode}, including layout) took: ${result.medianMs.toFixed(2)}ms`,
+      )
+    }
+  })
+
   test('Bookmark Manager renders and filters a 10k bookmark dataset', async ({ page }) => {
     test.setTimeout(20000)
     await page.setViewportSize({ width: 1280, height: 900 })

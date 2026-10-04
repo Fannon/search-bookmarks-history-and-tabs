@@ -3,6 +3,7 @@
  */
 
 import { createSearchStringLower } from './helper/browserApi.js'
+import { compareText } from './helper/compareText.js'
 import { createExtensionContext } from './helper/extensionContext.js'
 import {
   createLargeLocalAiTagSelectionWarning,
@@ -1342,7 +1343,7 @@ function getScopedCleanupModel() {
       if (a.count !== b.count) {
         return b.count - a.count
       }
-      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+      return compareText(a.name, b.name)
     }),
   }
 }
