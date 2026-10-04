@@ -140,6 +140,56 @@ describe('createSearchStringLower', () => {
     assert.strictEqual(result, 'title¦#tag')
   })
 })
+describe('converted search strings', () => {
+  it('preserves the original field composition across browser sources', () => {
+    mock.method(Date, 'now', () => 2_000)
+    const titles = [
+      '  Mixed CASE  ',
+      'ΣΟΣ ΟΣ',
+      '東京 Café İSTANBUL',
+      '',
+      'example.com',
+      'EXAMPLE.COM',
+      'https://Example.com/',
+      'Notes #DEV #Reference +20',
+      'C# 11 #11 #valid',
+    ]
+    const raw = titles.map((title, id) => ({
+      id,
+      title,
+      url: 'https://Example.com/',
+      lastVisitTime: 1_000,
+      lastAccessed: 1_000,
+      groupId: 2,
+    }))
+    const bookmarks = convertBrowserBookmarks(raw, ['Work ΣΟΣ', '東京'], 3)
+    const tabs = convertBrowserTabs(raw, new Map([[2, { title: 'Group ΣΟΣ 東京' }]]))
+    const history = convertBrowserHistory(raw)
+
+    for (const item of [...bookmarks, ...tabs, ...history]) {
+      const fields = []
+      if (item.title && item.title !== item.url) fields.push(item.title)
+      for (const field of [item.url, item.tags, item.folder, item.group]) {
+        if (field) fields.push(field)
+      }
+      assert.strictEqual(item.searchStringLower, fields.join('¦').toLowerCase())
+      assert.strictEqual(item.titleLower, item.title.toLowerCase().trim())
+    }
+    assert.strictEqual(bookmarks[0].searchStringLower, '  mixed case  ¦example.com¦~work σος ~東京')
+    assert.strictEqual(bookmarks[4].searchStringLower, 'example.com¦~work σος ~東京')
+    assert.strictEqual(bookmarks[5].searchStringLower, 'example.com¦example.com¦~work σος ~東京')
+    assert.strictEqual(tabs[0].groupLower, 'group σος 東京')
+  })
+  it('preserves a supplied folder search string without cached lowercase metadata', () => {
+    const [bookmark] = convertBrowserBookmarks(
+      [{ id: '1', title: 'Example', url: 'https://example.com/' }],
+      [],
+      3,
+      '~Work ΣΟΣ',
+    )
+    assert.strictEqual(bookmark.searchStringLower, 'example¦example.com¦~work σος')
+  })
+})
 describe('getTitle', () => {
   it('cleans title when it is a raw url', () => {
     assert.strictEqual(getTitle('https://Example.com/path', 'https://Example.com/path'), 'example.com/path')
