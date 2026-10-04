@@ -7,7 +7,8 @@ let revision = 0
 registerHooks({
   resolve(specifier, context, nextResolve) {
     const result = nextResolve(specifier, context)
-    if (result.url.startsWith(sourceRoot) && !result.url.includes('/__tests__/')) {
+    // Keep initial static and dynamic imports identical until a test explicitly resets them.
+    if (revision && result.url.startsWith(sourceRoot) && !result.url.includes('/__tests__/')) {
       const url = new URL(result.url)
       url.searchParams.set('testRevision', revision)
       result.url = url.href

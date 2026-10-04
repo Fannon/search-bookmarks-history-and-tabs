@@ -1,6 +1,8 @@
 import '../../../test/setup.js'
 import assert from 'node:assert/strict'
 import { before, describe, mock, test } from 'node:test'
+import uFuzzy from '@leeoniya/ufuzzy'
+import { browserApi } from '../helper/browserApi.js'
 import { createTestExt, generateRawBookmarks, generateRawHistory, generateRawTabs } from './testUtils.js'
 
 // Mock chrome before imports
@@ -27,8 +29,8 @@ const mockChrome = {
   },
 }
 global.chrome = mockChrome
-global.window = global
-global.window.chrome = mockChrome
+Object.assign(browserApi, mockChrome)
+global.uFuzzy = uFuzzy
 
 /** setup DOM */
 document.body.innerHTML = `
@@ -83,6 +85,7 @@ describe('Performance Benchmarks', () => {
     ext.model.tabs = data.tabs
     assert.strictEqual(data.bookmarks.length, 5000)
     assert.strictEqual(data.tabs.length, 100)
+    assert.strictEqual(data.history.length, 2000)
   })
   test('Search Performance - Precise Strategy (5000 items)', async () => {
     ext.opts.searchStrategy = 'precise'
@@ -90,33 +93,14 @@ describe('Performance Benchmarks', () => {
     const duration = await measureSearch()
     console.log(`Precise Search ("resource-123") took: ${duration.toFixed(2)}ms`)
     assert(duration < 100)
-    assert(ext.model.result.length > 0)
+    assert(ext.model.result.some((entry) => entry.type === 'bookmark' && entry.originalId === 'b123'))
   })
   test('Search Performance - Fuzzy Strategy (5000 items)', async () => {
-    // Mock uFuzzy if not present
-    if (!global.uFuzzy) {
-      global.uFuzzy = class {
-        constructor() {
-          this.filter = (h, _t) => h.map((_, i) => i)
-          this.info = (idxs, _h, _t) => ({
-            idx: idxs,
-            intraIns: new Array(idxs.length).fill(0),
-            ranges: new Array(idxs.length).fill([]),
-          })
-        }
-      }
-      global.uFuzzy.highlight = (h, _r, cb) => {
-        if (typeof cb === 'function') {
-          return cb(h, true)
-        }
-        return h
-      }
-    }
     ext.opts.searchStrategy = 'fuzzy'
     ext.dom.searchInput.value = 'resrc 123'
     const duration = await measureSearch()
     console.log(`Fuzzy Search ("resrc 123") took: ${duration.toFixed(2)}ms`)
     assert(duration < 200)
-    assert(ext.model.result.length > 0)
+    assert(ext.model.result.some((entry) => entry.type === 'bookmark' && entry.originalId === 'b123'))
   })
 })

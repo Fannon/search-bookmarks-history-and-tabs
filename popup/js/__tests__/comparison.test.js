@@ -578,7 +578,7 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     }
   }
 
-  test('Benchmark Matrix', async () => {
+  test('Benchmark Matrix', { timeout: 30000 }, async () => {
     // Data Loading Benchmarks
     console.log('\n### Data Loading/Conversion Performance')
     console.log('\n| Dataset Size | Time (Avg) |')
@@ -627,5 +627,5 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     await runSearchOptionsBenchmark()
     await runStartupPathBenchmark()
     await runDefaultResultsStartupBenchmark()
-  }, 30000)
+  })
 })
