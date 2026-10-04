@@ -8,9 +8,9 @@
  * against established baselines.
  */
 
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import fs from 'fs-extra'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -85,7 +85,7 @@ function generateSummary() {
   lines.push('# Performance Benchmark Summary')
   lines.push('')
 
-  fs.ensureDirSync('./reports')
+  fs.mkdirSync('./reports', { recursive: true })
 
   // 1. Parse Jest output into sections
   if (fs.existsSync(jestLog)) {
