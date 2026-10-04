@@ -2,6 +2,7 @@
  * @file Shared utility for rendering taxonomy overview pages (Tags, Folders, Tab Groups).
  */
 
+import { compareText } from '../helper/compareText.js'
 import { escapeHtml } from '../helper/utils.js'
 
 /**
@@ -40,10 +41,10 @@ export function renderTaxonomy({
       if (countA !== countB) {
         return countB - countA // Higher count first
       }
-      return a.localeCompare(b, undefined, { sensitivity: 'base' })
+      return compareText(a, b)
     })
   } else {
-    sortedKeys = keys.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+    sortedKeys = keys.sort(compareText)
   }
 
   const container = document.getElementById(containerId)
