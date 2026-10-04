@@ -1,5 +1,5 @@
-import { describe, expect, test } from '@jest/globals'
-
+import assert from 'node:assert/strict'
+import { describe, test } from 'node:test'
 import {
   countBookmarkCleanupChanges,
   createBookmarkCleanupApplyConfirmation,
@@ -56,176 +56,153 @@ const managerModel = {
     { name: 'llm', count: 1 },
   ],
 }
-
 describe('bookmark cleanup proposal', () => {
   test('creates a prompt with output rules and bookmark context', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel)
-
-    expect(prompt).toContain('Act as a careful browser bookmark curator')
-    expect(prompt).toContain('1 | OpenAI Docs')
-    expect(prompt).toContain('dev | Development')
-    expect(prompt).toContain('ai (1), llm (1)')
-    expect(prompt).toContain('safety ceiling, not a quota')
-    expect(prompt).toContain('Do not force changes to fill the limit')
-    expect(prompt).toContain('Bookmark context: included 3 of 3 bookmarks.')
-    expect(prompt).toContain('Preserve distinctive project, repository, package, and product identifiers')
-    expect(prompt).toContain('Do not remove tags merely because they are generic or redundant')
-    expect(prompt).toContain('the reason should name the evidence')
-    expect(prompt).toContain('Output raw JSON only')
-    expect(prompt).toContain('first character of your response must be "{"')
-    expect(prompt).not.toContain('"$schema"')
-    expect(prompt).not.toContain('Omitted bookmark count')
+    assert(prompt.includes('Act as a careful browser bookmark curator'))
+    assert(prompt.includes('1 | OpenAI Docs'))
+    assert(prompt.includes('dev | Development'))
+    assert(prompt.includes('ai (1), llm (1)'))
+    assert(prompt.includes('safety ceiling, not a quota'))
+    assert(prompt.includes('Do not force changes to fill the limit'))
+    assert(prompt.includes('Bookmark context: included 3 of 3 bookmarks.'))
+    assert(prompt.includes('Preserve distinctive project, repository, package, and product identifiers'))
+    assert(prompt.includes('Do not remove tags merely because they are generic or redundant'))
+    assert(prompt.includes('the reason should name the evidence'))
+    assert(prompt.includes('Output raw JSON only'))
+    assert(prompt.includes('first character of your response must be "{"'))
+    assert(!prompt.includes('"$schema"'))
+    assert(!prompt.includes('Omitted bookmark count'))
   })
-
   test('creates a lite prompt without embedding the full JSON schema', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'lite')
-
-    expect(prompt).toContain('"changes":{')
-    expect(prompt).toContain('id | title | url | tags')
-    expect(prompt).toContain('Do not propose bookmark moves or deletions.')
-    expect(prompt).toContain('Change type focus: Everything')
-    expect(prompt).toContain('Lite mode: return a compact review batch')
-    expect(prompt).toContain('Prioritize addTags')
-    expect(prompt).toContain('Example output format only')
-    expect(prompt).toContain('"addTags":[{"id":"add-1","bookmarkId":"bookmark-id-from-data"')
-    expect(prompt).not.toContain('"moveBookmarks"')
-    expect(prompt).not.toContain('"deleteBookmarks"')
-    expect(prompt).not.toContain('Existing folders')
-    expect(prompt).not.toContain('dev | Development')
-    expect(prompt).not.toContain('"$schema"')
+    assert(prompt.includes('"changes":{'))
+    assert(prompt.includes('id | title | url | tags'))
+    assert(prompt.includes('Do not propose bookmark moves or deletions.'))
+    assert(prompt.includes('Change type focus: Everything'))
+    assert(prompt.includes('Lite mode: return a compact review batch'))
+    assert(prompt.includes('Prioritize addTags'))
+    assert(prompt.includes('Example output format only'))
+    assert(prompt.includes('"addTags":[{"id":"add-1","bookmarkId":"bookmark-id-from-data"'))
+    assert(!prompt.includes('"moveBookmarks"'))
+    assert(!prompt.includes('"deleteBookmarks"'))
+    assert(!prompt.includes('Existing folders'))
+    assert(!prompt.includes('dev | Development'))
+    assert(!prompt.includes('"$schema"'))
   })
-
   test('can generate an unlimited prompt', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'lite', { changeLimit: 'unlimited' })
-
-    expect(prompt).not.toContain('No proposal count ceiling is set')
-    expect(prompt).not.toContain('highest-confidence changes')
-    expect(prompt).not.toContain('safety ceiling, not a quota')
+    assert(!prompt.includes('No proposal count ceiling is set'))
+    assert(!prompt.includes('highest-confidence changes'))
+    assert(!prompt.includes('safety ceiling, not a quota'))
   })
-
   test('limits bookmark context and reports omitted bookmark rows', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'lite', { bookmarkLimit: 2 })
     const payload = createBookmarkCleanupPromptPayload(managerModel, { bookmarkLimit: 2, includeFolders: false })
-
-    expect(prompt).toContain('Bookmark context: included 2 of 3 bookmarks. Omitted 1')
-    expect(prompt).toContain('1 | OpenAI Docs')
-    expect(prompt).toContain('2 | Duplicate OpenAI Docs')
-    expect(prompt).not.toContain('3 | Different Docs')
-    expect(payload.includedBookmarkCount).toBe(2)
-    expect(payload.omittedBookmarkCount).toBe(1)
-    expect(payload.totalBookmarkCount).toBe(3)
-    expect(payload.truncatedByCharacterBudget).toBe(false)
+    assert(prompt.includes('Bookmark context: included 2 of 3 bookmarks. Omitted 1'))
+    assert(prompt.includes('1 | OpenAI Docs'))
+    assert(prompt.includes('2 | Duplicate OpenAI Docs'))
+    assert(!prompt.includes('3 | Different Docs'))
+    assert.strictEqual(payload.includedBookmarkCount, 2)
+    assert.strictEqual(payload.omittedBookmarkCount, 1)
+    assert.strictEqual(payload.totalBookmarkCount, 3)
+    assert.strictEqual(payload.truncatedByCharacterBudget, false)
   })
-
   test('can focus a prompt on title changes', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'full', { changeFocus: 'title' })
-
-    expect(prompt).toContain('Change type focus: Title')
-    expect(prompt).toContain('Include only these change arrays when they have proposals: rewriteTitles')
-    expect(prompt).toContain('"changes":{"rewriteTitles"')
-    expect(prompt).toContain('"rewriteTitles":[{"id":"rewrite-1"')
-    expect(prompt).toContain('Do not rewrite short, clear, or already useful titles')
-    expect(prompt).toContain('looks like an unedited webpage title')
-    expect(prompt).toContain('A medium-confidence improvement is acceptable')
-    expect(prompt).toContain('Strip boilerplate prefixes')
-    expect(prompt).not.toContain('Add useful, specific tags')
-    expect(prompt).not.toContain('Use renameTags for tag merges')
-    expect(prompt).not.toContain('Use only folder IDs')
-    expect(prompt).not.toContain('Do not delete a bookmark')
+    assert(prompt.includes('Change type focus: Title'))
+    assert(prompt.includes('Include only these change arrays when they have proposals: rewriteTitles'))
+    assert(prompt.includes('"changes":{"rewriteTitles"'))
+    assert(prompt.includes('"rewriteTitles":[{"id":"rewrite-1"'))
+    assert(prompt.includes('Do not rewrite short, clear, or already useful titles'))
+    assert(prompt.includes('looks like an unedited webpage title'))
+    assert(prompt.includes('A medium-confidence improvement is acceptable'))
+    assert(prompt.includes('Strip boilerplate prefixes'))
+    assert(!prompt.includes('Add useful, specific tags'))
+    assert(!prompt.includes('Use renameTags for tag merges'))
+    assert(!prompt.includes('Use only folder IDs'))
+    assert(!prompt.includes('Do not delete a bookmark'))
   })
-
   test('omits folder context when advanced prompt only focuses tags', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'full', { changeFocus: 'tags' })
-
-    expect(prompt).toContain('Change type focus: Tags')
-    expect(prompt).toContain('id | title | url | tags')
-    expect(prompt).toContain('Add useful, concise, lowercase tags')
-    expect(prompt).toContain('Strongly prefer tags that already exist')
-    expect(prompt).toContain('For already-tagged bookmarks, suggest at most 1–2')
-    expect(prompt).toContain('For bookmarks with no tags, suggest at most 1–3')
-    expect(prompt).toContain('Use one renameTags entry per source tag')
-    expect(prompt).toContain('Mutually exclusive: if you use renameTags')
-    expect(prompt).not.toContain('Rewrite titles only when')
-    expect(prompt).not.toContain('Do not rewrite titles for style alone')
-    expect(prompt).not.toContain('Delete only exact or near-exact duplicate bookmarks')
-    expect(prompt).not.toContain('Existing folders')
-    expect(prompt).not.toContain('dev | Development')
+    assert(prompt.includes('Change type focus: Tags'))
+    assert(prompt.includes('id | title | url | tags'))
+    assert(prompt.includes('Add useful, concise, lowercase tags'))
+    assert(prompt.includes('Strongly prefer tags that already exist'))
+    assert(prompt.includes('For already-tagged bookmarks, suggest at most 1–2'))
+    assert(prompt.includes('For bookmarks with no tags, suggest at most 1–3'))
+    assert(prompt.includes('Use one renameTags entry per source tag'))
+    assert(prompt.includes('Mutually exclusive: if you use renameTags'))
+    assert(!prompt.includes('Rewrite titles only when'))
+    assert(!prompt.includes('Do not rewrite titles for style alone'))
+    assert(!prompt.includes('Delete only exact or near-exact duplicate bookmarks'))
+    assert(!prompt.includes('Existing folders'))
+    assert(!prompt.includes('dev | Development'))
   })
-
   test('keeps folder context when advanced prompt focuses folder structure', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'full', { changeFocus: 'folder' })
-
-    expect(prompt).toContain('Change type focus: Folder Structure')
-    expect(prompt).toContain('id | title | url | folderId | folderPath | tags')
-    expect(prompt).toContain('Existing folders')
-    expect(prompt).toContain('dev | Development')
-    expect(prompt).toContain('Move a bookmark only when the target folder is clearly more specific')
-    expect(prompt).toContain('Use only folder IDs')
-    expect(prompt).not.toContain('Add useful, specific tags')
-    expect(prompt).not.toContain('Rewrite titles only when')
-    expect(prompt).not.toContain('Delete only exact or near-exact duplicate bookmarks')
+    assert(prompt.includes('Change type focus: Folder Structure'))
+    assert(prompt.includes('id | title | url | folderId | folderPath | tags'))
+    assert(prompt.includes('Existing folders'))
+    assert(prompt.includes('dev | Development'))
+    assert(prompt.includes('Move a bookmark only when the target folder is clearly more specific'))
+    assert(prompt.includes('Use only folder IDs'))
+    assert(!prompt.includes('Add useful, specific tags'))
+    assert(!prompt.includes('Rewrite titles only when'))
+    assert(!prompt.includes('Delete only exact or near-exact duplicate bookmarks'))
   })
-
   test('supports folder-focused lite prompts with folder context', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'lite', { changeFocus: 'folder' })
-
-    expect(prompt).toContain('Change type focus: Folder Structure')
-    expect(prompt).toContain('Include only these change arrays when they have proposals: moveBookmarks')
-    expect(prompt).toContain('id | title | url | folderId | folderPath | tags')
-    expect(prompt).toContain('Existing folders')
-    expect(prompt).toContain('dev | Development')
-    expect(prompt).toContain('"changes":{"moveBookmarks"')
-    expect(prompt).toContain('"moveBookmarks":[{"id":"move-1"')
-    expect(prompt).toContain('Move a bookmark only when the target folder is clearly more specific')
-    expect(prompt).toContain('Use only folder IDs')
-    expect(prompt).toContain('Keep deleteBookmarks empty.')
-    expect(prompt).not.toContain('Keep moveBookmarks empty.')
-    expect(prompt).not.toContain('Lite mode has no folder data')
-    expect(prompt).not.toContain('"$schema"')
+    assert(prompt.includes('Change type focus: Folder Structure'))
+    assert(prompt.includes('Include only these change arrays when they have proposals: moveBookmarks'))
+    assert(prompt.includes('id | title | url | folderId | folderPath | tags'))
+    assert(prompt.includes('Existing folders'))
+    assert(prompt.includes('dev | Development'))
+    assert(prompt.includes('"changes":{"moveBookmarks"'))
+    assert(prompt.includes('"moveBookmarks":[{"id":"move-1"'))
+    assert(prompt.includes('Move a bookmark only when the target folder is clearly more specific'))
+    assert(prompt.includes('Use only folder IDs'))
+    assert(prompt.includes('Keep deleteBookmarks empty.'))
+    assert(!prompt.includes('Keep moveBookmarks empty.'))
+    assert(!prompt.includes('Lite mode has no folder data'))
+    assert(!prompt.includes('"$schema"'))
   })
-
   test('can focus an advanced prompt on duplicate cleanup', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'full', { changeFocus: 'duplicates' })
-
-    expect(prompt).toContain('Change type focus: Duplicates')
-    expect(prompt).toContain('Include only these change arrays when they have proposals: deleteBookmarks')
-    expect(prompt).toContain('"changes":{"deleteBookmarks"')
-    expect(prompt).toContain('"deleteBookmarks":[{"id":"delete-1"')
-    expect(prompt).toContain('Delete only exact or near-exact duplicate bookmarks')
-    expect(prompt).toContain('When in doubt, do not propose deletion')
-    expect(prompt).toContain('Do not delete a bookmark unless duplicateOfBookmarkId')
-    expect(prompt).toContain('URLs must be canonical duplicates or tracking/fragment variants')
-    expect(prompt).not.toContain('Add useful, specific tags')
-    expect(prompt).not.toContain('Rewrite titles only when')
-    expect(prompt).not.toContain('Use only folder IDs')
+    assert(prompt.includes('Change type focus: Duplicates'))
+    assert(prompt.includes('Include only these change arrays when they have proposals: deleteBookmarks'))
+    assert(prompt.includes('"changes":{"deleteBookmarks"'))
+    assert(prompt.includes('"deleteBookmarks":[{"id":"delete-1"'))
+    assert(prompt.includes('Delete only exact or near-exact duplicate bookmarks'))
+    assert(prompt.includes('When in doubt, do not propose deletion'))
+    assert(prompt.includes('Do not delete a bookmark unless duplicateOfBookmarkId'))
+    assert(prompt.includes('URLs must be canonical duplicates or tracking/fragment variants'))
+    assert(!prompt.includes('Add useful, specific tags'))
+    assert(!prompt.includes('Rewrite titles only when'))
+    assert(!prompt.includes('Use only folder IDs'))
   })
-
   test('uses a flat schema for local AI constrained generation', () => {
     const schema = JSON.stringify(localAiBookmarkCleanupProposalSchema)
-
-    expect(schema).toContain('"rewriteTitles"')
-    expect(schema).not.toContain('bookmarkChangeProposal')
-    expect(schema).not.toContain('"required":["addTags"')
-    expect(schema).not.toContain('"$ref"')
-    expect(schema).not.toContain('"$defs"')
-    expect(schema).not.toContain('"allOf"')
+    assert(schema.includes('"rewriteTitles"'))
+    assert(!schema.includes('bookmarkChangeProposal'))
+    assert(!schema.includes('"required":["addTags"'))
+    assert(!schema.includes('"$ref"'))
+    assert(!schema.includes('"$defs"'))
+    assert(!schema.includes('"allOf"'))
   })
-
   test('creates a bulk cleanup confirmation summary with destructive warnings', () => {
     const message = createBookmarkCleanupApplyConfirmation([
       { type: 'addTags', change: { id: 'add-1' } },
       { type: 'moveBookmarks', change: { id: 'move-1' } },
       { type: 'deleteBookmarks', change: { id: 'delete-1' } },
     ])
-
-    expect(message).toContain('Apply 3 bookmark cleanup changes?')
-    expect(message).toContain('Add tags: 1')
-    expect(message).toContain('Move bookmarks: 1')
-    expect(message).toContain('Delete bookmarks: 1')
-    expect(message).toContain('destructive or structural bookmark changes')
-    expect(message).toContain('Undo history is memory-only')
+    assert(message.includes('Apply 3 bookmark cleanup changes?'))
+    assert(message.includes('Add tags: 1'))
+    assert(message.includes('Move bookmarks: 1'))
+    assert(message.includes('Delete bookmarks: 1'))
+    assert(message.includes('destructive or structural bookmark changes'))
+    assert(message.includes('Undo history is memory-only'))
   })
-
   test('parses and normalizes a valid proposal', () => {
     const proposal = parseBookmarkCleanupProposal(
       JSON.stringify({
@@ -243,12 +220,10 @@ describe('bookmark cleanup proposal', () => {
       }),
       managerModel,
     )
-
-    expect(proposal.changes.addTags[0].tags).toEqual(['docs', 'ai'])
-    expect(proposal.changes.rewriteTitles[0].title).toBe('OpenAI Docs Reference')
-    expect(countBookmarkCleanupChanges(proposal)).toBe(5)
+    assert.deepStrictEqual(proposal.changes.addTags[0].tags, ['docs', 'ai'])
+    assert.strictEqual(proposal.changes.rewriteTitles[0].title, 'OpenAI Docs Reference')
+    assert.strictEqual(countBookmarkCleanupChanges(proposal), 5)
   })
-
   test('allows omitted change arrays and normalizes them to empty arrays', () => {
     const proposal = parseBookmarkCleanupProposal(
       JSON.stringify({
@@ -258,11 +233,9 @@ describe('bookmark cleanup proposal', () => {
       }),
       managerModel,
     )
-
-    expect(proposal.changes.addTags).toEqual([])
-    expect(proposal.changes.rewriteTitles).toHaveLength(1)
+    assert.deepStrictEqual(proposal.changes.addTags, [])
+    assert.strictEqual(proposal.changes.rewriteTitles.length, 1)
   })
-
   test('rejects references outside the current bookmark data', () => {
     const errors = validateBookmarkCleanupProposal(
       {
@@ -277,15 +250,13 @@ describe('bookmark cleanup proposal', () => {
       },
       managerModel,
     )
-
-    expect(errors).toEqual([
+    assert.deepStrictEqual(errors, [
       'changes.addTags[0].bookmarkId does not match an existing bookmark.',
       'changes.moveBookmarks[0].targetFolderId does not match an existing folder.',
       'changes.deleteBookmarks[0] cannot delete and keep the same bookmark.',
       'changes.rewriteTitles[0].bookmarkId does not match an existing bookmark.',
     ])
   })
-
   test('rejects delete proposals for bookmarks that are not duplicates', () => {
     const errors = validateBookmarkCleanupProposal(
       {
@@ -295,10 +266,10 @@ describe('bookmark cleanup proposal', () => {
       },
       managerModel,
     )
-
-    expect(errors).toEqual(['changes.deleteBookmarks[0] must reference bookmarks from the same duplicate URL group.'])
+    assert.deepStrictEqual(errors, [
+      'changes.deleteBookmarks[0] must reference bookmarks from the same duplicate URL group.',
+    ])
   })
-
   test('rejects delete proposals that remove every bookmark in a duplicate group', () => {
     const errors = validateBookmarkCleanupProposal(
       {
@@ -311,10 +282,8 @@ describe('bookmark cleanup proposal', () => {
       },
       managerModel,
     )
-
-    expect(errors).toEqual(['changes.deleteBookmarks would delete every bookmark in duplicate group: 1, 2.'])
+    assert.deepStrictEqual(errors, ['changes.deleteBookmarks would delete every bookmark in duplicate group: 1, 2.'])
   })
-
   test('liberal parsing drops invalid entries with warnings', () => {
     const result = parseBookmarkCleanupProposalWithIssues(
       JSON.stringify({
@@ -338,15 +307,14 @@ describe('bookmark cleanup proposal', () => {
       }),
       managerModel,
     )
-
-    expect(result.errors).toEqual([])
-    expect(result.proposal.changes.addTags).toEqual([
+    assert.deepStrictEqual(result.errors, [])
+    assert.deepStrictEqual(result.proposal.changes.addTags, [
       { id: 'add-1', bookmarkId: '1', tags: ['docs'], reason: 'Valid.' },
     ])
-    expect(result.proposal.changes.rewriteTitles).toEqual([
+    assert.deepStrictEqual(result.proposal.changes.rewriteTitles, [
       { id: 'rewrite-1', bookmarkId: '1', title: 'OpenAI Docs', reason: 'Short title.' },
     ])
-    expect(result.warnings).toEqual([
+    assert.deepStrictEqual(result.warnings, [
       'changes.addTags[1] ignored because bookmarkId "missing" does not exist.',
       'changes.renameTags[0] ignored because source tag "missing-tag" does not exist.',
       'changes.moveBookmarks[0] ignored because targetFolderId "missing" does not exist.',
@@ -355,7 +323,6 @@ describe('bookmark cleanup proposal', () => {
       'changes.rewriteTitles[1] ignored because bookmarkId "missing" does not exist.',
     ])
   })
-
   test('liberal parsing drops delete proposals that remove every duplicate copy', () => {
     const result = parseBookmarkCleanupProposalWithIssues(
       JSON.stringify({
@@ -368,10 +335,9 @@ describe('bookmark cleanup proposal', () => {
       }),
       managerModel,
     )
-
-    expect(result.errors).toEqual([])
-    expect(result.proposal.changes.deleteBookmarks).toEqual([])
-    expect(result.warnings).toEqual([
+    assert.deepStrictEqual(result.errors, [])
+    assert.deepStrictEqual(result.proposal.changes.deleteBookmarks, [])
+    assert.deepStrictEqual(result.warnings, [
       'changes.deleteBookmarks ignored for duplicate group 1, 2 because it would delete every copy.',
     ])
   })

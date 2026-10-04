@@ -1,3 +1,5 @@
+import '../../../test/setup.js'
+import { describe, test } from 'node:test'
 import uFuzzy from '@leeoniya/ufuzzy'
 import { browserApi, convertBrowserBookmarks, convertBrowserHistory, convertBrowserTabs } from '../helper/browserApi.js'
 import {
@@ -25,13 +27,11 @@ createTestExt({
     resultList: document.getElementById('result-list'),
   },
 })
-
 const { addDefaultEntries, search } = await import('../search/common.js')
 const { resetSimpleSearchState, simpleSearch } = await import('../search/simpleSearch.js')
 const { resetFuzzySearchState } = await import('../search/fuzzySearch.js')
 const { calculateFinalScore } = await import('../search/scoring.js')
 const { getSearchData } = await import('../model/searchData.js')
-
 describe('REAL Fuzzy vs Precise Search Benchmark', () => {
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -578,7 +578,7 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     }
   }
 
-  test('Benchmark Matrix', async () => {
+  test('Benchmark Matrix', { timeout: 30000 }, async () => {
     // Data Loading Benchmarks
     console.log('\n### Data Loading/Conversion Performance')
     console.log('\n| Dataset Size | Time (Avg) |')
@@ -627,5 +627,5 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
     await runSearchOptionsBenchmark()
     await runStartupPathBenchmark()
     await runDefaultResultsStartupBenchmark()
-  }, 30000)
+  })
 })

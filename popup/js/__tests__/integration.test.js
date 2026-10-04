@@ -1,9 +1,12 @@
+import '../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { afterEach, beforeEach, describe, mock, test } from 'node:test'
+import { resetModules } from '../../../test/modules.js'
 /**
  * Integration tests for the search bookmarks extension
  * Tests how different components work together and handle real-world scenarios
  */
 
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { createTaggedBookmarkTitle, mergeBulkTags } from '../model/bookmarkManagerOperations.js'
 import {
   clearTestExt,
@@ -74,34 +77,28 @@ describe('Extension Integration Tests', () => {
     ext.dom.searchApproachToggle = document.getElementById('toggle')
     ext.dom.resultsLoading = document.getElementById('results-load')
   })
-
   afterEach(() => {
     clearTestExt()
     document.body.innerHTML = ''
-    jest.resetModules()
+    resetModules()
   })
-
   test('performance with large datasets', async () => {
     ext.model.bookmarks = generateBookmarksTestData(1000)
-
     const { search } = await import('../search/common.js')
-
     ext.dom.searchInput.value = 'bookmark'
     ext.dom.resultCounter.innerText = ''
     ext.initialized = true
     ext.searchCache = new Map()
-
     const startTime = Date.now()
     await search({ key: 'a' })
     const endTime = Date.now()
 
     // Should find results and complete within reasonable time
-    expect(ext.model.result.length).toBeGreaterThan(0)
+    assert(ext.model.result.length > 0)
 
     // Should complete within reasonable time
-    expect(endTime - startTime).toBeLessThan(800)
+    assert(endTime - startTime < 800)
   })
-
   test('complete search workflow from user input to results display', async () => {
     const { search } = await import('../search/common.js')
 
@@ -110,20 +107,17 @@ describe('Extension Integration Tests', () => {
     ext.dom.resultCounter.innerText = ''
     ext.initialized = true
     ext.searchCache = new Map()
-
     await search({ key: 'a' })
 
     // The search should find results from the bookmarks that contain 'javascript'
-    expect(ext.model.result.length).toBeGreaterThan(0)
+    assert(ext.model.result.length > 0)
   })
-
   test('bookmark data structure contains expected fields after conversion', async () => {
     const bookmark = ext.model.bookmarks[0]
-    expect(bookmark.title).toBe('JavaScript Guide')
-    expect(bookmark.searchStringLower).toContain('javascript guide')
-    expect(bookmark.type).toBe('bookmark')
+    assert.strictEqual(bookmark.title, 'JavaScript Guide')
+    assert(bookmark.searchStringLower.includes('javascript guide'))
+    assert.strictEqual(bookmark.type, 'bookmark')
   })
-
   test('bookmark manager title rewrites preserve parsed favorite scores from browser bookmark titles', () => {
     const [bookmark] = createBookmarksTestData([
       {
@@ -132,43 +126,38 @@ describe('Extension Integration Tests', () => {
         url: 'https://example.com/favorite',
       },
     ])
-
-    expect(bookmark).toMatchObject({
+    assert.partialDeepStrictEqual(bookmark, {
       title: 'Favorite Reference',
       tagsArray: ['Docs'],
       customBonusScore: 75,
     })
-    expect(createTaggedBookmarkTitle(bookmark.title, mergeBulkTags(bookmark.tagsArray, ['Read'], 'add'), 75)).toBe(
+    assert.strictEqual(
+      createTaggedBookmarkTitle(bookmark.title, mergeBulkTags(bookmark.tagsArray, ['Read'], 'add'), 75),
       'Favorite Reference +75 #Docs #Read',
     )
   })
-
   test('error handling across multiple components', async () => {
-    await jest.unstable_mockModule('../search/simpleSearch.js', () => ({
-      __esModule: true,
-      simpleSearch: () => {
-        throw new Error('Simple search failure')
+    mock.module(new URL('../search/simpleSearch.js', import.meta.url), {
+      exports: {
+        simpleSearch: () => {
+          throw new Error('Simple search failure')
+        },
+        highlightSimpleSearch: mock.fn((r) => r),
+        resetSimpleSearchState: mock.fn(),
       },
-      highlightSimpleSearch: jest.fn((r) => r),
-      resetSimpleSearchState: jest.fn(),
-    }))
-
+    })
     const { search } = await import('../search/common.js')
-
     ext.dom.searchInput.value = 'test'
     ext.dom.resultCounter.innerText = ''
     ext.initialized = true
     ext.searchCache = new Map()
-
     await search({ key: 'a' })
-
     const errorOverlay = document.getElementById('error-overlay')
-    expect(errorOverlay.style.display).toBe('block')
-    expect(errorOverlay.innerHTML).toContain('Simple search failure')
+    assert.strictEqual(errorOverlay.style.display, 'block')
+    assert(errorOverlay.innerHTML.includes('Simple search failure'))
   })
-
   test('caches results to avoid redundant searches', async () => {
-    const mockSimpleSearch = jest.fn(() => [
+    const mockSimpleSearch = mock.fn(() => [
       {
         id: 'bookmark-1',
         type: 'bookmark',
@@ -179,30 +168,24 @@ describe('Extension Integration Tests', () => {
         searchApproach: 'precise',
       },
     ])
-
-    await jest.unstable_mockModule('../search/simpleSearch.js', () => ({
-      __esModule: true,
-      simpleSearch: mockSimpleSearch,
-      highlightSimpleSearch: jest.fn((r) => r),
-      resetSimpleSearchState: jest.fn(),
-    }))
-
+    mock.module(new URL('../search/simpleSearch.js', import.meta.url), {
+      exports: {
+        simpleSearch: mockSimpleSearch,
+        highlightSimpleSearch: mock.fn((r) => r),
+        resetSimpleSearchState: mock.fn(),
+      },
+    })
     const { search } = await import('../search/common.js')
-
     ext.dom.searchInput.value = 'test'
     ext.dom.resultCounter.innerText = ''
     ext.initialized = true
     ext.searchCache = new Map()
-
     await search({ key: 'a' })
-    expect(mockSimpleSearch).toHaveBeenCalledTimes(1)
-
-    mockSimpleSearch.mockClear()
+    assert.strictEqual(mockSimpleSearch.mock.callCount(), 1)
+    mockSimpleSearch.mock.resetCalls()
     ext.dom.searchInput.value = 'test'
-
     await search({ key: 'a' })
-
-    expect(mockSimpleSearch).not.toHaveBeenCalled()
-    expect(ext.model.result.length).toBeGreaterThan(0)
+    assert(mockSimpleSearch.mock.callCount() === 0)
+    assert(ext.model.result.length > 0)
   })
 })

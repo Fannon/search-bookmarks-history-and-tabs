@@ -1,5 +1,6 @@
-import { describe, expect, test } from '@jest/globals'
-
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { describe, test } from 'node:test'
 import { createBulkTagDescription, createBulkTagMetadata, createTagUpdatePlans } from '../bookmarkManagerTagUpdates.js'
 
 const bookmarks = [
@@ -12,14 +13,14 @@ const bookmarks = [
     tagsArray: ['docs'],
   },
 ]
-
 describe('bookmark manager tag update plans', () => {
   test('creates update plans only when tags change case-insensitively', () => {
-    expect(createTagUpdatePlans(bookmarks, (tags) => tags.map((tag) => tag.toLowerCase()))).toEqual([])
-
+    assert.deepStrictEqual(
+      createTagUpdatePlans(bookmarks, (tags) => tags.map((tag) => tag.toLowerCase())),
+      [],
+    )
     const plans = createTagUpdatePlans(bookmarks, (tags) => tags.concat('AI'))
-
-    expect(plans).toEqual([
+    assert.deepStrictEqual(plans, [
       {
         bookmark: bookmarks[0],
         currentTags: ['Docs', 'Read'],
@@ -32,27 +33,26 @@ describe('bookmark manager tag update plans', () => {
       },
     ])
   })
-
   test('describes added, removed, and changed tag plans', () => {
-    expect(
+    assert.strictEqual(
       createBulkTagDescription([
         {
           currentTags: ['Docs'],
           nextTags: ['Docs', 'AI'],
         },
       ]),
-    ).toBe('Added tags "AI" to 1 bookmark')
-
-    expect(
+      'Added tags "AI" to 1 bookmark',
+    )
+    assert.strictEqual(
       createBulkTagDescription([
         {
           currentTags: ['Docs', 'AI'],
           nextTags: ['Docs'],
         },
       ]),
-    ).toBe('Removed tags "AI" from 1 bookmark')
-
-    expect(
+      'Removed tags "AI" from 1 bookmark',
+    )
+    assert.strictEqual(
       createBulkTagDescription([
         {
           currentTags: ['Docs', 'Read'],
@@ -63,11 +63,11 @@ describe('bookmark manager tag update plans', () => {
           nextTags: ['docs', 'AI'],
         },
       ]),
-    ).toBe('Changed tags on 2 bookmarks: added "AI"; removed "Read"')
+      'Changed tags on 2 bookmarks: added "AI"; removed "Read"',
+    )
   })
-
   test('creates deduplicated tag metadata for undo display', () => {
-    expect(
+    assert.deepStrictEqual(
       createBulkTagMetadata([
         {
           currentTags: ['Docs'],
@@ -78,10 +78,11 @@ describe('bookmark manager tag update plans', () => {
           nextTags: ['docs', 'ai'],
         },
       ]),
-    ).toEqual({
-      action: 'updateTags',
-      tagsAdded: ['AI'],
-      tagsRemoved: ['Old'],
-    })
+      {
+        action: 'updateTags',
+        tagsAdded: ['AI'],
+        tagsRemoved: ['Old'],
+      },
+    )
   })
 })

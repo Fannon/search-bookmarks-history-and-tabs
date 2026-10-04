@@ -1,5 +1,6 @@
-import { describe, expect, test } from '@jest/globals'
-
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { describe, test } from 'node:test'
 import {
   clearDuplicateBookmarkSelection,
   getSelectedDuplicateBookmarkIds,
@@ -32,39 +33,28 @@ function renderDuplicatesDom() {
     </section>
   `
 }
-
 describe('bookmark manager duplicate selection', () => {
   test('selects lower-ranked copies without selecting keep rows or disabled inputs', () => {
     renderDuplicatesDom()
-
     selectSuggestedDuplicateBookmarks()
-
-    expect(getSelectedDuplicateBookmarkIds()).toEqual(['copy-1', 'copy-3'])
+    assert.deepStrictEqual(getSelectedDuplicateBookmarkIds(), ['copy-1', 'copy-3'])
   })
-
   test('can select a single duplicate group', () => {
     renderDuplicatesDom()
     const group = document.querySelector('[data-duplicate-group]')
-
     selectSuggestedDuplicateGroup(group)
-
-    expect(getSelectedDuplicateBookmarkIds()).toEqual(['copy-1'])
+    assert.deepStrictEqual(getSelectedDuplicateBookmarkIds(), ['copy-1'])
   })
-
   test('clears selection and updates the delete action state', () => {
     renderDuplicatesDom()
     const deleteButton = document.getElementById('delete-selected')
-
     selectSuggestedDuplicateBookmarks()
     updateDuplicateSelectionAction(deleteButton)
-
-    expect(deleteButton.disabled).toBe(false)
-    expect(deleteButton.querySelector('[data-selected-count]').textContent).toBe('2')
-
+    assert.strictEqual(deleteButton.disabled, false)
+    assert.strictEqual(deleteButton.querySelector('[data-selected-count]').textContent, '2')
     clearDuplicateBookmarkSelection()
     updateDuplicateSelectionAction(deleteButton)
-
-    expect(deleteButton.disabled).toBe(true)
-    expect(deleteButton.querySelector('[data-selected-count]').textContent).toBe('0')
+    assert.strictEqual(deleteButton.disabled, true)
+    assert.strictEqual(deleteButton.querySelector('[data-selected-count]').textContent, '0')
   })
 })

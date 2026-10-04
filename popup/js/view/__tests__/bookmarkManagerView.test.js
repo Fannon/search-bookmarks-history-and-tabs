@@ -1,5 +1,7 @@
-import { beforeEach, describe, expect, jest, test } from '@jest/globals'
-
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { beforeEach, describe, mock, test } from 'node:test'
+import { matches } from '../../../../test/patterns.js'
 import {
   addManagerTagInputValues,
   bindBookmarkManagerEvents,
@@ -35,7 +37,6 @@ const BOOKMARKS = [
     tagsArray: ['two'],
   },
 ]
-
 function setupDom() {
   window.history.replaceState(null, '', '/')
   document.body.innerHTML = `
@@ -122,7 +123,6 @@ function setupDom() {
     <section data-manager-panel="undo"></section>
   `
 }
-
 function setupExt() {
   global.ext = {
     dom: {},
@@ -148,87 +148,76 @@ function setupExt() {
     },
     browserApi: {
       bookmarks: {
-        move: jest.fn(),
-        update: jest.fn(),
+        move: mock.fn(),
+        update: mock.fn(),
       },
     },
   }
   window.ext = global.ext
   ext.dom.manager = getBookmarkManagerDom()
 }
-
 function bindEvents() {
   bindBookmarkManagerEvents({
-    onRefresh: jest.fn(),
-    onDeleteSelected: jest.fn(),
-    onDeleteOne: jest.fn(),
-    onBookmarkSearch: jest.fn(),
+    onRefresh: mock.fn(),
+    onDeleteSelected: mock.fn(),
+    onDeleteOne: mock.fn(),
+    onBookmarkSearch: mock.fn(),
     onSelectBookmark: setManagedBookmarkSelected,
-    onSaveBookmark: jest.fn(),
-    onMoveSelected: jest.fn(),
-    onSuggestTagsSelected: jest.fn(),
-    onBulkTagSelected: jest.fn(),
-    onRenameTag: jest.fn(),
-    onRemoveTag: jest.fn(),
-    onOpenBookmark: jest.fn(),
-    onBookmarkNavigation: jest.fn(),
-    onUndoBookmarkChange: jest.fn(),
-    onExportBookmarks: jest.fn(),
-    onExportUndoHistory: jest.fn(),
-    onImportUndoHistory: jest.fn(),
-    onGenerateCleanupPrompt: jest.fn(),
-    onGenerateCleanupPromptFull: jest.fn(),
-    onCleanupScopeChange: jest.fn(),
-    onRunLocalCleanup: jest.fn(),
-    onCopyCleanupPrompt: jest.fn(),
-    onCleanupProposalInput: jest.fn(),
-    onApplyCleanupChange: jest.fn(),
-    onApplyCleanupCategory: jest.fn(),
-    onApplyAllCleanupChanges: jest.fn(),
+    onSaveBookmark: mock.fn(),
+    onMoveSelected: mock.fn(),
+    onSuggestTagsSelected: mock.fn(),
+    onBulkTagSelected: mock.fn(),
+    onRenameTag: mock.fn(),
+    onRemoveTag: mock.fn(),
+    onOpenBookmark: mock.fn(),
+    onBookmarkNavigation: mock.fn(),
+    onUndoBookmarkChange: mock.fn(),
+    onExportBookmarks: mock.fn(),
+    onExportUndoHistory: mock.fn(),
+    onImportUndoHistory: mock.fn(),
+    onGenerateCleanupPrompt: mock.fn(),
+    onGenerateCleanupPromptFull: mock.fn(),
+    onCleanupScopeChange: mock.fn(),
+    onRunLocalCleanup: mock.fn(),
+    onCopyCleanupPrompt: mock.fn(),
+    onCleanupProposalInput: mock.fn(),
+    onApplyCleanupChange: mock.fn(),
+    onApplyCleanupCategory: mock.fn(),
+    onApplyAllCleanupChanges: mock.fn(),
   })
 }
-
 function renderWorkspace() {
   renderBookmarkWorkspace(BOOKMARKS, true, true)
 }
-
 beforeEach(() => {
   setupDom()
   setupExt()
   global.boundHandlers = bindEvents()
   renderWorkspace()
 })
-
 describe('bookmarkManagerView selection', () => {
   test('shows an empty inspector, single-bookmark editing, and bulk actions for the current selection', () => {
     const dom = ext.dom.manager
-    expect(dom.bookmarkInspectorEmpty.hidden).toBe(false)
-    expect(dom.bookmarkEditFields.hidden).toBe(true)
-    expect(dom.bookmarkTargetActions.hidden).toBe(true)
-    expect(dom.clearManagedSelection.disabled).toBe(true)
-
+    assert.strictEqual(dom.bookmarkInspectorEmpty.hidden, false)
+    assert.strictEqual(dom.bookmarkEditFields.hidden, true)
+    assert.strictEqual(dom.bookmarkTargetActions.hidden, true)
+    assert.strictEqual(dom.clearManagedSelection.disabled, true)
     document.querySelector('[data-edit-managed-bookmark-id]').click()
-
-    expect(dom.bookmarkInspectorEmpty.hidden).toBe(true)
-    expect(dom.bookmarkEditFields.hidden).toBe(false)
-    expect(dom.bookmarkTargetActions.hidden).toBe(false)
-    expect(dom.bookmarkBulkSelectionNote.hidden).toBe(true)
-    expect(document.querySelector('[data-edit-managed-bookmark-id]').getAttribute('aria-pressed')).toBe('true')
-
+    assert.strictEqual(dom.bookmarkInspectorEmpty.hidden, true)
+    assert.strictEqual(dom.bookmarkEditFields.hidden, false)
+    assert.strictEqual(dom.bookmarkTargetActions.hidden, false)
+    assert.strictEqual(dom.bookmarkBulkSelectionNote.hidden, true)
+    assert.strictEqual(document.querySelector('[data-edit-managed-bookmark-id]').getAttribute('aria-pressed'), 'true')
     dom.selectVisibleBookmarks.click()
-
-    expect(dom.bookmarkEditFields.hidden).toBe(true)
-    expect(dom.bookmarkTargetActions.hidden).toBe(false)
-    expect(dom.bookmarkBulkSelectionNote.hidden).toBe(false)
-    expect(dom.clearManagedSelection.disabled).toBe(false)
-
+    assert.strictEqual(dom.bookmarkEditFields.hidden, true)
+    assert.strictEqual(dom.bookmarkTargetActions.hidden, false)
+    assert.strictEqual(dom.bookmarkBulkSelectionNote.hidden, false)
+    assert.strictEqual(dom.clearManagedSelection.disabled, false)
     dom.clearManagedSelection.click()
-
-    expect(dom.bookmarkEditFields.hidden).toBe(false)
-    expect(dom.bookmarkBulkSelectionNote.hidden).toBe(true)
-    expect(getSelectedManagedBookmarkIds()).toEqual([])
+    assert.strictEqual(dom.bookmarkEditFields.hidden, false)
+    assert.strictEqual(dom.bookmarkBulkSelectionNote.hidden, true)
+    assert.deepStrictEqual(getSelectedManagedBookmarkIds(), [])
   })
-
   test('preserves unfinished edits while updating tag and move actions', () => {
     const dom = ext.dom.manager
     document.querySelector('[data-edit-managed-bookmark-id]').click()
@@ -239,175 +228,136 @@ describe('bookmarkManagerView selection', () => {
     dom.bulkTagsInput.value = 'bulk-tag'
     dom.bulkTagsInput.dispatchEvent(new Event('input'))
     dom.bookmarkMoveFolder.dispatchEvent(new Event('change'))
-
-    expect(getManagedBookmarkEditValues()).toEqual({
+    assert.deepStrictEqual(getManagedBookmarkEditValues(), {
       title: 'Unfinished title',
       url: 'https://example.com/new',
       tags: ['new-tag'],
       customBonusScore: 42,
     })
-    expect(dom.addTagsSelected.disabled).toBe(false)
+    assert.strictEqual(dom.addTagsSelected.disabled, false)
 
     // Refreshing the dataset must still load the saved bookmark values.
     renderWorkspace()
-    expect(dom.bookmarkEditTitle.value).toBe('First Bookmark')
-    expect(dom.bookmarkEditScore.value).toBe('25')
+    assert.strictEqual(dom.bookmarkEditTitle.value, 'First Bookmark')
+    assert.strictEqual(dom.bookmarkEditScore.value, '25')
   })
-
   test('selects all matches even when the rendered list is capped', () => {
     const bookmarks = Array.from({ length: 501 }, (_, index) => ({ ...BOOKMARKS[0], originalId: String(index) }))
     renderBookmarkWorkspace(bookmarks, true, true)
-    expect(document.querySelectorAll('[data-managed-bookmark-row-id]')).toHaveLength(500)
-
+    assert.strictEqual(document.querySelectorAll('[data-managed-bookmark-row-id]').length, 500)
     ext.dom.manager.selectVisibleBookmarks.click()
-
-    expect(getSelectedManagedBookmarkIds()).toHaveLength(501)
-    expect(ext.dom.manager.managedBookmarkList.textContent).toContain('Select matches selects all 501')
-    expect(ext.dom.manager.bookmarkSelectionSummary.textContent).toBe('501 selected bookmarks')
+    assert.strictEqual(getSelectedManagedBookmarkIds().length, 501)
+    assert(ext.dom.manager.managedBookmarkList.textContent.includes('Select matches selects all 501'))
+    assert.strictEqual(ext.dom.manager.bookmarkSelectionSummary.textContent, '501 selected bookmarks')
   })
-
   test('temporarily checks the current bookmark until another row is clicked', () => {
     const rows = document.querySelectorAll('[data-managed-bookmark-row-id]')
     const inputs = document.querySelectorAll('[data-managed-bookmark-id]')
-
     rows[0].querySelector('.url').click()
-
-    expect(rows[0].classList.contains('current')).toBe(true)
-    expect(rows[0].classList.contains('selected')).toBe(true)
-    expect(inputs[0].checked).toBe(true)
-    expect(document.getElementById('bookmark-edit-title').disabled).toBe(false)
-    expect(document.getElementById('bookmark-edit-score').disabled).toBe(false)
-    expect(document.getElementById('bookmark-edit-score').value).toBe('25')
-    expect(getSelectedManagedBookmarkIds()).toEqual([])
-
+    assert.strictEqual(rows[0].classList.contains('current'), true)
+    assert.strictEqual(rows[0].classList.contains('selected'), true)
+    assert.strictEqual(inputs[0].checked, true)
+    assert.strictEqual(document.getElementById('bookmark-edit-title').disabled, false)
+    assert.strictEqual(document.getElementById('bookmark-edit-score').disabled, false)
+    assert.strictEqual(document.getElementById('bookmark-edit-score').value, '25')
+    assert.deepStrictEqual(getSelectedManagedBookmarkIds(), [])
     document.getElementById('bookmark-edit-score').value = '42'
-    expect(getManagedBookmarkEditValues().customBonusScore).toBe(42)
+    assert.strictEqual(getManagedBookmarkEditValues().customBonusScore, 42)
     document.getElementById('bookmark-edit-score').value = '-5'
-    expect(getManagedBookmarkEditValues().customBonusScore).toBe(0)
-
+    assert.strictEqual(getManagedBookmarkEditValues().customBonusScore, 0)
     rows[1].querySelector('.url').click()
-
-    expect(rows[0].classList.contains('selected')).toBe(false)
-    expect(inputs[0].checked).toBe(false)
-    expect(rows[1].classList.contains('current')).toBe(true)
-    expect(rows[1].classList.contains('selected')).toBe(true)
-    expect(inputs[1].checked).toBe(true)
-    expect(getSelectedManagedBookmarkIds()).toEqual([])
-    expect(getManagedActionTargetIds()).toEqual(['bookmark-2'])
+    assert.strictEqual(rows[0].classList.contains('selected'), false)
+    assert.strictEqual(inputs[0].checked, false)
+    assert.strictEqual(rows[1].classList.contains('current'), true)
+    assert.strictEqual(rows[1].classList.contains('selected'), true)
+    assert.strictEqual(inputs[1].checked, true)
+    assert.deepStrictEqual(getSelectedManagedBookmarkIds(), [])
+    assert.deepStrictEqual(getManagedActionTargetIds(), ['bookmark-2'])
   })
-
   test('stops temporary checkbox changes after a checkbox is manually clicked', () => {
     const rows = document.querySelectorAll('[data-managed-bookmark-row-id]')
     const inputs = document.querySelectorAll('[data-managed-bookmark-id]')
-
     rows[0].querySelector('.url').click()
     inputs[0].click()
-
-    expect(inputs[0].checked).toBe(true)
-    expect(getSelectedManagedBookmarkIds()).toEqual(['bookmark-1'])
-
+    assert.strictEqual(inputs[0].checked, true)
+    assert.deepStrictEqual(getSelectedManagedBookmarkIds(), ['bookmark-1'])
     rows[1].querySelector('.url').click()
-
-    expect(rows[1].classList.contains('current')).toBe(true)
-    expect(rows[1].classList.contains('selected')).toBe(false)
-    expect(inputs[0].checked).toBe(true)
-    expect(inputs[1].checked).toBe(false)
-    expect(document.getElementById('bookmark-edit-title').disabled).toBe(true)
-    expect(document.getElementById('bookmark-edit-url').disabled).toBe(true)
-    expect(document.getElementById('bookmark-edit-score').disabled).toBe(true)
-    expect(getManagedActionTargetIds()).toEqual(['bookmark-1'])
-
+    assert.strictEqual(rows[1].classList.contains('current'), true)
+    assert.strictEqual(rows[1].classList.contains('selected'), false)
+    assert.strictEqual(inputs[0].checked, true)
+    assert.strictEqual(inputs[1].checked, false)
+    assert.strictEqual(document.getElementById('bookmark-edit-title').disabled, true)
+    assert.strictEqual(document.getElementById('bookmark-edit-url').disabled, true)
+    assert.strictEqual(document.getElementById('bookmark-edit-score').disabled, true)
+    assert.deepStrictEqual(getManagedActionTargetIds(), ['bookmark-1'])
     inputs[1].click()
-
-    expect(rows[1].classList.contains('selected')).toBe(true)
-    expect(inputs[1].checked).toBe(true)
-    expect(document.getElementById('bookmark-edit-title').disabled).toBe(true)
-    expect(getSelectedManagedBookmarkIds()).toEqual(['bookmark-1', 'bookmark-2'])
+    assert.strictEqual(rows[1].classList.contains('selected'), true)
+    assert.strictEqual(inputs[1].checked, true)
+    assert.strictEqual(document.getElementById('bookmark-edit-title').disabled, true)
+    assert.deepStrictEqual(getSelectedManagedBookmarkIds(), ['bookmark-1', 'bookmark-2'])
   })
-
   test('shows tag suggestion feedback next to the suggest button', () => {
     showTagSuggestionStatus('No tags suggested', 'error')
-
     const status = document.getElementById('tag-suggestion-status')
-    expect(status.textContent).toBe('No tags suggested')
-    expect(status.dataset.tone).toBe('error')
-    expect(document.getElementById('manager-status').textContent).toBe('')
+    assert.strictEqual(status.textContent, 'No tags suggested')
+    assert.strictEqual(status.dataset.tone, 'error')
+    assert.strictEqual(document.getElementById('manager-status').textContent, '')
   })
-
   test('labels suggestion retry only while the target selection is unchanged', () => {
     ext.model.bookmarkManagerLocalAiAvailable = true
     const rows = document.querySelectorAll('[data-managed-bookmark-row-id]')
     const button = document.getElementById('suggest-tags-selected')
-
     rows[0].querySelector('.url').click()
     ext.model.bookmarkManagerTagSuggestionRetryKey = 'bookmark-1'
     ext.model.bookmarkManagerTagSuggestionRetryCount = 1
     showTagSuggestionBusy(false)
-
-    expect(button.textContent).toBe('Suggest tags (try again)')
-
+    assert.strictEqual(button.textContent, 'Suggest tags (try again)')
     rows[1].querySelector('.url').click()
-
-    expect(button.textContent).toBe('Suggest tags')
+    assert.strictEqual(button.textContent, 'Suggest tags')
   })
-
   test('clears suggested bulk tags when the action target changes', () => {
     const rows = document.querySelectorAll('[data-managed-bookmark-row-id]')
     const bulkTags = document.getElementById('bookmark-bulk-tags')
     const status = document.getElementById('tag-suggestion-status')
-
     rows[0].querySelector('.url').click()
     addManagerTagInputValues('bulk', ['suggested'])
     showTagSuggestionStatus('Suggested 1 tag', 'success', false)
-
-    expect(ext.model.bookmarkManagerSuggestedTagsReady).toBe(true)
-    expect(bulkTags.disabled).toBe(false)
-    expect(bulkTags.value).toContain('suggested')
-    expect(status.textContent).toBe('Suggested 1 tag')
-
+    assert.strictEqual(ext.model.bookmarkManagerSuggestedTagsReady, true)
+    assert.strictEqual(bulkTags.disabled, false)
+    assert(bulkTags.value.includes('suggested'))
+    assert.strictEqual(status.textContent, 'Suggested 1 tag')
     rows[1].querySelector('.url').click()
-
-    expect(ext.model.bookmarkManagerSuggestedTagsReady).toBe(false)
-    expect(bulkTags.disabled).toBe(false)
-    expect(bulkTags.value).toBe('')
-    expect(status.textContent).toBe('')
+    assert.strictEqual(ext.model.bookmarkManagerSuggestedTagsReady, false)
+    assert.strictEqual(bulkTags.disabled, false)
+    assert.strictEqual(bulkTags.value, '')
+    assert.strictEqual(status.textContent, '')
   })
-
   test('enables manual bulk tags without suggested tags', () => {
     const rows = document.querySelectorAll('[data-managed-bookmark-row-id]')
     const bulkTags = document.getElementById('bookmark-bulk-tags')
     const addButton = document.getElementById('add-tags-selected')
-
     rows[0].querySelector('.url').click()
-
-    expect(ext.model.bookmarkManagerSuggestedTagsReady).toBeFalsy()
-    expect(bulkTags.disabled).toBe(false)
-    expect(addButton.disabled).toBe(true)
-
+    assert(!ext.model.bookmarkManagerSuggestedTagsReady)
+    assert.strictEqual(bulkTags.disabled, false)
+    assert.strictEqual(addButton.disabled, true)
     bulkTags.value = 'manual'
     bulkTags.dispatchEvent(new Event('input'))
-
-    expect(addButton.disabled).toBe(false)
+    assert.strictEqual(addButton.disabled, false)
   })
-
   test('renders move folder options as indented folder names without repeated parent trails', () => {
     ext.model.bookmarkManager.folderOptions = [
       { id: 'parent', title: 'Parent', label: 'Parent', depth: 1 },
       { id: 'child', title: 'Child', label: 'Parent / Child', depth: 2 },
     ]
-
     renderWorkspace()
-
     const options = [...document.getElementById('bookmark-move-folder').options]
-    expect(options[0].textContent).toBe('Parent')
-    expect(options[1].textContent).toBe('\u00a0\u00a0\u00a0\u00a0Child')
-    expect(options[1].textContent).not.toContain('Parent / Child')
-    expect(options[1].title).toBe('Parent / Child')
+    assert.strictEqual(options[0].textContent, 'Parent')
+    assert.strictEqual(options[1].textContent, '\u00a0\u00a0\u00a0\u00a0Child')
+    assert(!options[1].textContent.includes('Parent / Child'))
+    assert.strictEqual(options[1].title, 'Parent / Child')
   })
-
   test('renders move cleanup proposals with folder titles instead of ids', () => {
     ext.model.bookmarkManager.folderOptions = [{ id: '1199', title: 'GitHub PR', label: 'GitHub PR', depth: 1 }]
-
     renderBookmarkCleanupProposal(
       {
         changes: {
@@ -428,11 +378,9 @@ describe('bookmarkManagerView selection', () => {
       },
       ext.model.bookmarkManager,
     )
-
-    expect(document.getElementById('cleanup-proposal-list').textContent).toContain('Move to ~GitHub PR')
-    expect(document.getElementById('cleanup-proposal-list').textContent).not.toContain('~1199')
+    assert(document.getElementById('cleanup-proposal-list').textContent.includes('Move to ~GitHub PR'))
+    assert(!document.getElementById('cleanup-proposal-list').textContent.includes('~1199'))
   })
-
   test('renders rename cleanup proposals as tag scope changes', () => {
     renderBookmarkCleanupProposal(
       {
@@ -454,22 +402,18 @@ describe('bookmarkManagerView selection', () => {
       },
       ext.model.bookmarkManager,
     )
-
     const text = document.getElementById('cleanup-proposal-list').textContent
-    expect(text).toContain('1 bookmark with #one')
-    expect(text).toContain('First Bookmark')
-    expect(text).toContain('Rename #one to #first')
-    expect(text).not.toContain('Bookmark undefined')
-    expect(text).not.toContain('Bookmark not found')
+    assert(text.includes('1 bookmark with #one'))
+    assert(text.includes('First Bookmark'))
+    assert(text.includes('Rename #one to #first'))
+    assert(!text.includes('Bookmark undefined'))
+    assert(!text.includes('Bookmark not found'))
   })
-
   test('places apply all with the proposed changes review controls', () => {
     const applyAll = document.getElementById('apply-all-cleanup-changes')
-
-    expect(applyAll.closest('.cleanup-review-section')).not.toBe(null)
-    expect(applyAll.closest('.cleanup-result-panel')).toBe(null)
+    assert.notStrictEqual(applyAll.closest('.cleanup-review-section'), null)
+    assert.strictEqual(applyAll.closest('.cleanup-result-panel'), null)
   })
-
   test('renders undo history with structured action details', () => {
     renderBookmarkUndoHistory(
       [
@@ -489,18 +433,16 @@ describe('bookmarkManagerView selection', () => {
       ],
       true,
     )
-
     const history = document.getElementById('bookmark-undo-history')
-    expect(history.textContent).toContain('Changed tags')
-    expect(history.textContent).toContain('#ai')
-    expect(history.textContent).toContain('#old')
-    expect(history.textContent).toContain('~Folder')
-    expect(history.textContent).toContain('First Bookmark')
-    expect(history.querySelector('[href*="tag=ai"]')).not.toBeNull()
+    assert(history.textContent.includes('Changed tags'))
+    assert(history.textContent.includes('#ai'))
+    assert(history.textContent.includes('#old'))
+    assert(history.textContent.includes('~Folder'))
+    assert(history.textContent.includes('First Bookmark'))
+    assert.notStrictEqual(history.querySelector('[href*="tag=ai"]'), null)
   })
-
   test('selects and scrolls a tag from the tag manager URL', () => {
-    const scrollIntoView = jest.fn()
+    const scrollIntoView = mock.fn()
     window.HTMLElement.prototype.scrollIntoView = scrollIntoView
     ext.model.bookmarkManager.tagGroups = [
       { name: 'one', count: 1, bookmarkIds: ['bookmark-1'] },
@@ -509,13 +451,11 @@ describe('bookmarkManagerView selection', () => {
     ext.model.bookmarkManagerTagFilter = 'missing'
     document.getElementById('tag-filter').value = 'missing'
     window.history.replaceState(null, '', '/bookmarkManager.html?tag=two#tags')
-
     renderActiveManagerScreen()
-
-    expect(ext.model.bookmarkManagerSelectedTag).toBe('two')
-    expect(document.getElementById('tag-filter').value).toBe('')
-    expect(document.querySelector('.tag-manager-list .active .badge').textContent).toBe('#two')
-    expect(document.querySelector('[data-manager-panel="tags"]').hidden).toBe(false)
-    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' })
+    assert.strictEqual(ext.model.bookmarkManagerSelectedTag, 'two')
+    assert.strictEqual(document.getElementById('tag-filter').value, '')
+    assert.strictEqual(document.querySelector('.tag-manager-list .active .badge').textContent, '#two')
+    assert.strictEqual(document.querySelector('[data-manager-panel="tags"]').hidden, false)
+    assert(scrollIntoView.mock.calls.some((call) => matches(call.arguments, [{ block: 'nearest' }])))
   })
 })

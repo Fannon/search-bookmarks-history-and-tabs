@@ -1,4 +1,7 @@
-import { describe, expect, test } from '@jest/globals'
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { describe, test } from 'node:test'
+import { matches } from '../../../../test/patterns.js'
 import { createBookmarkManagerModel, getDuplicateGroups, getFolderTree, getTagGroups } from '../bookmarkManagerData.js'
 
 const bookmarks = [
@@ -41,19 +44,19 @@ const bookmarks = [
     folderArray: [],
   },
 ]
-
 describe('bookmark manager data', () => {
   test('groups duplicates by normalized URL and suggests the richer bookmark to keep', () => {
     const duplicateGroups = getDuplicateGroups(bookmarks)
-
-    expect(duplicateGroups).toHaveLength(1)
-    expect(duplicateGroups[0].url).toBe('example.com/page')
-    expect(duplicateGroups[0].keepId).toBe('1')
-    expect(duplicateGroups[0].bookmarks.map((bookmark) => bookmark.originalId)).toEqual(['1', '2'])
-    expect(duplicateGroups[0].bookmarks[0].duplicateSuggestion.label).toBe('Best candidate')
-    expect(duplicateGroups[0].bookmarks[1].duplicateSuggestion.label).toBe('Lower-ranked copy')
+    assert.strictEqual(duplicateGroups.length, 1)
+    assert.strictEqual(duplicateGroups[0].url, 'example.com/page')
+    assert.strictEqual(duplicateGroups[0].keepId, '1')
+    assert.deepStrictEqual(
+      duplicateGroups[0].bookmarks.map((bookmark) => bookmark.originalId),
+      ['1', '2'],
+    )
+    assert.strictEqual(duplicateGroups[0].bookmarks[0].duplicateSuggestion.label, 'Best candidate')
+    assert.strictEqual(duplicateGroups[0].bookmarks[1].duplicateSuggestion.label, 'Lower-ranked copy')
   })
-
   test('prefers tags, title quality, recency, then folder depth for duplicate suggestions', () => {
     const tagGroups = getDuplicateGroups([
       {
@@ -75,8 +78,7 @@ describe('bookmark manager data', () => {
         folderArray: ['Folder'],
       },
     ])
-    expect(tagGroups[0].keepId).toBe('tagged-old')
-
+    assert.strictEqual(tagGroups[0].keepId, 'tagged-old')
     const titleGroups = getDuplicateGroups([
       {
         originalId: 'url-title-new',
@@ -97,8 +99,7 @@ describe('bookmark manager data', () => {
         folderArray: [],
       },
     ])
-    expect(titleGroups[0].keepId).toBe('clean-title-old')
-
+    assert.strictEqual(titleGroups[0].keepId, 'clean-title-old')
     const dateGroups = getDuplicateGroups([
       {
         originalId: 'older',
@@ -119,9 +120,8 @@ describe('bookmark manager data', () => {
         folderArray: [],
       },
     ])
-    expect(dateGroups[0].keepId).toBe('newer')
+    assert.strictEqual(dateGroups[0].keepId, 'newer')
   })
-
   test('prefers favorited duplicate bookmarks before other ranking signals', () => {
     const duplicateGroups = getDuplicateGroups([
       {
@@ -145,38 +145,32 @@ describe('bookmark manager data', () => {
         folderArray: ['Folder'],
       },
     ])
-
-    expect(duplicateGroups[0].keepId).toBe('favorite')
-    expect(duplicateGroups[0].bookmarks[0].duplicateSuggestion.detail).toContain('+50 favorite score')
-    expect(duplicateGroups[0].bookmarks[1].duplicateSuggestion.detail).toContain('lower favorite score')
+    assert.strictEqual(duplicateGroups[0].keepId, 'favorite')
+    assert(duplicateGroups[0].bookmarks[0].duplicateSuggestion.detail.includes('+50 favorite score'))
+    assert(duplicateGroups[0].bookmarks[1].duplicateSuggestion.detail.includes('lower favorite score'))
   })
-
   test('calculates overview statistics', () => {
     const model = createBookmarkManagerModel(bookmarks)
-
-    expect(model.stats.bookmarkCount).toBe(4)
-    expect(model.stats.taggedBookmarkCount).toBe(3)
-    expect(model.stats.untaggedBookmarkCount).toBe(1)
-    expect(model.stats.uniqueTagCount).toBe(3)
-    expect(model.stats.tagAssignmentCount).toBe(4)
-    expect(model.stats.averageTagsPerBookmark).toBe(1)
-    expect(model.stats.duplicateGroupCount).toBe(1)
-    expect(model.stats.duplicateBookmarkCount).toBe(2)
-    expect(model.stats.removableDuplicateCount).toBe(1)
-    expect(model.stats.folderCount).toBe(3)
-    expect(model.stats.topTags[0]).toEqual({ name: 'work', count: 2 })
-    expect(model.stats.topDomains[0]).toEqual({ name: 'example.com', count: 2 })
-    expect(model.stats.topFolders[0]).toEqual({ name: 'Work', id: 'work', count: 2 })
-    expect(model.tagGroups[0]).toEqual({ name: 'work', count: 2, bookmarkIds: ['1', '2'] })
+    assert.strictEqual(model.stats.bookmarkCount, 4)
+    assert.strictEqual(model.stats.taggedBookmarkCount, 3)
+    assert.strictEqual(model.stats.untaggedBookmarkCount, 1)
+    assert.strictEqual(model.stats.uniqueTagCount, 3)
+    assert.strictEqual(model.stats.tagAssignmentCount, 4)
+    assert.strictEqual(model.stats.averageTagsPerBookmark, 1)
+    assert.strictEqual(model.stats.duplicateGroupCount, 1)
+    assert.strictEqual(model.stats.duplicateBookmarkCount, 2)
+    assert.strictEqual(model.stats.removableDuplicateCount, 1)
+    assert.strictEqual(model.stats.folderCount, 3)
+    assert.deepStrictEqual(model.stats.topTags[0], { name: 'work', count: 2 })
+    assert.deepStrictEqual(model.stats.topDomains[0], { name: 'example.com', count: 2 })
+    assert.deepStrictEqual(model.stats.topFolders[0], { name: 'Work', id: 'work', count: 2 })
+    assert.deepStrictEqual(model.tagGroups[0], { name: 'work', count: 2, bookmarkIds: ['1', '2'] })
   })
-
   test('groups tags with affected bookmark ids', () => {
     const tagGroups = getTagGroups(bookmarks)
-
-    expect(tagGroups).toContainEqual({ name: 'docs', count: 1, bookmarkIds: ['1'] })
-    expect(tagGroups).toContainEqual({ name: 'personal', count: 1, bookmarkIds: ['4'] })
+    assert(tagGroups.some((item) => matches(item, { name: 'docs', count: 1, bookmarkIds: ['1'] })))
+    assert(tagGroups.some((item) => matches(item, { name: 'personal', count: 1, bookmarkIds: ['4'] })))
   })
-
   test('builds a traditional folder tree from raw browser folders', () => {
     const folderTree = getFolderTree([
       {
@@ -212,11 +206,13 @@ describe('bookmark manager data', () => {
         ],
       },
     ])
-
-    expect(folderTree.title).toBe('All Bookmarks')
-    expect(folderTree.totalCount).toBe(1)
-    expect(folderTree.children.map((folder) => folder.title)).toEqual(['Bookmarks Bar', 'Other Bookmarks'])
-    expect(folderTree.children[0].children[0]).toMatchObject({
+    assert.strictEqual(folderTree.title, 'All Bookmarks')
+    assert.strictEqual(folderTree.totalCount, 1)
+    assert.deepStrictEqual(
+      folderTree.children.map((folder) => folder.title),
+      ['Bookmarks Bar', 'Other Bookmarks'],
+    )
+    assert.partialDeepStrictEqual(folderTree.children[0].children[0], {
       id: '5',
       title: 'Work',
       path: ['Bookmarks Bar', 'Work'],

@@ -1,3 +1,8 @@
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { afterEach, before, beforeEach, describe, mock, test } from 'node:test'
+import { format } from 'node:util'
+import { matches, subset } from '../../../../test/patterns.js'
 /**
  * Tests for defaultResults.js - default result generation when no search term provided.
  *
@@ -5,26 +10,23 @@
  * ⚠️ Known gaps: none
  * 🐞 Added BUG tests: none
  */
-import { afterEach, beforeAll, beforeEach, describe, expect, jest, test } from '@jest/globals'
+
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
-const mockGetBrowserTabs = jest.fn()
-
+const mockGetBrowserTabs = mock.fn()
 let addDefaultEntries
-
-beforeAll(async () => {
-  await jest.unstable_mockModule('../../helper/browserApi.js', () => ({
-    __esModule: true,
-    getBrowserTabs: mockGetBrowserTabs,
-  }))
-
+before(async () => {
+  mock.module(new URL('../../helper/browserApi.js', import.meta.url), {
+    exports: {
+      getBrowserTabs: mockGetBrowserTabs,
+    },
+  })
   const defaultResultsModule = await import('../defaultResults.js')
   addDefaultEntries = defaultResultsModule.addDefaultEntries
 })
-
 beforeEach(() => {
-  jest.clearAllMocks()
-  mockGetBrowserTabs.mockResolvedValue([])
+  mockGetBrowserTabs.mock.resetCalls()
+  mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([]))
   createTestExt({
     opts: {
       maxRecentTabsToShow: 3,
@@ -37,11 +39,9 @@ beforeEach(() => {
     },
   })
 })
-
 afterEach(() => {
   clearTestExt()
 })
-
 describe('addDefaultEntries', () => {
   describe('history mode', () => {
     test('returns all history entries with default score', async () => {
@@ -50,27 +50,21 @@ describe('addDefaultEntries', () => {
         { id: 1, title: 'History 1', url: 'https://one.test' },
         { id: 2, title: 'History 2', url: 'https://two.test' },
       ]
-
       const results = await addDefaultEntries()
-
-      expect(results).toEqual([
+      assert.deepStrictEqual(results, [
         { id: 1, title: 'History 1', url: 'https://one.test' },
         { id: 2, title: 'History 2', url: 'https://two.test' },
       ])
-      expect(ext.model.result).toBe(results)
+      assert.strictEqual(ext.model.result, results)
     })
-
     test('clones history entries so downstream scoring cannot mutate source data', async () => {
       ext.model.searchMode = 'history'
       ext.model.history = [{ id: 1, title: 'History 1', url: 'https://one.test' }]
-
       const results = await addDefaultEntries()
-
-      expect(results[0]).toEqual(ext.model.history[0])
-      expect(results[0]).not.toBe(ext.model.history[0])
+      assert.deepStrictEqual(results[0], ext.model.history[0])
+      assert.notStrictEqual(results[0], ext.model.history[0])
     })
   })
-
   describe('tabs mode', () => {
     test('returns tabs sorted by recency', async () => {
       ext.model.searchMode = 'tabs'
@@ -79,16 +73,14 @@ describe('addDefaultEntries', () => {
         { id: 2, title: 'Recent Tab', lastVisitSecondsAgo: 10 },
         { id: 3, title: 'Mid Tab', lastVisitSecondsAgo: 50 },
       ]
-
       const results = await addDefaultEntries()
-
-      expect(results.map((r) => r.id)).toEqual([2, 3, 1])
-      expect(results[0]).toMatchObject({
-        id: 2,
-      })
+      assert.deepStrictEqual(
+        results.map((r) => r.id),
+        [2, 3, 1],
+      )
+      assert.partialDeepStrictEqual(results[0], { id: 2 })
     })
   })
-
   describe('bookmarks mode', () => {
     test('returns all bookmarks with default score', async () => {
       ext.model.searchMode = 'bookmarks'
@@ -96,26 +88,20 @@ describe('addDefaultEntries', () => {
         { id: 1, title: 'Bookmark 1' },
         { id: 2, title: 'Bookmark 2' },
       ]
-
       const results = await addDefaultEntries()
-
-      expect(results).toEqual([
+      assert.deepStrictEqual(results, [
         { id: 1, title: 'Bookmark 1' },
         { id: 2, title: 'Bookmark 2' },
       ])
     })
-
     test('clones bookmark entries so downstream scoring cannot mutate source data', async () => {
       ext.model.searchMode = 'bookmarks'
       ext.model.bookmarks = [{ id: 1, title: 'Bookmark 1' }]
-
       const results = await addDefaultEntries()
-
-      expect(results[0]).toEqual(ext.model.bookmarks[0])
-      expect(results[0]).not.toBe(ext.model.bookmarks[0])
+      assert.deepStrictEqual(results[0], ext.model.bookmarks[0])
+      assert.notStrictEqual(results[0], ext.model.bookmarks[0])
     })
   })
-
   describe('all mode (default)', () => {
     test('returns bookmarks matching current tab URL', async () => {
       ext.model.bookmarks = [
@@ -123,14 +109,11 @@ describe('addDefaultEntries', () => {
         { id: 2, url: 'other.com', originalUrl: 'https://other.com', title: 'Other' },
       ]
       ext.model.tabs = []
-      mockGetBrowserTabs.mockResolvedValue([{ url: 'https://example.com/' }])
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([{ url: 'https://example.com/' }]))
       const results = await addDefaultEntries()
-
-      expect(results).toEqual([expect.objectContaining({ id: 1, title: 'Example' })])
-      expect(results[0]).not.toBe(ext.model.bookmarks[0])
+      assert(matches(results, [subset({ id: 1, title: 'Example' })]))
+      assert.notStrictEqual(results[0], ext.model.bookmarks[0])
     })
-
     test('reuses the loaded active tab when it is unambiguous', async () => {
       ext.model.bookmarks = [
         { id: 1, url: 'active.test/path', originalUrl: 'https://active.test/path', title: 'Active Bookmark' },
@@ -145,14 +128,14 @@ describe('addDefaultEntries', () => {
           lastVisitSecondsAgo: 0,
         },
       ]
-      mockGetBrowserTabs.mockResolvedValue([{ id: 99, url: 'https://wrong.test' }])
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([{ id: 99, url: 'https://wrong.test' }]))
       const results = await addDefaultEntries()
-
-      expect(mockGetBrowserTabs).not.toHaveBeenCalled()
-      expect(results.map((r) => r.id)).toEqual([1])
+      assert(mockGetBrowserTabs.mock.callCount() === 0)
+      assert.deepStrictEqual(
+        results.map((r) => r.id),
+        [1],
+      )
     })
-
     test('queries the browser when loaded tab data has multiple active tabs', async () => {
       ext.opts.maxRecentTabsToShow = 0
       ext.model.bookmarks = [
@@ -163,29 +146,33 @@ describe('addDefaultEntries', () => {
         { originalId: 10, active: true, url: 'other-window.test', originalUrl: 'https://other-window.test' },
         { originalId: 20, active: true, url: 'current-window.test', originalUrl: 'https://current-window.test' },
       ]
-      mockGetBrowserTabs.mockResolvedValue([{ id: 20, url: 'https://current-window.test' }])
-
+      mockGetBrowserTabs.mock.mockImplementation(() =>
+        Promise.resolve([{ id: 20, url: 'https://current-window.test' }]),
+      )
       const results = await addDefaultEntries()
-
-      expect(mockGetBrowserTabs).toHaveBeenCalledWith({ active: true, currentWindow: true })
-      expect(results.map((r) => r.id)).toEqual([2])
+      assert(
+        mockGetBrowserTabs.mock.calls.some((call) => matches(call.arguments, [{ active: true, currentWindow: true }])),
+      )
+      assert.deepStrictEqual(
+        results.map((r) => r.id),
+        [2],
+      )
     })
-
     test('adds quick bookmark action first for an unbookmarked active tab', async () => {
       ext.model.bookmarks = []
       ext.model.tabs = [{ id: 2, originalId: 2, url: 'https://recent.test', lastVisitSecondsAgo: 10 }]
-      mockGetBrowserTabs.mockResolvedValue([
-        {
-          id: 1,
-          title: 'Active Page',
-          url: 'https://active.test/path',
-          favIconUrl: 'https://active.test/favicon.ico',
-        },
-      ])
-
+      mockGetBrowserTabs.mock.mockImplementation(() =>
+        Promise.resolve([
+          {
+            id: 1,
+            title: 'Active Page',
+            url: 'https://active.test/path',
+            favIconUrl: 'https://active.test/favicon.ico',
+          },
+        ]),
+      )
       const results = await addDefaultEntries()
-
-      expect(results[0]).toEqual({
+      assert.deepStrictEqual(results[0], {
         type: 'bookmarkCreate',
         title: 'Bookmark current page',
         pageTitle: 'Active Page',
@@ -193,34 +180,34 @@ describe('addDefaultEntries', () => {
         url: 'active.test/path',
         favIconUrl: 'https://active.test/favicon.ico',
       })
-      expect(results[1]).toEqual(expect.objectContaining({ id: 2 }))
+      assert(matches(results[1], subset({ id: 2 })))
     })
-
     test('does not add quick bookmark action when option is disabled', async () => {
       ext.opts.quickBookmarkCurrentTab = ''
       ext.model.bookmarks = []
       ext.model.tabs = []
-      mockGetBrowserTabs.mockResolvedValue([{ id: 1, title: 'Active Page', url: 'https://active.test/path' }])
-
+      mockGetBrowserTabs.mock.mockImplementation(() =>
+        Promise.resolve([{ id: 1, title: 'Active Page', url: 'https://active.test/path' }]),
+      )
       const results = await addDefaultEntries()
-
-      expect(results).toEqual([])
+      assert.deepStrictEqual(results, [])
     })
-
     test('does not add quick bookmark action when active tab is already bookmarked', async () => {
       ext.model.bookmarks = [
         { id: 1, url: 'active.test/path', originalUrl: 'https://active.test/path', title: 'Existing Bookmark' },
       ]
       ext.model.tabs = []
-      mockGetBrowserTabs.mockResolvedValue([{ id: 1, title: 'Active Page', url: 'https://active.test/path' }])
-
+      mockGetBrowserTabs.mock.mockImplementation(() =>
+        Promise.resolve([{ id: 1, title: 'Active Page', url: 'https://active.test/path' }]),
+      )
       const results = await addDefaultEntries()
-
-      expect(results).toEqual([expect.objectContaining({ id: 1, title: 'Existing Bookmark' })])
-      expect(results.find((entry) => entry.type === 'bookmarkCreate')).toBeUndefined()
+      assert(matches(results, [subset({ id: 1, title: 'Existing Bookmark' })]))
+      assert.strictEqual(
+        results.find((entry) => entry.type === 'bookmarkCreate'),
+        undefined,
+      )
     })
-
-    test.each([
+    ;[
       ['about:blank'],
       ['brave://settings'],
       ['chrome://extensions'],
@@ -232,58 +219,59 @@ describe('addDefaultEntries', () => {
       ['moz-extension://abc/page.html'],
       ['opera://settings'],
       ['vivaldi://settings'],
-    ])('does not add quick bookmark action for unbookmarkable URL %s', async (url) => {
-      ext.model.bookmarks = []
-      ext.model.tabs = []
-      mockGetBrowserTabs.mockResolvedValue([{ id: 1, title: 'Internal Page', url }])
-
-      const results = await addDefaultEntries()
-
-      expect(results).toEqual([])
+    ].forEach((testCase) => {
+      const args = Array.isArray(testCase) ? testCase : [testCase]
+      test(
+        format(
+          'does not add quick bookmark action for unbookmarkable URL %s'.replace(
+            /\$([a-zA-Z]+)/g,
+            (_, key) => testCase[key],
+          ),
+          ...args,
+        ),
+        () =>
+          (async (url) => {
+            ext.model.bookmarks = []
+            ext.model.tabs = []
+            mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([{ id: 1, title: 'Internal Page', url }]))
+            const results = await addDefaultEntries()
+            assert.deepStrictEqual(results, [])
+          })(...args),
+      )
     })
-
     test('shows all bookmarks if multiple match current tab URL', async () => {
       ext.model.bookmarks = [
         { id: 1, url: 'example.com', originalUrl: 'https://example.com', title: 'Example 1' },
         { id: 2, url: 'example.com', originalUrl: 'https://example.com', title: 'Example 2' },
       ]
       ext.model.tabs = []
-      mockGetBrowserTabs.mockResolvedValue([{ url: 'https://example.com' }])
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([{ url: 'https://example.com' }]))
       const results = await addDefaultEntries()
-
-      expect(results.map((r) => r.id)).toEqual([1, 2])
+      assert.deepStrictEqual(
+        results.map((r) => r.id),
+        [1, 2],
+      )
     })
-
     test('matches URLs with and without trailing slashes', async () => {
       ext.model.bookmarks = [{ id: 1, url: 'example.com', originalUrl: 'https://example.com/', title: 'With Slash' }]
-      mockGetBrowserTabs.mockResolvedValue([{ url: 'https://example.com' }])
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([{ url: 'https://example.com' }]))
       const results = await addDefaultEntries()
-
-      expect(results).toEqual([expect.objectContaining({ id: 1, title: 'With Slash' })])
+      assert(matches(results, [subset({ id: 1, title: 'With Slash' })]))
     })
-
     test('matches URLs with and without protocol', async () => {
       ext.model.bookmarks = [{ id: 1, url: 'example.com', originalUrl: 'https://example.com', title: 'Example' }]
-      mockGetBrowserTabs.mockResolvedValue([{ url: 'example.com' }])
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([{ url: 'example.com' }]))
       const results = await addDefaultEntries()
-
-      expect(results).toEqual([expect.objectContaining({ id: 1, title: 'Example' })])
+      assert(matches(results, [subset({ id: 1, title: 'Example' })]))
     })
-
     test('matches URLs ignoring anchor tags', async () => {
       ext.model.bookmarks = [
         { id: 1, url: 'example.com', originalUrl: 'https://example.com#section1', title: 'Bookmark with Hash' },
       ]
-      mockGetBrowserTabs.mockResolvedValue([{ url: 'https://example.com#section2' }])
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([{ url: 'https://example.com#section2' }]))
       const results = await addDefaultEntries()
-
-      expect(results).toEqual([expect.objectContaining({ id: 1, title: 'Bookmark with Hash' })])
+      assert(matches(results, [subset({ id: 1, title: 'Bookmark with Hash' })]))
     })
-
     test('adds recent tabs when enabled', async () => {
       ext.opts.maxRecentTabsToShow = 2
       ext.opts.quickBookmarkCurrentTab = ''
@@ -293,13 +281,13 @@ describe('addDefaultEntries', () => {
         { id: 3, url: 'https://three.test', lastVisitSecondsAgo: 20 },
       ]
       ext.model.bookmarks = []
-      mockGetBrowserTabs.mockResolvedValue([{ url: 'https://nomatch.test' }])
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([{ url: 'https://nomatch.test' }]))
       const results = await addDefaultEntries()
-
-      expect(results.map((r) => r.id)).toEqual([2, 3])
+      assert.deepStrictEqual(
+        results.map((r) => r.id),
+        [2, 3],
+      )
     })
-
     test('excludes active tab from recent tabs', async () => {
       ext.opts.maxRecentTabsToShow = 2
       ext.opts.quickBookmarkCurrentTab = ''
@@ -309,13 +297,13 @@ describe('addDefaultEntries', () => {
         { id: 3, originalId: 3, url: 'https://older.test', active: false, lastVisitSecondsAgo: 20 },
       ]
       ext.model.bookmarks = []
-      mockGetBrowserTabs.mockResolvedValue([{ id: 1, url: 'https://active.test' }])
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([{ id: 1, url: 'https://active.test' }]))
       const results = await addDefaultEntries()
-
-      expect(results.map((r) => r.id)).toEqual([2, 3])
+      assert.deepStrictEqual(
+        results.map((r) => r.id),
+        [2, 3],
+      )
     })
-
     test('filters out chrome:// and about: URLs from recent tabs', async () => {
       ext.opts.maxRecentTabsToShow = 5
       ext.model.tabs = [
@@ -324,13 +312,13 @@ describe('addDefaultEntries', () => {
         { id: 3, url: 'about:blank', lastVisitSecondsAgo: 15 },
       ]
       ext.model.bookmarks = []
-      mockGetBrowserTabs.mockResolvedValue([])
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([]))
       const results = await addDefaultEntries()
-
-      expect(results.map((r) => r.id)).toEqual([2])
+      assert.deepStrictEqual(
+        results.map((r) => r.id),
+        [2],
+      )
     })
-
     test('combines matching bookmarks and excludes active tab from recent list', async () => {
       ext.opts.maxRecentTabsToShow = 2
       ext.model.bookmarks = [
@@ -340,47 +328,44 @@ describe('addDefaultEntries', () => {
         { id: 2, originalId: 101, url: 'https://active.test', lastVisitSecondsAgo: 0 },
         { id: 3, originalId: 102, url: 'https://other.test', lastVisitSecondsAgo: 10 },
       ]
-      mockGetBrowserTabs.mockResolvedValue([{ id: 101, url: 'https://active.test' }])
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([{ id: 101, url: 'https://active.test' }]))
       const results = await addDefaultEntries()
 
       // id: 1 (bookmark) should be there from the bookmark matching logic.
       // id: 2 (tab) should be EXCLUDED from recent tabs because it's the active tab.
       // id: 3 (tab) should be there as it is a recent tab.
-      expect(results.map((r) => r.id)).toEqual([1, 3])
+      assert.deepStrictEqual(
+        results.map((r) => r.id),
+        [1, 3],
+      )
     })
-
     test('handles missing tab URL gracefully', async () => {
       ext.model.bookmarks = [{ id: 1, url: 'example.com', originalUrl: 'https://example.com', title: 'Example' }]
-      mockGetBrowserTabs.mockResolvedValue([{ url: null }])
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([{ url: null }]))
       const results = await addDefaultEntries()
 
       // Should not throw and may have no bookmark matches
-      expect(results).toBeDefined()
+      assert.notStrictEqual(results, undefined)
     })
-
     test('handles browser API errors gracefully', async () => {
       ext.model.tabs = [{ id: 1, url: 'https://tab.test', lastVisitSecondsAgo: 10 }]
-      mockGetBrowserTabs.mockRejectedValue(new Error('API error'))
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.reject(new Error('API error')))
       const results = await addDefaultEntries()
 
       // Should still return recent tabs
-      expect(results.map((r) => r.id)).toEqual([1])
+      assert.deepStrictEqual(
+        results.map((r) => r.id),
+        [1],
+      )
     })
-
     test('returns empty when maxRecentTabsToShow is 0', async () => {
       ext.opts.maxRecentTabsToShow = 0
       ext.model.tabs = [{ id: 1, url: 'https://tab.test', lastVisitSecondsAgo: 10 }]
       ext.model.bookmarks = []
-      mockGetBrowserTabs.mockResolvedValue([])
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([]))
       const results = await addDefaultEntries()
-
-      expect(results).toEqual([])
+      assert.deepStrictEqual(results, [])
     })
-
     test('handles tabs with undefined lastVisitSecondsAgo', async () => {
       ext.opts.maxRecentTabsToShow = 2
       ext.model.tabs = [
@@ -388,12 +373,14 @@ describe('addDefaultEntries', () => {
         { id: 2, url: 'https://two.test', lastVisitSecondsAgo: 10 },
       ]
       ext.model.bookmarks = []
-      mockGetBrowserTabs.mockResolvedValue([])
-
+      mockGetBrowserTabs.mock.mockImplementation(() => Promise.resolve([]))
       const results = await addDefaultEntries()
 
       // Tab with undefined should be sorted last
-      expect(results.map((r) => r.id)).toEqual([2, 1])
+      assert.deepStrictEqual(
+        results.map((r) => r.id),
+        [2, 1],
+      )
     })
   })
 })

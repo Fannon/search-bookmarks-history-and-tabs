@@ -1,4 +1,8 @@
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
+import '../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { afterEach, beforeEach, describe, mock, test } from 'node:test'
+import { resetModules } from '../../../test/modules.js'
+import { matches } from '../../../test/patterns.js'
 import { clearTestExt, flushPromises } from './testUtils.js'
 
 function setupDom() {
@@ -15,278 +19,279 @@ function setupDom() {
     <ul id="errors"></ul>
   `
 }
-
 describe('initEditBookmark entry point', () => {
   beforeEach(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
+    resetModules()
     clearTestExt()
     setupDom()
     window.history.replaceState(null, '', 'http://localhost/editBookmark.html')
     window.location.hash = '#bookmark/bookmark-1/search/foo'
   })
-
   afterEach(() => {
     clearTestExt()
   })
-
   test('initializes bookmark editor and wires event handlers', async () => {
-    const editBookmark = jest.fn((bookmarkId) => {
+    const editBookmark = mock.fn((bookmarkId) => {
       window.ext.currentBookmarkId = bookmarkId
       return Promise.resolve()
     })
-    const updateBookmark = jest.fn()
-    const deleteBookmark = jest.fn(() => Promise.resolve())
-    const cycleFavoriteButton = jest.fn()
-    const getEffectiveOptions = jest.fn(() => Promise.resolve({}))
+    const updateBookmark = mock.fn()
+    const deleteBookmark = mock.fn(() => Promise.resolve())
+    const cycleFavoriteButton = mock.fn()
+    const getEffectiveOptions = mock.fn(() => Promise.resolve({}))
     const bookmarkTree = [{ id: '0', title: '', children: [] }]
-    const getSearchData = jest.fn(() => Promise.resolve({ bookmarks: [{ originalId: 'bookmark-1' }], bookmarkTree }))
-    const printError = jest.fn()
-
-    await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
-      __esModule: true,
-      createBookmark: jest.fn(),
-      editBookmark,
-      editNewBookmark: jest.fn(),
-      updateBookmark,
-      deleteBookmark,
-      cycleFavoriteButton,
-    }))
-    await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
-      __esModule: true,
-      getEffectiveOptions,
-    }))
-    await jest.unstable_mockModule('../model/searchData.js', () => ({
-      __esModule: true,
-      getSearchData,
-    }))
-    await jest.unstable_mockModule('../view/errorView.js', () => ({
-      __esModule: true,
-      printError,
-    }))
-    await jest.unstable_mockModule('../helper/browserApi.js', () => ({
-      __esModule: true,
-      browserApi: {},
-    }))
-
+    const getSearchData = mock.fn(() => Promise.resolve({ bookmarks: [{ originalId: 'bookmark-1' }], bookmarkTree }))
+    const printError = mock.fn()
+    mock.module(new URL('../view/editBookmarkView.js', import.meta.url), {
+      exports: {
+        createBookmark: mock.fn(),
+        editBookmark,
+        editNewBookmark: mock.fn(),
+        updateBookmark,
+        deleteBookmark,
+        cycleFavoriteButton,
+      },
+    })
+    mock.module(new URL('../model/optionsStorage.js', import.meta.url), {
+      exports: {
+        getEffectiveOptions,
+      },
+    })
+    mock.module(new URL('../model/searchData.js', import.meta.url), {
+      exports: {
+        getSearchData,
+      },
+    })
+    mock.module(new URL('../view/errorView.js', import.meta.url), {
+      exports: {
+        printError,
+      },
+    })
+    mock.module(new URL('../helper/browserApi.js', import.meta.url), {
+      exports: {
+        browserApi: {},
+      },
+    })
     const module = await import('../initEditBookmark.js')
     await flushPromises()
-
-    expect(printError).not.toHaveBeenCalled()
-    expect(module.ext.initialized).toBe(true)
-    expect(module.ext.returnHash).toBe('#search/foo')
-    expect(window.ext).toBe(module.ext)
-    expect(module.ext.model.bookmarkTree).toBe(bookmarkTree)
-    expect(editBookmark).toHaveBeenCalledWith('bookmark-1')
-    expect(getEffectiveOptions).toHaveBeenCalled()
-    expect(getSearchData).toHaveBeenCalled()
-    expect(document.getElementById('bm-load')).toBeNull()
-    expect(document.getElementById('bm-cancel').getAttribute('href')).toBe('./index.html#search/foo')
-
+    assert(printError.mock.callCount() === 0)
+    assert.strictEqual(module.ext.initialized, true)
+    assert.strictEqual(module.ext.returnHash, '#search/foo')
+    assert.strictEqual(window.ext, module.ext)
+    assert.strictEqual(module.ext.model.bookmarkTree, bookmarkTree)
+    assert(editBookmark.mock.calls.some((call) => matches(call.arguments, ['bookmark-1'])))
+    assert(getEffectiveOptions.mock.callCount() > 0)
+    assert(getSearchData.mock.callCount() > 0)
+    assert.strictEqual(document.getElementById('bm-load'), null)
+    assert.strictEqual(document.getElementById('bm-cancel').getAttribute('href'), './index.html#search/foo')
     document.getElementById('bm-save').dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    expect(updateBookmark).toHaveBeenCalledWith('bookmark-1')
-
+    assert(updateBookmark.mock.calls.some((call) => matches(call.arguments, ['bookmark-1'])))
     document.getElementById('bm-del').dispatchEvent(new MouseEvent('click', { bubbles: true }))
     await flushPromises()
-    expect(deleteBookmark).toHaveBeenCalledWith('bookmark-1')
-
+    assert(deleteBookmark.mock.calls.some((call) => matches(call.arguments, ['bookmark-1'])))
     const favoriteButton = document.getElementById('bm-favorite')
     favoriteButton.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    expect(cycleFavoriteButton).toHaveBeenCalledWith(favoriteButton)
+    assert(cycleFavoriteButton.mock.calls.some((call) => matches(call.arguments, [favoriteButton])))
   })
-
   test('supports legacy #id hash format for backwards compatibility', async () => {
     window.location.hash = '#id/legacy-bookmark&searchTerm=foo'
-    const editBookmark = jest.fn((bookmarkId) => {
+    const editBookmark = mock.fn((bookmarkId) => {
       window.ext.currentBookmarkId = bookmarkId
       return Promise.resolve()
     })
-    const updateBookmark = jest.fn()
-    const deleteBookmark = jest.fn(() => Promise.resolve())
-    const getEffectiveOptions = jest.fn(() => Promise.resolve({}))
-    const getSearchData = jest.fn(() => Promise.resolve({ bookmarks: [{ originalId: 'legacy-bookmark' }] }))
-    const printError = jest.fn()
-
-    await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
-      __esModule: true,
-      createBookmark: jest.fn(),
-      editBookmark,
-      editNewBookmark: jest.fn(),
-      updateBookmark,
-      deleteBookmark,
-      cycleFavoriteButton: jest.fn(),
-    }))
-    await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
-      __esModule: true,
-      getEffectiveOptions,
-    }))
-    await jest.unstable_mockModule('../model/searchData.js', () => ({
-      __esModule: true,
-      getSearchData,
-    }))
-    await jest.unstable_mockModule('../view/errorView.js', () => ({
-      __esModule: true,
-      printError,
-    }))
-    await jest.unstable_mockModule('../helper/browserApi.js', () => ({
-      __esModule: true,
-      browserApi: {},
-    }))
-
+    const updateBookmark = mock.fn()
+    const deleteBookmark = mock.fn(() => Promise.resolve())
+    const getEffectiveOptions = mock.fn(() => Promise.resolve({}))
+    const getSearchData = mock.fn(() => Promise.resolve({ bookmarks: [{ originalId: 'legacy-bookmark' }] }))
+    const printError = mock.fn()
+    mock.module(new URL('../view/editBookmarkView.js', import.meta.url), {
+      exports: {
+        createBookmark: mock.fn(),
+        editBookmark,
+        editNewBookmark: mock.fn(),
+        updateBookmark,
+        deleteBookmark,
+        cycleFavoriteButton: mock.fn(),
+      },
+    })
+    mock.module(new URL('../model/optionsStorage.js', import.meta.url), {
+      exports: {
+        getEffectiveOptions,
+      },
+    })
+    mock.module(new URL('../model/searchData.js', import.meta.url), {
+      exports: {
+        getSearchData,
+      },
+    })
+    mock.module(new URL('../view/errorView.js', import.meta.url), {
+      exports: {
+        printError,
+      },
+    })
+    mock.module(new URL('../helper/browserApi.js', import.meta.url), {
+      exports: {
+        browserApi: {},
+      },
+    })
     const module = await import('../initEditBookmark.js')
     await flushPromises()
-
-    expect(editBookmark).toHaveBeenCalledWith('legacy-bookmark')
-    expect(module.ext.returnHash).toBe('#search/foo')
-    expect(printError).not.toHaveBeenCalled()
+    assert(editBookmark.mock.calls.some((call) => matches(call.arguments, ['legacy-bookmark'])))
+    assert.strictEqual(module.ext.returnHash, '#search/foo')
+    assert(printError.mock.callCount() === 0)
   })
-
   test('initializes new bookmark draft and creates only on save', async () => {
     window.location.hash = '#new?url=https%3A%2F%2Fnew.test%2Fpage&title=New%20Page&return=%23search%2F'
-    const editBookmark = jest.fn()
-    const editNewBookmark = jest.fn((bookmarkDraft) => {
+    const editBookmark = mock.fn()
+    const editNewBookmark = mock.fn((bookmarkDraft) => {
       window.ext.currentBookmarkDraft = bookmarkDraft
     })
     let resolveCreateBookmark
-    const createBookmark = jest.fn(
+    const createBookmark = mock.fn(
       () =>
         new Promise((resolve) => {
           resolveCreateBookmark = resolve
         }),
     )
-    const getEffectiveOptions = jest.fn(() => Promise.resolve({}))
-    const getSearchData = jest.fn(() => Promise.resolve({ bookmarks: [] }))
-    const printError = jest.fn()
-
-    await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
-      __esModule: true,
-      createBookmark,
-      editBookmark,
-      editNewBookmark,
-      updateBookmark: jest.fn(),
-      deleteBookmark: jest.fn(),
-      cycleFavoriteButton: jest.fn(),
-    }))
-    await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
-      __esModule: true,
-      getEffectiveOptions,
-    }))
-    await jest.unstable_mockModule('../model/searchData.js', () => ({
-      __esModule: true,
-      getSearchData,
-    }))
-    await jest.unstable_mockModule('../view/errorView.js', () => ({
-      __esModule: true,
-      printError,
-    }))
-    await jest.unstable_mockModule('../helper/browserApi.js', () => ({
-      __esModule: true,
-      browserApi: {},
-    }))
-
+    const getEffectiveOptions = mock.fn(() => Promise.resolve({}))
+    const getSearchData = mock.fn(() => Promise.resolve({ bookmarks: [] }))
+    const printError = mock.fn()
+    mock.module(new URL('../view/editBookmarkView.js', import.meta.url), {
+      exports: {
+        createBookmark,
+        editBookmark,
+        editNewBookmark,
+        updateBookmark: mock.fn(),
+        deleteBookmark: mock.fn(),
+        cycleFavoriteButton: mock.fn(),
+      },
+    })
+    mock.module(new URL('../model/optionsStorage.js', import.meta.url), {
+      exports: {
+        getEffectiveOptions,
+      },
+    })
+    mock.module(new URL('../model/searchData.js', import.meta.url), {
+      exports: {
+        getSearchData,
+      },
+    })
+    mock.module(new URL('../view/errorView.js', import.meta.url), {
+      exports: {
+        printError,
+      },
+    })
+    mock.module(new URL('../helper/browserApi.js', import.meta.url), {
+      exports: {
+        browserApi: {},
+      },
+    })
     const module = await import('../initEditBookmark.js')
     await flushPromises()
-
-    expect(editBookmark).not.toHaveBeenCalled()
-    expect(editNewBookmark).toHaveBeenCalledWith({
-      title: 'New Page',
-      url: 'https://new.test/page',
-    })
-    expect(module.ext.returnHash).toBe('#search/')
-    expect(printError).not.toHaveBeenCalled()
-    expect(createBookmark).not.toHaveBeenCalled()
-
+    assert(editBookmark.mock.callCount() === 0)
+    assert(
+      editNewBookmark.mock.calls.some((call) =>
+        matches(call.arguments, [
+          {
+            title: 'New Page',
+            url: 'https://new.test/page',
+          },
+        ]),
+      ),
+    )
+    assert.strictEqual(module.ext.returnHash, '#search/')
+    assert(printError.mock.callCount() === 0)
+    assert(createBookmark.mock.callCount() === 0)
     document.getElementById('bm-save').dispatchEvent(new MouseEvent('click', { bubbles: true }))
     document.getElementById('bm-save').dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    expect(createBookmark).toHaveBeenCalledTimes(1)
-
+    assert.strictEqual(createBookmark.mock.callCount(), 1)
     resolveCreateBookmark()
     await flushPromises()
-
-    expect(createBookmark).toHaveBeenCalledTimes(1)
-    expect(module.ext.currentBookmarkDraft).toBeNull()
+    assert.strictEqual(createBookmark.mock.callCount(), 1)
+    assert.strictEqual(module.ext.currentBookmarkDraft, null)
   })
-
   test('logs an error when bookmark identifier is missing', async () => {
     window.location.hash = ''
-    const printError = jest.fn()
-
-    await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
-      __esModule: true,
-      createBookmark: jest.fn(),
-      editBookmark: jest.fn(),
-      editNewBookmark: jest.fn(),
-      updateBookmark: jest.fn(),
-      deleteBookmark: jest.fn(),
-      cycleFavoriteButton: jest.fn(),
-    }))
-    await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
-      __esModule: true,
-      getEffectiveOptions: jest.fn(() => Promise.resolve({})),
-    }))
-    await jest.unstable_mockModule('../model/searchData.js', () => ({
-      __esModule: true,
-      getSearchData: jest.fn(() => Promise.resolve({ bookmarks: [] })),
-    }))
-    await jest.unstable_mockModule('../view/errorView.js', () => ({
-      __esModule: true,
-      printError,
-    }))
-    await jest.unstable_mockModule('../helper/browserApi.js', () => ({
-      __esModule: true,
-      browserApi: {},
-    }))
-
+    const printError = mock.fn()
+    mock.module(new URL('../view/editBookmarkView.js', import.meta.url), {
+      exports: {
+        createBookmark: mock.fn(),
+        editBookmark: mock.fn(),
+        editNewBookmark: mock.fn(),
+        updateBookmark: mock.fn(),
+        deleteBookmark: mock.fn(),
+        cycleFavoriteButton: mock.fn(),
+      },
+    })
+    mock.module(new URL('../model/optionsStorage.js', import.meta.url), {
+      exports: {
+        getEffectiveOptions: mock.fn(() => Promise.resolve({})),
+      },
+    })
+    mock.module(new URL('../model/searchData.js', import.meta.url), {
+      exports: {
+        getSearchData: mock.fn(() => Promise.resolve({ bookmarks: [] })),
+      },
+    })
+    mock.module(new URL('../view/errorView.js', import.meta.url), {
+      exports: {
+        printError,
+      },
+    })
+    mock.module(new URL('../helper/browserApi.js', import.meta.url), {
+      exports: {
+        browserApi: {},
+      },
+    })
     await import('../initEditBookmark.js')
     await flushPromises()
-
-    expect(printError).toHaveBeenCalled()
-    const [error, message] = printError.mock.calls[0]
-    expect(error).toBeInstanceOf(Error)
-    expect(message).toBe('Could not initialize bookmark editor.')
+    assert(printError.mock.callCount() > 0)
+    const [error, message] = printError.mock.calls[0].arguments
+    assert(error instanceof Error)
+    assert.strictEqual(message, 'Could not initialize bookmark editor.')
   })
-
   test('updates editor when hash changes to a different bookmark id', async () => {
-    const editBookmark = jest.fn((bookmarkId) => {
+    const editBookmark = mock.fn((bookmarkId) => {
       window.ext.currentBookmarkId = bookmarkId
       return Promise.resolve()
     })
-
-    await jest.unstable_mockModule('../view/editBookmarkView.js', () => ({
-      __esModule: true,
-      createBookmark: jest.fn(),
-      editBookmark,
-      editNewBookmark: jest.fn(),
-      updateBookmark: jest.fn(),
-      deleteBookmark: jest.fn(),
-      cycleFavoriteButton: jest.fn(),
-    }))
-    await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
-      __esModule: true,
-      getEffectiveOptions: jest.fn(() => Promise.resolve({})),
-    }))
-    await jest.unstable_mockModule('../model/searchData.js', () => ({
-      __esModule: true,
-      getSearchData: jest.fn(() => Promise.resolve({ bookmarks: [] })),
-    }))
-    await jest.unstable_mockModule('../view/errorView.js', () => ({
-      __esModule: true,
-      printError: jest.fn(),
-    }))
-    await jest.unstable_mockModule('../helper/browserApi.js', () => ({
-      __esModule: true,
-      browserApi: {},
-    }))
-
+    mock.module(new URL('../view/editBookmarkView.js', import.meta.url), {
+      exports: {
+        createBookmark: mock.fn(),
+        editBookmark,
+        editNewBookmark: mock.fn(),
+        updateBookmark: mock.fn(),
+        deleteBookmark: mock.fn(),
+        cycleFavoriteButton: mock.fn(),
+      },
+    })
+    mock.module(new URL('../model/optionsStorage.js', import.meta.url), {
+      exports: {
+        getEffectiveOptions: mock.fn(() => Promise.resolve({})),
+      },
+    })
+    mock.module(new URL('../model/searchData.js', import.meta.url), {
+      exports: {
+        getSearchData: mock.fn(() => Promise.resolve({ bookmarks: [] })),
+      },
+    })
+    mock.module(new URL('../view/errorView.js', import.meta.url), {
+      exports: {
+        printError: mock.fn(),
+      },
+    })
+    mock.module(new URL('../helper/browserApi.js', import.meta.url), {
+      exports: {
+        browserApi: {},
+      },
+    })
     await import('../initEditBookmark.js')
     await flushPromises()
-
-    editBookmark.mockClear()
+    editBookmark.mock.resetCalls()
     window.location.hash = '#bookmark/bookmark-2/search/bar'
     window.dispatchEvent(new HashChangeEvent('hashchange'))
     await flushPromises()
-
-    expect(editBookmark).toHaveBeenCalledWith('bookmark-2')
-    expect(window.ext.returnHash).toBe('#search/bar')
+    assert(editBookmark.mock.calls.some((call) => matches(call.arguments, ['bookmark-2'])))
+    assert.strictEqual(window.ext.returnHash, '#search/bar')
   })
 })

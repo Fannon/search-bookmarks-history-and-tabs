@@ -1,11 +1,16 @@
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { afterEach, describe, it, mock } from 'node:test'
+import { format } from 'node:util'
+import { resetModules } from '../../../../test/modules.js'
+import { matches } from '../../../../test/patterns.js'
+
 /**
  * ✅ Covered behaviors: keyboard navigation (arrow keys, vim-style, Enter, Escape),
  *   selection management, scrolling, and hover handling.
  * ⚠️ Known gaps: does not verify browser navigation side effects beyond mocked APIs.
  * 🐞 Added BUG tests: none.
  */
-
-import { jest } from '@jest/globals'
 
 function createResults() {
   return [
@@ -32,26 +37,22 @@ function createResults() {
     },
   ]
 }
-
 async function setupSearchNavigation({ results = createResults(), opts = {} } = {}) {
-  jest.resetModules()
+  resetModules()
   window.location.hash = '#search/query'
 
   // Import modules - no mocking needed
   const searchNavigationModule = await import('../searchNavigation.js')
   const searchViewModule = await import('../searchView.js')
   const searchEventsModule = await import('../searchEvents.js')
-
   document.body.innerHTML = `
     <input id="q" />
     <ul id="results"></ul>
     <button id="toggle"></button>
   `
-
   const resultList = document.getElementById('results')
   const searchInput = document.getElementById('q')
   const searchApproachToggle = document.getElementById('toggle')
-
   const copiedResults = results.map((entry) => ({ ...entry }))
   const tabEntries = copiedResults
     .filter((entry) => entry.type === 'tab')
@@ -60,11 +61,9 @@ async function setupSearchNavigation({ results = createResults(), opts = {} } = 
       originalUrl: entry.originalUrl,
       windowId: 101,
     }))
-
-  window.Mark = jest.fn(() => ({
-    mark: jest.fn(),
+  window.Mark = mock.fn(() => ({
+    mark: mock.fn(),
   }))
-
   global.ext = {
     dom: {
       resultList,
@@ -93,18 +92,17 @@ async function setupSearchNavigation({ results = createResults(), opts = {} } = 
     },
     browserApi: {
       tabs: {
-        remove: jest.fn(),
-        query: jest.fn(() => Promise.resolve([{ id: 77 }])),
-        update: jest.fn(),
-        create: jest.fn(),
-        highlight: jest.fn(),
+        remove: mock.fn(),
+        query: mock.fn(() => Promise.resolve([{ id: 77 }])),
+        update: mock.fn(),
+        create: mock.fn(),
+        highlight: mock.fn(),
       },
       windows: {
-        update: jest.fn(),
+        update: mock.fn(),
       },
     },
   }
-
   return {
     module: searchNavigationModule,
     viewModule: searchViewModule,
@@ -117,32 +115,32 @@ async function setupSearchNavigation({ results = createResults(), opts = {} } = 
     results: copiedResults,
   }
 }
-
 afterEach(() => {
   delete global.ext
   delete window.Mark
   document.body.innerHTML = ''
   window.location.hash = ''
 })
-
 describe('searchNavigation selection helpers', () => {
   it('selectListItem updates selection and scrolls when requested', async () => {
     const { module, viewModule, elements } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
-
     const secondItem = elements.resultList.children[1]
-    secondItem.scrollIntoView = jest.fn()
-
+    secondItem.scrollIntoView = mock.fn()
     module.selectListItem(1, true)
-
-    expect(ext.model.currentItem).toBe(1)
-    expect(document.getElementById('sel')).toBe(secondItem)
-    expect(secondItem.scrollIntoView).toHaveBeenCalledWith({
-      behavior: 'auto',
-      block: 'nearest',
-    })
+    assert.strictEqual(ext.model.currentItem, 1)
+    assert.strictEqual(document.getElementById('sel'), secondItem)
+    assert(
+      secondItem.scrollIntoView.mock.calls.some((call) =>
+        matches(call.arguments, [
+          {
+            behavior: 'auto',
+            block: 'nearest',
+          },
+        ]),
+      ),
+    )
   })
-
   it('hoverResultItem only selects after mouse has actually moved', async () => {
     const { module, viewModule, elements } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
@@ -150,23 +148,22 @@ describe('searchNavigation selection helpers', () => {
     const secondItem = elements.resultList.children[1]
 
     // Initially, mouseMoved is false (set by renderSearchResults)
-    expect(ext.model.mouseMoved).toBe(false)
+    assert.strictEqual(ext.model.mouseMoved, false)
 
     // Hovering should not change selection when mouse hasn't moved
     module.hoverResultItem({ target: secondItem })
-    expect(ext.model.currentItem).toBe(0)
-    expect(document.getElementById('sel')).toBe(firstItem)
+    assert.strictEqual(ext.model.currentItem, 0)
+    assert.strictEqual(document.getElementById('sel'), firstItem)
 
     // Simulate actual mouse movement
     ext.model.mouseMoved = true
 
     // Now hovering should update selection
     module.hoverResultItem({ target: secondItem })
-    expect(ext.model.currentItem).toBe('1')
-    expect(document.getElementById('sel')).toBe(secondItem)
+    assert.strictEqual(ext.model.currentItem, '1')
+    assert.strictEqual(document.getElementById('sel'), secondItem)
   })
 })
-
 describe('searchNavigation navigationKeyListener', () => {
   const imeCases = [
     {
@@ -178,41 +175,37 @@ describe('searchNavigation navigationKeyListener', () => {
       event: { isComposing: false, keyCode: 229, which: 229 },
     },
   ]
-
   it('handles arrow navigation and prevents going above first item', async () => {
     const { module, viewModule, elements } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
-    const preventDefault = jest.fn()
+    const preventDefault = mock.fn()
     Array.from(elements.resultList.children).forEach((child) => {
-      child.scrollIntoView = jest.fn()
+      child.scrollIntoView = mock.fn()
     })
-
     elements.searchInput.value = 'typed'
     module.navigationKeyListener({
       key: 'ArrowUp',
       ctrlKey: false,
       preventDefault,
     })
-    expect(preventDefault).toHaveBeenCalledTimes(1)
-    expect(ext.model.currentItem).toBe(0)
-
-    preventDefault.mockClear()
+    assert.strictEqual(preventDefault.mock.callCount(), 1)
+    assert.strictEqual(ext.model.currentItem, 0)
+    preventDefault.mock.resetCalls()
     module.navigationKeyListener({
       key: 'ArrowDown',
       ctrlKey: false,
       preventDefault,
     })
-    expect(preventDefault).toHaveBeenCalledTimes(1)
-    expect(ext.model.currentItem).toBe(1)
-    expect(document.getElementById('sel')).toBe(elements.resultList.children[1])
+    assert.strictEqual(preventDefault.mock.callCount(), 1)
+    assert.strictEqual(ext.model.currentItem, 1)
+    assert.strictEqual(document.getElementById('sel'), elements.resultList.children[1])
   })
-
   it('supports vim-style navigation keybindings', async () => {
     const { module, viewModule, elements } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
-    const preventDefault = jest.fn()
+    const preventDefault = mock.fn()
     Array.from(elements.resultList.children).forEach((child) => {
-      child.scrollIntoView = jest.fn()
+      child.scrollIntoView = mock.fn()
     })
 
     // Test all vim-style down keybindings
@@ -223,7 +216,7 @@ describe('searchNavigation navigationKeyListener', () => {
     for (const keyCombo of downKeys) {
       ext.model.currentItem = 0
       module.navigationKeyListener({ ...keyCombo, preventDefault })
-      expect(ext.model.currentItem).toBe(1)
+      assert.strictEqual(ext.model.currentItem, 1)
     }
 
     // Test all vim-style up keybindings
@@ -234,25 +227,23 @@ describe('searchNavigation navigationKeyListener', () => {
     for (const keyCombo of upKeys) {
       ext.model.currentItem = 1
       module.navigationKeyListener({ ...keyCombo, preventDefault })
-      expect(ext.model.currentItem).toBe(0)
+      assert.strictEqual(ext.model.currentItem, 0)
     }
   })
-
   it('handles Enter key by calling openResultItem', async () => {
     const { module, viewModule } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
 
     // Mock window.close to verify openResultItem was called (it closes the window)
-    const windowCloseSpy = jest.fn()
+    const windowCloseSpy = mock.fn()
     window.close = windowCloseSpy
-
     const event = {
       key: 'Enter',
       ctrlKey: false,
       shiftKey: false,
       altKey: false,
-      preventDefault: jest.fn(),
-      stopPropagation: jest.fn(),
+      preventDefault: mock.fn(),
+      stopPropagation: mock.fn(),
       button: 0,
       target: {
         nodeName: 'LI',
@@ -261,78 +252,88 @@ describe('searchNavigation navigationKeyListener', () => {
       },
     }
     window.location.hash = '#search/query'
-
     await module.navigationKeyListener(event)
 
     // Verify window closed (side effect of openResultItem for bookmark)
-    expect(windowCloseSpy).toHaveBeenCalledTimes(1)
+    assert.strictEqual(windowCloseSpy.mock.callCount(), 1)
   })
-
-  it.each([{ strategy: 'precise' }, { strategy: 'fuzzy' }])(
-    'ignores Enter while IME composition is active in $strategy mode',
-    async ({ strategy }) => {
-      for (const imeCase of imeCases) {
-        const { module, viewModule } = await setupSearchNavigation({
-          opts: { searchStrategy: strategy },
-        })
-        await viewModule.renderSearchResults()
-
-        const windowCloseSpy = jest.fn()
-        window.close = windowCloseSpy
-
-        await module.navigationKeyListener({
-          key: 'Enter',
-          preventDefault: jest.fn(),
-          stopPropagation: jest.fn(),
-          button: 0,
-          target: {
-            nodeName: 'LI',
-            getAttribute: () => null,
-            className: '',
-          },
-          ...imeCase.event,
-        })
-
-        expect(windowCloseSpy).not.toHaveBeenCalled()
-        expect(ext.model.currentItem).toBe(0)
-      }
-    },
-  )
-
-  it.each([{ strategy: 'precise' }, { strategy: 'fuzzy' }])(
-    'ignores navigation keys while IME composition is active in $strategy mode',
-    async ({ strategy }) => {
-      for (const imeCase of imeCases) {
-        const { module, viewModule, elements } = await setupSearchNavigation({
-          opts: { searchStrategy: strategy },
-        })
-        await viewModule.renderSearchResults()
-
-        const preventDefault = jest.fn()
-        Array.from(elements.resultList.children).forEach((child) => {
-          child.scrollIntoView = jest.fn()
-        })
-
-        ext.model.currentItem = 0
-        await module.navigationKeyListener({
-          key: 'ArrowDown',
-          preventDefault,
-          ...imeCase.event,
-        })
-
-        expect(preventDefault).not.toHaveBeenCalled()
-        expect(ext.model.currentItem).toBe(0)
-        expect(document.getElementById('sel')).toBe(elements.resultList.children[0])
-      }
-    },
-  )
-
+  ;[{ strategy: 'precise' }, { strategy: 'fuzzy' }].forEach((testCase) => {
+    const args = Array.isArray(testCase) ? testCase : [testCase]
+    it(
+      format(
+        'ignores Enter while IME composition is active in $strategy mode'.replace(
+          /\$([a-zA-Z]+)/g,
+          (_, key) => testCase[key],
+        ),
+        ...args,
+      ),
+      () =>
+        (async ({ strategy }) => {
+          for (const imeCase of imeCases) {
+            const { module, viewModule } = await setupSearchNavigation({
+              opts: { searchStrategy: strategy },
+            })
+            await viewModule.renderSearchResults()
+            const windowCloseSpy = mock.fn()
+            window.close = windowCloseSpy
+            await module.navigationKeyListener({
+              key: 'Enter',
+              preventDefault: mock.fn(),
+              stopPropagation: mock.fn(),
+              button: 0,
+              target: {
+                nodeName: 'LI',
+                getAttribute: () => null,
+                className: '',
+              },
+              ...imeCase.event,
+            })
+            assert(windowCloseSpy.mock.callCount() === 0)
+            assert.strictEqual(ext.model.currentItem, 0)
+          }
+        })(...args),
+    )
+  })
+  ;[{ strategy: 'precise' }, { strategy: 'fuzzy' }].forEach((testCase) => {
+    const args = Array.isArray(testCase) ? testCase : [testCase]
+    it(
+      format(
+        'ignores navigation keys while IME composition is active in $strategy mode'.replace(
+          /\$([a-zA-Z]+)/g,
+          (_, key) => testCase[key],
+        ),
+        ...args,
+      ),
+      () =>
+        (async ({ strategy }) => {
+          for (const imeCase of imeCases) {
+            const { module, viewModule, elements } = await setupSearchNavigation({
+              opts: { searchStrategy: strategy },
+            })
+            await viewModule.renderSearchResults()
+            const preventDefault = mock.fn()
+            Array.from(elements.resultList.children).forEach((child) => {
+              child.scrollIntoView = mock.fn()
+            })
+            ext.model.currentItem = 0
+            await module.navigationKeyListener({
+              key: 'ArrowDown',
+              preventDefault,
+              ...imeCase.event,
+            })
+            assert(preventDefault.mock.callCount() === 0)
+            assert.strictEqual(ext.model.currentItem, 0)
+            assert.strictEqual(document.getElementById('sel'), elements.resultList.children[0])
+          }
+        })(...args),
+    )
+  })
   it('waits for in-flight search to complete before opening result on Enter', async () => {
     const { module, viewModule } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
 
     // Mock window.close to verify openResultItem was called
-    const windowCloseSpy = jest.fn()
+    const windowCloseSpy = mock.fn()
     window.close = windowCloseSpy
 
     // Simulate an in-flight search by creating a pending promise
@@ -353,14 +354,13 @@ describe('searchNavigation navigationKeyListener', () => {
         score: 100,
       },
     ]
-
     const event = {
       key: 'Enter',
       ctrlKey: false,
       shiftKey: false,
       altKey: false,
-      preventDefault: jest.fn(),
-      stopPropagation: jest.fn(),
+      preventDefault: mock.fn(),
+      stopPropagation: mock.fn(),
       button: 0,
       target: {
         nodeName: 'LI',
@@ -374,7 +374,7 @@ describe('searchNavigation navigationKeyListener', () => {
     const navigationPromise = module.navigationKeyListener(event)
 
     // Verify that window.close hasn't been called yet (still waiting for search)
-    expect(windowCloseSpy).not.toHaveBeenCalled()
+    assert(windowCloseSpy.mock.callCount() === 0)
 
     // Now complete the search and update results
     ext.model.result = newResults
@@ -385,81 +385,67 @@ describe('searchNavigation navigationKeyListener', () => {
     await navigationPromise
 
     // Now verify window closed (openResultItem was called with the correct result)
-    expect(windowCloseSpy).toHaveBeenCalledTimes(1)
+    assert.strictEqual(windowCloseSpy.mock.callCount(), 1)
   })
-
   it('handles Escape key to reset search and focus input', async () => {
     const { module, viewModule, elements } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
-
-    const focusMock = jest.fn()
+    const focusMock = mock.fn()
     elements.searchInput.focus = focusMock
     window.location.hash = '#search/query'
-
     module.navigationKeyListener({
       key: 'Escape',
-      preventDefault: jest.fn(),
+      preventDefault: mock.fn(),
     })
-
-    expect(window.location.hash).toBe('#search/')
-    expect(focusMock).toHaveBeenCalledTimes(1)
+    assert.strictEqual(window.location.hash, '#search/')
+    assert.strictEqual(focusMock.mock.callCount(), 1)
   })
-
   it('toggles search strategy with Ctrl+F', async () => {
     const { module, viewModule } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
-    const preventDefault = jest.fn()
+    const preventDefault = mock.fn()
 
     // Default is 'precise' (set in setupSearchNavigation)
-    expect(ext.opts.searchStrategy).toBe('precise')
-
+    assert.strictEqual(ext.opts.searchStrategy, 'precise')
     await module.navigationKeyListener({
       key: 'f',
       ctrlKey: true,
       preventDefault,
-      stopPropagation: jest.fn(),
+      stopPropagation: mock.fn(),
     })
-
-    expect(preventDefault).toHaveBeenCalledTimes(1)
-    expect(ext.opts.searchStrategy).toBe('fuzzy')
-
+    assert.strictEqual(preventDefault.mock.callCount(), 1)
+    assert.strictEqual(ext.opts.searchStrategy, 'fuzzy')
     await module.navigationKeyListener({
       key: 'F',
       ctrlKey: true,
       preventDefault,
-      stopPropagation: jest.fn(),
+      stopPropagation: mock.fn(),
     })
-
-    expect(ext.opts.searchStrategy).toBe('precise')
+    assert.strictEqual(ext.opts.searchStrategy, 'precise')
   })
-
   it('opens selected bookmark editor with F2', async () => {
     const { module, viewModule } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
-    const preventDefault = jest.fn()
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
-
+    const preventDefault = mock.fn()
+    const errorSpy = mock.method(console, 'error', () => {})
     const editorUrl = await module.navigationKeyListener({
       key: 'F2',
       preventDefault,
     })
-
-    expect(preventDefault).toHaveBeenCalledTimes(1)
-    expect(editorUrl).toBe('./editBookmark.html#bookmark/bm-1?return=%23search%2Fquery')
-    errorSpy.mockRestore()
+    assert.strictEqual(preventDefault.mock.callCount(), 1)
+    assert.strictEqual(editorUrl, './editBookmark.html#bookmark/bm-1?return=%23search%2Fquery')
+    errorSpy.mock.restore()
   })
-
   it('opens selected result in background with Ctrl+Enter', async () => {
     const { module, viewModule } = await setupSearchNavigation()
     await viewModule.renderSearchResults()
-
     const event = {
       key: 'Enter',
       ctrlKey: true,
       shiftKey: false,
       altKey: false,
-      preventDefault: jest.fn(),
-      stopPropagation: jest.fn(),
+      preventDefault: mock.fn(),
+      stopPropagation: mock.fn(),
       button: 0,
       target: {
         nodeName: 'LI',
@@ -468,19 +454,22 @@ describe('searchNavigation navigationKeyListener', () => {
       },
     }
     window.location.hash = '#search/query'
-
     await module.navigationKeyListener(event)
-
-    expect(ext.browserApi.tabs.create).toHaveBeenCalledWith({
-      active: false,
-      url: 'https://bookmark.test',
-    })
+    assert(
+      ext.browserApi.tabs.create.mock.calls.some((call) =>
+        matches(call.arguments, [
+          {
+            active: false,
+            url: 'https://bookmark.test',
+          },
+        ]),
+      ),
+    )
   })
-
   it('inserts two spaces when TAB is pressed in search input', async () => {
     const { module, elements } = await setupSearchNavigation()
-    const preventDefault = jest.fn()
-    const dispatchEvent = jest.fn()
+    const preventDefault = mock.fn()
+    const dispatchEvent = mock.fn()
 
     // Setup input state
     elements.searchInput.value = 'tag'
@@ -495,13 +484,12 @@ describe('searchNavigation navigationKeyListener', () => {
       key: 'Tab',
       preventDefault,
     })
-
-    expect(preventDefault).toHaveBeenCalledTimes(1)
-    expect(elements.searchInput.value).toBe('tag  ')
-    expect(elements.searchInput.selectionStart).toBe(5)
-    expect(elements.searchInput.selectionEnd).toBe(5)
+    assert.strictEqual(preventDefault.mock.callCount(), 1)
+    assert.strictEqual(elements.searchInput.value, 'tag  ')
+    assert.strictEqual(elements.searchInput.selectionStart, 5)
+    assert.strictEqual(elements.searchInput.selectionEnd, 5)
     // Check that 'input' event was dispatched
-    expect(dispatchEvent).toHaveBeenCalledTimes(1)
-    expect(dispatchEvent.mock.calls[0][0].type).toBe('input')
+    assert.strictEqual(dispatchEvent.mock.callCount(), 1)
+    assert.strictEqual(dispatchEvent.mock.calls[0].arguments[0].type, 'input')
   })
 })

@@ -29,6 +29,17 @@
       "a11y": {
         "noAutofocus": "off",
         "noSvgWithoutTitle": "off"
+      },
+      "correctness": {
+        "noUndeclaredDependencies": {
+          "level": "error",
+          "options": {
+            "devDependencies": ["**/*.test.js", "**/test/**", "**/bin/**", "**/playwright/**", "**/playwright.config.*"]
+          }
+        },
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error",
+        "noUnusedFunctionParameters": "error"
       }
     }
   },

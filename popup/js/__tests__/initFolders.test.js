@@ -1,91 +1,89 @@
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
+import '../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { afterEach, beforeEach, describe, mock, test } from 'node:test'
+import { resetModules } from '../../../test/modules.js'
+import { matches } from '../../../test/patterns.js'
 
-const mockLoadFoldersOverview = jest.fn()
-const mockGetEffectiveOptions = jest.fn()
-const mockGetSearchData = jest.fn()
-const mockPrintError = jest.fn()
-
+const mockLoadFoldersOverview = mock.fn()
+const mockGetEffectiveOptions = mock.fn()
+const mockGetSearchData = mock.fn()
+const mockPrintError = mock.fn()
 beforeEach(async () => {
-  jest.resetModules()
-
+  resetModules()
   document.body.innerHTML = `
     <div id="folders-view"></div>
     <div id="folders-list"></div>
     <div id="folders-load"></div>
   `
-
-  await jest.unstable_mockModule('../view/foldersView.js', () => ({
-    loadFoldersOverview: mockLoadFoldersOverview,
-  }))
-  await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
-    getEffectiveOptions: mockGetEffectiveOptions,
-  }))
-  await jest.unstable_mockModule('../model/searchData.js', () => ({
-    getSearchData: mockGetSearchData,
-  }))
-  await jest.unstable_mockModule('../view/errorView.js', () => ({
-    printError: mockPrintError,
-  }))
+  mock.module(new URL('../view/foldersView.js', import.meta.url), {
+    exports: {
+      loadFoldersOverview: mockLoadFoldersOverview,
+    },
+  })
+  mock.module(new URL('../model/optionsStorage.js', import.meta.url), {
+    exports: {
+      getEffectiveOptions: mockGetEffectiveOptions,
+    },
+  })
+  mock.module(new URL('../model/searchData.js', import.meta.url), {
+    exports: {
+      getSearchData: mockGetSearchData,
+    },
+  })
+  mock.module(new URL('../view/errorView.js', import.meta.url), {
+    exports: {
+      printError: mockPrintError,
+    },
+  })
 })
-
 afterEach(() => {
-  jest.clearAllMocks()
+  mockLoadFoldersOverview.mock.resetCalls()
+  mockGetEffectiveOptions.mock.resetCalls()
+  mockGetSearchData.mock.resetCalls()
+  mockPrintError.mock.resetCalls()
   delete global.ext
   document.body.innerHTML = ''
 })
-
 describe('initFoldersPage', () => {
   test('loads options, disables tabs/history, and renders folders overview', async () => {
     const mockOptions = { searchStrategy: 'precise', enableTabs: true, enableHistory: true }
     const mockBookmarks = [{ id: 'bm-1', title: 'Test Bookmark' }]
-
-    mockGetEffectiveOptions.mockResolvedValue(mockOptions)
-    mockGetSearchData.mockResolvedValue({ bookmarks: mockBookmarks })
-
+    mockGetEffectiveOptions.mock.mockImplementation(() => Promise.resolve(mockOptions))
+    mockGetSearchData.mock.mockImplementation(() => Promise.resolve({ bookmarks: mockBookmarks }))
     const { initFoldersPage } = await import('../initFolders.js')
     await initFoldersPage()
-
-    expect(mockGetEffectiveOptions).toHaveBeenCalled()
-    expect(mockGetSearchData).toHaveBeenCalled()
-    expect(global.ext.opts.enableTabs).toBe(false)
-    expect(global.ext.opts.enableHistory).toBe(false)
-    expect(global.ext.model.bookmarks).toBe(mockBookmarks)
-    expect(mockLoadFoldersOverview).toHaveBeenCalled()
-    expect(global.ext.initialized).toBe(true)
+    assert(mockGetEffectiveOptions.mock.callCount() > 0)
+    assert(mockGetSearchData.mock.callCount() > 0)
+    assert.strictEqual(global.ext.opts.enableTabs, false)
+    assert.strictEqual(global.ext.opts.enableHistory, false)
+    assert.strictEqual(global.ext.model.bookmarks, mockBookmarks)
+    assert(mockLoadFoldersOverview.mock.callCount() > 0)
+    assert.strictEqual(global.ext.initialized, true)
   })
-
   test('handles errors gracefully', async () => {
     const error = new Error('Test error')
-    mockGetEffectiveOptions.mockRejectedValue(error)
-
+    mockGetEffectiveOptions.mock.mockImplementation(() => Promise.reject(error))
     const { initFoldersPage } = await import('../initFolders.js')
     await initFoldersPage()
-
-    expect(mockPrintError).toHaveBeenCalledWith(error, 'Could not initialize folders view.')
+    assert(
+      mockPrintError.mock.calls.some((call) => matches(call.arguments, [error, 'Could not initialize folders view.'])),
+    )
   })
-
   test('removes loading indicator on success', async () => {
-    mockGetEffectiveOptions.mockResolvedValue({})
-    mockGetSearchData.mockResolvedValue({ bookmarks: [] })
-
+    mockGetEffectiveOptions.mock.mockImplementation(() => Promise.resolve({}))
+    mockGetSearchData.mock.mockImplementation(() => Promise.resolve({ bookmarks: [] }))
     const loadingIndicator = document.getElementById('folders-load')
-    expect(loadingIndicator).toBeTruthy()
-
+    assert(!!loadingIndicator)
     const { initFoldersPage } = await import('../initFolders.js')
     await initFoldersPage()
-
-    expect(document.getElementById('folders-load')).toBeNull()
+    assert.strictEqual(document.getElementById('folders-load'), null)
   })
-
   test('removes loading indicator even on error', async () => {
-    mockGetEffectiveOptions.mockRejectedValue(new Error('Test error'))
-
+    mockGetEffectiveOptions.mock.mockImplementation(() => Promise.reject(new Error('Test error')))
     const loadingIndicator = document.getElementById('folders-load')
-    expect(loadingIndicator).toBeTruthy()
-
+    assert(!!loadingIndicator)
     const { initFoldersPage } = await import('../initFolders.js')
     await initFoldersPage()
-
-    expect(document.getElementById('folders-load')).toBeNull()
+    assert.strictEqual(document.getElementById('folders-load'), null)
   })
 })

@@ -1,4 +1,7 @@
-import { jest } from '@jest/globals'
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { afterEach, describe, it, mock } from 'node:test'
+import { any, matches, subset } from '../../../../test/patterns.js'
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
 const { calculateFinalScore } = await import('../scoring.js')
@@ -31,7 +34,6 @@ const baseOpts = {
   historyDaysAgo: 7,
   scoreCustomBonusScore: false,
 }
-
 const baseResult = {
   type: 'bookmark',
   title: 'base title',
@@ -42,7 +44,6 @@ const baseResult = {
   folderArray: [],
   customBonusScore: 0,
 }
-
 function scoreFor({ searchTerm = 'query', opts = {}, result = {} }) {
   createTestExt({
     model: { searchTerm },
@@ -79,19 +80,16 @@ function scoreFor({ searchTerm = 'query', opts = {}, result = {} }) {
   clearTestExt()
   return score
 }
-
 describe('scoring', () => {
   afterEach(() => {
     clearTestExt()
-    jest.restoreAllMocks()
+    mock.restoreAll()
   })
-
   it('applies base scores for each result type', () => {
     createTestExt({
       model: { searchTerm: '' },
       opts: baseOpts,
     })
-
     const results = [
       {
         type: 'bookmark',
@@ -124,26 +122,28 @@ describe('scoring', () => {
       },
       { type: 'direct', title: 'Direct', titleLower: 'direct', url: 'direct.test', searchScore: 1 },
     ]
-
     const scored = calculateFinalScore(results, '')
     const scoreByType = Object.fromEntries(scored.map((item) => [item.type, item.score]))
-
-    expect(scoreByType).toMatchObject({
-      bookmark: expect.any(Number),
-      tab: expect.any(Number),
-      history: expect.any(Number),
-      search: expect.any(Number),
-      customSearch: expect.any(Number),
-      direct: expect.any(Number),
-    })
-    expect(scoreByType.bookmark).toBeCloseTo(100)
-    expect(scoreByType.tab).toBeCloseTo(70)
-    expect(scoreByType.history).toBeCloseTo(45)
-    expect(scoreByType.search).toBeCloseTo(30)
-    expect(scoreByType.customSearch).toBeCloseTo(400)
-    expect(scoreByType.direct).toBeCloseTo(500)
+    assert(
+      matches(
+        scoreByType,
+        subset({
+          bookmark: any(Number),
+          tab: any(Number),
+          history: any(Number),
+          search: any(Number),
+          customSearch: any(Number),
+          direct: any(Number),
+        }),
+      ),
+    )
+    assert(Math.abs(scoreByType.bookmark - 100) < 0.5 * 10 ** -2)
+    assert(Math.abs(scoreByType.tab - 70) < 0.5 * 10 ** -2)
+    assert(Math.abs(scoreByType.history - 45) < 0.5 * 10 ** -2)
+    assert(Math.abs(scoreByType.search - 30) < 0.5 * 10 ** -2)
+    assert(Math.abs(scoreByType.customSearch - 400) < 0.5 * 10 ** -2)
+    assert(Math.abs(scoreByType.direct - 500) < 0.5 * 10 ** -2)
   })
-
   it('uses the searchTerm argument rather than global model state for search bonuses', () => {
     createTestExt({
       model: { searchTerm: '' },
@@ -153,7 +153,6 @@ describe('scoring', () => {
         scoreExactEqualsBonus: 20,
       },
     })
-
     const [scored] = calculateFinalScore(
       [
         {
@@ -164,40 +163,36 @@ describe('scoring', () => {
       ],
       'exact match',
     )
-
-    expect(scored.score).toBe(120)
+    assert.strictEqual(scored.score, 120)
   })
-
   it('throws on unsupported result type', () => {
     createTestExt({
       model: { searchTerm: 'test' },
       opts: baseOpts,
     })
-
-    expect(() =>
-      calculateFinalScore(
-        [
-          {
-            type: 'unsupported',
-            title: 'X',
-            url: 'https://x.test',
-          },
-        ],
-        'test',
-      ),
-    ).toThrow('Search result type "unsupported" not supported')
+    assert.throws(
+      () =>
+        calculateFinalScore(
+          [
+            {
+              type: 'unsupported',
+              title: 'X',
+              url: 'https://x.test',
+            },
+          ],
+          'test',
+        ),
+      new RegExp(RegExp.escape('Search result type "unsupported" not supported')),
+    )
   })
-
   it('applies includes bonus for title matches', () => {
     const score = scoreFor({
       searchTerm: 'alpha',
       opts: { scoreExactIncludesBonus: 5 },
       result: { title: 'alpha value' },
     })
-
-    expect(score).toBeCloseTo(105)
+    assert(Math.abs(score - 105) < 0.5 * 10 ** -2)
   })
-
   it('applies includes bonus for tag matches', () => {
     const score = scoreFor({
       searchTerm: 'taggy',
@@ -208,10 +203,8 @@ describe('scoring', () => {
         tagsArray: ['taggy'],
       },
     })
-
-    expect(score).toBeCloseTo(105)
+    assert(Math.abs(score - 105) < 0.5 * 10 ** -2)
   })
-
   it('applies includes bonus for folder matches', () => {
     const score = scoreFor({
       searchTerm: 'projects',
@@ -222,10 +215,8 @@ describe('scoring', () => {
         folderArray: ['Projects'],
       },
     })
-
-    expect(score).toBeCloseTo(105)
+    assert(Math.abs(score - 105) < 0.5 * 10 ** -2)
   })
-
   it('normalizes url fragments before applying includes bonus', () => {
     const score = scoreFor({
       searchTerm: 'project plan',
@@ -235,10 +226,8 @@ describe('scoring', () => {
         url: 'example.com/project-plan',
       },
     })
-
-    expect(score).toBeCloseTo(110)
+    assert(Math.abs(score - 110) < 0.5 * 10 ** -2)
   })
-
   it('allows numeric tokens shorter than the min character threshold (3 chars)', () => {
     // Note: scoreExactIncludesBonusMinChars is now hard-coded to 3
     const score = scoreFor({
@@ -246,30 +235,24 @@ describe('scoring', () => {
       opts: { scoreExactIncludesBonus: 5 },
       result: { title: 'version 42 release' },
     })
-
-    expect(score).toBeCloseTo(105)
+    assert(Math.abs(score - 105) < 0.5 * 10 ** -2)
   })
-
   it('adds the configured bonus when a bookmark is also an open tab', () => {
     const score = scoreFor({
       searchTerm: '',
       opts: { scoreBookmarkOpenTabBonus: 25 },
       result: { tab: true },
     })
-
-    expect(score).toBeCloseTo(125)
+    assert(Math.abs(score - 125) < 0.5 * 10 ** -2)
   })
-
   it('does not apply open-tab bonus to non-bookmark types', () => {
     const score = scoreFor({
       searchTerm: '',
       opts: { scoreBookmarkOpenTabBonus: 25 },
       result: { type: 'tab', tab: true },
     })
-
-    expect(score).toBeCloseTo(70)
+    assert(Math.abs(score - 70) < 0.5 * 10 ** -2)
   })
-
   it('limits substring bonuses to max cap of 3 (hard-coded)', () => {
     // Note: scoreExactIncludesMaxBonuses is now hard-coded to 3
     // Use 4 terms to verify the cap is applied
@@ -280,29 +263,24 @@ describe('scoring', () => {
     })
 
     // Only 3 bonuses should be applied (capped), not 4: 100 + (5 * 3) = 115
-    expect(score).toBeCloseTo(115)
+    assert(Math.abs(score - 115) < 0.5 * 10 ** -2)
   })
-
   it('adds phrase bonus when the entire query appears in the title', () => {
     const score = scoreFor({
       searchTerm: 'project plan',
       opts: { scoreExactPhraseTitleBonus: 3, scoreExactIncludesBonus: 0 },
       result: { title: 'project plan document' },
     })
-
-    expect(score).toBeCloseTo(103)
+    assert(Math.abs(score - 103) < 0.5 * 10 ** -2)
   })
-
   it('adds phrase bonus when the entire query appears in the url', () => {
     const score = scoreFor({
       searchTerm: 'project plan',
       opts: { scoreExactPhraseUrlBonus: 2, scoreExactIncludesBonus: 0 },
       result: { url: 'https://docs.test/project-plan-overview' },
     })
-
-    expect(score).toBeCloseTo(102)
+    assert(Math.abs(score - 102) < 0.5 * 10 ** -2)
   })
-
   it('does NOT add phrase bonus for single-word searches in title', () => {
     const score = scoreFor({
       searchTerm: 'project',
@@ -311,9 +289,8 @@ describe('scoring', () => {
     })
 
     // Should be base score only (100), no phrase bonus for single word
-    expect(score).toBeCloseTo(100)
+    assert(Math.abs(score - 100) < 0.5 * 10 ** -2)
   })
-
   it('does NOT add phrase bonus for single-word searches in url', () => {
     const score = scoreFor({
       searchTerm: 'project',
@@ -322,9 +299,8 @@ describe('scoring', () => {
     })
 
     // Should be base score only (100), no phrase bonus for single word
-    expect(score).toBeCloseTo(100)
+    assert(Math.abs(score - 100) < 0.5 * 10 ** -2)
   })
-
   it('adds exact tag match bonus when the tag matches a search term', () => {
     const score = scoreFor({
       searchTerm: 'taggy other',
@@ -334,10 +310,8 @@ describe('scoring', () => {
         tagsArray: ['taggy'],
       },
     })
-
-    expect(score).toBeCloseTo(107)
+    assert(Math.abs(score - 107) < 0.5 * 10 ** -2)
   })
-
   it('adds exact folder match bonus when the folder name matches a search term', () => {
     const score = scoreFor({
       searchTerm: 'projects other',
@@ -347,10 +321,8 @@ describe('scoring', () => {
         folderArray: ['Projects'],
       },
     })
-
-    expect(score).toBeCloseTo(106)
+    assert(Math.abs(score - 106) < 0.5 * 10 ** -2)
   })
-
   it('adds starts-with bonus when the title starts with the search term', () => {
     const score = scoreFor({
       searchTerm: 'alpha',
@@ -359,10 +331,8 @@ describe('scoring', () => {
         title: 'alpha project plan',
       },
     })
-
-    expect(score).toBeCloseTo(108)
+    assert(Math.abs(score - 108) < 0.5 * 10 ** -2)
   })
-
   it('adds starts-with bonus when the url starts with the hyphenated search term', () => {
     const score = scoreFor({
       searchTerm: 'alpha beta',
@@ -371,10 +341,8 @@ describe('scoring', () => {
         url: 'alpha-beta.com/path',
       },
     })
-
-    expect(score).toBeCloseTo(108)
+    assert(Math.abs(score - 108) < 0.5 * 10 ** -2)
   })
-
   it('adds exact equals bonus when the title equals the search term', () => {
     const score = scoreFor({
       searchTerm: 'alpha',
@@ -383,10 +351,8 @@ describe('scoring', () => {
         title: 'alpha',
       },
     })
-
-    expect(score).toBeCloseTo(109)
+    assert(Math.abs(score - 109) < 0.5 * 10 ** -2)
   })
-
   it('adds custom bonus score when enabled', () => {
     const score = scoreFor({
       searchTerm: 'alpha',
@@ -395,10 +361,8 @@ describe('scoring', () => {
         customBonusScore: 7,
       },
     })
-
-    expect(score).toBeCloseTo(107)
+    assert(Math.abs(score - 107) < 0.5 * 10 ** -2)
   })
-
   it('adds visited bonus and respects the maximum cap', () => {
     const score = scoreFor({
       searchTerm: 'alpha',
@@ -410,10 +374,8 @@ describe('scoring', () => {
         visitCount: 10,
       },
     })
-
-    expect(score).toBeCloseTo(105)
+    assert(Math.abs(score - 105) < 0.5 * 10 ** -2)
   })
-
   it('adds recent bonus scaled by lastVisitSecondsAgo', () => {
     const score = scoreFor({
       searchTerm: 'alpha',
@@ -425,10 +387,8 @@ describe('scoring', () => {
         lastVisitSecondsAgo: 3600,
       },
     })
-
-    expect(score).toBeCloseTo(119.1666667)
+    assert(Math.abs(score - 119.1666667) < 0.5 * 10 ** -2)
   })
-
   it('adds full recent bonus when lastVisitSecondsAgo is zero', () => {
     const score = scoreFor({
       searchTerm: 'alpha',
@@ -440,10 +400,8 @@ describe('scoring', () => {
         lastVisitSecondsAgo: 0,
       },
     })
-
-    expect(score).toBeCloseTo(120)
+    assert(Math.abs(score - 120) < 0.5 * 10 ** -2)
   })
-
   it('BEHAVIOR: repeated search terms each get exact tag match bonus (intentional)', () => {
     const score = scoreFor({
       searchTerm: 'tag tag tag',
@@ -456,9 +414,8 @@ describe('scoring', () => {
 
     // Each "tag" in the search gets the exact tag match bonus: 100 + (10 * 3) = 130
     // This is intentional - repeated terms indicate higher relevance
-    expect(score).toBeCloseTo(130)
+    assert(Math.abs(score - 130) < 0.5 * 10 ** -2)
   })
-
   it('BUG FIX: normalizes title before startsWith check', () => {
     const score = scoreFor({
       searchTerm: 'alpha',
@@ -469,9 +426,8 @@ describe('scoring', () => {
     })
 
     // Should match even with leading spaces (now fixed with title.trim())
-    expect(score).toBeCloseTo(108)
+    assert(Math.abs(score - 108) < 0.5 * 10 ** -2)
   })
-
   it('OPTIMIZATION: caches normalized tag lookups', () => {
     const score = scoreFor({
       searchTerm: 'tag1 tag2',
@@ -483,15 +439,13 @@ describe('scoring', () => {
     })
 
     // Should match Tag1 without repeated toLowerCase
-    expect(score).toBeCloseTo(105)
+    assert(Math.abs(score - 105) < 0.5 * 10 ** -2)
   })
-
   it('IMPROVEMENT: penalizes results missing all search terms more aggressively', () => {
     const scoreNoMatch = scoreFor({
       searchTerm: 'alpha beta gamma',
       result: { title: 'delta' },
     })
-
     const scoreOneMatch = scoreFor({
       searchTerm: 'alpha beta gamma',
       opts: { scoreExactIncludesBonus: 5 },
@@ -499,10 +453,9 @@ describe('scoring', () => {
     })
 
     // Single match should not score close to base
-    expect(scoreOneMatch).toBeGreaterThan(scoreNoMatch)
-    expect(scoreOneMatch).toBeLessThan(120)
+    assert(scoreOneMatch > scoreNoMatch)
+    assert(scoreOneMatch < 120)
   })
-
   it('IMPROVEMENT: avoids duplicate penalty for multi-source results', () => {
     const score = scoreFor({
       searchTerm: 'test',
@@ -514,9 +467,8 @@ describe('scoring', () => {
     })
 
     // Should not double-count bonuses for duplicates
-    expect(score).toBeLessThan(150)
+    assert(score < 150)
   })
-
   it('IMPROVEMENT: detects exact URL matches in includes check', () => {
     const score = scoreFor({
       searchTerm: 'github.com',
@@ -528,9 +480,8 @@ describe('scoring', () => {
     })
 
     // Should match domain exactly
-    expect(score).toBeGreaterThan(105)
+    assert(score > 105)
   })
-
   it('BEHAVIOR: repeated search terms each get includes bonus (intentional)', () => {
     const score = scoreFor({
       searchTerm: 'test test test',
@@ -540,9 +491,8 @@ describe('scoring', () => {
 
     // Each "test" in the search gets bonus: 100 + (5 * 3) = 115
     // This is intentional - repeated terms indicate higher relevance
-    expect(score).toBeCloseTo(115)
+    assert(Math.abs(score - 115) < 0.5 * 10 ** -2)
   })
-
   it('BEHAVIOR: multiple different terms each get their own includes bonus', () => {
     const score = scoreFor({
       searchTerm: 'alpha beta',
@@ -551,9 +501,8 @@ describe('scoring', () => {
     })
 
     // Both 'alpha' and 'beta' match: 100 + (5 * 2) = 110
-    expect(score).toBeCloseTo(110)
+    assert(Math.abs(score - 110) < 0.5 * 10 ** -2)
   })
-
   it('BUG FIX: normalizes URL in includes check for case-insensitive matching', () => {
     const score = scoreFor({
       searchTerm: 'example',
@@ -565,9 +514,8 @@ describe('scoring', () => {
     })
 
     // Should match despite URL being uppercase
-    expect(score).toBeCloseTo(108)
+    assert(Math.abs(score - 108) < 0.5 * 10 ** -2)
   })
-
   it('BUG FIX: uses lowercase URL in startsWith check', () => {
     const score = scoreFor({
       searchTerm: 'example-path',
@@ -579,9 +527,8 @@ describe('scoring', () => {
     })
 
     // Should match despite URL being uppercase
-    expect(score).toBeCloseTo(110)
+    assert(Math.abs(score - 110) < 0.5 * 10 ** -2)
   })
-
   it('does not apply bonus multiple times when same search term appears in different fields', () => {
     const score = scoreFor({
       searchTerm: 'test',
@@ -594,18 +541,15 @@ describe('scoring', () => {
     })
 
     // Should apply only title bonus (first match), not title + tag bonuses
-    expect(score).toBeCloseTo(105)
+    assert(Math.abs(score - 105) < 0.5 * 10 ** -2)
   })
-
   it('handles empty results gracefully', () => {
     const scoreNoSearchTerm = scoreFor({
       searchTerm: '',
       result: {},
     })
-
-    expect(scoreNoSearchTerm).toBeCloseTo(100)
+    assert(Math.abs(scoreNoSearchTerm - 100) < 0.5 * 10 ** -2)
   })
-
   it('applies includes bonuses in priority order (title > url > tags > folder)', () => {
     // Note: scoreTitleWeight is now hard-coded to 1, but we can still verify
     // that title match takes priority over other fields
@@ -626,9 +570,8 @@ describe('scoring', () => {
     })
 
     // Should apply title weight bonus (5 * 1 = 5 added) since title takes priority
-    expect(scoreWith).toBeCloseTo(105)
+    assert(Math.abs(scoreWith - 105) < 0.5 * 10 ** -2)
   })
-
   describe('Tag scoring scenarios (real-world use cases)', () => {
     it('exact tag match gets both includes bonus (tag weight) and exact tag match bonus', () => {
       const score = scoreFor({
@@ -648,9 +591,8 @@ describe('scoring', () => {
 
       // Base: 100, includes bonus (tag): 5 * 0.7 = 3.5, exact tag match: 10
       // Total: 100 + 3.5 + 10 = 113.5
-      expect(score).toBeCloseTo(113.5)
+      assert(Math.abs(score - 113.5) < 0.5 * 10 ** -2)
     })
-
     it('tag match with title match applies title bonus (higher priority)', () => {
       const score = scoreFor({
         searchTerm: 'javascript',
@@ -670,9 +612,8 @@ describe('scoring', () => {
 
       // Base: 100, includes bonus (title, not tag): 5 * 1 = 5, exact tag match: 10
       // Total: 100 + 5 + 10 = 115
-      expect(score).toBeCloseTo(115)
+      assert(Math.abs(score - 115) < 0.5 * 10 ** -2)
     })
-
     it('compares tag-only match vs title-only match scores', () => {
       const tagOnlyScore = scoreFor({
         searchTerm: 'javascript',
@@ -689,7 +630,6 @@ describe('scoring', () => {
           tagsArray: ['javascript'],
         },
       })
-
       const titleOnlyScore = scoreFor({
         searchTerm: 'javascript',
         opts: {
@@ -709,11 +649,10 @@ describe('scoring', () => {
       // Tag-only: 100 + (5 * 0.7) + 10 = 113.5
       // Title-only: 100 + (5 * 1) = 105
       // Tag-only should score HIGHER due to exact tag match bonus
-      expect(tagOnlyScore).toBeCloseTo(113.5)
-      expect(titleOnlyScore).toBeCloseTo(105)
-      expect(tagOnlyScore).toBeGreaterThan(titleOnlyScore)
+      assert(Math.abs(tagOnlyScore - 113.5) < 0.5 * 10 ** -2)
+      assert(Math.abs(titleOnlyScore - 105) < 0.5 * 10 ** -2)
+      assert(tagOnlyScore > titleOnlyScore)
     })
-
     it('ISSUE: partial tag match (e.g., "java" matching "#javascript") does NOT get exact tag bonus', () => {
       const score = scoreFor({
         searchTerm: 'java',
@@ -733,9 +672,8 @@ describe('scoring', () => {
       // Base: 100, includes bonus (tag): 5 * 0.7 = 3.5
       // NO exact tag match bonus because "java" !== "javascript"
       // Total: 100 + 3.5 = 103.5
-      expect(score).toBeCloseTo(103.5)
+      assert(Math.abs(score - 103.5) < 0.5 * 10 ** -2)
     })
-
     it('BUG: tag includes bonus not applied when only exact tag match is configured', () => {
       const tagMatchScore = scoreFor({
         searchTerm: 'tutorial',
@@ -753,7 +691,6 @@ describe('scoring', () => {
           tagsArray: ['tutorial'],
         },
       })
-
       const titleMatchScore = scoreFor({
         searchTerm: 'tutorial',
         opts: {
@@ -774,11 +711,10 @@ describe('scoring', () => {
       // Tag match should be: 100 + (10 * 0.7 includes bonus) + (10 exact tag bonus) = 117
       // Title match should be: 100 + (10 * 1.0 includes bonus) = 110
       // Tag should win!
-      expect(tagMatchScore).toBeCloseTo(117)
-      expect(titleMatchScore).toBeCloseTo(110)
-      expect(tagMatchScore).toBeGreaterThan(titleMatchScore)
+      assert(Math.abs(tagMatchScore - 117) < 0.5 * 10 ** -2)
+      assert(Math.abs(titleMatchScore - 110) < 0.5 * 10 ** -2)
+      assert(tagMatchScore > titleMatchScore)
     })
-
     it('OBSERVATION: tags need BOTH includes and exact match bonuses to compete with titles', () => {
       // With ONLY includes bonus (no exact tag match bonus)
       const tagNoExactBonus = scoreFor({
@@ -796,7 +732,6 @@ describe('scoring', () => {
           tagsArray: ['react'],
         },
       })
-
       const titleMatch = scoreFor({
         searchTerm: 'react',
         opts: {
@@ -816,12 +751,11 @@ describe('scoring', () => {
       // Tag: 100 + (5 * 0.7) = 103.5
       // Title: 100 + (5 * 1.0) = 105
       // Title WINS when exact tag match bonus is disabled!
-      expect(tagNoExactBonus).toBeCloseTo(103.5)
-      expect(titleMatch).toBeCloseTo(105)
-      expect(titleMatch).toBeGreaterThan(tagNoExactBonus)
+      assert(Math.abs(tagNoExactBonus - 103.5) < 0.5 * 10 ** -2)
+      assert(Math.abs(titleMatch - 105) < 0.5 * 10 ** -2)
+      assert(titleMatch > tagNoExactBonus)
     })
   })
-
   describe('Real-world scoring with ACTUAL default options', () => {
     function scoreWithDefaults({ searchTerm, result }) {
       createTestExt({
@@ -856,7 +790,6 @@ describe('scoring', () => {
       clearTestExt()
       return score
     }
-
     it('validates that tag-only matches remain competitive with defaults', () => {
       const tagOnlyScore = scoreWithDefaults({
         searchTerm: 'javascript',
@@ -871,7 +804,6 @@ describe('scoring', () => {
           searchScore: 1,
         },
       })
-
       const titleOnlyScore = scoreWithDefaults({
         searchTerm: 'javascript',
         result: {
@@ -899,11 +831,10 @@ describe('scoring', () => {
       //
       // Note: No phrase bonus for single-word search "javascript"
       // With default scoreExactTagMatchBonus of 15, tags WIN by 3.5 points
-      expect(tagOnlyScore).toBeCloseTo(118.5)
-      expect(titleOnlyScore).toBeCloseTo(115)
-      expect(tagOnlyScore - titleOnlyScore).toBeCloseTo(3.5)
+      assert(Math.abs(tagOnlyScore - 118.5) < 0.5 * 10 ** -2)
+      assert(Math.abs(titleOnlyScore - 115) < 0.5 * 10 ** -2)
+      assert(Math.abs(tagOnlyScore - titleOnlyScore - 3.5) < 0.5 * 10 ** -2)
     })
-
     it('validates that both title AND tag match scores highest with defaults', () => {
       const bothScore = scoreWithDefaults({
         searchTerm: 'react',
@@ -918,7 +849,6 @@ describe('scoring', () => {
           searchScore: 1,
         },
       })
-
       const tagOnlyScore = scoreWithDefaults({
         searchTerm: 'react',
         result: {
@@ -932,7 +862,6 @@ describe('scoring', () => {
           searchScore: 1,
         },
       })
-
       const titleOnlyScore = scoreWithDefaults({
         searchTerm: 'react',
         result: {
@@ -951,15 +880,14 @@ describe('scoring', () => {
       // Tag-only: 100 + 3.5 (tag includes) + 15 (exact tag) = 118.5
       // Title-only: 100 + 5 (title includes) + 10 (title starts with "React") = 115
       // Note: No phrase bonus for single-word search "react"
-      expect(bothScore).toBeCloseTo(130)
-      expect(tagOnlyScore).toBeCloseTo(118.5)
-      expect(titleOnlyScore).toBeCloseTo(115)
-      expect(bothScore).toBeGreaterThan(tagOnlyScore)
-      expect(bothScore).toBeGreaterThan(titleOnlyScore)
+      assert(Math.abs(bothScore - 130) < 0.5 * 10 ** -2)
+      assert(Math.abs(tagOnlyScore - 118.5) < 0.5 * 10 ** -2)
+      assert(Math.abs(titleOnlyScore - 115) < 0.5 * 10 ** -2)
+      assert(bothScore > tagOnlyScore)
+      assert(bothScore > titleOnlyScore)
       // With default scoreExactTagMatchBonus of 15, tag-only now edges out title-only
-      expect(tagOnlyScore).toBeGreaterThan(titleOnlyScore)
+      assert(tagOnlyScore > titleOnlyScore)
     })
-
     it('validates partial tag matches still get some benefit (includes bonus only)', () => {
       const partialTagScore = scoreWithDefaults({
         searchTerm: 'java',
@@ -979,9 +907,8 @@ describe('scoring', () => {
       // - Gets includes bonus: 5 * 0.7 = 3.5
       // - Does NOT get exact tag match bonus (10) because "java" !== "javascript"
       // Total: 100 + 3.5 = 103.5
-      expect(partialTagScore).toBeCloseTo(103.5)
+      assert(Math.abs(partialTagScore - 103.5) < 0.5 * 10 ** -2)
     })
-
     it('demonstrates how custom bonus score can prioritize important bookmarks', () => {
       const withCustomBonus = scoreWithDefaults({
         searchTerm: 'docs',
@@ -997,7 +924,6 @@ describe('scoring', () => {
           customBonusScore: 50, // User added +50 to title
         },
       })
-
       const withoutCustomBonus = scoreWithDefaults({
         searchTerm: 'docs',
         result: {
@@ -1015,11 +941,10 @@ describe('scoring', () => {
 
       // Both get base 100 + includes 5, but one gets +50 custom bonus
       // Note: No phrase bonus for single-word search "docs"
-      expect(withCustomBonus).toBeCloseTo(155)
-      expect(withoutCustomBonus).toBeCloseTo(105)
-      expect(withCustomBonus - withoutCustomBonus).toBeCloseTo(50)
+      assert(Math.abs(withCustomBonus - 155) < 0.5 * 10 ** -2)
+      assert(Math.abs(withoutCustomBonus - 105) < 0.5 * 10 ** -2)
+      assert(Math.abs(withCustomBonus - withoutCustomBonus - 50) < 0.5 * 10 ** -2)
     })
-
     it('validates that exact title match gets massive bonus with defaults', () => {
       const exactTitleMatch = scoreWithDefaults({
         searchTerm: 'react',
@@ -1034,7 +959,6 @@ describe('scoring', () => {
           searchScore: 1,
         },
       })
-
       const partialTitleMatch = scoreWithDefaults({
         searchTerm: 'react',
         result: {
@@ -1052,11 +976,10 @@ describe('scoring', () => {
       // Exact: 100 + 5 (includes) + 10 (starts with) + 20 (equals) = 135
       // Partial: 100 + 5 (includes) + 10 (starts with "React") = 115
       // Note: No phrase bonus for single-word search "react"
-      expect(exactTitleMatch).toBeCloseTo(135)
-      expect(partialTitleMatch).toBeCloseTo(115)
-      expect(exactTitleMatch - partialTitleMatch).toBeCloseTo(20)
+      assert(Math.abs(exactTitleMatch - 135) < 0.5 * 10 ** -2)
+      assert(Math.abs(partialTitleMatch - 115) < 0.5 * 10 ** -2)
+      assert(Math.abs(exactTitleMatch - partialTitleMatch - 20) < 0.5 * 10 ** -2)
     })
-
     it('confirms scoreExactTagMatchBonus of 15 makes tags competitive', () => {
       // This test validates your change from 10 to 15
       const tagScore = scoreWithDefaults({
@@ -1072,7 +995,6 @@ describe('scoring', () => {
           searchScore: 1,
         },
       })
-
       const titleScore = scoreWithDefaults({
         searchTerm: 'tutorial',
         result: {
@@ -1091,9 +1013,9 @@ describe('scoring', () => {
       // Title: 100 + 5 (includes with 1.0 weight) + 10 (starts with "Tutorial") = 115
       // Note: No phrase bonus for single-word search "tutorial"
       // With default scoreExactTagMatchBonus of 15, tags WIN by 3.5 points!
-      expect(tagScore).toBeCloseTo(118.5)
-      expect(titleScore).toBeCloseTo(115)
-      expect(tagScore - titleScore).toBeCloseTo(3.5)
+      assert(Math.abs(tagScore - 118.5) < 0.5 * 10 ** -2)
+      assert(Math.abs(titleScore - 115) < 0.5 * 10 ** -2)
+      assert(Math.abs(tagScore - titleScore - 3.5) < 0.5 * 10 ** -2)
     })
   })
 })

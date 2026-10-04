@@ -1,4 +1,7 @@
-import { afterEach, describe, expect, jest, test } from '@jest/globals'
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { afterEach, describe, mock, test } from 'node:test'
+import { containsText, matches, subset } from '../../../../test/patterns.js'
 import {
   createLargeLocalAiTagSelectionWarning,
   getLocalAiTagAvailability,
@@ -9,36 +12,36 @@ describe('local AI tag suggestions', () => {
   afterEach(() => {
     delete globalThis.LanguageModel
   })
-
   test('reports unsupported when the browser has no local language model API', async () => {
     delete globalThis.LanguageModel
-
-    await expect(getLocalAiTagAvailability()).resolves.toBe('unsupported')
+    assert.strictEqual(await getLocalAiTagAvailability(), 'unsupported')
   })
-
   test('checks LanguageModel availability with text options', async () => {
-    const availability = jest.fn(() => Promise.resolve('available'))
+    const availability = mock.fn(() => Promise.resolve('available'))
     globalThis.LanguageModel = { availability }
-
-    await expect(getLocalAiTagAvailability()).resolves.toBe('available')
-    expect(availability).toHaveBeenCalledWith({
-      expectedInputs: [{ type: 'text', languages: ['en'] }],
-      expectedOutputs: [{ type: 'text', languages: ['en'] }],
-    })
+    assert.strictEqual(await getLocalAiTagAvailability(), 'available')
+    assert(
+      availability.mock.calls.some((call) =>
+        matches(call.arguments, [
+          {
+            expectedInputs: [{ type: 'text', languages: ['en'] }],
+            expectedOutputs: [{ type: 'text', languages: ['en'] }],
+          },
+        ]),
+      ),
+    )
   })
-
   test('suggests normalized tags from JSON output', async () => {
-    const prompt = jest.fn(() => Promise.resolve('{"tags":["JavaScript", "#Browser AI", "dev/tools"]}'))
-    const destroy = jest.fn()
+    const prompt = mock.fn(() => Promise.resolve('{"tags":["JavaScript", "#Browser AI", "dev/tools"]}'))
+    const destroy = mock.fn()
     globalThis.LanguageModel = {
-      create: jest.fn(() =>
+      create: mock.fn(() =>
         Promise.resolve({
           prompt,
           destroy,
         }),
       ),
     }
-
     const tags = await suggestBookmarkTags(
       [
         {
@@ -57,31 +60,35 @@ describe('local AI tag suggestions', () => {
         { name: 'local-ai', count: 1 },
       ],
     )
-
-    expect(tags).toEqual(['javascript', 'browser-ai', 'devtools'])
-    const promptText = prompt.mock.calls[0][0]
-    expect(promptText).toContain("Their usage counts show the user's conventions")
-    expect(promptText).toContain('chrome (8), ai (5), docs (2), local-ai (1)')
-    expect(promptText).toContain('Treat folder names as context, not tags')
-    expect(promptText).toContain('open tab title: Prompt API reference - Chrome Developers')
-    expect(promptText).toContain('open tab group: Browser APIs')
-    expect(prompt).toHaveBeenCalledWith(expect.stringContaining('Chrome Prompt API'), {
-      responseConstraint: expect.objectContaining({ type: 'object' }),
-    })
-    expect(destroy).toHaveBeenCalled()
+    assert.deepStrictEqual(tags, ['javascript', 'browser-ai', 'devtools'])
+    const promptText = prompt.mock.calls[0].arguments[0]
+    assert(promptText.includes("Their usage counts show the user's conventions"))
+    assert(promptText.includes('chrome (8), ai (5), docs (2), local-ai (1)'))
+    assert(promptText.includes('Treat folder names as context, not tags'))
+    assert(promptText.includes('open tab title: Prompt API reference - Chrome Developers'))
+    assert(promptText.includes('open tab group: Browser APIs'))
+    assert(
+      prompt.mock.calls.some((call) =>
+        matches(call.arguments, [
+          containsText('Chrome Prompt API'),
+          {
+            responseConstraint: subset({ type: 'object' }),
+          },
+        ]),
+      ),
+    )
+    assert(destroy.mock.callCount() > 0)
   })
-
   test('allows no suggestion when the model finds no clear tag', async () => {
-    const prompt = jest.fn(() => Promise.resolve('{"tags":[]}'))
+    const prompt = mock.fn(() => Promise.resolve('{"tags":[]}'))
     globalThis.LanguageModel = {
-      create: jest.fn(() =>
+      create: mock.fn(() =>
         Promise.resolve({
           prompt,
-          destroy: jest.fn(),
+          destroy: mock.fn(),
         }),
       ),
     }
-
     const tags = await suggestBookmarkTags([
       {
         title: 'Untitled',
@@ -90,28 +97,32 @@ describe('local AI tag suggestions', () => {
         tagsArray: [],
       },
     ])
-
-    expect(tags).toEqual([])
-    expect(prompt).toHaveBeenCalledWith(expect.stringContaining('Return {"tags":[]}'), {
-      responseConstraint: expect.objectContaining({
-        properties: expect.objectContaining({
-          tags: expect.objectContaining({ minItems: 0, maxItems: 5 }),
-        }),
-      }),
-    })
+    assert.deepStrictEqual(tags, [])
+    assert(
+      prompt.mock.calls.some((call) =>
+        matches(call.arguments, [
+          containsText('Return {"tags":[]}'),
+          {
+            responseConstraint: subset({
+              properties: subset({
+                tags: subset({ minItems: 0, maxItems: 5 }),
+              }),
+            }),
+          },
+        ]),
+      ),
+    )
   })
-
   test('keeps multi-select suggestions only when each bookmark has evidence', async () => {
-    const prompt = jest.fn(() => Promise.resolve('{"tags":["github","bitwig","dev","own-repos"]}'))
+    const prompt = mock.fn(() => Promise.resolve('{"tags":["github","bitwig","dev","own-repos"]}'))
     globalThis.LanguageModel = {
-      create: jest.fn(() =>
+      create: mock.fn(() =>
         Promise.resolve({
           prompt,
-          destroy: jest.fn(),
+          destroy: mock.fn(),
         }),
       ),
     }
-
     const tags = await suggestBookmarkTags(
       [
         {
@@ -139,34 +150,29 @@ describe('local AI tag suggestions', () => {
         { name: 'bitwig', count: 2 },
       ],
     )
-
-    expect(tags).toEqual(['github'])
-    const promptText = prompt.mock.calls[0][0]
-    expect(promptText).toContain('Only suggest a tag when it clearly applies to EVERY provided bookmark')
-    expect(promptText).toContain('A shared folder alone is not enough evidence for a multi-select tag')
-    expect(promptText).toContain('do not suggest tags that fit only some bookmarks')
+    assert.deepStrictEqual(tags, ['github'])
+    const promptText = prompt.mock.calls[0].arguments[0]
+    assert(promptText.includes('Only suggest a tag when it clearly applies to EVERY provided bookmark'))
+    assert(promptText.includes('A shared folder alone is not enough evidence for a multi-select tag'))
+    assert(promptText.includes('do not suggest tags that fit only some bookmarks'))
   })
-
   test('warns before suggesting tags for large multi-bookmark selections', () => {
     const warning = createLargeLocalAiTagSelectionWarning(21)
-
-    expect(warning).toContain('Suggest tags for 21 selected bookmarks?')
-    expect(warning).toContain('20 or fewer bookmarks')
-    expect(warning).toContain('Only the first 20 bookmarks are included in the prompt')
-    expect(warning).toContain('Cancel and narrow the selection')
+    assert(warning.includes('Suggest tags for 21 selected bookmarks?'))
+    assert(warning.includes('20 or fewer bookmarks'))
+    assert(warning.includes('Only the first 20 bookmarks are included in the prompt'))
+    assert(warning.includes('Cancel and narrow the selection'))
   })
-
   test('uses a broader prompt on second try and keeps inferred common-denominator tags', async () => {
-    const prompt = jest.fn(() => Promise.resolve('{"tags":["Browser Marketplace"]}'))
+    const prompt = mock.fn(() => Promise.resolve('{"tags":["Browser Marketplace"]}'))
     globalThis.LanguageModel = {
-      create: jest.fn(() =>
+      create: mock.fn(() =>
         Promise.resolve({
           prompt,
-          destroy: jest.fn(),
+          destroy: mock.fn(),
         }),
       ),
     }
-
     const tags = await suggestBookmarkTags(
       [
         {
@@ -186,21 +192,19 @@ describe('local AI tag suggestions', () => {
       undefined,
       { liberal: true },
     )
-
-    expect(tags).toEqual(['browser-marketplace'])
-    const promptText = prompt.mock.calls[0][0]
-    expect(promptText).toContain('This is a second try after no tags were suggested')
-    expect(promptText).toContain('common denominator')
-    expect(promptText).toContain('New tags are allowed')
+    assert.deepStrictEqual(tags, ['browser-marketplace'])
+    const promptText = prompt.mock.calls[0].arguments[0]
+    assert(promptText.includes('This is a second try after no tags were suggested'))
+    assert(promptText.includes('common denominator'))
+    assert(promptText.includes('New tags are allowed'))
   })
-
   test('keeps large-selection retry suggestions strict across every selected bookmark', async () => {
-    const prompt = jest.fn(() => Promise.resolve('{"tags":["github"]}'))
+    const prompt = mock.fn(() => Promise.resolve('{"tags":["github"]}'))
     globalThis.LanguageModel = {
-      create: jest.fn(() =>
+      create: mock.fn(() =>
         Promise.resolve({
           prompt,
-          destroy: jest.fn(),
+          destroy: mock.fn(),
         }),
       ),
     }
@@ -219,12 +223,10 @@ describe('local AI tag suggestions', () => {
       folderArray: ['Development'],
       tagsArray: [],
     })
-
     const tags = await suggestBookmarkTags(bookmarks, [], undefined, { liberal: true })
-
-    expect(tags).toEqual([])
-    const promptText = prompt.mock.calls[0][0]
-    expect(promptText).toContain('GitHub Repository 20')
-    expect(promptText).not.toContain('Unrelated Documentation')
+    assert.deepStrictEqual(tags, [])
+    const promptText = prompt.mock.calls[0].arguments[0]
+    assert(promptText.includes('GitHub Repository 20'))
+    assert(!promptText.includes('Unrelated Documentation'))
   })
 })

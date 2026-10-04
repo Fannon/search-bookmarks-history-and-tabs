@@ -67,11 +67,20 @@ For multi-step tasks, state a brief plan:
 
 ## 6. Commands
 
-- Run `npm run lint` for code changes; use `npm run lint:fix` only for fixable issues in touched files.
-- Prefer focused tests before broader suites:
-  - Unit: `npm run test:unit -- path/to/test.js`
-  - E2E: `npx playwright test path/to/test.spec.js --project=chromium`
-- Run `npm run test:unit` for code changes.
-- Run `npm run test:e2e` for UI or behavior changes.
+- Use Node.js 24.21 or newer and the npm version in `packageManager`; install reproducibly with `npm ci`.
+- While editing, prefer focused, read-only feedback:
+  - Files: `npm run lint -- path/to/touched.js` or `npm run lint -- --staged`.
+  - Unit: `npm run test:unit -- path/to/file.test.js` (multiple paths or quoted globs are supported).
+  - Test names: `npm run test:unit -- --test-name-pattern='pattern' path/to/file.test.js`.
+  - E2E: `npx playwright test path/to/test.spec.js --project=chromium` for affected UI or browser behavior.
+- `--changed --since=origin/main` checks committed branch changes only; use explicit file paths while editing unstaged changes.
+- Before handing off code changes, run `npm run check` (read-only Biome formatting, lint, import checks, and all unit tests). This does not build or launch browsers.
+- Changes to search, scoring, rendering, or caching also require `npm run test:perf`. Run affected Chromium E2E tests for UI or behavior changes.
+- Fixes are explicit: `npm run fix -- path/to/touched.js` applies safe Biome fixes and import organization; `npm run format -- path/to/touched.js` only formats. Review the diff. Never add `--unsafe` or restage files automatically.
+- Write unit tests with `node:test`, `node:assert/strict`, and native mocks. Popup tests needing the DOM import `test/setup.js`; use `resetModules` from `test/modules.js` only when a bootstrap test needs fresh ESM imports. Tests in `bin/` use Node directly.
+- There is no TypeScript configuration or typecheck command. Biome checks JavaScript; assertions verify behavior.
+- Git commits do not run repository hooks. Validation is explicit, and CI is the authoritative gate.
+- For older checkouts with installed Lefthook hooks, run `npx --yes lefthook@2.1.16 uninstall` once. Do not install replacement hooks.
+- Full coverage (`npm run test:unit:coverage`), complete Chromium/Firefox E2E suites, and production builds run in CI. Run them locally when investigating a relevant failure; do not add them to Git hooks or the fast `check` command.
 - Run `npm run size` for dependency, bundling, shared utility, or significant code-size changes.
 - Run `npm run build` only when explicitly requested or for release work.

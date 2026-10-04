@@ -3,7 +3,7 @@
 /**
  * @file Aggregates and prints a summary of performance benchmark results.
  *
- * This script parses outputs from Jest and Playwright performance tests,
+ * This script parses outputs from Node and Playwright performance tests,
  * generates a formatted Markdown summary, and checks for performance regressions
  * against established baselines.
  */
@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const jestLog = 'reports/jest_output.txt'
+const unitLog = 'reports/unit_output.txt'
 const playwrightLog = 'reports/playwright_output.txt'
 const summaryFile = 'reports/perf-summary.md'
 const baselinesFile = path.join(__dirname, 'perf-baselines.json')
@@ -32,7 +32,7 @@ function parseMs(str) {
  * Check performance results against baselines
  * @returns {Object} { passed: boolean, failures: Array<{test, actual, baseline, threshold}> }
  */
-function checkRegressions(jestResults, playwrightResults) {
+function checkRegressions(unitResults, playwrightResults) {
   if (!fs.existsSync(baselinesFile)) {
     console.log('⚠️  No baselines file found, skipping regression check')
     return { passed: true, failures: [] }
@@ -42,14 +42,14 @@ function checkRegressions(jestResults, playwrightResults) {
   const tolerance = baselines.toleranceMultiplier || 2.0
   const failures = []
 
-  // Check Jest results
-  for (const [testName, actualMs] of Object.entries(jestResults)) {
-    const baselineMs = baselines.baselines?.jest?.[testName]
+  // Check Node results
+  for (const [testName, actualMs] of Object.entries(unitResults)) {
+    const baselineMs = baselines.baselines?.unit?.[testName]
     if (baselineMs != null && actualMs != null) {
       const threshold = baselineMs * tolerance
       if (actualMs > threshold) {
         failures.push({
-          test: `[Jest] ${testName}`,
+          test: `[Node] ${testName}`,
           actual: actualMs,
           baseline: baselineMs,
           threshold,
@@ -79,7 +79,7 @@ function checkRegressions(jestResults, playwrightResults) {
 
 function generateSummary() {
   const lines = []
-  const jestResults = {}
+  const unitResults = {}
   const playwrightResults = {}
 
   lines.push('# Performance Benchmark Summary')
@@ -87,9 +87,9 @@ function generateSummary() {
 
   fs.mkdirSync('./reports', { recursive: true })
 
-  // 1. Parse Jest output into sections
-  if (fs.existsSync(jestLog)) {
-    const content = fs.readFileSync(jestLog, 'utf-8')
+  // 1. Parse Node output into sections
+  if (fs.existsSync(unitLog)) {
+    const content = fs.readFileSync(unitLog, 'utf-8')
     const contentLines = content.split('\n')
 
     // Parse sections based on headers
@@ -107,9 +107,9 @@ function generateSummary() {
     }
 
     let currentSection = null
-    const recordJestTiming = (key, value) => {
+    const recordNodeTiming = (key, value) => {
       const ms = parseMs(value)
-      if (ms != null) jestResults[key] = ms
+      if (ms != null) unitResults[key] = ms
     }
 
     for (const line of contentLines) {
@@ -140,8 +140,8 @@ function generateSummary() {
           .filter((p) => p !== '')
         if (parts.length === 3) {
           sections.coldStart.rows.push(parts)
-          recordJestTiming(`${parts[0]} Precise`, parts[1])
-          recordJestTiming(`${parts[0]} Fuzzy`, parts[2])
+          recordNodeTiming(`${parts[0]} Precise`, parts[1])
+          recordNodeTiming(`${parts[0]} Fuzzy`, parts[2])
         }
       } else if (currentSection && line.includes('|') && line.includes('ms')) {
         // Parse table row
@@ -156,21 +156,21 @@ function generateSummary() {
           // Extract timing for regression check
           const scenario = parts[0]
           if (['dataLoading', 'scoring', 'conversionShape', 'searchOptions'].includes(currentSection)) {
-            recordJestTiming(`${currentSection} ${scenario}`, parts[1])
+            recordNodeTiming(`${currentSection} ${scenario}`, parts[1])
           } else if (['singleQuery', 'incremental'].includes(currentSection)) {
-            recordJestTiming(`${scenario} Precise`, parts[1])
-            recordJestTiming(`${scenario} Fuzzy`, parts[2])
+            recordNodeTiming(`${scenario} Precise`, parts[1])
+            recordNodeTiming(`${scenario} Fuzzy`, parts[2])
           } else if (currentSection === 'realisticBoundary') {
-            recordJestTiming(`${currentSection} ${scenario} Conversion`, parts[1])
-            recordJestTiming(`${currentSection} ${scenario} Precise Broad`, parts[2])
-            recordJestTiming(`${currentSection} ${scenario} Precise Selective`, parts[3])
-            recordJestTiming(`${currentSection} ${scenario} Scoring 1k`, parts[4])
+            recordNodeTiming(`${currentSection} ${scenario} Conversion`, parts[1])
+            recordNodeTiming(`${currentSection} ${scenario} Precise Broad`, parts[2])
+            recordNodeTiming(`${currentSection} ${scenario} Precise Selective`, parts[3])
+            recordNodeTiming(`${currentSection} ${scenario} Scoring 1k`, parts[4])
           } else if (currentSection === 'startupStage') {
-            recordJestTiming(`${currentSection} ${scenario} Total`, parts[1])
-            recordJestTiming(`${currentSection} ${scenario} API Wall`, parts[2])
-            recordJestTiming(`${currentSection} ${scenario} Post-API Work`, parts[3])
+            recordNodeTiming(`${currentSection} ${scenario} Total`, parts[1])
+            recordNodeTiming(`${currentSection} ${scenario} API Wall`, parts[2])
+            recordNodeTiming(`${currentSection} ${scenario} Post-API Work`, parts[3])
           } else if (currentSection === 'defaultResults') {
-            recordJestTiming(`${currentSection} ${scenario}`, parts[1])
+            recordNodeTiming(`${currentSection} ${scenario}`, parts[1])
           }
         }
       }
@@ -263,7 +263,7 @@ function generateSummary() {
 
           // Extract timing for regression check
           const ms = parseMs(timeStr)
-          if (ms != null) jestResults[testName] = ms
+          if (ms != null) unitResults[testName] = ms
         }
       }
 
@@ -324,7 +324,7 @@ function generateSummary() {
   }
 
   // 4. Check for performance regressions
-  const { passed, failures } = checkRegressions(jestResults, playwrightResults)
+  const { passed, failures } = checkRegressions(unitResults, playwrightResults)
 
   if (failures.length > 0) {
     lines.push('## ⚠️ Performance Regressions Detected')

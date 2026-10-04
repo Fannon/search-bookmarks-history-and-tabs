@@ -47,6 +47,6 @@ jobs:
         with:
           name: performance-logs
           path: |
-            reports/jest_output.txt
+            reports/unit_output.txt
             reports/playwright_output.txt
           retention-days: 30
