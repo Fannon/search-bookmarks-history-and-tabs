@@ -44,6 +44,14 @@ describe('bookmark manager render helpers', () => {
     expect(renderBookmarkTitle({ title: '<Unsafe>', originalUrl: 'javascript:alert(1)' })).toBe('&lt;Unsafe&gt;')
   })
 
+  test('escapes accessible link labels and keeps unsafe URLs unlinked', () => {
+    const bookmark = { title: '↗', originalUrl: 'https://example.test' }
+    expect(renderBookmarkTitle(bookmark, 'Open "Docs" <Guide>')).toContain(
+      'aria-label="Open &quot;Docs&quot; &lt;Guide&gt;"',
+    )
+    expect(renderBookmarkTitle({ ...bookmark, originalUrl: 'javascript:alert(1)' }, 'Open')).toBe('↗')
+  })
+
   test('renders folder, tag, date, icon, and number helpers', () => {
     expect(renderFolderBadge([])).toContain('~Root')
     expect(renderFolderBadge(['Bookmarks', 'Docs'], 'active')).toContain('folder active')

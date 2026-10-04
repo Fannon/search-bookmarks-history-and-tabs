@@ -1,31 +1,31 @@
 @charset "utf-8";
 
 :root {
-  --bg: #eee;
-  --fg: #898989;
-  --a: #4494c9;
+  --bg: #f0f2f3;
+  --fg: #626b74;
+  --a: #2875aa;
   --code-bg: #d5d5d5;
   --code-fg: #676767;
   --input-bg: #fff;
   --input-border: #ccc;
   --input-fg: #333;
   --li-bg: #fff;
-  --li-sel: #dadada;
+  --li-sel: #e5f1f0;
   --li-title: #333;
   --footer-bg: #f8f9fa;
   --footer-border: #dee2e6;
   --nav-fg: #6c757d;
   --nav-hover: #e9ecef;
-  --nav-active-fg: #007bff;
-  --nav-active-bg: #f1f3f5;
-  --counter: #888;
-  --bookmark-color: #3c8d8d;
+  --nav-active-fg: #287575;
+  --nav-active-bg: #e5f1f0;
+  --counter: #626b74;
+  --bookmark-color: #327b7b;
   --tab-color: #b89aff;
   --history-color: #9ece2f;
   --badge-tag: #557292;
   --badge-folder: #3c8d8d;
-  --badge-date: #bb8c26;
-  --danger: #d9534f;
+  --badge-date: #886519;
+  --danger: #bc3d38;
   --success: #2f7d32;
   --panel-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
@@ -50,7 +50,7 @@ body {
   background: var(--bg);
   color: var(--fg);
   padding: 0;
-  font-size: 1.1em;
+  font-size: 15px;
   line-height: 1.5;
   font-family: "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 }
@@ -74,28 +74,29 @@ button {
 }
 
 .manager-header {
-  min-height: 56px;
-  padding: 9px 22px 10px;
+  min-height: 112px;
+  padding: 16px max(24px, calc((100vw - 1520px) / 2 + 24px)) 0;
   background: var(--input-bg);
-  border-bottom: 1px solid #7d7d7d;
+  border-bottom: 1px solid var(--footer-border);
   color: var(--input-fg);
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px 18px;
+  gap: 16px;
 }
 
 .manager-header h1 {
   color: var(--input-fg);
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.15;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .manager-title-row {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
   flex-wrap: wrap;
   white-space: nowrap;
 }
@@ -112,11 +113,11 @@ button {
   padding: 0 8px;
   height: 22px;
   border-radius: 999px;
-  background: #f7c948;
-  color: #1f1f1f;
+  background: var(--nav-active-bg);
+  color: var(--nav-active-fg);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
@@ -157,16 +158,16 @@ button {
 }
 
 .button {
-  min-height: 30px;
+  min-height: 36px;
   border-radius: 4px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
   line-height: normal;
-  padding: 3px 12px 5px;
+  padding: 7px 12px;
   font-size: 14px;
-  border: none;
+  border: 1px solid transparent;
   background: var(--bookmark-color);
   color: #fff;
   cursor: pointer;
@@ -197,8 +198,9 @@ button {
 }
 
 .button.secondary {
-  background: #747474;
-  color: #fff;
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--li-title);
 }
 
 .button.danger {
@@ -236,11 +238,13 @@ button {
 
 .manager-tabs {
   min-width: 0;
+  grid-column: 1 / -1;
+  grid-row: 2;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 4px;
-  font-size: 13px;
+  gap: 20px;
+  font-size: 14px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -250,12 +254,12 @@ button {
 }
 
 .manager-tabs a {
-  min-height: 32px;
+  min-height: 42px;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 0 9px;
+  padding: 0 4px;
   gap: 6px;
   color: var(--nav-fg);
   text-align: center;
@@ -270,20 +274,21 @@ button {
 
 .manager-tabs a.active {
   color: var(--nav-active-fg);
-  background: var(--nav-active-bg);
+  background: transparent;
+  font-weight: 600;
   box-shadow: inset 0 -2px 0 0 var(--nav-active-fg);
 }
 
 .manager-tabs strong {
   min-width: 18px;
-  height: 15px;
+  height: 20px;
   border-radius: 3px;
   background: var(--danger);
   color: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 0 4px;
 }
@@ -307,7 +312,7 @@ button {
 
 .manager-content {
   min-width: 0;
-  padding: 18px 22px 28px 18px;
+  padding: 28px 24px 40px;
 }
 
 .manager-panel {
@@ -320,7 +325,7 @@ button {
 
 .bookmarks-workspace {
   display: grid;
-  grid-template-columns: minmax(210px, 260px) minmax(0, 1fr);
+  grid-template-columns: 210px minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
@@ -328,16 +333,18 @@ button {
 .bookmark-tree-panel {
   position: sticky;
   top: 14px;
-  max-height: calc(100vh - 104px);
+  max-height: calc(100dvh - 28px);
   overflow: auto;
   background: var(--footer-bg);
   border: 1px solid var(--footer-border);
   border-radius: 4px;
-  padding: 10px;
+  padding: 14px 8px;
   box-shadow: var(--panel-shadow);
 }
 
 .manager-panel-header.compact h2 {
+  font-size: 16px;
+  padding-inline: 7px;
   margin-top: 0;
   margin-bottom: 6px;
 }
@@ -405,7 +412,7 @@ button {
 
 .bookmark-browser-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+  grid-template-columns: minmax(0, 1fr) 310px;
   gap: 16px;
   align-items: start;
 }
@@ -427,9 +434,9 @@ button {
 
 .folder-tree-button {
   width: 100%;
-  min-height: 30px;
+  min-height: 36px;
   border: none;
-  border-radius: 0;
+  border-radius: 3px;
   background: transparent;
   color: var(--nav-fg);
   padding: 4px 7px 5px calc(7px + var(--folder-depth, 0) * 14px);
@@ -468,7 +475,7 @@ button {
 
 .managed-bookmark {
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr);
+  grid-template-columns: 24px minmax(0, 1fr) auto;
   align-items: center;
   gap: 9px;
   cursor: pointer;
@@ -487,7 +494,8 @@ button {
 }
 
 .managed-bookmark.current {
-  background-color: var(--li-sel) !important;
+  background-color: var(--li-sel);
+  border-left-color: var(--bookmark-color);
 }
 
 .managed-bookmark.disabled {
@@ -514,6 +522,8 @@ button {
 }
 
 .bookmark-edit-panel {
+  max-height: calc(100dvh - 28px);
+  overflow-y: auto;
   position: sticky;
   top: 14px;
   display: grid;
@@ -524,9 +534,9 @@ button {
   background: var(--li-bg);
   border: 1px solid var(--footer-border);
   border-radius: 4px;
-  padding: 12px;
+  padding: 16px;
   display: grid;
-  gap: 9px;
+  gap: 12px;
   box-shadow: var(--panel-shadow);
 }
 
@@ -554,7 +564,7 @@ button {
 }
 
 .bookmark-tools-panel .field-description {
-  margin-top: -4px;
+  margin-top: 0;
   min-height: 0;
 }
 
@@ -574,7 +584,7 @@ button {
 }
 
 .tag-suggestion-status {
-  min-height: 16px;
+  min-height: 0;
   color: var(--counter);
   font-size: 12px;
   line-height: 1.2;
@@ -717,6 +727,7 @@ button {
 }
 
 .option-body {
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   display: grid;
   gap: 5px;
@@ -1047,31 +1058,22 @@ button {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.stat,
-.overview-grid section,
-.manager-panel > section,
-.duplicate-toolbar,
-.duplicate-group {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
 }
 
 .stat {
   display: block;
   background-color: var(--li-bg);
   margin: 0;
-  padding: 9px 10px 10px;
+  padding: 16px 14px;
   border-radius: 4px;
   overflow: hidden;
   border-left: 4px solid #747474;
-  box-shadow: var(--panel-shadow);
+  border-top: 1px solid var(--footer-border);
+  border-right: 1px solid var(--footer-border);
+  border-bottom: 1px solid var(--footer-border);
 }
 
 .stat-bookmark {
@@ -1114,29 +1116,38 @@ button {
 
 .stat-value {
   color: var(--li-title);
-  font-size: 22px;
+  font-size: 30px;
+  font-variant-numeric: tabular-nums;
   line-height: 1.25;
-  font-weight: 400;
-  margin-top: 2px;
+  font-weight: 600;
+  margin-top: 8px;
   overflow-wrap: anywhere;
 }
 
 .stat-detail {
   font-size: 12px;
   line-height: 1.25;
-  margin-top: 1px;
+  margin-top: 6px;
 }
 
 .overview-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 16px;
+  gap: 20px;
+  margin-bottom: 28px;
 }
 
-.overview-grid section,
-.manager-panel > section {
-  padding: 0;
+.overview-grid section {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--footer-border);
+  background: var(--li-bg);
+  border-radius: 6px;
+}
+
+.overview-grid h2 {
+  margin: 0 0 12px;
+  font-size: 17px;
 }
 
 h2 {
@@ -1173,10 +1184,11 @@ h3 {
 }
 
 .rank-list li {
-  min-height: 32px;
+  min-height: 36px;
   background-color: var(--li-bg);
-  margin: 0 0 1px;
-  padding: 3px 8px 4px;
+  margin: 0;
+  border-bottom: 1px solid var(--footer-border);
+  padding: 6px 0;
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -1219,7 +1231,7 @@ h3 {
 }
 
 .bookmark-list li {
-  padding: 5px 8px 6px;
+  padding: 10px 12px;
 }
 
 .recent-bookmark-list li {
@@ -1241,7 +1253,7 @@ h3 {
 .bookmark-title,
 .title {
   color: var(--li-title);
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.4;
   font-weight: 400;
   overflow-wrap: anywhere;
@@ -1589,17 +1601,18 @@ h3 {
 }
 
 .manager-panel-header {
-  margin: 0 0 10px;
+  margin: 0 0 22px;
 }
 
 .manager-panel-header h2 {
   margin-top: 0;
-  font-size: 24px;
+  font-size: 26px;
+  font-weight: 600;
 }
 
 .manager-panel-header p {
   color: var(--fg);
-  max-width: 980px;
+  max-width: 76ch;
   font-size: 15px;
   line-height: 1.45;
 }
@@ -1608,8 +1621,9 @@ h3 {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  align-items: center;
-  margin-bottom: 10px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
   padding: 0;
 }
 
@@ -1709,7 +1723,7 @@ h3 {
 
 .tag-toolbar input {
   width: min(420px, 100%);
-  height: 34px;
+  height: 38px;
   border: 1px solid var(--input-border);
   border-radius: 4px;
   background: var(--input-bg);
@@ -1897,11 +1911,158 @@ h3 {
   background: #999;
 }
 
-@media (max-width: 980px) {
-  .manager-header {
-    grid-template-columns: minmax(220px, 1fr) auto;
+.manager-mark {
+  width: 26px;
+  height: 26px;
+  color: var(--bookmark-color);
+  flex-shrink: 0;
+}
+
+.manager-header > .manager-actions {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+:focus-visible {
+  outline: 2px solid var(--a);
+  outline-offset: 3px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.tagify:focus-within {
+  outline: 2px solid var(--a);
+  outline-offset: 1px;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--bookmark-color);
+}
+
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  padding: 8px 12px;
+  background: var(--input-bg);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.overview-page-header,
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.section-heading h2 {
+  margin: 0;
+}
+
+.section-heading {
+  margin-bottom: 12px;
+}
+
+.backup-guidance {
+  margin-top: 24px;
+  font-size: 13px;
+}
+
+.backup-guidance summary {
+  color: var(--li-title);
+  cursor: pointer;
+}
+
+.managed-bookmark-edit {
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--li-title);
+  font: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.managed-bookmark-edit:hover {
+  color: var(--a);
+}
+
+.managed-bookmark-open a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+}
+
+.bookmark-meta .badge {
+  top: 0;
+  margin-block: 3px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bookmark-edit-fields,
+.bookmark-target-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.bookmark-target-actions {
+  border-top: 1px solid var(--footer-border);
+  padding-top: 12px;
+}
+
+.inspector-empty {
+  padding: 12px 0;
+}
+
+.inspector-empty p + p {
+  margin-top: 12px;
+}
+
+.bookmark-tools-panel [hidden] {
+  display: none;
+}
+
+.cleanup-step-heading {
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .managed-bookmark {
+    transition: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .bookmark-browser-grid {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+
+  .bookmarks-workspace {
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 980px) {
   .manager-tabs {
     grid-column: 1 / -1;
     justify-content: flex-start;
@@ -1919,15 +2080,17 @@ h3 {
     grid-template-columns: 1fr;
   }
 
-  .bookmarks-workspace,
   .bookmark-browser-grid {
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+
+  .bookmarks-workspace {
     grid-template-columns: 1fr;
   }
 
-  .bookmark-tree-panel,
-  .bookmark-edit-panel {
+  .bookmark-tree-panel {
     position: static;
-    max-height: none;
+    max-height: 180px;
   }
 }
 
@@ -1940,6 +2103,23 @@ h3 {
 
   .manager-header {
     grid-template-columns: 1fr;
+    padding: 16px 16px 0;
+  }
+
+  .manager-header > .manager-actions {
+    grid-column: 1;
+    grid-row: 2;
+    justify-content: flex-start;
+  }
+
+  .manager-tabs {
+    grid-row: 3;
+    gap: 12px;
+  }
+
+  .overview-page-header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .manager-actions,
@@ -1968,27 +2148,50 @@ h3 {
   }
 
   .manager-content {
-    padding: 6px;
+    padding: 20px 16px 32px;
   }
 
   .bookmark-browser-toolbar {
     grid-template-columns: 1fr;
   }
 
+  .bookmark-browser-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .managed-bookmark-list {
+    max-height: 50dvh;
+    overflow-y: auto;
+  }
+
+  .bookmark-edit-panel {
+    position: static;
+    max-height: none;
+  }
+
   .managed-bookmark {
-    grid-template-columns: 24px minmax(0, 1fr);
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    gap: 6px;
   }
 
   .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 4px;
-    margin-bottom: 4px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 20px;
   }
 
   .overview-grid {
     grid-template-columns: 1fr;
-    gap: 4px;
-    margin-bottom: 4px;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .duplicate-header {
+    flex-direction: column;
+  }
+
+  .duplicate-header .text-button {
+    align-self: flex-start;
   }
 
   .duplicate-bookmark {
@@ -2016,6 +2219,11 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  .option-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
   .search-engine-choice-item,
   .custom-search-engine-item {
     grid-template-columns: 1fr;
@@ -2037,7 +2245,11 @@ h3 {
 
 @media (prefers-color-scheme: dark) {
   :root {
+    color-scheme: dark;
     --bg: #222;
+    --fg: #b1b8bf;
+    --bookmark-color: #3c8d8d;
+    --danger: #d9534f;
     --a: #f1f1f1;
     --code-bg: #404040;
     --code-fg: #9d9d9d;
@@ -2045,7 +2257,7 @@ h3 {
     --input-border: #444;
     --input-fg: #ddd;
     --li-bg: #111;
-    --li-sel: #333;
+    --li-sel: #233a3a;
     --li-title: #e7e7e7;
     --footer-bg: #1a1a1a;
     --footer-border: #333;
@@ -2053,7 +2265,7 @@ h3 {
     --nav-hover: #2d2d2d;
     --nav-active-fg: #4dabf7;
     --nav-active-bg: #3c3d40;
-    --counter: #666;
+    --counter: #b1b8bf;
   }
 
   ::-webkit-scrollbar-track {

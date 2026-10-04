@@ -32,12 +32,13 @@ export function renderBookmarkListItem(bookmark) {
   `
 }
 
-export function renderBookmarkTitle(bookmark) {
+export function renderBookmarkTitle(bookmark, linkLabel = '') {
   const title = bookmark.title || bookmark.originalUrl || bookmark.url
   const url = bookmark.originalUrl || bookmark.url
 
   if (isSafeLinkUrl(url)) {
-    return `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(title)}</a>`
+    const labelAttribute = linkLabel ? ` aria-label="${escapeHtml(linkLabel)}"` : ''
+    return `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer"${labelAttribute}>${escapeHtml(title)}</a>`
   }
 
   return escapeHtml(title)
