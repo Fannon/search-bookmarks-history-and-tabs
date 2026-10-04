@@ -62,6 +62,8 @@ Please review the guidelines below before submitting changes.
 - `npm run analyze` - Run code analysis helper (`bin/analyze-code.js`).
 - `npm run size` - Report bundle sizes after a build.
 
+If an older checkout still has installed Lefthook hooks, remove them once with `npx --yes lefthook@2.1.16 uninstall`. New installations do not install Git hooks.
+
 Source maps are available in `popup/js/` and the CI build artifact for debugging. Store ZIPs include runtime assets and omit source maps and test fixtures.
 
 See also: [AGENTS.md](./AGENTS.md) for architecture overview, verify loops, and performance guidelines.

@@ -80,6 +80,7 @@ For multi-step tasks, state a brief plan:
 - Write unit tests with `node:test`, `node:assert/strict`, and native mocks. Popup tests needing the DOM import `test/setup.js`; use `resetModules` from `test/modules.js` only when a bootstrap test needs fresh ESM imports. Tests in `bin/` use Node directly.
 - There is no TypeScript configuration or typecheck command. Biome checks JavaScript; assertions verify behavior.
 - Git commits do not run repository hooks. Validation is explicit, and CI is the authoritative gate.
+- For older checkouts with installed Lefthook hooks, run `npx --yes lefthook@2.1.16 uninstall` once. Do not install replacement hooks.
 - Full coverage (`npm run test:unit:coverage`), complete Chromium/Firefox E2E suites, and production builds run in CI. Run them locally when investigating a relevant failure; do not add them to Git hooks or the fast `check` command.
 - Run `npm run size` for dependency, bundling, shared utility, or significant code-size changes.
 - Run `npm run build` only when explicitly requested or for release work.
