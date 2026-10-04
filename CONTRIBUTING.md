@@ -91,6 +91,7 @@ npm ci
 - Run native Node.js unit tests: `npm run test` or `npm run test:unit`. Scope to a file with `npm run test:unit -- path/to/module.test.js` or filter names with `--test-name-pattern=pattern`.
 - Tests use `node:test`, `node:assert/strict`, and native mocks. Popup tests needing the DOM import `test/setup.js` for jsdom; Node-only build tests do not need it. ESM module mocking currently requires Node's experimental module-mock flag, supplied by the test command.
 - Collect coverage when needed: `npm run test:unit:coverage -- path/to/module.test.js` (LCOV in `reports/unit-test-coverage/`).
+- Bootstrap tests reset ESM modules using URL revisions. Native coverage lists those revisions separately, including repeated `SF` entries in LCOV; the overall percentage counts repeated source lines and is not comparable to Jest. Inspect uncovered lines across all records for a file before deciding it needs tests.
 - Run `npm run check` before handing off code changes. There are no automatic Git hooks or mutation/restaging during commits. CI additionally validates coverage, production builds, performance, and the full Chromium/Firefox browser suite.
 - Run Playwright end-to-end specs: `npm run test:e2e`. Browser-specific runners exist (`test:e2e:chromium`, `test:e2e:firefox`, `test:e2e:edge`).
 

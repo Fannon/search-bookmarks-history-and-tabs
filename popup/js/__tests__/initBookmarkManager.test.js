@@ -3,7 +3,6 @@ import assert from 'node:assert/strict'
 import { afterEach, beforeEach, describe, mock, test } from 'node:test'
 import { resetModules } from '../../../test/modules.js'
 import { containsText, matches, subset } from '../../../test/patterns.js'
-import { clearBookmarkUndoSnapshots } from '../model/bookmarkManagerUndo.js'
 import { clearTestExt, flushPromises } from './testUtils.js'
 
 const BOOKMARKS = [
@@ -127,10 +126,13 @@ function setupDom() {
 describe('initBookmarkManager cleanup apply', () => {
   let ext
   let updateBookmark
+  let undo
+  let printError
   beforeEach(async () => {
     resetModules()
     clearTestExt()
-    clearBookmarkUndoSnapshots()
+    undo = await import('../model/bookmarkManagerUndo.js')
+    undo.clearBookmarkUndoSnapshots()
     setupDom()
     window.HTMLElement.prototype.scrollIntoView = mock.fn()
     global.CSS = { escape: (value) => String(value) }
@@ -193,10 +195,11 @@ describe('initBookmarkManager cleanup apply', () => {
         ),
       },
     })
+    printError = mock.fn()
     mock.module(new URL('../view/errorView.js', import.meta.url), {
       exports: {
         closeErrors: mock.fn(),
-        printError: mock.fn(),
+        printError,
       },
     })
     await import('../initBookmarkManager.js')
@@ -205,8 +208,85 @@ describe('initBookmarkManager cleanup apply', () => {
   })
   afterEach(() => {
     delete globalThis.LanguageModel
-    clearBookmarkUndoSnapshots()
+    undo.clearBookmarkUndoSnapshots()
     clearTestExt()
+  })
+  async function applyOneCleanupChange(type = 'addTags') {
+    const change = { id: 'change-1', bookmarkId: 'bookmark-1' }
+    if (type === 'addTags') change.tags = ['docs']
+    if (type === 'deleteBookmarks') change.duplicateOfBookmarkId = 'bookmark-2'
+    const proposalInput = document.getElementById('cleanup-proposal-json')
+    proposalInput.value = JSON.stringify({ changes: { [type]: [change] } })
+    proposalInput.dispatchEvent(new Event('input'))
+    await new Promise((resolve) => setTimeout(resolve, 220))
+    document.getElementById('apply-all-cleanup-changes').click()
+    await flushPromises()
+    await flushPromises()
+  }
+  test('cancelling cleanup leaves bookmarks and undo history untouched', async () => {
+    window.confirm = mock.fn(() => false)
+    await applyOneCleanupChange()
+    assert.strictEqual(window.confirm.mock.callCount(), 1)
+    assert.strictEqual(ext.browserApi.bookmarks.get.mock.callCount(), 0)
+    assert.strictEqual(updateBookmark.mock.callCount(), 0)
+    assert.deepStrictEqual(undo.getBookmarkUndoSnapshots(), [])
+    assert.strictEqual(ext.model.bookmarkCleanupAppliedChangeIds?.size || 0, 0)
+  })
+  test('undo restores the previous title, URL, folder and position before removing its snapshot', async () => {
+    await applyOneCleanupChange()
+    assert.strictEqual(undo.getBookmarkUndoSnapshots().length, 1)
+    assert.deepStrictEqual(updateBookmark.mock.calls[0].arguments, ['bookmark-1', { title: 'First Bookmark #docs' }])
+    document.getElementById('undo-bookmark-change').click()
+    await flushPromises()
+    await flushPromises()
+    assert.deepStrictEqual(updateBookmark.mock.calls[1].arguments, [
+      'bookmark-1',
+      { title: 'First Bookmark', url: 'https://example.com/first' },
+    ])
+    assert.deepStrictEqual(ext.browserApi.bookmarks.move.mock.calls[0].arguments, [
+      'bookmark-1',
+      { parentId: 'folder-1', index: 0 },
+    ])
+    assert.deepStrictEqual(undo.getBookmarkUndoSnapshots(), [])
+    assert.strictEqual(document.getElementById('undo-bookmark-change').disabled, true)
+    assert.strictEqual(printError.mock.callCount(), 0)
+  })
+  test('undo recreates a deleted bookmark with its original folder and position', async () => {
+    ext.model.bookmarkManager.bookmarks[1].originalUrl = BOOKMARKS[0].originalUrl
+    ext.model.bookmarkManager.bookmarks[1].url = BOOKMARKS[0].url
+    await applyOneCleanupChange('deleteBookmarks')
+    assert.deepStrictEqual(ext.browserApi.bookmarks.remove.mock.calls[0].arguments, ['bookmark-1'])
+    assert.strictEqual(undo.getBookmarkUndoSnapshots().length, 1)
+    ext.browserApi.bookmarks.get.mock.mockImplementation(() => Promise.resolve([]))
+    document.getElementById('undo-bookmark-change').click()
+    await flushPromises()
+    await flushPromises()
+    assert.deepStrictEqual(ext.browserApi.bookmarks.create.mock.calls[0].arguments, [
+      { title: 'First Bookmark', url: 'https://example.com/first', parentId: 'folder-1', index: 0 },
+    ])
+    assert.strictEqual(updateBookmark.mock.callCount(), 0)
+    assert.deepStrictEqual(undo.getBookmarkUndoSnapshots(), [])
+    assert.strictEqual(printError.mock.callCount(), 0)
+  })
+  test('failed undo keeps its snapshot available for a successful retry', async () => {
+    await applyOneCleanupChange()
+    const [snapshot] = undo.getBookmarkUndoSnapshots()
+    const error = new Error('simulated move failure')
+    ext.browserApi.bookmarks.move.mock.mockImplementation(() => Promise.reject(error))
+    document.getElementById('undo-bookmark-change').click()
+    await flushPromises()
+    await flushPromises()
+    assert.deepStrictEqual(undo.getBookmarkUndoSnapshots(), [snapshot])
+    assert.strictEqual(document.getElementById('manager-status').textContent, 'Undo failed')
+    assert.strictEqual(document.getElementById('undo-bookmark-change').disabled, false)
+    assert.deepStrictEqual(printError.mock.calls[0].arguments, [error, 'Could not restore bookmark undo snapshot.'])
+    ext.browserApi.bookmarks.move.mock.mockImplementation(() => Promise.resolve())
+    document.getElementById('undo-bookmark-change').click()
+    await flushPromises()
+    await flushPromises()
+    assert.strictEqual(ext.browserApi.bookmarks.move.mock.callCount(), 2)
+    assert.deepStrictEqual(undo.getBookmarkUndoSnapshots(), [])
+    assert.strictEqual(document.getElementById('manager-status').textContent, `Undid: ${snapshot.description}`)
   })
   test('keeps failed cleanup changes pending and reports partial success', async () => {
     const proposal = {
