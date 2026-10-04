@@ -6,7 +6,7 @@
   "type": "module",
   "packageManager": "npm@12.2.0",
   "engines": {
-    "node": ">=24",
+    "node": ">=24.21.0",
     "npm": ">=12"
   },
   "dependencies": {
@@ -16,17 +16,13 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
-    "@jest/globals": "^30.5.2",
     "@playwright/test": "^1.63.0",
     "archiver": "^8.0.0",
     "chokidar": "^5.0.0",
     "esbuild": "^0.28.2",
-    "jest": "^30.5.2",
-    "jest-environment-jsdom": "^30.5.2",
-    "lefthook": "^2.1.16"
+    "jsdom": "^26.1.0"
   },
   "scripts": {
-    "prepare": "lefthook install",
     "clean": "node bin/clean.js",
     "build": "npm run clean && npm run build:update-libs && npm run build:bundle && npm run build:update-manifests && npm run build:create-dist && npm run size && npm run build:sync-dev-dist",
     "build:bundle": "node bin/bundle.js",
@@ -42,23 +38,24 @@
     "test:e2e:chromium": "playwright test --project=chromium",
     "test:e2e:firefox": "playwright test --project=firefox",
     "test:e2e:edge": "playwright test --project=edge",
-    "test:unit": "node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js",
-    "test:unit:watch": "node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js --watch",
-    "test:unit:coverage": "node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js --coverage",
-    "test:perf": "mkdir -p reports && npm run test:perf:unit > reports/jest_output.txt 2>&1 && : > reports/playwright_output.txt && node bin/perf-summary.js",
-    "test:perf:unit": "npm run test:unit -- popup/js/__tests__/performance.test.js popup/js/__tests__/comparison.test.js",
+    "test:unit": "node bin/test.js",
+    "test:unit:watch": "node bin/test.js --watch",
+    "test:unit:coverage": "node bin/test.js --coverage",
+    "test:perf": "mkdir -p reports && npm run test:perf:unit > reports/unit_output.txt 2>&1 && : > reports/playwright_output.txt && node bin/perf-summary.js",
+    "test:perf:unit": "npm run test:unit -- --test-concurrency=1 popup/js/__tests__/performance.test.js popup/js/__tests__/comparison.test.js",
     "test:perf:e2e": "npx playwright test playwright/tests/performance.spec.js --project=chromium --workers=1",
-    "test:perf:full": "mkdir -p reports && npm run test:perf:unit > reports/jest_output.txt 2>&1 && npm run test:perf:e2e > reports/playwright_output.txt 2>&1 && node bin/perf-summary.js",
+    "test:perf:full": "mkdir -p reports && npm run test:perf:unit > reports/unit_output.txt 2>&1 && npm run test:perf:e2e > reports/playwright_output.txt 2>&1 && node bin/perf-summary.js",
     "test:ci": "npm run lint && npm run test:unit && npm run test:e2e",
-    "lint": "biome check --error-on-warnings .",
-    "lint:fix": "biome check --write .",
-    "format": "biome format . --write",
-    "format:check": "biome format .",
+    "lint": "biome check --error-on-warnings",
+    "format": "biome format --write",
+    "format:check": "biome format",
     "start": "node bin/serveStatic.js popup 8080",
     "start:dist": "node bin/serveStatic.js dist/chrome/popup 8080",
     "size": "node bin/size.js",
     "analyze": "node bin/analyze-code.js",
-    "watch": "node bin/watch.js"
+    "watch": "node bin/watch.js",
+    "fix": "biome check --write --error-on-warnings",
+    "check": "npm run lint && npm run test:unit"
   },
   "repository": {
     "type": "git",

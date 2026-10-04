@@ -1,5 +1,6 @@
-import { describe, expect, test } from '@jest/globals'
-
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { describe, test } from 'node:test'
 import {
   ensureManagerTagControls,
   getManagerTagControlValues,
@@ -24,62 +25,48 @@ function createExt() {
     model: {},
   }
 }
-
 describe('bookmark manager tag controls', () => {
   test('normalizes comma, hash, whitespace, and duplicate tag values', () => {
-    expect(normalizeManagerTagValues([' #Docs ', 'docs', 'Project   Notes', '', '#Read'])).toEqual([
+    assert.deepStrictEqual(normalizeManagerTagValues([' #Docs ', 'docs', 'Project   Notes', '', '#Read']), [
       'docs',
       'project-notes',
       'read',
     ])
   })
-
   test('reads and writes plain fallback inputs without Tagify', () => {
     const ext = createExt()
     ext.dom.manager.bulkTagsInput.value = '#Docs, Project  Notes, docs'
-
-    expect(getManagerTagControlValues(ext, 'bulk')).toEqual(['docs', 'project-notes'])
-
+    assert.deepStrictEqual(getManagerTagControlValues(ext, 'bulk'), ['docs', 'project-notes'])
     setManagerTagControlValues(ext, 'edit', ['Docs', 'Read'])
-
-    expect(ext.dom.manager.bookmarkEditTags.value).toBe('Docs, Read')
+    assert.strictEqual(ext.dom.manager.bookmarkEditTags.value, 'Docs, Read')
   })
-
   test('toggles native input and Tagify disabled states together', () => {
     const ext = createExt()
     const disabledCalls = []
     ext.managerEditTagify = {
       setDisabled: (disabled) => disabledCalls.push(disabled),
     }
-
     setManagerTagControlDisabled(ext, 'edit', true)
     setManagerTagControlDisabled(ext, 'edit', false)
-
-    expect(disabledCalls).toEqual([true, false])
-    expect(ext.dom.manager.bookmarkEditTags.disabled).toBe(false)
+    assert.deepStrictEqual(disabledCalls, [true, false])
+    assert.strictEqual(ext.dom.manager.bookmarkEditTags.disabled, false)
   })
-
   test('normalizes Tagify display values with the persisted tag rules', () => {
     const ext = createExt()
     const createdTagifyOptions = []
     const originalTagify = globalThis.Tagify
-
     globalThis.Tagify = function Tagify(_input, options) {
       createdTagifyOptions.push(options)
       this.whitelist = options.whitelist
     }
-
     try {
       ext.model.bookmarkManager = {
         tagGroups: [{ name: 'docs' }],
       }
-
       ensureManagerTagControls(ext)
-
       const tagData = { value: ' #Project   Docs/AI ' }
       createdTagifyOptions[0].transformTag(tagData)
-
-      expect(tagData.value).toBe('project-docsai')
+      assert.strictEqual(tagData.value, 'project-docsai')
     } finally {
       globalThis.Tagify = originalTagify
     }

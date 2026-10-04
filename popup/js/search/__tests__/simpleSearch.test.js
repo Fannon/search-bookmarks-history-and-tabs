@@ -1,10 +1,12 @@
-import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { afterEach, beforeEach, describe, test } from 'node:test'
+import { containsItems, matches } from '../../../../test/patterns.js'
 import { createBookmarksTestData, createHistoryTestData, createTabsTestData } from '../../__tests__/testUtils.js'
 import { resetSimpleSearchState, simpleSearch } from '../simpleSearch.js'
 
 describe('simpleSearch', () => {
   let model
-
   beforeEach(() => {
     resetSimpleSearchState()
     model = {
@@ -13,11 +15,9 @@ describe('simpleSearch', () => {
       history: [],
     }
   })
-
   afterEach(() => {
     resetSimpleSearchState()
   })
-
   test('returns exact matches for bookmarks mode', () => {
     model.bookmarks = createBookmarksTestData([
       {
@@ -26,16 +26,13 @@ describe('simpleSearch', () => {
         url: 'https://example.com/test',
       },
     ])
-
     const results = simpleSearch('bookmarks', 'test', model)
-
-    expect(results).toHaveLength(1)
-    expect(results[0]).toMatchObject({
+    assert.strictEqual(results.length, 1)
+    assert.partialDeepStrictEqual(results[0], {
       originalId: 'bookmark-1',
       searchApproach: 'precise',
     })
   })
-
   test('returns exact matches for tabs mode', () => {
     model.tabs = createTabsTestData([
       {
@@ -44,16 +41,13 @@ describe('simpleSearch', () => {
         url: 'https://example.com/tab',
       },
     ])
-
     const results = simpleSearch('tabs', 'test', model)
-
-    expect(results).toHaveLength(1)
-    expect(results[0]).toMatchObject({
+    assert.strictEqual(results.length, 1)
+    assert.partialDeepStrictEqual(results[0], {
       originalId: 'tab-1',
       searchApproach: 'precise',
     })
   })
-
   test('returns exact matches for history mode', () => {
     model.history = createHistoryTestData([
       {
@@ -62,30 +56,24 @@ describe('simpleSearch', () => {
         url: 'https://example.com/history',
       },
     ])
-
     const results = simpleSearch('history', 'test', model)
-
-    expect(results).toHaveLength(1)
-    expect(results[0]).toMatchObject({
+    assert.strictEqual(results.length, 1)
+    assert.partialDeepStrictEqual(results[0], {
       originalId: 'history-1',
       searchApproach: 'precise',
     })
   })
-
   test('filters out non-matching items', () => {
     model.bookmarks = createBookmarksTestData([
       { id: 'bookmark-1', title: 'Learn JavaScript', url: 'https://javascript.info' },
       { id: 'bookmark-2', title: 'Learn Python', url: 'https://python.org' },
     ])
-
     const results = simpleSearch('bookmarks', 'learn javascript', model)
-
-    expect(results).toHaveLength(1)
-    expect(results[0]).toMatchObject({
+    assert.strictEqual(results.length, 1)
+    assert.partialDeepStrictEqual(results[0], {
       originalId: 'bookmark-1',
     })
   })
-
   test('case insensitive matching', () => {
     model.bookmarks = createBookmarksTestData([
       {
@@ -94,13 +82,10 @@ describe('simpleSearch', () => {
         url: 'https://example.com/test',
       },
     ])
-
     const results = simpleSearch('bookmarks', 'test', model)
-
-    expect(results).toHaveLength(1)
-    expect(results[0].originalId).toBe('bookmark-1')
+    assert.strictEqual(results.length, 1)
+    assert.strictEqual(results[0].originalId, 'bookmark-1')
   })
-
   test('requires all search terms to match (AND logic)', () => {
     model.bookmarks = createBookmarksTestData([
       {
@@ -112,10 +97,8 @@ describe('simpleSearch', () => {
 
     // "learn" matches, "python" does not
     const results = simpleSearch('bookmarks', 'learn python', model)
-
-    expect(results).toHaveLength(0)
+    assert.strictEqual(results.length, 0)
   })
-
   test('aggregates tab and history entries when searching in history mode', () => {
     model.tabs = createTabsTestData([
       {
@@ -131,18 +114,15 @@ describe('simpleSearch', () => {
         url: 'https://example.com',
       },
     ])
-
     const results = simpleSearch('history', 'example entry', model)
-
-    expect(results).toHaveLength(2)
-    expect(results[0]).toMatchObject({
+    assert.strictEqual(results.length, 2)
+    assert.partialDeepStrictEqual(results[0], {
       originalId: 'tab-1',
     })
-    expect(results[1]).toMatchObject({
+    assert.partialDeepStrictEqual(results[1], {
       originalId: 'history-1',
     })
   })
-
   test('returns empty array when no matches found', () => {
     model.bookmarks = createBookmarksTestData([
       {
@@ -151,18 +131,13 @@ describe('simpleSearch', () => {
         url: 'https://example.com',
       },
     ])
-
     const results = simpleSearch('bookmarks', 'nonexistent', model)
-
-    expect(results).toHaveLength(0)
+    assert.strictEqual(results.length, 0)
   })
-
   test('returns empty array for unknown search mode', () => {
     const results = simpleSearch('search', 'test', model)
-
-    expect(results).toHaveLength(0)
+    assert.strictEqual(results.length, 0)
   })
-
   test('searches all targets for "unknown" mode (fallback to all)', () => {
     model.bookmarks = createBookmarksTestData([
       { id: 'bookmark-1', title: 'javascript', url: 'https://example.com/bm' },
@@ -171,13 +146,15 @@ describe('simpleSearch', () => {
     model.history = createHistoryTestData([
       { id: 'history-1', title: 'javascript', url: 'https://example.com/history' },
     ])
-
     const results = simpleSearch('unknown', 'javascript', model)
-
-    expect(results).toHaveLength(3)
-    expect(results.map((r) => r.originalId)).toEqual(expect.arrayContaining(['bookmark-1', 'tab-1', 'history-1']))
+    assert.strictEqual(results.length, 3)
+    assert(
+      matches(
+        results.map((r) => r.originalId),
+        containsItems(['bookmark-1', 'tab-1', 'history-1']),
+      ),
+    )
   })
-
   describe('Performance optimizations', () => {
     test('pre-calculates lower case search string when data is loaded', () => {
       model.bookmarks = createBookmarksTestData([
@@ -187,14 +164,11 @@ describe('simpleSearch', () => {
           url: 'https://example.com',
         },
       ])
-
       const results = simpleSearch('bookmarks', 'test', model)
-
-      expect(results).toHaveLength(1)
+      assert.strictEqual(results.length, 1)
       // The conversion process precomputes searchStringLower for performance
-      expect(model.bookmarks[0].searchStringLower).toBe('test¦example.com')
+      assert.strictEqual(model.bookmarks[0].searchStringLower, 'test¦example.com')
     })
-
     test('uses internal cache for efficient repeated searches', () => {
       model.bookmarks = createBookmarksTestData([
         {
@@ -206,16 +180,15 @@ describe('simpleSearch', () => {
 
       // First search should set up cache
       const results1 = simpleSearch('bookmarks', 'test', model)
-      expect(results1).toHaveLength(1)
+      assert.strictEqual(results1.length, 1)
 
       // Second search with extension of term should use cache (progressive filtering)
       // Note: "https://" is stripped, so searching for "test example" instead
       const results2 = simpleSearch('bookmarks', 'test example', model)
-      expect(results2).toHaveLength(1)
-      expect(results2[0].originalId).toBe('bookmark-1')
+      assert.strictEqual(results2.length, 1)
+      assert.strictEqual(results2[0].originalId, 'bookmark-1')
     })
   })
-
   describe('Edge cases', () => {
     test('handles empty search term', () => {
       model.bookmarks = createBookmarksTestData([
@@ -225,12 +198,9 @@ describe('simpleSearch', () => {
           url: 'https://example.com',
         },
       ])
-
       const results = simpleSearch('bookmarks', '', model)
-
-      expect(results).toHaveLength(0)
+      assert.strictEqual(results.length, 0)
     })
-
     test('handles whitespace only search term', () => {
       model.bookmarks = createBookmarksTestData([
         {
@@ -239,21 +209,15 @@ describe('simpleSearch', () => {
           url: 'https://example.com',
         },
       ])
-
       const results = simpleSearch('bookmarks', '   ', model)
-
-      expect(results).toHaveLength(0)
+      assert.strictEqual(results.length, 0)
     })
-
     test('handles null/undefined data gracefully', () => {
       delete model.bookmarks
-
       const results = simpleSearch('bookmarks', 'test', model)
-
-      expect(results).toHaveLength(0)
+      assert.strictEqual(results.length, 0)
     })
   })
-
   describe('Caching behavior', () => {
     test('caches results for progressive searching', () => {
       model.bookmarks = createBookmarksTestData([
@@ -266,13 +230,12 @@ describe('simpleSearch', () => {
 
       // First search should prepare and cache data
       const results1 = simpleSearch('bookmarks', 'learn', model)
-      expect(results1).toHaveLength(1)
+      assert.strictEqual(results1.length, 1)
 
       // Second search should use cached data
       const results2 = simpleSearch('bookmarks', 'javascript', model)
-      expect(results2).toHaveLength(1)
+      assert.strictEqual(results2.length, 1)
     })
-
     test('invalidates cache when search term does not start with previous term', () => {
       model.bookmarks = createBookmarksTestData([
         { id: 'bookmark-1', title: 'learn javascript', url: 'https://example.com/1' },
@@ -281,14 +244,13 @@ describe('simpleSearch', () => {
 
       // Search for "learn" first
       const results1 = simpleSearch('bookmarks', 'learn', model)
-      expect(results1).toHaveLength(1)
+      assert.strictEqual(results1.length, 1)
 
       // Search for "python" - should invalidate cache since "python" doesn't start with "learn"
       const results2 = simpleSearch('bookmarks', 'python', model)
-      expect(results2).toHaveLength(1)
-      expect(results2[0].originalId).toBe('bookmark-2')
+      assert.strictEqual(results2.length, 1)
+      assert.strictEqual(results2[0].originalId, 'bookmark-2')
     })
-
     test('uses cache when search term extends previous term', () => {
       model.bookmarks = createBookmarksTestData([
         { id: 'bookmark-1', title: 'learn javascript', url: 'https://example.com/1' },
@@ -297,22 +259,20 @@ describe('simpleSearch', () => {
 
       // Search for "learn" first
       const results1 = simpleSearch('bookmarks', 'learn', model)
-      expect(results1).toHaveLength(2)
+      assert.strictEqual(results1.length, 2)
 
       // Search for "learn javascript" - should use cached data since it extends "learn"
       const results2 = simpleSearch('bookmarks', 'learn javascript', model)
-      expect(results2).toHaveLength(1)
-      expect(results2[0].originalId).toBe('bookmark-1')
+      assert.strictEqual(results2.length, 1)
+      assert.strictEqual(results2[0].originalId, 'bookmark-1')
     })
-
     test('resets cache when data changes (simulated by resetSimpleSearchState)', () => {
       model.bookmarks = createBookmarksTestData([
         { id: 'bookmark-3', title: 'learn reading', url: 'https://example.com/3' },
         { id: 'bookmark-4', title: 'learn cooking', url: 'https://example.com/4' },
       ])
-
       const initialResults = simpleSearch('bookmarks', 'learn', model)
-      expect(initialResults).toHaveLength(2)
+      assert.strictEqual(initialResults.length, 2)
 
       // Simulate data change by modifying model and resetting state
       model.bookmarks = createBookmarksTestData([
@@ -323,29 +283,23 @@ describe('simpleSearch', () => {
         },
       ])
       resetSimpleSearchState('bookmarks')
-
       const refreshedResults = simpleSearch('bookmarks', 'learn cooking', model)
-      expect(refreshedResults).toHaveLength(1)
-      expect(refreshedResults[0].originalId).toBe('bookmark-4')
+      assert.strictEqual(refreshedResults.length, 1)
+      assert.strictEqual(refreshedResults[0].originalId, 'bookmark-4')
     })
-
     test('rebuilds cached tab haystacks after tab data is mutated in place', () => {
       model.tabs = createTabsTestData([
         { id: 'tab-1', title: 'Alpha tab', url: 'https://alpha.test' },
         { id: 'tab-2', title: 'Beta tab', url: 'https://beta.test' },
       ])
-
       const initialResults = simpleSearch('tabs', 'beta', model)
-      expect(initialResults).toHaveLength(1)
-      expect(initialResults[0].originalId).toBe('tab-2')
-
+      assert.strictEqual(initialResults.length, 1)
+      assert.strictEqual(initialResults[0].originalId, 'tab-2')
       model.tabs.splice(0, 1)
-
       const refreshedResults = simpleSearch('tabs', 'beta', model)
-      expect(refreshedResults).toHaveLength(1)
-      expect(refreshedResults[0].originalId).toBe('tab-2')
+      assert.strictEqual(refreshedResults.length, 1)
+      assert.strictEqual(refreshedResults[0].originalId, 'tab-2')
     })
-
     test('maintains separate caches for different modes', () => {
       model.bookmarks = createBookmarksTestData([
         { id: 'bookmark-1', title: 'javascript', url: 'https://example.com/bm' },
@@ -361,21 +315,19 @@ describe('simpleSearch', () => {
 
       // Tabs state should remain intact
       const tabResults = simpleSearch('tabs', 'javascript', model)
-      expect(tabResults).toHaveLength(1)
+      assert.strictEqual(tabResults.length, 1)
 
       // Bookmarks should have fresh state
       const bookmarkResults = simpleSearch('bookmarks', 'javascript', model)
-      expect(bookmarkResults).toHaveLength(1)
+      assert.strictEqual(bookmarkResults.length, 1)
     })
   })
-
   describe('Error handling', () => {
     test('handles empty data arrays gracefully', () => {
       model.bookmarks = []
       const results = simpleSearch('bookmarks', 'javascript', model)
-      expect(results).toHaveLength(0)
+      assert.strictEqual(results.length, 0)
     })
-
     test('reduces cached data progressively during multi-term search', () => {
       model.bookmarks = createBookmarksTestData([
         { id: '1', title: 'learn javascript web', url: 'https://example.com/1' },
@@ -387,11 +339,10 @@ describe('simpleSearch', () => {
       const results = simpleSearch('bookmarks', 'learn javascript web', model)
 
       // Should find entries that contain ALL terms
-      expect(results).toHaveLength(1)
-      expect(results[0].originalId).toBe('1')
+      assert.strictEqual(results.length, 1)
+      assert.strictEqual(results[0].originalId, '1')
     })
   })
-
   describe('Result immutability', () => {
     test('does not mutate original data entries when adding highlights', () => {
       model.bookmarks = createBookmarksTestData([
@@ -401,13 +352,10 @@ describe('simpleSearch', () => {
           url: 'https://reactjs.org',
         },
       ])
-
       simpleSearch('bookmarks', 'react', model)
-
-      expect(model.bookmarks[0].highlightedTitle).toBeUndefined()
-      expect(model.bookmarks[0].highlightedUrl).toBeUndefined()
+      assert.strictEqual(model.bookmarks[0].highlightedTitle, undefined)
+      assert.strictEqual(model.bookmarks[0].highlightedUrl, undefined)
     })
-
     test('returns new result objects, not references to originals', () => {
       model.bookmarks = createBookmarksTestData([
         {
@@ -416,38 +364,30 @@ describe('simpleSearch', () => {
           url: 'https://reactjs.org',
         },
       ])
-
       const results = simpleSearch('bookmarks', 'react', model)
-
-      expect(results[0]).not.toBe(model.bookmarks[0])
+      assert.notStrictEqual(results[0], model.bookmarks[0])
       results[0].customField = 'test'
-      expect(model.bookmarks[0].customField).toBeUndefined()
+      assert.strictEqual(model.bookmarks[0].customField, undefined)
     })
-
     test('returns new objects even on cache hits', () => {
       model.bookmarks = createBookmarksTestData([{ id: '1', title: 'test', url: 'https://test.com' }])
-
       const results1 = simpleSearch('bookmarks', 'test', model)
       const results2 = simpleSearch('bookmarks', 'test', model)
-
-      expect(results1).not.toBe(results2)
-      expect(results1[0]).not.toBe(results2[0])
-      expect(results1[0]).not.toBe(model.bookmarks[0])
-      expect(results2[0]).not.toBe(model.bookmarks[0])
+      assert.notStrictEqual(results1, results2)
+      assert.notStrictEqual(results1[0], results2[0])
+      assert.notStrictEqual(results1[0], model.bookmarks[0])
+      assert.notStrictEqual(results2[0], model.bookmarks[0])
     })
   })
-
   describe('Optimization edge cases', () => {
     test('skips unchanged leading terms during incremental multi-word searches', () => {
       let includesCalls = 0
-
       const createSearchString = (matchingTerms) => ({
         includes(term) {
           includesCalls++
           return matchingTerms.includes(term)
         },
       })
-
       model.bookmarks = [
         {
           type: 'bookmark',
@@ -474,17 +414,13 @@ describe('simpleSearch', () => {
           searchStringLower: createSearchString(['beta']),
         },
       ]
-
       simpleSearch('bookmarks', 'alpha', model)
       includesCalls = 0
-
       const results = simpleSearch('bookmarks', 'alpha beta', model)
-
-      expect(results).toHaveLength(1)
-      expect(results[0].originalId).toBe('1')
-      expect(includesCalls).toBe(2)
+      assert.strictEqual(results.length, 1)
+      assert.strictEqual(results[0].originalId, '1')
+      assert.strictEqual(includesCalls, 2)
     })
-
     test('progressive search from "abc" to "abc def" works correctly', () => {
       model.bookmarks = createBookmarksTestData([
         { id: '1', title: 'abc def ghi', url: 'url1' },
@@ -493,40 +429,33 @@ describe('simpleSearch', () => {
 
       // Step 1: "abc"
       const results1 = simpleSearch('bookmarks', 'abc', model)
-      expect(results1).toHaveLength(2)
+      assert.strictEqual(results1.length, 2)
 
       // Step 2: "abc def" - should use optimized path and only return 1
       const results2 = simpleSearch('bookmarks', 'abc def', model)
-      expect(results2).toHaveLength(1)
-      expect(results2[0].originalId).toBe('1')
+      assert.strictEqual(results2.length, 1)
+      assert.strictEqual(results2[0].originalId, '1')
     })
-
     test('backtracking search from "abc def" to "abc" works correctly', () => {
       model.bookmarks = createBookmarksTestData([
         { id: '1', title: 'abc def ghi', url: 'url1' },
         { id: '2', title: 'abc xyz', url: 'url2' },
       ])
-
       simpleSearch('bookmarks', 'abc def', model)
       const results = simpleSearch('bookmarks', 'abc', model)
-
-      expect(results).toHaveLength(2)
-      expect(results.map((r) => r.originalId)).toContain('1')
-      expect(results.map((r) => r.originalId)).toContain('2')
+      assert.strictEqual(results.length, 2)
+      assert(results.map((r) => r.originalId).includes('1'))
+      assert(results.map((r) => r.originalId).includes('2'))
     })
-
     test('backtracking from "abcd" to "abc" handles idxs correctly', () => {
       model.bookmarks = createBookmarksTestData([
         { id: '1', title: 'abcd', url: 'u1' },
         { id: '2', title: 'abc', url: 'u2' },
       ])
-
       simpleSearch('bookmarks', 'abcd', model)
       const results = simpleSearch('bookmarks', 'abc', model)
-
-      expect(results).toHaveLength(2)
+      assert.strictEqual(results.length, 2)
     })
-
     test('handling identical searches with different spaces', () => {
       model.bookmarks = createBookmarksTestData([{ id: '1', title: 'abc def', url: 'u1' }])
 
@@ -534,12 +463,10 @@ describe('simpleSearch', () => {
       // But if someone called simpleSearch directly with multiple spaces:
       const results1 = simpleSearch('bookmarks', 'abc  def', model)
       const results2 = simpleSearch('bookmarks', 'abc def', model)
-
-      expect(results1).toHaveLength(1)
-      expect(results2).toHaveLength(1)
-      expect(results1).not.toBe(results2)
+      assert.strictEqual(results1.length, 1)
+      assert.strictEqual(results2.length, 1)
+      assert.notStrictEqual(results1, results2)
     })
-
     test('incremental single-character appending uses cached indices', () => {
       model.bookmarks = createBookmarksTestData([
         { id: '1', title: 'resource manager', url: 'u1' },
@@ -549,19 +476,18 @@ describe('simpleSearch', () => {
 
       // Type "res" -> matches 2 items
       const res1 = simpleSearch('bookmarks', 'res', model)
-      expect(res1).toHaveLength(2)
+      assert.strictEqual(res1.length, 2)
 
       // Type "reso" -> should filter from previous 2 items, not all 3
       const res2 = simpleSearch('bookmarks', 'reso', model)
-      expect(res2).toHaveLength(1)
-      expect(res2[0].originalId).toBe('1')
+      assert.strictEqual(res2.length, 1)
+      assert.strictEqual(res2[0].originalId, '1')
 
       // Type "resou" -> should filter from previous 1 item
       const res3 = simpleSearch('bookmarks', 'resou', model)
-      expect(res3).toHaveLength(1)
-      expect(res3[0].originalId).toBe('1')
+      assert.strictEqual(res3.length, 1)
+      assert.strictEqual(res3[0].originalId, '1')
     })
-
     test('incremental two-character appending uses cached indices', () => {
       model.bookmarks = createBookmarksTestData([
         { id: '1', title: 'resource manager', url: 'u1' },
@@ -571,13 +497,12 @@ describe('simpleSearch', () => {
 
       // Type "r" -> matches all 3
       const res1 = simpleSearch('bookmarks', 'r', model)
-      expect(res1).toHaveLength(3)
+      assert.strictEqual(res1.length, 3)
 
       // Type "res" (appending 2 chars) -> should filter down to 2
       const res2 = simpleSearch('bookmarks', 'res', model)
-      expect(res2).toHaveLength(2)
+      assert.strictEqual(res2.length, 2)
     })
-
     test('cache invalidation when character is removed (backspace)', () => {
       model.bookmarks = createBookmarksTestData([
         { id: '1', title: 'resource manager', url: 'u1' },
@@ -587,14 +512,13 @@ describe('simpleSearch', () => {
 
       // Type "reso" -> matches 1 item
       const res1 = simpleSearch('bookmarks', 'reso', model)
-      expect(res1).toHaveLength(1)
-      expect(res1[0].originalId).toBe('1')
+      assert.strictEqual(res1.length, 1)
+      assert.strictEqual(res1[0].originalId, '1')
 
       // Backspace to "res" -> cache must be invalidated, should match 2 items
       const res2 = simpleSearch('bookmarks', 'res', model)
-      expect(res2).toHaveLength(2)
+      assert.strictEqual(res2.length, 2)
     })
-
     test('cache invalidation when character is changed', () => {
       model.bookmarks = createBookmarksTestData([
         { id: '1', title: 'resource manager', url: 'u1' },
@@ -604,12 +528,12 @@ describe('simpleSearch', () => {
 
       // Type "res" -> matches 2 items
       const res1 = simpleSearch('bookmarks', 'res', model)
-      expect(res1).toHaveLength(2)
+      assert.strictEqual(res1.length, 2)
 
       // Change to "rea" -> cache invalidated (not a prefix extension)
       const res2 = simpleSearch('bookmarks', 'rea', model)
-      expect(res2).toHaveLength(1)
-      expect(res2[0].originalId).toBe('3')
+      assert.strictEqual(res2.length, 1)
+      assert.strictEqual(res2[0].originalId, '3')
     })
   })
 })

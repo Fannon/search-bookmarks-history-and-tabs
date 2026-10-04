@@ -1,5 +1,6 @@
-import { describe, expect, test } from '@jest/globals'
-
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { describe, test } from 'node:test'
 import { createBookmarkExportFilename, createBookmarkExportHtml } from '../bookmarkExport.js'
 
 describe('bookmark export', () => {
@@ -36,18 +37,20 @@ describe('bookmark export', () => {
       ],
       1700000004000,
     )
-
-    expect(html).toContain('<!DOCTYPE NETSCAPE-Bookmark-file-1>')
-    expect(html).toContain('<H1>Bookmarks</H1>')
-    expect(html).toContain(
-      '<DT><H3 ADD_DATE="1700000001" LAST_MODIFIED="1700000002" ID="1" PERSONAL_TOOLBAR_FOLDER="true">Bookmarks Bar</H3>',
+    assert(html.includes('<!DOCTYPE NETSCAPE-Bookmark-file-1>'))
+    assert(html.includes('<H1>Bookmarks</H1>'))
+    assert(
+      html.includes(
+        '<DT><H3 ADD_DATE="1700000001" LAST_MODIFIED="1700000002" ID="1" PERSONAL_TOOLBAR_FOLDER="true">Bookmarks Bar</H3>',
+      ),
     )
-    expect(html).toContain(
-      '<DT><A HREF="https://example.test/?a=1&amp;b=&lt;two&gt;" ADD_DATE="1700000003" ID="b1">Example &amp; Docs</A>',
+    assert(
+      html.includes(
+        '<DT><A HREF="https://example.test/?a=1&amp;b=&lt;two&gt;" ADD_DATE="1700000003" ID="b1">Example &amp; Docs</A>',
+      ),
     )
-    expect(html).not.toContain('Empty Folder')
+    assert(!html.includes('Empty Folder'))
   })
-
   test('omits ID attribute when bookmark or folder has no id', () => {
     const html = createBookmarkExportHtml(
       [
@@ -66,12 +69,10 @@ describe('bookmark export', () => {
       ],
       1700000004000,
     )
-
-    expect(html).toContain('<DT><H3 ADD_DATE="1700000001" LAST_MODIFIED="1700000002">Anon Folder</H3>')
-    expect(html).toContain('<DT><A HREF="https://anon.test/" ADD_DATE="1700000003">Anon Bookmark</A>')
-    expect(html).not.toMatch(/ID=""/)
+    assert(html.includes('<DT><H3 ADD_DATE="1700000001" LAST_MODIFIED="1700000002">Anon Folder</H3>'))
+    assert(html.includes('<DT><A HREF="https://anon.test/" ADD_DATE="1700000003">Anon Bookmark</A>'))
+    assert.doesNotMatch(html, /ID=""/)
   })
-
   test('preserves title-based tags', () => {
     const html = createBookmarkExportHtml(
       [
@@ -83,11 +84,9 @@ describe('bookmark export', () => {
       ],
       1700000004000,
     )
-
-    expect(html).toContain('>Tagged Bookmark #docs #reference</A>')
+    assert(html.includes('>Tagged Bookmark #docs #reference</A>'))
   })
-
   test('creates dated html export filenames', () => {
-    expect(createBookmarkExportFilename(new Date(2026, 4, 7))).toBe('bookmarks_07_05_2026.html')
+    assert.strictEqual(createBookmarkExportFilename(new Date(2026, 4, 7)), 'bookmarks_07_05_2026.html')
   })
 })

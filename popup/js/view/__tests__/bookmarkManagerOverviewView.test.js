@@ -1,5 +1,6 @@
-import { describe, expect, test } from '@jest/globals'
-
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { describe, test } from 'node:test'
 import {
   createDomainBookmarkHref,
   createFolderBookmarkHref,
@@ -21,7 +22,6 @@ function createBookmarks(count) {
     tagsArray: ['tag'],
   }))
 }
-
 describe('bookmark manager overview rendering', () => {
   test('renders overview stats and tag summary', () => {
     const stats = {
@@ -36,38 +36,40 @@ describe('bookmark manager overview rendering', () => {
       averageTagsPerTaggedBookmark: 1.5,
       uniqueDomainCount: 6,
     }
-
-    expect(renderStats(stats)).toContain('Bookmarks')
-    expect(renderStats(stats)).toContain('Manage tags')
-    expect(renderTagSummary(stats)).toContain('4 unique tags')
+    assert(renderStats(stats).includes('Bookmarks'))
+    assert(renderStats(stats).includes('Manage tags'))
+    assert(renderTagSummary(stats).includes('4 unique tags'))
   })
-
   test('renders top lists with optional bookmark filter links', () => {
-    expect(renderTopList([], 'No domains found')).toContain('No domains found')
-    expect(renderTopList([{ name: 'example.test', count: 2 }], 'No domains found', createDomainBookmarkHref)).toContain(
-      '?folder=all&amp;search=example.test#bookmarks',
+    assert(renderTopList([], 'No domains found').includes('No domains found'))
+    assert(
+      renderTopList([{ name: 'example.test', count: 2 }], 'No domains found', createDomainBookmarkHref).includes(
+        '?folder=all&amp;search=example.test#bookmarks',
+      ),
     )
-    expect(
-      renderTopList([{ name: 'Work', id: 'work-folder', count: 2 }], 'No folders found', createFolderBookmarkHref),
-    ).toContain('?folder=work-folder#bookmarks')
-    expect(renderTopList([{ name: 'work docs', count: 2 }], 'No tags found', createTagManagerHref)).toContain(
-      '?tag=work+docs#tags',
+    assert(
+      renderTopList(
+        [{ name: 'Work', id: 'work-folder', count: 2 }],
+        'No folders found',
+        createFolderBookmarkHref,
+      ).includes('?folder=work-folder#bookmarks'),
+    )
+    assert(
+      renderTopList([{ name: 'work docs', count: 2 }], 'No tags found', createTagManagerHref).includes(
+        '?tag=work+docs#tags',
+      ),
     )
   })
-
   test('renders recent bookmarks sorted by date and clamps requested pages', () => {
     const result = renderRecentBookmarks(createBookmarks(25), 99)
-
-    expect(result.page).toBe(2)
-    expect(result.html).toContain('Bookmark 1')
-    expect(result.html).toContain('25 of 25')
-    expect(result.html).not.toContain('Bookmark 25')
+    assert.strictEqual(result.page, 2)
+    assert(result.html.includes('Bookmark 1'))
+    assert(result.html.includes('25 of 25'))
+    assert(!result.html.includes('Bookmark 25'))
   })
-
   test('renders an empty recent state when dates are missing', () => {
     const result = renderRecentBookmarks([{ originalId: '1', title: 'No Date' }])
-
-    expect(result.page).toBe(1)
-    expect(result.html).toContain('No bookmark date metadata found')
+    assert.strictEqual(result.page, 1)
+    assert(result.html.includes('No bookmark date metadata found'))
   })
 })

@@ -1,17 +1,23 @@
-import { beforeEach, describe, expect, jest, test } from '@jest/globals'
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { beforeEach, describe, mock, test } from 'node:test'
+import { matches, subset } from '../../../../test/patterns.js'
 
 // Mock dependencies
-const mockGetUniqueGroups = jest.fn()
-const mockRenderTaxonomy = jest.fn()
+const mockGetUniqueGroups = mock.fn()
+const mockRenderTaxonomy = mock.fn()
 
 // Use unstable_mockModule for ESM mocking
-jest.unstable_mockModule('../../search/taxonomySearch.js', () => ({
-  getUniqueGroups: mockGetUniqueGroups,
-}))
-
-jest.unstable_mockModule('../taxonomyViewHelper.js', () => ({
-  renderTaxonomy: mockRenderTaxonomy,
-}))
+mock.module(new URL('../../search/taxonomySearch.js', import.meta.url), {
+  exports: {
+    getUniqueGroups: mockGetUniqueGroups,
+  },
+})
+mock.module(new URL('../taxonomyViewHelper.js', import.meta.url), {
+  exports: {
+    renderTaxonomy: mockRenderTaxonomy,
+  },
+})
 
 // Import the module under test
 // Note: We need to import it AFTER mocking
@@ -20,15 +26,15 @@ jest.unstable_mockModule('../taxonomyViewHelper.js', () => ({
 
 describe('groupsView', () => {
   let loadGroupsOverview
-
   beforeEach(async () => {
-    jest.clearAllMocks()
+    mockGetUniqueGroups.mock.resetCalls()
+    mockRenderTaxonomy.mock.resetCalls()
     document.body.innerHTML = '<div id="groups-list"></div>'
 
     // Mock global chrome object
     global.chrome = {
       permissions: {
-        contains: jest.fn(),
+        contains: mock.fn(),
       },
       tabGroups: {},
     }
@@ -37,10 +43,9 @@ describe('groupsView', () => {
     const module = await import('../groupsView.js')
     loadGroupsOverview = module.loadGroupsOverview
   })
-
   test('renders warning when permission is missing', async () => {
     // specific behavior: if chrome.permissions.contains returns false
-    global.chrome.permissions.contains.mockImplementation(({ permissions: _permissions }, cb) => cb(false))
+    global.chrome.permissions.contains.mock.mockImplementation(({ permissions: _permissions }, cb) => cb(false))
     // And tabGroups API is NOT available (mocking undefined would be hard on global, let's rely on permissions check flow)
     // Actually the code checks permissions.contains OR chrome.tabGroups presence as a fallback.
     // If we want to simulate missing permission, we should probably ensure both fail.
@@ -53,62 +58,58 @@ describe('groupsView', () => {
 
     // Let's adjust mock for this specific test
     delete global.chrome.tabGroups
-
     await loadGroupsOverview()
-
     const container = document.getElementById('groups-list')
-    expect(container.innerHTML).toContain('Permission missing')
-    expect(mockGetUniqueGroups).not.toHaveBeenCalled()
+    assert(container.innerHTML.includes('Permission missing'))
+    assert(mockGetUniqueGroups.mock.callCount() === 0)
   })
-
   test('fetches and renders groups when permissions are granted', async () => {
     // Mock permission granted
-    global.chrome.permissions.contains.mockImplementation(({ permissions: _permissions }, cb) => cb(true))
+    global.chrome.permissions.contains.mock.mockImplementation(({ permissions: _permissions }, cb) => cb(true))
     global.chrome.tabGroups = {} // API exists
 
     const mockGroups = {
       'My Group': ['tab-1'],
     }
-    mockGetUniqueGroups.mockResolvedValue(mockGroups)
-
+    mockGetUniqueGroups.mock.mockImplementation(() => Promise.resolve(mockGroups))
     await loadGroupsOverview()
-
-    expect(mockGetUniqueGroups).toHaveBeenCalled()
-    expect(mockRenderTaxonomy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        containerId: 'groups-list',
-        items: mockGroups,
-        marker: '@',
-        itemClass: 'group',
-      }),
+    assert(mockGetUniqueGroups.mock.callCount() > 0)
+    assert(
+      mockRenderTaxonomy.mock.calls.some((call) =>
+        matches(call.arguments, [
+          subset({
+            containerId: 'groups-list',
+            items: mockGroups,
+            marker: '@',
+            itemClass: 'group',
+          }),
+        ]),
+      ),
     )
   })
-
   test('renders correctly when chrome.permissions API is missing but chrome.tabGroups exists', async () => {
     // Firefox might not have permissions API but might support tabGroups?
     // Or just a browser that exposes the API directly.
     delete global.chrome.permissions
     global.chrome.tabGroups = {}
-
     const mockGroups = { Work: ['t1'] }
-    mockGetUniqueGroups.mockResolvedValue(mockGroups)
-
+    mockGetUniqueGroups.mock.mockImplementation(() => Promise.resolve(mockGroups))
     await loadGroupsOverview()
-
-    expect(mockGetUniqueGroups).toHaveBeenCalled()
-    expect(mockRenderTaxonomy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        items: mockGroups,
-      }),
+    assert(mockGetUniqueGroups.mock.callCount() > 0)
+    assert(
+      mockRenderTaxonomy.mock.calls.some((call) =>
+        matches(call.arguments, [
+          subset({
+            items: mockGroups,
+          }),
+        ]),
+      ),
     )
   })
-
   test('does nothing if container is missing', async () => {
     document.body.innerHTML = '' // No container
-    global.chrome.permissions.contains.mockImplementation((_, cb) => cb(true))
-
+    global.chrome.permissions.contains.mock.mockImplementation((_, cb) => cb(true))
     await loadGroupsOverview()
-
-    expect(mockGetUniqueGroups).not.toHaveBeenCalled()
+    assert(mockGetUniqueGroups.mock.callCount() === 0)
   })
 })

@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, test } from '@jest/globals'
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { afterEach, beforeEach, describe, test } from 'node:test'
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
 describe('taxonomy search', () => {
   let taxonomyModule
-
   beforeEach(async () => {
     createTestExt({
       model: {
@@ -15,11 +16,9 @@ describe('taxonomy search', () => {
     })
     taxonomyModule = await import('../taxonomySearch.js')
   })
-
   afterEach(() => {
     clearTestExt()
   })
-
   test('searchTaxonomy finds entries containing all tag terms', () => {
     const { searchTaxonomy } = taxonomyModule
     const data = [
@@ -34,16 +33,13 @@ describe('taxonomy search', () => {
         type: 'bookmark',
       },
     ]
-
     const result = searchTaxonomy('foo #bar', 'tags', data)
-
-    expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject({
+    assert.strictEqual(result.length, 1)
+    assert.partialDeepStrictEqual(result[0], {
       originalId: '1',
       searchApproach: 'taxonomy',
     })
   })
-
   test('searchTaxonomy finds entries based on folder names', () => {
     const { searchTaxonomy } = taxonomyModule
     const data = [
@@ -56,13 +52,10 @@ describe('taxonomy search', () => {
         folder: '~Personal',
       },
     ]
-
     const result = searchTaxonomy('work ~projects', 'folder', data)
-
-    expect(result).toHaveLength(1)
-    expect(result[0].originalId).toBe('3')
+    assert.strictEqual(result.length, 1)
+    assert.strictEqual(result[0].originalId, '3')
   })
-
   test('getUniqueTags aggregates tag usage', () => {
     const { getUniqueTags } = taxonomyModule
     ext.model.bookmarks = [
@@ -70,48 +63,45 @@ describe('taxonomy search', () => {
       { originalId: '2', tags: '#foo' },
       { originalId: '3', tags: '' },
     ]
-
     const result = getUniqueTags()
-
-    expect(result.foo).toEqual(['1', '2'])
-    expect(result.bar).toEqual(['1'])
+    assert.deepStrictEqual(result.foo, ['1', '2'])
+    assert.deepStrictEqual(result.bar, ['1'])
   })
-
   test('getUniqueFolders caches computed folders', () => {
     const { getUniqueFolders } = taxonomyModule
     ext.model.bookmarks = [
       { originalId: '1', folder: '~Parent ~Child' },
       { originalId: '2', folder: '~Parent' },
     ]
-
     const first = getUniqueFolders()
-    expect(first.Parent.sort()).toEqual(['1', '2'])
-    expect(first.Child).toEqual(['1'])
-
+    assert.deepStrictEqual(first.Parent.sort(), ['1', '2'])
+    assert.deepStrictEqual(first.Child, ['1'])
     ext.model.bookmarks = []
     const second = getUniqueFolders()
-    expect(second).toBe(first)
+    assert.strictEqual(second, first)
   })
-
   test('resetUniqueFoldersCache invalidates cached folder data', () => {
     const { getUniqueFolders, resetUniqueFoldersCache } = taxonomyModule
     ext.model.bookmarks = [
-      { originalId: '1', folder: '~Work ~Projects' },
-      { originalId: '2', folder: '~Work' },
+      {
+        originalId: '1',
+        folder: '~Work ~Projects',
+      },
+      {
+        originalId: '2',
+        folder: '~Work',
+      },
     ]
-
     const first = getUniqueFolders()
-    expect(first.Work.sort()).toEqual(['1', '2'])
+    assert.deepStrictEqual(first.Work.sort(), ['1', '2'])
 
     // Simulate a bookmark removal that affects the folder map
     ext.model.bookmarks = [{ originalId: '2', folder: '~Work' }]
     resetUniqueFoldersCache()
-
     const second = getUniqueFolders()
-    expect(second.Work).toEqual(['2'])
-    expect(second).not.toBe(first)
+    assert.deepStrictEqual(second.Work, ['2'])
+    assert.notStrictEqual(second, first)
   })
-
   test('searchTaxonomy handles trailing whitespace in tag terms', () => {
     const { searchTaxonomy } = taxonomyModule
     const data = [
@@ -129,16 +119,15 @@ describe('taxonomy search', () => {
 
     // Test with trailing whitespace after tag
     const resultWithTrailingSpace = searchTaxonomy('react ', 'tags', data)
-    expect(resultWithTrailingSpace).toHaveLength(2)
-    expect(resultWithTrailingSpace[0].originalId).toBe('1')
-    expect(resultWithTrailingSpace[1].originalId).toBe('2')
+    assert.strictEqual(resultWithTrailingSpace.length, 2)
+    assert.strictEqual(resultWithTrailingSpace[0].originalId, '1')
+    assert.strictEqual(resultWithTrailingSpace[1].originalId, '2')
 
     // Test with multiple tags where last has trailing whitespace
     const resultMultipleTags = searchTaxonomy('react #node ', 'tags', data)
-    expect(resultMultipleTags).toHaveLength(1)
-    expect(resultMultipleTags[0].originalId).toBe('1')
+    assert.strictEqual(resultMultipleTags.length, 1)
+    assert.strictEqual(resultMultipleTags[0].originalId, '1')
   })
-
   test('searchTaxonomy handles trailing whitespace in folder terms', () => {
     const { searchTaxonomy } = taxonomyModule
     const data = [
@@ -154,14 +143,13 @@ describe('taxonomy search', () => {
 
     // Test with trailing whitespace after folder
     const resultWithTrailingSpace = searchTaxonomy('work ', 'folder', data)
-    expect(resultWithTrailingSpace).toHaveLength(2)
+    assert.strictEqual(resultWithTrailingSpace.length, 2)
 
     // Test with multiple folders where last has trailing whitespace
     const resultMultipleFolders = searchTaxonomy('work ~projects ', 'folder', data)
-    expect(resultMultipleFolders).toHaveLength(1)
-    expect(resultMultipleFolders[0].originalId).toBe('1')
+    assert.strictEqual(resultMultipleFolders.length, 1)
+    assert.strictEqual(resultMultipleFolders[0].originalId, '1')
   })
-
   test('searchTaxonomy ignores empty terms from excessive whitespace', () => {
     const { searchTaxonomy } = taxonomyModule
     const data = [
@@ -174,10 +162,9 @@ describe('taxonomy search', () => {
 
     // Test with multiple spaces creating empty terms
     const result = searchTaxonomy('test  ', 'tags', data)
-    expect(result).toHaveLength(1)
-    expect(result[0].originalId).toBe('1')
+    assert.strictEqual(result.length, 1)
+    assert.strictEqual(result[0].originalId, '1')
   })
-
   test('searchTaxonomy supports hybrid taxonomy + text search with DOUBLE SPACE separator', () => {
     const { searchTaxonomy } = taxonomyModule
     const data = [
@@ -204,20 +191,18 @@ describe('taxonomy search', () => {
     // 1. Double space separator used: "KVR  temp"
     // Expect: Group matches "KVR" AND (title OR url matches "temp")
     const result = searchTaxonomy('KVR  temp', 'group', data)
-
-    expect(result).toHaveLength(1)
-    expect(result[0].originalId).toBe('1')
+    assert.strictEqual(result.length, 1)
+    assert.strictEqual(result[0].originalId, '1')
 
     // 2. Searching for invalid text match
     const resultNone = searchTaxonomy('KVR  nomatch', 'group', data)
-    expect(resultNone).toHaveLength(0)
+    assert.strictEqual(resultNone.length, 0)
 
     // 3. Searching for taxonomy only (no text part) - trailing double space
     // This simulates the user just clicking the badge and getting the trailing space
     const resultOnlyTaxonomy = searchTaxonomy('KVR  ', 'group', data)
-    expect(resultOnlyTaxonomy).toHaveLength(2)
+    assert.strictEqual(resultOnlyTaxonomy.length, 2)
   })
-
   test('searchTaxonomy supports hybrid search with folder type (~Blogs martin example)', () => {
     const { searchTaxonomy } = taxonomyModule
     const data = [
@@ -237,11 +222,9 @@ describe('taxonomy search', () => {
 
     // User example: "~Blogs  martin" (Input normalized/stripped by caller)
     const result = searchTaxonomy('Blogs  martin', 'folder', data)
-
-    expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('Martin Fowler')
+    assert.strictEqual(result.length, 1)
+    assert.strictEqual(result[0].title, 'Martin Fowler')
   })
-
   test('getUniqueGroups aggregates group usage', () => {
     const { getUniqueGroups } = taxonomyModule
     ext.model.tabs = [
@@ -250,11 +233,9 @@ describe('taxonomy search', () => {
       { originalId: '3', group: 'Personal' },
       { originalId: '4' }, // No group
     ]
-
     const result = getUniqueGroups()
-
-    expect(result.Work).toEqual(['1', '2'])
-    expect(result.Personal).toEqual(['3'])
-    expect(Object.keys(result)).not.toContain('undefined')
+    assert.deepStrictEqual(result.Work, ['1', '2'])
+    assert.deepStrictEqual(result.Personal, ['3'])
+    assert(!Object.keys(result).includes('undefined'))
   })
 })

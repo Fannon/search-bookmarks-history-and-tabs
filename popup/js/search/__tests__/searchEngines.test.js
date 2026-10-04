@@ -1,3 +1,6 @@
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { afterEach, beforeEach, describe, test } from 'node:test'
 /**
  * Tests for searchEngines.js - search engine result generation and custom alias handling.
  *
@@ -5,7 +8,7 @@
  * ⚠️ Known gaps: none
  * 🐞 Added BUG tests: none
  */
-import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
+
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 import { addSearchEngines, collectCustomSearchAliasResults, getCustomSearchEngineResult } from '../searchEngines.js'
 
@@ -38,33 +41,27 @@ beforeEach(() => {
     },
   })
 })
-
 afterEach(() => {
   clearTestExt()
 })
-
 describe('getCustomSearchEngineResult', () => {
   test('creates search result with $s placeholder replacement', () => {
     const result = getCustomSearchEngineResult('javascript', 'Google', 'https://www.google.com/search?q=$s')
-
-    expect(result).toMatchObject({
+    assert.partialDeepStrictEqual(result, {
       type: 'search',
       title: 'Google: "javascript"',
       originalUrl: 'https://www.google.com/search?q=javascript',
     })
-    expect(result.originalId).toBeDefined()
+    assert.notStrictEqual(result.originalId, undefined)
   })
-
   test('creates search result with URL prefix concatenation', () => {
     const result = getCustomSearchEngineResult('test query', 'SearchEngine', 'https://example.com/search?q=')
-
-    expect(result).toMatchObject({
+    assert.partialDeepStrictEqual(result, {
       type: 'search',
       title: 'SearchEngine: "test query"',
       originalUrl: 'https://example.com/search?q=test%20query',
     })
   })
-
   test('marks custom search engines with custom type', () => {
     const result = getCustomSearchEngineResult(
       'cats',
@@ -73,10 +70,8 @@ describe('getCustomSearchEngineResult', () => {
       null,
       true,
     )
-
-    expect(result.type).toBe('customSearch')
+    assert.strictEqual(result.type, 'customSearch')
   })
-
   test('uses blank URL when term is empty and urlBlank provided', () => {
     const result = getCustomSearchEngineResult(
       '',
@@ -84,122 +79,93 @@ describe('getCustomSearchEngineResult', () => {
       'https://youtube.com/results?search_query=$s',
       'https://youtube.com',
     )
-
-    expect(result).toMatchObject({
+    assert.partialDeepStrictEqual(result, {
       title: 'YouTube',
       originalUrl: 'https://youtube.com',
     })
   })
-
   test('encodes special characters in search term', () => {
     const result = getCustomSearchEngineResult('hello & goodbye', 'Google', 'https://www.google.com/search?q=$s')
-
-    expect(result.originalUrl).toBe('https://www.google.com/search?q=hello%20%26%20goodbye')
+    assert.strictEqual(result.originalUrl, 'https://www.google.com/search?q=hello%20%26%20goodbye')
   })
-
   test('generates unique IDs for different results', () => {
     const result1 = getCustomSearchEngineResult('test1', 'Google', 'https://google.com?q=$s')
     const result2 = getCustomSearchEngineResult('test2', 'Google', 'https://google.com?q=$s')
-
-    expect(result1.originalId).not.toBe(result2.originalId)
+    assert.notStrictEqual(result1.originalId, result2.originalId)
   })
 })
-
 describe('addSearchEngines', () => {
   test('creates results for all enabled search engines', () => {
     const results = addSearchEngines('javascript')
-
-    expect(results).toHaveLength(2)
-    expect(results[0]).toMatchObject({
+    assert.strictEqual(results.length, 2)
+    assert.partialDeepStrictEqual(results[0], {
       type: 'search',
       title: 'Google: "javascript"',
     })
-    expect(results[1]).toMatchObject({
+    assert.partialDeepStrictEqual(results[1], {
       type: 'search',
       title: 'DuckDuckGo: "javascript"',
     })
   })
-
   test('returns empty array when search engines disabled', () => {
     ext.opts.enableSearchEngines = false
-
     const results = addSearchEngines('test')
-
-    expect(results).toEqual([])
+    assert.deepStrictEqual(results, [])
   })
-
   test('handles empty search term', () => {
     const results = addSearchEngines('')
-
-    expect(results).toHaveLength(2)
-    expect(results[0].title).toBe('Google: ""')
+    assert.strictEqual(results.length, 2)
+    assert.strictEqual(results[0].title, 'Google: ""')
   })
 })
-
 describe('collectCustomSearchAliasResults', () => {
   test('detects single alias match', () => {
     const results = collectCustomSearchAliasResults('gh typescript')
-
-    expect(results).toHaveLength(1)
-    expect(results[0]).toMatchObject({
+    assert.strictEqual(results.length, 1)
+    assert.partialDeepStrictEqual(results[0], {
       type: 'customSearch',
       title: 'GitHub: "typescript"',
       originalUrl: 'https://github.com/search?q=typescript',
     })
   })
-
   test('detects multiple aliases for same engine', () => {
     const results1 = collectCustomSearchAliasResults('yt cats')
     const results2 = collectCustomSearchAliasResults('youtube cats')
-
-    expect(results1).toHaveLength(1)
-    expect(results2).toHaveLength(1)
-    expect(results1[0].title).toBe('YouTube: "cats"')
-    expect(results2[0].title).toBe('YouTube: "cats"')
+    assert.strictEqual(results1.length, 1)
+    assert.strictEqual(results2.length, 1)
+    assert.strictEqual(results1[0].title, 'YouTube: "cats"')
+    assert.strictEqual(results2[0].title, 'YouTube: "cats"')
   })
-
   test('handles alias at start with remaining term', () => {
     const results = collectCustomSearchAliasResults('yt funny videos')
-
-    expect(results[0]).toMatchObject({
+    assert.partialDeepStrictEqual(results[0], {
       title: 'YouTube: "funny videos"',
       originalUrl: 'https://youtube.com/results?search_query=funny%20videos',
     })
   })
-
   test('returns empty when no alias matches', () => {
     const results = collectCustomSearchAliasResults('no match here')
-
-    expect(results).toEqual([])
+    assert.deepStrictEqual(results, [])
   })
-
   test('returns empty when customSearchEngines not configured', () => {
     ext.opts.customSearchEngines = null
-
     const results = collectCustomSearchAliasResults('yt test')
-
-    expect(results).toEqual([])
+    assert.deepStrictEqual(results, [])
   })
-
   test('matches aliases case-insensitively', () => {
     // Note: collectCustomSearchAliasResults expects pre-normalized (lowercased) search terms
     // as it's called after normalization in common.js
     const results1 = collectCustomSearchAliasResults('yt cats')
     const results2 = collectCustomSearchAliasResults('yt cats')
-
-    expect(results1).toHaveLength(1)
-    expect(results2).toHaveLength(1)
+    assert.strictEqual(results1.length, 1)
+    assert.strictEqual(results2.length, 1)
   })
-
   test('requires space after alias', () => {
     const results = collectCustomSearchAliasResults('youtube')
-
-    expect(results).toEqual([])
+    assert.deepStrictEqual(results, [])
   })
-
   test('extracts term after alias correctly', () => {
     const results = collectCustomSearchAliasResults('gh   multiple   spaces')
-
-    expect(results[0].title).toBe('GitHub: "  multiple   spaces"')
+    assert.strictEqual(results[0].title, 'GitHub: "  multiple   spaces"')
   })
 })

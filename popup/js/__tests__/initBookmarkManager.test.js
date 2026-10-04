@@ -1,4 +1,8 @@
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
+import '../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { afterEach, beforeEach, describe, mock, test } from 'node:test'
+import { resetModules } from '../../../test/modules.js'
+import { containsText, matches, subset } from '../../../test/patterns.js'
 import { clearBookmarkUndoSnapshots } from '../model/bookmarkManagerUndo.js'
 import { clearTestExt, flushPromises } from './testUtils.js'
 
@@ -40,7 +44,6 @@ const BOOKMARKS = [
     searchStringLower: 'second bookmark example.com/second folder',
   },
 ]
-
 function setupDom() {
   window.history.replaceState(null, '', '/bookmarkManager.html#cleanup')
   document.body.innerHTML = `
@@ -121,29 +124,24 @@ function setupDom() {
     <div id="error-overlay"></div>
   `
 }
-
 describe('initBookmarkManager cleanup apply', () => {
   let ext
   let updateBookmark
-
   beforeEach(async () => {
-    jest.resetModules()
-    jest.clearAllMocks()
+    resetModules()
     clearTestExt()
     clearBookmarkUndoSnapshots()
     setupDom()
-    window.HTMLElement.prototype.scrollIntoView = jest.fn()
+    window.HTMLElement.prototype.scrollIntoView = mock.fn()
     global.CSS = { escape: (value) => String(value) }
-    window.confirm = jest.fn(() => true)
-    jest.spyOn(console, 'warn').mockImplementation(() => {})
-
-    updateBookmark = jest.fn((bookmarkId) => {
+    window.confirm = mock.fn(() => true)
+    mock.method(console, 'warn', () => {})
+    updateBookmark = mock.fn((bookmarkId) => {
       if (bookmarkId === 'bookmark-2') {
         return Promise.reject(new Error('simulated update failure'))
       }
       return Promise.resolve()
     })
-
     ext = {
       dom: {},
       model: {},
@@ -151,7 +149,7 @@ describe('initBookmarkManager cleanup apply', () => {
       opts: {},
       browserApi: {
         bookmarks: {
-          get: jest.fn((bookmarkId) =>
+          get: mock.fn((bookmarkId) =>
             Promise.resolve([
               {
                 id: String(bookmarkId),
@@ -163,53 +161,53 @@ describe('initBookmarkManager cleanup apply', () => {
             ]),
           ),
           update: updateBookmark,
-          move: jest.fn(),
-          create: jest.fn(),
-          remove: jest.fn(),
+          move: mock.fn(),
+          create: mock.fn(),
+          remove: mock.fn(),
         },
         windows: {},
       },
       searchCache: new Map(),
       initialized: false,
     }
-
-    await jest.unstable_mockModule('../helper/extensionContext.js', () => ({
-      __esModule: true,
-      createExtensionContext: () => ext,
-    }))
-    await jest.unstable_mockModule('../model/optionsStorage.js', () => ({
-      __esModule: true,
-      defaultOptions: {},
-      getEffectiveOptions: jest.fn(() => Promise.resolve({})),
-      getUserOptions: jest.fn(() => Promise.resolve({})),
-      setUserOptions: jest.fn(() => Promise.resolve()),
-    }))
-    await jest.unstable_mockModule('../model/searchData.js', () => ({
-      __esModule: true,
-      getSearchData: jest.fn(() =>
-        Promise.resolve({
-          bookmarks: BOOKMARKS.map((bookmark) => ({ ...bookmark })),
-          bookmarkTree: [],
-        }),
-      ),
-    }))
-    await jest.unstable_mockModule('../view/errorView.js', () => ({
-      __esModule: true,
-      closeErrors: jest.fn(),
-      printError: jest.fn(),
-    }))
-
+    mock.module(new URL('../helper/extensionContext.js', import.meta.url), {
+      exports: {
+        createExtensionContext: () => ext,
+      },
+    })
+    mock.module(new URL('../model/optionsStorage.js', import.meta.url), {
+      exports: {
+        defaultOptions: {},
+        getEffectiveOptions: mock.fn(() => Promise.resolve({})),
+        getUserOptions: mock.fn(() => Promise.resolve({})),
+        setUserOptions: mock.fn(() => Promise.resolve()),
+      },
+    })
+    mock.module(new URL('../model/searchData.js', import.meta.url), {
+      exports: {
+        getSearchData: mock.fn(() =>
+          Promise.resolve({
+            bookmarks: BOOKMARKS.map((bookmark) => ({ ...bookmark })),
+            bookmarkTree: [],
+          }),
+        ),
+      },
+    })
+    mock.module(new URL('../view/errorView.js', import.meta.url), {
+      exports: {
+        closeErrors: mock.fn(),
+        printError: mock.fn(),
+      },
+    })
     await import('../initBookmarkManager.js')
     await flushPromises()
     await flushPromises()
   })
-
   afterEach(() => {
     delete globalThis.LanguageModel
     clearBookmarkUndoSnapshots()
     clearTestExt()
   })
-
   test('keeps failed cleanup changes pending and reports partial success', async () => {
     const proposal = {
       changes: {
@@ -220,35 +218,47 @@ describe('initBookmarkManager cleanup apply', () => {
       },
     }
     const proposalInput = document.getElementById('cleanup-proposal-json')
-
     proposalInput.value = JSON.stringify(proposal)
     proposalInput.dispatchEvent(new Event('input'))
     await new Promise((resolve) => setTimeout(resolve, 220))
-
     document.getElementById('apply-all-cleanup-changes').click()
     await flushPromises()
     await flushPromises()
-
-    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('Apply 2 bookmark cleanup changes?'))
-    expect(updateBookmark).toHaveBeenCalledWith('bookmark-1', { title: 'First Bookmark #docs' })
-    expect(updateBookmark).toHaveBeenCalledWith('bookmark-2', { title: 'Second Bookmark #docs' })
-    expect(ext.model.bookmarkCleanupAppliedChangeIds.has('add-ok')).toBe(true)
-    expect(ext.model.bookmarkCleanupAppliedChangeIds.has('add-fails')).toBe(false)
-    expect(document.getElementById('manager-status').textContent).toBe('cleanup changes partially applied')
-    expect(document.getElementById('cleanup-status').textContent).toContain('Applied 1; failed 1')
-    expect(document.getElementById('cleanup-status').textContent).toContain('add-fails bookmarks bookmark-2')
-    expect(document.getElementById('cleanup-status').textContent).toContain('Undo is available')
-    expect(console.warn).toHaveBeenCalledWith(
-      'Could not apply cleanup change "add-fails".',
-      expect.objectContaining({ message: 'simulated update failure' }),
+    assert(
+      window.confirm.mock.calls.some((call) =>
+        matches(call.arguments, [containsText('Apply 2 bookmark cleanup changes?')]),
+      ),
+    )
+    assert(
+      updateBookmark.mock.calls.some((call) =>
+        matches(call.arguments, ['bookmark-1', { title: 'First Bookmark #docs' }]),
+      ),
+    )
+    assert(
+      updateBookmark.mock.calls.some((call) =>
+        matches(call.arguments, ['bookmark-2', { title: 'Second Bookmark #docs' }]),
+      ),
+    )
+    assert.strictEqual(ext.model.bookmarkCleanupAppliedChangeIds.has('add-ok'), true)
+    assert.strictEqual(ext.model.bookmarkCleanupAppliedChangeIds.has('add-fails'), false)
+    assert.strictEqual(document.getElementById('manager-status').textContent, 'cleanup changes partially applied')
+    assert(document.getElementById('cleanup-status').textContent.includes('Applied 1; failed 1'))
+    assert(document.getElementById('cleanup-status').textContent.includes('add-fails bookmarks bookmark-2'))
+    assert(document.getElementById('cleanup-status').textContent.includes('Undo is available'))
+    assert(
+      console.warn.mock.calls.some((call) =>
+        matches(call.arguments, [
+          'Could not apply cleanup change "add-fails".',
+          subset({ message: 'simulated update failure' }),
+        ]),
+      ),
     )
   })
-
   test('allows aborting local AI tag suggestions for large selections before prompting the model', async () => {
-    window.confirm = jest.fn(() => false)
+    window.confirm = mock.fn(() => false)
     globalThis.LanguageModel = {
-      availability: jest.fn(() => Promise.resolve('available')),
-      create: jest.fn(),
+      availability: mock.fn(() => Promise.resolve('available')),
+      create: mock.fn(),
     }
     const largeSelection = Array.from({ length: 21 }, (_, index) => {
       const bookmarkId = `large-${index + 1}`
@@ -261,14 +271,16 @@ describe('initBookmarkManager cleanup apply', () => {
     })
     ext.model.bookmarkManager.bookmarks = largeSelection
     ext.model.bookmarkManagerSelectedIds = new Set(largeSelection.map((bookmark) => bookmark.originalId))
-
     document.getElementById('suggest-tags-selected').disabled = false
     document.getElementById('suggest-tags-selected').click()
     await flushPromises()
-
-    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('Suggest tags for 21 selected bookmarks?'))
-    expect(globalThis.LanguageModel.availability).not.toHaveBeenCalled()
-    expect(globalThis.LanguageModel.create).not.toHaveBeenCalled()
-    expect(document.getElementById('tag-suggestion-status').textContent).toContain('Tag suggestion cancelled')
+    assert(
+      window.confirm.mock.calls.some((call) =>
+        matches(call.arguments, [containsText('Suggest tags for 21 selected bookmarks?')]),
+      ),
+    )
+    assert(globalThis.LanguageModel.availability.mock.callCount() === 0)
+    assert(globalThis.LanguageModel.create.mock.callCount() === 0)
+    assert(document.getElementById('tag-suggestion-status').textContent.includes('Tag suggestion cancelled'))
   })
 })

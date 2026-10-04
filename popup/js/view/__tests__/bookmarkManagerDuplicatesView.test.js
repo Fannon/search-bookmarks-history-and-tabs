@@ -1,5 +1,6 @@
-import { describe, expect, test } from '@jest/globals'
-
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { describe, test } from 'node:test'
 import { renderDuplicateSummary, renderDuplicates } from '../bookmarkManagerDuplicatesView.js'
 
 const duplicateGroups = [
@@ -39,27 +40,27 @@ const duplicateGroups = [
     ],
   },
 ]
-
 describe('bookmark manager duplicates rendering', () => {
   test('renders summary and deletion controls when bookmark API is available', () => {
     const html = renderDuplicates(duplicateGroups, true)
-
-    expect(
-      renderDuplicateSummary({ duplicateGroupCount: 1, duplicateBookmarkCount: 2, removableDuplicateCount: 1 }),
-    ).toContain('2 bookmarks share URLs')
-    expect(html).toContain('Best candidate')
-    expect(html).toContain('data-delete-bookmark-id="copy" checked')
-    expect(html).not.toContain('data-delete-bookmark-id="keep" checked')
-    expect(html).not.toContain('Bookmark deletion is unavailable')
+    assert(
+      renderDuplicateSummary({
+        duplicateGroupCount: 1,
+        duplicateBookmarkCount: 2,
+        removableDuplicateCount: 1,
+      }).includes('2 bookmarks share URLs'),
+    )
+    assert(html.includes('Best candidate'))
+    assert(html.includes('data-delete-bookmark-id="copy" checked'))
+    assert(!html.includes('data-delete-bookmark-id="keep" checked'))
+    assert(!html.includes('Bookmark deletion is unavailable'))
   })
-
   test('renders disabled controls in preview contexts', () => {
     const html = renderDuplicates(duplicateGroups, false)
-
-    expect(html).toContain('Bookmark deletion is unavailable')
-    expect(html).toContain('data-delete-bookmark-id="copy" checked disabled')
-    expect(html).toContain('duplicate-delete-button')
-    expect(renderDuplicates([], true)).toContain('No duplicate bookmark URLs')
-    expect(renderDuplicateSummary({ duplicateGroupCount: 0 })).toContain('No duplicate bookmark URLs')
+    assert(html.includes('Bookmark deletion is unavailable'))
+    assert(html.includes('data-delete-bookmark-id="copy" checked disabled'))
+    assert(html.includes('duplicate-delete-button'))
+    assert(renderDuplicates([], true).includes('No duplicate bookmark URLs'))
+    assert(renderDuplicateSummary({ duplicateGroupCount: 0 }).includes('No duplicate bookmark URLs'))
   })
 })

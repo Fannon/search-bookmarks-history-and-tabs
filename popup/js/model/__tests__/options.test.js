@@ -1,5 +1,10 @@
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { afterEach, beforeEach, describe, mock, test } from 'node:test'
+import { resetModules } from '../../../../test/modules.js'
+import { any, containsText, matches } from '../../../../test/patterns.js'
 /**
- * Jest unit tests for options.js
+ * Node.js unit tests for options.js
  *
  * ## Behaviors Covered:
  * - validateUserOptions: Input validation, type checking, circular reference detection
@@ -18,127 +23,116 @@
  * - None - all tests verify existing functionality
  */
 
-import { jest } from '@jest/globals'
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
+import { printError } from '../../view/errorView.js'
 
-// Mock the utils module
-const mockPrintError = jest.fn()
-jest.mock('../../view/errorView.js', () => ({
-  __esModule: true,
-  printError: mockPrintError,
-}))
-
+const mockPrintError = mock.fn(printError)
 describe('options model', () => {
   let optionsModule
-
   beforeEach(async () => {
     localStorage.clear()
-    jest.clearAllMocks()
-    mockPrintError.mockClear()
-    jest.resetModules()
+    mockPrintError.mock.resetCalls()
+    resetModules()
+    mock.module(new URL('../../view/errorView.js', import.meta.url), {
+      exports: { printError: mockPrintError },
+    })
     optionsModule = await import('../options.js')
   })
-
   afterEach(() => {
     clearTestExt()
   })
-
   describe('validateUserOptions', () => {
     test('accepts valid objects', () => {
       const validObject = { searchStrategy: 'fuzzy' }
-      expect(optionsModule.validateUserOptions(validObject)).toEqual(validObject)
-      expect(optionsModule.validateUserOptions({})).toEqual({})
-      expect(optionsModule.validateUserOptions(null)).toEqual({})
-      expect(optionsModule.validateUserOptions(undefined)).toEqual({})
+      assert.deepStrictEqual(optionsModule.validateUserOptions(validObject), validObject)
+      assert.deepStrictEqual(optionsModule.validateUserOptions({}), {})
+      assert.deepStrictEqual(optionsModule.validateUserOptions(null), {})
+      assert.deepStrictEqual(optionsModule.validateUserOptions(undefined), {})
     })
-
     test('rejects invalid structures', () => {
-      expect(() => optionsModule.validateUserOptions('string')).toThrow(
-        'User options must be a valid YAML / JSON object',
+      assert.throws(
+        () => optionsModule.validateUserOptions('string'),
+        new RegExp(RegExp.escape('User options must be a valid YAML / JSON object')),
       )
-      expect(() => optionsModule.validateUserOptions(123)).toThrow('User options must be a valid YAML / JSON object')
+      assert.throws(
+        () => optionsModule.validateUserOptions(123),
+        new RegExp(RegExp.escape('User options must be a valid YAML / JSON object')),
+      )
     })
-
     test('rejects circular references', () => {
       const circular = {}
       circular.self = circular
-      expect(() => optionsModule.validateUserOptions(circular)).toThrow(/User options cannot be parsed into JSON/)
+      assert.throws(() => optionsModule.validateUserOptions(circular), /User options cannot be parsed into JSON/)
     })
-
     test('removes unknown options and logs warning', () => {
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+      const warnSpy = mock.method(console, 'warn', () => {})
       const optionsWithUnknown = { searchStrategy: 'fuzzy', unknownOption: 'value' }
       const result = optionsModule.validateUserOptions(optionsWithUnknown)
-      expect(result).toEqual({ searchStrategy: 'fuzzy' })
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown user option: "unknownOption"'))
-      warnSpy.mockRestore()
+      assert.deepStrictEqual(result, { searchStrategy: 'fuzzy' })
+      assert(
+        warnSpy.mock.calls.some((call) =>
+          matches(call.arguments, [containsText('Unknown user option: "unknownOption"')]),
+        ),
+      )
+      warnSpy.mock.restore()
     })
   })
-
   describe('setUserOptions', () => {
     test('saves through sync storage when available', async () => {
-      const syncSet = jest.fn((_payload, callback) => callback())
+      const syncSet = mock.fn((_payload, callback) => callback())
       createTestExt({
         browserApi: {
           storage: { sync: { set: syncSet } },
           runtime: {},
         },
       })
-
-      await expect(optionsModule.setUserOptions({ searchStrategy: 'fuzzy' })).resolves.toBeUndefined()
-      expect(syncSet).toHaveBeenCalledWith({ userOptions: { searchStrategy: 'fuzzy' } }, expect.any(Function))
+      assert.strictEqual(await optionsModule.setUserOptions({ searchStrategy: 'fuzzy' }), undefined)
+      assert(
+        syncSet.mock.calls.some((call) =>
+          matches(call.arguments, [{ userOptions: { searchStrategy: 'fuzzy' } }, any(Function)]),
+        ),
+      )
     })
-
     test('falls back to localStorage when sync storage missing', async () => {
-      createTestExt({
-        browserApi: {},
-      })
-
-      await expect(optionsModule.setUserOptions({ enableDirectUrl: false })).resolves.toBeUndefined()
-      expect(localStorage.getItem('userOptions')).toBe(JSON.stringify({ enableDirectUrl: false }))
+      createTestExt({ browserApi: {} })
+      assert.strictEqual(await optionsModule.setUserOptions({ enableDirectUrl: false }), undefined)
+      assert.strictEqual(localStorage.getItem('userOptions'), JSON.stringify({ enableDirectUrl: false }))
     })
-
     test('handles storage API errors', async () => {
       const runtimeError = new Error('Storage quota exceeded')
-      const syncSet = jest.fn((_payload, callback) => {
-        // Simulate runtime error
+      const syncSet = mock.fn((_payload, callback) => {
         global.ext.browserApi.runtime.lastError = runtimeError
         callback()
       })
-
       createTestExt({
         browserApi: {
           storage: { sync: { set: syncSet } },
           runtime: {},
         },
       })
-
-      await expect(optionsModule.setUserOptions({ searchStrategy: 'fuzzy' })).rejects.toThrow(runtimeError)
+      await assert.rejects(optionsModule.setUserOptions({ searchStrategy: 'fuzzy' }), runtimeError)
     })
 
     // Note: setUserOptions no longer validates options against the schema.
     // Validation is now done separately in editOptionsView.js using validateOptions().
     // This design keeps the validation code (and its dependencies) out of the initSearch bundle.
   })
-
   describe('getUserOptions', () => {
     test('reads from sync storage when available', async () => {
-      const syncGet = jest.fn((_keys, callback) => callback({ userOptions: { searchStrategy: 'precise' } }))
+      const syncGet = mock.fn((_keys, callback) => callback({ userOptions: { searchStrategy: 'precise' } }))
       createTestExt({
         browserApi: {
           storage: { sync: { get: syncGet } },
           runtime: {},
         },
       })
-
-      await expect(optionsModule.getUserOptions()).resolves.toEqual({
+      assert.deepStrictEqual(await optionsModule.getUserOptions(), {
         searchStrategy: 'precise',
       })
-      expect(syncGet).toHaveBeenCalledWith(['userOptions'], expect.any(Function))
+      assert(syncGet.mock.calls.some((call) => matches(call.arguments, [['userOptions'], any(Function)])))
     })
-
     test('removes legacy displayIcons option from sync storage values', async () => {
-      const syncGet = jest.fn((_keys, callback) =>
+      const syncGet = mock.fn((_keys, callback) =>
         callback({ userOptions: { displayIcons: true, displayFavicons: true } }),
       )
       createTestExt({
@@ -147,99 +141,78 @@ describe('options model', () => {
           runtime: {},
         },
       })
-
-      await expect(optionsModule.getUserOptions()).resolves.toEqual({
+      assert.deepStrictEqual(await optionsModule.getUserOptions(), {
         displayFavicons: true,
       })
     })
-
     test('falls back to localStorage when sync storage missing', async () => {
-      createTestExt({
-        browserApi: {},
-      })
-      localStorage.setItem('userOptions', JSON.stringify({ searchMaxResults: 5 }))
-
-      await expect(optionsModule.getUserOptions()).resolves.toEqual({
+      createTestExt({ browserApi: {} })
+      localStorage.setItem(
+        'userOptions',
+        JSON.stringify({
+          searchMaxResults: 5,
+        }),
+      )
+      assert.deepStrictEqual(await optionsModule.getUserOptions(), {
         searchMaxResults: 5,
       })
     })
-
     test('removes legacy displayIcons option from localStorage values', async () => {
-      createTestExt({
-        browserApi: {},
-      })
+      createTestExt({ browserApi: {} })
       localStorage.setItem('userOptions', JSON.stringify({ displayIcons: true, searchMaxResults: 5 }))
-
-      await expect(optionsModule.getUserOptions()).resolves.toEqual({
+      assert.deepStrictEqual(await optionsModule.getUserOptions(), {
         searchMaxResults: 5,
       })
     })
-
     test('returns empty object when no user options exist', async () => {
-      createTestExt({
-        browserApi: {},
-      })
-
-      await expect(optionsModule.getUserOptions()).resolves.toEqual({})
+      createTestExt({ browserApi: {} })
+      assert.deepStrictEqual(await optionsModule.getUserOptions(), {})
     })
-
     test('handles malformed JSON in localStorage', async () => {
-      createTestExt({
-        browserApi: {},
-      })
+      createTestExt({ browserApi: {} })
       localStorage.setItem('userOptions', 'invalid json{')
-
-      await expect(optionsModule.getUserOptions()).rejects.toThrow()
+      await assert.rejects(optionsModule.getUserOptions())
     })
-
     test('handles storage API errors', async () => {
       const runtimeError = new Error('Storage API unavailable')
-      const syncGet = jest.fn((_keys, callback) => {
+      const syncGet = mock.fn((_keys, callback) => {
         global.ext.browserApi.runtime.lastError = runtimeError
         callback()
       })
-
       createTestExt({
         browserApi: {
           storage: { sync: { get: syncGet } },
           runtime: {},
         },
       })
-
-      await expect(optionsModule.getUserOptions()).rejects.toThrow(runtimeError)
+      await assert.rejects(optionsModule.getUserOptions(), runtimeError)
     })
   })
-
   describe('getEffectiveOptions', () => {
     test('merges defaults with user overrides', async () => {
       // Use localStorage to simulate user options
       createTestExt({ browserApi: {} })
       localStorage.setItem('userOptions', JSON.stringify({ searchMaxResults: 10, enableDirectUrl: false }))
-
       const effective = await optionsModule.getEffectiveOptions()
-      expect(effective.searchMaxResults).toBe(10)
-      expect(effective.enableDirectUrl).toBe(false)
-      expect(effective.bookmarkColor).toBe(optionsModule.defaultOptions.bookmarkColor)
+      assert.strictEqual(effective.searchMaxResults, 10)
+      assert.strictEqual(effective.enableDirectUrl, false)
+      assert.strictEqual(effective.bookmarkColor, optionsModule.defaultOptions.bookmarkColor)
     })
-
     test('returns defaults when user options are empty', async () => {
       createTestExt({ browserApi: {} })
       localStorage.setItem('userOptions', JSON.stringify({}))
-
       const effective = await optionsModule.getEffectiveOptions()
-      expect(effective).toEqual(optionsModule.defaultOptions)
+      assert.deepStrictEqual(effective, optionsModule.defaultOptions)
     })
   })
-
   describe('constants', () => {
     test('defaultOptions has expected structure', () => {
-      expect(optionsModule.defaultOptions).toBeDefined()
-      expect(typeof optionsModule.defaultOptions).toBe('object')
-      expect(optionsModule.defaultOptions.searchStrategy).toBe('precise')
-      expect(typeof optionsModule.defaultOptions.searchMaxResults).toBe('number')
-      expect(Array.isArray(optionsModule.defaultOptions.bookmarksIgnoreFolderList)).toBe(true)
+      assert.notStrictEqual(optionsModule.defaultOptions, undefined)
+      assert.strictEqual(typeof optionsModule.defaultOptions, 'object')
+      assert.strictEqual(optionsModule.defaultOptions.searchStrategy, 'precise')
+      assert.strictEqual(typeof optionsModule.defaultOptions.searchMaxResults, 'number')
+      assert.strictEqual(Array.isArray(optionsModule.defaultOptions.bookmarksIgnoreFolderList), true)
     })
-
     test('defaultOptions contains all required option categories', () => {
       const requiredCategories = [
         'searchStrategy',
@@ -257,45 +230,39 @@ describe('options model', () => {
         'scoreBookmarkBase',
         'scoreTabBase',
       ]
-
       requiredCategories.forEach((category) => {
-        expect(optionsModule.defaultOptions).toHaveProperty(category)
+        assert(category in optionsModule.defaultOptions)
       })
     })
   })
-
   describe('integration scenarios', () => {
     test('complete workflow: set, get, and merge options', async () => {
       // Start with no browser API to use localStorage
       createTestExt({ browserApi: {} })
 
       // Set user options
-      await optionsModule.setUserOptions({
-        searchMaxResults: 20,
-        historyMaxItems: 2048,
-      })
+      await optionsModule.setUserOptions({ searchMaxResults: 20, historyMaxItems: 2048 })
 
       // Get user options
       const userOptions = await optionsModule.getUserOptions()
-      expect(userOptions).toEqual({ searchMaxResults: 20, historyMaxItems: 2048 })
+      assert.deepStrictEqual(userOptions, { searchMaxResults: 20, historyMaxItems: 2048 })
 
       // Get effective options (should merge with defaults)
       const effectiveOptions = await optionsModule.getEffectiveOptions()
-      expect(effectiveOptions.searchMaxResults).toBe(20)
-      expect(effectiveOptions.historyMaxItems).toBe(2048)
-      expect(effectiveOptions.bookmarkColor).toBe(optionsModule.defaultOptions.bookmarkColor)
-
-      expect(mockPrintError).not.toHaveBeenCalled()
+      assert.strictEqual(effectiveOptions.searchMaxResults, 20)
+      assert.strictEqual(effectiveOptions.historyMaxItems, 2048)
+      assert.strictEqual(effectiveOptions.bookmarkColor, optionsModule.defaultOptions.bookmarkColor)
+      assert(mockPrintError.mock.callCount() === 0)
     })
-
     test('effective options report invalid stored options before falling back to defaults', async () => {
       createTestExt({ browserApi: {} })
       document.body.innerHTML = '<div id="error-overlay"></div>'
       localStorage.setItem('userOptions', 'invalid json{')
-
-      await expect(optionsModule.getEffectiveOptions()).resolves.toEqual(optionsModule.defaultOptions)
-      expect(document.getElementById('error-overlay').textContent).toContain(
-        'Could not get valid user options, falling back to defaults.',
+      assert.deepStrictEqual(await optionsModule.getEffectiveOptions(), optionsModule.defaultOptions)
+      assert(
+        document
+          .getElementById('error-overlay')
+          .textContent.includes('Could not get valid user options, falling back to defaults.'),
       )
     })
   })

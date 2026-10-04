@@ -1,3 +1,5 @@
+import assert from 'node:assert/strict'
+import { describe, test } from 'node:test'
 /**
  * Tests for queryParser.js - query parsing and mode detection logic.
  *
@@ -5,101 +7,90 @@
  * ⚠️ Known gaps: none
  * 🐞 Added BUG tests: none
  */
-import { describe, expect, test } from '@jest/globals'
+
 import { resolveSearchMode } from '../queryParser.js'
 
 describe('resolveSearchMode', () => {
   test('detects history mode prefix', () => {
     const result = resolveSearchMode('h example search')
-    expect(result).toEqual({
+    assert.deepStrictEqual(result, {
       mode: 'history',
       term: 'example search',
     })
   })
-
   test('detects bookmarks mode prefix', () => {
     const result = resolveSearchMode('b my bookmark')
-    expect(result).toEqual({
+    assert.deepStrictEqual(result, {
       mode: 'bookmarks',
       term: 'my bookmark',
     })
   })
-
   test('detects tabs mode prefix', () => {
     const result = resolveSearchMode('t open tab')
-    expect(result).toEqual({
+    assert.deepStrictEqual(result, {
       mode: 'tabs',
       term: 'open tab',
     })
   })
-
   test('detects search mode prefix', () => {
     const result = resolveSearchMode('s google query')
-    expect(result).toEqual({
+    assert.deepStrictEqual(result, {
       mode: 'search',
       term: 'google query',
     })
   })
-
   test('detects tags taxonomy marker', () => {
     const result = resolveSearchMode('#javascript')
-    expect(result).toEqual({
+    assert.deepStrictEqual(result, {
       mode: 'tags',
       term: 'javascript',
     })
   })
-
   test('detects folders taxonomy marker', () => {
     const result = resolveSearchMode('~work/projects')
-    expect(result).toEqual({
+    assert.deepStrictEqual(result, {
       mode: 'folders',
       term: 'work/projects',
     })
   })
-
   test('returns all mode for normal search without prefix', () => {
     const result = resolveSearchMode('normal search term')
-    expect(result).toEqual({
+    assert.deepStrictEqual(result, {
       mode: 'all',
       term: 'normal search term',
     })
   })
-
   test('handles empty search term', () => {
     const result = resolveSearchMode('')
-    expect(result).toEqual({
+    assert.deepStrictEqual(result, {
       mode: 'all',
       term: '',
     })
   })
-
   test('handles search term with only spaces', () => {
     const result = resolveSearchMode('   ')
-    expect(result).toEqual({
+    assert.deepStrictEqual(result, {
       mode: 'all',
       term: '   ',
     })
   })
-
   test('mode prefix takes precedence over taxonomy marker in term', () => {
     const result = resolveSearchMode('h #tag')
-    expect(result).toEqual({
+    assert.deepStrictEqual(result, {
       mode: 'history',
       term: '#tag',
     })
   })
-
   test('preserves term case', () => {
     const result = resolveSearchMode('b MyBookmark')
-    expect(result).toEqual({
+    assert.deepStrictEqual(result, {
       mode: 'bookmarks',
       term: 'MyBookmark',
     })
   })
-
   test('handles prefix without space as normal search', () => {
     const result = resolveSearchMode('hello')
-    expect(result).toEqual({
+    assert.deepStrictEqual(result, {
       mode: 'all',
       term: 'hello',
     })

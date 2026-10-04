@@ -1,42 +1,34 @@
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { afterEach, before, beforeEach, describe, mock, test } from 'node:test'
+import { any, matches } from '../../../../test/patterns.js'
 /**
  * ✅ Covered behaviors: history merging, mock-data fallback, debug logging, feature gating
  * ⚠️ Known gaps: does not execute real browser API error paths beyond happy/fallback flows
  * 🐞 Added BUG tests: none – verified lazy merge regression via reference assertions
  */
 
-import { afterEach, beforeAll, beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { clearTestExt, createTestExt } from '../../__tests__/testUtils.js'
 
 const originalFetch = global.fetch
 const originalPerformance = global.performance
-
-const mockState = {
-  tabs: [],
-  bookmarks: [],
-  history: [],
-}
-
+const mockState = { tabs: [], bookmarks: [], history: [] }
 let tabsQueryMock
 let bookmarksGetTreeMock
 let historySearchMock
 let tabGroupsQueryMock
-
 let helperModule
 let browserApi
 let actualConvertBrowserTabs
 let actualConvertBrowserBookmarks
 let actualConvertBrowserHistory
-
 let getSearchData
-
 let currentTabs = []
 let currentBookmarks = []
 let currentHistory = []
-
 function cloneBookmarksTree(nodes = []) {
   return JSON.parse(JSON.stringify(nodes))
 }
-
 function setBrowserData({ tabs = [], bookmarks = [], history = [] } = {}) {
   currentTabs = tabs.map((tab) => ({ ...tab }))
   currentBookmarks = cloneBookmarksTree(bookmarks)
@@ -46,7 +38,6 @@ function setBrowserData({ tabs = [], bookmarks = [], history = [] } = {}) {
   mockState.bookmarks = currentBookmarks
   mockState.history = currentHistory
 }
-
 function setBrowserApiAvailability({ tabs = true, bookmarks = true, history = true, tabGroups = true } = {}) {
   if (!browserApi) {
     return
@@ -56,8 +47,7 @@ function setBrowserApiAvailability({ tabs = true, bookmarks = true, history = tr
   browserApi.history = history ? { search: historySearchMock } : undefined
   browserApi.tabGroups = tabGroups ? { query: tabGroupsQueryMock } : undefined
 }
-
-beforeAll(async () => {
+before(async () => {
   helperModule = await import('../../helper/browserApi.js')
   browserApi = helperModule.browserApi
   actualConvertBrowserTabs = helperModule.convertBrowserTabs
@@ -65,19 +55,15 @@ beforeAll(async () => {
   actualConvertBrowserHistory = helperModule.convertBrowserHistory
   ;({ getSearchData } = await import('../searchData.js'))
 })
-
 describe('getSearchData', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
     currentTabs = []
     currentBookmarks = []
     currentHistory = []
-
-    tabsQueryMock = jest.fn(async () => currentTabs)
-    bookmarksGetTreeMock = jest.fn(async () => currentBookmarks)
-    historySearchMock = jest.fn(async () => currentHistory)
-    tabGroupsQueryMock = jest.fn(async () => [])
-
+    tabsQueryMock = mock.fn(async () => currentTabs)
+    bookmarksGetTreeMock = mock.fn(async () => currentBookmarks)
+    historySearchMock = mock.fn(async () => currentHistory)
+    tabGroupsQueryMock = mock.fn(async () => [])
     setBrowserApiAvailability()
     setBrowserData()
     createTestExt({
@@ -92,7 +78,6 @@ describe('getSearchData', () => {
     })
     global.fetch = originalFetch
   })
-
   afterEach(() => {
     clearTestExt()
     global.fetch = originalFetch
@@ -101,13 +86,11 @@ describe('getSearchData', () => {
     } else {
       delete global.performance
     }
-    jest.restoreAllMocks()
+    mock.restoreAll()
   })
-
   test('merges history into bookmarks and tabs', async () => {
     const baseTime = 1700000000000
-    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
-
+    const nowSpy = mock.method(Date, 'now', () => baseTime)
     try {
       setBrowserData({
         tabs: [
@@ -165,37 +148,29 @@ describe('getSearchData', () => {
       })
       const tabsAfterConvert = actualConvertBrowserTabs(mockState.tabs)
       const historyAfterConvert = actualConvertBrowserHistory(mockState.history)
-
       const result = await getSearchData()
-
-      expect(historySearchMock).toHaveBeenCalled()
-      const [historySearchArgs] = historySearchMock.mock.calls[0]
-      expect(historySearchArgs.maxResults).toBe(ext.opts.historyMaxItems)
-      expect(historySearchArgs.startTime).toBe(baseTime - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo)
-
+      assert(historySearchMock.mock.callCount() > 0)
+      const [historySearchArgs] = historySearchMock.mock.calls[0].arguments
+      assert.strictEqual(historySearchArgs.maxResults, ext.opts.historyMaxItems)
+      assert.strictEqual(historySearchArgs.startTime, baseTime - 1000 * 60 * 60 * 24 * ext.opts.historyDaysAgo)
       const mergedTab = result.tabs.find((tab) => tab.originalUrl === 'https://example.com')
-      expect(mergedTab.lastVisitSecondsAgo).toBe(25)
-      expect(mergedTab.visitCount).toBe(12)
-
+      assert.strictEqual(mergedTab.lastVisitSecondsAgo, 25)
+      assert.strictEqual(mergedTab.visitCount, 12)
       const untouchedTab = result.tabs.find((tab) => tab.originalUrl === 'https://no-match.com')
       const originalUntouchedTab = tabsAfterConvert.find((tab) => tab.originalUrl === 'https://no-match.com')
-      expect(untouchedTab).toEqual(originalUntouchedTab)
-
+      assert.deepStrictEqual(untouchedTab, originalUntouchedTab)
       const mergedBookmark = result.bookmarks.find((bookmark) => bookmark.originalUrl === 'https://example.com')
-      expect(mergedBookmark.lastVisitSecondsAgo).toBe(25)
-      expect(mergedBookmark.visitCount).toBe(12)
-
+      assert.strictEqual(mergedBookmark.lastVisitSecondsAgo, 25)
+      assert.strictEqual(mergedBookmark.visitCount, 12)
       const remainingHistory = historyAfterConvert.filter((entry) => entry.originalUrl !== 'https://example.com')
-      expect(result.history).toEqual(remainingHistory)
+      assert.deepStrictEqual(result.history, remainingHistory)
     } finally {
-      nowSpy.mockRestore()
+      nowSpy.mock.restore()
     }
   })
-
   test('marks bookmarks that have an open browser tab', async () => {
     const baseTime = 1700000200000
-    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
-
+    const nowSpy = mock.method(Date, 'now', () => baseTime)
     try {
       setBrowserData({
         tabs: [
@@ -234,26 +209,21 @@ describe('getSearchData', () => {
         ],
         history: [],
       })
-
       const result = await getSearchData()
       const flaggedBookmark = result.bookmarks.find((bookmark) => bookmark.originalUrl === 'https://example.com')
       const plainBookmark = result.bookmarks.find((bookmark) => bookmark.originalUrl === 'https://no-open-tab.com')
-
-      expect(flaggedBookmark.tab).toBe(true)
-      expect(plainBookmark.tab).toBeUndefined()
+      assert.strictEqual(flaggedBookmark.tab, true)
+      assert.strictEqual(plainBookmark.tab, undefined)
     } finally {
-      nowSpy.mockRestore()
+      nowSpy.mock.restore()
     }
   })
-
   test('copies tab group information to matching bookmarks', async () => {
     const baseTime = 1700000300000
-    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
-
+    const nowSpy = mock.method(Date, 'now', () => baseTime)
     try {
       const mockTabGroup = { id: 101, title: 'Work Group', color: 'blue' }
-      tabGroupsQueryMock.mockResolvedValue([mockTabGroup])
-
+      tabGroupsQueryMock.mock.mockImplementation(() => Promise.resolve([mockTabGroup]))
       setBrowserData({
         tabs: [
           {
@@ -285,25 +255,20 @@ describe('getSearchData', () => {
         ],
         history: [],
       })
-
       const result = await getSearchData()
-
       const bookmark = result.bookmarks.find((b) => b.originalUrl === 'https://work.com/doc')
-      expect(bookmark.tab).toBe(true)
-      expect(bookmark.group).toBe('Work Group')
-      expect(bookmark.groupId).toBe(101)
+      assert.strictEqual(bookmark.tab, true)
+      assert.strictEqual(bookmark.group, 'Work Group')
+      assert.strictEqual(bookmark.groupId, 101)
     } finally {
-      nowSpy.mockRestore()
+      nowSpy.mock.restore()
     }
   })
-
   test('uses bundled mock data when browser APIs are unavailable', async () => {
     setBrowserApiAvailability({ tabs: false, bookmarks: false, history: false, tabGroups: false })
     ext.opts.enableBookmarks = true
-
     const baseTime = 1700000100000
-    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
-
+    const nowSpy = mock.method(Date, 'now', () => baseTime)
     try {
       const mockResponse = {
         tabs: [
@@ -344,102 +309,90 @@ describe('getSearchData', () => {
           },
         ],
       }
-      const fetchMock = jest.fn(() =>
+      const fetchMock = mock.fn(() =>
         Promise.resolve({
           json: () => Promise.resolve(mockResponse),
         }),
       )
       global.fetch = fetchMock
-
       const result = await getSearchData()
-
-      expect(fetchMock).toHaveBeenCalledWith('./mockData/chrome.json')
-      expect(tabsQueryMock).not.toHaveBeenCalled()
-      expect(bookmarksGetTreeMock).not.toHaveBeenCalled()
-      expect(historySearchMock).not.toHaveBeenCalled()
-
+      assert(fetchMock.mock.calls.some((call) => matches(call.arguments, ['./mockData/chrome.json'])))
+      assert(tabsQueryMock.mock.callCount() === 0)
+      assert(bookmarksGetTreeMock.mock.callCount() === 0)
+      assert(historySearchMock.mock.callCount() === 0)
       const expectedTabs = actualConvertBrowserTabs(mockResponse.tabs)
       const expectedBookmarks = actualConvertBrowserBookmarks(mockResponse.bookmarks)
       const expectedHistory = actualConvertBrowserHistory(mockResponse.history)
-
-      expect(result.tabs).toEqual(expectedTabs)
-      expect(result.history).toEqual(expectedHistory)
-      expect(result.bookmarks).toEqual(expectedBookmarks)
+      assert.deepStrictEqual(result.tabs, expectedTabs)
+      assert.deepStrictEqual(result.history, expectedHistory)
+      assert.deepStrictEqual(result.bookmarks, expectedBookmarks)
     } finally {
-      nowSpy.mockRestore()
+      nowSpy.mock.restore()
     }
   })
-
-  test.failing('uses the available live APIs when history is unavailable but history search is disabled', async () => {
-    ext.opts.enableHistory = false
-    setBrowserApiAvailability({ tabs: true, bookmarks: true, history: false, tabGroups: true })
-
-    setBrowserData({
-      tabs: [
-        {
-          url: 'https://tab-only.com',
-          title: 'Real Tab',
-          id: 'tab-1',
-          active: true,
-          windowId: 2,
-        },
-      ],
-      bookmarks: [
-        {
-          title: '',
-          children: [
+  test('uses the available live APIs when history is unavailable but history search is disabled', async () =>
+    assert.rejects(
+      async () => {
+        ext.opts.enableHistory = false
+        setBrowserApiAvailability({ tabs: true, bookmarks: true, history: false, tabGroups: true })
+        setBrowserData({
+          tabs: [
             {
-              title: 'Bookmarks Bar',
+              url: 'https://tab-only.com',
+              title: 'Real Tab',
+              id: 'tab-1',
+              active: true,
+              windowId: 2,
+            },
+          ],
+          bookmarks: [
+            {
+              title: '',
               children: [
                 {
-                  id: 'bookmark-1',
-                  title: 'Real Bookmark',
-                  url: 'https://real-bookmark.com',
-                  dateAdded: 1700000000000,
+                  title: 'Bookmarks Bar',
+                  children: [
+                    {
+                      id: 'bookmark-1',
+                      title: 'Real Bookmark',
+                      url: 'https://real-bookmark.com',
+                      dateAdded: 1700000000000,
+                    },
+                  ],
                 },
               ],
             },
           ],
-        },
-      ],
-      history: [],
-    })
-
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve({ tabs: [], bookmarks: [], history: [] }),
-      }),
-    )
-
-    const result = await getSearchData()
-
-    expect(global.fetch).not.toHaveBeenCalled()
-    expect(tabsQueryMock).toHaveBeenCalled()
-    expect(bookmarksGetTreeMock).toHaveBeenCalled()
-    expect(result.tabs).toEqual(actualConvertBrowserTabs(mockState.tabs))
-    expect(result.bookmarks).toEqual(actualConvertBrowserBookmarks(mockState.bookmarks))
-  })
-
+          history: [],
+        })
+        global.fetch = mock.fn(() =>
+          Promise.resolve({
+            json: () => Promise.resolve({ tabs: [], bookmarks: [], history: [] }),
+          }),
+        )
+        const result = await getSearchData()
+        assert(global.fetch.mock.callCount() === 0)
+        assert(tabsQueryMock.mock.callCount() > 0)
+        assert(bookmarksGetTreeMock.mock.callCount() > 0)
+        assert.deepStrictEqual(result.tabs, actualConvertBrowserTabs(mockState.tabs))
+        assert.deepStrictEqual(result.bookmarks, actualConvertBrowserBookmarks(mockState.bookmarks))
+      },
+      { code: 'ERR_ASSERTION' },
+    ))
   test('handles mock data fetch failures gracefully', async () => {
     setBrowserApiAvailability({ tabs: false, bookmarks: false, history: false })
-
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
-    global.fetch = jest.fn(() => Promise.reject(new Error('Network error')))
-
+    const warnSpy = mock.method(console, 'warn', () => {})
+    global.fetch = mock.fn(() => Promise.reject(new Error('Network error')))
     const result = await getSearchData()
-
-    expect(global.fetch).toHaveBeenCalledWith('./mockData/chrome.json')
-    expect(warnSpy).toHaveBeenCalledWith('Could not load example mock data', expect.any(Error))
-    expect(result).toEqual({ tabs: [], bookmarks: [], history: [], bookmarkTree: [] })
-
-    warnSpy.mockRestore()
+    assert(global.fetch.mock.calls.some((call) => matches(call.arguments, ['./mockData/chrome.json'])))
+    assert(warnSpy.mock.calls.some((call) => matches(call.arguments, ['Could not load example mock data', any(Error)])))
+    assert.deepStrictEqual(result, { tabs: [], bookmarks: [], history: [], bookmarkTree: [] })
+    warnSpy.mock.restore()
   })
-
   test('skips history retrieval when feature disabled', async () => {
     ext.opts.enableHistory = false
     const baseTime = 1700000200000
-    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
-
+    const nowSpy = mock.method(Date, 'now', () => baseTime)
     try {
       setBrowserData({
         tabs: [
@@ -480,18 +433,15 @@ describe('getSearchData', () => {
           },
         ],
       })
-
       const expectedTabs = actualConvertBrowserTabs(mockState.tabs)
       const expectedBookmarks = actualConvertBrowserBookmarks(mockState.bookmarks)
-
       const result = await getSearchData()
-
-      expect(historySearchMock).not.toHaveBeenCalled()
-      expect(result.history).toEqual([])
-      expect(result.tabs).toEqual(expectedTabs)
-      expect(result.bookmarks).toEqual(expectedBookmarks)
+      assert(historySearchMock.mock.callCount() === 0)
+      assert.deepStrictEqual(result.history, [])
+      assert.deepStrictEqual(result.tabs, expectedTabs)
+      assert.deepStrictEqual(result.bookmarks, expectedBookmarks)
     } finally {
-      nowSpy.mockRestore()
+      nowSpy.mock.restore()
     }
   })
 
@@ -517,15 +467,15 @@ describe('getSearchData', () => {
 
     const result = await getSearchData()
 
-    expect(result.tabs).toHaveLength(2)
+    assert.strictEqual(result.tabs.length, 2)
     const bookmark = result.bookmarks.find((entry) => entry.originalId === 'bookmark-1')
-    expect(bookmark.tab).toBe(true)
-    expect(bookmark.openTabTitle).toBe('Inbox')
+    assert.strictEqual(bookmark.tab, true)
+    assert.strictEqual(bookmark.openTabTitle, 'Inbox')
   })
 
   test('merges the freshest history entry when hash routes share a base URL', async () => {
     const baseTime = 1700000400000
-    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTime)
+    const nowSpy = mock.method(Date, 'now', () => baseTime)
 
     try {
       setBrowserData({
@@ -561,10 +511,10 @@ describe('getSearchData', () => {
 
       const result = await getSearchData()
       const bookmark = result.bookmarks.find((entry) => entry.originalId === 'bookmark-1')
-      expect(bookmark.lastVisitSecondsAgo).toBe(10)
-      expect(bookmark.visitCount).toBe(3)
+      assert.strictEqual(bookmark.lastVisitSecondsAgo, 10)
+      assert.strictEqual(bookmark.visitCount, 3)
     } finally {
-      nowSpy.mockRestore()
+      nowSpy.mock.restore()
     }
   })
 })

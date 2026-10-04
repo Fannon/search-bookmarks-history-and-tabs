@@ -1,5 +1,6 @@
-import { describe, expect, test } from '@jest/globals'
-
+import '../../../../test/setup.js'
+import assert from 'node:assert/strict'
+import { describe, test } from 'node:test'
 import {
   createCleanupApplyEntry,
   createCleanupApplyResult,
@@ -11,11 +12,9 @@ describe('bookmark cleanup apply helpers', () => {
   test('creates apply results and entries for status reporting', () => {
     const result = createCleanupApplyResult(true)
     const error = new Error('Browser API failed')
-
     result.applied.push(createCleanupApplyEntry('addTags', { id: 'add-1' }, ['bookmark-1']))
     result.failed.push(createCleanupApplyEntry('deleteBookmarks', { id: 'delete-1' }, ['bookmark-2'], error))
-
-    expect(result).toEqual({
+    assert.deepStrictEqual(result, {
       snapshotCreated: true,
       applied: [
         {
@@ -34,11 +33,10 @@ describe('bookmark cleanup apply helpers', () => {
         },
       ],
     })
-    expect(formatCleanupApplyEntries(result.failed)).toBe('delete-1 bookmarks bookmark-2: Browser API failed')
+    assert.strictEqual(formatCleanupApplyEntries(result.failed), 'delete-1 bookmarks bookmark-2: Browser API failed')
   })
-
   test('creates cleanup undo metadata from proposed changes', () => {
-    expect(
+    assert.deepStrictEqual(
       createCleanupUndoMetadata(
         [
           { type: 'addTags', change: { tags: ['Docs', 'docs', 'AI'] } },
@@ -49,29 +47,30 @@ describe('bookmark cleanup apply helpers', () => {
         ],
         (folderId) => (folderId === 'folder-1' ? 'References' : ''),
       ),
-    ).toEqual({
-      action: 'aiCleanup',
-      tagsAdded: ['Docs', 'AI'],
-      tagsRemoved: ['old'],
-      tagRenames: [{ from: 'llm', to: 'ai' }],
-      targetFolderId: 'folder-1',
-      targetFolderLabel: 'References',
-    })
+      {
+        action: 'aiCleanup',
+        tagsAdded: ['Docs', 'AI'],
+        tagsRemoved: ['old'],
+        tagRenames: [{ from: 'llm', to: 'ai' }],
+        targetFolderId: 'folder-1',
+        targetFolderLabel: 'References',
+      },
+    )
   })
-
   test('prefers explicit cleanup target folder paths in undo metadata', () => {
-    expect(
+    assert.deepStrictEqual(
       createCleanupUndoMetadata(
         [{ type: 'moveBookmarks', change: { targetFolderId: 'folder-1', targetFolderPath: 'Work / Docs' } }],
         () => 'Fallback',
       ),
-    ).toEqual({
-      action: 'aiCleanup',
-      tagsAdded: [],
-      tagsRemoved: [],
-      tagRenames: [],
-      targetFolderId: 'folder-1',
-      targetFolderLabel: 'Work / Docs',
-    })
+      {
+        action: 'aiCleanup',
+        tagsAdded: [],
+        tagsRemoved: [],
+        tagRenames: [],
+        targetFolderId: 'folder-1',
+        targetFolderLabel: 'Work / Docs',
+      },
+    )
   })
 })
