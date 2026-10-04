@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { watch } from 'node:fs'
 import { performance } from 'node:perf_hooks'
 import process from 'node:process'
 /**
@@ -8,7 +9,6 @@ import process from 'node:process'
  * the Chrome distribution directory. Designed for `npm run watch` to keep the
  * side-loaded extension in sync without manual rebuilds.
  */
-import chokidar from 'chokidar'
 import { bundleAll } from './bundle.js'
 import { createDist } from './createDist.js'
 import { syncDevDist } from './syncDevDist.js'
@@ -16,7 +16,7 @@ import { syncDevDist } from './syncDevDist.js'
 /**
  * Determine whether a changed file should be ignored by the watcher.
  *
- * @param {string} filePath - Path reported by chokidar.
+ * @param {string} filePath - Path relative to the watched popup directory.
  * @returns {boolean} True when the path should be skipped.
  */
 const isIgnoredPath = (filePath) => {
@@ -24,23 +24,13 @@ const isIgnoredPath = (filePath) => {
 
   const normalized = filePath.replace(/\\/g, '/')
 
-  if (normalized.startsWith('popup/lib') || normalized.includes('/popup/lib/') || normalized.endsWith('/popup/lib')) {
+  if (normalized === 'lib' || normalized.startsWith('lib/')) {
     return true
   }
 
   const fileName = normalized.substring(normalized.lastIndexOf('/') + 1)
   return /\.min\.(js|css)(\.map)?$/i.test(fileName)
 }
-
-const watcher = chokidar.watch('popup', {
-  ignoreInitial: true,
-  persistent: true,
-  ignored: isIgnoredPath,
-  awaitWriteFinish: {
-    stabilityThreshold: 200,
-    pollInterval: 100,
-  },
-})
 
 let pendingTimer = null
 let isBuilding = false
@@ -94,29 +84,33 @@ async function runBuild() {
  */
 const scheduleBuild = () => {
   if (pendingTimer) {
-    return
+    clearTimeout(pendingTimer)
   }
 
   // Coalesce rapid file change events into a single rebuild invocation
   pendingTimer = setTimeout(() => {
     pendingTimer = null
+    // Refresh inode watches so atomic saves remain observable on Linux.
+    watcher.close()
+    watcher = watchPopup()
     runBuild()
   }, 250)
 }
 
-watcher.on('ready', () => {
-  console.info('Watching popup/ for changes')
-  runBuild()
-})
+function watchPopup() {
+  return watch('popup', { recursive: true }, (eventName, filePath) => {
+    if (isIgnoredPath(filePath)) {
+      return
+    }
 
-watcher.on('all', (eventName, filePath) => {
-  if (isIgnoredPath(filePath)) {
-    return
-  }
+    console.info(`Detected ${eventName} on ${filePath}`)
+    scheduleBuild()
+  })
+}
 
-  console.info(`Detected ${eventName} on ${filePath}`)
-  scheduleBuild()
-})
+let watcher = watchPopup()
+console.info('Watching popup/ for changes')
+runBuild()
 
 /**
  * Cancel pending timers and close the watcher before exit.
@@ -126,7 +120,7 @@ const cleanup = () => {
     clearTimeout(pendingTimer)
   }
 
-  watcher.close().catch(() => {})
+  watcher.close()
 }
 
 process.on('SIGINT', () => {
