@@ -249,9 +249,16 @@ export function convertBrowserBookmarks(
       // It's a folder
       const folderTitle = entry.title
 
-      // Check ignore list before building folder metadata for skipped children
-      if (hasIgnoreList && folderTitle && ignoreList.includes(folderTitle)) {
-        continue
+      // Check ignore list before building folder metadata for skipped children.
+      // Supports bare folder names ('Archive') and trail paths ('Work/Old Bookmarks').
+      if (hasIgnoreList && folderTitle) {
+        if (ignoreList.includes(folderTitle)) {
+          continue
+        }
+        const fullPath = folderTrail.length ? `${folderTrail.join('/')}/${folderTitle}` : folderTitle
+        if (ignoreList.includes(fullPath)) {
+          continue
+        }
       }
 
       let newFolderTrail = folderTrail

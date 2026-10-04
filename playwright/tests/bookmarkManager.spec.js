@@ -1,6 +1,63 @@
 import { expect, expectNoClientErrors, test } from './fixtures.js'
 
 test.describe('Bookmark Manager', () => {
+  test('supports keyboard editing and switches between single and bulk selection', async ({ page }) => {
+    await page.locator('[data-manager-tab="bookmarks"]').click()
+    await page.locator('.skip-link').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#manager-main')).toBeFocused()
+    await expect(page.locator('[data-manager-panel="bookmarks"]')).toBeVisible()
+    await expect(page.locator('#bookmark-inspector-empty')).toBeVisible()
+    await expect(page.locator('#bookmark-edit-fields')).toBeHidden()
+    await expect(page.locator('#clear-managed-selection')).toBeDisabled()
+
+    const editButton = page.locator('[data-edit-managed-bookmark-id]').first()
+    await editButton.focus()
+    await page.keyboard.press('Enter')
+
+    await expect(editButton).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.locator('#bookmark-inspector-empty')).toBeHidden()
+    await expect(page.locator('#bookmark-edit-fields')).toBeVisible()
+    await expect(page.locator('#bookmark-edit-title')).toHaveValue('quicktype generator')
+    await expect(page.locator('.managed-bookmark-open a').first()).toHaveAccessibleName(
+      'Open quicktype generator in a new tab',
+    )
+
+    await page.getByRole('button', { name: 'Select matches', exact: true }).click()
+    await expect(page.locator('#bookmark-edit-fields')).toBeHidden()
+    await expect(page.locator('#bookmark-bulk-selection-note')).toBeVisible()
+    await expect(page.locator('#bookmark-selection-summary')).toHaveText('35 selected bookmarks')
+
+    await page.getByRole('button', { name: 'Clear selection', exact: true }).click()
+    await expect(page.locator('#bookmark-edit-fields')).toBeVisible()
+    await expect(page.locator('#bookmark-bulk-selection-note')).toBeHidden()
+    await expectNoClientErrors(page)
+  })
+
+  test('keeps every manager section within narrow and tablet viewports', async ({ page }) => {
+    test.setTimeout(15_000)
+    for (const width of [320, 390, 768]) {
+      await page.setViewportSize({ width, height: 844 })
+      for (const screen of ['overview', 'bookmarks', 'duplicates', 'tags', 'cleanup', 'undo', 'options']) {
+        await page.locator(`[data-manager-tab="${screen}"]`).click()
+        await expect(page.locator(`[data-manager-panel="${screen}"]`)).toBeVisible()
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
+      }
+    }
+    await expectNoClientErrors(page)
+  })
+
+  test('keeps the editor reachable on a narrow screen', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.locator('[data-manager-tab="bookmarks"]').click()
+    await page.locator('[data-edit-managed-bookmark-id]').first().click()
+    const list = await page.locator('#managed-bookmark-list').boundingBox()
+    expect(list.height).toBeLessThanOrEqual(422)
+    await page.locator('#bookmark-edit-fields').scrollIntoViewIfNeeded()
+    await expect(page.locator('#bookmark-edit-title')).toBeInViewport()
+    await expectNoClientErrors(page)
+  })
+
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 760 })
     await page.goto('/bookmarkManager.html')
@@ -33,7 +90,7 @@ test.describe('Bookmark Manager', () => {
     await expect(page.locator('.folder-tree-button.active')).toHaveAttribute('data-manager-folder-id', 'all')
     await expect(page.locator('#bookmark-manager-search')).toHaveValue(domain)
     await expect(page.locator('#bookmark-browser-summary')).toContainText(
-      `selected in All Bookmarks matching "${domain}"`,
+      `bookmarks in All Bookmarks matching "${domain}"`,
     )
     await expectNoClientErrors(page)
   })
@@ -98,7 +155,7 @@ test.describe('Bookmark Manager', () => {
 
     await expect(firstBookmark).toHaveClass(/current/)
     await expect(page.locator('#bookmark-selection-summary')).not.toHaveText('Click a bookmark or check bookmarks.')
-    await expect(page.locator('.suggested-tags-section')).toContainText('Add suggested tags')
+    await expect(page.locator('.suggested-tags-section')).toContainText('Tag actions')
     await expect(page.locator('.suggested-tags-section')).toContainText("browser's local LLM")
     await expect(page.locator('#add-tags-visible')).toHaveCount(0)
     await expect(page.locator('#suggest-tags-bookmark')).toHaveCount(0)
