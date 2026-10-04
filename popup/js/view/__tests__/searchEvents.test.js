@@ -321,14 +321,22 @@ describe('searchEvents openResultItem', () => {
     expect(ext.model.bookmarks[1].openTabTitle).toBe('Other Tab')
   })
 
-  it('keeps the bookmark flagged when a sibling hash-route tab is still open', async () => {
-    const results = [
+  it.each([
+    [2, 3],
+    [3, 2],
+  ])('refreshes visible bookmark metadata when closing hash tabs %s then %s', async (first, last) => {
+    const tabs = [
       {
         type: 'tab',
         originalId: 2,
         originalUrl: 'https://app.test/#/inbox',
         url: 'app.test',
         title: 'Inbox',
+        active: true,
+        favIconUrl: 'https://app.test/inbox.png',
+        group: 'Work',
+        groupLower: 'work',
+        groupId: 7,
         score: 8.4,
       },
       {
@@ -337,31 +345,77 @@ describe('searchEvents openResultItem', () => {
         originalUrl: 'https://app.test/#/settings',
         url: 'app.test',
         title: 'Settings',
+        active: false,
+        favIconUrl: 'https://app.test/settings.png',
+        group: 'Personal',
+        groupLower: 'personal',
+        groupId: 8,
         score: 8.0,
       },
     ]
-    const bookmarks = [
-      {
-        type: 'bookmark',
-        originalId: 'bm-app',
-        originalUrl: 'https://app.test/',
-        url: 'app.test',
-        title: 'App',
-        tab: true,
-        openTabTitle: 'Inbox',
-        openTabActive: true,
-      },
-    ]
-
-    const { viewModule, elements } = await setupSearchEvents({ results, bookmarks })
+    const bookmark = {
+      ...tabs[0],
+      type: 'bookmark',
+      originalId: 'bm-app',
+      originalUrl: 'https://app.test/',
+      title: 'App',
+      tab: true,
+      openTabTitle: 'Inbox',
+      openTabActive: true,
+      highlightedGroup: '@<mark>Work</mark>',
+    }
+    const { viewModule, elements } = await setupSearchEvents({
+      results: [bookmark, ...tabs],
+      bookmarks: [bookmark],
+      opts: { displayTabGroup: true, displayFavicons: true },
+    })
     await viewModule.renderSearchResults()
 
-    elements.resultList.children[0].querySelector('.close').dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+    elements.resultList
+      .querySelector(`[x-original-id="${first}"] .close`)
+      .dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
 
+    const remaining = tabs.find((tab) => tab.originalId === last)
     expect(ext.model.tabs).toHaveLength(1)
-    expect(ext.model.tabs[0].originalId).toBe(3)
-    expect(ext.model.bookmarks[0].tab).toBe(true)
-    expect(ext.model.bookmarks[0].openTabTitle).toBe('Settings')
+    for (const entry of [ext.model.bookmarks[0], ext.model.result[0]]) {
+      expect(entry).toMatchObject({
+        tab: true,
+        openTabTitle: remaining.title,
+        openTabActive: remaining.active,
+        favIconUrl: remaining.favIconUrl,
+        group: remaining.group,
+        groupLower: remaining.groupLower,
+        groupId: remaining.groupId,
+      })
+    }
+    let visibleBookmark = elements.resultList.querySelector('.bookmark')
+    expect(visibleBookmark.querySelector('[title="Tab Group"]').textContent).toBe(`@${remaining.group}`)
+    expect(visibleBookmark.querySelector('.favicon').getAttribute('src')).toBe(remaining.favIconUrl)
+    expect(visibleBookmark.style.backgroundImage).toContain('linear-gradient')
+
+    elements.resultList
+      .querySelector(`[x-original-id="${last}"] .close`)
+      .dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+
+    expect(ext.model.tabs).toHaveLength(0)
+    for (const entry of [ext.model.bookmarks[0], ext.model.result[0]]) {
+      for (const field of [
+        'tab',
+        'openTabTitle',
+        'openTabActive',
+        'favIconUrl',
+        'group',
+        'groupLower',
+        'groupId',
+        'highlightedGroup',
+      ]) {
+        expect(entry[field]).toBeUndefined()
+      }
+    }
+    visibleBookmark = elements.resultList.querySelector('.bookmark')
+    expect(visibleBookmark.querySelector('[title="Tab Group"]')).toBeNull()
+    expect(visibleBookmark.querySelector('.favicon')).toBeNull()
+    expect(visibleBookmark.style.backgroundImage).toBe('')
   })
 
   it('ignores stale close buttons without a valid tab id', async () => {

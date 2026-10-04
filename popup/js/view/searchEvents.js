@@ -37,43 +37,50 @@ function clearBookmarkOpenTabState(closedTab) {
   // open, keep the bookmark flagged and refresh from the remaining tab.
   const remainingTab = ext.model.tabs.find((tab) => tab?.url === closedTab.url)
 
-  for (const bookmark of ext.model.bookmarks) {
-    if (bookmark?.url !== closedTab.url) {
-      continue
-    }
+  // Search results can be copies of the bookmark model; update both before rendering.
+  for (const items of [ext.model.bookmarks, ext.model.result || []]) {
+    for (const bookmark of items) {
+      if (bookmark?.type !== 'bookmark' || bookmark.url !== closedTab.url) {
+        continue
+      }
 
-    if (remainingTab) {
-      bookmark.tab = true
-      bookmark.openTabTitle = remainingTab.title
-      bookmark.openTabActive = remainingTab.active
-      if (remainingTab.favIconUrl) {
-        bookmark.favIconUrl = remainingTab.favIconUrl
-      } else if (bookmark.favIconUrl === closedTab.favIconUrl) {
+      if (bookmark.group !== remainingTab?.group) {
+        delete bookmark.highlightedGroup
+      }
+
+      if (remainingTab) {
+        bookmark.tab = true
+        bookmark.openTabTitle = remainingTab.title
+        bookmark.openTabActive = remainingTab.active
+        if (remainingTab.favIconUrl) {
+          bookmark.favIconUrl = remainingTab.favIconUrl
+        } else if (bookmark.favIconUrl === closedTab.favIconUrl) {
+          delete bookmark.favIconUrl
+        }
+        if (remainingTab.group) {
+          bookmark.group = remainingTab.group
+          bookmark.groupLower = remainingTab.groupLower
+          bookmark.groupId = remainingTab.groupId
+        } else {
+          delete bookmark.group
+          delete bookmark.groupLower
+          delete bookmark.groupId
+        }
+        continue
+      }
+
+      delete bookmark.tab
+      delete bookmark.openTabTitle
+      delete bookmark.openTabActive
+
+      if (bookmark.favIconUrl === closedTab.favIconUrl) {
         delete bookmark.favIconUrl
       }
-      if (remainingTab.group) {
-        bookmark.group = remainingTab.group
-        bookmark.groupLower = remainingTab.groupLower
-        bookmark.groupId = remainingTab.groupId
-      } else {
-        delete bookmark.group
-        delete bookmark.groupLower
-        delete bookmark.groupId
-      }
-      continue
+
+      delete bookmark.group
+      delete bookmark.groupLower
+      delete bookmark.groupId
     }
-
-    delete bookmark.tab
-    delete bookmark.openTabTitle
-    delete bookmark.openTabActive
-
-    if (bookmark.favIconUrl === closedTab.favIconUrl) {
-      delete bookmark.favIconUrl
-    }
-
-    delete bookmark.group
-    delete bookmark.groupLower
-    delete bookmark.groupId
   }
 }
 
