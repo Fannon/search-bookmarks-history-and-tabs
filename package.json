@@ -40,7 +40,7 @@
     "test:e2e:edge": "playwright test --project=edge",
     "test:unit": "node bin/test.js",
     "test:unit:watch": "node bin/test.js --watch",
-    "test:unit:coverage": "node bin/test.js --coverage",
+    "test:unit:coverage": "node bin/test.js --coverage --test-concurrency=1",
     "test:perf": "mkdir -p reports && npm run test:perf:unit > reports/unit_output.txt 2>&1 && : > reports/playwright_output.txt && node bin/perf-summary.js",
     "test:perf:unit": "npm run test:unit -- --test-concurrency=1 popup/js/__tests__/performance.test.js popup/js/__tests__/comparison.test.js",
     "test:perf:e2e": "npx playwright test playwright/tests/performance.spec.js --project=chromium --workers=1",
