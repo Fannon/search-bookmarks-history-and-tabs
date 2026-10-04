@@ -278,6 +278,103 @@ describe('convertBrowserBookmarks', () => {
     expect(result).toHaveLength(0)
   })
 
+  it('skips bookmarks in folders matched by trail path', () => {
+    ext.opts.bookmarksIgnoreFolderList = ['Work/Old Bookmarks']
+
+    // Mirror a real bookmark tree: root (depth 1) -> system folder (depth 2) ->
+    // user folders (depth 3+), which is when folderTrail tracking starts.
+    const tree = [
+      {
+        title: 'root',
+        children: [
+          {
+            title: 'Bookmarks bar',
+            children: [
+              {
+                title: 'Work',
+                children: [
+                  {
+                    title: 'Old Bookmarks',
+                    children: [{ id: 'bm-1', title: 'Old', url: 'https://old.example.com' }],
+                  },
+                  {
+                    title: 'Current',
+                    children: [{ id: 'bm-2', title: 'Current', url: 'https://current.example.com' }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ]
+
+    const result = convertBrowserBookmarks(tree)
+    expect(result.map((bookmark) => bookmark.originalId)).toEqual(['bm-2'])
+  })
+
+  it('ignores subfolders below a path-ignored folder', () => {
+    ext.opts.bookmarksIgnoreFolderList = ['Work/Old Bookmarks']
+
+    const tree = [
+      {
+        title: 'root',
+        children: [
+          {
+            title: 'Bookmarks bar',
+            children: [
+              {
+                title: 'Work',
+                children: [
+                  {
+                    title: 'Old Bookmarks',
+                    children: [
+                      {
+                        title: 'Deeper',
+                        children: [{ id: 'bm-1', title: 'Deep', url: 'https://deep.example.com' }],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ]
+
+    expect(convertBrowserBookmarks(tree)).toHaveLength(0)
+  })
+
+  it('does not ignore folders with a partially matching path', () => {
+    ext.opts.bookmarksIgnoreFolderList = ['Work/Old Bookmarks']
+
+    const tree = [
+      {
+        title: 'root',
+        children: [
+          {
+            title: 'Bookmarks bar',
+            children: [
+              {
+                title: 'Other',
+                children: [
+                  {
+                    title: 'Old Bookmarks',
+                    children: [{ id: 'bm-1', title: 'Kept', url: 'https://kept.example.com' }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ]
+
+    const result = convertBrowserBookmarks(tree)
+    expect(result).toHaveLength(1)
+  })
+
   it('checks ignored folders before preparing child folder metadata', () => {
     ext.opts.bookmarksIgnoreFolderList = ['Ignored']
     const folderTrail = {
