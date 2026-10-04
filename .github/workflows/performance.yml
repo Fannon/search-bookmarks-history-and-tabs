@@ -36,29 +36,9 @@ jobs:
       - name: Update Popup Libraries
         run: npm run build:update-libs
 
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(npm ls @playwright/test --json | jq -r '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright Chromium
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install chromium --with-deps
-
-      - name: Install Playwright deps (if cached)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
-
       - name: Run Performance Benchmarks
         id: perf
         run: |
-          mkdir -p reports
           npm run test:perf
           cat reports/perf-summary.md >> $GITHUB_STEP_SUMMARY
 
@@ -69,4 +49,4 @@ jobs:
           path: |
             reports/jest_output.txt
             reports/playwright_output.txt
-          retention-days: 180
+          retention-days: 30

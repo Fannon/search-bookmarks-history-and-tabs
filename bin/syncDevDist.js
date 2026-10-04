@@ -1,8 +1,8 @@
 #!/usr/bin/env node
+import * as fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import fs from 'fs-extra'
 
 const SOURCE_DIST_PATH = path.resolve('dist')
 const DEV_DIST_PATH = '/mnt/c/Development/search-bookmarks-history-and-tabs/dist'
@@ -14,13 +14,15 @@ const DEV_DIST_PATH = '/mnt/c/Development/search-bookmarks-history-and-tabs/dist
  * the extra checkout is not available.
  */
 export async function syncDevDist() {
-  const devDistExists = await fs.pathExists(DEV_DIST_PATH)
-  if (!devDistExists) {
-    return
+  try {
+    await fs.access(DEV_DIST_PATH)
+  } catch (error) {
+    if (error.code === 'ENOENT') return
+    throw error
   }
 
-  await fs.remove(DEV_DIST_PATH)
-  await fs.copy(SOURCE_DIST_PATH, DEV_DIST_PATH)
+  await fs.rm(DEV_DIST_PATH, { recursive: true, force: true })
+  await fs.cp(SOURCE_DIST_PATH, DEV_DIST_PATH, { recursive: true })
   console.info(`Synced dist/ to ${DEV_DIST_PATH}`)
 }
 
