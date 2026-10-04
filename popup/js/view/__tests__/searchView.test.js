@@ -382,6 +382,7 @@ describe('searchView renderSearchResults', () => {
     const { module, elements } = await setupSearchView({
       results: specialResults,
     })
+    ext.model.rawSearchTerm = '#MixedCase'
 
     await module.renderSearchResults()
 
@@ -391,6 +392,7 @@ describe('searchView renderSearchResults', () => {
 
     expect(link).toContain('bookmark%2Fwith%2Fslashes')
     expect(link).not.toContain('bookmark/with/slashes')
+    expect(link).toContain('/search/%23MixedCase')
   })
 
   it('displays last-visited badge for items visited 0 seconds ago (just now)', async () => {

@@ -45,6 +45,7 @@ export async function renderSearchResults() {
     const opts = ext.opts
     const shouldHighlight = opts.displaySearchMatchHighlight
     const searchTerm = ext.model.searchTerm
+    const rawSearchTerm = ext.model.rawSearchTerm ?? searchTerm
 
     // Set up right-click context menu prevention (one-time setup)
     if (!document.hasContextMenuListener) {
@@ -56,7 +57,7 @@ export async function renderSearchResults() {
 
     // Use an array to accumulate HTML strings for all result items
     const itemsHTML = []
-    const searchTermSuffix = `/search/${encodeURIComponent(searchTerm || '')}`
+    const searchTermSuffix = `/search/${encodeURIComponent(rawSearchTerm || '')}`
 
     // Pre-calculate type-based colors once
     const typeColors = {}

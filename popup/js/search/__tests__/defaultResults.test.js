@@ -57,7 +57,7 @@ describe('addDefaultEntries', () => {
         { id: 1, title: 'History 1', url: 'https://one.test' },
         { id: 2, title: 'History 2', url: 'https://two.test' },
       ])
-      expect(ext.model.result).toBe(results)
+      expect(ext.model.result).toBeUndefined()
     })
 
     test('clones history entries so downstream scoring cannot mutate source data', async () => {

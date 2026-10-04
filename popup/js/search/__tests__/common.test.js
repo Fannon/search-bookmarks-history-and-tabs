@@ -374,7 +374,7 @@ describe('search', () => {
     expect(direct.title).toBe('Direct: "example.com"')
   })
 
-  test.failing('preserves the user-typed casing for direct URL navigation targets', async () => {
+  test('preserves the user-typed casing for direct URL navigation targets', async () => {
     ext.dom.searchInput.value = 'Example.com/API/Foo'
     ext.opts.enableSearchEngines = false
     ext.opts.customSearchEngines = []
@@ -384,6 +384,39 @@ describe('search', () => {
     const direct = ext.model.result.find((item) => item.type === 'direct')
     expect(direct).toBeDefined()
     expect(direct.originalUrl).toBe('https://Example.com/API/Foo')
+  })
+
+  test('keeps newer search results when an earlier empty search resolves later', async () => {
+    let resolveDefaultTabs
+    mockGetBrowserTabs.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveDefaultTabs = resolve
+        }),
+    )
+    ext.opts.enableSearchEngines = false
+    ext.opts.customSearchEngines = []
+    ext.model.bookmarks = createBookmarksTestData([
+      {
+        id: 'new-result',
+        title: 'New result',
+        url: 'https://new.test',
+      },
+    ])
+
+    ext.dom.searchInput.value = ''
+    const emptySearch = search()
+
+    ext.dom.searchInput.value = 'new'
+    await search({ key: 'n' })
+
+    resolveDefaultTabs([])
+    await emptySearch
+
+    expect(ext.model.result).toHaveLength(1)
+    expect(ext.model.result[0].originalId).toBe('new-result')
+    expect(ext.model.rawSearchTerm).toBe('new')
+    expect(mockRenderSearchResults).toHaveBeenCalledTimes(1)
   })
 
   test('keeps the newest async search results when earlier searches resolve later', async () => {
