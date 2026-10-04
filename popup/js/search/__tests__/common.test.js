@@ -359,6 +359,7 @@ describe('search', () => {
   }
   for (const term of [
     'foo bar.com',
+    'example.com docs',
     'just some words',
     'example',
     'example.com/path with spaces',
@@ -372,7 +373,10 @@ describe('search', () => {
       ext.model.tabs = []
       ext.model.history = []
       await search({ key: 'e' })
-      assert.strictEqual(ext.model.result.some((item) => item.type === 'direct'), false)
+      assert.strictEqual(
+        ext.model.result.some((item) => item.type === 'direct'),
+        false,
+      )
     })
   }
   test('preserves the user-typed casing for direct URL navigation targets', async () =>
