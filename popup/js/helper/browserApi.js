@@ -79,7 +79,7 @@ export function convertBrowserTabs(chromeTabs, groupMap) {
     if (typeof el?.url === 'string' && el.url.trim()) {
       const cleanUrl = cleanUpUrl(el.url)
       const title = getTitle(el.title, cleanUrl)
-      const titleLower = title.toLowerCase().trim()
+      const titleLower = title.toLowerCase()
 
       // Only look up group info if groups are available and tab has a valid groupId
       let group = ''
@@ -92,12 +92,18 @@ export function convertBrowserTabs(chromeTabs, groupMap) {
         }
       }
 
-      const searchStringLower = createSearchStringLower(title, cleanUrl, undefined, undefined, group)
+      const searchStringLower = joinSearchFields(
+        title === cleanUrl ? '' : titleLower,
+        cleanUrl,
+        undefined,
+        undefined,
+        groupLower,
+      )
 
       const tabItem = {
         type: 'tab',
         title,
-        titleLower: titleLower,
+        titleLower: titleLower.trim(),
         url: cleanUrl,
         originalUrl: el.url,
         originalId: el.id,
@@ -168,6 +174,7 @@ export function convertBrowserBookmarks(
 
   const ignoreList = ext.opts.bookmarksIgnoreFolderList
   const hasIgnoreList = ignoreList?.length > 0
+  const searchFolderLower = folderText.toLowerCase()
 
   for (let i = 0; i < bookmarks.length; i++) {
     const entry = bookmarks[i]
@@ -210,8 +217,14 @@ export function convertBrowserBookmarks(
       }
 
       const finalTitle = getTitle(title, cleanedUrl)
-      const titleLower = finalTitle.toLowerCase().trim()
-      const searchStringLower = createSearchStringLower(finalTitle, cleanedUrl, tagsText, folderText)
+      const titleLower = finalTitle.toLowerCase()
+      const tagsLower = tagsText.toLowerCase()
+      const searchStringLower = joinSearchFields(
+        finalTitle === cleanedUrl ? '' : titleLower,
+        cleanedUrl,
+        tagsLower,
+        searchFolderLower,
+      )
 
       const mappedEntry = {
         type: 'bookmark',
@@ -220,13 +233,13 @@ export function convertBrowserBookmarks(
         index: entry.index,
         folderId,
         title: finalTitle,
-        titleLower: titleLower,
+        titleLower: titleLower.trim(),
         originalUrl,
         url: cleanedUrl,
         dateAdded: entry.dateAdded,
         customBonusScore,
         tags: tagsText,
-        tagsLower: tagsText.toLowerCase(),
+        tagsLower,
         tagsArray: tagsArray,
         tagsArrayLower: tagsArray.map((t) => t.toLowerCase()),
         folder: folderText,
@@ -367,13 +380,13 @@ export function convertBrowserHistory(history) {
 
     const cleanUrl = cleanUpUrl(el.url)
     const title = getTitle(el.title, cleanUrl)
-    const titleLower = title.toLowerCase().trim()
-    const searchStringLower = createSearchStringLower(title, cleanUrl)
+    const titleLower = title.toLowerCase()
+    const searchStringLower = joinSearchFields(title === cleanUrl ? '' : titleLower, cleanUrl)
 
     const historyItem = {
       type: 'history',
       title,
-      titleLower: titleLower,
+      titleLower: titleLower.trim(),
       originalUrl: el.url,
       url: cleanUrl,
       visitCount: el.visitCount,
@@ -407,8 +420,13 @@ export function convertBrowserHistory(history) {
  * @returns {string} Combined lowercased search string.
  */
 export function createSearchStringLower(title, url, tags, folder, group) {
+  return joinSearchFields(title === url ? '' : title, url, tags, folder, group).toLowerCase()
+}
+
+/** Join prepared fields without lowercasing the same title, URL, or folder again. */
+function joinSearchFields(title, url, tags, folder, group) {
   let result = ''
-  if (title && title !== url) {
+  if (title) {
     result += title
   }
   if (url) {
@@ -423,7 +441,7 @@ export function createSearchStringLower(title, url, tags, folder, group) {
   if (group) {
     result += (result ? '¦' : '') + group
   }
-  return result.toLowerCase()
+  return result
 }
 
 /**
