@@ -52,10 +52,15 @@ export async function getBrowserTabs(queryOptions = {}) {
     queryOptions.currentWindow = true
   }
   if (browserApi.tabs) {
-    return (await browserApi.tabs.query(queryOptions)).filter((el) => {
-      const url = typeof el?.url === 'string' ? el.url : ''
-      return !!url.trim()
-    })
+    try {
+      return (await browserApi.tabs.query(queryOptions)).filter((el) => {
+        const url = typeof el?.url === 'string' ? el.url : ''
+        return !!url.trim()
+      })
+    } catch (err) {
+      console.warn(`Error fetching tabs: ${err.message}`)
+      return []
+    }
   } else {
     console.warn(`No browser tab API found. Returning no results.`)
     return []
@@ -129,7 +134,12 @@ export function convertBrowserTabs(chromeTabs, groupMap) {
  */
 export async function getBrowserBookmarks() {
   if (browserApi.bookmarks?.getTree) {
-    return browserApi.bookmarks.getTree()
+    try {
+      return await browserApi.bookmarks.getTree()
+    } catch (err) {
+      console.warn(`Error fetching bookmarks: ${err.message}`)
+      return []
+    }
   } else {
     console.warn(`No browser bookmark API found. Returning no results.`)
     return []
@@ -298,11 +308,16 @@ export function convertBrowserBookmarks(
  */
 export async function getBrowserHistory(startTime, maxResults) {
   if (browserApi.history) {
-    return await browserApi.history.search({
-      text: '',
-      startTime: startTime,
-      maxResults: maxResults,
-    })
+    try {
+      return await browserApi.history.search({
+        text: '',
+        startTime: startTime,
+        maxResults: maxResults,
+      })
+    } catch (err) {
+      console.warn(`Error fetching history: ${err.message}`)
+      return []
+    }
   } else {
     console.warn(`No browser history API found. Returning no results.`)
     return []

@@ -5,6 +5,8 @@ import {
   convertBrowserHistory,
   convertBrowserTabs,
   createSearchStringLower,
+  getBrowserBookmarks,
+  getBrowserHistory,
   getBrowserTabGroups,
   getBrowserTabs,
   getTitle,
@@ -26,6 +28,9 @@ afterEach(() => {
   delete globalThis.ext
   jest.restoreAllMocks()
   delete browserApi.tabs
+  delete browserApi.bookmarks
+  delete browserApi.history
+  delete browserApi.tabGroups
 })
 
 describe('getBrowserTabs', () => {
@@ -47,6 +52,34 @@ describe('getBrowserTabs', () => {
     expect(result[0]).toMatchObject({ id: 3, url: 'chrome-extension://abcdef' })
     expect(result[1]).toMatchObject({ id: 4, url: 'https://example.com' })
     expect(result[2]).toMatchObject({ id: 5, url: 'moz-extension://xyz' })
+  })
+
+  it('warns and returns no results when the API rejects', async () => {
+    browserApi.tabs = { query: jest.fn().mockRejectedValue(new Error('permission denied')) }
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    await expect(getBrowserTabs()).resolves.toEqual([])
+    expect(warnSpy).toHaveBeenCalledWith('Error fetching tabs: permission denied')
+  })
+})
+
+describe('getBrowserBookmarks', () => {
+  it('warns and returns no results when the API rejects', async () => {
+    browserApi.bookmarks = { getTree: jest.fn().mockRejectedValue(new Error('permission denied')) }
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    await expect(getBrowserBookmarks()).resolves.toEqual([])
+    expect(warnSpy).toHaveBeenCalledWith('Error fetching bookmarks: permission denied')
+  })
+})
+
+describe('getBrowserHistory', () => {
+  it('warns and returns no results when the API rejects', async () => {
+    browserApi.history = { search: jest.fn().mockRejectedValue(new Error('permission denied')) }
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    await expect(getBrowserHistory(100, 20)).resolves.toEqual([])
+    expect(warnSpy).toHaveBeenCalledWith('Error fetching history: permission denied')
   })
 })
 
