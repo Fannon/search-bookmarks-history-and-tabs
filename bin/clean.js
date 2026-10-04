@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 /**
  * @file Removes build artifacts prior to bundling.
  *
@@ -8,7 +6,9 @@ import { fileURLToPath } from 'node:url'
  * generated bundle files from popup/js/ and popup/css/ so subsequent builds
  * start from a predictable state.
  */
-import fs from 'fs-extra'
+import fs from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const thisDir = dirname(fileURLToPath(import.meta.url))
 const popupJsDir = join(thisDir, '..', 'popup', 'js')
@@ -18,7 +18,7 @@ const popupCssDir = join(thisDir, '..', 'popup', 'css')
 try {
   for (const name of fs.readdirSync(popupJsDir)) {
     if (name.endsWith('.bundle.min.js') || name.endsWith('.bundle.min.js.map')) {
-      fs.removeSync(join(popupJsDir, name))
+      fs.rmSync(join(popupJsDir, name), { force: true })
     }
   }
 } catch {
@@ -29,7 +29,7 @@ try {
 try {
   for (const name of fs.readdirSync(popupCssDir)) {
     if (name.endsWith('.min.css')) {
-      fs.removeSync(join(popupCssDir, name))
+      fs.rmSync(join(popupCssDir, name), { force: true })
     }
   }
 } catch {
@@ -37,4 +37,4 @@ try {
 }
 
 // Clear dist/
-fs.removeSync('./dist')
+fs.rmSync('./dist', { recursive: true, force: true })

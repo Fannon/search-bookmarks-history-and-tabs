@@ -1,9 +1,5 @@
 #!/usr/bin/env node
 import { createWriteStream } from 'node:fs'
-import { join } from 'node:path'
-import process from 'node:process'
-import { fileURLToPath } from 'node:url'
-import { ZipArchive } from 'archiver'
 /**
  * @file Builds the Chrome-ready distribution directory and archive.
  *
@@ -11,7 +7,11 @@ import { ZipArchive } from 'archiver'
  * bundled equivalents, removes test fixtures, and packages the result as a zip
  * file. This mirrors the artifact uploaded to browser extension stores.
  */
-import fs from 'fs-extra'
+import * as fs from 'node:fs/promises'
+import { basename, relative, sep } from 'node:path'
+import process from 'node:process'
+import { fileURLToPath } from 'node:url'
+import { ZipArchive } from 'archiver'
 
 // Track CSS files that receive minified companions so we can prune originals
 const CSS_BUNDLED_FILENAMES = new Set([
@@ -28,41 +28,40 @@ const CSS_BUNDLED_FILENAMES = new Set([
 export async function createDist(clean = true) {
   // Remove and create directories
   if (clean) {
-    await fs.remove('dist')
+    await fs.rm('dist', { recursive: true, force: true })
   }
-  await fs.ensureDir('dist/chrome')
-  await fs.ensureDir('dist/chrome/images')
+  await fs.mkdir('dist/chrome/images', { recursive: true })
 
   // Copy manifest
-  await fs.copy('manifest.json', 'dist/chrome/manifest.json')
+  await fs.copyFile('manifest.json', 'dist/chrome/manifest.json')
 
   // Copy images
   const images = ['logo-16.png', 'logo-32.png', 'logo-48.png', 'logo-128.png']
-  await Promise.all(images.map((img) => fs.copy(`images/${img}`, `dist/chrome/images/${img}`)))
+  await Promise.all(images.map((img) => fs.copyFile(`images/${img}`, `dist/chrome/images/${img}`)))
 
-  // Always remove the popup destination before copying so stale
-  // files removed from popup/ are not left behind (e.g. during watch).
-  await fs.remove('dist/chrome/popup')
+  // Rebuild the popup directory even during watch builds so removed files cannot linger.
+  await fs.rm('dist/chrome/popup', { recursive: true, force: true })
+  await fs.cp('popup', 'dist/chrome/popup', {
+    recursive: true,
+    filter: (source) => {
+      const name = basename(source)
+      if (name === 'mockData' || name === '__tests__' || name.endsWith('.test.js') || name.endsWith('.map')) {
+        return false
+      }
+      // Entry bundles live directly in popup/js; their source modules are already bundled.
+      if (relative('popup', source).startsWith(`js${sep}`)) {
+        return name.endsWith('.bundle.min.js')
+      }
+      return !CSS_BUNDLED_FILENAMES.has(name)
+    },
+  })
 
-  // Copy popup directory
-  await fs.copy('popup/', 'dist/chrome/popup/', { recursive: true })
-
-  await modifyHtmlFile('dist/chrome/popup/index.html')
-  await modifyHtmlFile('dist/chrome/popup/tags.html')
-  await modifyHtmlFile('dist/chrome/popup/folders.html')
-  await modifyHtmlFile('dist/chrome/popup/groups.html')
-  await modifyHtmlFile('dist/chrome/popup/editBookmark.html')
-  await modifyHtmlFile('dist/chrome/popup/bookmarkManager.html')
-
-  // Remove mock data and test artifacts
-  await fs.rm('dist/chrome/popup/mockData', { recursive: true, force: true })
-
-  await removeBundledJs('dist/chrome/popup/js')
-  await removeBundledCss('dist/chrome/popup/css')
-
-  const popupDir = 'dist/chrome/popup'
-  await removeTestArtifacts(popupDir)
-  console.info(`Created dist/chrome/`)
+  await Promise.all(
+    ['index', 'tags', 'folders', 'groups', 'editBookmark', 'bookmarkManager'].map((page) =>
+      modifyHtmlFile(`dist/chrome/popup/${page}.html`),
+    ),
+  )
+  console.info('Created dist/chrome/')
 
   // Create zip archive
   const archive = new ZipArchive({ zlib: { level: 9 } })
@@ -88,58 +87,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error(error)
     process.exit(1)
   })
-}
-
-/**
- * Recursively delete non-bundled JavaScript files beneath a directory.
- * @param {string} dir Path to inspect for removable files.
- * @returns {Promise<void>}
- */
-async function removeBundledJs(dir) {
-  try {
-    const entries = await fs.readdir(dir, { withFileTypes: true })
-    for (const entry of entries) {
-      const fullPath = join(dir, entry.name)
-      if (entry.isDirectory()) {
-        await removeBundledJs(fullPath)
-        const remaining = await fs.readdir(fullPath)
-        if (!remaining.length) {
-          await fs.remove(fullPath)
-        }
-      } else if (entry.isFile() && entry.name.endsWith('.js') && !entry.name.endsWith('.bundle.min.js')) {
-        await fs.remove(fullPath)
-      }
-    }
-  } catch (error) {
-    if (error.code !== 'ENOENT') {
-      throw error
-    }
-  }
-}
-
-/**
- * Remove test artifacts such as __tests__ directories and *.test.js files.
- * @param {string} dir Directory to traverse while pruning test files.
- * @returns {Promise<void>}
- */
-async function removeTestArtifacts(dir) {
-  try {
-    const entries = await fs.readdir(dir, { withFileTypes: true })
-    for (const entry of entries) {
-      const fullPath = join(dir, entry.name)
-      if (entry.isDirectory()) {
-        if (entry.name === '__tests__') {
-          await fs.remove(fullPath)
-        } else {
-          await removeTestArtifacts(fullPath)
-        }
-      } else if (entry.isFile() && entry.name.endsWith('.test.js')) {
-        await fs.remove(fullPath)
-      }
-    }
-  } catch {
-    // Ignore errors if dir doesn't exist
-  }
 }
 
 /**
@@ -185,48 +132,4 @@ function replaceStylesheetReferences(htmlContent) {
       return match
     },
   )
-}
-
-/**
- * Recursively delete non-bundled CSS files beneath a directory.
- * @param {string} dir Path to inspect for removable files.
- * @returns {Promise<void>}
- */
-async function removeBundledCss(dir) {
-  try {
-    const entries = await fs.readdir(dir, { withFileTypes: true })
-    for (const entry of entries) {
-      const fullPath = join(dir, entry.name)
-      if (entry.isDirectory()) {
-        await removeBundledCss(fullPath)
-        const remaining = await fs.readdir(fullPath)
-        if (!remaining.length) {
-          await fs.remove(fullPath)
-        }
-      } else if (entry.isFile() && shouldRemoveOriginalCss(entry.name)) {
-        await fs.remove(fullPath)
-      }
-    }
-  } catch (error) {
-    if (error.code !== 'ENOENT') {
-      throw error
-    }
-  }
-}
-
-/**
- * Determine whether an original CSS file should be pruned from dist output.
- * @param {string} fileName File name to evaluate.
- * @returns {boolean}
- */
-function shouldRemoveOriginalCss(fileName) {
-  if (!fileName.endsWith('.css')) {
-    return false
-  }
-
-  if (fileName.endsWith('.bundle.min.css')) {
-    return false
-  }
-
-  return CSS_BUNDLED_FILENAMES.has(fileName)
 }

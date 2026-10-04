@@ -5,7 +5,7 @@
  * Copies the minified browser-ready assets from node_modules into the extension
  * so the popup can load dependencies without a bundler at runtime.
  */
-import * as fs from 'fs-extra'
+import * as fs from 'node:fs/promises'
 
 /**
  * Copy third-party popup dependencies from node_modules into the workspace.
@@ -14,13 +14,14 @@ import * as fs from 'fs-extra'
  */
 async function updateLibs() {
   // Clear stale assets so the directory mirrors current dependency versions
-  await fs.emptyDir('popup/lib')
+  await fs.rm('popup/lib', { recursive: true, force: true })
+  await fs.mkdir('popup/lib', { recursive: true })
 
   await Promise.all([
-    fs.copy('node_modules/@leeoniya/ufuzzy/dist/uFuzzy.iife.min.js', 'popup/lib/uFuzzy.iife.min.js'),
-    fs.copy('node_modules/js-yaml/dist/browser/js-yaml.umd.min.js', 'popup/lib/js-yaml.min.js'),
-    fs.copy('node_modules/@yaireo/tagify/dist/tagify.js', 'popup/lib/tagify.min.js'),
-    fs.copy('node_modules/@yaireo/tagify/dist/tagify.css', 'popup/lib/tagify.min.css'),
+    fs.copyFile('node_modules/@leeoniya/ufuzzy/dist/uFuzzy.iife.min.js', 'popup/lib/uFuzzy.iife.min.js'),
+    fs.copyFile('node_modules/js-yaml/dist/browser/js-yaml.umd.min.js', 'popup/lib/js-yaml.min.js'),
+    fs.copyFile('node_modules/@yaireo/tagify/dist/tagify.js', 'popup/lib/tagify.min.js'),
+    fs.copyFile('node_modules/@yaireo/tagify/dist/tagify.css', 'popup/lib/tagify.min.css'),
   ])
 
   console.info('Updated libraries in popup/lib')
