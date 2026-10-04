@@ -124,6 +124,23 @@ test.describe('Search View', () => {
   })
 
   test.describe('Direct URL Search', () => {
+    test('preserves the port, query and fragment in a long-TLD navigation item', async ({ page }) => {
+      const url = 'sub.example.technology:8080/path?q=1#section'
+      await page.locator('#q').fill(url)
+      const directResult = page.locator('li.direct')
+      await expect(directResult).toHaveCount(1)
+      await expect(directResult).toHaveAttribute('x-open-url', `https://${url}`)
+      await expectNoClientErrors(page)
+    })
+
+    test('does not offer direct navigation for URL-like search phrases', async ({ page }) => {
+      await page.locator('#q').fill('example.com')
+      await expect(page.locator('li.direct')).toHaveCount(1)
+      await page.locator('#q').fill('example.com docs')
+      await expect(page.locator('li.direct')).toHaveCount(0)
+      await expectNoClientErrors(page)
+    })
+
     test('returns a direct navigation item', async ({ page }) => {
       await page.locator('#q').fill('example.com')
 

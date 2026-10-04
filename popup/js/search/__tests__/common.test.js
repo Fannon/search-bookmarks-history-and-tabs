@@ -336,6 +336,49 @@ describe('search', () => {
     assert.strictEqual(direct.url, 'example.com')
     assert.strictEqual(direct.title, 'Direct: "example.com"')
   })
+  for (const term of [
+    'example.technology',
+    'example.museum',
+    'sub.example.com:8080/path?q=1#frag',
+    'https://example.technology/path%20name?x=1&y=2#section',
+    'http://example.com:8080/path',
+    'example.com?query=value',
+    'example.com#section',
+    'my-site.example.com/path',
+  ]) {
+    test(`adds direct URL result for ${term}`, async () => {
+      ext.dom.searchInput.value = term
+      ext.model.bookmarks = []
+      ext.model.tabs = []
+      ext.model.history = []
+      await search({ key: 'e' })
+      const direct = ext.model.result.find((item) => item.type === 'direct')
+      assert.notStrictEqual(direct, undefined)
+      assert.strictEqual(direct.originalUrl, term.includes('://') ? term : `https://${term}`)
+    })
+  }
+  for (const term of [
+    'foo bar.com',
+    'example.com docs',
+    'just some words',
+    'example',
+    'example.com/path with spaces',
+    'example..com',
+    '-example.com',
+    'example-.com',
+  ]) {
+    test(`does not add direct URL result for ${term}`, async () => {
+      ext.dom.searchInput.value = term
+      ext.model.bookmarks = []
+      ext.model.tabs = []
+      ext.model.history = []
+      await search({ key: 'e' })
+      assert.strictEqual(
+        ext.model.result.some((item) => item.type === 'direct'),
+        false,
+      )
+    })
+  }
   test('preserves the user-typed casing for direct URL navigation targets', async () =>
     assert.rejects(
       async () => {

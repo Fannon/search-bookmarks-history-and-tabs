@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **IMPROVED**: Refreshed the Bookmark Manager with clearer navigation, more usable bookmark editing and bulk selection, keyboard editing shortcuts, and layouts that adapt to narrow screens.
+- **IMPROVED**: Reduced the extension package size by excluding development files and source maps from store builds.
+- **FIXED**: `bookmarksIgnoreFolderList` now supports folder paths such as `Work/Old Bookmarks`, including their subfolders, while bare folder names still match anywhere.
+- **FIXED**: Bookmark results keep their open-tab indicator, favicon, and tab-group metadata correct when closing one of several tabs sharing the same base URL. Matching history entries now use the most recent visit.
+- **FIXED**: Direct URL navigation now recognizes ports, query strings, and fragments, while rejecting malformed domain names, search phrases, and URL paths containing spaces.
+
 ## [v2.5.0] - 2026-08-01
 
 - **CHANGED**: Detecting whether a result is "already open" is now hash-sensitive. Opening a URL that shares its base with an existing tab but has a different `#hash` route now opens a new tab instead of switching to the existing one. This fixes single-page apps whose hash is a significant route (distinct pages sharing one base URL were previously treated as the same tab). To restore the previous behavior, set the `openTabMatchIgnoreHash` option to `true`.
