@@ -11,9 +11,14 @@
 </head>
 
 <body id="bookmark-manager" data-beta="true">
-  <div id="manager-load" class="loading">Loading bookmarks...</div>
+  <div id="manager-load" class="loading" role="status">Loading bookmarks...</div>
+  <a class="skip-link" href="#manager-main">Skip to content</a>
   <header class="manager-header">
     <div class="manager-title-row">
+      <svg class="manager-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 4h12v17l-6-4-6 4z" />
+      </svg>
       <h1><a href="#overview">Bookmark Manager</a></h1>
       <span class="beta-badge">BETA</span>
     </div>
@@ -26,11 +31,11 @@
         <strong id="bookmark-count"></strong>
       </a>
       <a href="#duplicates" data-manager-tab="duplicates">
-        <span>Bookmark Duplicates</span>
+        <span>Duplicates</span>
         <strong id="duplicate-count"></strong>
       </a>
       <a href="#tags" data-manager-tab="tags">
-        <span>Tag Manager</span>
+        <span>Tags</span>
         <strong id="tag-count"></strong>
       </a>
       <a href="#cleanup" data-manager-tab="cleanup">
@@ -38,7 +43,7 @@
         <strong id="cleanup-count"></strong>
       </a>
       <a href="#undo" data-manager-tab="undo">
-        <span>Undo History</span>
+        <span>Undo history</span>
         <strong id="undo-count"></strong>
       </a>
       <a href="#options" data-manager-tab="options">
@@ -49,8 +54,7 @@
       <button id="undo-bookmark-change" class="button secondary" type="button"
         title="Undo the latest bookmark manager change" disabled>Undo</button>
       <button id="export-bookmarks" class="button secondary" type="button"
-        title="Export standard bookmark HTML that can be restored with your browser's bookmark import">Export
-        Bookmarks</button>
+        title="Export standard bookmark HTML that can be restored with your browser's bookmark import">Export bookmarks</button>
       <button id="refresh-bookmarks" class="button" type="button" title="Refresh bookmarks">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -62,16 +66,14 @@
     </div>
   </header>
 
-  <main class="manager-layout">
+  <main id="manager-main" class="manager-layout" tabindex="-1">
     <section class="manager-content">
       <section data-manager-panel="bookmarks" class="manager-panel" hidden>
         <header class="manager-panel-header bookmark-page-header">
           <h2>Bookmarks</h2>
-          <div id="manager-status" class="manager-page-status" data-page-status data-tone="info" aria-live="polite">
-          </div>
+          <div id="manager-status" class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
           <p>
-            Click a bookmark to edit its title and URL. Check one or more bookmarks to apply tag and move actions to
-            that selection.
+            Choose a bookmark to edit it. Use checkboxes to tag or move several bookmarks together.
           </p>
         </header>
 
@@ -85,70 +87,84 @@
 
           <section class="bookmark-browser-panel">
             <div class="bookmark-browser-toolbar">
-              <input id="bookmark-manager-search" type="search" placeholder="Search bookmarks" autocomplete="off"
+              <input id="bookmark-manager-search" type="search" aria-label="Search bookmarks" placeholder="Search titles, URLs, folders and tags"
+                autocomplete="off"
                 spellcheck="false" />
               <div class="bookmark-browser-actions">
-                <button id="select-visible-bookmarks" class="button secondary" type="button">Select Visible</button>
-                <button id="clear-managed-selection" class="button secondary" type="button">Clear</button>
+                <button id="select-visible-bookmarks" class="button secondary" type="button">Select matches</button>
+                <button id="clear-managed-selection" class="button secondary" type="button">Clear selection</button>
               </div>
             </div>
 
-            <div id="bookmark-browser-summary" class="bookmark-browser-summary"></div>
+            <div id="bookmark-browser-summary" class="bookmark-browser-summary" role="status"></div>
 
             <div class="bookmark-browser-grid">
               <div id="managed-bookmark-list" class="managed-bookmark-list"></div>
 
               <aside class="bookmark-edit-panel" aria-label="Bookmark editing">
                 <section class="bookmark-tools-panel">
-                  <h2>Selection</h2>
-                  <p id="bookmark-selection-summary">Click a bookmark or check bookmarks.</p>
-
-                  <label for="bookmark-edit-title">Title</label>
-                  <input id="bookmark-edit-title" type="text" autocomplete="off" disabled />
-                  <label for="bookmark-edit-url">URL</label>
-                  <input id="bookmark-edit-url" type="url" autocomplete="off" disabled />
-                  <label for="bookmark-edit-tags">Existing Tags</label>
-                  <input id="bookmark-edit-tags" type="text" disabled />
-                  <label for="bookmark-edit-score">Bonus Score</label>
-                  <input id="bookmark-edit-score" type="number" min="0" step="1" inputmode="numeric" disabled />
-                  <div class="bookmark-edit-actions">
-                    <button id="save-managed-bookmark" class="button success" type="button"
-                      title="Save the current bookmark title, URL, and existing tags" disabled>Save Bookmark</button>
+                  <h2 id="bookmark-inspector-title">Bookmark details</h2>
+                  <p id="bookmark-selection-summary" aria-live="polite">Click a bookmark or check bookmarks.</p>
+                  <div id="bookmark-inspector-empty" class="inspector-empty">
+                    <p>Choose a bookmark to see its details here.</p>
+                    <p>To work with several bookmarks, select their checkboxes.</p>
                   </div>
-
-                  <div class="suggested-tags-section">
-                    <h3>Add suggested tags</h3>
-                    <p class="field-description">
-                      Uses your browser's local LLM to suggest tags for the current bookmark or checked bookmarks.
-                    </p>
-                    <button id="suggest-tags-selected" class="button secondary" type="button"
-                      title="Suggest tags for checked bookmarks, or the current bookmark if none are checked"
-                      disabled>Suggest tags</button>
-                    <div id="tag-suggestion-status" class="tag-suggestion-status" aria-live="polite"></div>
-                    <label for="bookmark-bulk-tags">Suggested Tags</label>
-                    <input id="bookmark-bulk-tags" type="text" placeholder="Suggested tags appear here" disabled />
-                    <div class="bulk-tag-actions">
-                      <button id="add-tags-selected" class="button success" type="button"
-                        title="Add these tags to checked bookmarks, or the current bookmark if none are checked"
-                        disabled>Add</button>
-                      <button id="replace-tags-selected" class="button warning" type="button"
-                        title="Replace all tags on checked bookmarks, or the current bookmark if none are checked"
-                        disabled>Replace</button>
-                      <button id="remove-tags-selected" class="button danger" type="button"
-                        title="Remove these tags from checked bookmarks, or the current bookmark if none are checked"
-                        disabled>Remove</button>
-                    </div>
-                  </div>
-
-                  <p class="bookmark-safety-note">
-                    Export a backup before changing many bookmarks. Undo only keeps the latest 50 changes and is cleared
-                    when this page closes.
+                  <p id="bookmark-bulk-selection-note" class="manager-note" hidden>
+                    Tag and move actions apply to the checked bookmarks. Clear the selection to edit one bookmark.
                   </p>
 
-                  <label for="bookmark-move-folder">Move to folder</label>
-                  <select id="bookmark-move-folder"></select>
-                  <button id="move-selected-bookmarks" class="button warning" type="button"
-                    title="Move checked bookmarks, or the current bookmark if none are checked" disabled>Move</button>
+                  <div id="bookmark-edit-fields" class="bookmark-edit-fields" hidden>
+                    <label for="bookmark-edit-title">Title</label>
+                    <input id="bookmark-edit-title" type="text" autocomplete="off" disabled />
+                    <label for="bookmark-edit-url">URL</label>
+                    <input id="bookmark-edit-url" type="url" autocomplete="off" disabled />
+                    <label for="bookmark-edit-tags">Tags</label>
+                    <input id="bookmark-edit-tags" type="text" disabled />
+                    <label for="bookmark-edit-score">Search boost</label>
+                    <input id="bookmark-edit-score" type="number" min="0" step="1" inputmode="numeric" disabled
+                      title="Adds points to this bookmark's ranking in popup search" />
+                    <div class="bookmark-edit-actions">
+                      <button id="save-managed-bookmark" class="button success" type="button"
+                        title="Save the current bookmark title, URL, and existing tags" disabled>Save bookmark</button>
+                    </div>
+
+                  </div>
+
+                  <div id="bookmark-target-actions" class="bookmark-target-actions" hidden>
+                    <div class="suggested-tags-section">
+                      <h3>Tag actions</h3>
+                      <p class="field-description">
+                        Enter tags below, or use your browser's local LLM to suggest them.
+                      </p>
+                      <button id="suggest-tags-selected" class="button secondary" type="button"
+                        title="Suggest tags for checked bookmarks, or the current bookmark if none are checked"
+                        disabled>Suggest tags</button>
+                      <div id="tag-suggestion-status" class="tag-suggestion-status" aria-live="polite"></div>
+                      <label for="bookmark-bulk-tags">Tags to apply</label>
+                      <input id="bookmark-bulk-tags" type="text" placeholder="Type a tag and press Enter" disabled />
+                      <div class="bulk-tag-actions">
+                        <button id="add-tags-selected" class="button success" type="button"
+                          title="Add these tags to checked bookmarks, or the current bookmark if none are checked"
+                          disabled>Add tags</button>
+                        <button id="replace-tags-selected" class="button warning" type="button"
+                          title="Replace all tags on checked bookmarks, or the current bookmark if none are checked"
+                          disabled>Replace tags</button>
+                        <button id="remove-tags-selected" class="button danger" type="button"
+                          title="Remove these tags from checked bookmarks, or the current bookmark if none are checked"
+                          disabled>Remove tags</button>
+                      </div>
+                    </div>
+
+                    <p class="bookmark-safety-note">
+                      Export a backup before changing many bookmarks. Undo only keeps the latest 50 changes and is cleared
+                      when this page closes.
+                    </p>
+
+                    <label for="bookmark-move-folder">Move to folder</label>
+                    <select id="bookmark-move-folder"></select>
+                    <button id="move-selected-bookmarks" class="button warning" type="button"
+                      title="Move checked bookmarks, or the current bookmark if none are checked" disabled>Move bookmarks</button>
+                  </div>
                 </section>
               </aside>
             </div>
@@ -158,31 +174,44 @@
 
       <section data-manager-panel="overview" class="manager-panel">
         <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
-        <p class="manager-note" data-bookmark-import-guidance>
-          Restore the HTML file with your browser's bookmark import. Tags are stored in bookmark titles and are
-          preserved.
-        </p>
+        <header class="manager-panel-header overview-page-header">
+          <div>
+            <h2>Your bookmark library</h2>
+            <p>Find what you saved, organize your tags, and clear out duplicate bookmarks.</p>
+          </div>
+          <a class="button" href="#bookmarks">Browse bookmarks</a>
+        </header>
         <div id="stats-grid" class="stats-grid"></div>
 
         <div class="overview-grid">
           <section>
-            <h2>Top Tags</h2>
+            <h2>Top tags</h2>
             <div id="top-tags"></div>
           </section>
           <section>
-            <h2>Top Domains</h2>
+            <h2>Top domains</h2>
             <div id="top-domains"></div>
           </section>
           <section>
-            <h2>Top Folders</h2>
+            <h2>Top folders</h2>
             <div id="top-folders"></div>
           </section>
         </div>
 
-        <section>
-          <h2>Recently Added</h2>
+        <section class="recent-section">
+          <header class="section-heading">
+            <h2>Recently added</h2>
+            <a href="#bookmarks">View all bookmarks</a>
+          </header>
           <div id="recent-bookmarks"></div>
         </section>
+        <details class="backup-guidance">
+          <summary>Back up and restore bookmarks</summary>
+          <p class="manager-note" data-bookmark-import-guidance>
+            Restore the HTML file with your browser's bookmark import. Tags are stored in bookmark titles and are
+            preserved.
+          </p>
+        </details>
 
       </section>
 
@@ -232,7 +261,7 @@
           <div id="tag-summary"></div>
         </header>
         <div class="tag-toolbar">
-          <input id="tag-filter" type="search" placeholder="Filter tags" autocomplete="off" spellcheck="false" />
+          <input id="tag-filter" type="search" aria-label="Filter tags" placeholder="Filter tags" autocomplete="off" spellcheck="false" />
         </div>
         <p class="bookmark-safety-note">
           Export a backup before changing tags on many bookmarks. Undo only keeps the latest 50 changes and is cleared
@@ -246,11 +275,12 @@
           <h2>AI Bookmark Cleanup</h2>
           <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
           <p>
-            Generate a prompt for external AI prompting or ask the browser's local LLM for a JSON proposal.
-            Review every proposed change before applying it.
+            Create a prompt for an AI assistant, or use your browser's local AI.
+            Review its suggestions before applying changes.
           </p>
         </header>
 
+        <h3 class="cleanup-step-heading">1. Prepare a prompt</h3>
         <div class="cleanup-toolbar">
           <button id="generate-cleanup-prompt" class="button secondary" type="button">Generate Prompt
             (Lite)</button>
@@ -263,7 +293,7 @@
 
         <div class="cleanup-control-row">
           <div>
-            <label for="cleanup-change-limit">Limit Proposed Changes</label>
+            <label for="cleanup-change-limit">Maximum changes</label>
             <select id="cleanup-change-limit">
               <option value="10">10 changes</option>
               <option value="25">25 changes</option>
@@ -274,7 +304,7 @@
             </select>
           </div>
           <div>
-            <label for="cleanup-change-focus">Limit Change Type</label>
+            <label for="cleanup-change-focus">Change type</label>
             <select id="cleanup-change-focus">
               <option value="everything" selected>Everything</option>
               <option value="tags">Tags</option>
@@ -284,11 +314,11 @@
             </select>
           </div>
           <div>
-            <label for="cleanup-folder-scope">Limit Bookmark Folders</label>
+            <label for="cleanup-folder-scope">Folder scope</label>
             <select id="cleanup-folder-scope"></select>
           </div>
           <div>
-            <label for="cleanup-bookmark-limit">Limit Bookmark Amount</label>
+            <label for="cleanup-bookmark-limit">Bookmarks to include</label>
             <select id="cleanup-bookmark-limit">
               <option value="20">20 bookmarks</option>
               <option value="50">50 bookmarks</option>
@@ -303,12 +333,12 @@
 
         <div class="cleanup-workspace">
           <section class="cleanup-prompt-panel">
-            <label for="cleanup-prompt">Prompt and JSON Schema</label>
+            <label for="cleanup-prompt">Generated prompt</label>
             <textarea id="cleanup-prompt" spellcheck="false" rows="16" readonly></textarea>
           </section>
 
           <section class="cleanup-result-panel">
-            <label for="cleanup-proposal-json">Proposal JSON</label>
+            <label for="cleanup-proposal-json">2. Paste the AI response</label>
             <textarea id="cleanup-proposal-json" spellcheck="false" rows="16"
               placeholder="Paste the LLM JSON response here"></textarea>
             <div id="cleanup-status" class="cleanup-status" aria-live="polite"></div>
@@ -317,8 +347,8 @@
 
         <section class="cleanup-review-section">
           <header class="cleanup-review-header">
-            <h2>Proposed Changes</h2>
-            <button id="apply-all-cleanup-changes" class="button success" type="button" disabled>Accept All</button>
+            <h2>3. Review proposed changes</h2>
+            <button id="apply-all-cleanup-changes" class="button success" type="button" disabled>Apply all changes</button>
           </header>
           <p class="bookmark-safety-note">
             Export a backup before applying cleanup changes. Undo only keeps the latest 50 changes and is cleared when
@@ -354,7 +384,7 @@
               <header class="options-column-header">
                 <h3>Settings</h3>
               </header>
-              <input id="options-filter" class="options-filter-input" type="search" placeholder="Filter options..."
+              <input id="options-filter" class="options-filter-input" type="search" aria-label="Filter options" placeholder="Filter options..."
                 autocomplete="off" />
               <form id="options-form" class="options-form" novalidate></form>
             </section>

@@ -46,7 +46,12 @@ function setupDom() {
     <div id="managed-bookmark-list"></div>
     <button id="select-visible-bookmarks"></button>
     <button id="clear-managed-selection"></button>
+    <h2 id="bookmark-inspector-title"></h2>
     <div id="bookmark-selection-summary"></div>
+    <div id="bookmark-inspector-empty"></div>
+    <div id="bookmark-edit-fields"></div>
+    <div id="bookmark-target-actions"></div>
+    <p id="bookmark-bulk-selection-note"></p>
     <select id="bookmark-move-folder"><option value="folder-1">Folder</option></select>
     <button id="move-selected-bookmarks"></button>
     <input id="bookmark-bulk-tags" />
@@ -195,6 +200,72 @@ beforeEach(() => {
 })
 
 describe('bookmarkManagerView selection', () => {
+  test('shows an empty inspector, single-bookmark editing, and bulk actions for the current selection', () => {
+    const dom = ext.dom.manager
+    expect(dom.bookmarkInspectorEmpty.hidden).toBe(false)
+    expect(dom.bookmarkEditFields.hidden).toBe(true)
+    expect(dom.bookmarkTargetActions.hidden).toBe(true)
+    expect(dom.clearManagedSelection.disabled).toBe(true)
+
+    document.querySelector('[data-edit-managed-bookmark-id]').click()
+
+    expect(dom.bookmarkInspectorEmpty.hidden).toBe(true)
+    expect(dom.bookmarkEditFields.hidden).toBe(false)
+    expect(dom.bookmarkTargetActions.hidden).toBe(false)
+    expect(dom.bookmarkBulkSelectionNote.hidden).toBe(true)
+    expect(document.querySelector('[data-edit-managed-bookmark-id]').getAttribute('aria-pressed')).toBe('true')
+
+    dom.selectVisibleBookmarks.click()
+
+    expect(dom.bookmarkEditFields.hidden).toBe(true)
+    expect(dom.bookmarkTargetActions.hidden).toBe(false)
+    expect(dom.bookmarkBulkSelectionNote.hidden).toBe(false)
+    expect(dom.clearManagedSelection.disabled).toBe(false)
+
+    dom.clearManagedSelection.click()
+
+    expect(dom.bookmarkEditFields.hidden).toBe(false)
+    expect(dom.bookmarkBulkSelectionNote.hidden).toBe(true)
+    expect(getSelectedManagedBookmarkIds()).toEqual([])
+  })
+
+  test('preserves unfinished edits while updating tag and move actions', () => {
+    const dom = ext.dom.manager
+    document.querySelector('[data-edit-managed-bookmark-id]').click()
+    dom.bookmarkEditTitle.value = 'Unfinished title'
+    dom.bookmarkEditUrl.value = 'https://example.com/new'
+    dom.bookmarkEditScore.value = '42'
+    dom.bookmarkEditTags.value = 'new-tag'
+    dom.bulkTagsInput.value = 'bulk-tag'
+    dom.bulkTagsInput.dispatchEvent(new Event('input'))
+    dom.bookmarkMoveFolder.dispatchEvent(new Event('change'))
+
+    expect(getManagedBookmarkEditValues()).toEqual({
+      title: 'Unfinished title',
+      url: 'https://example.com/new',
+      tags: ['new-tag'],
+      customBonusScore: 42,
+    })
+    expect(dom.addTagsSelected.disabled).toBe(false)
+
+    // Refreshing the dataset must still load the saved bookmark values.
+    renderWorkspace()
+    expect(dom.bookmarkEditTitle.value).toBe('First Bookmark')
+    expect(dom.bookmarkEditScore.value).toBe('25')
+  })
+
+  test('selects all matches even when the rendered list is capped', () => {
+    const bookmarks = Array.from({ length: 501 }, (_, index) => ({ ...BOOKMARKS[0], originalId: String(index) }))
+    renderBookmarkWorkspace(bookmarks, true, true)
+    expect(document.querySelectorAll('[data-managed-bookmark-row-id]')).toHaveLength(500)
+
+    ext.dom.manager.selectVisibleBookmarks.click()
+
+    expect(getSelectedManagedBookmarkIds()).toHaveLength(501)
+    expect(ext.dom.manager.managedBookmarkList.textContent).toContain('Select matches selects all 501')
+    expect(ext.dom.manager.bookmarkSelectionSummary.textContent).toBe('501 selected bookmarks')
+  })
+
   test('temporarily checks the current bookmark until another row is clicked', () => {
     const rows = document.querySelectorAll('[data-managed-bookmark-row-id]')
     const inputs = document.querySelectorAll('[data-managed-bookmark-id]')

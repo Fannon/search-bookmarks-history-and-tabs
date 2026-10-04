@@ -56,6 +56,11 @@ export function getBookmarkManagerDom() {
     selectVisibleBookmarks: document.getElementById('select-visible-bookmarks'),
     clearManagedSelection: document.getElementById('clear-managed-selection'),
     bookmarkSelectionSummary: document.getElementById('bookmark-selection-summary'),
+    bookmarkInspectorTitle: document.getElementById('bookmark-inspector-title'),
+    bookmarkInspectorEmpty: document.getElementById('bookmark-inspector-empty'),
+    bookmarkEditFields: document.getElementById('bookmark-edit-fields'),
+    bookmarkTargetActions: document.getElementById('bookmark-target-actions'),
+    bookmarkBulkSelectionNote: document.getElementById('bookmark-bulk-selection-note'),
     bookmarkMoveFolder: document.getElementById('bookmark-move-folder'),
     moveSelectedBookmarks: document.getElementById('move-selected-bookmarks'),
     bulkTagsInput: document.getElementById('bookmark-bulk-tags'),
@@ -204,6 +209,10 @@ export function bindBookmarkManagerEvents({
 }) {
   const dom = ext.dom.manager
 
+  document.querySelector('.skip-link')?.addEventListener('click', (event) => {
+    event.preventDefault()
+    document.getElementById('manager-main').focus()
+  })
   dom.refreshBookmarks.addEventListener('click', onRefresh)
   dom.undoBookmarkChange.addEventListener('click', () => onUndoBookmarkChange())
   dom.exportUndoHistory.addEventListener('click', onExportUndoHistory)
@@ -269,7 +278,7 @@ export function bindBookmarkManagerEvents({
   })
   dom.managedBookmarkList.addEventListener('click', (event) => {
     const row = event.target.closest('[data-managed-bookmark-row-id]')
-    if (!row || event.target.closest('a, button, input')) {
+    if (!row || event.target.closest('a, input, button:not([data-edit-managed-bookmark-id])')) {
       return
     }
 
@@ -675,7 +684,7 @@ export function renderBookmarkWorkspace(visibleBookmarks, canUpdateBookmarks, ca
   )
 
   ensureManagerTagControls(ext)
-  updateManagedSelectionUi()
+  updateManagedSelectionUi(true)
 }
 
 /**
@@ -1231,7 +1240,8 @@ function renderFolderNode(folder, activeFolderId) {
   return `
     <li>
       <button class="folder-tree-button${isActive ? ' active' : ''}" type="button"
-        data-manager-folder-id="${escapeHtml(folderId)}" style="--folder-depth: ${depth}">
+        data-manager-folder-id="${escapeHtml(folderId)}"${isActive ? ' aria-current="true"' : ''}
+        title="${escapeHtml(folder.path?.join(' / ') || folder.title)}" style="--folder-depth: ${depth}">
         <span>${escapeHtml(folder.title)}</span>
         <small>${formatInteger(folder.totalCount || folder.count)}</small>
       </button>
@@ -1265,7 +1275,7 @@ function renderFolderOptions(folderOptions) {
 
 function renderManagedBookmarkList(bookmarks, canUpdateBookmarks) {
   if (!bookmarks.length) {
-    return '<p class="empty-state">No bookmarks match this view.</p>'
+    return '<p class="empty-state">No bookmarks match this view. Try another search or choose All Bookmarks.</p>'
   }
 
   const renderCount = Math.min(bookmarks.length, MANAGED_BOOKMARK_RENDER_LIMIT)
@@ -1274,7 +1284,7 @@ function renderManagedBookmarkList(bookmarks, canUpdateBookmarks) {
     bookmarks.length > renderCount
       ? `<p class="manager-note">Showing first ${formatInteger(renderCount)} of ${formatInteger(
           bookmarks.length,
-        )} bookmarks. Search or choose a folder to narrow the list; Select Visible still selects all ${formatInteger(
+        )} bookmarks. Search or choose a folder to narrow the list; Select matches selects all ${formatInteger(
           bookmarks.length,
         )} matching bookmarks.</p>`
       : ''
@@ -1306,16 +1316,23 @@ function renderManagedBookmarkRow(bookmark, canUpdateBookmarks) {
     <li class="bookmark managed-bookmark${selectedClass}${currentClass}${disabledClass}"
       data-managed-bookmark-row-id="${escapeHtml(bookmarkId)}">
       <label class="managed-bookmark-check">
-        <input type="checkbox" data-managed-bookmark-id="${escapeHtml(bookmarkId)}"${checked}${disabled}>
+        <input type="checkbox" aria-label="Select ${escapeHtml(bookmark.title || displayUrl)}"
+          data-managed-bookmark-id="${escapeHtml(bookmarkId)}"${checked}${disabled}>
       </label>
       <div class="managed-bookmark-main">
         <div class="title">
-          <span class="title-text">${renderBookmarkTitle(bookmark)} </span>
+          <button class="managed-bookmark-edit" type="button" data-edit-managed-bookmark-id="${escapeHtml(bookmarkId)}"
+            aria-pressed="${currentClass ? 'true' : 'false'}">${escapeHtml(bookmark.title || displayUrl)}</button>
+        </div>
+        <div class="bookmark-meta">
           ${renderFolderBadge(bookmark.folderArray)}
           ${renderTagBadges(bookmark.tagsArray)}
         </div>
         <div class="url" title="${escapeHtml(displayUrl)}">${escapeHtml(displayUrl)}</div>
       </div>
+      <span class="managed-bookmark-open" title="Open bookmark in a new tab">
+        ${renderBookmarkTitle({ title: '↗', originalUrl: displayUrl }, `Open ${bookmark.title || displayUrl} in a new tab`)}
+      </span>
     </li>
   `
 }
@@ -1327,10 +1344,10 @@ function renderBrowserSummary(visibleCount, selectedCount) {
   const folderName = folderId === 'all' || !folder ? 'All Bookmarks' : folder.path.join(' / ')
   const searchText = query ? ` matching "${query}"` : ''
 
-  return `${formatInteger(selectedCount)}/${formatInteger(visibleCount)} selected in ${folderName}${searchText}`
+  return `${formatInteger(visibleCount)} bookmarks in ${folderName}${searchText} · ${formatInteger(selectedCount)} selected`
 }
 
-function updateManagedSelectionUi() {
+function updateManagedSelectionUi(refreshEditor = false) {
   const dom = ext.dom.manager
   const selectedIds = getSelectedManagedBookmarkIds()
   const selectedCount = selectedIds.length
@@ -1352,6 +1369,17 @@ function updateManagedSelectionUi() {
     getVisibleManagedSelectionCount(selectedIds, currentBookmark),
   )
   dom.bookmarkSelectionSummary.textContent = renderActionTargetSummary(selectedCount, currentBookmark)
+  dom.bookmarkSelectionSummary.hidden = !targetIds.length
+  const showSingleEditor = canEditCurrentManagedBookmark(currentBookmark, selectedIds, true)
+  if (dom.bookmarkEditFields) {
+    dom.bookmarkEditFields.hidden = !showSingleEditor
+    dom.bookmarkTargetActions.hidden = !targetIds.length
+    dom.bookmarkInspectorEmpty.hidden = Boolean(targetIds.length)
+    dom.bookmarkBulkSelectionNote.hidden = !targetIds.length || showSingleEditor
+    dom.bookmarkInspectorTitle.textContent = showSingleEditor ? 'Edit bookmark' : 'Bookmark details'
+  }
+  dom.clearManagedSelection.disabled = !selectedCount
+  dom.selectVisibleBookmarks.disabled = !ext.model.bookmarkManagerVisibleBookmarks?.length
   dom.moveSelectedBookmarks.disabled = !targetIds.length || !canMoveBookmarks || !dom.bookmarkMoveFolder.value
   dom.addTagsSelected.disabled = !canApplyBulkTags
   dom.replaceTagsSelected.disabled = !canApplyBulkTags
@@ -1365,21 +1393,25 @@ function updateManagedSelectionUi() {
   dom.bookmarkEditScore.disabled = !canEditCurrentBookmark
   dom.bulkTagsInput.disabled = !canEditBulkTags
 
-  if (selectedCount > 1) {
-    dom.bookmarkEditTitle.value = '<< multiple selection >>'
-    dom.bookmarkEditUrl.value = '<< multiple selection >>'
-    dom.bookmarkEditScore.value = ''
-    setManagerTagControlValues(ext, 'edit', [])
-  } else if (currentBookmark) {
-    dom.bookmarkEditTitle.value = currentBookmark.title || ''
-    dom.bookmarkEditUrl.value = currentBookmark.originalUrl || ''
-    dom.bookmarkEditScore.value = String(currentBookmark.customBonusScore || 0)
-    setManagerTagControlValues(ext, 'edit', currentBookmark.tagsArray || [])
-  } else {
-    dom.bookmarkEditTitle.value = ''
-    dom.bookmarkEditUrl.value = ''
-    dom.bookmarkEditScore.value = ''
-    setManagerTagControlValues(ext, 'edit', [])
+  const editorState = `${currentBookmark?.originalId || ''}:${showSingleEditor}:${selectedCount > 1}`
+  if (refreshEditor === true || dom.bookmarkEditTitle.dataset.editorState !== editorState) {
+    dom.bookmarkEditTitle.dataset.editorState = editorState
+    if (selectedCount > 1) {
+      dom.bookmarkEditTitle.value = '<< multiple selection >>'
+      dom.bookmarkEditUrl.value = '<< multiple selection >>'
+      dom.bookmarkEditScore.value = ''
+      setManagerTagControlValues(ext, 'edit', [])
+    } else if (currentBookmark) {
+      dom.bookmarkEditTitle.value = currentBookmark.title || ''
+      dom.bookmarkEditUrl.value = currentBookmark.originalUrl || ''
+      dom.bookmarkEditScore.value = String(currentBookmark.customBonusScore || 0)
+      setManagerTagControlValues(ext, 'edit', currentBookmark.tagsArray || [])
+    } else {
+      dom.bookmarkEditTitle.value = ''
+      dom.bookmarkEditUrl.value = ''
+      dom.bookmarkEditScore.value = ''
+      setManagerTagControlValues(ext, 'edit', [])
+    }
   }
 
   setManagerTagControlDisabled(ext, 'edit', !canEditCurrentBookmark)
@@ -1495,7 +1527,11 @@ function syncManagedBookmarkSelectionRows() {
   for (const row of rows) {
     const bookmarkId = String(row.dataset.managedBookmarkRowId)
     row.classList.toggle('selected', selectedIds.has(bookmarkId) || isTemporaryManagedBookmarkSelected(bookmarkId))
-    row.classList.toggle('current', bookmarkId === currentId)
+    const isCurrent = bookmarkId === currentId
+    if (row.classList.contains('current') !== isCurrent) {
+      row.classList.toggle('current', isCurrent)
+      row.querySelector('[data-edit-managed-bookmark-id]')?.setAttribute('aria-pressed', String(isCurrent))
+    }
   }
 }
 
