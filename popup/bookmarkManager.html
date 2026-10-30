@@ -162,7 +162,7 @@
 
                     <label for="bookmark-move-folder">Move to folder</label>
                     <select id="bookmark-move-folder"></select>
-                    <button id="move-selected-bookmarks" class="button warning" type="button"
+                    <button id="move-selected-bookmarks" class="button" type="button"
                       title="Move checked bookmarks, or the current bookmark if none are checked" disabled>Move bookmarks</button>
                   </div>
                 </section>
@@ -217,7 +217,7 @@
 
       <section data-manager-panel="undo" class="manager-panel" hidden>
         <header class="manager-panel-header undo-page-header">
-          <h2>Undo History</h2>
+          <h2>Undo history</h2>
           <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
           <p>
             Undo snapshots store the previous bookmark title, URL, parent folder, and position for each affected
@@ -225,8 +225,8 @@
           </p>
         </header>
         <div class="undo-toolbar">
-          <button id="export-undo-history" class="button secondary" type="button" disabled>Export Undo History</button>
-          <button id="import-undo-history" class="button secondary" type="button">Import Undo History</button>
+          <button id="export-undo-history" class="button secondary" type="button" disabled>Export history</button>
+          <button id="import-undo-history" class="button secondary" type="button">Import history</button>
           <input id="import-undo-history-file" type="file" accept="application/json,.json" hidden />
         </div>
         <div id="bookmark-undo-history" class="bookmark-undo-history"></div>
@@ -234,7 +234,7 @@
 
       <section data-manager-panel="duplicates" class="manager-panel" hidden>
         <header class="manager-panel-header duplicate-page-header">
-          <h2>Duplicate Bookmarks</h2>
+          <h2>Duplicate bookmarks</h2>
           <div class="manager-page-status" data-page-status data-tone="info" aria-live="polite"></div>
           <div id="duplicate-summary"></div>
         </header>
@@ -244,10 +244,10 @@
             page closes.
           </p>
           <div class="duplicate-actions">
-            <button id="select-suggested" class="button secondary" type="button">Select Lower-Ranked Copies</button>
-            <button id="select-none" class="button secondary" type="button">Select None</button>
+            <button id="select-suggested" class="button secondary" type="button">Select lower-ranked copies</button>
+            <button id="select-none" class="button secondary" type="button">Clear selection</button>
             <button id="delete-selected" class="button danger" type="button" disabled>
-              Delete Selected (<span data-selected-count>0</span>)
+              <span>Delete selected (<span data-selected-count>0</span>)</span>
             </button>
           </div>
         </div>
@@ -281,16 +281,6 @@
         </header>
 
         <h3 class="cleanup-step-heading">1. Prepare a prompt</h3>
-        <div class="cleanup-toolbar">
-          <button id="generate-cleanup-prompt" class="button secondary" type="button">Generate Prompt
-            (Lite)</button>
-          <button id="generate-cleanup-prompt-full" class="button secondary" type="button">Generate Prompt
-            (Advanced)</button>
-          <button id="run-local-cleanup" class="button secondary" type="button" disabled>Run Local AI</button>
-          <button id="copy-cleanup-prompt" class="button secondary" type="button" disabled>Copy Prompt</button>
-          <span id="cleanup-prompt-size" class="cleanup-prompt-size"></span>
-        </div>
-
         <div class="cleanup-control-row">
           <div>
             <label for="cleanup-change-limit">Maximum changes</label>
@@ -309,7 +299,7 @@
               <option value="everything" selected>Everything</option>
               <option value="tags">Tags</option>
               <option value="title">Title</option>
-              <option value="folder">Folder Structure</option>
+              <option value="folder">Folder structure</option>
               <option value="duplicates">Duplicates</option>
             </select>
           </div>
@@ -331,6 +321,14 @@
           </div>
         </div>
 
+        <div class="cleanup-toolbar">
+          <button id="generate-cleanup-prompt" class="button secondary" type="button">Generate prompt (Lite)</button>
+          <button id="generate-cleanup-prompt-full" class="button secondary" type="button">Generate prompt (Advanced)</button>
+          <button id="run-local-cleanup" class="button secondary" type="button" disabled>Run local AI</button>
+          <button id="copy-cleanup-prompt" class="button secondary" type="button" disabled>Copy prompt</button>
+          <span id="cleanup-prompt-size" class="cleanup-prompt-size"></span>
+        </div>
+
         <div class="cleanup-workspace">
           <section class="cleanup-prompt-panel">
             <label for="cleanup-prompt">Generated prompt</label>
@@ -338,7 +336,7 @@
           </section>
 
           <section class="cleanup-result-panel">
-            <label for="cleanup-proposal-json">2. Paste the AI response</label>
+            <label for="cleanup-proposal-json" class="cleanup-step-heading">2. Paste the AI response</label>
             <textarea id="cleanup-proposal-json" spellcheck="false" rows="16"
               placeholder="Paste the LLM JSON response here"></textarea>
             <div id="cleanup-status" class="cleanup-status" aria-live="polite"></div>
@@ -347,7 +345,7 @@
 
         <section class="cleanup-review-section">
           <header class="cleanup-review-header">
-            <h2>3. Review proposed changes</h2>
+            <h3 class="cleanup-step-heading">3. Review proposed changes</h3>
             <button id="apply-all-cleanup-changes" class="button success" type="button" disabled>Apply all changes</button>
           </header>
           <p class="bookmark-safety-note">
@@ -374,7 +372,7 @@
               href="https://github.com/Fannon/search-bookmarks-history-and-tabs/blob/main/OPTIONS.md" target="_blank"
               rel="noreferrer">Help</a>
             <button id="opt-reset" class="button warning" type="button">Reset</button>
-            <button id="opt-save" class="button success" type="button">Save Options</button>
+            <button id="opt-save" class="button success" type="button">Save options</button>
           </div>
         </header>
 
@@ -394,7 +392,8 @@
                 <label for="config">YAML</label>
               </header>
               <div class="textarea-container">
-                <textarea id="config" title="User Config" spellcheck="false"></textarea>
+                <textarea id="config" title="User Config" spellcheck="false"
+                  placeholder="# No customized options yet. Check Customize on a setting or type YAML here, for example:&#10;searchStrategy: fuzzy"></textarea>
                 <div id="error-message" class="error-overlay" style="display: none"></div>
               </div>
             </section>

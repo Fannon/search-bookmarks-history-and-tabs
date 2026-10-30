@@ -5,6 +5,7 @@
 ## [v2.5.1] - 2026-10-30
 
 - **IMPROVED**: Refreshed the Bookmark Manager with clearer navigation, more usable bookmark editing and bulk selection, keyboard editing shortcuts, and layouts that adapt to narrow screens.
+- **IMPROVED**: Polished the Bookmark Manager for consistency with the search popup: compact bookmark rows with inline badges, a teal accent in dark mode, consistent sentence-case labels and button styles, AI Cleanup settings shown before the prompt actions, and section tabs that wrap on narrow screens.
 - **IMPROVED**: Reduced the extension package size by excluding development files and source maps from store builds.
 - **IMPROVED**: Faster popup startup with large collections, and faster sorting on the tags, folders, and tab groups pages and in the Bookmark Manager.
 - **FIXED**: Typing only a search mode prefix such as `#`, `~`, `@`, or `s ` no longer shows a `Search result type "bookmarkCreate" not supported` error when the quick bookmark entry is part of the default results.
@@ -16,6 +17,7 @@
 - **FIXED**: Duplicate detection in the Bookmark Manager and its AI cleanup no longer treats bookmarks with different `#hash` routes or anchors, such as `app/#/inbox` and `app/#/settings`, as duplicates. Variants that differ only by http/https, `www.`, letter case, or a trailing slash are still detected.
 - **FIXED**: Direct URL navigation now recognizes ports, query strings, and fragments, while rejecting malformed domain names, search phrases, and URL paths containing spaces.
 - **FIXED**: Search engine and custom search alias results send your query with its original casing instead of lowercasing it, including when results come from the search cache. Aliases still match regardless of case.
+- **FIXED**: Bookmark Manager duplicate summaries now use correct singular and plural wording.
 
 ## [v2.5.0] - 2026-08-01
 

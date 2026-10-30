@@ -11,6 +11,7 @@ Available as [Chrome Extension](https://chrome.google.com/webstore/detail/tabs-b
 - Use prefixes to narrow the search: `b ` for bookmarks, `t ` for tabs, `h ` for history and tabs, `#tag`, `~folder`, or `@group`.
 - Type `g search term` or `d word` to use the default custom search aliases.
 - Click the edit icon on a bookmark result to edit its title, URL, tags, and favorite score.
+- Click **Manager** in the popup footer to open the full-page [Bookmark Manager](#optional-bookmark-manager-beta) and its **Options** tab.
 
 ## Features
 
@@ -23,9 +24,9 @@ It supports two different search approaches:
 
 With this extension you can also **tag your bookmarks** including auto completions.
 The tags are considered when searching and can be used for navigation.
-Tabs support now the tab grouping feature by the browser.
+Open tabs can also be searched by their browser tab group.
 
-The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). The daily search popup stays lightweight: it loads about 33 KB of minified app JavaScript initially, with optional features such as fuzzy matching and the full-page Bookmark Manager bundled separately.
+The extension is very customizable (see [user options](#user-configuration)) and has a dark / light theme that is selected based on your system settings (see [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)). The daily search popup stays lightweight: it loads about 35 KB of minified app JavaScript initially, with optional features such as fuzzy matching and the full-page Bookmark Manager bundled separately.
 
 > 💡 Have a look at the [Tips & Tricks](./Tips.md) collection.
 

@@ -17,12 +17,15 @@ export function renderDuplicateSummary(stats) {
     return '<p>No duplicate bookmark URLs were found.</p>'
   }
 
+  const groupCount = stats.duplicateGroupCount
+  const removableCount = stats.removableDuplicateCount
+
   return `
-    <p>${formatInteger(stats.duplicateBookmarkCount)} bookmarks share URLs in ${formatInteger(
-      stats.duplicateGroupCount,
-    )} groups. Ranking prefers more tags, cleaner titles, newer additions, then deeper folder placement. ${formatInteger(
-      stats.removableDuplicateCount,
-    )} lower-ranked copies can be selected for deletion.</p>
+    <p>${formatInteger(stats.duplicateBookmarkCount)} bookmarks share URLs in ${formatInteger(groupCount)} group${
+      groupCount === 1 ? '' : 's'
+    }. Ranking prefers more tags, cleaner titles, newer additions, then deeper folder placement. ${formatInteger(
+      removableCount,
+    )} lower-ranked cop${removableCount === 1 ? 'y' : 'ies'} can be selected for deletion.</p>
   `
 }
 
