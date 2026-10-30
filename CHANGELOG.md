@@ -8,6 +8,7 @@
 - **IMPROVED**: Polished the Bookmark Manager for consistency with the search popup: compact bookmark rows with inline badges, a teal accent in dark mode, consistent sentence-case labels and button styles, AI Cleanup settings shown before the prompt actions, and section tabs that wrap on narrow screens.
 - **IMPROVED**: Reduced the extension package size by excluding development files and source maps from store builds.
 - **IMPROVED**: Faster popup startup with large collections, and faster sorting on the tags, folders, and tab groups pages and in the Bookmark Manager.
+- **IMPROVED**: With a large history limit (`historyMaxItems`), results are shown and searchable before browser history finishes loading, and history results are added once it arrives. When fuzzy search is the default strategy, the first keystroke is faster.
 - **FIXED**: Typing only a search mode prefix such as `#`, `~`, `@`, or `s ` no longer shows a `Search result type "bookmarkCreate" not supported` error when the quick bookmark entry is part of the default results.
 - **FIXED**: The popup bookmark editor waits for the browser to save or delete a bookmark. If that fails, for example because of an invalid URL, it shows the error and keeps your edits so you can retry. Tags, folders, and tab groups named like built-in object properties (such as `constructor`) no longer break tag, folder, or group search.
 - **FIXED**: If reading tabs, bookmarks, or history fails, the popup still shows results from the other sources instead of none.
