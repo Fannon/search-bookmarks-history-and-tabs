@@ -55,7 +55,7 @@ describe('addDefaultEntries', () => {
         { id: 1, title: 'History 1', url: 'https://one.test' },
         { id: 2, title: 'History 2', url: 'https://two.test' },
       ])
-      assert.strictEqual(ext.model.result, results)
+      assert.strictEqual(ext.model.result, undefined)
     })
     test('clones history entries so downstream scoring cannot mutate source data', async () => {
       ext.model.searchMode = 'history'

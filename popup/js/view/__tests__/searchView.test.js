@@ -349,12 +349,14 @@ describe('searchView renderSearchResults', () => {
     const { module, elements } = await setupSearchView({
       results: specialResults,
     })
+    ext.model.rawSearchTerm = '#MixedCase'
     await module.renderSearchResults()
     const listItem = elements.resultList.querySelector('li')
     const editButton = listItem.querySelector('.edit')
     const link = editButton.getAttribute('x-link')
     assert(link.includes('bookmark%2Fwith%2Fslashes'))
     assert(!link.includes('bookmark/with/slashes'))
+    assert(link.includes('/search/%23MixedCase'))
   })
   it('displays last-visited badge for items visited 0 seconds ago (just now)', async () => {
     const justNowResults = [

@@ -107,7 +107,6 @@ export async function addDefaultEntries() {
     }
   }
 
-  ext.model.result = results
   return results
 }
 

@@ -66,6 +66,48 @@ test.describe('Search View', () => {
   })
 
   test.describe('Precise search', () => {
+    test('preserves direct URL casing after case-only edits and cache hits', async ({ page }) => {
+      const direct = page.locator('#results li.direct')
+      for (const term of ['Example.com/API/Foo', 'Example.com/api/foo', 'Example.com/API/Foo']) {
+        await page.locator('#q').fill(term)
+        await expect(direct).toHaveAttribute('x-open-url', `https://${term}`)
+      }
+      await expectNoClientErrors(page)
+    })
+
+    test('empty hash route cannot overwrite a newer search', async ({ page }) => {
+      await page.waitForFunction(() => window.ext?.initialized)
+      const keepsNewerResults = await page.evaluate(async () => {
+        const { hashRouter } = await import('/js/initSearch.js')
+        const { search } = await import('/js/search/common.js')
+        const ext = window.ext
+        const originalTabsApi = ext.browserApi.tabs
+        let resolveTabs
+        ext.model.tabs = []
+        ext.browserApi.tabs = {
+          query: () =>
+            new Promise((resolve) => {
+              resolveTabs = resolve
+            }),
+        }
+        try {
+          window.history.replaceState(null, '', '#search/')
+          const emptyRoute = hashRouter()
+          ext.dom.searchInput.value = 'JSON'
+          await search()
+          const newResults = ext.model.result
+          const newHtml = ext.dom.resultList.innerHTML
+          resolveTabs([])
+          await emptyRoute
+          return newResults.length > 0 && ext.model.result === newResults && ext.dom.resultList.innerHTML === newHtml
+        } finally {
+          ext.browserApi.tabs = originalTabsApi
+        }
+      })
+      expect(keepsNewerResults).toBe(true)
+      await expectNoClientErrors(page)
+    })
+
     test('can execute search successfully', async ({ page }) => {
       await expect(page.locator('#toggle')).toHaveText('PRECISE')
 
