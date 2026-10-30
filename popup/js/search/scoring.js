@@ -51,6 +51,8 @@ export function calculateFinalScore(results, searchTerm) {
   // Pre-calculate base scores for each type to avoid repeated lookups
   const baseScores = {
     bookmark: opts.scoreBookmarkBase || 0,
+    // Quick-bookmark action can appear in mode-prefix default results (e.g. bare "#")
+    bookmarkCreate: opts.scoreBookmarkBase || 0,
     tab: opts.scoreTabBase || 0,
     history: opts.scoreHistoryBase || 0,
     search: opts.scoreSearchEngineBase || 0,

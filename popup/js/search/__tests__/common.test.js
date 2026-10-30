@@ -711,4 +711,23 @@ describe('✅ VERIFIED: Mode Prefix Without Search Term', () => {
     assert.strictEqual(ext.model.searchMode, 'bookmarks')
     assert.strictEqual(ext.model.searchTerm, '')
   })
+  for (const [prefix, mode] of [
+    ['#', 'tags'],
+    ['~', 'folders'],
+    ['@', 'groups'],
+    ['s ', 'search'],
+  ]) {
+    test(`renders quick bookmark default entry for bare "${prefix}" prefix`, async () => {
+      ext.dom.searchInput.value = prefix
+      ext.opts.quickBookmarkCurrentTab = 'Quick Bookmarks'
+      mockGetBrowserTabs.mock.mockImplementation(() =>
+        Promise.resolve([{ id: 1, title: 'Unbookmarked', url: 'https://unbookmarked.test' }]),
+      )
+      await search({ key: prefix[0] })
+
+      assert.strictEqual(ext.model.searchMode, mode)
+      assert(matches(ext.model.result, [subset({ type: 'bookmarkCreate', score: 100 })]))
+      assert.strictEqual(mockRenderSearchResults.mock.callCount(), 1)
+    })
+  }
 })
