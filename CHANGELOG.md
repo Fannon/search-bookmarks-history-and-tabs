@@ -9,6 +9,7 @@
 - **FIXED**: `bookmarksIgnoreFolderList` now supports folder paths such as `Work/Old Bookmarks`, including their subfolders, while bare folder names still match anywhere.
 - **FIXED**: Bookmark Manager edits keep Unicode tags such as `#café` or `#日本語`. AI cleanup changes on the same bookmark now build on each other within one batch, a scoped tag rename whose targets are all unknown is rejected instead of renaming the tag everywhere, and undo keeps working for bookmarks that were restored after a deletion.
 - **FIXED**: Bookmark results keep their open-tab indicator, favicon, and tab-group metadata correct when closing one of several tabs sharing the same base URL. Matching history entries now use the most recent visit.
+- **FIXED**: Duplicate detection in the Bookmark Manager and its AI cleanup no longer treats bookmarks with different `#hash` routes or anchors, such as `app/#/inbox` and `app/#/settings`, as duplicates. Variants that differ only by http/https, `www.`, letter case, or a trailing slash are still detected.
 - **FIXED**: Direct URL navigation now recognizes ports, query strings, and fragments, while rejecting malformed domain names, search phrases, and URL paths containing spaces.
 
 ## [v2.5.0] - 2026-08-01

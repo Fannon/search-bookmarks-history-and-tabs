@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
+import { cleanUpUrl } from '../../helper/utils.js'
 import {
   countBookmarkCleanupChanges,
   createBookmarkCleanupApplyConfirmation,
@@ -202,7 +203,8 @@ describe('bookmark cleanup proposal', () => {
     assert(prompt.includes('Delete only exact or near-exact duplicate bookmarks'))
     assert(prompt.includes('When in doubt, do not propose deletion'))
     assert(prompt.includes('Do not delete a bookmark unless duplicateOfBookmarkId'))
-    assert(prompt.includes('URLs must be canonical duplicates or tracking/fragment variants'))
+    assert(prompt.includes('query parameters and #fragments must match'))
+    assert(prompt.includes('URLs must match except for http/https, www., letter case, or a trailing slash'))
     assert(!prompt.includes('Add useful, specific tags'))
     assert(!prompt.includes('Rewrite titles only when'))
     assert(!prompt.includes('Use only folder IDs'))
@@ -295,6 +297,24 @@ describe('bookmark cleanup proposal', () => {
     assert.deepStrictEqual(errors, [
       'changes.deleteBookmarks[0] must reference bookmarks from the same duplicate URL group.',
     ])
+  })
+  test('accepts URL variant duplicates but rejects deleting a different hash route', () => {
+    const proposeDeletion = (keepUrl, deleteUrl) =>
+      parseBookmarkCleanupProposalWithIssues(
+        JSON.stringify({
+          changes: { deleteBookmarks: [{ id: 'delete', bookmarkId: '2', duplicateOfBookmarkId: '1' }] },
+        }),
+        {
+          bookmarks: [
+            { originalId: '1', originalUrl: keepUrl, url: cleanUpUrl(keepUrl) },
+            { originalId: '2', originalUrl: deleteUrl, url: cleanUpUrl(deleteUrl) },
+          ],
+        },
+      ).proposal.changes.deleteBookmarks
+
+    assert.strictEqual(proposeDeletion('https://example.com/docs', 'http://www.example.com/docs/').length, 1)
+    assert.deepStrictEqual(proposeDeletion('https://example.com/docs#install', 'https://example.com/docs#config'), [])
+    assert.deepStrictEqual(proposeDeletion('https://app.example.com/#/inbox', 'https://app.example.com/'), [])
   })
   test('rejects delete proposals that remove every bookmark in a duplicate group', () => {
     const errors = validateBookmarkCleanupProposal(

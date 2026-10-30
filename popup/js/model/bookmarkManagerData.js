@@ -67,7 +67,29 @@ export function getFolderOptions(folderTree) {
 }
 
 /**
- * Group bookmarks by normalized URL and keep only groups with duplicates.
+ * Get the URL key that identifies duplicate bookmarks.
+ *
+ * Uses the normalized search URL, which ignores http/https, `www.`, letter case,
+ * and a trailing slash, plus the exact hash. Distinct hash routes and anchors
+ * such as `#install` and `#config` are different pages.
+ *
+ * @param {Object} bookmark Normalized bookmark entry.
+ * @returns {string} Duplicate key, or an empty string without a URL.
+ */
+export function getDuplicateUrlKey(bookmark) {
+  const originalUrl = bookmark?.originalUrl || ''
+  if (!bookmark?.url) {
+    return originalUrl
+  }
+  const hashIndex = originalUrl.indexOf('#')
+  if (hashIndex === -1 || hashIndex === originalUrl.length - 1) {
+    return bookmark.url
+  }
+  return bookmark.url + originalUrl.slice(hashIndex)
+}
+
+/**
+ * Group bookmarks by duplicate URL key and keep only groups with duplicates.
  *
  * @param {Array<Object>} bookmarks Normalized bookmark entries.
  * @returns {Array<Object>} Duplicate URL groups.
@@ -77,7 +99,7 @@ export function getDuplicateGroups(bookmarks = []) {
 
   for (let i = 0; i < bookmarks.length; i++) {
     const bookmark = bookmarks[i]
-    const url = bookmark?.url || bookmark?.originalUrl
+    const url = getDuplicateUrlKey(bookmark)
     if (!url) {
       continue
     }
