@@ -205,7 +205,7 @@ describe('initEditBookmark entry point', () => {
     document.getElementById('bm-save').dispatchEvent(new MouseEvent('click', { bubbles: true }))
     document.getElementById('bm-save').dispatchEvent(new MouseEvent('click', { bubbles: true }))
     assert.strictEqual(createBookmark.mock.callCount(), 1)
-    resolveCreateBookmark()
+    resolveCreateBookmark({ id: 'created-bookmark' })
     await flushPromises()
     assert.strictEqual(createBookmark.mock.callCount(), 1)
     assert.strictEqual(module.ext.currentBookmarkDraft, null)

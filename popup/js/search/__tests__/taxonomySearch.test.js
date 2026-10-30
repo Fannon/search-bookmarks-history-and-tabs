@@ -19,6 +19,19 @@ describe('taxonomy search', () => {
   afterEach(() => {
     clearTestExt()
   })
+  test('indexes prototype property names as normal tags, folders, and groups', () => {
+    const names = ['constructor', '__proto__', 'toString']
+    ext.model.bookmarks = names.map((name) => ({ originalId: name, tags: `#${name}`, folder: `~${name}` }))
+    ext.model.tabs = names.map((name) => ({ originalId: name, group: name }))
+    for (const index of [
+      taxonomyModule.getUniqueTags(),
+      taxonomyModule.getUniqueFolders(),
+      taxonomyModule.getUniqueGroups(),
+    ]) {
+      assert.deepStrictEqual(Object.keys(index), names)
+      for (const name of names) assert.deepStrictEqual(index[name], [name])
+    }
+  })
   test('searchTaxonomy finds entries containing all tag terms', () => {
     const { searchTaxonomy } = taxonomyModule
     const data = [

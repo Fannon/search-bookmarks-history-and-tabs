@@ -166,6 +166,28 @@ afterEach(() => {
   delete global.Tagify
 })
 describe('editBookmarkView', () => {
+  for (const action of ['updateBookmark', 'deleteBookmark']) {
+    it(`${action} retains the model and editor when persistence fails`, async () => {
+      setupDom()
+      document.body.insertAdjacentHTML('beforeend', '<div id="error-overlay"></div>')
+      const bookmark = { originalId: BOOKMARK_ID, title: 'Original', originalUrl: 'https://original.test' }
+      setupExt([bookmark])
+      const { module, mocks } = await loadEditBookmarkView()
+      ext.tagify = { value: [] }
+      document.getElementById('bm-title').value = 'Unsaved'
+      document.getElementById('bm-url').value = 'http://'
+      const apiAction = action === 'updateBookmark' ? 'update' : 'remove'
+      mocks.browserApi.bookmarks[apiAction].mock.mockImplementation(() => Promise.reject(new Error('API rejected')))
+      mock.method(console, 'warn', () => {})
+      mock.method(console, 'error', () => {})
+      await module[action](BOOKMARK_ID)
+      assert.strictEqual(ext.model.bookmarks[0], bookmark)
+      assert.strictEqual(bookmark.title, 'Original')
+      assert.strictEqual(document.getElementById('bm-title').value, 'Unsaved')
+      assert(document.getElementById('error-overlay').textContent.includes('API rejected'))
+      assert.strictEqual(mocks.resetSimpleSearchState.mock.callCount(), 0)
+    })
+  }
   it('initializes Tagify and populates the edit form for an existing bookmark', async () => {
     setupDom()
     setupExt([
@@ -310,7 +332,7 @@ describe('editBookmarkView', () => {
     global.ext.tagify = {
       value: [{ value: 'alpha' }, { value: 'beta' }],
     }
-    module.updateBookmark(BOOKMARK_ID)
+    await module.updateBookmark(BOOKMARK_ID)
     const expectedCleanUrl = helpers.cleanUpUrl('http://updated.com')
     const expectedSearchStringLower = `search:Updated Title|${expectedCleanUrl}|#alpha #beta|~Work`.toLowerCase()
     assert.strictEqual(bookmark.title, 'Updated Title')
@@ -357,7 +379,7 @@ describe('editBookmarkView', () => {
       value: [{ value: 'star' }],
     }
     module.updateFavoriteButton(document.getElementById('bm-favorite'), 'yellow')
-    module.updateBookmark(BOOKMARK_ID)
+    await module.updateBookmark(BOOKMARK_ID)
     assert(
       mocks.browserApi.bookmarks.update.mock.calls.some((call) =>
         matches(call.arguments, [
@@ -391,7 +413,7 @@ describe('editBookmarkView', () => {
       value: [],
     }
     module.updateFavoriteButton(document.getElementById('bm-favorite'), '')
-    module.updateBookmark(BOOKMARK_ID)
+    await module.updateBookmark(BOOKMARK_ID)
     assert(
       mocks.browserApi.bookmarks.update.mock.calls.some((call) =>
         matches(call.arguments, [
@@ -446,7 +468,7 @@ describe('editBookmarkView', () => {
     global.ext.tagify = {
       value: [{ value: 'star' }],
     }
-    module.updateBookmark(BOOKMARK_ID)
+    await module.updateBookmark(BOOKMARK_ID)
     assert(
       mocks.browserApi.bookmarks.update.mock.calls.some((call) =>
         matches(call.arguments, [
@@ -720,7 +742,7 @@ describe('editBookmarkView', () => {
       value: [],
     }
     mocks.browserApi.bookmarks = undefined
-    module.updateBookmark(BOOKMARK_ID)
+    await module.updateBookmark(BOOKMARK_ID)
     assert.strictEqual(bookmark.tags, '')
     assert.strictEqual(mocks.browserApi.bookmarks?.update, undefined)
     assert(

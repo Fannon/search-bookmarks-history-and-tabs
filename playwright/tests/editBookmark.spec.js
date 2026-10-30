@@ -130,6 +130,8 @@ const installChromeMock = async (page) => {
           }
 
           if (Object.hasOwn(changes, 'url')) {
+            // Like the browser API, reject URLs that cannot be parsed
+            new URL(changes.url)
             node.url = changes.url
           }
 
@@ -260,5 +262,26 @@ test.describe('Edit Bookmark View', () => {
     await expect(bookmarkRow.locator('.badge.tags').nth(0)).toContainText('#first-tag')
     await expect(bookmarkRow.locator('.badge.tags').nth(1)).toContainText('#second-tag')
     await expectNoClientErrors(page)
+  })
+
+  test.describe('when saving fails', () => {
+    test.use({ skipConsoleErrors: true })
+
+    test('keeps edits after an invalid URL and saves on retry', async ({ page }) => {
+      await page.locator('#bm-title').fill('Unsaved')
+      await page.locator('#bm-url').fill('http://')
+      await page.locator('#bm-save').click()
+
+      await expect(page.locator('#error-overlay')).toBeVisible()
+      await expect(page).toHaveURL(/editBookmark\.html/)
+      await expect(page.locator('#bm-title')).toHaveValue('Unsaved')
+      const tree = await page.evaluate(async () => JSON.stringify(await chrome.bookmarks.getTree()))
+      expect(tree).toContain('Try pandoc! #md')
+
+      await page.locator('#btn-dismiss-error').click()
+      await page.locator('#bm-url').fill('https://pandoc.org/try/')
+      await Promise.all([page.waitForURL(/#search\/t$/), page.locator('#bm-save').click()])
+      await expect(page.locator('#results [x-original-id="23"] .title')).toContainText('Unsaved')
+    })
   })
 })
