@@ -45,6 +45,7 @@ const mockDependencies = async (overrides = {}) => {
       data.history = history
     }),
     search: mock.fn(() => Promise.resolve()),
+    preloadFuzzySearch: mock.fn(),
   }
   const config = { ...defaults, ...overrides }
   mock.module(new URL('../helper/utils.js', import.meta.url), {
@@ -80,6 +81,11 @@ const mockDependencies = async (overrides = {}) => {
   mock.module(new URL('../search/common.js', import.meta.url), {
     exports: {
       search: config.search,
+    },
+  })
+  mock.module(new URL('../search/fuzzySearch.js', import.meta.url), {
+    exports: {
+      preloadFuzzySearch: config.preloadFuzzySearch,
     },
   })
   mock.module(new URL('../helper/browserApi.js', import.meta.url), {
@@ -320,6 +326,23 @@ describe('initSearch entry point', () => {
     } finally {
       warnSpy.mock.restore()
     }
+  })
+  test('initExtension preloads fuzzy search only when it is the default strategy', async () => {
+    const precise = await mockDependencies()
+    moduleUnderTest = await import('../initSearch.js')
+    await flushPromises()
+    assert.strictEqual(precise.preloadFuzzySearch.mock.callCount(), 0)
+
+    window.removeEventListener('hashchange', moduleUnderTest.hashRouter)
+    resetModules()
+    clearTestExt()
+    setupDom()
+    const fuzzy = await mockDependencies({
+      getEffectiveOptions: mock.fn(() => Promise.resolve({ searchStrategy: 'fuzzy', enableHistory: true })),
+    })
+    moduleUnderTest = await import('../initSearch.js')
+    await flushPromises()
+    assert.strictEqual(fuzzy.preloadFuzzySearch.mock.callCount(), 1)
   })
   test('hashRouter handles search, bookmark routes, and ignores tags/folders routes', async () => {
     const mocks = await mockDependencies()
