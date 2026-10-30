@@ -179,7 +179,7 @@ export function mergeBulkTags(currentTags = [], nextTags = [], mode) {
 export function normalizeTagName(tagName) {
   return String(tagName || '')
     .replaceAll('#', '')
-    .replace(/[^a-z0-9 _.-]/gi, '')
+    .replace(/[^\p{L}\p{N}\p{M} _.-]/gu, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .trim()

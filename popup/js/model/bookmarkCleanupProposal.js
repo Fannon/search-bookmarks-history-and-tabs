@@ -626,7 +626,9 @@ function validateRenameTagChanges(errors, changes, existingTags, bookmarkIds) {
     if (!normalizePromptTag(change?.to)) {
       errors.push(`changes.renameTags[${i}].to must be a tag name.`)
     }
-    if (Array.isArray(change?.bookmarkIds)) {
+    if (change?.bookmarkIds !== undefined && !Array.isArray(change.bookmarkIds)) {
+      errors.push(`changes.renameTags[${i}].bookmarkIds must be an array.`)
+    } else if (Array.isArray(change?.bookmarkIds)) {
       for (let j = 0; j < change.bookmarkIds.length; j++) {
         if (!bookmarkIds.has(String(change.bookmarkIds[j]))) {
           errors.push(`changes.renameTags[${i}].bookmarkIds[${j}] does not match an existing bookmark.`)
@@ -840,11 +842,16 @@ function normalizeRenameTagChangesWithIssues(changes, existingTags, bookmarkIds,
       continue
     }
 
+    const targetIds = normalizeOptionalBookmarkIds(change.bookmarkIds, bookmarkIds, context, warnings)
+    if (targetIds === null) {
+      warnings.push(`${context} ignored because it has no valid target bookmarks.`)
+      continue
+    }
     result.push({
       id: normalizeChangeId(change.id, 'renameTags', i),
       from,
       to,
-      bookmarkIds: normalizeOptionalBookmarkIds(change.bookmarkIds, bookmarkIds, context, warnings),
+      bookmarkIds: targetIds,
       reason: String(change.reason || '').trim(),
     })
   }
@@ -981,8 +988,10 @@ function normalizeRewriteTitleChangesWithIssues(changes, bookmarkIds, warnings) 
 }
 
 function normalizeOptionalBookmarkIds(bookmarkIds, knownBookmarkIds, context, warnings) {
+  if (bookmarkIds === undefined) return []
   if (!Array.isArray(bookmarkIds)) {
-    return []
+    warnings.push(`${context}.bookmarkIds must be an array.`)
+    return null
   }
 
   const result = []
@@ -994,7 +1003,7 @@ function normalizeOptionalBookmarkIds(bookmarkIds, knownBookmarkIds, context, wa
       warnings.push(`${context}.bookmarkIds[${i}] ignored because bookmark "${bookmarkId}" does not exist.`)
     }
   }
-  return result
+  return bookmarkIds.length && !result.length ? null : result
 }
 
 function isProposalChangeObject(change, context, warnings) {

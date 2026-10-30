@@ -57,6 +57,32 @@ const managerModel = {
   ],
 }
 describe('bookmark cleanup proposal', () => {
+  test('invalid rename targets never become an unrestricted rename', () => {
+    for (const bookmarkIds of [['missing'], 'missing']) {
+      const result = parseBookmarkCleanupProposalWithIssues(
+        JSON.stringify({
+          changes: { renameTags: [{ id: 'rename', from: 'ai', to: 'new', bookmarkIds }] },
+        }),
+        managerModel,
+      )
+      assert.deepStrictEqual(result.proposal.changes.renameTags, [])
+      assert(result.warnings.some((warning) => warning.includes('no valid target bookmarks')))
+    }
+    const mixed = parseBookmarkCleanupProposalWithIssues(
+      JSON.stringify({
+        changes: { renameTags: [{ id: 'rename', from: 'ai', to: 'new', bookmarkIds: ['1', 'missing'] }] },
+      }),
+      managerModel,
+    )
+    assert.deepStrictEqual(mixed.proposal.changes.renameTags[0].bookmarkIds, ['1'])
+    const global = parseBookmarkCleanupProposalWithIssues(
+      JSON.stringify({
+        changes: { renameTags: [{ id: 'rename', from: 'ai', to: 'new' }] },
+      }),
+      managerModel,
+    )
+    assert.deepStrictEqual(global.proposal.changes.renameTags[0].bookmarkIds, [])
+  })
   test('creates a prompt with output rules and bookmark context', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel)
     assert(prompt.includes('Act as a careful browser bookmark curator'))

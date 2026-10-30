@@ -49,6 +49,7 @@ import {
   createUndoHistoryExportFilename,
   getBookmarkUndoSnapshots,
   parseUndoHistoryImport,
+  remapBookmarkUndoId,
   removeBookmarkUndoSnapshot,
   saveBookmarkUndoSnapshot,
 } from './model/bookmarkManagerUndo.js'
@@ -1212,6 +1213,13 @@ async function applyCleanupRewriteTitle(change) {
   await ext.browserApi.bookmarks.update(change.bookmarkId, {
     title: createTaggedBookmarkTitle(change.title, bookmark.tagsArray || [], bookmark.customBonusScore),
   })
+  updateBookmarkInMemory(
+    bookmark,
+    change.title,
+    bookmark.originalUrl || bookmark.url,
+    bookmark.tagsArray || [],
+    bookmark.customBonusScore,
+  )
 }
 
 function getPendingCleanupChanges(proposal) {
@@ -1616,7 +1624,8 @@ async function recreateDeletedBookmark(bookmark) {
     createInfo.index = bookmark.index
   }
 
-  await ext.browserApi.bookmarks.create(createInfo)
+  const restored = await ext.browserApi.bookmarks.create(createInfo)
+  remapBookmarkUndoId(bookmark.id, restored.id)
 }
 
 function updateBookmarkUndoHistory() {
@@ -1665,6 +1674,13 @@ async function updateTaggedBookmarkPlans(tagPlans) {
     await ext.browserApi.bookmarks.update(String(bookmark.originalId), {
       title: createTaggedBookmarkTitle(bookmark.title, nextTags, bookmark.customBonusScore),
     })
+    updateBookmarkInMemory(
+      bookmark,
+      bookmark.title,
+      bookmark.originalUrl || bookmark.url,
+      nextTags,
+      bookmark.customBonusScore,
+    )
   }
 }
 
