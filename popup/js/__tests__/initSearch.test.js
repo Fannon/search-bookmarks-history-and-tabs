@@ -37,15 +37,10 @@ const mockDependencies = async (overrides = {}) => {
       Promise.resolve({
         tabs: [{ originalId: 't1' }],
         bookmarks: [{ originalId: 'b1' }],
-        history: [],
+        history: [{ originalId: 'h1' }],
       }),
     ),
-    getSearchHistory: mock.fn(() => Promise.resolve([{ originalId: 'h1' }])),
-    addSearchHistory: mock.fn((data, history) => {
-      data.history = history
-    }),
     search: mock.fn(() => Promise.resolve()),
-    preloadFuzzySearch: mock.fn(),
   }
   const config = { ...defaults, ...overrides }
   mock.module(new URL('../helper/utils.js', import.meta.url), {
@@ -74,18 +69,11 @@ const mockDependencies = async (overrides = {}) => {
   mock.module(new URL('../model/searchData.js', import.meta.url), {
     exports: {
       getSearchData: config.getSearchData,
-      getSearchHistory: config.getSearchHistory,
-      addSearchHistory: config.addSearchHistory,
     },
   })
   mock.module(new URL('../search/common.js', import.meta.url), {
     exports: {
       search: config.search,
-    },
-  })
-  mock.module(new URL('../search/fuzzySearch.js', import.meta.url), {
-    exports: {
-      preloadFuzzySearch: config.preloadFuzzySearch,
     },
   })
   mock.module(new URL('../helper/browserApi.js', import.meta.url), {
@@ -237,112 +225,6 @@ describe('initSearch entry point', () => {
       ),
     )
     assert.strictEqual(document.getElementById('results-load'), null)
-  })
-  test('initExtension merges history before the first render when it is already loaded', async () => {
-    const calls = []
-    const mocks = await mockDependencies()
-    mocks.addSearchHistory.mock.mockImplementation((data, history) => {
-      calls.push('addSearchHistory')
-      data.history = history
-    })
-    mocks.search.mock.mockImplementation(async () => {
-      calls.push('search')
-    })
-    const module = await import('../initSearch.js')
-    moduleUnderTest = module
-    await flushPromises()
-    assert.deepStrictEqual(calls, ['addSearchHistory', 'search'])
-    assert.deepStrictEqual(module.ext.model.history, [{ originalId: 'h1' }])
-  })
-  test('initExtension merges history that arrives just after bookmarks before the first render', async () => {
-    const calls = []
-    const mocks = await mockDependencies({
-      // Resolves in the next task, like a history response queued behind the bookmark tree.
-      getSearchHistory: mock.fn(() => new Promise((resolve) => setTimeout(() => resolve([{ originalId: 'h1' }])))),
-    })
-    mocks.addSearchHistory.mock.mockImplementation((data, history) => {
-      calls.push('addSearchHistory')
-      data.history = history
-    })
-    mocks.search.mock.mockImplementation(async () => {
-      calls.push('search')
-    })
-    moduleUnderTest = await import('../initSearch.js')
-    await flushPromises()
-    await flushPromises()
-    assert.deepStrictEqual(calls, ['addSearchHistory', 'search'])
-  })
-  test('initExtension renders without waiting for slow history, then refreshes results with it', async () => {
-    const history = createDeferred()
-    const mocks = await mockDependencies({
-      getSearchHistory: mock.fn(() => history.promise),
-    })
-    const module = await import('../initSearch.js')
-    moduleUnderTest = module
-    await flushPromises()
-    assert.strictEqual(module.ext.initialized, true)
-    assert.strictEqual(mocks.search.mock.callCount(), 1)
-    assert.strictEqual(document.getElementById('results-load'), null)
-    assert.strictEqual(mocks.addSearchHistory.mock.callCount(), 0)
-    module.ext.searchCache.set('stale', [])
-
-    history.resolve([{ originalId: 'late-history' }])
-    await flushPromises()
-    assert.deepStrictEqual(module.ext.model.history, [{ originalId: 'late-history' }])
-    assert.strictEqual(module.ext.searchCache.size, 0)
-    assert.strictEqual(mocks.search.mock.callCount(), 2)
-    assert(matches(mocks.search.mock.calls[1].arguments, [{ bypassInitializedGuard: true }]))
-  })
-  test('initExtension keeps a moved selection when slow history arrives', async () => {
-    const history = createDeferred()
-    const mocks = await mockDependencies({
-      getSearchHistory: mock.fn(() => history.promise),
-    })
-    const module = await import('../initSearch.js')
-    moduleUnderTest = module
-    await flushPromises()
-    module.ext.model.currentItem = 2
-
-    history.resolve([{ originalId: 'late-history' }])
-    await flushPromises()
-    assert.deepStrictEqual(module.ext.model.history, [{ originalId: 'late-history' }])
-    assert.strictEqual(mocks.search.mock.callCount(), 1)
-  })
-  test('initExtension continues without history when loading it fails', async () => {
-    const historyError = new Error('History failed')
-    const warnSpy = mock.method(console, 'warn', () => {})
-    try {
-      const mocks = await mockDependencies({
-        getSearchHistory: mock.fn(() => Promise.reject(historyError)),
-      })
-      const module = await import('../initSearch.js')
-      moduleUnderTest = module
-      await flushPromises()
-      assert.strictEqual(module.ext.initialized, true)
-      assert(
-        warnSpy.mock.calls.some((call) => matches(call.arguments, ['Could not load browser history', historyError])),
-      )
-      assert.strictEqual(mocks.printError.mock.callCount(), 0)
-    } finally {
-      warnSpy.mock.restore()
-    }
-  })
-  test('initExtension preloads fuzzy search only when it is the default strategy', async () => {
-    const precise = await mockDependencies()
-    moduleUnderTest = await import('../initSearch.js')
-    await flushPromises()
-    assert.strictEqual(precise.preloadFuzzySearch.mock.callCount(), 0)
-
-    window.removeEventListener('hashchange', moduleUnderTest.hashRouter)
-    resetModules()
-    clearTestExt()
-    setupDom()
-    const fuzzy = await mockDependencies({
-      getEffectiveOptions: mock.fn(() => Promise.resolve({ searchStrategy: 'fuzzy', enableHistory: true })),
-    })
-    moduleUnderTest = await import('../initSearch.js')
-    await flushPromises()
-    assert.strictEqual(fuzzy.preloadFuzzySearch.mock.callCount(), 1)
   })
   test('hashRouter handles search, bookmark routes, and ignores tags/folders routes', async () => {
     const mocks = await mockDependencies()

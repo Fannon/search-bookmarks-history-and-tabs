@@ -2,7 +2,7 @@
  * @file Implements the popup's fuzzy/approximate-match search via uFuzzy.
  *
  * Strategy:
- * - Lazy-load uFuzzy on first use to keep initial bundle size low; preload it when fuzzy is the default strategy.
+ * - Lazy-load uFuzzy on first use to keep initial bundle size low.
  * - Build memoized haystacks per mode (bookmarks, tabs, history) for quick repeated searches.
  * - Handle typo tolerance, loose word boundaries, and non-ASCII fallbacks better than the simple strategy.
  *
@@ -18,7 +18,6 @@ import { resolveSearchTargets } from './common.js'
 import { createSearchResultObjects } from './resultObjects.js'
 
 const nonASCIIRegex = /[\u0080-\uFFFF]/
-const UFUZZY_URL = './lib/uFuzzy.iife.min.js'
 
 /** Memoize some state, to avoid re-creating haystack and fuzzy search instances. */
 let state = {}
@@ -39,16 +38,6 @@ export function resetFuzzySearchState(searchMode) {
 }
 
 /**
- * Start loading uFuzzy before the first fuzzy search, e.g. while browser data is loading.
- * Load failures are reported by that first search, which retries the load.
- */
-export function preloadFuzzySearch() {
-  if (!window.uFuzzy) {
-    loadScript(UFUZZY_URL).catch(() => {})
-  }
-}
-
-/**
  * Execute fuzzy search across the datasets mapped to the active mode.
  *
  * @param {string} searchMode - Active search mode.
@@ -59,7 +48,7 @@ export async function fuzzySearch(searchMode, searchTerm, data, options) {
   // Lazy load the uFuzzy library if not there already
   if (!window.uFuzzy) {
     try {
-      await loadScript(UFUZZY_URL)
+      await loadScript('./lib/uFuzzy.iife.min.js')
     } catch (err) {
       printError(err, 'Could not load uFuzzy')
     }

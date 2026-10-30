@@ -456,15 +456,13 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
 
     try {
       const apiDelayMs = 2
-      const slowHistoryDelayMs = 30
-      let historyDelayMs = apiDelayMs
       let apiWallMs = 0
 
       const timedApi =
-        (fn, getDelayMs = () => apiDelayMs) =>
+        (fn) =>
         async (...args) => {
           const start = performance.now()
-          await sleep(getDelayMs())
+          await sleep(apiDelayMs)
           const result = fn(...args)
           apiWallMs = Math.max(apiWallMs, performance.now() - start)
           return result
@@ -472,56 +470,34 @@ describe('REAL Fuzzy vs Precise Search Benchmark', () => {
 
       browserApi.tabs = { query: timedApi(() => rawTabs) }
       browserApi.bookmarks = { getTree: timedApi(() => rawBookmarks) }
-      browserApi.history = {
-        search: timedApi(
-          () => rawHistory,
-          () => historyDelayMs,
-        ),
-      }
+      browserApi.history = { search: timedApi(() => rawHistory) }
       browserApi.tabGroups = { query: timedApi(() => []) }
       ext.opts.enableTabs = true
       ext.opts.enableBookmarks = true
       ext.opts.enableHistory = true
 
-      const scenarios = [
-        [`getSearchData, 6000 bookmarks + 6000 history, ${apiDelayMs}ms API delay`, apiDelayMs, {}],
-        [
-          `getSearchData, history API ${slowHistoryDelayMs}ms, loaded together`,
-          slowHistoryDelayMs,
-          { includeHistory: true },
-        ],
-        [
-          `getSearchData, history API ${slowHistoryDelayMs}ms, tabs and bookmarks first`,
-          slowHistoryDelayMs,
-          { includeHistory: false },
-        ],
-      ]
-
-      for (const [label, delayMs, options] of scenarios) {
-        historyDelayMs = delayMs
-        for (let i = 0; i < 2; i++) {
-          apiWallMs = 0
-          await getSearchData(options)
-        }
-
-        let totalMs = 0
-        let totalApiWallMs = 0
-        const iterations = 5
-        for (let i = 0; i < iterations; i++) {
-          apiWallMs = 0
-          const start = performance.now()
-          await getSearchData(options)
-          totalMs += performance.now() - start
-          totalApiWallMs += apiWallMs
-        }
-        const avgTotalMs = totalMs / iterations
-        const avgApiWallMs = totalApiWallMs / iterations
-        const postApiMs = Math.max(0, avgTotalMs - avgApiWallMs)
-
-        console.log(
-          `| ${label} | ${avgTotalMs.toFixed(2)}ms | ${avgApiWallMs.toFixed(2)}ms | ${postApiMs.toFixed(2)}ms |`,
-        )
+      for (let i = 0; i < 2; i++) {
+        apiWallMs = 0
+        await getSearchData()
       }
+
+      let totalMs = 0
+      let totalApiWallMs = 0
+      const iterations = 5
+      for (let i = 0; i < iterations; i++) {
+        apiWallMs = 0
+        const start = performance.now()
+        await getSearchData()
+        totalMs += performance.now() - start
+        totalApiWallMs += apiWallMs
+      }
+      const avgTotalMs = totalMs / iterations
+      const avgApiWallMs = totalApiWallMs / iterations
+      const postApiMs = Math.max(0, avgTotalMs - avgApiWallMs)
+
+      console.log(
+        `| getSearchData, 6000 bookmarks + 6000 history, ${apiDelayMs}ms API delay | ${avgTotalMs.toFixed(2)}ms | ${avgApiWallMs.toFixed(2)}ms | ${postApiMs.toFixed(2)}ms |`,
+      )
     } finally {
       browserApi.tabs = originalTabs
       browserApi.bookmarks = originalBookmarks

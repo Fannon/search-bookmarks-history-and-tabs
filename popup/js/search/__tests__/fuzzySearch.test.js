@@ -2,7 +2,7 @@ import '../../../../test/setup.js'
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, describe, it, mock } from 'node:test'
 import { createBookmarksTestData, createHistoryTestData, createTabsTestData } from '../../__tests__/testUtils.js'
-import { fuzzySearch, preloadFuzzySearch, resetFuzzySearchState } from '../fuzzySearch.js'
+import { fuzzySearch, resetFuzzySearchState } from '../fuzzySearch.js'
 
 const cjkTerm = '\u6f22\u5b57'
 
@@ -469,28 +469,5 @@ describe('fuzzySearch', () => {
     assert.notStrictEqual(secondResults[0], model.bookmarks[0])
     assert.strictEqual(model.bookmarks[0].searchScore, undefined)
     assert.strictEqual(model.bookmarks[0].searchApproach, undefined)
-  })
-})
-
-describe('preloadFuzzySearch', () => {
-  const uFuzzyScripts = () => document.head.querySelectorAll('script[src="./lib/uFuzzy.iife.min.js"]')
-
-  it('requests the uFuzzy script once while it is not loaded', () => {
-    const loadedUFuzzy = window.uFuzzy
-    delete window.uFuzzy
-    try {
-      preloadFuzzySearch()
-      preloadFuzzySearch()
-      assert.strictEqual(uFuzzyScripts().length, 1)
-    } finally {
-      window.uFuzzy = loadedUFuzzy
-      for (const script of uFuzzyScripts()) script.remove()
-    }
-  })
-
-  it('does nothing when uFuzzy is already available', () => {
-    window.uFuzzy = TrackedUFuzzy
-    preloadFuzzySearch()
-    assert.strictEqual(uFuzzyScripts().length, 0)
   })
 })

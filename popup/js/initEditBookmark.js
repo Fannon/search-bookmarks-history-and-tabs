@@ -54,8 +54,7 @@ export async function initEditBookmark() {
     }
     ext.returnHash = normalizeReturnHash(returnHash)
 
-    // The editor needs no visit data, so skip the potentially slow history API.
-    const { bookmarks, bookmarkTree } = await getSearchData({ includeHistory: false })
+    const { bookmarks, bookmarkTree } = await getSearchData()
     ext.model.bookmarks = bookmarks
     ext.model.bookmarkTree = bookmarkTree
 
