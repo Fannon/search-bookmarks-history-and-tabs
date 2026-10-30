@@ -2,6 +2,7 @@
  * @file Prompt, schema, and validation helpers for AI bookmark cleanup proposals.
  */
 
+import { getDuplicateUrlKey } from './bookmarkManagerData.js'
 import { normalizeTagName } from './bookmarkManagerOperations.js'
 
 const DEFAULT_PROMPT_BOOKMARK_LIMIT = 1000
@@ -300,7 +301,7 @@ function formatPromptGoals(isLite, allowedChangeTypes) {
   }
   if (allowedChangeTypes.includes('deleteBookmarks')) {
     goals.push(
-      '- deleteBookmarks: Delete only exact or near-exact duplicate bookmarks. When in doubt, do not propose deletion. Both must share the same canonical URL or differ only by tracking parameters, URL fragments, or minor URL variants. Every entry must include duplicateOfBookmarkId identifying the bookmark to keep. Never delete related pages, alternate documentation versions, mirrors, forks, language variants, or product pages that serve different purposes.',
+      '- deleteBookmarks: Delete only exact or near-exact duplicate bookmarks. When in doubt, do not propose deletion. Both URLs may differ only by http/https, a www. prefix, letter case, or a trailing slash; query parameters and #fragments must match, because a different #fragment can be a different page or app route. Every entry must include duplicateOfBookmarkId identifying the bookmark to keep. Never delete related pages, alternate documentation versions, mirrors, forks, language variants, or product pages that serve different purposes.',
     )
   }
   if (allowedChangeTypes.includes('rewriteTitles')) {
@@ -328,7 +329,7 @@ function formatPromptRules(isLite, allowedChangeTypes) {
 
   if (allowedChangeTypes.includes('deleteBookmarks')) {
     rules.push('- Do not delete a bookmark unless duplicateOfBookmarkId identifies the bookmark to keep.')
-    rules.push('- For deleteBookmarks, URLs must be canonical duplicates or tracking/fragment variants.')
+    rules.push('- For deleteBookmarks, URLs must match except for http/https, www., letter case, or a trailing slash.')
   }
   if (isLite && !allowedChangeTypes.includes('moveBookmarks')) {
     rules.push('- Keep moveBookmarks empty.')
@@ -1064,7 +1065,7 @@ function isDuplicateBookmarkPair(bookmarkId, duplicateOfBookmarkId, managerModel
   const urlsByBookmarkId = new Map()
   const bookmarks = managerModel?.bookmarks || []
   for (let i = 0; i < bookmarks.length; i++) {
-    urlsByBookmarkId.set(String(bookmarks[i].originalId), normalizeDuplicateUrl(bookmarks[i]))
+    urlsByBookmarkId.set(String(bookmarks[i].originalId), getDuplicateUrlKey(bookmarks[i]))
   }
 
   const firstUrl = urlsByBookmarkId.get(firstId)
@@ -1156,7 +1157,7 @@ function getDuplicateBookmarkIdGroups(managerModel) {
   const idsByUrl = new Map()
   const bookmarks = managerModel?.bookmarks || []
   for (let i = 0; i < bookmarks.length; i++) {
-    const url = normalizeDuplicateUrl(bookmarks[i])
+    const url = getDuplicateUrlKey(bookmarks[i])
     if (!url) {
       continue
     }
@@ -1191,12 +1192,6 @@ function appendDuplicateBookmarkIdGroup(result, seen, ids) {
 
   seen.add(key)
   result.push(group)
-}
-
-function normalizeDuplicateUrl(bookmark) {
-  return String(bookmark?.url || bookmark?.originalUrl || '')
-    .trim()
-    .toLowerCase()
 }
 
 function countCleanupChangeTypes(changes) {

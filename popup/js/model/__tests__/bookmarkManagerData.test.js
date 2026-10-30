@@ -2,7 +2,14 @@ import '../../../../test/setup.js'
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
 import { matches } from '../../../../test/patterns.js'
-import { createBookmarkManagerModel, getDuplicateGroups, getFolderTree, getTagGroups } from '../bookmarkManagerData.js'
+import { cleanUpUrl } from '../../helper/utils.js'
+import {
+  createBookmarkManagerModel,
+  getDuplicateGroups,
+  getDuplicateUrlKey,
+  getFolderTree,
+  getTagGroups,
+} from '../bookmarkManagerData.js'
 
 const bookmarks = [
   {
@@ -18,7 +25,7 @@ const bookmarks = [
   {
     originalId: '2',
     title: 'Example Copy',
-    originalUrl: 'http://www.example.com/page#section',
+    originalUrl: 'http://www.example.com/page/',
     url: 'example.com/page',
     dateAdded: 2000,
     tagsArray: ['work'],
@@ -45,6 +52,31 @@ const bookmarks = [
   },
 ]
 describe('bookmark manager data', () => {
+  test('treats URL variants as duplicates but keeps distinct hash routes apart', () => {
+    const toBookmark = (originalUrl, index) => ({
+      originalId: String(index),
+      originalUrl,
+      url: cleanUpUrl(originalUrl),
+    })
+    const getGroupIds = (urls) =>
+      getDuplicateGroups(urls.map(toBookmark)).map((group) => group.bookmarks.map((b) => b.originalId).sort())
+
+    assert.deepStrictEqual(
+      getGroupIds(['https://example.com/docs', 'http://www.example.com/docs/', 'https://EXAMPLE.com/docs#']),
+      [['0', '1', '2']],
+    )
+    assert.deepStrictEqual(
+      getGroupIds([
+        'https://app.example.com/#/inbox',
+        'https://app.example.com/#/settings',
+        'https://example.com/docs#install',
+        'https://example.com/docs/#install',
+        'https://example.com/docs#config',
+      ]),
+      [['2', '3']],
+    )
+    assert.strictEqual(getDuplicateUrlKey(toBookmark('https://example.com/App#/Route', 0)), 'example.com/app#/Route')
+  })
   test('groups duplicates by normalized URL and suggests the richer bookmark to keep', () => {
     const duplicateGroups = getDuplicateGroups(bookmarks)
     assert.strictEqual(duplicateGroups.length, 1)
