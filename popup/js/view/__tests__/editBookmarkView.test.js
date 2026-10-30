@@ -156,6 +156,29 @@ async function loadEditBookmarkView({ uniqueTags = {} } = {}) {
     },
   }
 }
+
+for (const action of ['updateBookmark', 'deleteBookmark']) {
+  it(`${action} retains the model and editor when persistence fails`, async () => {
+    setupDom()
+    document.body.insertAdjacentHTML('beforeend', '<div id="error-overlay"></div>')
+    const bookmark = { originalId: BOOKMARK_ID, title: 'Original', originalUrl: 'https://original.test' }
+    setupExt([bookmark])
+    const { module, mocks } = await loadEditBookmarkView()
+    ext.tagify = { value: [] }
+    document.getElementById('bm-title').value = 'Unsaved'
+    document.getElementById('bm-url').value = 'http://'
+    const apiAction = action === 'updateBookmark' ? 'update' : 'remove'
+    mocks.browserApi.bookmarks[apiAction].mock.mockImplementation(() => Promise.reject(new Error('API rejected')))
+    mock.method(console, 'warn', () => {})
+    mock.method(console, 'error', () => {})
+    await module[action](BOOKMARK_ID)
+    assert.strictEqual(ext.model.bookmarks[0], bookmark)
+    assert.strictEqual(bookmark.title, 'Original')
+    assert.strictEqual(document.getElementById('bm-title').value, 'Unsaved')
+    assert(document.getElementById('error-overlay').textContent.includes('API rejected'))
+    assert.strictEqual(mocks.resetSimpleSearchState.mock.callCount(), 0)
+  })
+}
 beforeEach(() => {
   document.body.innerHTML = ''
   window.location.hash = ''
@@ -310,7 +333,7 @@ describe('editBookmarkView', () => {
     global.ext.tagify = {
       value: [{ value: 'alpha' }, { value: 'beta' }],
     }
-    module.updateBookmark(BOOKMARK_ID)
+    await module.updateBookmark(BOOKMARK_ID)
     const expectedCleanUrl = helpers.cleanUpUrl('http://updated.com')
     const expectedSearchStringLower = `search:Updated Title|${expectedCleanUrl}|#alpha #beta|~Work`.toLowerCase()
     assert.strictEqual(bookmark.title, 'Updated Title')
@@ -357,7 +380,7 @@ describe('editBookmarkView', () => {
       value: [{ value: 'star' }],
     }
     module.updateFavoriteButton(document.getElementById('bm-favorite'), 'yellow')
-    module.updateBookmark(BOOKMARK_ID)
+    await module.updateBookmark(BOOKMARK_ID)
     assert(
       mocks.browserApi.bookmarks.update.mock.calls.some((call) =>
         matches(call.arguments, [
@@ -391,7 +414,7 @@ describe('editBookmarkView', () => {
       value: [],
     }
     module.updateFavoriteButton(document.getElementById('bm-favorite'), '')
-    module.updateBookmark(BOOKMARK_ID)
+    await module.updateBookmark(BOOKMARK_ID)
     assert(
       mocks.browserApi.bookmarks.update.mock.calls.some((call) =>
         matches(call.arguments, [
@@ -446,7 +469,7 @@ describe('editBookmarkView', () => {
     global.ext.tagify = {
       value: [{ value: 'star' }],
     }
-    module.updateBookmark(BOOKMARK_ID)
+    await module.updateBookmark(BOOKMARK_ID)
     assert(
       mocks.browserApi.bookmarks.update.mock.calls.some((call) =>
         matches(call.arguments, [
@@ -700,7 +723,7 @@ describe('editBookmarkView', () => {
     assert(mocks.resetUniqueFoldersCache.mock.callCount() === 0)
     warnSpy.mock.restore()
   })
-  it('handles missing browser API and empty tag selection during update', async () => {
+  it('preserves bookmark metadata when the update API is unavailable', async () => {
     setupDom()
     const bookmark = {
       originalId: BOOKMARK_ID,
@@ -720,15 +743,15 @@ describe('editBookmarkView', () => {
       value: [],
     }
     mocks.browserApi.bookmarks = undefined
-    module.updateBookmark(BOOKMARK_ID)
-    assert.strictEqual(bookmark.tags, '')
+    await module.updateBookmark(BOOKMARK_ID)
+    assert.strictEqual(bookmark.tags, '#old')
     assert.strictEqual(mocks.browserApi.bookmarks?.update, undefined)
     assert(
       warnSpy.mock.calls.some((call) =>
         matches(call.arguments, ['No browser bookmarks API found. Bookmark update will not persist.']),
       ),
     )
-    assert.strictEqual(mocks.resetUniqueFoldersCache.mock.callCount(), 1)
+    assert.strictEqual(mocks.resetUniqueFoldersCache.mock.callCount(), 0)
     warnSpy.mock.restore()
   })
   it('removes bookmark, resets search state, and redirects after deletion', async () => {
@@ -813,8 +836,8 @@ describe('editBookmarkView', () => {
         matches(call.arguments, ['No browser bookmarks API found. Bookmark remove will not persist.']),
       ),
     )
-    assert.strictEqual(global.ext.model.bookmarks.length, 0)
-    assert.strictEqual(mocks.resetUniqueFoldersCache.mock.callCount(), 1)
+    assert.strictEqual(global.ext.model.bookmarks.length, 1)
+    assert.strictEqual(mocks.resetUniqueFoldersCache.mock.callCount(), 0)
     warnSpy.mock.restore()
   })
   it('warns when editing a non-existent bookmark', async () => {

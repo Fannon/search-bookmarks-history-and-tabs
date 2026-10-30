@@ -18,7 +18,7 @@ const bookmarks = [
   {
     originalId: '2',
     title: 'Example Copy',
-    originalUrl: 'http://www.example.com/page#section',
+    originalUrl: 'https://example.com/page',
     url: 'example.com/page',
     dateAdded: 2000,
     tagsArray: ['work'],
@@ -45,10 +45,33 @@ const bookmarks = [
   },
 ]
 describe('bookmark manager data', () => {
+  test('does not recommend removing distinct paths, queries, fragments, or origins', () => {
+    const urls = [
+      'https://example.com/API/Foo',
+      'https://example.com/api/foo',
+      'https://example.com/#one',
+      'https://example.com/#two',
+      'https://example.com/?token=AbC',
+      'https://example.com/?token=abc',
+      'http://example.com/API/Foo',
+      'https://www.example.com/API/Foo',
+    ]
+    assert.deepStrictEqual(
+      getDuplicateGroups(
+        urls.map((originalUrl, index) => ({
+          originalId: String(index),
+          originalUrl,
+          url: 'same-search-key',
+          title: 'Bookmark',
+        })),
+      ),
+      [],
+    )
+  })
   test('groups duplicates by normalized URL and suggests the richer bookmark to keep', () => {
     const duplicateGroups = getDuplicateGroups(bookmarks)
     assert.strictEqual(duplicateGroups.length, 1)
-    assert.strictEqual(duplicateGroups[0].url, 'example.com/page')
+    assert.strictEqual(duplicateGroups[0].url, 'https://example.com/page')
     assert.strictEqual(duplicateGroups[0].keepId, '1')
     assert.deepStrictEqual(
       duplicateGroups[0].bookmarks.map((bookmark) => bookmark.originalId),

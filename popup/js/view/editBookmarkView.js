@@ -13,6 +13,7 @@ import { cleanUpUrl } from '../helper/utils.js'
 import { resetFuzzySearchState } from '../search/fuzzySearch.js'
 import { resetSimpleSearchState } from '../search/simpleSearch.js'
 import { getUniqueTags, resetUniqueFoldersCache } from '../search/taxonomySearch.js'
+import { printError } from './errorView.js'
 
 const STAR_STATE_CYCLE = ['', 'yellow', 'orange', 'red']
 const STAR_BONUS = { yellow: 25, orange: 50, red: 75 }
@@ -205,7 +206,7 @@ function setupTagEditor(tagsInput, currentTags) {
  *
  * @param {string} bookmarkId - Identifier of the bookmark being updated.
  */
-export function updateBookmark(bookmarkId) {
+export async function updateBookmark(bookmarkId) {
   const bookmark = ext.model.bookmarks.find((el) => el.originalId === bookmarkId)
   if (!bookmark) {
     console.warn(`Tried to update bookmark id="${bookmarkId}", but could not find it in searchData.`)
@@ -213,6 +214,21 @@ export function updateBookmark(bookmarkId) {
   }
 
   const formValues = getBookmarkFormValues()
+
+  if (!browserApi.bookmarks?.update) {
+    console.warn('No browser bookmarks API found. Bookmark update will not persist.')
+    return
+  }
+  try {
+    await browserApi.bookmarks.update(bookmarkId, {
+      title: formValues.persistedTitle,
+      url: formValues.url,
+    })
+  } catch (error) {
+    console.warn('Could not update bookmark:', error)
+    printError(error, 'Could not save bookmark.')
+    return
+  }
 
   // Update search data model of bookmark
   bookmark.title = formValues.title
@@ -229,15 +245,6 @@ export function updateBookmark(bookmarkId) {
   resetSimpleSearchState('bookmarks')
   resetUniqueFoldersCache()
 
-  if (browserApi.bookmarks) {
-    browserApi.bookmarks.update(bookmarkId, {
-      title: formValues.persistedTitle,
-      url: formValues.url,
-    })
-  } else {
-    console.warn(`No browser bookmarks API found. Bookmark update will not persist.`)
-  }
-
   // Start search again to update the search index and the UI with new bookmark model
   navigateToSearchView()
 }
@@ -245,7 +252,7 @@ export function updateBookmark(bookmarkId) {
 /**
  * Create a new browser bookmark from the current form values.
  *
- * @returns {Promise<void>}
+ * @returns {Promise<Object|undefined>} Created bookmark, or undefined when creation fails.
  */
 export async function createBookmark() {
   const formValues = getBookmarkFormValues()
@@ -311,6 +318,7 @@ export async function createBookmark() {
   resetSimpleSearchState('bookmarks')
   resetUniqueFoldersCache()
   navigateToSearchView()
+  return createdBookmark
 }
 
 /**
@@ -474,10 +482,16 @@ function getBookmarkFormValues() {
  * @returns {Promise<void>}
  */
 export async function deleteBookmark(bookmarkId) {
-  if (browserApi.bookmarks) {
-    browserApi.bookmarks.remove(bookmarkId)
-  } else {
+  if (!browserApi.bookmarks?.remove) {
     console.warn(`No browser bookmarks API found. Bookmark remove will not persist.`)
+    return
+  }
+  try {
+    await browserApi.bookmarks.remove(bookmarkId)
+  } catch (error) {
+    console.warn('Could not remove bookmark:', error)
+    printError(error, 'Could not delete bookmark.')
+    return
   }
 
   // Remove item from search data and reset search caches

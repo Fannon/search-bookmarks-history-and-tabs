@@ -53,6 +53,15 @@ export function clearBookmarkUndoSnapshots() {
   return bookmarkUndoSnapshots
 }
 
+/** Keep older undo steps and partial retries attached to a recreated bookmark. */
+export function remapBookmarkUndoId(previousId, restoredId) {
+  for (const snapshot of bookmarkUndoSnapshots) {
+    for (const bookmark of snapshot.bookmarks) {
+      if (bookmark.id === previousId) bookmark.id = String(restoredId)
+    }
+  }
+}
+
 /**
  * Create an undo snapshot from current browser bookmark nodes.
  *

@@ -8,10 +8,11 @@
 import fs from 'node:fs'
 
 const packageJson = JSON.parse(fs.readFileSync('package.json').toString())
-const manifestJson = JSON.parse(fs.readFileSync('manifest.json').toString())
+const manifestSource = fs.readFileSync('manifest.json', 'utf8')
 
 console.log(`Updating Manifests with version v${packageJson.version}`)
 
-manifestJson.version = packageJson.version
-
-fs.writeFileSync('manifest.json', JSON.stringify(manifestJson, null, 2))
+fs.writeFileSync(
+  'manifest.json',
+  manifestSource.replace(/("version"\s*:\s*)"[^"]*"/, (_match, prefix) => prefix + JSON.stringify(packageJson.version)),
+)

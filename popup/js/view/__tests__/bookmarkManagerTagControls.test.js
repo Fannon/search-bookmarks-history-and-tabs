@@ -26,6 +26,11 @@ function createExt() {
   }
 }
 describe('bookmark manager tag controls', () => {
+  test('preserves Unicode tags and combining marks when reading edit values', () => {
+    const ext = createExt()
+    ext.managerEditTagify = { value: ['日本語', 'café', 'cafe\u0301', 'Україна'].map((value) => ({ value })) }
+    assert.deepStrictEqual(getManagerTagControlValues(ext, 'edit'), ['日本語', 'café', 'cafe\u0301', 'україна'])
+  })
   test('normalizes comma, hash, whitespace, and duplicate tag values', () => {
     assert.deepStrictEqual(normalizeManagerTagValues([' #Docs ', 'docs', 'Project   Notes', '', '#Read']), [
       'docs',

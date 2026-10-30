@@ -92,20 +92,21 @@ export function addSearchEngines(searchTerm) {
  * collectCustomSearchAliasResults('yt cats')
  * // Returns: [{ type: 'customSearch', title: 'YouTube: "cats"', ... }]
  */
-export function collectCustomSearchAliasResults(searchTerm) {
+export function collectCustomSearchAliasResults(searchTerm, rawSearchTerm = searchTerm) {
   if (!ext.opts.customSearchEngines) {
     return []
   }
 
   const results = []
+  const normalizedSearchTerm = searchTerm.toLowerCase()
   for (const customSearchEngine of ext.opts.customSearchEngines) {
     const aliases = Array.isArray(customSearchEngine.alias) ? customSearchEngine.alias : [customSearchEngine.alias]
 
     for (const alias of aliases) {
       const lowerAlias = alias.toLowerCase()
       const aliasPrefix = `${lowerAlias} `
-      if (searchTerm.startsWith(aliasPrefix)) {
-        const aliasTerm = searchTerm.slice(aliasPrefix.length)
+      if (normalizedSearchTerm.startsWith(aliasPrefix)) {
+        const aliasTerm = rawSearchTerm.slice(aliasPrefix.length)
         results.push(
           getCustomSearchEngineResult(
             aliasTerm,

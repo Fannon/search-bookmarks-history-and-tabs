@@ -7,11 +7,35 @@ import {
   escapeHtml,
   escapeRegex,
   generateRandomId,
+  getUrlIdentity,
   highlightMatches,
   highlightRegexMatches,
   loadScript,
   timeSince,
 } from '../utils.js'
+
+describe('getUrlIdentity', () => {
+  it('preserves case-sensitive paths, queries, routes, and distinct origins', () => {
+    assert.strictEqual(getUrlIdentity('https://EXAMPLE.com'), getUrlIdentity('https://example.com/'))
+    for (const [first, second] of [
+      ['/API/Foo', '/api/foo'],
+      ['/?token=AbC', '/?token=abc'],
+      ['/#one', '/#two'],
+      ['/page', '/page/'],
+    ]) {
+      assert.notStrictEqual(
+        getUrlIdentity(`https://example.com${first}`),
+        getUrlIdentity(`https://example.com${second}`),
+      )
+    }
+    assert.notStrictEqual(getUrlIdentity('http://example.com'), getUrlIdentity('https://example.com'))
+    assert.notStrictEqual(getUrlIdentity('https://www.example.com'), getUrlIdentity('https://example.com'))
+    assert.strictEqual(
+      getUrlIdentity('https://example.com/#one', true),
+      getUrlIdentity('https://example.com/#two', true),
+    )
+  })
+})
 
 describe('generateRandomId', () => {
   it('returns a deterministic identifier prefixed with R', () => {

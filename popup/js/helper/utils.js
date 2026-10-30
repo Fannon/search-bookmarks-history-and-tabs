@@ -190,6 +190,18 @@ export function cleanUpUrl(url) {
   return start === 0 && end === normalizedUrl.length ? normalizedUrl : normalizedUrl.slice(start, end)
 }
 
+/** Compare navigation targets without changing case-sensitive paths, queries, or routes. */
+export function getUrlIdentity(url, ignoreHash = false) {
+  if (!url) return ''
+  try {
+    const parsed = new URL(url)
+    if (ignoreHash) parsed.hash = ''
+    return parsed.href
+  } catch {
+    return String(url)
+  }
+}
+
 // Cache script load promises to deduplicate both completed and in-flight requests
 const scriptLoads = new Map()
 

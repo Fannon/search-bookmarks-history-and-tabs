@@ -3,6 +3,7 @@
  */
 
 import { compareText } from '../helper/compareText.js'
+import { getUrlIdentity } from '../helper/utils.js'
 
 const TOP_LIST_LIMIT = 8
 const UNKNOWN_DOMAIN = 'Unknown'
@@ -67,7 +68,7 @@ export function getFolderOptions(folderTree) {
 }
 
 /**
- * Group bookmarks by normalized URL and keep only groups with duplicates.
+ * Group bookmarks by navigation URL identity and keep only exact duplicate groups.
  *
  * @param {Array<Object>} bookmarks Normalized bookmark entries.
  * @returns {Array<Object>} Duplicate URL groups.
@@ -77,7 +78,7 @@ export function getDuplicateGroups(bookmarks = []) {
 
   for (let i = 0; i < bookmarks.length; i++) {
     const bookmark = bookmarks[i]
-    const url = bookmark?.url || bookmark?.originalUrl
+    const url = getUrlIdentity(bookmark?.originalUrl || bookmark?.url)
     if (!url) {
       continue
     }

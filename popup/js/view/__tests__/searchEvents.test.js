@@ -174,6 +174,28 @@ afterEach(() => {
   window.location.hash = ''
 })
 describe('searchEvents openResultItem', () => {
+  for (const suffix of ['/API/Foo', '/api/foo?token=AbC', '/api/foo/', '/api/foo#other']) {
+    it(`does not switch to a distinct URL ${suffix}`, async () => {
+      const { module } = await setupSearchEvents({
+        results: [
+          {
+            type: 'direct',
+            originalUrl: 'https://case.test/api/foo',
+            url: 'case.test/api/foo',
+            title: 'Target',
+          },
+        ],
+      })
+      ext.model.tabs = [{ originalId: 42, originalUrl: `https://case.test${suffix}`, url: 'case.test/api/foo' }]
+      module.openResultItem({
+        button: 0,
+        target: { nodeName: 'LI', getAttribute: () => null, className: '' },
+        stopPropagation() {},
+      })
+      assert.strictEqual(ext.browserApi.tabs.update.mock.callCount(), 0)
+      assert.strictEqual(ext.browserApi.tabs.create.mock.callCount(), 1)
+    })
+  }
   it('builds the new-bookmark editor URL for quick bookmark results', async () => {
     const { module } = await setupSearchEvents()
     ext.model.searchTerm = ''
@@ -844,7 +866,7 @@ describe('searchEvents openResultItem', () => {
     assert(ext.browserApi.tabs.update.mock.calls.some((call) => matches(call.arguments, [22, { active: true }])))
     assert(ext.browserApi.tabs.create.mock.callCount() === 0)
   })
-  it('matches an existing tab by normalized base URL when non-empty hashes match by default', async () => {
+  it('keeps distinct trailing-slash paths separate even when hashes match', async () => {
     const { module, viewModule } = await setupSearchEvents({
       results: [
         {
@@ -879,8 +901,8 @@ describe('searchEvents openResultItem', () => {
       stopPropagation: mock.fn(),
       preventDefault: mock.fn(),
     })
-    assert(ext.browserApi.tabs.update.mock.calls.some((call) => matches(call.arguments, [42, { active: true }])))
-    assert(ext.browserApi.tabs.create.mock.callCount() === 0)
+    assert.strictEqual(ext.browserApi.tabs.update.mock.callCount(), 0)
+    assert.strictEqual(ext.browserApi.tabs.create.mock.callCount(), 1)
   })
   it('matches existing tabs by normalized URL when openTabMatchIgnoreHash is true', async () => {
     const { module, viewModule } = await setupSearchEvents({

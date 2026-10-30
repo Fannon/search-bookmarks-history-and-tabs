@@ -2,6 +2,7 @@
  * @file Prompt, schema, and validation helpers for AI bookmark cleanup proposals.
  */
 
+import { getUrlIdentity } from '../helper/utils.js'
 import { normalizeTagName } from './bookmarkManagerOperations.js'
 
 const DEFAULT_PROMPT_BOOKMARK_LIMIT = 1000
@@ -300,7 +301,7 @@ function formatPromptGoals(isLite, allowedChangeTypes) {
   }
   if (allowedChangeTypes.includes('deleteBookmarks')) {
     goals.push(
-      '- deleteBookmarks: Delete only exact or near-exact duplicate bookmarks. When in doubt, do not propose deletion. Both must share the same canonical URL or differ only by tracking parameters, URL fragments, or minor URL variants. Every entry must include duplicateOfBookmarkId identifying the bookmark to keep. Never delete related pages, alternate documentation versions, mirrors, forks, language variants, or product pages that serve different purposes.',
+      '- deleteBookmarks: Delete only bookmarks identifying the same canonical URL. When in doubt, do not propose deletion. Preserve case-sensitive paths and query values, fragments, schemes, and hostnames; differences in these can identify distinct pages. Every entry must include duplicateOfBookmarkId identifying the bookmark to keep. Never delete related pages, alternate documentation versions, mirrors, forks, language variants, or product pages that serve different purposes.',
     )
   }
   if (allowedChangeTypes.includes('rewriteTitles')) {
@@ -328,7 +329,7 @@ function formatPromptRules(isLite, allowedChangeTypes) {
 
   if (allowedChangeTypes.includes('deleteBookmarks')) {
     rules.push('- Do not delete a bookmark unless duplicateOfBookmarkId identifies the bookmark to keep.')
-    rules.push('- For deleteBookmarks, URLs must be canonical duplicates or tracking/fragment variants.')
+    rules.push('- For deleteBookmarks, URLs must be canonical duplicates with matching paths, queries, and fragments.')
   }
   if (isLite && !allowedChangeTypes.includes('moveBookmarks')) {
     rules.push('- Keep moveBookmarks empty.')
@@ -626,7 +627,9 @@ function validateRenameTagChanges(errors, changes, existingTags, bookmarkIds) {
     if (!normalizePromptTag(change?.to)) {
       errors.push(`changes.renameTags[${i}].to must be a tag name.`)
     }
-    if (Array.isArray(change?.bookmarkIds)) {
+    if (change?.bookmarkIds !== undefined && !Array.isArray(change.bookmarkIds)) {
+      errors.push(`changes.renameTags[${i}].bookmarkIds must be an array.`)
+    } else if (Array.isArray(change?.bookmarkIds)) {
       for (let j = 0; j < change.bookmarkIds.length; j++) {
         if (!bookmarkIds.has(String(change.bookmarkIds[j]))) {
           errors.push(`changes.renameTags[${i}].bookmarkIds[${j}] does not match an existing bookmark.`)
@@ -840,11 +843,16 @@ function normalizeRenameTagChangesWithIssues(changes, existingTags, bookmarkIds,
       continue
     }
 
+    const targetIds = normalizeOptionalBookmarkIds(change.bookmarkIds, bookmarkIds, context, warnings)
+    if (targetIds === null) {
+      warnings.push(`${context} ignored because it has no valid target bookmarks.`)
+      continue
+    }
     result.push({
       id: normalizeChangeId(change.id, 'renameTags', i),
       from,
       to,
-      bookmarkIds: normalizeOptionalBookmarkIds(change.bookmarkIds, bookmarkIds, context, warnings),
+      bookmarkIds: targetIds,
       reason: String(change.reason || '').trim(),
     })
   }
@@ -981,8 +989,10 @@ function normalizeRewriteTitleChangesWithIssues(changes, bookmarkIds, warnings) 
 }
 
 function normalizeOptionalBookmarkIds(bookmarkIds, knownBookmarkIds, context, warnings) {
+  if (bookmarkIds === undefined) return []
   if (!Array.isArray(bookmarkIds)) {
-    return []
+    warnings.push(`${context}.bookmarkIds must be an array.`)
+    return null
   }
 
   const result = []
@@ -994,7 +1004,7 @@ function normalizeOptionalBookmarkIds(bookmarkIds, knownBookmarkIds, context, wa
       warnings.push(`${context}.bookmarkIds[${i}] ignored because bookmark "${bookmarkId}" does not exist.`)
     }
   }
-  return result
+  return bookmarkIds.length && !result.length ? null : result
 }
 
 function isProposalChangeObject(change, context, warnings) {
@@ -1051,14 +1061,6 @@ function isDuplicateBookmarkPair(bookmarkId, duplicateOfBookmarkId, managerModel
   const secondId = String(duplicateOfBookmarkId || '')
   if (!firstId || !secondId || firstId === secondId) {
     return false
-  }
-
-  const duplicateGroups = managerModel?.duplicateGroups || []
-  for (let i = 0; i < duplicateGroups.length; i++) {
-    const groupIds = new Set((duplicateGroups[i].bookmarks || []).map((bookmark) => String(bookmark.originalId)))
-    if (groupIds.has(firstId) && groupIds.has(secondId)) {
-      return true
-    }
   }
 
   const urlsByBookmarkId = new Map()
@@ -1194,9 +1196,7 @@ function appendDuplicateBookmarkIdGroup(result, seen, ids) {
 }
 
 function normalizeDuplicateUrl(bookmark) {
-  return String(bookmark?.url || bookmark?.originalUrl || '')
-    .trim()
-    .toLowerCase()
+  return getUrlIdentity(bookmark?.originalUrl || bookmark?.url)
 }
 
 function countCleanupChangeTypes(changes) {

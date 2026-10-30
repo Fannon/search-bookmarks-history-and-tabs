@@ -56,6 +56,54 @@ const managerModel = {
     { name: 'llm', count: 1 },
   ],
 }
+
+test('cleanup deletion rejects distinct pages even when their search keys match', () => {
+  for (const url of ['https://example.com/API', 'https://example.com/#one', 'https://example.com/?key=AbC']) {
+    const other = url.replace('API', 'api').replace('#one', '#two').replace('AbC', 'abc')
+    const model = {
+      bookmarks: [
+        { originalId: '1', originalUrl: url, url: 'same' },
+        { originalId: '2', originalUrl: other, url: 'same' },
+      ],
+    }
+    const result = parseBookmarkCleanupProposalWithIssues(
+      JSON.stringify({
+        changes: {
+          deleteBookmarks: [{ id: 'delete', bookmarkId: '1', duplicateOfBookmarkId: '2' }],
+        },
+      }),
+      model,
+    )
+    assert.deepStrictEqual(result.proposal.changes.deleteBookmarks, [])
+  }
+})
+
+test('invalid rename targets never become an unrestricted rename', () => {
+  for (const bookmarkIds of [['missing'], 'missing']) {
+    const result = parseBookmarkCleanupProposalWithIssues(
+      JSON.stringify({
+        changes: { renameTags: [{ id: 'rename', from: 'ai', to: 'new', bookmarkIds }] },
+      }),
+      managerModel,
+    )
+    assert.deepStrictEqual(result.proposal.changes.renameTags, [])
+    assert(result.warnings.some((warning) => warning.includes('no valid target bookmarks')))
+  }
+  const mixed = parseBookmarkCleanupProposalWithIssues(
+    JSON.stringify({
+      changes: { renameTags: [{ id: 'rename', from: 'ai', to: 'new', bookmarkIds: ['1', 'missing'] }] },
+    }),
+    managerModel,
+  )
+  assert.deepStrictEqual(mixed.proposal.changes.renameTags[0].bookmarkIds, ['1'])
+  const global = parseBookmarkCleanupProposalWithIssues(
+    JSON.stringify({
+      changes: { renameTags: [{ id: 'rename', from: 'ai', to: 'new' }] },
+    }),
+    managerModel,
+  )
+  assert.deepStrictEqual(global.proposal.changes.renameTags[0].bookmarkIds, [])
+})
 describe('bookmark cleanup proposal', () => {
   test('creates a prompt with output rules and bookmark context', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel)
@@ -173,10 +221,10 @@ describe('bookmark cleanup proposal', () => {
     assert(prompt.includes('Include only these change arrays when they have proposals: deleteBookmarks'))
     assert(prompt.includes('"changes":{"deleteBookmarks"'))
     assert(prompt.includes('"deleteBookmarks":[{"id":"delete-1"'))
-    assert(prompt.includes('Delete only exact or near-exact duplicate bookmarks'))
+    assert(prompt.includes('Delete only bookmarks identifying the same canonical URL'))
     assert(prompt.includes('When in doubt, do not propose deletion'))
     assert(prompt.includes('Do not delete a bookmark unless duplicateOfBookmarkId'))
-    assert(prompt.includes('URLs must be canonical duplicates or tracking/fragment variants'))
+    assert(prompt.includes('URLs must be canonical duplicates with matching paths, queries, and fragments'))
     assert(!prompt.includes('Add useful, specific tags'))
     assert(!prompt.includes('Rewrite titles only when'))
     assert(!prompt.includes('Use only folder IDs'))

@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **FIXED**: Duplicate cleanup and existing-tab matching preserve distinct navigation URLs, including case-sensitive paths, query values, and hash routes.
+- **FIXED**: Bookmark Manager editing preserves Unicode tags. Cleanup changes compose within a batch, and invalid rename targets cannot broaden into a collection-wide rename.
+- **FIXED**: Undo follows bookmarks recreated after deletion. Failed popup-editor saves and deletions retain the editor and its data for retrying.
+- **FIXED**: Tags, folders, and groups can use names such as `constructor` and `__proto__`. Browser API failures no longer discard working data sources, and external search queries preserve input casing through cache hits.
+- **FIXED**: Building the extension preserves manifest formatting instead of leaving a dirty file that fails lint.
+
 - **IMPROVED**: Refreshed the Bookmark Manager with clearer navigation, more usable bookmark editing and bulk selection, keyboard editing shortcuts, and layouts that adapt to narrow screens.
 - **IMPROVED**: Reduced the extension package size by excluding development files and source maps from store builds.
 - **FIXED**: `bookmarksIgnoreFolderList` now supports folder paths such as `Work/Old Bookmarks`, including their subfolders, while bare folder names still match anywhere.
