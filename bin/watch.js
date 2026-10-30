@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { watch } from 'node:fs'
+import { statSync, watch } from 'node:fs'
+import { join } from 'node:path'
 import { performance } from 'node:perf_hooks'
 import process from 'node:process'
 /**
@@ -31,6 +32,17 @@ const isIgnoredPath = (filePath) => {
   const fileName = normalized.substring(normalized.lastIndexOf('/') + 1)
   return /\.min\.(js|css)(\.map)?$/i.test(fileName)
 }
+
+/**
+ * Windows reports a `change` on the parent directory whenever a file inside it is written.
+ * The file emits its own event, so directory changes are skipped to avoid rebuild loops.
+ *
+ * @param {string} eventName - Watch event type.
+ * @param {string} filePath - Path relative to the watched popup directory.
+ * @returns {boolean} True when the event only reports a directory content change.
+ */
+const isDirectoryChange = (eventName, filePath) =>
+  eventName === 'change' && !!filePath && !!statSync(join('popup', filePath), { throwIfNoEntry: false })?.isDirectory()
 
 let pendingTimer = null
 let isBuilding = false
@@ -99,7 +111,7 @@ const scheduleBuild = () => {
 
 function watchPopup() {
   return watch('popup', { recursive: true }, (eventName, filePath) => {
-    if (isIgnoredPath(filePath)) {
+    if (isIgnoredPath(filePath) || isDirectoryChange(eventName, filePath)) {
       return
     }
 

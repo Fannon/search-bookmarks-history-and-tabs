@@ -9,7 +9,16 @@ import { setTimeout } from 'node:timers/promises'
 
 test('watches nested sources, coalesces saves, ignores generated assets, and closes on SIGTERM', async (t) => {
   const fixture = await fs.mkdtemp(join(tmpdir(), 'bookmark-watch-'))
-  t.after(() => fs.rm(fixture, { recursive: true, force: true }))
+  let child
+  // Stop the watcher before removing the fixture: Windows keeps watched directories locked
+  t.after(async () => {
+    if (child && child.exitCode === null && child.signalCode === null) {
+      const exited = once(child, 'exit')
+      child.kill('SIGTERM')
+      await exited
+    }
+    await fs.rm(fixture, { recursive: true, force: true, maxRetries: 5 })
+  })
   await fs.mkdir(join(fixture, 'popup/nested'), { recursive: true })
   await fs.mkdir(join(fixture, 'popup/lib'), { recursive: true })
   await fs.writeFile(join(fixture, 'package.json'), '{"type":"module"}')
@@ -25,7 +34,7 @@ export async function syncDevDist() {
   )
   const source = join(fixture, 'popup/nested/source.js')
   await fs.writeFile(source, 'initial')
-  const child = fork(join(fixture, 'watch.js'), {
+  child = fork(join(fixture, 'watch.js'), {
     cwd: fixture,
     execArgv: [],
     stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
@@ -36,13 +45,6 @@ export async function syncDevDist() {
   })
   child.stderr.on('data', (data) => {
     output += data
-  })
-  t.after(async () => {
-    if (child.exitCode === null && child.signalCode === null) {
-      const exited = once(child, 'exit')
-      child.kill('SIGTERM')
-      await exited
-    }
   })
   let builds = 0
   child.on('message', () => builds++)
@@ -101,6 +103,11 @@ export async function syncDevDist() {
   const exited = once(child, 'exit')
   child.kill('SIGTERM')
   const [code, signal] = await exited
-  assert.strictEqual(code, 0, output)
-  assert.strictEqual(signal, null)
+  // Windows cannot deliver SIGTERM to a handler and terminates the process instead
+  if (process.platform === 'win32') {
+    assert.strictEqual(signal, 'SIGTERM')
+  } else {
+    assert.strictEqual(code, 0, output)
+    assert.strictEqual(signal, null)
+  }
 })

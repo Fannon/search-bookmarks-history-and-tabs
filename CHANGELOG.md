@@ -2,8 +2,12 @@
 
 ## [Unreleased]
 
+## [v2.5.1] - 2026-10-30
+
 - **IMPROVED**: Refreshed the Bookmark Manager with clearer navigation, more usable bookmark editing and bulk selection, keyboard editing shortcuts, and layouts that adapt to narrow screens.
 - **IMPROVED**: Reduced the extension package size by excluding development files and source maps from store builds.
+- **IMPROVED**: Faster popup startup with large collections, and faster sorting on the tags, folders, and tab groups pages and in the Bookmark Manager.
+- **FIXED**: Typing only a search mode prefix such as `#`, `~`, `@`, or `s ` no longer shows a `Search result type "bookmarkCreate" not supported` error when the quick bookmark entry is part of the default results.
 - **FIXED**: The popup bookmark editor waits for the browser to save or delete a bookmark. If that fails, for example because of an invalid URL, it shows the error and keeps your edits so you can retry. Tags, folders, and tab groups named like built-in object properties (such as `constructor`) no longer break tag, folder, or group search.
 - **FIXED**: If reading tabs, bookmarks, or history fails, the popup still shows results from the other sources instead of none.
 - **FIXED**: `bookmarksIgnoreFolderList` now supports folder paths such as `Work/Old Bookmarks`, including their subfolders, while bare folder names still match anywhere.

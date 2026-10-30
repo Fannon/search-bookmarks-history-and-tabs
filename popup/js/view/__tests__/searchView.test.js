@@ -405,11 +405,8 @@ describe('searchView renderSearchResults', () => {
     // Check that the border-left-color is transparent (to let gradient show)
     assert.strictEqual(listItem.style.borderLeftColor, 'transparent')
 
-    // Check that the background-image contains the linear gradient with correct stops
-    // Note: detailed string matching might be brittle to spacing, so checking key parts
-    const bgImage = listItem.style.backgroundImage
-    assert(bgImage.includes('linear-gradient'))
-    assert(bgImage.includes('to bottom'))
+    // Check the rendered markup, since CSSOM serialization omits the default `to bottom` direction
+    assert(listItem.getAttribute('style').includes('linear-gradient(to bottom'))
 
     // Verify the "T" badge is NOT present
     const badges = Array.from(listItem.querySelectorAll('.badge'))
