@@ -23,6 +23,8 @@ let actualConvertBrowserTabs
 let actualConvertBrowserBookmarks
 let actualConvertBrowserHistory
 let getSearchData
+let getSearchHistory
+let addSearchHistory
 let currentTabs = []
 let currentBookmarks = []
 let currentHistory = []
@@ -53,7 +55,7 @@ before(async () => {
   actualConvertBrowserTabs = helperModule.convertBrowserTabs
   actualConvertBrowserBookmarks = helperModule.convertBrowserBookmarks
   actualConvertBrowserHistory = helperModule.convertBrowserHistory
-  ;({ getSearchData } = await import('../searchData.js'))
+  ;({ addSearchHistory, getSearchData, getSearchHistory } = await import('../searchData.js'))
 })
 describe('getSearchData', () => {
   beforeEach(() => {
@@ -516,5 +518,82 @@ describe('getSearchData', () => {
     } finally {
       nowSpy.mock.restore()
     }
+  })
+
+  test('loading history separately produces the same data as loading it together', async () => {
+    const baseTime = 1700000400000
+    const nowSpy = mock.method(Date, 'now', () => baseTime)
+    try {
+      setBrowserData({
+        tabs: [
+          {
+            url: 'https://shared.example',
+            title: 'Shared Tab',
+            id: 1,
+            active: true,
+            windowId: 1,
+            lastAccessed: baseTime - 60 * 1000,
+          },
+        ],
+        bookmarks: [
+          {
+            title: '',
+            children: [
+              {
+                title: 'Bookmarks Bar',
+                children: [{ id: 'bookmark-1', title: 'Shared', url: 'https://shared.example' }],
+              },
+            ],
+          },
+        ],
+        history: [
+          {
+            id: 'history-1',
+            url: 'https://shared.example',
+            title: 'Shared',
+            lastVisitTime: baseTime - 30 * 1000,
+            visitCount: 7,
+          },
+          {
+            id: 'history-2',
+            url: 'https://history-only.example',
+            title: 'History Only',
+            lastVisitTime: baseTime - 90 * 1000,
+            visitCount: 2,
+          },
+        ],
+      })
+
+      const combined = await getSearchData()
+      historySearchMock.mock.resetCalls()
+
+      const progressive = await getSearchData({ includeHistory: false })
+      assert.strictEqual(historySearchMock.mock.callCount(), 0)
+      assert.deepStrictEqual(progressive.history, [])
+      assert.strictEqual(progressive.bookmarks[0].visitCount, undefined)
+      assert.strictEqual(progressive.bookmarks[0].tab, true)
+
+      const unmergedBookmark = progressive.bookmarks[0]
+      addSearchHistory(progressive, await getSearchHistory())
+      assert.strictEqual(historySearchMock.mock.callCount(), 1)
+      assert.deepStrictEqual(progressive, combined)
+      assert.strictEqual(unmergedBookmark.visitCount, undefined, 'merging copies instead of mutating items')
+    } finally {
+      nowSpy.mock.restore()
+    }
+  })
+
+  test('getSearchHistory returns no history when disabled', async () => {
+    ext.opts.enableHistory = false
+    setBrowserData({ history: [{ id: 'history-1', url: 'https://history.example', lastVisitTime: 1 }] })
+    assert.deepStrictEqual(await getSearchHistory(), [])
+    assert.strictEqual(historySearchMock.mock.callCount(), 0)
+  })
+
+  test('addSearchHistory keeps existing data for empty history', () => {
+    const data = { bookmarks: [{ url: 'a.example' }], tabs: [], history: [{ url: 'mock-history.example' }] }
+    const before = structuredClone(data)
+    addSearchHistory(data, [])
+    assert.deepStrictEqual(data, before)
   })
 })
