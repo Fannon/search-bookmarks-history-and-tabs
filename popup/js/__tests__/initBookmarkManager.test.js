@@ -164,7 +164,7 @@ describe('initBookmarkManager cleanup apply', () => {
           ),
           update: updateBookmark,
           move: mock.fn(),
-          create: mock.fn(),
+          create: mock.fn(async () => ({ id: 'restored-1' })),
           remove: mock.fn(),
         },
         windows: {},
@@ -223,6 +223,54 @@ describe('initBookmarkManager cleanup apply', () => {
     await flushPromises()
     await flushPromises()
   }
+  test('cleanup changes on the same bookmark compose without overwriting earlier tags', async () => {
+    const input = document.getElementById('cleanup-proposal-json')
+    input.value = JSON.stringify({
+      changes: {
+        addTags: [
+          { id: 'add-first', bookmarkId: 'bookmark-1', tags: ['docs'] },
+          { id: 'add-second', bookmarkId: 'bookmark-1', tags: ['new'] },
+        ],
+        removeTags: [{ id: 'remove', bookmarkId: 'bookmark-1', tags: ['docs'] }],
+        rewriteTitles: [{ id: 'rewrite', bookmarkId: 'bookmark-1', title: 'Rewritten' }],
+      },
+    })
+    input.dispatchEvent(new Event('input'))
+    await new Promise((resolve) => setTimeout(resolve, 220))
+    document.getElementById('apply-all-cleanup-changes').click()
+    await flushPromises()
+    await flushPromises()
+    assert.deepStrictEqual(
+      updateBookmark.mock.calls.map((call) => call.arguments[1].title),
+      ['First Bookmark #docs', 'First Bookmark #docs #new', 'First Bookmark #new', 'Rewritten #new'],
+    )
+    assert.strictEqual(ext.model.bookmarkCleanupAppliedChangeIds.size, 4)
+  })
+  test('older undo steps follow a bookmark recreated by undoing its deletion', async () => {
+    const node = { id: 'bookmark-1', title: 'Original', url: 'https://example.com/first' }
+    undo.saveBookmarkUndoSnapshot(undo.createBookmarkUndoSnapshot('Edit', [node], 1))
+    undo.saveBookmarkUndoSnapshot(undo.createBookmarkUndoSnapshot('Delete', [{ ...node, title: 'Edited' }], 2))
+    let restored = false
+    ext.browserApi.bookmarks.get.mock.mockImplementation((id) =>
+      Promise.resolve(restored && id === 'restored-1' ? [{ ...node, id: 'restored-1' }] : []),
+    )
+    ext.browserApi.bookmarks.create.mock.mockImplementation(async () => {
+      restored = true
+      return { id: 'restored-1' }
+    })
+    const button = document.getElementById('undo-bookmark-change')
+    button.disabled = false
+    button.click()
+    await flushPromises()
+    await flushPromises()
+    assert.strictEqual(undo.getBookmarkUndoSnapshots()[0].bookmarks[0].id, 'restored-1')
+    button.click()
+    await flushPromises()
+    await flushPromises()
+    assert.strictEqual(ext.browserApi.bookmarks.create.mock.callCount(), 1)
+    assert.deepStrictEqual(updateBookmark.mock.calls[0].arguments, ['restored-1', { title: 'Original', url: node.url }])
+    assert.deepStrictEqual(undo.getBookmarkUndoSnapshots(), [])
+  })
   test('cancelling cleanup leaves bookmarks and undo history untouched', async () => {
     window.confirm = mock.fn(() => false)
     await applyOneCleanupChange()
