@@ -265,6 +265,27 @@ code {
 .favorite-star {
   float: right;
 }
+/* Icons are CSS masks rather than <img> elements, which are costly to create on every render. */
+.edit,
+.close {
+  width: 24px;
+  height: 24px;
+}
+.edit::before,
+.close::before {
+  content: "";
+  display: block;
+  height: 100%;
+  background: #777;
+}
+.edit::before {
+  mask: url("../img/edit.svg") center / contain no-repeat;
+  -webkit-mask: url("../img/edit.svg") center / contain no-repeat;
+}
+.close::before {
+  mask: url("../img/x.svg") center / contain no-repeat;
+  -webkit-mask: url("../img/x.svg") center / contain no-repeat;
+}
 .edit:hover,
 .close:hover,
 .favorite-star:hover {

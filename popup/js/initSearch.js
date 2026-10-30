@@ -13,6 +13,7 @@ import { getEffectiveOptions } from './model/optionsStorage.js'
 import { addSearchHistory, getSearchData, getSearchHistory } from './model/searchData.js'
 
 import { search } from './search/common.js'
+import { preloadFuzzySearch } from './search/fuzzySearch.js'
 
 import { closeErrors, printError } from './view/errorView.js'
 import { toggleSearchApproach, updateSearchApproachToggle } from './view/searchEvents.js'
@@ -52,6 +53,11 @@ export async function initExtension() {
     ext.dom.searchApproachToggle = document.getElementById('toggle')
 
     updateSearchApproachToggle()
+
+    // Load the fuzzy search library while the main thread waits for browser data.
+    if (ext.opts.searchStrategy === 'fuzzy') {
+      preloadFuzzySearch()
+    }
 
     // Load history in parallel, but don't let it delay the first render: with large histories,
     // `history.search` is by far the slowest browser API. If it arrives with the other data,
