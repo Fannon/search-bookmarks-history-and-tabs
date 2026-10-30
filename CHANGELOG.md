@@ -2,18 +2,17 @@
 
 ## [Unreleased]
 
-- **IMPROVED**: Polished the Bookmark Manager for consistency with the search popup: compact bookmark rows with inline badges, a teal accent in dark mode, consistent sentence-case labels and button styles, AI Cleanup settings shown before the prompt actions, and section tabs that wrap on narrow screens.
-- **FIXED**: Bookmark Manager duplicate summaries now use correct singular and plural wording.
-
 ## [v2.5.1] - 2026-10-30
 
 - **IMPROVED**: Refreshed the Bookmark Manager with clearer navigation, more usable bookmark editing and bulk selection, keyboard editing shortcuts, and layouts that adapt to narrow screens.
+- **IMPROVED**: Polished the Bookmark Manager for consistency with the search popup: compact bookmark rows with inline badges, a teal accent in dark mode, consistent sentence-case labels and button styles, AI Cleanup settings shown before the prompt actions, and section tabs that wrap on narrow screens.
 - **IMPROVED**: Reduced the extension package size by excluding development files and source maps from store builds.
 - **IMPROVED**: Faster popup startup with large collections, and faster sorting on the tags, folders, and tab groups pages and in the Bookmark Manager.
 - **FIXED**: Typing only a search mode prefix such as `#`, `~`, `@`, or `s ` no longer shows a `Search result type "bookmarkCreate" not supported` error when the quick bookmark entry is part of the default results.
 - **FIXED**: `bookmarksIgnoreFolderList` now supports folder paths such as `Work/Old Bookmarks`, including their subfolders, while bare folder names still match anywhere.
 - **FIXED**: Bookmark results keep their open-tab indicator, favicon, and tab-group metadata correct when closing one of several tabs sharing the same base URL. Matching history entries now use the most recent visit.
 - **FIXED**: Direct URL navigation now recognizes ports, query strings, and fragments, while rejecting malformed domain names, search phrases, and URL paths containing spaces.
+- **FIXED**: Bookmark Manager duplicate summaries now use correct singular and plural wording.
 
 ## [v2.5.0] - 2026-08-01
 
