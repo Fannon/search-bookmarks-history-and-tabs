@@ -210,6 +210,7 @@ describe('search', () => {
     assert(mockRenderSearchResults.mock.calls.some((call) => matches(call.arguments, [])))
   })
   test('uses cached results when present', async () => {
+    ext.opts.enableSearchEngines = false
     const cached = [{ type: 'bookmark', score: 50 }]
     ext.searchCache = new Map([['test_precise_all', cached]])
     ext.dom.searchInput.value = 'Test'
@@ -220,6 +221,17 @@ describe('search', () => {
     assert.strictEqual(ext.model.rawSearchTerm, 'Test')
     assert(mockRenderSearchResults.mock.calls.some((call) => matches(call.arguments, [])))
   })
+  for (const prefix of ['s ', 'yt ']) {
+    test(`preserves outgoing query casing across cache hits for ${prefix}`, async () => {
+      const type = prefix === 's ' ? 'search' : 'customSearch'
+      for (const term of ['AbC', 'abc', 'AbC']) {
+        ext.dom.searchInput.value = prefix + term
+        await search()
+        const result = ext.model.result.find((entry) => entry.type === type)
+        assert(result.originalUrl.endsWith(encodeURIComponent(term)))
+      }
+    })
+  }
   test('does not serve a cache hit from the previous logical mode when the new query has no prefix', async () => {
     const cached = [{ type: 'bookmark', title: 'stale tag cache', score: 50 }]
     ext.searchCache = new Map([['foo_precise_tags', cached]])

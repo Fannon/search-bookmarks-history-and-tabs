@@ -84,7 +84,8 @@ export function addSearchEngines(searchTerm) {
  * (e.g., `yt cats` for YouTube). If found, it extracts the term after the alias
  * and generates a custom search result.
  *
- * @param {string} searchTerm - Raw search query.
+ * @param {string} searchTerm - Lowercased search query used to match aliases.
+ * @param {string} [rawSearchTerm=searchTerm] - Same query with the user's casing, used for the outgoing URL.
  * @returns {Array} Matching custom search engine entries.
  *
  * @example
@@ -92,7 +93,7 @@ export function addSearchEngines(searchTerm) {
  * collectCustomSearchAliasResults('yt cats')
  * // Returns: [{ type: 'customSearch', title: 'YouTube: "cats"', ... }]
  */
-export function collectCustomSearchAliasResults(searchTerm) {
+export function collectCustomSearchAliasResults(searchTerm, rawSearchTerm = searchTerm) {
   if (!ext.opts.customSearchEngines) {
     return []
   }
@@ -105,7 +106,7 @@ export function collectCustomSearchAliasResults(searchTerm) {
       const lowerAlias = alias.toLowerCase()
       const aliasPrefix = `${lowerAlias} `
       if (searchTerm.startsWith(aliasPrefix)) {
-        const aliasTerm = searchTerm.slice(aliasPrefix.length)
+        const aliasTerm = rawSearchTerm.slice(aliasPrefix.length)
         results.push(
           getCustomSearchEngineResult(
             aliasTerm,

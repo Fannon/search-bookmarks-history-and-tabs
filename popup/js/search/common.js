@@ -322,19 +322,17 @@ export async function search(event) {
       ext.model.searchTerm = searchTerm
       ext.model.searchMode = searchMode
 
-      // Check cache after mode parsing so prefixes like "b foo" use the
-      // bookmarks-specific cache key instead of the previous mode.
-      // Direct URL paths and query strings can be case-sensitive.
-      const cacheTerm = ext.opts.enableDirectUrl && urlRegex.test(rawTrimmedTerm) ? rawTrimmedTerm : searchTerm
+      const aliasResults = searchMode === 'all' ? collectCustomSearchAliasResults(searchTerm, rawTrimmedTerm) : []
+      // Outgoing URLs preserve input casing; cached results must preserve it too.
+      const hasOutgoingResults =
+        (ext.opts.enableDirectUrl && urlRegex.test(rawTrimmedTerm)) ||
+        (ext.opts.enableSearchEngines && (searchMode === 'all' || searchMode === 'search')) ||
+        aliasResults.length > 0
+      const cacheTerm = hasOutgoingResults ? rawTrimmedTerm : searchTerm
       if (useCachedResultsIfAvailable(cacheTerm)) return
 
       // Collect results
-      let results = []
-
-      // Add custom search alias results if in 'all' mode
-      if (searchMode === 'all') {
-        results.push(...collectCustomSearchAliasResults(searchTerm))
-      }
+      let results = aliasResults
 
       // Execute search if we have a search term after mode prefix is stripped
       // Note: searchTerm can become empty after resolveSearchMode() strips mode prefix (e.g., "t ", "b ")
@@ -344,7 +342,7 @@ export async function search(event) {
 
         // Add search engine result items
         if (searchMode === 'all' || searchMode === 'search') {
-          results.push(...addSearchEngines(searchTerm))
+          results.push(...addSearchEngines(rawTrimmedTerm))
         }
       } else {
         // Mode prefix without search term (e.g., "t ", "b ", "h ")
