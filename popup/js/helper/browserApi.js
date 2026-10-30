@@ -52,10 +52,15 @@ export async function getBrowserTabs(queryOptions = {}) {
     queryOptions.currentWindow = true
   }
   if (browserApi.tabs) {
-    return (await browserApi.tabs.query(queryOptions)).filter((el) => {
-      const url = typeof el?.url === 'string' ? el.url : ''
-      return !!url.trim()
-    })
+    try {
+      return (await browserApi.tabs.query(queryOptions)).filter((el) => {
+        const url = typeof el?.url === 'string' ? el.url : ''
+        return !!url.trim()
+      })
+    } catch (error) {
+      console.warn('Could not load browser tabs:', error)
+      return []
+    }
   } else {
     console.warn(`No browser tab API found. Returning no results.`)
     return []
@@ -135,7 +140,12 @@ export function convertBrowserTabs(chromeTabs, groupMap) {
  */
 export async function getBrowserBookmarks() {
   if (browserApi.bookmarks?.getTree) {
-    return browserApi.bookmarks.getTree()
+    try {
+      return await browserApi.bookmarks.getTree()
+    } catch (error) {
+      console.warn('Could not load browser bookmarks:', error)
+      return []
+    }
   } else {
     console.warn(`No browser bookmark API found. Returning no results.`)
     return []
@@ -318,11 +328,16 @@ export function convertBrowserBookmarks(
  */
 export async function getBrowserHistory(startTime, maxResults) {
   if (browserApi.history) {
-    return await browserApi.history.search({
-      text: '',
-      startTime: startTime,
-      maxResults: maxResults,
-    })
+    try {
+      return await browserApi.history.search({
+        text: '',
+        startTime: startTime,
+        maxResults: maxResults,
+      })
+    } catch (error) {
+      console.warn('Could not load browser history:', error)
+      return []
+    }
   } else {
     console.warn(`No browser history API found. Returning no results.`)
     return []

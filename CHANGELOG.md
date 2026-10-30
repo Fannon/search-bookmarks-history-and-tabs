@@ -5,6 +5,7 @@
 - **IMPROVED**: Refreshed the Bookmark Manager with clearer navigation, more usable bookmark editing and bulk selection, keyboard editing shortcuts, and layouts that adapt to narrow screens.
 - **IMPROVED**: Reduced the extension package size by excluding development files and source maps from store builds.
 - **FIXED**: The popup bookmark editor waits for the browser to save or delete a bookmark. If that fails, for example because of an invalid URL, it shows the error and keeps your edits so you can retry. Tags, folders, and tab groups named like built-in object properties (such as `constructor`) no longer break tag, folder, or group search.
+- **FIXED**: If reading tabs, bookmarks, or history fails, the popup still shows results from the other sources instead of none.
 - **FIXED**: `bookmarksIgnoreFolderList` now supports folder paths such as `Work/Old Bookmarks`, including their subfolders, while bare folder names still match anywhere.
 - **FIXED**: Bookmark results keep their open-tab indicator, favicon, and tab-group metadata correct when closing one of several tabs sharing the same base URL. Matching history entries now use the most recent visit.
 - **FIXED**: Direct URL navigation now recognizes ports, query strings, and fragments, while rejecting malformed domain names, search phrases, and URL paths containing spaces.
