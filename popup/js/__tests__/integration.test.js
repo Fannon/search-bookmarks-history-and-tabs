@@ -86,7 +86,7 @@ describe('Extension Integration Tests', () => {
     ext.model.bookmarks = generateBookmarksTestData(1000)
     const { search } = await import('../search/common.js')
     ext.dom.searchInput.value = 'bookmark'
-    ext.dom.resultCounter.innerText = ''
+    ext.dom.resultCounter.textContent = ''
     ext.initialized = true
     ext.searchCache = new Map()
     const startTime = Date.now()
@@ -104,7 +104,7 @@ describe('Extension Integration Tests', () => {
 
     // Simulate user typing in search box
     ext.dom.searchInput.value = 'javascript'
-    ext.dom.resultCounter.innerText = ''
+    ext.dom.resultCounter.textContent = ''
     ext.initialized = true
     ext.searchCache = new Map()
     await search({ key: 'a' })
@@ -148,7 +148,7 @@ describe('Extension Integration Tests', () => {
     })
     const { search } = await import('../search/common.js')
     ext.dom.searchInput.value = 'test'
-    ext.dom.resultCounter.innerText = ''
+    ext.dom.resultCounter.textContent = ''
     ext.initialized = true
     ext.searchCache = new Map()
     await search({ key: 'a' })
@@ -177,7 +177,7 @@ describe('Extension Integration Tests', () => {
     })
     const { search } = await import('../search/common.js')
     ext.dom.searchInput.value = 'test'
-    ext.dom.resultCounter.innerText = ''
+    ext.dom.resultCounter.textContent = ''
     ext.initialized = true
     ext.searchCache = new Map()
     await search({ key: 'a' })

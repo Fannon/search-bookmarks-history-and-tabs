@@ -8,6 +8,10 @@ for (const name of Object.getOwnPropertyNames(dom.window)) {
     Object.defineProperty(globalThis, name, { value: dom.window[name], writable: true, configurable: true })
   }
 }
+// Node 25+ predefines Web Storage globals that are unusable without --localstorage-file
+for (const name of ['localStorage', 'sessionStorage']) {
+  Object.defineProperty(globalThis, name, { value: dom.window[name], writable: true, configurable: true })
+}
 Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, configurable: true, writable: true })
 globalThis.window = globalThis
 for (const name of ['Event', 'EventTarget', 'AbortController', 'AbortSignal']) {

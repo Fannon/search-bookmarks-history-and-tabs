@@ -45,7 +45,7 @@ function tokenizeSearchTerm(searchTerm) {
  * @returns {number} Number of unchanged leading terms.
  */
 function getSharedPrefixTermCount(prevTerms, nextTerms) {
-  const max = prevTerms.length < nextTerms.length ? prevTerms.length : nextTerms.length
+  const max = Math.min(prevTerms.length, nextTerms.length)
   let i = 0
   for (; i < max; i++) {
     if (prevTerms[i] !== nextTerms[i]) {

@@ -138,7 +138,7 @@ function setupExt(overrides = {}) {
     },
     dom: {
       searchInput: { value: '' },
-      resultCounter: { innerText: '' },
+      resultCounter: { textContent: '' },
       ...overrides.dom,
     },
     ...overrides,

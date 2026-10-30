@@ -33,7 +33,7 @@ export async function renderSearchResults() {
       ext.dom.resultList.replaceChildren()
       // Clear result counter when no results to show
       if (ext.dom.resultCounter) {
-        ext.dom.resultCounter.innerText = ''
+        ext.dom.resultCounter.textContent = ''
       }
       return
     }
@@ -186,7 +186,7 @@ export async function renderSearchResults() {
 
     // Update result counter
     if (ext.dom.resultCounter) {
-      ext.dom.resultCounter.innerText = `(${result.length})`
+      ext.dom.resultCounter.textContent = `(${result.length})`
     }
 
     // Highlight the first result as the current selection
