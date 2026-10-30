@@ -89,13 +89,13 @@ export function searchTaxonomy(searchTerm, taxonomyType, data) {
  * @returns {Object<string, Array<string>>} Map of tag name to bookmark ids.
  */
 export function getUniqueTags() {
-  ext.index.taxonomy.tags = {}
+  ext.index.taxonomy.tags = Object.create(null)
   for (const el of ext.model.bookmarks) {
     if (el.tags) {
       for (let tag of el.tags.split('#')) {
         tag = tag.trim()
         if (tag) {
-          if (!ext.index.taxonomy.tags[tag]) {
+          if (!Object.hasOwn(ext.index.taxonomy.tags, tag)) {
             ext.index.taxonomy.tags[tag] = [el.originalId]
           } else {
             ext.index.taxonomy.tags[tag].push(el.originalId)
@@ -115,13 +115,13 @@ export function getUniqueTags() {
 export function getUniqueFolders() {
   // This function is memoized, as the folders don't change while the extension is open
   if (!ext?.index.taxonomy.folders) {
-    const foldersDictionary = {}
+    const foldersDictionary = Object.create(null)
     for (const el of ext.model.bookmarks) {
       if (el.folder) {
         for (let folderName of el.folder.split('~')) {
           folderName = folderName.trim()
           if (folderName) {
-            if (!foldersDictionary[folderName]) {
+            if (!Object.hasOwn(foldersDictionary, folderName)) {
               foldersDictionary[folderName] = [el.originalId]
             } else {
               foldersDictionary[folderName].push(el.originalId)
@@ -151,13 +151,13 @@ export function resetUniqueFoldersCache() {
  * @returns {Object<string, Array<number>>} Map of group name to tab ids.
  */
 export function getUniqueGroups() {
-  const groupsDictionary = {}
+  const groupsDictionary = Object.create(null)
   const tabs = ext.model.tabs || []
 
   for (const el of tabs) {
     if (el.group) {
       const groupName = el.group
-      if (!groupsDictionary[groupName]) {
+      if (!Object.hasOwn(groupsDictionary, groupName)) {
         groupsDictionary[groupName] = [el.originalId]
       } else {
         groupsDictionary[groupName].push(el.originalId)

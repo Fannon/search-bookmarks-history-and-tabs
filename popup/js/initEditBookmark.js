@@ -214,22 +214,21 @@ function setupEventHandlers() {
   if (saveButton && !saveButton.dataset.listenerAttached) {
     saveButton.addEventListener('click', async (event) => {
       event.preventDefault()
-      if (ext.currentBookmarkId) {
-        updateBookmark(ext.currentBookmarkId)
-      } else if (ext.currentBookmarkDraft) {
-        if (saveButton.dataset.saving === 'true') return
-
-        saveButton.dataset.saving = 'true'
-        saveButton.setAttribute('aria-busy', 'true')
-        try {
-          await createBookmark()
-          ext.currentBookmarkDraft = null
-        } finally {
-          delete saveButton.dataset.saving
-          saveButton.removeAttribute('aria-busy')
+      if (saveButton.dataset.saving === 'true') return
+      saveButton.dataset.saving = 'true'
+      saveButton.setAttribute('aria-busy', 'true')
+      try {
+        if (ext.currentBookmarkId) {
+          await updateBookmark(ext.currentBookmarkId)
+        } else if (ext.currentBookmarkDraft) {
+          const created = await createBookmark()
+          if (created) ext.currentBookmarkDraft = null
+        } else {
+          window.location.href = getReturnTarget()
         }
-      } else {
-        window.location.href = getReturnTarget()
+      } finally {
+        delete saveButton.dataset.saving
+        saveButton.removeAttribute('aria-busy')
       }
     })
     saveButton.dataset.listenerAttached = 'true'
@@ -238,10 +237,16 @@ function setupEventHandlers() {
   if (deleteButton && !deleteButton.dataset.listenerAttached) {
     deleteButton.addEventListener('click', async (event) => {
       event.preventDefault()
-      if (ext.currentBookmarkId) {
-        await deleteBookmark(ext.currentBookmarkId)
-      } else {
-        window.location.href = getReturnTarget()
+      if (deleteButton.dataset.deleting === 'true') return
+      deleteButton.dataset.deleting = 'true'
+      try {
+        if (ext.currentBookmarkId) {
+          await deleteBookmark(ext.currentBookmarkId)
+        } else {
+          window.location.href = getReturnTarget()
+        }
+      } finally {
+        delete deleteButton.dataset.deleting
       }
     })
     deleteButton.dataset.listenerAttached = 'true'

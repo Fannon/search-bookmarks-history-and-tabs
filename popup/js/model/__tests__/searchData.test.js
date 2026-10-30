@@ -90,6 +90,22 @@ describe('getSearchData', () => {
     }
     mock.restoreAll()
   })
+  for (const failedSource of ['tabs', 'bookmarks', 'history']) {
+    test(`keeps working sources when ${failedSource} rejects`, async () => {
+      setBrowserData({
+        tabs: [{ id: 1, title: 'Tab', url: 'https://tab.test' }],
+        bookmarks: [{ id: 'b1', title: 'Bookmark', url: 'https://bookmark.test' }],
+        history: [{ id: 'h1', title: 'History', url: 'https://history.test', lastVisitTime: Date.now() }],
+      })
+      const apiMocks = { tabs: tabsQueryMock, bookmarks: bookmarksGetTreeMock, history: historySearchMock }
+      apiMocks[failedSource].mock.mockImplementation(() => Promise.reject(new Error('API failure')))
+      const warn = mock.method(console, 'warn', () => {})
+      const data = await getSearchData()
+      for (const source of Object.keys(apiMocks))
+        assert.strictEqual(data[source].length, source === failedSource ? 0 : 1)
+      assert(warn.mock.callCount() > 0)
+    })
+  }
   test('merges history into bookmarks and tabs', async () => {
     const baseTime = 1700000000000
     const nowSpy = mock.method(Date, 'now', () => baseTime)
