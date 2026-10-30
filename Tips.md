@@ -13,7 +13,7 @@
   - <kbd>Ctrl</kbd> + <kbd>Enter</kbd>: Open in background without closing the popup.
   - <kbd>F2</kbd>: Edit the selected bookmark, or create a new bookmark from the selected URL.
   - Tip: Enable the `openInCurrentTab` option to flip this — <kbd>Enter</kbd> opens in the **current tab** and <kbd>Shift</kbd>/<kbd>Alt</kbd> + <kbd>Enter</kbd> opens in a **new tab**.
-- **Copy URL**: **Right-Click** any result or press a custom shortcut if configured.
+- **Copy URL**: **Right-Click** any result.
 - **Hybrid Search**: Press <kbd>TAB</kbd> to insert a double-space separator for combining taxonomy filters with search terms (e.g., `#tag  query`).
 
 ---
@@ -23,13 +23,15 @@
 - **Search Modes**: Use prefixes to filter by type:
   - `#tag`: Only bookmarks with this tag.
   - `~folder`: Only bookmarks in this folder.
+  - `@group`: Only tabs in this tab group.
   - `t `: Only open tabs.
   - `b `: Only bookmarks.
   - `h `: Only history and tabs.
   - `s `: Only search engines.
-- **AND Filtering**: Combine markers for precise results, e.g., `#work #todo` finds bookmarks with both tags, or `~Projects #design` finds design tags inside the Projects folder.
-- **Interactive Badges**: Click on any **Tag** or **Folder** badge in the search results to instantly filter by that item.
-- **Direct Navigation**: Type a domain like `example.com` or `localhost:3000` to jump directly to it.
+- **AND Filtering**: Repeat the same marker to require all values, e.g., `#work #todo` finds bookmarks with both tags, and `~Sites ~Blogs` finds bookmarks in both folders.
+- **Filter and Search**: Add a double space after a tag, folder or group filter to search within it, e.g., `~Projects  design`.
+- **Interactive Badges**: Click on any **Tag**, **Folder** or **Tab Group** badge in the search results to instantly filter by that item.
+- **Direct Navigation**: Type a domain like `example.com` or `example.com:8080/docs` to jump directly to it.
 - **Quick Aliases**: Use `g <query>` for Google, `d <query>` for dict.cc, or define your own in `customSearchEngines`.
 
 ---

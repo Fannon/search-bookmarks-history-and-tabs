@@ -5,7 +5,7 @@
 import { escapeHtml } from '../helper/utils.js'
 import { formatDecimal, formatInteger, renderBookmarkListItem } from './bookmarkManagerRenderHelpers.js'
 
-export const RECENT_BOOKMARKS_PER_PAGE = 20
+export const RECENT_BOOKMARKS_PER_PAGE = 10
 
 export function renderStats(stats) {
   return [
@@ -13,7 +13,7 @@ export function renderStats(stats) {
     renderStat(
       'Duplicates',
       formatInteger(stats.duplicateGroupCount),
-      `${formatInteger(stats.removableDuplicateCount)} removable copies`,
+      `${formatInteger(stats.removableDuplicateCount)} removable cop${stats.removableDuplicateCount === 1 ? 'y' : 'ies'}`,
       '#duplicates',
       'duplicate',
     ),
@@ -26,7 +26,7 @@ export function renderStats(stats) {
       'Manage tags',
     ),
     renderStat(
-      'Unique Tags',
+      'Unique tags',
       formatInteger(stats.uniqueTagCount),
       `${formatInteger(stats.tagAssignmentCount)} tag assignments`,
       '#tags',
@@ -34,7 +34,7 @@ export function renderStats(stats) {
       'Manage tags',
     ),
     renderStat(
-      'Avg Tags',
+      'Avg. tags',
       formatDecimal(stats.averageTagsPerBookmark),
       `${formatDecimal(stats.averageTagsPerTaggedBookmark)} on tagged bookmarks`,
       '#tags',

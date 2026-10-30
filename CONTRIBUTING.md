@@ -7,7 +7,7 @@ Please review the guidelines below before submitting changes.
 ## Getting Started
 
 - **Read the [README.md](./README.md)** for project overview, features, and user configuration.
-- **Review [AGENTS.md](./AGENTS.md)** for architecture, commands, performance guidelines, and coding standards.
+- **Review [AGENTS.md](./AGENTS.md)** for project rules, commands, performance guidelines, and coding standards.
 - **See [OPTIONS.md](./OPTIONS.md)** for all available configuration options.
 - **Use Node.js 24.21 or newer** and the npm version specified in `package.json`.
 
@@ -27,7 +27,7 @@ Please review the guidelines below before submitting changes.
 
 - `popup/` contains popup HTML, CSS, entry scripts, and bundled libraries.
   - `popup/js/helper/` holds shared utilities.
-  - `popup/js/model/` defines data models and configuration defaults (see `options.js`).
+  - `popup/js/model/` defines data models and configuration defaults (see `optionsDefaults.js`).
   - `popup/js/search/` coordinates search orchestration and parsing.
   - `popup/js/view/` renders the UI and wires helpers to DOM updates.
   - `popup/js/**/__tests__/` groups native Node.js unit tests alongside their modules.
@@ -66,7 +66,7 @@ If an older checkout still has installed Lefthook hooks, remove them once with `
 
 Source maps are available in `popup/js/` and the CI build artifact for debugging. Store ZIPs include runtime assets and omit source maps and test fixtures.
 
-See also: [AGENTS.md](./AGENTS.md) for architecture overview, verify loops, and performance guidelines.
+See also: [AGENTS.md](./AGENTS.md) for project rules, validation commands, and performance guidelines.
 
 ## How to Contribute
 

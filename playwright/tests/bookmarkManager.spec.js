@@ -178,7 +178,7 @@ test.describe('Bookmark Manager', () => {
     await page.locator('[data-manager-tab="duplicates"]').click()
 
     await expect(page).toHaveURL(/#duplicates$/)
-    await expect(page.locator('.duplicate-page-header')).toContainText('Duplicate Bookmarks')
+    await expect(page.locator('.duplicate-page-header')).toContainText('Duplicate bookmarks')
     await expect(page.locator('#duplicates-list')).toContainText('app.quicktype.io')
     await expect(page.locator('#duplicates-list')).toContainText('Best candidate')
     await expect(page.locator('#duplicates-list')).toContainText('Lower-ranked copy')

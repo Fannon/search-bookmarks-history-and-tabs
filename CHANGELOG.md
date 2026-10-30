@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- **IMPROVED**: Polished the Bookmark Manager for consistency with the search popup: compact bookmark rows with inline badges, a teal accent in dark mode, consistent sentence-case labels and button styles, AI Cleanup settings shown before the prompt actions, and section tabs that wrap on narrow screens.
+- **FIXED**: Bookmark Manager duplicate summaries now use correct singular and plural wording.
+
 ## [v2.5.1] - 2026-10-30
 
 - **IMPROVED**: Refreshed the Bookmark Manager with clearer navigation, more usable bookmark editing and bulk selection, keyboard editing shortcuts, and layouts that adapt to narrow screens.
