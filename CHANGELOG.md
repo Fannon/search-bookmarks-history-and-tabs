@@ -2,8 +2,14 @@
 
 ## [Unreleased]
 
+## [v2.5.1] - 2026-10-30
+
 - **IMPROVED**: Refreshed the Bookmark Manager with clearer navigation, more usable bookmark editing and bulk selection, keyboard editing shortcuts, and layouts that adapt to narrow screens.
+- **IMPROVED**: Polished the Bookmark Manager for consistency with the search popup: compact bookmark rows with inline badges, a teal accent in dark mode, consistent sentence-case labels and button styles, AI Cleanup settings shown before the prompt actions, and section tabs that wrap on narrow screens.
 - **IMPROVED**: Reduced the extension package size by excluding development files and source maps from store builds.
+- **IMPROVED**: Faster popup startup with large collections, and faster sorting on the tags, folders, and tab groups pages and in the Bookmark Manager.
+- **IMPROVED**: With a large history limit (`historyMaxItems`), results are shown and searchable before browser history finishes loading, and history results are added once it arrives. When fuzzy search is the default strategy, the first keystroke is faster.
+- **FIXED**: Typing only a search mode prefix such as `#`, `~`, `@`, or `s ` no longer shows a `Search result type "bookmarkCreate" not supported` error when the quick bookmark entry is part of the default results.
 - **FIXED**: The popup bookmark editor waits for the browser to save or delete a bookmark. If that fails, for example because of an invalid URL, it shows the error and keeps your edits so you can retry. Tags, folders, and tab groups named like built-in object properties (such as `constructor`) no longer break tag, folder, or group search.
 - **FIXED**: If reading tabs, bookmarks, or history fails, the popup still shows results from the other sources instead of none.
 - **FIXED**: `bookmarksIgnoreFolderList` now supports folder paths such as `Work/Old Bookmarks`, including their subfolders, while bare folder names still match anywhere.
@@ -11,7 +17,10 @@
 - **FIXED**: Bookmark results keep their open-tab indicator, favicon, and tab-group metadata correct when closing one of several tabs sharing the same base URL. Matching history entries now use the most recent visit.
 - **FIXED**: Duplicate detection in the Bookmark Manager and its AI cleanup no longer treats bookmarks with different `#hash` routes or anchors, such as `app/#/inbox` and `app/#/settings`, as duplicates. Variants that differ only by http/https, `www.`, letter case, or a trailing slash are still detected.
 - **FIXED**: Direct URL navigation now recognizes ports, query strings, and fragments, while rejecting malformed domain names, search phrases, and URL paths containing spaces.
+- **FIXED**: Direct URL navigation preserves case-sensitive paths and query strings, including after case-only edits and cache hits. Returning from bookmark editing restores the original search prefix and casing.
+- **FIXED**: Delayed default results no longer overwrite a newer search, including searches started through hash navigation.
 - **FIXED**: Search engine and custom search alias results send your query with its original casing instead of lowercasing it, including when results come from the search cache. Aliases still match regardless of case.
+- **FIXED**: Bookmark Manager duplicate summaries now use correct singular and plural wording.
 
 ## [v2.5.0] - 2026-08-01
 

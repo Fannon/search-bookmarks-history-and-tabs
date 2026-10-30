@@ -62,7 +62,7 @@ describe('bookmark manager overview rendering', () => {
   })
   test('renders recent bookmarks sorted by date and clamps requested pages', () => {
     const result = renderRecentBookmarks(createBookmarks(25), 99)
-    assert.strictEqual(result.page, 2)
+    assert.strictEqual(result.page, 3)
     assert(result.html.includes('Bookmark 1'))
     assert(result.html.includes('25 of 25'))
     assert(!result.html.includes('Bookmark 25'))

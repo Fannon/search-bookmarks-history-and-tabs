@@ -1323,8 +1323,6 @@ function renderManagedBookmarkRow(bookmark, canUpdateBookmarks) {
         <div class="title">
           <button class="managed-bookmark-edit" type="button" data-edit-managed-bookmark-id="${escapeHtml(bookmarkId)}"
             aria-pressed="${currentClass ? 'true' : 'false'}">${escapeHtml(bookmark.title || displayUrl)}</button>
-        </div>
-        <div class="bookmark-meta">
           ${renderFolderBadge(bookmark.folderArray)}
           ${renderTagBadges(bookmark.tagsArray)}
         </div>

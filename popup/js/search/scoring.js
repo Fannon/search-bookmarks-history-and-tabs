@@ -195,7 +195,7 @@ export function calculateFinalScore(results, searchTerm) {
     // STEP 4: Behavioral bonuses
     if (scoreVisitedBonusScore && el.visitCount) {
       const visitBonus = el.visitCount * scoreVisitedBonusScore
-      score += visitBonus > scoreVisitedBonusScoreMaximum ? scoreVisitedBonusScoreMaximum : visitBonus
+      score += Math.min(visitBonus, scoreVisitedBonusScoreMaximum)
     }
 
     if (scoreRecentBonusScoreMaximum && el.lastVisitSecondsAgo != null) {

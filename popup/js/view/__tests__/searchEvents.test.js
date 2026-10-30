@@ -1170,7 +1170,7 @@ describe('search approach controls', () => {
         ]),
       ),
     )
-    assert.strictEqual(elements.searchApproachToggle.innerText, 'FUZZY')
+    assert.strictEqual(elements.searchApproachToggle.textContent, 'FUZZY')
     assert.strictEqual(elements.searchApproachToggle.className, 'fuzzy')
     assert.strictEqual(mocks.search.mock.callCount(), 1)
   })
@@ -1178,11 +1178,11 @@ describe('search approach controls', () => {
     const { module, elements } = await setupSearchEvents()
     ext.opts.searchStrategy = 'precise'
     module.updateSearchApproachToggle()
-    assert.strictEqual(elements.searchApproachToggle.innerText, 'PRECISE')
+    assert.strictEqual(elements.searchApproachToggle.textContent, 'PRECISE')
     assert.strictEqual(elements.searchApproachToggle.className, 'precise')
     ext.opts.searchStrategy = 'fuzzy'
     module.updateSearchApproachToggle()
-    assert.strictEqual(elements.searchApproachToggle.innerText, 'FUZZY')
+    assert.strictEqual(elements.searchApproachToggle.textContent, 'FUZZY')
     assert.strictEqual(elements.searchApproachToggle.className, 'fuzzy')
   })
 })
