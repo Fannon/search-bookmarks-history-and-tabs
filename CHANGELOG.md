@@ -7,6 +7,7 @@
 - **FIXED**: `bookmarksIgnoreFolderList` now supports folder paths such as `Work/Old Bookmarks`, including their subfolders, while bare folder names still match anywhere.
 - **FIXED**: Bookmark results keep their open-tab indicator, favicon, and tab-group metadata correct when closing one of several tabs sharing the same base URL. Matching history entries now use the most recent visit.
 - **FIXED**: Direct URL navigation now recognizes ports, query strings, and fragments, while rejecting malformed domain names, search phrases, and URL paths containing spaces.
+- **FIXED**: Search engine and custom search alias results send your query with its original casing instead of lowercasing it, including when results come from the search cache. Aliases still match regardless of case.
 
 ## [v2.5.0] - 2026-08-01
 
