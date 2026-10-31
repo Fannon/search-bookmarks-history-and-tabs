@@ -101,6 +101,8 @@ export function getBookmarkManagerDom() {
     generateCleanupPrompt: document.getElementById('generate-cleanup-prompt'),
     generateCleanupPromptFull: document.getElementById('generate-cleanup-prompt-full'),
     runLocalCleanup: document.getElementById('run-local-cleanup'),
+    cancelLocalCleanup: document.getElementById('cancel-local-cleanup'),
+    cleanupRunPlan: document.getElementById('cleanup-run-plan'),
     copyCleanupPrompt: document.getElementById('copy-cleanup-prompt'),
     applyAllCleanupChanges: document.getElementById('apply-all-cleanup-changes'),
     deleteSelected: document.getElementById('delete-selected'),
@@ -173,6 +175,7 @@ export function renderBookmarkManager(model, canModifyBookmarks, canUpdateBookma
  * @param {Function} handlers.onGenerateCleanupPromptFull Generate full cleanup prompt.
  * @param {Function} handlers.onCleanupScopeChange Cleanup prompt scope change.
  * @param {Function} handlers.onRunLocalCleanup Run local AI cleanup proposal.
+ * @param {Function} handlers.onCancelLocalCleanup Cancel the running local AI cleanup.
  * @param {Function} handlers.onCopyCleanupPrompt Copy cleanup prompt.
  * @param {Function} handlers.onCleanupProposalInput Parse proposal JSON after textarea edits.
  * @param {Function} handlers.onApplyCleanupChange Apply one cleanup proposal change.
@@ -201,6 +204,7 @@ export function bindBookmarkManagerEvents({
   onGenerateCleanupPromptFull,
   onCleanupScopeChange,
   onRunLocalCleanup,
+  onCancelLocalCleanup,
   onCopyCleanupPrompt,
   onCleanupProposalInput,
   onApplyCleanupChange,
@@ -226,6 +230,7 @@ export function bindBookmarkManagerEvents({
   dom.cleanupChangeFocus.addEventListener('change', onCleanupScopeChange)
   dom.cleanupBookmarkLimit.addEventListener('change', onCleanupScopeChange)
   dom.runLocalCleanup.addEventListener('click', onRunLocalCleanup)
+  dom.cancelLocalCleanup.addEventListener('click', onCancelLocalCleanup)
   dom.copyCleanupPrompt.addEventListener('click', onCopyCleanupPrompt)
   dom.cleanupProposalJson.addEventListener('input', onCleanupProposalInput)
   dom.applyAllCleanupChanges.addEventListener('click', onApplyAllCleanupChanges)
@@ -769,6 +774,40 @@ export function renderBookmarkCleanupPrompt(prompt, localAiAvailable) {
   dom.cleanupPromptSize.textContent = promptText ? formatPromptSize(promptText) : ''
   dom.copyCleanupPrompt.disabled = !promptText
   dom.runLocalCleanup.disabled = !promptText || !localAiAvailable
+}
+
+/**
+ * Explain what the generated prompt is for and how local AI will run it.
+ *
+ * @param {{mode: 'lite'|'full', batchCount?: number, bookmarkCount?: number}|null} plan Prompt plan.
+ */
+export function renderLocalCleanupPlan(plan) {
+  const dom = ext.dom.manager
+  const batchCount = plan?.mode === 'lite' ? plan.batchCount : 0
+  dom.runLocalCleanup.textContent = batchCount > 1 ? `Run local AI (${batchCount} batches)` : 'Run local AI'
+  dom.cleanupRunPlan.textContent = formatLocalCleanupPlan(plan, batchCount)
+}
+
+function formatLocalCleanupPlan(plan, batchCount) {
+  if (!plan) {
+    return "Advanced creates one complete prompt to copy into an AI assistant. Lite creates a shorter prompt for your browser's local AI, which reviews large collections in batches."
+  }
+  if (plan.mode !== 'lite') {
+    return 'Advanced prompt for copying into an AI assistant. Local AI would send it as one large prompt; use Lite for local AI.'
+  }
+  if (batchCount <= 1) {
+    return `Lite prompt: local AI reviews ${plan.bookmarkCount} bookmark(s) in one run.`
+  }
+  return `Lite prompt: local AI reviews ${plan.bookmarkCount} bookmarks in about ${batchCount} batches, one after another, and merges the suggestions. The prompt below is batch 1 of ${batchCount}, so Copy prompt only copies that batch; use Advanced to copy everything.`
+}
+
+/**
+ * Show the cancel button while a local AI cleanup run is in progress.
+ *
+ * @param {boolean} running Whether a local run is in progress.
+ */
+export function setLocalCleanupRunning(running) {
+  ext.dom.manager.cancelLocalCleanup.hidden = !running
 }
 
 /**

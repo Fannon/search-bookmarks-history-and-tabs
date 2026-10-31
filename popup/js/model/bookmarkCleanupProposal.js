@@ -13,6 +13,8 @@ const PROMPT_TEXT_LIMIT = 180
 const LITE_PROMPT_CHAR_BUDGET = 20000
 const LITE_PROMPT_TEXT_LIMIT = 100
 const LITE_CHANGE_LIMIT = 25
+// Short link to popup/json/change-proposal.schema.json on main.
+const PROMPT_SCHEMA_URL = 'https://tinyurl.com/sbht-change'
 const PROMPT_FULL = 'full'
 const PROMPT_LITE = 'lite'
 const PROMPT_HTTPS_PREFIX_REGEX = /^https:\/\/(?:www\.)?/i
@@ -218,6 +220,7 @@ ${formatPromptGoals(allowedChangeTypes)}
 - The first character of your response must be "{" and the last character must be "}".
 - Output base shape: {"summary":"","changes":{}}
 - Omit every change type key that has no proposals. Do not output empty arrays.
+- Optional reference: the full JSON Schema for the output is at ${PROMPT_SCHEMA_URL}
 Example output format only. Do not copy example IDs; use IDs from the provided data:
 ${createPromptExample(allowedChangeTypes)}
 

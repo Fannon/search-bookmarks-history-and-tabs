@@ -78,6 +78,8 @@ import {
   renderBookmarkManager,
   renderBookmarkUndoHistory,
   renderBookmarkWorkspace,
+  renderLocalCleanupPlan,
+  setLocalCleanupRunning,
   setManagedBookmarkSelected,
   showCleanupIssues,
   showCleanupStatus,
@@ -141,12 +143,14 @@ export async function initBookmarkManager() {
     onGenerateCleanupPromptFull: generateCleanupPromptFull,
     onCleanupScopeChange: resetCleanupPrompt,
     onRunLocalCleanup: runLocalCleanup,
+    onCancelLocalCleanup: cancelLocalCleanup,
     onCopyCleanupPrompt: copyCleanupPrompt,
     onCleanupProposalInput: parseCleanupProposalInput,
     onApplyCleanupChange: applyCleanupChange,
     onApplyCleanupCategory: applyCleanupCategory,
     onApplyAllCleanupChanges: applyAllCleanupChanges,
   })
+  renderLocalCleanupPlan(null)
 
   if (window.location.hash === '#options') {
     ext.dom.manager.loadingIndicator?.remove()
@@ -776,12 +780,30 @@ function generateCleanupPromptFull() {
 
 function setCleanupPrompt(mode) {
   const options = getCleanupPromptOptions()
-  const prompt = createBookmarkCleanupPrompt(getScopedCleanupModel(), mode, options).trim()
+  const scopedModel = getScopedCleanupModel()
+  let prompt
+  let plan = { mode }
+  if (mode === 'lite') {
+    // Use the same budget as an unmeasured local run so the batch estimate matches.
+    const batches = createLiteBookmarkCleanupPromptBatches(scopedModel, {
+      ...options,
+      charBudget: getLocalCleanupCharBudget(0),
+    })
+    prompt = batches[0].prompt.trim()
+    plan = {
+      mode,
+      batchCount: batches.length,
+      bookmarkCount: batches.reduce((sum, batch) => sum + batch.bookmarkCount, 0),
+    }
+  } else {
+    prompt = createBookmarkCleanupPrompt(scopedModel, mode, options).trim()
+  }
   ext.model.bookmarkCleanupPrompt = prompt
   ext.model.bookmarkCleanupPromptMode = mode
   ext.model.bookmarkCleanupPromptOptions = options
   ext.model.bookmarkCleanupSchema = createLocalAiBookmarkCleanupProposalSchema(mode, options)
   renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
+  renderLocalCleanupPlan(plan)
 }
 
 async function runLocalCleanup() {
@@ -807,28 +829,34 @@ async function runLocalCleanup() {
     return
   }
 
+  const controller = new AbortController()
+  const { signal } = controller
   let session
   let batchNumber = 0
+  let batches = []
+  const proposals = []
+  ext.model.bookmarkCleanupAbortController = controller
   try {
     renderBookmarkCleanupPrompt(prompt, false)
+    setLocalCleanupRunning(true)
     showCleanupStatus('Starting local AI...', 'info', false)
-    session = await createLocalCleanupSession(languageModel, startedAt)
+    session = await createLocalCleanupSession(languageModel, startedAt, signal)
     debugLocalCleanup('session created', {
       elapsedMs: getElapsedMs(startedAt),
       hasPrompt: typeof session?.prompt === 'function',
       hasDestroy: typeof session?.destroy === 'function',
       contextWindow: getLocalAiContextWindow(session),
     })
-    const batches = isLite
+    batches = isLite
       ? await createLocalCleanupBatches(session, options, responseConstraint, startedAt)
       : [{ prompt, bookmarkCount: 0 }]
     const changeLimit = Number.parseInt(options?.changeLimit, 10) || 0
-    const proposals = []
     let changeCount = 0
     let skippedBatches = 0
     let stoppedAtLimit = false
 
     for (; batchNumber < batches.length; batchNumber++) {
+      signal.throwIfAborted()
       if (changeLimit && changeCount >= changeLimit) {
         stoppedAtLimit = true
         break
@@ -836,7 +864,7 @@ async function runLocalCleanup() {
       if (batchNumber > 0) {
         // Each batch needs an empty context, otherwise earlier batches use up the context window.
         destroyLocalCleanupSession(session, startedAt)
-        session = await createLocalCleanupSession(languageModel, startedAt)
+        session = await createLocalCleanupSession(languageModel, startedAt, signal)
       }
       showCleanupStatus(formatLocalCleanupProgress(batchNumber, batches, changeCount), 'info', false)
       const result = await promptLocalCleanupBatch(
@@ -845,6 +873,7 @@ async function runLocalCleanup() {
         batches[batchNumber].prompt,
         responseConstraint,
         startedAt,
+        signal,
       )
       session = result.session
       const responseText = formatLocalAiCleanupResponse(result.response)
@@ -889,6 +918,11 @@ async function runLocalCleanup() {
     }
     debugLocalCleanup('parsed response', { elapsedMs: getElapsedMs(startedAt) })
   } catch (error) {
+    if (signal.aborted) {
+      debugLocalCleanup('cancelled', { batch: batchNumber + 1, elapsedMs: getElapsedMs(startedAt) })
+      showCancelledLocalCleanup(proposals, batchNumber, batches.length)
+      return
+    }
     debugLocalCleanup('failed', {
       batch: batchNumber + 1,
       elapsedMs: getElapsedMs(startedAt),
@@ -899,10 +933,39 @@ async function runLocalCleanup() {
     showManagerStatus('Cleanup proposal failed', 'error')
     printError(error, 'Could not create bookmark cleanup proposal with local AI.')
   } finally {
+    if (ext.model.bookmarkCleanupAbortController === controller) {
+      ext.model.bookmarkCleanupAbortController = null
+    }
     destroyLocalCleanupSession(session, startedAt)
+    setLocalCleanupRunning(false)
     renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
     debugLocalCleanup('finish', { elapsedMs: getElapsedMs(startedAt) })
   }
+}
+
+function cancelLocalCleanup() {
+  const controller = ext.model.bookmarkCleanupAbortController
+  if (controller && !controller.signal.aborted) {
+    controller.abort()
+    showCleanupStatus('Cancelling local AI...', 'info', false)
+  }
+}
+
+/**
+ * Keep proposals from finished batches when a local run is cancelled.
+ */
+function showCancelledLocalCleanup(proposals, finishedBatches, batchCount) {
+  if (!proposals.length) {
+    showCleanupStatus('Local cleanup cancelled', 'info')
+    return
+  }
+  setCleanupProposalJson(JSON.stringify(mergeBookmarkCleanupProposals(proposals)))
+  parseCleanupProposalText()
+  showCleanupStatus(
+    `Cancelled after ${finishedBatches} of ${batchCount} batches. Loaded ${countBookmarkCleanupChanges(ext.model.bookmarkCleanupProposal)} proposed change(s).`,
+    'warning',
+    false,
+  )
 }
 
 /**
@@ -913,12 +976,8 @@ async function runLocalCleanup() {
  */
 async function createLocalCleanupBatches(session, options, responseConstraint, startedAt) {
   const scopedModel = getScopedCleanupModel()
-  const contextTokens = Math.min(
-    getLocalAiContextWindow(session) || LOCAL_AI_TARGET_CONTEXT_TOKENS,
-    LOCAL_AI_TARGET_CONTEXT_TOKENS,
-  )
-  const inputTokenLimit = contextTokens - LOCAL_AI_OUTPUT_RESERVE_TOKENS
-  let charBudget = Math.floor(inputTokenLimit * LOCAL_AI_CHARS_PER_TOKEN)
+  const inputTokenLimit = getLocalCleanupInputTokenLimit(getLocalAiContextWindow(session))
+  let charBudget = getLocalCleanupCharBudget(getLocalAiContextWindow(session))
   let batches = createLiteBookmarkCleanupPromptBatches(scopedModel, { ...options, charBudget })
 
   const measuredTokens = await measureLocalAiPrompt(session, batches[0].prompt, responseConstraint)
@@ -936,6 +995,15 @@ async function createLocalCleanupBatches(session, options, responseConstraint, s
   }
 
   return batches
+}
+
+function getLocalCleanupInputTokenLimit(contextWindow) {
+  const contextTokens = Math.min(contextWindow || LOCAL_AI_TARGET_CONTEXT_TOKENS, LOCAL_AI_TARGET_CONTEXT_TOKENS)
+  return contextTokens - LOCAL_AI_OUTPUT_RESERVE_TOKENS
+}
+
+function getLocalCleanupCharBudget(contextWindow) {
+  return Math.floor(getLocalCleanupInputTokenLimit(contextWindow) * LOCAL_AI_CHARS_PER_TOKEN)
 }
 
 function formatLocalCleanupProgress(batchIndex, batches, changeCount) {
@@ -962,18 +1030,18 @@ async function measureLocalAiPrompt(session, prompt, responseConstraint) {
   }
 }
 
-async function promptLocalCleanupBatch(languageModel, session, prompt, responseConstraint, startedAt) {
+async function promptLocalCleanupBatch(languageModel, session, prompt, responseConstraint, startedAt, signal) {
   try {
     const response = await promptLocalCleanupWithTimeout(
       session,
       prompt,
-      { responseConstraint },
+      { responseConstraint, signal },
       'session.prompt constrained',
       startedAt,
     )
     return { response, session }
   } catch (error) {
-    if (error?.name !== 'TimeoutError') {
+    if (error?.name !== 'TimeoutError' || signal.aborted) {
       throw error
     }
 
@@ -983,11 +1051,11 @@ async function promptLocalCleanupBatch(languageModel, session, prompt, responseC
     })
     showCleanupStatus('Constrained generation timed out. Retrying without schema...', 'info', false)
     destroyLocalCleanupSession(session, startedAt)
-    const retrySession = await createLocalCleanupSession(languageModel, startedAt)
+    const retrySession = await createLocalCleanupSession(languageModel, startedAt, signal)
     const response = await promptLocalCleanupWithTimeout(
       retrySession,
       prompt,
-      {},
+      { signal },
       'session.prompt unconstrained',
       startedAt,
     )
@@ -995,10 +1063,11 @@ async function promptLocalCleanupBatch(languageModel, session, prompt, responseC
   }
 }
 
-async function createLocalCleanupSession(languageModel, startedAt) {
+async function createLocalCleanupSession(languageModel, startedAt, signal) {
   const waitingTimer = startLocalAiWaitingLog('session.create', startedAt)
   try {
     return await languageModel.create({
+      signal,
       expectedInputs: [{ type: 'text', languages: ['en'] }],
       expectedOutputs: [{ type: 'text', languages: ['en'] }],
       monitor(monitorTarget) {
@@ -1018,7 +1087,12 @@ async function createLocalCleanupSession(languageModel, startedAt) {
 async function promptLocalCleanupWithTimeout(session, prompt, options, stage, startedAt) {
   const waitingTimer = startLocalAiWaitingLog(stage, startedAt)
   try {
-    return await Promise.race([session.prompt(prompt, options), createLocalAiTimeout(stage)])
+    // The abort promise also stops the wait if the browser ignores the signal.
+    return await Promise.race([
+      session.prompt(prompt, options),
+      createLocalAiTimeout(stage),
+      createAbortPromise(options.signal),
+    ])
   } finally {
     stopLocalAiWaitingLog(waitingTimer)
   }
@@ -1029,6 +1103,16 @@ function destroyLocalCleanupSession(session, startedAt) {
     debugLocalCleanup('destroy session', { elapsedMs: getElapsedMs(startedAt) })
     session.destroy()
   }
+}
+
+function createAbortPromise(signal) {
+  return new Promise((_, reject) => {
+    if (signal.aborted) {
+      reject(signal.reason)
+      return
+    }
+    signal.addEventListener('abort', () => reject(signal.reason), { once: true })
+  })
 }
 
 function createLocalAiTimeout(stage) {
@@ -1091,6 +1175,7 @@ function resetCleanupPrompt() {
   ext.model.bookmarkCleanupPrompt = ''
   ext.model.bookmarkCleanupSchema = null
   renderBookmarkCleanupPrompt('', Boolean(ext.model.bookmarkManagerLocalAiAvailable))
+  renderLocalCleanupPlan(null)
   showCleanupStatus('')
 }
 

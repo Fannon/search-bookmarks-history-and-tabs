@@ -100,6 +100,8 @@ function setupDom() {
     <button id="generate-cleanup-prompt"></button>
     <button id="generate-cleanup-prompt-full"></button>
     <button id="run-local-cleanup"></button>
+    <button id="cancel-local-cleanup" hidden></button>
+    <p id="cleanup-run-plan"></p>
     <button id="copy-cleanup-prompt"></button>
     <button id="delete-selected"><span data-selected-count></span></button>
     <button id="select-suggested"></button>
@@ -179,6 +181,7 @@ function bindEvents() {
     onGenerateCleanupPromptFull: mock.fn(),
     onCleanupScopeChange: mock.fn(),
     onRunLocalCleanup: mock.fn(),
+    onCancelLocalCleanup: mock.fn(),
     onCopyCleanupPrompt: mock.fn(),
     onCleanupProposalInput: mock.fn(),
     onApplyCleanupChange: mock.fn(),

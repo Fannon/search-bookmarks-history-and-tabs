@@ -275,6 +275,8 @@ describe('bookmark cleanup proposal', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'full')
     assert(prompt.endsWith('only IDs from the provided data, and no empty change arrays.'))
     assert(prompt.indexOf('## Reminder') > prompt.indexOf('3 | Different Docs'))
+    assert(prompt.includes('full JSON Schema for the output is at https://tinyurl.com/sbht-change'))
+    assert(!createBookmarkCleanupPrompt(managerModel, 'lite').includes('tinyurl'))
   })
   test('builds a flat local AI schema with only allowed change types', () => {
     const fullSchema = createLocalAiBookmarkCleanupProposalSchema('full')

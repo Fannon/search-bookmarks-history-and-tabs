@@ -94,6 +94,8 @@ function setupDom() {
     <button id="generate-cleanup-prompt"></button>
     <button id="generate-cleanup-prompt-full"></button>
     <button id="run-local-cleanup"></button>
+    <button id="cancel-local-cleanup" hidden></button>
+    <p id="cleanup-run-plan"></p>
     <button id="copy-cleanup-prompt"></button>
     <button id="apply-all-cleanup-changes"></button>
     <button id="delete-selected"><span data-selected-count></span></button>
@@ -382,7 +384,7 @@ describe('initBookmarkManager cleanup apply', () => {
       ),
     )
   })
-  async function runBatchedLocalCleanup(measuredTokens) {
+  async function runBatchedLocalCleanup(measuredTokens, onPrompt) {
     ext.model.bookmarkManager.bookmarks = Array.from({ length: 400 }, (_, index) => ({
       ...BOOKMARKS[0],
       originalId: `batch-${index + 1}`,
@@ -397,8 +399,11 @@ describe('initBookmarkManager cleanup apply', () => {
         const session = {
           contextWindow: 9216,
           measureContextUsage: mock.fn(async () => measuredTokens),
-          prompt: mock.fn(async (prompt) => {
+          prompt: mock.fn(async (prompt, options) => {
             statuses.push(document.getElementById('cleanup-status').textContent)
+            if (onPrompt) {
+              await onPrompt(sessions.length, options)
+            }
             const bookmarkId = prompt.match(/www\.\):\n(\S+) \|/)[1]
             return JSON.stringify({
               summary: 'Batch.',
@@ -437,6 +442,56 @@ describe('initBookmarkManager cleanup apply', () => {
     assert(
       document.getElementById('cleanup-status').textContent.includes(`Loaded ${sessions.length} proposed change(s)`),
     )
+    assert.strictEqual(
+      document.getElementById('run-local-cleanup').textContent,
+      `Run local AI (${sessions.length} batches)`,
+    )
+    assert(
+      document
+        .getElementById('cleanup-run-plan')
+        .textContent.includes(`reviews 400 bookmarks in about ${sessions.length} batches`),
+    )
+    assert(document.getElementById('cleanup-run-plan').textContent.includes(`batch 1 of ${sessions.length}`))
+  })
+  test('explains how each prompt type is used before running local AI', () => {
+    const plan = document.getElementById('cleanup-run-plan')
+    const runButton = document.getElementById('run-local-cleanup')
+    assert(plan.textContent.startsWith('Advanced creates one complete prompt'))
+
+    document.getElementById('generate-cleanup-prompt').click()
+    assert.strictEqual(plan.textContent, 'Lite prompt: local AI reviews 2 bookmark(s) in one run.')
+    assert.strictEqual(runButton.textContent, 'Run local AI')
+
+    document.getElementById('generate-cleanup-prompt-full').click()
+    assert(plan.textContent.startsWith('Advanced prompt for copying into an AI assistant.'))
+
+    document.getElementById('cleanup-folder-scope').dispatchEvent(new Event('change'))
+    assert(plan.textContent.startsWith('Advanced creates one complete prompt'))
+  })
+  test('cancelling a batched local cleanup keeps proposals from finished batches', async () => {
+    const cancelButton = document.getElementById('cancel-local-cleanup')
+    let wasVisible = false
+    const { sessions } = await runBatchedLocalCleanup(1000, (sessionCount) => {
+      if (sessionCount < 2) {
+        return undefined
+      }
+      wasVisible = !cancelButton.hidden
+      cancelButton.click()
+      // Never resolves; the run must stop through the abort signal.
+      return new Promise(() => {})
+    })
+
+    assert(wasVisible)
+    assert.strictEqual(sessions.length, 2)
+    assert(sessions.every((session) => session.prompt.mock.calls[0].arguments[1].signal.aborted))
+    assert(sessions.every((session) => session.destroy.mock.callCount() === 1))
+    assert.deepStrictEqual(
+      ext.model.bookmarkCleanupProposal.changes.addTags.map((change) => change.id),
+      ['add-1'],
+    )
+    assert(document.getElementById('cleanup-status').textContent.startsWith('Cancelled after 1 of'))
+    assert(cancelButton.hidden)
+    assert.strictEqual(printError.mock.callCount(), 0)
   })
   test('shrinks local cleanup batches when measured tokens exceed the input limit', async () => {
     const { sessions } = await runBatchedLocalCleanup(12000)
