@@ -408,6 +408,10 @@ button {
   flex-wrap: wrap;
 }
 
+.cleanup-toolbar [hidden] {
+  display: none;
+}
+
 .cleanup-toolbar-placeholder {
   display: flex;
   gap: 6px;

@@ -6,7 +6,8 @@ import {
   createBookmarkCleanupApplyConfirmation,
   createBookmarkCleanupPrompt,
   createBookmarkCleanupPromptPayload,
-  localAiBookmarkCleanupProposalSchema,
+  createLiteBookmarkCleanupPromptBatches,
+  createLocalAiBookmarkCleanupProposalSchema,
   parseBookmarkCleanupProposal,
   parseBookmarkCleanupProposalWithIssues,
   validateBookmarkCleanupProposal,
@@ -95,36 +96,93 @@ describe('bookmark cleanup proposal', () => {
     assert(prompt.includes('Bookmark context: included 3 of 3 bookmarks.'))
     assert(prompt.includes('Preserve distinctive project, repository, package, and product identifiers'))
     assert(prompt.includes('Do not remove tags merely because they are generic or redundant'))
+    assert(prompt.includes('return a focused batch of the best reviewable'))
+    assert(prompt.includes('do not add existing tags that contain spaces'))
+    const unlimitedPrompt = createBookmarkCleanupPrompt(managerModel, 'full', { changeLimit: 'unlimited' })
+    assert(unlimitedPrompt.includes('No change limit is set: cover every bookmark where the evidence is clear'))
+    assert(!unlimitedPrompt.includes('focused batch'))
     assert(prompt.includes('the reason should name the evidence'))
     assert(prompt.includes('Output raw JSON only'))
     assert(prompt.includes('first character of your response must be "{"'))
     assert(!prompt.includes('"$schema"'))
     assert(!prompt.includes('Omitted bookmark count'))
   })
-  test('creates a lite prompt without embedding the full JSON schema', () => {
+  test('creates a lite tag-suggestion prompt for untagged bookmarks', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'lite')
-    assert(prompt.includes('"changes":{'))
-    assert(prompt.includes('id | title | url | tags'))
-    assert(prompt.includes('Do not propose bookmark moves or deletions.'))
-    assert(prompt.includes('Change type focus: Everything'))
-    assert(prompt.includes('Lite mode: return a compact review batch'))
-    assert(prompt.includes('Prioritize addTags'))
-    assert(prompt.includes('Example output format only'))
-    assert(prompt.includes('"addTags":[{"id":"add-1","bookmarkId":"bookmark-id-from-data"'))
-    assert(!prompt.includes('"moveBookmarks"'))
-    assert(!prompt.includes('"deleteBookmarks"'))
-    assert(!prompt.includes('Existing folders'))
-    assert(!prompt.includes('dev | Development'))
-    assert(!prompt.includes('"$schema"'))
+    assert(prompt.startsWith('Suggest tags for each bookmark below.'))
+    assert(prompt.includes("Usage counts show the user's conventions: ai (1), llm (1)"))
+    assert(prompt.includes('Output JSON only: {"suggestions":[{"bookmarkId":"id from the list","tags":["tag"]}]}'))
+    assert(
+      prompt.endsWith(
+        'id | title | url | folder (URLs without https:// and www.):\n3 | Different Docs | example.test/docs | Read Later',
+      ),
+    )
+    assert(!prompt.includes('OpenAI Docs'))
+    assert(!prompt.includes('summary'))
+    assert(!prompt.includes('removeTags'))
   })
-  test('can generate an unlimited prompt', () => {
-    const prompt = createBookmarkCleanupPrompt(managerModel, 'lite', { changeLimit: 'unlimited' })
-    assert(!prompt.includes('No proposal count ceiling is set'))
-    assert(!prompt.includes('highest-confidence changes'))
-    assert(!prompt.includes('safety ceiling, not a quota'))
+  test('compacts lite URLs and limits batches to 20 bookmarks', () => {
+    const bookmarks = Array.from({ length: 45 }, (_, i) => ({
+      originalId: String(i + 1),
+      title: `Bookmark ${i + 1}`,
+      originalUrl: `http://www.example.test/${i + 1}/?q=1#top`,
+      folderArray: ['Dev', 'Tools'],
+      tagsArray: [],
+    }))
+    const batches = createLiteBookmarkCleanupPromptBatches({ ...managerModel, bookmarks })
+    assert.deepStrictEqual(
+      batches.map((batch) => batch.bookmarkCount),
+      [20, 20, 5],
+    )
+    assert(batches[0].prompt.includes('\n1 | Bookmark 1 | example.test/1 | Dev / Tools'))
+    assert(batches[1].prompt.includes('\n21 | Bookmark 21 |'))
+
+    const header = createLiteBookmarkCleanupPromptBatches({ ...managerModel, bookmarks: bookmarks.slice(0, 1) })[0]
+      .prompt
+    const charBudget = header.length + 200
+    const smallBatches = createLiteBookmarkCleanupPromptBatches({ ...managerModel, bookmarks }, { charBudget })
+    assert(smallBatches.length > 3)
+    assert(smallBatches.every((batch) => batch.prompt.length <= charBudget))
+    assert.strictEqual(
+      smallBatches.reduce((sum, batch) => sum + batch.bookmarkCount, 0),
+      45,
+    )
+  })
+  test('lite only suggests tags and skips scopes without untagged bookmarks', () => {
+    for (const changeFocus of ['title', 'folder', 'duplicates']) {
+      assert.deepStrictEqual(createLiteBookmarkCleanupPromptBatches(managerModel, { changeFocus }), [])
+      assert.strictEqual(createBookmarkCleanupPrompt(managerModel, 'lite', { changeFocus }), '')
+    }
+    assert.strictEqual(createLiteBookmarkCleanupPromptBatches(managerModel, { changeFocus: 'tags' }).length, 1)
+    const tagged = managerModel.bookmarks.map((bookmark) => ({ ...bookmark, tagsArray: ['ai'] }))
+    assert.deepStrictEqual(createLiteBookmarkCleanupPromptBatches({ ...managerModel, bookmarks: tagged }), [])
+  })
+  test('turns lite tag suggestions into filtered addTags changes', () => {
+    const result = parseBookmarkCleanupProposalWithIssues(
+      JSON.stringify({
+        suggestions: [
+          { bookmarkId: '1', tags: ['ai', 'docs', '#Docs'] },
+          { bookmarkId: '3', tags: ['docs', 'llm', 'x', 'y'] },
+          { bookmarkId: '2', tags: ['solo'] },
+          { bookmarkId: 'missing', tags: ['ai'] },
+        ],
+      }),
+      managerModel,
+    )
+    assert.deepStrictEqual(result.errors, [])
+    assert.deepStrictEqual(
+      result.proposal.changes.addTags.map(({ id, bookmarkId, tags }) => ({ id, bookmarkId, tags })),
+      [
+        { id: 'add-1', bookmarkId: '1', tags: ['docs'] },
+        { id: 'add-2', bookmarkId: '3', tags: ['docs', 'llm'] },
+      ],
+    )
+    assert.strictEqual(result.proposal.summary, 'Local AI suggested tags for 2 bookmark(s).')
+    assert(result.warnings.includes('Dropped new tag "x" because it was suggested for only one bookmark.'))
+    assert(result.warnings.includes('Dropped new tag "solo" because it was suggested for only one bookmark.'))
   })
   test('limits bookmark context and reports omitted bookmark rows', () => {
-    const prompt = createBookmarkCleanupPrompt(managerModel, 'lite', { bookmarkLimit: 2 })
+    const prompt = createBookmarkCleanupPrompt(managerModel, 'full', { bookmarkLimit: 2 })
     const payload = createBookmarkCleanupPromptPayload(managerModel, { bookmarkLimit: 2, includeFolders: false })
     assert(prompt.includes('Bookmark context: included 2 of 3 bookmarks. Omitted 1'))
     assert(prompt.includes('1 | OpenAI Docs'))
@@ -145,6 +203,7 @@ describe('bookmark cleanup proposal', () => {
     assert(prompt.includes('looks like an unedited webpage title'))
     assert(prompt.includes('A medium-confidence improvement is acceptable'))
     assert(prompt.includes('Strip boilerplate prefixes'))
+    assert(prompt.includes('Do not guess the rest of a truncated word'))
     assert(!prompt.includes('Add useful, specific tags'))
     assert(!prompt.includes('Use renameTags for tag merges'))
     assert(!prompt.includes('Use only folder IDs'))
@@ -160,6 +219,7 @@ describe('bookmark cleanup proposal', () => {
     assert(prompt.includes('For bookmarks with no tags, suggest at most 1–3'))
     assert(prompt.includes('Use one renameTags entry per source tag'))
     assert(prompt.includes('Mutually exclusive: if you use renameTags'))
+    assert(prompt.includes('they are intentional search synonyms'))
     assert(!prompt.includes('Rewrite titles only when'))
     assert(!prompt.includes('Do not rewrite titles for style alone'))
     assert(!prompt.includes('Delete only exact or near-exact duplicate bookmarks'))
@@ -178,45 +238,69 @@ describe('bookmark cleanup proposal', () => {
     assert(!prompt.includes('Rewrite titles only when'))
     assert(!prompt.includes('Delete only exact or near-exact duplicate bookmarks'))
   })
-  test('supports folder-focused lite prompts with folder context', () => {
-    const prompt = createBookmarkCleanupPrompt(managerModel, 'lite', { changeFocus: 'folder' })
-    assert(prompt.includes('Change type focus: Folder Structure'))
-    assert(prompt.includes('Include only these change arrays when they have proposals: moveBookmarks'))
-    assert(prompt.includes('id | title | url | folderId | folderPath | tags'))
-    assert(prompt.includes('Existing folders'))
-    assert(prompt.includes('dev | Development'))
-    assert(prompt.includes('"changes":{"moveBookmarks"'))
-    assert(prompt.includes('"moveBookmarks":[{"id":"move-1"'))
-    assert(prompt.includes('Move a bookmark only when the target folder is clearly more specific'))
-    assert(prompt.includes('Use only folder IDs'))
-    assert(prompt.includes('Keep deleteBookmarks empty.'))
-    assert(!prompt.includes('Keep moveBookmarks empty.'))
-    assert(!prompt.includes('Lite mode has no folder data'))
-    assert(!prompt.includes('"$schema"'))
-  })
   test('can focus an advanced prompt on duplicate cleanup', () => {
     const prompt = createBookmarkCleanupPrompt(managerModel, 'full', { changeFocus: 'duplicates' })
     assert(prompt.includes('Change type focus: Duplicates'))
     assert(prompt.includes('Include only these change arrays when they have proposals: deleteBookmarks'))
     assert(prompt.includes('"changes":{"deleteBookmarks"'))
     assert(prompt.includes('"deleteBookmarks":[{"id":"delete-1"'))
-    assert(prompt.includes('Delete only exact or near-exact duplicate bookmarks'))
+    assert(prompt.includes('Delete only bookmarks from the listed duplicate groups'))
     assert(prompt.includes('When in doubt, do not propose deletion'))
-    assert(prompt.includes('Do not delete a bookmark unless duplicateOfBookmarkId'))
-    assert(prompt.includes('query parameters and #fragments must match'))
-    assert(prompt.includes('URLs must match except for http/https, www., letter case, or a trailing slash'))
+    assert(prompt.includes('one per line as: suggestedKeepId | otherIds | url\n1 | 2 | platform.openai.com/docs'))
+    assert(prompt.includes('belong to the same listed duplicate group'))
+    assert(!prompt.includes('Every targetFolderId exists'))
     assert(!prompt.includes('Add useful, specific tags'))
     assert(!prompt.includes('Rewrite titles only when'))
     assert(!prompt.includes('Use only folder IDs'))
   })
-  test('uses a flat schema for local AI constrained generation', () => {
-    const schema = JSON.stringify(localAiBookmarkCleanupProposalSchema)
-    assert(schema.includes('"rewriteTitles"'))
-    assert(!schema.includes('bookmarkChangeProposal'))
-    assert(!schema.includes('"required":["addTags"'))
-    assert(!schema.includes('"$ref"'))
-    assert(!schema.includes('"$defs"'))
-    assert(!schema.includes('"allOf"'))
+  test('reports when an advanced duplicate prompt has no duplicate groups', () => {
+    const prompt = createBookmarkCleanupPrompt({ ...managerModel, duplicateGroups: [] }, 'full', {
+      changeFocus: 'duplicates',
+    })
+    assert(prompt.includes('Duplicate groups: none.'))
+  })
+  test('uses folder list labels for bookmark folder paths', () => {
+    const prompt = createBookmarkCleanupPrompt(
+      {
+        ...managerModel,
+        folderOptions: [
+          { id: 'dev', label: 'Bar / Development' },
+          { id: 'read', label: 'Bar / Read Later' },
+        ],
+      },
+      'full',
+    )
+    assert(prompt.includes('1 | OpenAI Docs | platform.openai.com/docs | dev | Bar / Development | ai'))
+    assert(prompt.includes('dev | Bar / Development'))
+  })
+  test('repeats output requirements after the data in advanced prompts', () => {
+    const prompt = createBookmarkCleanupPrompt(managerModel, 'full')
+    assert(prompt.endsWith('only IDs from the provided data, and no empty change arrays.'))
+    assert(prompt.indexOf('## Reminder') > prompt.indexOf('3 | Different Docs'))
+    assert(prompt.includes('full JSON Schema for the output is at https://tinyurl.com/sbht-change'))
+    assert(!createBookmarkCleanupPrompt(managerModel, 'lite').includes('tinyurl'))
+  })
+  test('builds a flat local AI schema with only allowed change types', () => {
+    const fullSchema = createLocalAiBookmarkCleanupProposalSchema('full')
+    const titleSchema = createLocalAiBookmarkCleanupProposalSchema('full', { changeFocus: 'title' })
+    const liteSchema = createLocalAiBookmarkCleanupProposalSchema('lite')
+    const serialized = JSON.stringify(fullSchema)
+    assert.deepStrictEqual(Object.keys(fullSchema.properties.changes.properties), [
+      'addTags',
+      'removeTags',
+      'renameTags',
+      'moveBookmarks',
+      'deleteBookmarks',
+      'rewriteTitles',
+    ])
+    assert(fullSchema.properties.changes.properties.addTags.items.properties.reason)
+    assert.deepStrictEqual(Object.keys(titleSchema.properties.changes.properties), ['rewriteTitles'])
+    assert.deepStrictEqual(liteSchema.required, ['suggestions'])
+    assert.deepStrictEqual(liteSchema.properties.suggestions.items.required, ['bookmarkId', 'tags'])
+    assert(!JSON.stringify(liteSchema).includes('summary'))
+    assert(!serialized.includes('"$ref"'))
+    assert(!serialized.includes('"$defs"'))
+    assert(!serialized.includes('"allOf"'))
   })
   test('creates a bulk cleanup confirmation summary with destructive warnings', () => {
     const message = createBookmarkCleanupApplyConfirmation([

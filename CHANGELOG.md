@@ -6,6 +6,8 @@
 
 - **IMPROVED**: Refreshed the Bookmark Manager with clearer navigation, more usable bookmark editing and bulk selection, keyboard editing shortcuts, and layouts that adapt to narrow screens.
 - **IMPROVED**: Polished the Bookmark Manager for consistency with the search popup: compact bookmark rows with inline badges, a teal accent in dark mode, consistent sentence-case labels and button styles, AI Cleanup settings shown before the prompt actions, and section tabs that wrap on narrow screens.
+- **IMPROVED**: The Advanced AI Cleanup prompt lists the detected duplicate groups, so deletions only come from real duplicates. It also uses full folder paths, keeps tag pairs used together such as `wetter` and `weather`, treats URL-only titles as rewrite candidates, links the proposal JSON Schema, and with no change limit asks for every clear improvement instead of a small sample.
+- **IMPROVED**: AI Cleanup with the browser's local AI is now a tag suggestion pass for untagged bookmarks. It runs in small batches sized to the local model, shows progress and a Cancel button, explains the run before it starts, and skips repeated or one-off tags. Local AI errors appear in the cleanup status instead of a full-page error.
 - **IMPROVED**: Reduced the extension package size by excluding development files and source maps from store builds.
 - **IMPROVED**: Faster popup startup with large collections, and faster sorting on the tags, folders, and tab groups pages and in the Bookmark Manager.
 - **IMPROVED**: With a large history limit (`historyMaxItems`), results are shown and searchable before browser history finishes loading, and history results are added once it arrives. When fuzzy search is the default strategy, the first keystroke is faster.

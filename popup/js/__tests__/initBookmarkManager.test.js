@@ -94,6 +94,8 @@ function setupDom() {
     <button id="generate-cleanup-prompt"></button>
     <button id="generate-cleanup-prompt-full"></button>
     <button id="run-local-cleanup"></button>
+    <button id="cancel-local-cleanup" hidden></button>
+    <p id="cleanup-run-plan"></p>
     <button id="copy-cleanup-prompt"></button>
     <button id="apply-all-cleanup-changes"></button>
     <button id="delete-selected"><span data-selected-count></span></button>
@@ -381,6 +383,175 @@ describe('initBookmarkManager cleanup apply', () => {
         ]),
       ),
     )
+  })
+  async function runBatchedLocalCleanup(measuredTokens, onPrompt) {
+    ext.model.bookmarkManager.bookmarks = Array.from({ length: 400 }, (_, index) => ({
+      ...BOOKMARKS[0],
+      originalId: `batch-${index + 1}`,
+      id: `batch-${index + 1}`,
+      title: `Batch Bookmark ${index + 1} ${'x'.repeat(90)}`,
+      originalUrl: `https://example.com/batch/${index + 1}`,
+    }))
+    const sessions = []
+    const statuses = []
+    globalThis.LanguageModel = {
+      create: mock.fn(async () => {
+        const session = {
+          contextWindow: 9216,
+          measureContextUsage: mock.fn(async () => measuredTokens),
+          prompt: mock.fn(async (prompt, options) => {
+            statuses.push(document.getElementById('cleanup-status').textContent)
+            // Suggest the same new tag for the first two bookmarks, so it is kept.
+            const bookmarkIds = [...prompt.matchAll(/\n(batch-\d+) \|/g)].slice(0, 2).map((match) => match[1])
+            const response = JSON.stringify({
+              suggestions: bookmarkIds.map((bookmarkId) => ({ bookmarkId, tags: ['docs'] })),
+            })
+            // onPrompt may delay the batch or replace its response.
+            return (onPrompt && (await onPrompt(sessions.length, options, response, bookmarkIds))) || response
+          }),
+          destroy: mock.fn(),
+        }
+        sessions.push(session)
+        return session
+      }),
+    }
+    const runButton = document.getElementById('run-local-cleanup')
+    runButton.disabled = false
+    runButton.click()
+    for (let i = 0; i < 100 && !ext.model.bookmarkCleanupProposal; i++) {
+      await flushPromises()
+    }
+    return { sessions, statuses }
+  }
+  test('runs lite local cleanup in small batches and turns suggestions into tag changes', async () => {
+    const { sessions, statuses } = await runBatchedLocalCleanup(1000)
+
+    assert.strictEqual(sessions.length, 20)
+    for (const session of sessions) {
+      assert.strictEqual(session.prompt.mock.callCount(), 1)
+      assert.strictEqual(session.destroy.mock.callCount(), 1)
+      assert.strictEqual(session.prompt.mock.calls[0].arguments[1].responseConstraint.required[0], 'suggestions')
+    }
+    assert(statuses[0].startsWith('Batch 1 of 20: reviewing 20 bookmarks'))
+    assert(statuses[1].includes('(2 suggestion(s) so far)'))
+    const addTags = ext.model.bookmarkCleanupProposal.changes.addTags
+    assert.strictEqual(addTags.length, 40)
+    assert.deepStrictEqual(
+      addTags.slice(0, 3).map((change) => change.bookmarkId),
+      ['batch-1', 'batch-2', 'batch-21'],
+    )
+    assert(addTags.every((change) => change.tags.join() === 'docs'))
+    assert(document.getElementById('cleanup-status').textContent.includes('Loaded 40 proposed change(s)'))
+    assert.strictEqual(document.getElementById('run-local-cleanup').textContent, 'Run local AI (20 batches)')
+    assert(
+      document
+        .getElementById('cleanup-run-plan')
+        .textContent.includes('suggests tags for 400 untagged bookmarks in 20 batches'),
+    )
+    assert(document.getElementById('cleanup-run-plan').textContent.includes('batch 1 of 20'))
+  })
+  test('accepts fenced local AI JSON and lists skipped batches with dropped tags', async () => {
+    await runBatchedLocalCleanup(1000, (sessionCount, _options, response, bookmarkIds) => {
+      if (sessionCount === 2) {
+        return `\`\`\`json\n${response}\n\`\`\``
+      }
+      if (sessionCount === 3) {
+        return 'not json'
+      }
+      if (sessionCount === 4) {
+        return JSON.stringify({ suggestions: [{ bookmarkId: bookmarkIds[0], tags: ['solo'] }] })
+      }
+      return undefined
+    })
+
+    const addTags = ext.model.bookmarkCleanupProposal.changes.addTags
+    // 20 batches: one invalid, one with only a dropped one-off tag, the rest two changes each.
+    assert.strictEqual(addTags.length, 36)
+    assert(addTags.some((change) => change.bookmarkId === 'batch-21'))
+    const status = document.getElementById('cleanup-status').textContent
+    assert(status.includes('Loaded 36 proposed change(s)'))
+    assert(status.includes('Skipped 1 batch(es) because local AI returned invalid JSON.'))
+    assert(status.includes('Dropped new tag "solo" because it was suggested for only one bookmark.'))
+  })
+  test('explains when an advanced prompt is too large for local AI', async () => {
+    const quotaError = Object.assign(new Error('The input is too large.'), {
+      name: 'QuotaExceededError',
+      requested: 30000,
+      contextWindow: 9216,
+    })
+    globalThis.LanguageModel = {
+      create: mock.fn(async () => ({ prompt: mock.fn(() => Promise.reject(quotaError)), destroy: mock.fn() })),
+    }
+    document.getElementById('generate-cleanup-prompt-full').click()
+    const runButton = document.getElementById('run-local-cleanup')
+    runButton.disabled = false
+    runButton.click()
+    const isQuotaWarning = (call) => call.arguments[1] === quotaError
+    for (let i = 0; i < 20 && !console.warn.mock.calls.some(isQuotaWarning); i++) {
+      await flushPromises()
+    }
+
+    assert.strictEqual(
+      document.getElementById('cleanup-status').textContent,
+      'This Advanced prompt is too large for local AI (30000 tokens, limit 9216). Generate a Lite prompt to run it locally.',
+    )
+    assert(console.warn.mock.calls.some(isQuotaWarning))
+    // Local AI failures stay in the cleanup status instead of the full-page error overlay.
+    assert.strictEqual(printError.mock.callCount(), 0)
+  })
+  test('explains how each prompt type is used before running local AI', () => {
+    const plan = document.getElementById('cleanup-run-plan')
+    const runButton = document.getElementById('run-local-cleanup')
+    const focus = document.getElementById('cleanup-change-focus')
+    assert(plan.textContent.startsWith('Advanced creates one complete prompt'))
+
+    document.getElementById('generate-cleanup-prompt').click()
+    assert.strictEqual(plan.textContent, 'Lite prompt: local AI suggests tags for 2 untagged bookmark(s) in one run.')
+    assert.strictEqual(runButton.textContent, 'Run local AI')
+
+    document.getElementById('generate-cleanup-prompt-full').click()
+    assert(plan.textContent.startsWith('Advanced prompt for copying into an AI assistant.'))
+
+    focus.innerHTML = '<option value="title" selected>Title</option>'
+    document.getElementById('generate-cleanup-prompt').click()
+    assert.strictEqual(plan.textContent, 'Lite only suggests tags. Use Advanced for titles, folders, or duplicates.')
+    assert.strictEqual(document.getElementById('cleanup-prompt').value, '')
+    assert(runButton.disabled)
+
+    document.getElementById('cleanup-folder-scope').dispatchEvent(new Event('change'))
+    assert(plan.textContent.startsWith('Advanced creates one complete prompt'))
+  })
+  test('cancelling a batched local cleanup keeps proposals from finished batches', async () => {
+    const cancelButton = document.getElementById('cancel-local-cleanup')
+    let wasVisible = false
+    const { sessions } = await runBatchedLocalCleanup(1000, (sessionCount) => {
+      if (sessionCount < 2) {
+        return undefined
+      }
+      wasVisible = !cancelButton.hidden
+      cancelButton.click()
+      // Never resolves; the run must stop through the abort signal.
+      return new Promise(() => {})
+    })
+
+    assert(wasVisible)
+    assert.strictEqual(sessions.length, 2)
+    assert(sessions.every((session) => session.prompt.mock.calls[0].arguments[1].signal.aborted))
+    assert(sessions.every((session) => session.destroy.mock.callCount() === 1))
+    assert.deepStrictEqual(
+      ext.model.bookmarkCleanupProposal.changes.addTags.map((change) => change.bookmarkId),
+      ['batch-1', 'batch-2'],
+    )
+    assert(document.getElementById('cleanup-status').textContent.startsWith('Cancelled after 1 of 20'))
+    assert(cancelButton.hidden)
+    assert.strictEqual(printError.mock.callCount(), 0)
+  })
+  test('shrinks local cleanup batches when measured tokens exceed the input limit', async () => {
+    const { sessions } = await runBatchedLocalCleanup(60000)
+
+    const prompts = sessions.map((session) => session.prompt.mock.calls[0].arguments[0])
+    assert(sessions.length > 20)
+    assert(prompts.every((prompt) => prompt.length <= 19800 * (6000 / 60000)))
   })
   test('allows aborting local AI tag suggestions for large selections before prompting the model', async () => {
     window.confirm = mock.fn(() => false)
