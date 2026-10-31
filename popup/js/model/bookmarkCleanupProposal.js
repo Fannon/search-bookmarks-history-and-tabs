@@ -10,6 +10,9 @@ const PROMPT_BOOKMARK_TEXT_BUDGET = 80000
 const PROMPT_TEXT_LIMIT = 180
 const PROMPT_FULL = 'full'
 const PROMPT_LITE = 'lite'
+const PROMPT_OUTPUT_REMINDER = `
+## Reminder
+Apply the rules above to the data. Return only the raw JSON object described in Output Requirements: no code fences or other text, only IDs from the provided data, and no empty change arrays.`
 const STRING_SCHEMA = { type: 'string' }
 const STRING_ARRAY_SCHEMA = { type: 'array', items: STRING_SCHEMA }
 const OBJECT_SCHEMA_BASE = { type: 'object', additionalProperties: false }
@@ -102,10 +105,42 @@ export function createBookmarkCleanupPrompt(managerModel, mode = PROMPT_FULL, op
   const changeFocus = normalizePromptChangeFocus(options.changeFocus)
   const allowedChangeTypes = getAllowedPromptChangeTypes(isLite, changeFocus)
   const needsFolders = allowedChangeTypes.includes('moveBookmarks')
+  const needsDuplicates = allowedChangeTypes.includes('deleteBookmarks')
   const payload = createBookmarkCleanupPromptPayload(managerModel, {
     bookmarkLimit: options.bookmarkLimit,
     includeFolders: needsFolders,
   })
+  const decisionPolicy = [
+    formatPromptChangeLimit(changeLimit),
+    '- Use stricter confidence for higher-risk changes: deleteBookmarks requires very high confidence, moveBookmarks and renameTags require high confidence.',
+    '- For addTags and rewriteTitles, medium confidence is acceptable when the title, URL, domain, folder, current tags, or existing tag patterns provide clear reviewable evidence.',
+    '- Prefer no change over a weak or speculative change, especially for destructive or structural changes.',
+    '- Do not optimize for the number of changes. When many bookmarks are untagged, sparsely tagged, or have noisy titles, return a focused batch of the best reviewable addTags and rewriteTitles suggestions.',
+    formatPromptFocusInstruction(isLite, changeFocus, allowedChangeTypes),
+    `- Bookmark context: included ${payload.includedBookmarkCount} of ${payload.totalBookmarkCount} bookmark${payload.totalBookmarkCount === 1 ? '' : 's'}.${payload.omittedBookmarkCount ? ` Omitted ${payload.omittedBookmarkCount} due to the selected bookmark/context limit.` : ''}${payload.truncatedByCharacterBudget ? ` Stopped at the ${PROMPT_BOOKMARK_TEXT_BUDGET} character bookmark-context budget.` : ''}`,
+  ]
+  const selfChecks = [
+    'Valid JSON: no trailing commas, all property names double-quoted, braces balanced.',
+    'Every change object has all required fields (id, bookmarkId, and tags/title/from/to/targetFolderId/duplicateOfBookmarkId as applicable).',
+    'Every bookmarkId exists in the provided bookmark data.',
+  ]
+  if (needsFolders) {
+    selfChecks.push('Every targetFolderId exists in the existing folder list.')
+  }
+  if (needsDuplicates) {
+    selfChecks.push('Every deleted bookmark and its duplicateOfBookmarkId belong to the same listed duplicate group.')
+  }
+  selfChecks.push('The first character is "{" and the last character is "}".')
+  const inputSections = [`Existing tags (with usage counts):\n${payload.existingTags}`]
+  if (needsFolders) {
+    inputSections.push(`Existing folders:\n${payload.existingFolders}`)
+  }
+  if (needsDuplicates) {
+    inputSections.push(formatDuplicateGroupsForPrompt(managerModel?.duplicateGroups))
+  }
+  inputSections.push(
+    `Bookmarks, one per line as: ${needsFolders ? 'id | title | url | folderId | folderPath | tags' : 'id | title | url | tags'}\n${payload.bookmarks}`,
+  )
 
   return `
 ## Role
@@ -120,21 +155,14 @@ Propose practical, reviewable bookmark cleanup changes using the bookmark data p
 - World knowledge: use common web and domain knowledge only to confirm patterns already visible in the bookmark data. Do not infer niche details, repository contents, package purposes, or product categories not evident from the title, URL, folder, or tags.
 
 ## Decision Policy
-${formatPromptChangeLimit(changeLimit)}
-- Use stricter confidence for higher-risk changes: deleteBookmarks requires very high confidence, moveBookmarks and renameTags require high confidence.
-- For addTags and rewriteTitles, medium confidence is acceptable when the title, URL, domain, folder, current tags, or existing tag patterns provide clear reviewable evidence.
-- Prefer no change over a weak or speculative change, especially for destructive or structural changes.
-- Do not optimize for the number of changes. When many bookmarks are untagged, sparsely tagged, or have noisy titles, return a focused batch of the best reviewable addTags and rewriteTitles suggestions.
-${formatPromptFocusInstruction(isLite, changeFocus, allowedChangeTypes)}
-Bookmark context: included ${payload.includedBookmarkCount} of ${payload.totalBookmarkCount} bookmark${payload.totalBookmarkCount === 1 ? '' : 's'}.${payload.omittedBookmarkCount ? ` Omitted ${payload.omittedBookmarkCount} due to the selected bookmark/context limit.` : ''}${payload.truncatedByCharacterBudget ? ` Stopped at the ${PROMPT_BOOKMARK_TEXT_BUDGET} character bookmark-context budget.` : ''}
+${decisionPolicy.filter(Boolean).join('\n')}
 
 ## Rules by Change Type
 - Use only bookmark IDs from the provided data.
 - If unsure about a required field, omit that change instead of using placeholders.
 - Include reason when it adds useful review context. For medium-confidence addTags, the reason should name the evidence: title, URL path, domain, folder, current tags, or existing tag pattern.
 - Keep summary to one short sentence.
-${formatPromptGoals(isLite, allowedChangeTypes)}
-${formatPromptRules(isLite, allowedChangeTypes)}
+${[formatPromptGoals(isLite, allowedChangeTypes), formatPromptRules(isLite, allowedChangeTypes)].filter(Boolean).join('\n')}
 
 ## Output Requirements
 - Output raw JSON only. Do not include introductory text, conversational filler, comments, or markdown formatting. Do not wrap the output in code fences such as \`\`\`json.
@@ -145,21 +173,12 @@ ${createPromptExample(allowedChangeTypes)}
 
 ## Internal Self-Check
 Before finalizing, verify:
-1. Valid JSON: no trailing commas, all property names double-quoted, braces balanced.
-2. Every change type that has proposals is included; every empty array is omitted.
-3. Every change object has all required fields (id, bookmarkId, and tags/title/from/to/targetFolderId/duplicateOfBookmarkId as applicable).
-4. Every bookmarkId exists in the provided bookmark data.
-5. Every targetFolderId exists in the existing folder list.
-6. The first character is "{" and the last character is "}".
+${selfChecks.map((check, index) => `${index + 1}. ${check}`).join('\n')}
 
 ## Input Data
 
-Existing tags (with usage counts):
-${payload.existingTags}
-
-${needsFolders ? `Existing folders:\n${payload.existingFolders}\n` : ''}
-Bookmarks, one per line as: ${needsFolders ? 'id | title | url | folderId | folderPath | tags' : 'id | title | url | tags'}
-${payload.bookmarks}
+${inputSections.join('\n\n')}
+${isLite ? '' : PROMPT_OUTPUT_REMINDER}
   `.trim()
 }
 
@@ -178,7 +197,8 @@ export function createBookmarkCleanupPromptPayload(managerModel, options = {}) {
   const tagGroups = managerModel?.tagGroups || []
   const bookmarkLimit = normalizePromptBookmarkLimit(options.bookmarkLimit)
   const includeFolders = options.includeFolders !== false
-  const bookmarkPayload = createBookmarkPromptRows(bookmarks, includeFolders, bookmarkLimit)
+  const folderLabels = new Map(folderOptions.map((folder) => [String(folder.id), folder.label || folder.title]))
+  const bookmarkPayload = createBookmarkPromptRows(bookmarks, includeFolders, bookmarkLimit, folderLabels)
 
   return {
     bookmarks: bookmarkPayload.bookmarks,
@@ -193,15 +213,16 @@ export function createBookmarkCleanupPromptPayload(managerModel, options = {}) {
   }
 }
 
-function createBookmarkPromptRows(bookmarks, includeFolders, bookmarkLimit) {
+function createBookmarkPromptRows(bookmarks, includeFolders, bookmarkLimit, folderLabels) {
   const maxBookmarks = bookmarkLimit ? Math.min(bookmarkLimit, bookmarks.length) : bookmarks.length
-  const formatBookmark = includeFolders ? formatBookmarkForPrompt : formatBookmarkForLitePrompt
   const rows = []
   let textLength = 0
   let truncatedByCharacterBudget = false
 
   for (let i = 0; i < maxBookmarks; i++) {
-    const row = formatBookmark(bookmarks[i])
+    const row = includeFolders
+      ? formatBookmarkForPrompt(bookmarks[i], folderLabels)
+      : formatBookmarkForLitePrompt(bookmarks[i])
     const nextLength = textLength + row.length + (rows.length ? 1 : 0)
     if (nextLength > PROMPT_BOOKMARK_TEXT_BUDGET) {
       truncatedByCharacterBudget = true
@@ -239,7 +260,7 @@ function formatPromptChangeLimit(changeLimit) {
     return ''
   }
 
-  return `Use ${changeLimit} as a safety ceiling, not a quota. Do not force changes to fill the limit; if there are only 10 good improvements, return only 10. For addTags and rewriteTitles, prefer a useful review batch of the strongest suggestions up to the limit.`
+  return `- Use ${changeLimit} as a safety ceiling, not a quota. Do not force changes to fill the limit; if there are only 10 good improvements, return only 10. For addTags and rewriteTitles, prefer a useful review batch of the strongest suggestions up to the limit.`
 }
 
 function normalizePromptBookmarkLimit(bookmarkLimit) {
@@ -281,7 +302,7 @@ function formatPromptGoals(isLite, allowedChangeTypes) {
 
   if (allowedChangeTypes.includes('addTags')) {
     goals.push(
-      '- addTags: Add useful, concise, lowercase tags when supported by title, URL structure, domain, folder, current tags, or existing collection tag patterns. Strongly prefer tags that already exist in the collection unless the bookmark clearly needs a broadly reusable new tag. For already-tagged bookmarks, suggest at most 1–2 new tags. For bookmarks with no tags, suggest at most 1–3 fundamental tags (e.g. "github", "docs", "reference") when the evidence is clear enough for quick human review. Do not add a tag simply because a word appears in the title.',
+      '- addTags: Add useful, concise, lowercase tags when supported by title, URL structure, domain, folder, current tags, or existing collection tag patterns. Strongly prefer tags that already exist in the collection unless the bookmark clearly needs a broadly reusable new tag. For already-tagged bookmarks, suggest at most 1–2 new tags. For bookmarks with no tags, suggest at most 1–3 fundamental tags (e.g. "github", "docs", "reference") when the evidence is clear enough for quick human review. Do not add a tag simply because a word appears in the title. Match the language of existing tags; do not add a translation of a tag that already exists (e.g. "weather" when "wetter" exists).',
     )
   }
   if (allowedChangeTypes.includes('removeTags')) {
@@ -291,7 +312,7 @@ function formatPromptGoals(isLite, allowedChangeTypes) {
   }
   if (allowedChangeTypes.includes('renameTags')) {
     goals.push(
-      '- renameTags: Use one renameTags entry per source tag being renamed or merged. Example: to merge "genai" and "llm" into "ai", create two separate entries — one from "genai" to "ai", one from "llm" to "ai". Only rename when the replacement is clearly better aligned with the collection\'s naming convention. Mutually exclusive: if you use renameTags, do not also add/remove the same tag in addTags/removeTags.',
+      '- renameTags: Use one renameTags entry per source tag being renamed or merged. Example: to merge "genai" and "llm" into "ai", create two separate entries — one from "genai" to "ai", one from "llm" to "ai". Only rename when the replacement is clearly better aligned with the collection\'s naming convention. Tags that are translations of each other (e.g. "wetter" and "weather") may be merged into the more used one. Mutually exclusive: if you use renameTags, do not also add/remove the same tag in addTags/removeTags.',
     )
   }
   if (allowedChangeTypes.includes('moveBookmarks')) {
@@ -301,12 +322,12 @@ function formatPromptGoals(isLite, allowedChangeTypes) {
   }
   if (allowedChangeTypes.includes('deleteBookmarks')) {
     goals.push(
-      '- deleteBookmarks: Delete only exact or near-exact duplicate bookmarks. When in doubt, do not propose deletion. Both URLs may differ only by http/https, a www. prefix, letter case, or a trailing slash; query parameters and #fragments must match, because a different #fragment can be a different page or app route. Every entry must include duplicateOfBookmarkId identifying the bookmark to keep. Never delete related pages, alternate documentation versions, mirrors, forks, language variants, or product pages that serve different purposes.',
+      '- deleteBookmarks: Delete only bookmarks from the listed duplicate groups; no other bookmarks are duplicates. Set duplicateOfBookmarkId to the bookmark to keep from the same group, normally suggestedKeepId. Keep a different copy only when its title, folder, or tags are clearly better. Keep at least one bookmark per group. When in doubt, do not propose deletion.',
     )
   }
   if (allowedChangeTypes.includes('rewriteTitles')) {
     goals.push(
-      '- rewriteTitles: Be conservative. Do not rewrite short, clear, or already useful titles. Rewrite when the current title is very long, noisy, duplicated boilerplate, truncated, or looks like an unedited webpage title that harms search or review quality. A medium-confidence improvement is acceptable only when the cleaner title can be derived from the existing title and URL. Do not rewrite for style alone. Strip boilerplate prefixes (e.g. "GitHub - owner/repo: description" → "owner/repo — description", "npm: package-name" → "package-name — npm package", "Home | Vendor Product" → "Vendor Product"). Preserve distinctive project, repository, package, and product identifiers. Do not add inferred categories, folder names, scores, domains, or subjective adjectives to rewritten titles.',
+      '- rewriteTitles: Be conservative. Do not rewrite short, clear, or already useful titles. Rewrite when the current title is very long, noisy, duplicated boilerplate, truncated, only a URL, hostname, or path, or looks like an unedited webpage title that harms search or review quality. A medium-confidence improvement is acceptable only when the cleaner title can be derived from the existing title and URL. Do not rewrite for style alone. Strip boilerplate prefixes (e.g. "GitHub - owner/repo: description" → "owner/repo — description", "npm: package-name" → "package-name", "Home | Vendor Product" → "Vendor Product"). Preserve distinctive project, repository, package, and product identifiers. Do not add inferred categories, folder names, scores, domains, or subjective adjectives to rewritten titles.',
     )
   }
   if (isLite && hasAnyAllowedType(allowedChangeTypes, ['addTags', 'removeTags', 'renameTags', 'rewriteTitles'])) {
@@ -314,7 +335,7 @@ function formatPromptGoals(isLite, allowedChangeTypes) {
   }
   if (isLite && allowedChangeTypes.length > 1) {
     goals.push(
-      '- Lite mode: return a compact review batch. Prioritize addTags. Suggest rewriteTitles only for clearly long, noisy, or boilerplate webpage titles. Use removeTags and renameTags only when clearly beneficial.',
+      '- Lite mode: return a compact review batch. Prioritize addTags. Suggest rewriteTitles only for clearly long, noisy, boilerplate, or URL-only titles. Use removeTags and renameTags only when clearly beneficial.',
     )
   }
   if (!goals.length) {
@@ -327,10 +348,6 @@ function formatPromptGoals(isLite, allowedChangeTypes) {
 function formatPromptRules(isLite, allowedChangeTypes) {
   const rules = []
 
-  if (allowedChangeTypes.includes('deleteBookmarks')) {
-    rules.push('- Do not delete a bookmark unless duplicateOfBookmarkId identifies the bookmark to keep.')
-    rules.push('- For deleteBookmarks, URLs must match except for http/https, www., letter case, or a trailing slash.')
-  }
   if (isLite && !allowedChangeTypes.includes('moveBookmarks')) {
     rules.push('- Keep moveBookmarks empty.')
   }
@@ -352,7 +369,7 @@ function hasAnyAllowedType(allowedChangeTypes, types) {
 
 function formatPromptFocusInstruction(isLite, changeFocus, allowedChangeTypes) {
   if (isLite && changeFocus === 'duplicates') {
-    return 'Change type focus: Duplicates. Lite mode does not include duplicate-cleanup context, so return an empty changes object. Use Advanced for duplicate proposals.'
+    return '- Change type focus: Duplicates. Lite mode does not include duplicate-cleanup context, so return an empty changes object. Use Advanced for duplicate proposals.'
   }
 
   const label =
@@ -365,7 +382,7 @@ function formatPromptFocusInstruction(isLite, changeFocus, allowedChangeTypes) {
           : changeFocus === 'duplicates'
             ? 'Duplicates'
             : 'Everything'
-  return `Change type focus: ${label}. Include only these change arrays when they have proposals: ${allowedChangeTypes.join(', ')}. Omit other change arrays.`
+  return `- Change type focus: ${label}. Include only these change arrays when they have proposals: ${allowedChangeTypes.join(', ')}. Omit other change arrays.`
 }
 
 function createPromptExample(allowedChangeTypes) {
@@ -577,15 +594,30 @@ function formatBookmarkForLitePrompt(bookmark) {
   ].join(' | ')
 }
 
-function formatBookmarkForPrompt(bookmark) {
+function formatBookmarkForPrompt(bookmark, folderLabels) {
+  const folderId = String(bookmark.folderId || '')
   return [
     String(bookmark.originalId),
     limitPromptText(bookmark.title || ''),
     limitPromptText(bookmark.originalUrl || bookmark.url || ''),
-    String(bookmark.folderId || ''),
-    limitPromptText((bookmark.folderArray || []).join(' / ')),
+    folderId,
+    limitPromptText(folderLabels.get(folderId) || (bookmark.folderArray || []).join(' / ')),
     (bookmark.tagsArray || []).join(', '),
   ].join(' | ')
+}
+
+function formatDuplicateGroupsForPrompt(duplicateGroups = []) {
+  const rows = []
+  for (let i = 0; i < duplicateGroups.length; i++) {
+    const ids = (duplicateGroups[i].bookmarks || []).map((bookmark) => String(bookmark.originalId))
+    if (ids.length > 1) {
+      rows.push(`${ids[0]} | ${ids.slice(1).join(', ')} | ${limitPromptText(duplicateGroups[i].url || '')}`)
+    }
+  }
+
+  return rows.length
+    ? `Duplicate groups (same page by URL), one per line as: suggestedKeepId | otherIds | url\n${rows.join('\n')}`
+    : 'Duplicate groups: none.'
 }
 
 function validateTagChanges(errors, changes, name, bookmarkIds) {

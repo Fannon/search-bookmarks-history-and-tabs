@@ -200,14 +200,44 @@ describe('bookmark cleanup proposal', () => {
     assert(prompt.includes('Include only these change arrays when they have proposals: deleteBookmarks'))
     assert(prompt.includes('"changes":{"deleteBookmarks"'))
     assert(prompt.includes('"deleteBookmarks":[{"id":"delete-1"'))
-    assert(prompt.includes('Delete only exact or near-exact duplicate bookmarks'))
+    assert(prompt.includes('Delete only bookmarks from the listed duplicate groups'))
     assert(prompt.includes('When in doubt, do not propose deletion'))
-    assert(prompt.includes('Do not delete a bookmark unless duplicateOfBookmarkId'))
-    assert(prompt.includes('query parameters and #fragments must match'))
-    assert(prompt.includes('URLs must match except for http/https, www., letter case, or a trailing slash'))
+    assert(
+      prompt.includes('one per line as: suggestedKeepId | otherIds | url\n1 | 2 | https://platform.openai.com/docs'),
+    )
+    assert(prompt.includes('belong to the same listed duplicate group'))
+    assert(!prompt.includes('Every targetFolderId exists'))
     assert(!prompt.includes('Add useful, specific tags'))
     assert(!prompt.includes('Rewrite titles only when'))
     assert(!prompt.includes('Use only folder IDs'))
+  })
+  test('reports when an advanced duplicate prompt has no duplicate groups', () => {
+    const prompt = createBookmarkCleanupPrompt({ ...managerModel, duplicateGroups: [] }, 'full', {
+      changeFocus: 'duplicates',
+    })
+    assert(prompt.includes('Duplicate groups: none.'))
+  })
+  test('uses folder list labels for bookmark folder paths', () => {
+    const prompt = createBookmarkCleanupPrompt(
+      {
+        ...managerModel,
+        folderOptions: [
+          { id: 'dev', label: 'Bar / Development' },
+          { id: 'read', label: 'Bar / Read Later' },
+        ],
+      },
+      'full',
+    )
+    assert(prompt.includes('1 | OpenAI Docs | https://platform.openai.com/docs | dev | Bar / Development | ai'))
+    assert(prompt.includes('dev | Bar / Development'))
+  })
+  test('repeats output requirements after the data only in advanced prompts', () => {
+    const fullPrompt = createBookmarkCleanupPrompt(managerModel, 'full')
+    const litePrompt = createBookmarkCleanupPrompt(managerModel, 'lite')
+    assert(fullPrompt.endsWith('only IDs from the provided data, and no empty change arrays.'))
+    assert(fullPrompt.indexOf('## Reminder') > fullPrompt.indexOf('3 | Different Docs'))
+    assert(!litePrompt.includes('## Reminder'))
+    assert(litePrompt.endsWith('3 | Different Docs | https://example.test/docs |'))
   })
   test('uses a flat schema for local AI constrained generation', () => {
     const schema = JSON.stringify(localAiBookmarkCleanupProposalSchema)
