@@ -934,8 +934,10 @@ async function runLocalCleanup() {
       elapsedMs: getElapsedMs(startedAt),
       name: error?.name || 'Error',
       message: error?.message || String(error),
+      requestedTokens: error?.requested,
+      contextWindow: error?.contextWindow,
     })
-    showCleanupStatus('Local cleanup proposal failed', 'error')
+    showCleanupStatus(formatLocalCleanupFailure(error, isLite), 'error')
     showManagerStatus('Cleanup proposal failed', 'error')
     printError(error, 'Could not create bookmark cleanup proposal with local AI.')
   } finally {
@@ -947,6 +949,16 @@ async function runLocalCleanup() {
     renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
     debugLocalCleanup('finish', { elapsedMs: getElapsedMs(startedAt) })
   }
+}
+
+function formatLocalCleanupFailure(error, isLite) {
+  if (error?.name !== 'QuotaExceededError') {
+    return 'Local cleanup proposal failed'
+  }
+  const tokens = error.requested ? ` (${error.requested} tokens, limit ${error.contextWindow})` : ''
+  return isLite
+    ? `A batch is too large for local AI${tokens}.`
+    : `This Advanced prompt is too large for local AI${tokens}. Generate a Lite prompt to run it locally.`
 }
 
 function cancelLocalCleanup() {
@@ -1146,7 +1158,8 @@ function createLocalAiTimeout(stage) {
 
 function debugLocalCleanup(message, details = {}) {
   if (isLocalCleanupDebugEnabled()) {
-    console.debug('[bookmark-cleanup local-ai]', message, details)
+    // Opt-in logs use info level, because Chrome hides debug output by default.
+    console.info('[bookmark-cleanup local-ai]', message, details)
   }
 }
 

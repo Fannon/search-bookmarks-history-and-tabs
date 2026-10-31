@@ -449,6 +449,28 @@ describe('initBookmarkManager cleanup apply', () => {
     )
     assert(document.getElementById('cleanup-run-plan').textContent.includes('batch 1 of 20'))
   })
+  test('explains when an advanced prompt is too large for local AI', async () => {
+    const quotaError = Object.assign(new Error('The input is too large.'), {
+      name: 'QuotaExceededError',
+      requested: 30000,
+      contextWindow: 9216,
+    })
+    globalThis.LanguageModel = {
+      create: mock.fn(async () => ({ prompt: mock.fn(() => Promise.reject(quotaError)), destroy: mock.fn() })),
+    }
+    document.getElementById('generate-cleanup-prompt-full').click()
+    const runButton = document.getElementById('run-local-cleanup')
+    runButton.disabled = false
+    runButton.click()
+    for (let i = 0; i < 20 && !printError.mock.callCount(); i++) {
+      await flushPromises()
+    }
+
+    assert.strictEqual(
+      document.getElementById('cleanup-status').textContent,
+      'This Advanced prompt is too large for local AI (30000 tokens, limit 9216). Generate a Lite prompt to run it locally.',
+    )
+  })
   test('explains how each prompt type is used before running local AI', () => {
     const plan = document.getElementById('cleanup-run-plan')
     const runButton = document.getElementById('run-local-cleanup')
