@@ -662,6 +662,49 @@ export function countBookmarkCleanupChanges(proposal) {
 }
 
 /**
+ * Merge raw proposals from batched local AI runs into one proposal.
+ *
+ * Change IDs get a batch prefix so they stay unique, and repeated tag renames are dropped.
+ *
+ * @param {Array<Object>} proposals Parsed batch proposals.
+ * @returns {{summary: string, changes: Object}} Merged raw proposal.
+ */
+export function mergeBookmarkCleanupProposals(proposals = []) {
+  const summaries = []
+  const changes = {}
+  const renameKeys = new Set()
+
+  for (let i = 0; i < proposals.length; i++) {
+    const proposal = proposals[i]
+    if (proposal?.summary) {
+      summaries.push(String(proposal.summary))
+    }
+    for (const [type, items] of Object.entries(proposal?.changes || {})) {
+      if (!Array.isArray(items)) {
+        continue
+      }
+      changes[type] ||= []
+      for (let j = 0; j < items.length; j++) {
+        const item = items[j]
+        if (!item || typeof item !== 'object') {
+          continue
+        }
+        if (type === 'renameTags') {
+          const key = `${item.from}\u0000${item.to}`
+          if (renameKeys.has(key)) {
+            continue
+          }
+          renameKeys.add(key)
+        }
+        changes[type].push(proposals.length > 1 ? { ...item, id: `b${i + 1}-${item.id || j + 1}` } : item)
+      }
+    }
+  }
+
+  return { summary: summaries.join(' '), changes }
+}
+
+/**
  * Create final confirmation text for applying multiple cleanup changes.
  *
  * @param {Array<{type: string, change: Object}>} changes Cleanup changes.

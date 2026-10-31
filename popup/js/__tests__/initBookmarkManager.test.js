@@ -382,6 +382,69 @@ describe('initBookmarkManager cleanup apply', () => {
       ),
     )
   })
+  async function runBatchedLocalCleanup(measuredTokens) {
+    ext.model.bookmarkManager.bookmarks = Array.from({ length: 400 }, (_, index) => ({
+      ...BOOKMARKS[0],
+      originalId: `batch-${index + 1}`,
+      id: `batch-${index + 1}`,
+      title: `Batch Bookmark ${index + 1} ${'x'.repeat(90)}`,
+      originalUrl: `https://example.com/batch/${index + 1}`,
+    }))
+    const sessions = []
+    const statuses = []
+    globalThis.LanguageModel = {
+      create: mock.fn(async () => {
+        const session = {
+          contextWindow: 9216,
+          measureContextUsage: mock.fn(async () => measuredTokens),
+          prompt: mock.fn(async (prompt) => {
+            statuses.push(document.getElementById('cleanup-status').textContent)
+            const bookmarkId = prompt.match(/www\.\):\n(\S+) \|/)[1]
+            return JSON.stringify({
+              summary: 'Batch.',
+              changes: { addTags: [{ id: 'add-1', bookmarkId, tags: ['docs'] }] },
+            })
+          }),
+          destroy: mock.fn(),
+        }
+        sessions.push(session)
+        return session
+      }),
+    }
+    const runButton = document.getElementById('run-local-cleanup')
+    runButton.disabled = false
+    runButton.click()
+    for (let i = 0; i < 50 && !ext.model.bookmarkCleanupProposal; i++) {
+      await flushPromises()
+    }
+    return { sessions, statuses }
+  }
+  test('runs lite local cleanup in context-sized batches and merges the proposals', async () => {
+    const { sessions, statuses } = await runBatchedLocalCleanup(1000)
+
+    assert(sessions.length > 1)
+    for (const session of sessions) {
+      assert.strictEqual(session.prompt.mock.callCount(), 1)
+      assert.strictEqual(session.destroy.mock.callCount(), 1)
+      assert(session.prompt.mock.calls[0].arguments[0].length <= 19800)
+    }
+    assert(statuses[0].startsWith(`Batch 1 of ${sessions.length}: reviewing`))
+    assert(statuses[1].includes('(1 change(s) so far)'))
+    assert.deepStrictEqual(
+      ext.model.bookmarkCleanupProposal.changes.addTags.map((change) => change.id),
+      sessions.map((_, index) => `b${index + 1}-add-1`),
+    )
+    assert(
+      document.getElementById('cleanup-status').textContent.includes(`Loaded ${sessions.length} proposed change(s)`),
+    )
+  })
+  test('shrinks local cleanup batches when measured tokens exceed the input limit', async () => {
+    const { sessions } = await runBatchedLocalCleanup(12000)
+
+    const prompts = sessions.map((session) => session.prompt.mock.calls[0].arguments[0])
+    assert(sessions.length > 4)
+    assert(prompts.every((prompt) => prompt.length <= 19800 * (6000 / 12000)))
+  })
   test('allows aborting local AI tag suggestions for large selections before prompting the model', async () => {
     window.confirm = mock.fn(() => false)
     globalThis.LanguageModel = {

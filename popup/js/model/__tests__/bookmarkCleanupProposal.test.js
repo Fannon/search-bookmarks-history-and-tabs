@@ -8,6 +8,7 @@ import {
   createBookmarkCleanupPromptPayload,
   createLiteBookmarkCleanupPromptBatches,
   createLocalAiBookmarkCleanupProposalSchema,
+  mergeBookmarkCleanupProposals,
   parseBookmarkCleanupProposal,
   parseBookmarkCleanupProposalWithIssues,
   validateBookmarkCleanupProposal,
@@ -295,6 +296,36 @@ describe('bookmark cleanup proposal', () => {
     assert(!serialized.includes('"$ref"'))
     assert(!serialized.includes('"$defs"'))
     assert(!serialized.includes('"allOf"'))
+  })
+  test('merges batch proposals with unique IDs and without repeated renames', () => {
+    const merged = mergeBookmarkCleanupProposals([
+      {
+        summary: 'First.',
+        changes: {
+          addTags: [{ id: 'add-1', bookmarkId: '1', tags: ['docs'] }],
+          renameTags: [{ id: 'rename-1', from: 'llm', to: 'ai' }],
+        },
+      },
+      {
+        summary: 'Second.',
+        changes: {
+          addTags: [{ id: 'add-1', bookmarkId: '3', tags: ['docs'] }, null],
+          renameTags: [{ id: 'rename-1', from: 'llm', to: 'ai' }],
+        },
+      },
+    ])
+    assert.deepStrictEqual(merged, {
+      summary: 'First. Second.',
+      changes: {
+        addTags: [
+          { id: 'b1-add-1', bookmarkId: '1', tags: ['docs'] },
+          { id: 'b2-add-1', bookmarkId: '3', tags: ['docs'] },
+        ],
+        renameTags: [{ id: 'b1-rename-1', from: 'llm', to: 'ai' }],
+      },
+    })
+    const single = { summary: 'Only.', changes: { addTags: [{ id: 'add-1', bookmarkId: '1', tags: ['x'] }] } }
+    assert.deepStrictEqual(mergeBookmarkCleanupProposals([single]), single)
   })
   test('creates a bulk cleanup confirmation summary with destructive warnings', () => {
     const message = createBookmarkCleanupApplyConfirmation([
