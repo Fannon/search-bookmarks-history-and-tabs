@@ -22,7 +22,7 @@ import {
   countBookmarkCleanupChanges,
   createBookmarkCleanupApplyConfirmation,
   createBookmarkCleanupPrompt,
-  localAiBookmarkCleanupProposalSchema,
+  createLocalAiBookmarkCleanupProposalSchema,
   parseBookmarkCleanupProposalWithIssues,
 } from './model/bookmarkCleanupProposal.js'
 import { createBookmarkExportFilename, createBookmarkExportHtml } from './model/bookmarkExport.js'
@@ -759,24 +759,29 @@ async function removeTag(tagName) {
 }
 
 function generateCleanupPrompt() {
-  const prompt = createBookmarkCleanupPrompt(getScopedCleanupModel(), 'lite', getCleanupPromptOptions()).trim()
-  ext.model.bookmarkCleanupPrompt = prompt
-  renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
+  setCleanupPrompt('lite')
   showCleanupStatus('Lite prompt generated', 'success')
 }
 
 function generateCleanupPromptFull() {
-  const prompt = createBookmarkCleanupPrompt(getScopedCleanupModel(), 'full', getCleanupPromptOptions()).trim()
-  ext.model.bookmarkCleanupPrompt = prompt
-  renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
+  setCleanupPrompt('full')
   showCleanupStatus('Full prompt generated', 'success')
 }
 
+function setCleanupPrompt(mode) {
+  const options = getCleanupPromptOptions()
+  const prompt = createBookmarkCleanupPrompt(getScopedCleanupModel(), mode, options).trim()
+  ext.model.bookmarkCleanupPrompt = prompt
+  ext.model.bookmarkCleanupSchema = createLocalAiBookmarkCleanupProposalSchema(mode, options)
+  renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
+}
+
 async function runLocalCleanup() {
-  const prompt = (
-    ext.model.bookmarkCleanupPrompt ||
-    createBookmarkCleanupPrompt(getScopedCleanupModel(), 'lite', getCleanupPromptOptions())
-  ).trim()
+  if (!ext.model.bookmarkCleanupPrompt) {
+    setCleanupPrompt('lite')
+  }
+  const prompt = ext.model.bookmarkCleanupPrompt
+  const responseConstraint = ext.model.bookmarkCleanupSchema
   const languageModel = globalThis.LanguageModel
   const startedAt = performance.now()
 
@@ -807,9 +812,7 @@ async function runLocalCleanup() {
       response = await promptLocalCleanupWithTimeout(
         session,
         prompt,
-        {
-          responseConstraint: localAiBookmarkCleanupProposalSchema,
-        },
+        { responseConstraint },
         'session.prompt constrained',
         startedAt,
       )
@@ -952,6 +955,7 @@ function formatCleanupResponseSize(responseText) {
 function resetCleanupPrompt() {
   ext.model.bookmarkCleanupFolderId = ext.dom.manager.cleanupFolderScope.value || 'all'
   ext.model.bookmarkCleanupPrompt = ''
+  ext.model.bookmarkCleanupSchema = null
   renderBookmarkCleanupPrompt('', Boolean(ext.model.bookmarkManagerLocalAiAvailable))
   showCleanupStatus('')
 }
