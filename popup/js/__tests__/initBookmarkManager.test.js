@@ -462,7 +462,8 @@ describe('initBookmarkManager cleanup apply', () => {
     const runButton = document.getElementById('run-local-cleanup')
     runButton.disabled = false
     runButton.click()
-    for (let i = 0; i < 20 && !printError.mock.callCount(); i++) {
+    const isQuotaWarning = (call) => call.arguments[1] === quotaError
+    for (let i = 0; i < 20 && !console.warn.mock.calls.some(isQuotaWarning); i++) {
       await flushPromises()
     }
 
@@ -470,6 +471,9 @@ describe('initBookmarkManager cleanup apply', () => {
       document.getElementById('cleanup-status').textContent,
       'This Advanced prompt is too large for local AI (30000 tokens, limit 9216). Generate a Lite prompt to run it locally.',
     )
+    assert(console.warn.mock.calls.some(isQuotaWarning))
+    // Local AI failures stay in the cleanup status instead of the full-page error overlay.
+    assert.strictEqual(printError.mock.callCount(), 0)
   })
   test('explains how each prompt type is used before running local AI', () => {
     const plan = document.getElementById('cleanup-run-plan')

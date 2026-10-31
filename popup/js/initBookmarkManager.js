@@ -939,7 +939,7 @@ async function runLocalCleanup() {
     })
     showCleanupStatus(formatLocalCleanupFailure(error, isLite), 'error')
     showManagerStatus('Cleanup proposal failed', 'error')
-    printError(error, 'Could not create bookmark cleanup proposal with local AI.')
+    console.warn('Could not create bookmark cleanup proposal with local AI:', error)
   } finally {
     if (ext.model.bookmarkCleanupAbortController === controller) {
       ext.model.bookmarkCleanupAbortController = null
