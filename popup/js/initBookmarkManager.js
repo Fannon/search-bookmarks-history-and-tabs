@@ -24,7 +24,6 @@ import {
   createBookmarkCleanupPrompt,
   createLiteBookmarkCleanupPromptBatches,
   createLocalAiBookmarkCleanupProposalSchema,
-  mergeBookmarkCleanupProposals,
   parseBookmarkCleanupProposalWithIssues,
 } from './model/bookmarkCleanupProposal.js'
 import { createBookmarkExportFilename, createBookmarkExportHtml } from './model/bookmarkExport.js'
@@ -769,8 +768,11 @@ async function removeTag(tagName) {
 }
 
 function generateCleanupPrompt() {
-  setCleanupPrompt('lite')
-  showCleanupStatus('Lite prompt generated', 'success')
+  if (setCleanupPrompt('lite')) {
+    showCleanupStatus('Lite prompt generated', 'success')
+  } else {
+    showCleanupStatus('')
+  }
 }
 
 function generateCleanupPromptFull() {
@@ -789,9 +791,10 @@ function setCleanupPrompt(mode) {
       ...options,
       charBudget: getLocalCleanupCharBudget(0),
     })
-    prompt = batches[0].prompt.trim()
+    prompt = batches[0]?.prompt.trim() || ''
     plan = {
       mode,
+      changeFocus: options.changeFocus,
       batchCount: batches.length,
       bookmarkCount: batches.reduce((sum, batch) => sum + batch.bookmarkCount, 0),
     }
@@ -804,11 +807,12 @@ function setCleanupPrompt(mode) {
   ext.model.bookmarkCleanupSchema = createLocalAiBookmarkCleanupProposalSchema(mode, options)
   renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
   renderLocalCleanupPlan(plan)
+  return prompt
 }
 
 async function runLocalCleanup() {
-  if (!ext.model.bookmarkCleanupPrompt) {
-    setCleanupPrompt('lite')
+  if (!ext.model.bookmarkCleanupPrompt && !setCleanupPrompt('lite')) {
+    return
   }
   const prompt = ext.model.bookmarkCleanupPrompt
   const responseConstraint = ext.model.bookmarkCleanupSchema
@@ -885,7 +889,9 @@ async function runLocalCleanup() {
       try {
         const proposal = JSON.parse(responseText)
         proposals.push(proposal)
-        changeCount += countBookmarkCleanupChanges(proposal)
+        changeCount += Array.isArray(proposal?.suggestions)
+          ? proposal.suggestions.length
+          : countBookmarkCleanupChanges(proposal)
       } catch (error) {
         if (batches.length === 1) {
           // Keep single-prompt behavior: show the raw response and its parse error.
@@ -899,7 +905,7 @@ async function runLocalCleanup() {
     }
 
     if (proposals[0] !== null) {
-      setCleanupProposalJson(JSON.stringify(mergeBookmarkCleanupProposals(proposals)))
+      setCleanupProposalJson(JSON.stringify(combineLocalCleanupResults(proposals)))
     }
     parseCleanupProposalText()
     if (skippedBatches || stoppedAtLimit) {
@@ -959,13 +965,26 @@ function showCancelledLocalCleanup(proposals, finishedBatches, batchCount) {
     showCleanupStatus('Local cleanup cancelled', 'info')
     return
   }
-  setCleanupProposalJson(JSON.stringify(mergeBookmarkCleanupProposals(proposals)))
+  setCleanupProposalJson(JSON.stringify(combineLocalCleanupResults(proposals)))
   parseCleanupProposalText()
   showCleanupStatus(
     `Cancelled after ${finishedBatches} of ${batchCount} batches. Loaded ${countBookmarkCleanupChanges(ext.model.bookmarkCleanupProposal)} proposed change(s).`,
     'warning',
     false,
   )
+}
+
+/**
+ * Combine batch responses. Lite batches return tag suggestions, which the proposal
+ * parser turns into addTags changes; an Advanced run is always a single response.
+ */
+function combineLocalCleanupResults(proposals) {
+  if (proposals.length === 1) {
+    return proposals[0]
+  }
+  return {
+    suggestions: proposals.flatMap((proposal) => (Array.isArray(proposal?.suggestions) ? proposal.suggestions : [])),
+  }
 }
 
 /**
@@ -1010,7 +1029,7 @@ function formatLocalCleanupProgress(batchIndex, batches, changeCount) {
   if (batches.length === 1) {
     return 'Generating cleanup proposal...'
   }
-  return `Batch ${batchIndex + 1} of ${batches.length}: reviewing ${batches[batchIndex].bookmarkCount} bookmarks (${changeCount} change(s) so far)...`
+  return `Batch ${batchIndex + 1} of ${batches.length}: reviewing ${batches[batchIndex].bookmarkCount} bookmarks (${changeCount} suggestion(s) so far)...`
 }
 
 function getLocalAiContextWindow(session) {

@@ -12,7 +12,9 @@ const PROMPT_TEXT_LIMIT = 180
 // leaving about 2k tokens for output.
 const LITE_PROMPT_CHAR_BUDGET = 20000
 const LITE_PROMPT_TEXT_LIMIT = 100
-const LITE_CHANGE_LIMIT = 25
+// Small local models lose track of long lists, so lite batches stay short.
+const LITE_BATCH_BOOKMARK_LIMIT = 20
+const LITE_MAX_TAGS_PER_BOOKMARK = 3
 // Short link to popup/json/change-proposal.schema.json on main.
 const PROMPT_SCHEMA_URL = 'https://tinyurl.com/sbht-change'
 const PROMPT_FULL = 'full'
@@ -21,23 +23,26 @@ const PROMPT_HTTPS_PREFIX_REGEX = /^https:\/\/(?:www\.)?/i
 const PROMPT_URL_PREFIX_REGEX = /^https?:\/\/(?:www\.)?/i
 const PROMPT_URL_SUFFIX_REGEX = /[?#].*$/
 const TRAILING_SLASH_REGEX = /\/$/
-const LITE_PROMPT_RULES = {
-  addTags:
-    '- addTags: Add 1–3 concise lowercase tags to untagged bookmarks, or 1–2 to tagged ones, when the title, URL, or domain clearly supports them. Strongly prefer existing tags, in their language. Do not add a tag just because a word appears in the title.',
-  removeTags: '- removeTags: Remove a tag only when it is clearly wrong for the bookmark.',
-  renameTags:
-    '- renameTags: Merge a tag into a clearly better existing tag, one entry per source tag. Do not also add or remove the same tag.',
-  moveBookmarks:
-    '- moveBookmarks: Move a bookmark only when an existing folder is clearly more accurate. Use only folder IDs from the folder list.',
-  rewriteTitles:
-    '- rewriteTitles: Rewrite only long, noisy, boilerplate, or URL-only titles into a short title derived from the existing title and URL. Keep project, repository, and product names.',
-}
 const PROMPT_OUTPUT_REMINDER = `
 ## Reminder
 Apply the rules above to the data. Return only the raw JSON object described in Output Requirements: no code fences or other text, only IDs from the provided data, and no empty change arrays.`
 const STRING_SCHEMA = { type: 'string' }
 const STRING_ARRAY_SCHEMA = { type: 'array', items: STRING_SCHEMA }
 const OBJECT_SCHEMA_BASE = { type: 'object', additionalProperties: false }
+const LITE_TAG_SUGGESTION_SCHEMA = {
+  ...OBJECT_SCHEMA_BASE,
+  required: ['suggestions'],
+  properties: {
+    suggestions: {
+      type: 'array',
+      items: {
+        ...OBJECT_SCHEMA_BASE,
+        required: ['bookmarkId', 'tags'],
+        properties: { bookmarkId: STRING_SCHEMA, tags: STRING_ARRAY_SCHEMA },
+      },
+    },
+  },
+}
 
 function createChangeSchema(required, properties) {
   return {
@@ -101,7 +106,7 @@ function createChangeProperties() {
 /**
  * Build the local AI response constraint for a prompt mode and focus.
  *
- * Only allowed change types are included. Lite omits `reason` to save output tokens.
+ * Lite returns plain tag suggestions. Full proposals include only allowed change types.
  *
  * @param {'lite'|'full'} [mode='full'] Prompt detail mode.
  * @param {Object} [options] Prompt options.
@@ -109,18 +114,16 @@ function createChangeProperties() {
  * @returns {Object} JSON schema.
  */
 export function createLocalAiBookmarkCleanupProposalSchema(mode = PROMPT_FULL, options = {}) {
-  const isLite = mode === PROMPT_LITE
-  const allowedChangeTypes = getAllowedPromptChangeTypes(isLite, normalizePromptChangeFocus(options.changeFocus))
+  if (mode === PROMPT_LITE) {
+    return LITE_TAG_SUGGESTION_SCHEMA
+  }
+
+  const allowedChangeTypes = getAllowedPromptChangeTypes(false, normalizePromptChangeFocus(options.changeFocus))
   const changeProperties = createChangeProperties()
   const properties = {}
 
   for (let i = 0; i < allowedChangeTypes.length; i++) {
-    const property = changeProperties[allowedChangeTypes[i]]
-    if (isLite) {
-      const { reason: _reason, ...itemProperties } = property.items.properties
-      property.items = { ...property.items, properties: itemProperties }
-    }
-    properties[allowedChangeTypes[i]] = property
+    properties[allowedChangeTypes[i]] = changeProperties[allowedChangeTypes[i]]
   }
 
   return {
@@ -149,7 +152,7 @@ export function createLocalAiBookmarkCleanupProposalSchema(mode = PROMPT_FULL, o
  */
 export function createBookmarkCleanupPrompt(managerModel, mode = PROMPT_FULL, options = {}) {
   if (mode === PROMPT_LITE) {
-    return createLiteBookmarkCleanupPromptBatches(managerModel, { ...options, maxBatches: 1 })[0].prompt.trim()
+    return createLiteBookmarkCleanupPromptBatches(managerModel, { ...options, maxBatches: 1 })[0]?.prompt.trim() || ''
   }
 
   const changeLimit = normalizePromptChangeLimit(options.changeLimit)
@@ -270,7 +273,7 @@ function createBookmarkPromptRows(bookmarks, includeFolders, bookmarkLimit, fold
   const maxBookmarks = bookmarkLimit ? Math.min(bookmarkLimit, bookmarks.length) : bookmarks.length
   const rowFolderLabels = includeFolders ? folderLabels : null
   const result = collectPromptRows(bookmarks, 0, maxBookmarks, PROMPT_BOOKMARK_TEXT_BUDGET, (bookmark) =>
-    formatBookmarkForPrompt(bookmark, rowFolderLabels, false),
+    formatBookmarkForPrompt(bookmark, rowFolderLabels),
   )
 
   return {
@@ -301,7 +304,11 @@ function collectPromptRows(bookmarks, start, end, textBudget, formatRow) {
 }
 
 /**
- * Build compact lite prompts that cover the bookmark context in budget-sized batches.
+ * Build lite tag-suggestion prompts for untagged bookmarks in small batches.
+ *
+ * Lite only suggests tags, because small local models are unreliable for removals,
+ * renames, moves, and rewrites. Returns no batches for other focuses or when every
+ * bookmark already has tags.
  *
  * @param {Object} managerModel Bookmark manager model.
  * @param {Object} [options] Prompt options, as for createBookmarkCleanupPrompt.
@@ -310,26 +317,21 @@ function collectPromptRows(bookmarks, start, end, textBudget, formatRow) {
  * @returns {Array<{prompt: string, bookmarkCount: number}>} Prompt batches.
  */
 export function createLiteBookmarkCleanupPromptBatches(managerModel, options = {}) {
-  const changeFocus = normalizePromptChangeFocus(options.changeFocus)
-  const allowedChangeTypes = getAllowedPromptChangeTypes(true, changeFocus)
-  const includeFolders = allowedChangeTypes.includes('moveBookmarks')
-  const bookmarks = getLitePromptBookmarks(
-    managerModel?.bookmarks || [],
-    allowedChangeTypes.includes('addTags'),
-    normalizePromptBookmarkLimit(options.bookmarkLimit),
-  )
-  const folderOptions = managerModel?.folderOptions || []
-  const folderLabels = includeFolders
-    ? new Map(folderOptions.map((folder) => [String(folder.id), folder.label || folder.title]))
-    : null
-  const header = createLitePromptHeader(managerModel, options, changeFocus, allowedChangeTypes, includeFolders)
+  if (!getAllowedPromptChangeTypes(true, normalizePromptChangeFocus(options.changeFocus)).length) {
+    return []
+  }
+
+  const bookmarkLimit = normalizePromptBookmarkLimit(options.bookmarkLimit)
+  const untagged = (managerModel?.bookmarks || []).filter((bookmark) => !bookmark.tagsArray?.length)
+  const bookmarks = bookmarkLimit ? untagged.slice(0, bookmarkLimit) : untagged
+  const header = createLitePromptHeader(managerModel)
   const rowBudget = (options.charBudget || LITE_PROMPT_CHAR_BUDGET) - header.length
   const maxBatches = options.maxBatches || Number.POSITIVE_INFINITY
-  const formatRow = (bookmark) => formatBookmarkForPrompt(bookmark, folderLabels, true)
   const batches = []
 
-  for (let start = 0; batches.length < maxBatches && (start < bookmarks.length || !batches.length); ) {
-    const { rows, nextIndex } = collectPromptRows(bookmarks, start, bookmarks.length, rowBudget, formatRow)
+  for (let start = 0; start < bookmarks.length && batches.length < maxBatches; ) {
+    const end = Math.min(start + LITE_BATCH_BOOKMARK_LIMIT, bookmarks.length)
+    const { rows, nextIndex } = collectPromptRows(bookmarks, start, end, rowBudget, formatBookmarkForLitePrompt)
     batches.push({ prompt: `${header}${rows.join('\n')}`, bookmarkCount: rows.length })
     start = nextIndex
   }
@@ -337,55 +339,20 @@ export function createLiteBookmarkCleanupPromptBatches(managerModel, options = {
   return batches
 }
 
-function getLitePromptBookmarks(bookmarks, prioritizeUntagged, bookmarkLimit) {
-  let result = bookmarks
-  if (prioritizeUntagged) {
-    const untagged = []
-    const tagged = []
-    for (let i = 0; i < bookmarks.length; i++) {
-      if (bookmarks[i].tagsArray?.length) {
-        tagged.push(bookmarks[i])
-      } else {
-        untagged.push(bookmarks[i])
-      }
-    }
-    result = untagged.concat(tagged)
-  }
-  return bookmarkLimit ? result.slice(0, bookmarkLimit) : result
-}
-
-function createLitePromptHeader(managerModel, options, changeFocus, allowedChangeTypes, includeFolders) {
-  const changeLimit = Math.min(normalizePromptChangeLimit(options.changeLimit) || LITE_CHANGE_LIMIT, LITE_CHANGE_LIMIT)
+function createLitePromptHeader(managerModel) {
   const tags = (managerModel?.tagGroups || []).map((tag) => `${tag.name} (${tag.count})`).join(', ')
-  const folders = includeFolders
-    ? `\n\nFolders, one per line as id | path:\n${(managerModel?.folderOptions || [])
-        .map((folder) => `${folder.id} | ${folder.label || folder.title || folder.id}`)
-        .join('\n')}`
-    : ''
-  const rules = allowedChangeTypes.length
-    ? allowedChangeTypes.map((type) => LITE_PROMPT_RULES[type])
-    : [
-        changeFocus === 'duplicates'
-          ? '- Lite mode does not handle duplicates. Use Advanced for duplicate cleanup.'
-          : '- No change types are available in this mode.',
-        '- Return an empty changes object.',
-      ]
 
-  return `## Task
-You are a careful bookmark curator. Propose practical, reviewable cleanup changes for the bookmarks below.
+  return `Suggest tags for each bookmark below.
 
-## Rules
-- Evidence: only each bookmark's title, URL, and tags, plus the existing tags. Do not guess page contents.
-- Prefer no change over a weak or speculative one. Propose at most ${changeLimit} changes; fewer is fine.
-- Use only bookmark IDs from the data. Keep summary to one short sentence.
-${rules.join('\n')}
-- Return raw JSON only and omit change arrays without proposals. Example format (use real IDs):
-${createPromptExample(allowedChangeTypes)}
+Rules:
+- Suggest 1 to ${LITE_MAX_TAGS_PER_BOOKMARK} lowercase tags for a bookmark only when its title, URL, or folder clearly supports them.
+- Strongly prefer existing tags, in their language. Usage counts show the user's conventions: ${tags || 'none'}
+- Folder names are context. Do not copy a folder name as a tag unless it is also an existing tag.
+- Leave out bookmarks without a clear tag.
+- Use only bookmark IDs from the list.
+- Output JSON only: {"suggestions":[{"bookmarkId":"id from the list","tags":["tag"]}]}
 
-## Data
-Existing tags (with usage counts): ${tags}${folders}
-
-Bookmarks, one per line as ${includeFolders ? 'id | title | url | folderId | folderPath | tags' : 'id | title | url | tags'} (URLs without https:// and www.):
+Bookmarks, one per line as id | title | url | folder (URLs without https:// and www.):
 `
 }
 
@@ -423,6 +390,9 @@ function normalizePromptChangeFocus(changeFocus) {
 }
 
 function getAllowedPromptChangeTypes(isLite, changeFocus) {
+  if (isLite) {
+    return changeFocus === 'everything' || changeFocus === 'tags' ? ['addTags'] : []
+  }
   if (changeFocus === 'tags') {
     return ['addTags', 'removeTags', 'renameTags']
   }
@@ -433,11 +403,9 @@ function getAllowedPromptChangeTypes(isLite, changeFocus) {
     return ['moveBookmarks']
   }
   if (changeFocus === 'duplicates') {
-    return isLite ? [] : ['deleteBookmarks']
+    return ['deleteBookmarks']
   }
-  return isLite
-    ? ['addTags']
-    : ['addTags', 'removeTags', 'renameTags', 'moveBookmarks', 'deleteBookmarks', 'rewriteTitles']
+  return ['addTags', 'removeTags', 'renameTags', 'moveBookmarks', 'deleteBookmarks', 'rewriteTitles']
 }
 
 function formatPromptGoals(allowedChangeTypes) {
@@ -594,6 +562,9 @@ export function parseBookmarkCleanupProposalWithIssues(jsonText, managerModel) {
       warnings,
     }
   }
+  if (!proposal.changes && Array.isArray(proposal.suggestions)) {
+    proposal = convertTagSuggestionsToProposal(proposal.suggestions, managerModel, warnings)
+  }
   if (!proposal.changes || typeof proposal.changes !== 'object' || Array.isArray(proposal.changes)) {
     return {
       proposal: null,
@@ -606,6 +577,64 @@ export function parseBookmarkCleanupProposalWithIssues(jsonText, managerModel) {
     proposal: normalizeBookmarkCleanupProposalWithIssues(proposal, managerModel, warnings),
     errors,
     warnings,
+  }
+}
+
+/**
+ * Turn lite tag suggestions into an addTags proposal.
+ *
+ * Small local models often repeat current tags or invent one-off tags, so this drops
+ * tags a bookmark already has, keeps at most three tags per bookmark, and keeps a new
+ * tag only when it is suggested for at least two bookmarks.
+ */
+function convertTagSuggestionsToProposal(suggestions, managerModel, warnings) {
+  const bookmarks = managerModel?.bookmarks || []
+  const bookmarksById = new Map(bookmarks.map((bookmark) => [String(bookmark.originalId), bookmark]))
+  const existingTags = new Set((managerModel?.tagGroups || []).map((tag) => normalizeTagName(tag.name)))
+  const tagsByBookmarkId = new Map()
+  const newTagBookmarkCounts = new Map()
+
+  for (let i = 0; i < suggestions.length; i++) {
+    const bookmarkId = String(suggestions[i]?.bookmarkId || '')
+    const bookmark = bookmarksById.get(bookmarkId)
+    if (!bookmark || !Array.isArray(suggestions[i].tags)) {
+      continue
+    }
+    const currentTags = new Set((bookmark.tagsArray || []).map(normalizeTagName))
+    const tags = tagsByBookmarkId.get(bookmarkId) || []
+    const suggestedTags = normalizePromptTags(suggestions[i].tags)
+    for (let j = 0; j < suggestedTags.length && tags.length < LITE_MAX_TAGS_PER_BOOKMARK; j++) {
+      const tag = suggestedTags[j]
+      if (currentTags.has(tag) || tags.includes(tag)) {
+        continue
+      }
+      tags.push(tag)
+      if (!existingTags.has(tag)) {
+        newTagBookmarkCounts.set(tag, (newTagBookmarkCounts.get(tag) || 0) + 1)
+      }
+    }
+    tagsByBookmarkId.set(bookmarkId, tags)
+  }
+
+  const droppedTags = new Set()
+  for (const [tag, count] of newTagBookmarkCounts) {
+    if (count < 2) {
+      droppedTags.add(tag)
+      warnings.push(`Dropped new tag "${tag}" because it was suggested for only one bookmark.`)
+    }
+  }
+
+  const addTags = []
+  for (const [bookmarkId, tags] of tagsByBookmarkId) {
+    const keptTags = tags.filter((tag) => !droppedTags.has(tag))
+    if (keptTags.length) {
+      addTags.push({ id: `add-${addTags.length + 1}`, bookmarkId, tags: keptTags })
+    }
+  }
+
+  return {
+    summary: `Local AI suggested tags for ${addTags.length} bookmark(s).`,
+    changes: { addTags },
   }
 }
 
@@ -665,49 +694,6 @@ export function countBookmarkCleanupChanges(proposal) {
 }
 
 /**
- * Merge raw proposals from batched local AI runs into one proposal.
- *
- * Change IDs get a batch prefix so they stay unique, and repeated tag renames are dropped.
- *
- * @param {Array<Object>} proposals Parsed batch proposals.
- * @returns {{summary: string, changes: Object}} Merged raw proposal.
- */
-export function mergeBookmarkCleanupProposals(proposals = []) {
-  const summaries = []
-  const changes = {}
-  const renameKeys = new Set()
-
-  for (let i = 0; i < proposals.length; i++) {
-    const proposal = proposals[i]
-    if (proposal?.summary) {
-      summaries.push(String(proposal.summary))
-    }
-    for (const [type, items] of Object.entries(proposal?.changes || {})) {
-      if (!Array.isArray(items)) {
-        continue
-      }
-      changes[type] ||= []
-      for (let j = 0; j < items.length; j++) {
-        const item = items[j]
-        if (!item || typeof item !== 'object') {
-          continue
-        }
-        if (type === 'renameTags') {
-          const key = `${item.from}\u0000${item.to}`
-          if (renameKeys.has(key)) {
-            continue
-          }
-          renameKeys.add(key)
-        }
-        changes[type].push(proposals.length > 1 ? { ...item, id: `b${i + 1}-${item.id || j + 1}` } : item)
-      }
-    }
-  }
-
-  return { summary: summaries.join(' '), changes }
-}
-
-/**
  * Create final confirmation text for applying multiple cleanup changes.
  *
  * @param {Array<{type: string, change: Object}>} changes Cleanup changes.
@@ -738,22 +724,30 @@ export function createBookmarkCleanupApplyConfirmation(changes = []) {
  * Format one bookmark prompt row. Folder columns are included when folderLabels is set.
  * Compact rows use shorter text and leave out an empty trailing tags column.
  */
-function formatBookmarkForPrompt(bookmark, folderLabels, compact) {
-  const textLimit = compact ? LITE_PROMPT_TEXT_LIMIT : PROMPT_TEXT_LIMIT
+/**
+ * Format one advanced prompt row. Folder columns are included when folderLabels is set.
+ */
+function formatBookmarkForPrompt(bookmark, folderLabels) {
   const columns = [
     String(bookmark.originalId),
-    limitPromptText(bookmark.title || '', textLimit),
-    limitPromptText(formatPromptUrl(bookmark.originalUrl || bookmark.url || '', compact), textLimit),
+    limitPromptText(bookmark.title || ''),
+    limitPromptText(formatPromptUrl(bookmark.originalUrl || bookmark.url || '', false)),
   ]
   if (folderLabels) {
     const folderId = String(bookmark.folderId || '')
     columns.push(folderId, limitPromptText(folderLabels.get(folderId) || (bookmark.folderArray || []).join(' / ')))
   }
-  const tags = (bookmark.tagsArray || []).join(', ')
-  if (tags || !compact) {
-    columns.push(tags)
-  }
+  columns.push((bookmark.tagsArray || []).join(', '))
   return columns.join(' | ')
+}
+
+function formatBookmarkForLitePrompt(bookmark) {
+  return [
+    String(bookmark.originalId),
+    limitPromptText(bookmark.title || '', LITE_PROMPT_TEXT_LIMIT),
+    limitPromptText(formatPromptUrl(bookmark.originalUrl || bookmark.url || '', true), LITE_PROMPT_TEXT_LIMIT),
+    limitPromptText((bookmark.folderArray || []).join(' / '), LITE_PROMPT_TEXT_LIMIT),
+  ].join(' | ')
 }
 
 /**

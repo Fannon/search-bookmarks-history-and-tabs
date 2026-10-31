@@ -404,11 +404,9 @@ describe('initBookmarkManager cleanup apply', () => {
             if (onPrompt) {
               await onPrompt(sessions.length, options)
             }
-            const bookmarkId = prompt.match(/www\.\):\n(\S+) \|/)[1]
-            return JSON.stringify({
-              summary: 'Batch.',
-              changes: { addTags: [{ id: 'add-1', bookmarkId, tags: ['docs'] }] },
-            })
+            // Suggest the same new tag for the first two bookmarks, so it is kept.
+            const bookmarkIds = [...prompt.matchAll(/\n(batch-\d+) \|/g)].slice(0, 2).map((match) => match[1])
+            return JSON.stringify({ suggestions: bookmarkIds.map((bookmarkId) => ({ bookmarkId, tags: ['docs'] })) })
           }),
           destroy: mock.fn(),
         }
@@ -419,51 +417,56 @@ describe('initBookmarkManager cleanup apply', () => {
     const runButton = document.getElementById('run-local-cleanup')
     runButton.disabled = false
     runButton.click()
-    for (let i = 0; i < 50 && !ext.model.bookmarkCleanupProposal; i++) {
+    for (let i = 0; i < 100 && !ext.model.bookmarkCleanupProposal; i++) {
       await flushPromises()
     }
     return { sessions, statuses }
   }
-  test('runs lite local cleanup in context-sized batches and merges the proposals', async () => {
+  test('runs lite local cleanup in small batches and turns suggestions into tag changes', async () => {
     const { sessions, statuses } = await runBatchedLocalCleanup(1000)
 
-    assert(sessions.length > 1)
+    assert.strictEqual(sessions.length, 20)
     for (const session of sessions) {
       assert.strictEqual(session.prompt.mock.callCount(), 1)
       assert.strictEqual(session.destroy.mock.callCount(), 1)
-      assert(session.prompt.mock.calls[0].arguments[0].length <= 19800)
+      assert.strictEqual(session.prompt.mock.calls[0].arguments[1].responseConstraint.required[0], 'suggestions')
     }
-    assert(statuses[0].startsWith(`Batch 1 of ${sessions.length}: reviewing`))
-    assert(statuses[1].includes('(1 change(s) so far)'))
+    assert(statuses[0].startsWith('Batch 1 of 20: reviewing 20 bookmarks'))
+    assert(statuses[1].includes('(2 suggestion(s) so far)'))
+    const addTags = ext.model.bookmarkCleanupProposal.changes.addTags
+    assert.strictEqual(addTags.length, 40)
     assert.deepStrictEqual(
-      ext.model.bookmarkCleanupProposal.changes.addTags.map((change) => change.id),
-      sessions.map((_, index) => `b${index + 1}-add-1`),
+      addTags.slice(0, 3).map((change) => change.bookmarkId),
+      ['batch-1', 'batch-2', 'batch-21'],
     )
-    assert(
-      document.getElementById('cleanup-status').textContent.includes(`Loaded ${sessions.length} proposed change(s)`),
-    )
-    assert.strictEqual(
-      document.getElementById('run-local-cleanup').textContent,
-      `Run local AI (${sessions.length} batches)`,
-    )
+    assert(addTags.every((change) => change.tags.join() === 'docs'))
+    assert(document.getElementById('cleanup-status').textContent.includes('Loaded 40 proposed change(s)'))
+    assert.strictEqual(document.getElementById('run-local-cleanup').textContent, 'Run local AI (20 batches)')
     assert(
       document
         .getElementById('cleanup-run-plan')
-        .textContent.includes(`reviews 400 bookmarks in about ${sessions.length} batches`),
+        .textContent.includes('suggests tags for 400 untagged bookmarks in 20 batches'),
     )
-    assert(document.getElementById('cleanup-run-plan').textContent.includes(`batch 1 of ${sessions.length}`))
+    assert(document.getElementById('cleanup-run-plan').textContent.includes('batch 1 of 20'))
   })
   test('explains how each prompt type is used before running local AI', () => {
     const plan = document.getElementById('cleanup-run-plan')
     const runButton = document.getElementById('run-local-cleanup')
+    const focus = document.getElementById('cleanup-change-focus')
     assert(plan.textContent.startsWith('Advanced creates one complete prompt'))
 
     document.getElementById('generate-cleanup-prompt').click()
-    assert.strictEqual(plan.textContent, 'Lite prompt: local AI reviews 2 bookmark(s) in one run.')
+    assert.strictEqual(plan.textContent, 'Lite prompt: local AI suggests tags for 2 untagged bookmark(s) in one run.')
     assert.strictEqual(runButton.textContent, 'Run local AI')
 
     document.getElementById('generate-cleanup-prompt-full').click()
     assert(plan.textContent.startsWith('Advanced prompt for copying into an AI assistant.'))
+
+    focus.innerHTML = '<option value="title" selected>Title</option>'
+    document.getElementById('generate-cleanup-prompt').click()
+    assert.strictEqual(plan.textContent, 'Lite only suggests tags. Use Advanced for titles, folders, or duplicates.')
+    assert.strictEqual(document.getElementById('cleanup-prompt').value, '')
+    assert(runButton.disabled)
 
     document.getElementById('cleanup-folder-scope').dispatchEvent(new Event('change'))
     assert(plan.textContent.startsWith('Advanced creates one complete prompt'))
@@ -486,19 +489,19 @@ describe('initBookmarkManager cleanup apply', () => {
     assert(sessions.every((session) => session.prompt.mock.calls[0].arguments[1].signal.aborted))
     assert(sessions.every((session) => session.destroy.mock.callCount() === 1))
     assert.deepStrictEqual(
-      ext.model.bookmarkCleanupProposal.changes.addTags.map((change) => change.id),
-      ['add-1'],
+      ext.model.bookmarkCleanupProposal.changes.addTags.map((change) => change.bookmarkId),
+      ['batch-1', 'batch-2'],
     )
-    assert(document.getElementById('cleanup-status').textContent.startsWith('Cancelled after 1 of'))
+    assert(document.getElementById('cleanup-status').textContent.startsWith('Cancelled after 1 of 20'))
     assert(cancelButton.hidden)
     assert.strictEqual(printError.mock.callCount(), 0)
   })
   test('shrinks local cleanup batches when measured tokens exceed the input limit', async () => {
-    const { sessions } = await runBatchedLocalCleanup(12000)
+    const { sessions } = await runBatchedLocalCleanup(60000)
 
     const prompts = sessions.map((session) => session.prompt.mock.calls[0].arguments[0])
-    assert(sessions.length > 4)
-    assert(prompts.every((prompt) => prompt.length <= 19800 * (6000 / 12000)))
+    assert(sessions.length > 20)
+    assert(prompts.every((prompt) => prompt.length <= 19800 * (6000 / 60000)))
   })
   test('allows aborting local AI tag suggestions for large selections before prompting the model', async () => {
     window.confirm = mock.fn(() => false)

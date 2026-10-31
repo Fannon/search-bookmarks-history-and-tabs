@@ -779,7 +779,7 @@ export function renderBookmarkCleanupPrompt(prompt, localAiAvailable) {
 /**
  * Explain what the generated prompt is for and how local AI will run it.
  *
- * @param {{mode: 'lite'|'full', batchCount?: number, bookmarkCount?: number}|null} plan Prompt plan.
+ * @param {{mode: 'lite'|'full', changeFocus?: string, batchCount?: number, bookmarkCount?: number}|null} plan Prompt plan.
  */
 export function renderLocalCleanupPlan(plan) {
   const dom = ext.dom.manager
@@ -790,15 +790,20 @@ export function renderLocalCleanupPlan(plan) {
 
 function formatLocalCleanupPlan(plan, batchCount) {
   if (!plan) {
-    return "Advanced creates one complete prompt to copy into an AI assistant. Lite creates a shorter prompt for your browser's local AI, which reviews large collections in batches."
+    return "Advanced creates one complete prompt to copy into an AI assistant and covers all change types. Lite runs on your browser's local AI and only suggests tags for untagged bookmarks, in small batches."
   }
   if (plan.mode !== 'lite') {
     return 'Advanced prompt for copying into an AI assistant. Local AI would send it as one large prompt; use Lite for local AI.'
   }
-  if (batchCount <= 1) {
-    return `Lite prompt: local AI reviews ${plan.bookmarkCount} bookmark(s) in one run.`
+  if (!batchCount) {
+    return plan.changeFocus === 'everything' || plan.changeFocus === 'tags'
+      ? 'Every bookmark in this scope already has tags, so Lite has nothing to suggest. Use Advanced for other cleanup.'
+      : 'Lite only suggests tags. Use Advanced for titles, folders, or duplicates.'
   }
-  return `Lite prompt: local AI reviews ${plan.bookmarkCount} bookmarks in about ${batchCount} batches, one after another, and merges the suggestions. The prompt below is batch 1 of ${batchCount}, so Copy prompt only copies that batch; use Advanced to copy everything.`
+  if (batchCount === 1) {
+    return `Lite prompt: local AI suggests tags for ${plan.bookmarkCount} untagged bookmark(s) in one run.`
+  }
+  return `Lite prompt: local AI suggests tags for ${plan.bookmarkCount} untagged bookmarks in ${batchCount} batches, one after another. The prompt below is batch 1 of ${batchCount}, so Copy prompt only copies that batch; use Advanced to copy everything.`
 }
 
 /**
