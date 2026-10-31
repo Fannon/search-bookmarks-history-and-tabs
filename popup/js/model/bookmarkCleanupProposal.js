@@ -169,7 +169,9 @@ export function createBookmarkCleanupPrompt(managerModel, mode = PROMPT_FULL, op
     '- Use stricter confidence for higher-risk changes: deleteBookmarks requires very high confidence, moveBookmarks and renameTags require high confidence.',
     '- For addTags and rewriteTitles, medium confidence is acceptable when the title, URL, domain, folder, current tags, or existing tag patterns provide clear reviewable evidence.',
     '- Prefer no change over a weak or speculative change, especially for destructive or structural changes.',
-    '- Do not optimize for the number of changes. When many bookmarks are untagged, sparsely tagged, or have noisy titles, return a focused batch of the best reviewable addTags and rewriteTitles suggestions.',
+    changeLimit
+      ? '- Do not optimize for the number of changes. When many bookmarks are untagged, sparsely tagged, or have noisy titles, return a focused batch of the best reviewable addTags and rewriteTitles suggestions.'
+      : '- No change limit is set: cover every bookmark where the evidence is clear instead of returning a small sample, but still skip weak or speculative changes.',
     formatPromptFocusInstruction(changeFocus, allowedChangeTypes),
     `- Bookmark context: included ${payload.includedBookmarkCount} of ${payload.totalBookmarkCount} bookmark${payload.totalBookmarkCount === 1 ? '' : 's'}.${payload.omittedBookmarkCount ? ` Omitted ${payload.omittedBookmarkCount} due to the selected bookmark/context limit.` : ''}${payload.truncatedByCharacterBudget ? ` Stopped at the ${PROMPT_BOOKMARK_TEXT_BUDGET} character bookmark-context budget.` : ''}`,
   ]
@@ -413,7 +415,7 @@ function formatPromptGoals(allowedChangeTypes) {
 
   if (allowedChangeTypes.includes('addTags')) {
     goals.push(
-      '- addTags: Add useful, concise, lowercase tags when supported by title, URL structure, domain, folder, current tags, or existing collection tag patterns. Strongly prefer tags that already exist in the collection unless the bookmark clearly needs a broadly reusable new tag. For already-tagged bookmarks, suggest at most 1–2 new tags. For bookmarks with no tags, suggest at most 1–3 fundamental tags (e.g. "github", "docs", "reference") when the evidence is clear enough for quick human review. Do not add a tag simply because a word appears in the title. Match the language of existing tags; do not add a translation of a tag that already exists (e.g. "weather" when "wetter" exists).',
+      '- addTags: Add useful, concise, lowercase tags when supported by title, URL structure, domain, folder, current tags, or existing collection tag patterns. Strongly prefer tags that already exist in the collection unless the bookmark clearly needs a broadly reusable new tag. For already-tagged bookmarks, suggest at most 1–2 new tags. For bookmarks with no tags, suggest at most 1–3 fundamental tags (e.g. "github", "docs", "reference") when the evidence is clear enough for quick human review. Do not add a tag simply because a word appears in the title. Match the language of existing tags. Tags cannot contain spaces, so do not add existing tags that contain spaces.',
     )
   }
   if (allowedChangeTypes.includes('removeTags')) {
@@ -423,7 +425,7 @@ function formatPromptGoals(allowedChangeTypes) {
   }
   if (allowedChangeTypes.includes('renameTags')) {
     goals.push(
-      '- renameTags: Use one renameTags entry per source tag being renamed or merged. Example: to merge "genai" and "llm" into "ai", create two separate entries — one from "genai" to "ai", one from "llm" to "ai". Only rename when the replacement is clearly better aligned with the collection\'s naming convention. Tags that are translations of each other (e.g. "wetter" and "weather") may be merged into the more used one. Mutually exclusive: if you use renameTags, do not also add/remove the same tag in addTags/removeTags.',
+      '- renameTags: Use one renameTags entry per source tag being renamed or merged. Example: to merge "genai" and "llm" into "ai", create two separate entries — one from "genai" to "ai", one from "llm" to "ai". Only rename when the replacement is clearly better aligned with the collection\'s naming convention. Do not merge tags that are used together on the same bookmarks, such as "wetter" and "weather"; they are intentional search synonyms. Mutually exclusive: if you use renameTags, do not also add/remove the same tag in addTags/removeTags.',
     )
   }
   if (allowedChangeTypes.includes('moveBookmarks')) {
@@ -438,7 +440,7 @@ function formatPromptGoals(allowedChangeTypes) {
   }
   if (allowedChangeTypes.includes('rewriteTitles')) {
     goals.push(
-      '- rewriteTitles: Be conservative. Do not rewrite short, clear, or already useful titles. Rewrite when the current title is very long, noisy, duplicated boilerplate, truncated, only a URL, hostname, or path, or looks like an unedited webpage title that harms search or review quality. A medium-confidence improvement is acceptable only when the cleaner title can be derived from the existing title and URL. Do not rewrite for style alone. Strip boilerplate prefixes (e.g. "GitHub - owner/repo: description" → "owner/repo — description", "npm: package-name" → "package-name", "Home | Vendor Product" → "Vendor Product"). Preserve distinctive project, repository, package, and product identifiers. Do not add inferred categories, folder names, scores, domains, or subjective adjectives to rewritten titles.',
+      '- rewriteTitles: Be conservative. Do not rewrite short, clear, or already useful titles. Rewrite when the current title is very long, noisy, duplicated boilerplate, truncated, only a URL, hostname, or path, or looks like an unedited webpage title that harms search or review quality. A medium-confidence improvement is acceptable only when the cleaner title can be derived from the existing title and URL. Do not rewrite for style alone. Do not guess the rest of a truncated word; drop the fragment instead. Strip boilerplate prefixes (e.g. "GitHub - owner/repo: description" → "owner/repo — description", "npm: package-name" → "package-name", "Home | Vendor Product" → "Vendor Product"). Preserve distinctive project, repository, package, and product identifiers. Do not add inferred categories, folder names, scores, domains, or subjective adjectives to rewritten titles.',
     )
   }
   if (!goals.length) {
