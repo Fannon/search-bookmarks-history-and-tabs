@@ -401,12 +401,13 @@ describe('initBookmarkManager cleanup apply', () => {
           measureContextUsage: mock.fn(async () => measuredTokens),
           prompt: mock.fn(async (prompt, options) => {
             statuses.push(document.getElementById('cleanup-status').textContent)
-            if (onPrompt) {
-              await onPrompt(sessions.length, options)
-            }
             // Suggest the same new tag for the first two bookmarks, so it is kept.
             const bookmarkIds = [...prompt.matchAll(/\n(batch-\d+) \|/g)].slice(0, 2).map((match) => match[1])
-            return JSON.stringify({ suggestions: bookmarkIds.map((bookmarkId) => ({ bookmarkId, tags: ['docs'] })) })
+            const response = JSON.stringify({
+              suggestions: bookmarkIds.map((bookmarkId) => ({ bookmarkId, tags: ['docs'] })),
+            })
+            // onPrompt may delay the batch or replace its response.
+            return (onPrompt && (await onPrompt(sessions.length, options, response, bookmarkIds))) || response
           }),
           destroy: mock.fn(),
         }
@@ -448,6 +449,29 @@ describe('initBookmarkManager cleanup apply', () => {
         .textContent.includes('suggests tags for 400 untagged bookmarks in 20 batches'),
     )
     assert(document.getElementById('cleanup-run-plan').textContent.includes('batch 1 of 20'))
+  })
+  test('accepts fenced local AI JSON and lists skipped batches with dropped tags', async () => {
+    await runBatchedLocalCleanup(1000, (sessionCount, _options, response, bookmarkIds) => {
+      if (sessionCount === 2) {
+        return `\`\`\`json\n${response}\n\`\`\``
+      }
+      if (sessionCount === 3) {
+        return 'not json'
+      }
+      if (sessionCount === 4) {
+        return JSON.stringify({ suggestions: [{ bookmarkId: bookmarkIds[0], tags: ['solo'] }] })
+      }
+      return undefined
+    })
+
+    const addTags = ext.model.bookmarkCleanupProposal.changes.addTags
+    // 20 batches: one invalid, one with only a dropped one-off tag, the rest two changes each.
+    assert.strictEqual(addTags.length, 36)
+    assert(addTags.some((change) => change.bookmarkId === 'batch-21'))
+    const status = document.getElementById('cleanup-status').textContent
+    assert(status.includes('Loaded 36 proposed change(s)'))
+    assert(status.includes('Skipped 1 batch(es) because local AI returned invalid JSON.'))
+    assert(status.includes('Dropped new tag "solo" because it was suggested for only one bookmark.'))
   })
   test('explains when an advanced prompt is too large for local AI', async () => {
     const quotaError = Object.assign(new Error('The input is too large.'), {

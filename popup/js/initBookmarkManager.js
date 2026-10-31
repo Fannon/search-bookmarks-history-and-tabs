@@ -95,6 +95,8 @@ const LOCAL_AI_PROMPT_TIMEOUT_MS = 45000
 const LOCAL_AI_TARGET_CONTEXT_TOKENS = 8000
 const LOCAL_AI_OUTPUT_RESERVE_TOKENS = 2000
 const LOCAL_AI_CHARS_PER_TOKEN = 3.3
+const CODE_FENCE_START_REGEX = /^```(?:json)?\s*/i
+const CODE_FENCE_END_REGEX = /\s*```$/
 const LOCAL_AI_DEBUG_STORAGE_KEY = 'bookmarkManagerDebugLocalAi'
 
 export const ext = createExtensionContext()
@@ -887,7 +889,7 @@ async function runLocalCleanup() {
         responseSize: formatCleanupResponseSize(responseText),
       })
       try {
-        const proposal = JSON.parse(responseText)
+        const proposal = parseLocalAiJson(responseText)
         proposals.push(proposal)
         changeCount += Array.isArray(proposal?.suggestions)
           ? proposal.suggestions.length
@@ -907,21 +909,14 @@ async function runLocalCleanup() {
     if (proposals[0] !== null) {
       setCleanupProposalJson(JSON.stringify(combineLocalCleanupResults(proposals)))
     }
-    parseCleanupProposalText()
-    if (skippedBatches || stoppedAtLimit) {
-      const notes = []
-      if (skippedBatches) {
-        notes.push(`${skippedBatches} batch(es) returned invalid JSON`)
-      }
-      if (stoppedAtLimit) {
-        notes.push(`stopped after ${batchNumber} of ${batches.length} batches at the change limit`)
-      }
-      showCleanupStatus(
-        `Loaded ${countBookmarkCleanupChanges(ext.model.bookmarkCleanupProposal)} proposed change(s); ${notes.join('; ')}.`,
-        'warning',
-        false,
-      )
+    const runWarnings = []
+    if (skippedBatches) {
+      runWarnings.push(`Skipped ${skippedBatches} batch(es) because local AI returned invalid JSON.`)
     }
+    if (stoppedAtLimit) {
+      runWarnings.push(`Stopped after ${batchNumber} of ${batches.length} batches at the change limit.`)
+    }
+    parseCleanupProposalText(runWarnings)
     debugLocalCleanup('parsed response', { elapsedMs: getElapsedMs(startedAt) })
   } catch (error) {
     if (signal.aborted) {
@@ -949,6 +944,13 @@ async function runLocalCleanup() {
     renderBookmarkCleanupPrompt(prompt, Boolean(ext.model.bookmarkManagerLocalAiAvailable))
     debugLocalCleanup('finish', { elapsedMs: getElapsedMs(startedAt) })
   }
+}
+
+/**
+ * Parse a local AI response. Without the schema constraint, models often wrap JSON in a code fence.
+ */
+function parseLocalAiJson(text) {
+  return JSON.parse(text.trim().replace(CODE_FENCE_START_REGEX, '').replace(CODE_FENCE_END_REGEX, ''))
 }
 
 function formatLocalCleanupFailure(error, isLite) {
@@ -1250,12 +1252,18 @@ function parseCleanupProposalInput() {
   ext.model.bookmarkCleanupParseTimer = window.setTimeout(parseCleanupProposalText, 180)
 }
 
-function parseCleanupProposalText() {
+/**
+ * Parse the proposal textarea and render it.
+ *
+ * @param {Array<string>} [runWarnings] Warnings from a local AI run to list with parse warnings.
+ */
+function parseCleanupProposalText(runWarnings = []) {
   window.clearTimeout(ext.model.bookmarkCleanupParseTimer)
   const result = parseBookmarkCleanupProposalWithIssues(
     ext.dom.manager.cleanupProposalJson.value,
     ext.model.bookmarkManager,
   )
+  const warnings = runWarnings.concat(result.warnings)
 
   if (result.proposal) {
     setCleanupProposalJson(JSON.stringify(result.proposal, null, 2))
@@ -1263,8 +1271,8 @@ function parseCleanupProposalText() {
     ext.model.bookmarkCleanupAppliedChangeIds = new Set()
     renderCleanupProposal()
     const message = `Loaded ${countBookmarkCleanupChanges(result.proposal)} proposed change(s)`
-    if (result.errors.length || result.warnings.length) {
-      showCleanupIssues(result.errors, result.warnings, message)
+    if (result.errors.length || warnings.length) {
+      showCleanupIssues(result.errors, warnings, message)
     } else {
       showCleanupIssues([], [])
       showCleanupStatus(message, 'success')
@@ -1274,7 +1282,7 @@ function parseCleanupProposalText() {
   ext.model.bookmarkCleanupProposal = null
   ext.model.bookmarkCleanupAppliedChangeIds = new Set()
   renderCleanupProposal()
-  showCleanupIssues(result.errors, result.warnings, 'Proposal JSON is invalid')
+  showCleanupIssues(result.errors, warnings, 'Proposal JSON is invalid')
 }
 
 function setCleanupProposalJson(value) {
