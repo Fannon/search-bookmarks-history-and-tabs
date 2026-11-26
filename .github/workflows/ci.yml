@@ -30,6 +30,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
+      - name: Use declared npm client
+        run: npm install --global --ignore-scripts "$(node -p "require('./package.json').packageManager")" --registry=https://registry.npmjs.org/
+
       - name: Install Dependencies
         run: npm ci
       - name: Build
@@ -54,6 +57,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
+      - name: Use declared npm client
+        run: npm install --global --ignore-scripts "$(node -p "require('./package.json').packageManager")" --registry=https://registry.npmjs.org/
+
       - name: Install Dependencies
         run: npm ci
       - name: Lint
@@ -86,6 +92,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
+      - name: Use declared npm client
+        run: npm install --global --ignore-scripts "$(node -p "require('./package.json').packageManager")" --registry=https://registry.npmjs.org/
+
       - name: Install Dependencies
         run: npm ci
       - name: Install Playwright browsers
